@@ -34,7 +34,10 @@ Povelitel-Tayn/
 ├─ index.html                  # только HTML-структура и точка входа
 ├─ package.json
 ├─ assets/
-│  └─ images/                 # растровые сцены и портретный источник
+│  └─ images/
+│     ├─ portraits/           # отдельные production-портреты героев
+│     ├─ scenes/              # отдельные responsive-сцены mobile/desktop
+│     └─ *.png                # исходные концепты и портретный источник
 ├─ styles/
 │  ├─ main.css                # токены, сцены, раскладка, responsive
 │  ├─ buttons.css             # кнопки, состояния и combat abilities

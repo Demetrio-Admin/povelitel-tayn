@@ -2,8 +2,17 @@ import { access, readFile, stat } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 
 const requiredIds = ['app', 'travelScreen', 'combatScreen', 'travelParty', 'combatParty', 'continueBtn', 'confirmBtn', 'modalLayer'];
-const requiredCopy = ['Адам', 'Мира', 'Гаррет', 'Эллиан', 'Продолжить путь', 'Через 1 ход: Разлом'];
-const assets = ['assets/images/whispering-forest.png', 'assets/images/ritual-observatory.png'];
+const requiredCopy = ['Адам', 'Мира', 'Гаррет', 'Эллиан', 'Продолжить путь', 'Через 1 ход: Разлом', 'Вернуться в Шепчущий лес'];
+const assets = [
+  'assets/images/scenes/whispering-forest-mobile-v1.png',
+  'assets/images/scenes/whispering-forest-desktop-v1.png',
+  'assets/images/scenes/ritual-observatory-mobile-v1.png',
+  'assets/images/scenes/ritual-observatory-desktop-v1.png',
+  'assets/images/portraits/adam-v2.png',
+  'assets/images/portraits/mira-v1.png',
+  'assets/images/portraits/garret-v1.png',
+  'assets/images/portraits/ellian-v1.png'
+];
 const styles = ['styles/buttons.css', 'styles/modals.css', 'styles/main.css'];
 const scripts = [
   'scripts/data/game-data.js',

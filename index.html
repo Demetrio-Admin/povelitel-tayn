@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08110e">
+  <title>Повелитель Тайн — Stage 7 Technical Shell</title>
+  <link rel="stylesheet" href="styles/buttons.css">
+  <link rel="stylesheet" href="styles/modals.css">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <svg class="sr-only" aria-hidden="true">
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M3 5.5 8.5 3l7 2.5L21 3v15.5L15.5 21l-7-2.5L3 21Z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 3v15.5m7-13v15.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 13H6Z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8.5 8V5.5a3.5 3.5 0 0 1 7 0V8" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2 20 5v6c0 5-3.4 8.6-8 11-4.6-2.4-8-6-8-11V5Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 6v12M7.5 11H16" stroke="currentColor" stroke-width="1.4"/></symbol>
+    <symbol id="i-rift" viewBox="0 0 24 24"><path d="m14 2-5 8 4 1-4 11 8-12-5-1Z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-bind" viewBox="0 0 24 24"><path d="M7 4c5 1 5 15 10 16M17 4c-5 1-5 15-10 16M4 12h16" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+  </svg>
+
+  <main class="app" id="app" data-screen="travel">
+    <div class="world travel-world" aria-hidden="true"></div>
+    <div class="world combat-world" aria-hidden="true"></div>
+    <div class="noise" aria-hidden="true"></div>
+
+    <section class="screen active" id="travelScreen" aria-label="Путешествие" aria-hidden="false">
+      <button class="context-bar" id="contextBar" aria-label="Раскрыть сведения о локации">
+        <span><span class="place">Шепчущий лес</span><span class="objective">Найти источник шёпота</span></span>
+        <span class="step" aria-label="Два из пяти этапов"><i class="done"></i><i class="done"></i><i></i><i></i><i></i></span>
+      </button>
+      <div class="scene-space"><div class="whisper" id="whisper">Шёпот зовёт из-за каменных стражей</div></div>
+      <div class="travel-dock">
+        <div class="party" id="travelParty"></div>
+        <div class="split-surface">
+          <button class="quick" data-open="map"><svg><use href="#i-map"/></svg><span>Карта</span></button>
+          <button class="primary" id="continueBtn"><span>Продолжить путь</span></button>
+          <button class="quick" data-open="bag"><svg><use href="#i-bag"/></svg><span>Сумка</span></button>
+        </div>
+      </div>
+      <div class="location-plate metal" id="locationPlate">
+        <h1>Шепчущий лес</h1><p>Найти источник шёпота</p>
+        <div class="progress-line"><b></b><i class="done"></i><i class="done"></i><i></i><i></i><i></i></div>
+      </div>
+    </section>
+
+    <section class="screen" id="combatScreen" aria-label="Бой" aria-hidden="true">
+      <div class="combat-top"><div class="combat-title"><strong>Астрономический ритуал</strong><span id="roundLabel">Раунд 1</span></div></div>
+      <div class="scene-space">
+        <button class="target-zone" id="targetZone" aria-label="Цель: Хранитель разлома"><span class="target-label">Хранитель разлома · 4/4 печати</span></button>
+        <div class="round-result" id="roundResult">Печать дала трещину</div>
+      </div>
+      <div class="threat" id="threat">
+        <div class="threat-copy"><strong>Намерение цели</strong><span id="threatCopy">Через 1 ход: Разлом</span></div>
+        <div class="timeline" style="--threat:58%"><div class="fill"></div><i class="marker"></i><i class="impact"></i></div>
+      </div>
+      <div class="abilities" id="abilities" aria-label="Способности выбранного героя"></div>
+      <div class="combat-dock">
+        <div class="party combat-party" id="combatParty"></div>
+        <div class="split-surface">
+          <button class="quick" id="defendBtn"><svg><use href="#i-shield"/></svg><span>Защита</span></button>
+          <button class="primary combat-primary" id="confirmBtn" disabled><span>Выберите способность</span></button>
+          <button class="quick" id="waitBtn"><svg><use href="#i-bind"/></svg><span>Ожидать</span></button>
+        </div>
+      </div>
+    </section>
+
+    <div class="modal-layer" id="modalLayer" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
+      <div class="modal metal" id="modal"><button class="close" id="closeModal" aria-label="Закрыть">×</button><div id="modalContent"></div></div>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </main>
+
+  <script type="module" src="scripts/app.js"></script>
+</body>
+</html>

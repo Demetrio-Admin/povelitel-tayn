@@ -1,0 +1,15 @@
+.modal-layer{position:absolute;inset:0;z-index:40;display:grid;place-items:center;padding:var(--safe);background:rgba(2,6,4,.68);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-layer.open{opacity:1;pointer-events:auto}
+.modal{position:relative;width:100%;max-width:480px;min-height:50vh;max-height:60vh;padding:22px 18px 18px;overflow:auto;border:1px solid rgba(133,115,92,.78);background:linear-gradient(180deg,rgba(25,37,31,.98),rgba(9,16,13,.98));box-shadow:0 26px 80px rgba(0,0,0,.72)}
+.modal h2{margin:0 46px 14px 0;font-family:Georgia,serif;font-size:28px;font-weight:500}.modal p{color:var(--muted);line-height:1.5}
+.close{position:absolute;right:12px;top:12px;width:48px;height:48px;border:1px solid rgba(133,115,92,.5);background:rgba(8,17,14,.65);cursor:pointer;color:var(--muted);font-size:25px}
+.modal-list{display:grid;gap:0;border-top:1px solid rgba(133,115,92,.28)}
+.modal-row{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:10px;min-height:58px;border-bottom:1px solid rgba(133,115,92,.2)}
+.modal-row .icon{display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(133,115,92,.42);color:var(--active)}
+.modal-row b{font-size:14px}.modal-row small{display:block;margin-top:3px;color:var(--muted)}.modal-row em{font-style:normal;color:var(--risk);font-size:12px}
+.map-path{height:140px;position:relative;margin:12px 0;background:radial-gradient(circle at 60% 40%,rgba(110,224,177,.12),transparent 38%);border:1px solid rgba(133,115,92,.26)}
+.map-path::before{content:"";position:absolute;left:14%;right:14%;top:52%;height:1px;background:linear-gradient(90deg,var(--active) 0 38%,var(--frame) 38%)}
+.map-path i{position:absolute;top:52%;width:13px;height:13px;background:#111a17;border:1px solid var(--frame);transform:translate(-50%,-50%) rotate(45deg)}
+.map-path i:nth-child(1){left:14%;background:var(--active);border-color:var(--active)}.map-path i:nth-child(2){left:38%;background:var(--active);border-color:var(--active)}.map-path i:nth-child(3){left:62%}.map-path i:nth-child(4){left:86%;border-color:var(--risk)}
+.toast{position:absolute;z-index:50;left:50%;top:calc(env(safe-area-inset-top) + 82px);transform:translate(-50%,-12px);max-width:calc(100% - 32px);padding:9px 14px;background:rgba(8,17,14,.94);border:1px solid rgba(110,224,177,.44);color:var(--text);font-size:12px;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}

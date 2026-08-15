@@ -32,6 +32,7 @@ export function renderCombatState(state) {
   $('#roundLabel').textContent = `Раунд ${state.round}`;
   $('.target-label').textContent = `Хранитель разлома · ${state.seals}/4 печати`;
   $('#targetZone').classList.toggle('cracked', state.seals <= 2);
+  $('#targetZone').classList.toggle('defeated', state.seals === 0);
   $('#threat .timeline').style.setProperty('--threat', `${state.threat}%`);
 }
 
@@ -66,7 +67,10 @@ export function showLocationPlate() {
   plateTimer = setTimeout(() => $('#locationPlate').classList.add('hidden'), 2800);
 }
 
-export function openModal(content) {
+export function openModal(content, variant = '') {
+  const modal = $('#modal');
+  modal.classList.remove('victory', 'leaving');
+  if (variant) modal.classList.add(variant);
   $('#modalContent').innerHTML = content;
   $('#modalLayer').classList.add('open');
   $('#modalLayer').setAttribute('aria-hidden', 'false');
@@ -83,11 +87,14 @@ export function openHeroModal(heroId) {
 }
 
 export function openVictoryModal() {
-  openModal(victoryModal());
+  $('#app').classList.add('victory');
+  openModal(victoryModal(), 'victory');
 }
 
 export function closeModal(state) {
   $('#modalLayer').classList.remove('open');
   $('#modalLayer').setAttribute('aria-hidden', 'true');
+  $('#modal').classList.remove('victory', 'leaving');
+  $('#app').classList.remove('victory');
   setTimeout(() => (state.screen === 'travel' ? $('#continueBtn') : $('#confirmBtn')).focus(), 20);
 }

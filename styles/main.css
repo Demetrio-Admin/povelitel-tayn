@@ -15,18 +15,21 @@ button:focus-visible{outline:2px solid var(--active);outline-offset:2px}
 .world{position:absolute;inset:0;background-position:center;background-size:cover;transition:opacity .45s var(--ease),transform .8s var(--ease);z-index:-3}
 .world::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,7,5,.25) 0%,transparent 25%,transparent 55%,rgba(3,8,6,.7) 77%,#060c09 100%);pointer-events:none}
 .world::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 90px rgba(0,0,0,.68);pointer-events:none}
-.travel-world{background-image:url("../assets/images/whispering-forest.png");background-position:50% 42%}
-.combat-world{background-image:url("../assets/images/ritual-observatory.png");background-position:50% 18%;opacity:0;transform:scale(1.035)}
+.travel-world{background-image:url("../assets/images/scenes/whispering-forest-mobile-v1.png");background-position:50% 50%}
+.combat-world{background-image:url("../assets/images/scenes/ritual-observatory-mobile-v1.png");background-position:50% 50%;opacity:0;transform:scale(1.035)}
 .app[data-screen="combat"] .travel-world{opacity:0;transform:scale(1.04)}
 .app[data-screen="combat"] .combat-world{opacity:1;transform:scale(1)}
+.app.victory .combat-world{filter:saturate(.62) brightness(.72);transform:scale(1.018)}
+.app.returning .combat-world{opacity:0;filter:saturate(.5) brightness(1.18);transform:scale(1.055)}
+.app.returning .travel-world{opacity:1;filter:brightness(.78);transform:scale(1.018)}
 .noise{position:absolute;inset:0;z-index:-1;opacity:.14;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.23'/%3E%3C/svg%3E")}
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .35s var(--ease),transform .35s var(--ease)}
 .screen.active{opacity:1;pointer-events:auto;transform:none}
 .metal{background:linear-gradient(180deg,rgba(27,38,33,.97),rgba(11,18,15,.96));border:1px solid var(--frame-soft);box-shadow:inset 0 1px rgba(255,255,255,.035),0 14px 40px rgba(0,0,0,.35)}
 .metal::before{content:"";position:absolute;inset:3px;border:1px solid rgba(133,115,92,.16);pointer-events:none}
 .context-bar{position:relative;z-index:5;height:var(--header);margin:calc(env(safe-area-inset-top) + 8px) var(--safe) 0;display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;padding:10px 14px;border-radius:2px;background:rgba(11,18,15,.84);border:1px solid rgba(133,115,92,.48);backdrop-filter:blur(14px);cursor:pointer;text-align:left}
-.context-bar .place{font-family:Georgia,"Times New Roman",serif;font-size:20px;line-height:1.05;letter-spacing:.02em}
-.context-bar .objective{margin-top:4px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:245px}
+.context-bar .place{display:block;font-family:Georgia,"Times New Roman",serif;font-size:20px;line-height:1.05;letter-spacing:.02em;white-space:nowrap}
+.context-bar .objective{display:block;margin-top:4px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:245px}
 .step{display:flex;align-items:center;gap:4px;color:var(--quest);font-size:12px}
 .step i{width:7px;height:7px;border:1px solid currentColor;transform:rotate(45deg);opacity:.45}
 .step i.done{background:currentColor;opacity:1;box-shadow:0 0 8px currentColor}
@@ -38,11 +41,11 @@ button:focus-visible{outline:2px solid var(--active);outline-offset:2px}
 .hero{position:relative;min-width:0;height:88px;padding:0;border:1px solid rgba(133,115,92,.68);background:#0c1411;overflow:hidden;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(0,0,0,.45)}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 44%,rgba(4,8,6,.35) 60%,#07100c 100%);pointer-events:none}
 .hero.selected{border-color:var(--active);box-shadow:0 0 0 1px rgba(110,224,177,.3),0 0 16px rgba(110,224,177,.22),inset 0 0 0 2px rgba(0,0,0,.4)}
-.portrait{position:absolute;inset:0;background-image:url("../assets/images/whispering-forest.png");background-size:440% auto;background-repeat:no-repeat;filter:saturate(.82) contrast(1.06)}
-.hero[data-hero="adam"] .portrait{background-position:0% 89%}
-.hero[data-hero="mira"] .portrait{background-position:33.2% 89%}
-.hero[data-hero="garret"] .portrait{background-position:66.3% 89%}
-.hero[data-hero="ellian"] .portrait{background-position:99.8% 89%}
+.portrait{position:absolute;inset:0;background-size:cover;background-position:50% 10%;background-repeat:no-repeat;filter:saturate(.9) contrast(1.03)}
+.hero[data-hero="adam"] .portrait{background-image:url("../assets/images/portraits/adam-v2.png")}
+.hero[data-hero="mira"] .portrait{background-image:url("../assets/images/portraits/mira-v1.png")}
+.hero[data-hero="garret"] .portrait{background-image:url("../assets/images/portraits/garret-v1.png")}
+.hero[data-hero="ellian"] .portrait{background-image:url("../assets/images/portraits/ellian-v1.png")}
 .hero-rune{position:absolute;left:5px;top:5px;z-index:2;display:grid;place-items:center;width:21px;height:21px;color:var(--active);text-shadow:0 0 8px currentColor;font-size:15px}
 .hero-name{position:absolute;left:6px;right:6px;bottom:15px;z-index:2;font-size:10px;font-weight:700;text-shadow:0 1px 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hp{position:absolute;left:6px;right:6px;bottom:7px;z-index:2;height:4px;background:#26312d;border:1px solid rgba(255,255,255,.12)}
@@ -71,6 +74,7 @@ button:focus-visible{outline:2px solid var(--active);outline-offset:2px}
 .combat-party .hero{height:88px}
 .round-result{position:absolute;left:50%;top:23%;transform:translateX(-50%);z-index:12;padding:8px 14px;background:rgba(8,17,14,.84);border-left:1px solid var(--active);border-right:1px solid var(--active);font-family:Georgia,serif;font-size:17px;opacity:0;transition:opacity .25s,transform .25s}
 .round-result.show{opacity:1;transform:translate(-50%,-8px)}
+.round-result.final{border-color:var(--quest);color:#e9fff6;box-shadow:0 0 28px rgba(110,224,177,.2);letter-spacing:.035em}
 @media (min-width:900px){
   body{display:grid;place-items:center;background:radial-gradient(circle at 50% 20%,#15251f,#030604 68%)}
   .app{width:min(1180px,calc(100vw - 48px));height:min(820px,calc(100dvh - 40px));min-height:700px;border:1px solid rgba(133,115,92,.55);box-shadow:0 35px 120px #000}
@@ -83,6 +87,8 @@ button:focus-visible{outline:2px solid var(--active);outline-offset:2px}
   .combat-top{width:520px}.combat-dock{padding-top:14px}.abilities{bottom:137px;left:27%}
   .target-zone{top:46%;width:360px;height:330px}
   .modal{max-width:520px}
+  .travel-world{background-image:url("../assets/images/scenes/whispering-forest-desktop-v1.png");background-position:50% 50%}
+  .combat-world{background-image:url("../assets/images/scenes/ritual-observatory-desktop-v1.png");background-position:50% 50%}
 }
 @media (max-width:370px){:root{--safe:10px}.context-bar .place{font-size:18px}.context-bar .objective{max-width:210px}.hero-name{display:none}.party{gap:5px}.quick{font-size:9px}.primary{min-width:180px;font-size:16px}}
 @media (max-height:700px){.app{min-height:560px}.hero,.combat-party .hero{height:72px}.party{margin-bottom:6px}.threat{bottom:173px}.abilities{bottom:160px}.context-bar{height:56px}.target-zone{height:31vh}.location-plate{padding:16px}.location-plate h1{font-size:28px}}

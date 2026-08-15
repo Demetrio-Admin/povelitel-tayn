@@ -59,12 +59,14 @@ function resolveAction() {
     updateState({ seals: Math.max(0, state.seals - 1), threat: Math.min(88, state.threat + 8) });
     renderCombatState(state);
     $('#roundResult').textContent = state.seals ? `${skillName}: печать дала трещину` : 'Ритуал остановлен';
+    $('#roundResult').classList.toggle('final', state.seals === 0);
     $('#roundResult').classList.add('show');
   }, 420);
 
   setTimeout(() => {
     target.classList.remove('respond');
     $('#roundResult').classList.remove('show');
+    $('#roundResult').classList.remove('final');
     $('#confirmBtn').classList.remove('loading');
     Object.assign(state, { round: state.round + 1, skill: null, busy: false });
     saveState();
@@ -88,11 +90,27 @@ function waitTurn() {
   showToast('Ход пропущен. Разлом приблизился.');
 }
 
-function handleModalClose() {
-  if (state.seals === 0) {
+function returnFromVictory() {
+  if (state.busy) return;
+  state.busy = true;
+  const app = $('#app');
+  app.classList.add('returning');
+  $('#modal').classList.add('leaving');
+
+  setTimeout(() => {
     resetBattle();
     renderAll(state);
-    showToast('Этап 4 открыт');
+    closeModal(state);
+    showLocationPlate();
+    showToast('Этап 4 открыт · путь продолжен');
+    setTimeout(() => app.classList.remove('returning'), 520);
+  }, 420);
+}
+
+function handleModalClose() {
+  if (state.seals === 0) {
+    returnFromVictory();
+    return;
   }
   closeModal(state);
 }
@@ -112,6 +130,11 @@ $('#modalLayer').addEventListener('click', event => {
 });
 
 document.addEventListener('click', event => {
+  if (event.target.closest('[data-victory-return]')) {
+    returnFromVictory();
+    return;
+  }
+
   const openControl = event.target.closest('[data-open]');
   if (openControl) openNamedModal(openControl.dataset.open, state);
 

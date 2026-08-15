@@ -18,7 +18,9 @@
 .target-label{position:absolute;left:50%;bottom:-28px;transform:translateX(-50%);white-space:nowrap;padding:4px 10px;background:rgba(8,17,14,.8);border:1px solid rgba(110,224,177,.34);font-size:11px;color:var(--muted)}
 .target-zone.respond{animation:worldResponse .7s var(--ease)}
 .target-zone.cracked{filter:drop-shadow(0 0 16px rgba(156,107,216,.48))}
+.target-zone.defeated{border-color:rgba(110,224,177,.22);filter:saturate(.38) brightness(.72) drop-shadow(0 0 24px rgba(110,224,177,.28));animation:sealBreak 1s var(--ease)}
 @keyframes worldResponse{0%{transform:translate(-50%,-50%) scale(1)}40%{transform:translate(-50%,-50%) scale(.96);filter:brightness(1.7)}100%{transform:translate(-50%,-50%) scale(1)}}
+@keyframes sealBreak{0%{transform:translate(-50%,-50%) scale(1);filter:brightness(1.9) drop-shadow(0 0 30px var(--active))}45%{transform:translate(-50%,-50%) scale(.94);opacity:.72}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
 .abilities{position:absolute;left:50%;bottom:190px;z-index:9;display:flex;gap:16px;transform:translate(-50%,10px);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s var(--ease)}
 .abilities.open{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .ability{width:48px;height:48px;border-radius:50%;border:1px solid rgba(133,115,92,.72);background:radial-gradient(circle,rgba(26,45,37,.96),rgba(7,14,11,.98));color:var(--active);cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.55)}

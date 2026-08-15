@@ -25,5 +25,5 @@ export function heroModal(hero) {
 }
 
 export function victoryModal() {
-  return '<h2 id="modalTitle">Ритуал остановлен</h2><p>Хранитель разлома потерял опору. Тропа в глубину леса снова открыта.</p><div class="modal-list"><div class="modal-row"><span class="icon">◇</span><span><b>Пыль Истока</b><small>Награда за разрушенные печати</small></span><em>+2</em></div><div class="modal-row"><span class="icon">✦</span><span><b>Путь продолжен</b><small>Открыт этап 4 из 5</small></span><em>4/5</em></div></div>';
+  return '<div class="victory-mark" aria-hidden="true"><i></i></div><span class="victory-kicker">Испытание завершено</span><h2 id="modalTitle">Ритуал остановлен</h2><p class="victory-copy">Последняя печать разрушена. Хранитель разлома потерял опору, и тропа в глубину леса снова открыта.</p><div class="modal-list victory-rewards"><div class="modal-row"><span class="icon">◇</span><span><b>Пыль Истока</b><small>Награда за разрушенные печати</small></span><em>+2</em></div><div class="modal-row"><span class="icon">✦</span><span><b>Путь продолжен</b><small>Открыт этап 4 из 5</small></span><em>4/5</em></div></div><button class="victory-return" type="button" data-victory-return><span>Вернуться в Шепчущий лес</span><small>Продолжить путь · этап 4 из 5</small></button>';
 }

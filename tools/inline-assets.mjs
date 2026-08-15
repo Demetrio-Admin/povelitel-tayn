@@ -12,11 +12,22 @@ for (const file of styleFiles) {
   html = html.replace(`<link rel="stylesheet" href="${file}">`, `<style>\n${css}\n</style>`);
 }
 
-for (const file of ['whispering-forest.png', 'ritual-observatory.png']) {
-  const bytes = await readFile(join(root, 'assets', 'images', file));
+const imageFiles = [
+  'assets/images/scenes/whispering-forest-mobile-v1.png',
+  'assets/images/scenes/whispering-forest-desktop-v1.png',
+  'assets/images/scenes/ritual-observatory-mobile-v1.png',
+  'assets/images/scenes/ritual-observatory-desktop-v1.png',
+  'assets/images/portraits/adam-v2.png',
+  'assets/images/portraits/mira-v1.png',
+  'assets/images/portraits/garret-v1.png',
+  'assets/images/portraits/ellian-v1.png'
+];
+
+for (const file of imageFiles) {
+  const bytes = await readFile(join(root, file));
   const data = `data:image/png;base64,${bytes.toString('base64')}`;
-  html = html.replaceAll(`../assets/images/${file}`, data);
-  html = html.replaceAll(`assets/images/${file}`, data);
+  html = html.replaceAll(`../${file}`, data);
+  html = html.replaceAll(file, data);
 }
 
 const moduleFiles = [

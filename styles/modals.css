@@ -1,12 +1,25 @@
 .modal-layer{position:absolute;inset:0;z-index:40;display:grid;place-items:center;padding:var(--safe);background:rgba(2,6,4,.68);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s}
 .modal-layer.open{opacity:1;pointer-events:auto}
 .modal{position:relative;width:100%;max-width:480px;min-height:50vh;max-height:60vh;padding:22px 18px 18px;overflow:auto;border:1px solid rgba(133,115,92,.78);background:linear-gradient(180deg,rgba(25,37,31,.98),rgba(9,16,13,.98));box-shadow:0 26px 80px rgba(0,0,0,.72)}
+.modal.victory{min-height:0;max-height:none;padding:24px 18px 18px;overflow:hidden;text-align:center;border-color:rgba(110,224,177,.56);background:radial-gradient(circle at 50% 0,rgba(110,224,177,.13),transparent 38%),linear-gradient(180deg,rgba(22,34,29,.99),rgba(7,13,11,.99));box-shadow:0 30px 100px rgba(0,0,0,.82),0 0 42px rgba(110,224,177,.1);transition:opacity .32s var(--ease),transform .32s var(--ease)}
+.modal.victory::after{content:"";position:absolute;inset:4px;border:1px solid rgba(133,115,92,.2);pointer-events:none}
+.modal.victory.leaving{opacity:0;transform:translateY(-12px) scale(.985)}
 .modal h2{margin:0 46px 14px 0;font-family:Georgia,serif;font-size:28px;font-weight:500}.modal p{color:var(--muted);line-height:1.5}
+.modal.victory h2{margin:6px 44px 10px;font-size:30px;line-height:1.08}.modal.victory .victory-copy{max-width:390px;margin:0 auto 16px;font-size:14px}
 .close{position:absolute;right:12px;top:12px;width:48px;height:48px;border:1px solid rgba(133,115,92,.5);background:rgba(8,17,14,.65);cursor:pointer;color:var(--muted);font-size:25px}
 .modal-list{display:grid;gap:0;border-top:1px solid rgba(133,115,92,.28)}
 .modal-row{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:10px;min-height:58px;border-bottom:1px solid rgba(133,115,92,.2)}
 .modal-row .icon{display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(133,115,92,.42);color:var(--active)}
 .modal-row b{font-size:14px}.modal-row small{display:block;margin-top:3px;color:var(--muted)}.modal-row em{font-style:normal;color:var(--risk);font-size:12px}
+.victory-mark{position:relative;width:68px;height:68px;margin:0 auto 8px;border:1px solid rgba(110,224,177,.48);border-radius:50%;box-shadow:inset 0 0 24px rgba(110,224,177,.08),0 0 22px rgba(110,224,177,.12)}
+.victory-mark::before,.victory-mark::after,.victory-mark i{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(45deg)}
+.victory-mark::before{width:24px;height:24px;border:1px solid var(--active);box-shadow:0 0 14px rgba(110,224,177,.5)}
+.victory-mark::after{width:7px;height:7px;background:var(--active);box-shadow:0 0 12px var(--active)}
+.victory-mark i{width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--active),transparent)}
+.victory-kicker{display:block;color:var(--quest);font-size:10px;letter-spacing:.18em;text-transform:uppercase}
+.victory-rewards{margin-top:8px;text-align:left}.victory-rewards .modal-row{min-height:54px}.victory-rewards .icon{border-color:rgba(110,224,177,.35)}
+.victory-return{position:relative;width:100%;min-height:64px;margin-top:16px;padding:10px 18px;border:1px solid rgba(110,224,177,.62);background:radial-gradient(ellipse at 50% 120%,rgba(110,224,177,.2),transparent 70%),rgba(10,20,16,.9);color:var(--text);cursor:pointer;box-shadow:inset 0 0 0 3px rgba(5,10,8,.65)}
+.victory-return span{display:block;font-size:17px;font-weight:650}.victory-return small{display:block;margin-top:4px;color:var(--muted);font-size:10px;letter-spacing:.03em}.victory-return:active{transform:translateY(2px);box-shadow:inset 0 4px 12px rgba(0,0,0,.6)}
 .map-path{height:140px;position:relative;margin:12px 0;background:radial-gradient(circle at 60% 40%,rgba(110,224,177,.12),transparent 38%);border:1px solid rgba(133,115,92,.26)}
 .map-path::before{content:"";position:absolute;left:14%;right:14%;top:52%;height:1px;background:linear-gradient(90deg,var(--active) 0 38%,var(--frame) 38%)}
 .map-path i{position:absolute;top:52%;width:13px;height:13px;background:#111a17;border:1px solid var(--frame);transform:translate(-50%,-50%) rotate(45deg)}

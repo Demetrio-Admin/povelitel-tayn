@@ -6,3 +6,4 @@ __pycache__/
 tools/art/out*/
 tools/ui/shots/
 tools/world/shots/
+tools/ui/dom/stand.bundle.js

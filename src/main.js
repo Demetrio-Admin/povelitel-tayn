@@ -6,6 +6,7 @@ import { ExplorationScene } from './scenes/ExplorationScene.js';
 import { CombatScene } from './scenes/CombatScene.js';
 import { UIScene } from './scenes/UIScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
+import { HeroSelectScene } from './scenes/HeroSelectScene.js';
 import { loadUIFont } from './ui/fonts.js';
 
 const debug = new URLSearchParams(window.location.search).has('debug');
@@ -27,7 +28,7 @@ const config = {
   },
   input: { activePointers: 3 },
   render: { pixelArt: false, antialias: true },
-  scene: [BootScene, PreloadScene, MenuScene, ExplorationScene, CombatScene, UIScene],
+  scene: [BootScene, PreloadScene, MenuScene, HeroSelectScene, ExplorationScene, CombatScene, UIScene],
 };
 
 // Шрифт интерфейса грузится до старта игры (макс. 2 с), иначе Canvas нарисует текст запасным шрифтом навсегда.

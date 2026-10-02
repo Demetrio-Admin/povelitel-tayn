@@ -35,7 +35,7 @@ export async function freshWorld(progress = 'mid') {
   const { EV } = await import('../../src/config/events.js');
   const state = new GameState(memStorage());
   const quests = new QuestFlags(state, bus);
-  services.state = state; services.quests = quests;
+  services.state = state; services.quests = quests; services.session = null; services.offline = false;
   services.abilities = new AbilitySystem(state, quests, bus);
   services.settings = new Settings(memStorage());
   services.audio = new AudioManager(services.settings);

@@ -34,26 +34,27 @@ export function createDefaultState() {
 }
 
 export class GameState {
+  /**
+   * storage — только для режима без сервера (разработка): тогда прогресс лежит в localStorage этого браузера.
+   * В онлайн-режиме storage = null: данные приходят с сервера (PlayerSession → setData), а save() лишь сообщает
+   * подписчикам, что прогресс изменился, — дальше его отправляет на сервер PlayerSession.
+   */
   constructor(storage = null, now = () => Date.now()) {
     this.storage = storage;
     this.now = now;
     this.data = createDefaultState();
     this.listeners = new Set();
     this.saveListeners = new Set();
-    this.key = SAVE.key; // ячейка хранилища: гостевая или личная ячейка вошедшего игрока (см. cloud/Account.js)
   }
 
   // ---------- persistence ----------
-  /** Переключает ячейку хранилища. Данные не читает — после этого вызовите load(). */
-  useKey(key) { this.key = key || SAVE.key; }
-
-  /** Подписка на каждое сохранение (облако отправляет прогресс на сервер). */
+  /** Подписка на каждое сохранение (онлайн-режим: PlayerSession отправляет изменения на сервер). */
   onSave(fn) { this.saveListeners.add(fn); return () => this.saveListeners.delete(fn); }
 
   load() {
     if (!this.storage) return false;
     try {
-      const raw = this.storage.getItem(this.key);
+      const raw = this.storage.getItem(SAVE.key);
       if (!raw) return false;
       const parsed = JSON.parse(raw);
       if (parsed.version !== SAVE_VERSION) return false;
@@ -66,36 +67,30 @@ export class GameState {
   }
 
   hasSave() {
-    try { return !!(this.storage && this.storage.getItem(this.key)); } catch (e) { return false; }
+    try { return !!(this.storage && this.storage.getItem(SAVE.key)); } catch (e) { return false; }
   }
 
   save() {
-    this.data.savedAt = this.now();
     if (this.storage) {
-      try { this.storage.setItem(this.key, JSON.stringify(this.data)); } catch (e) { /* quota / private mode */ }
+      try { this.storage.setItem(SAVE.key, JSON.stringify(this.data)); } catch (e) { /* quota / private mode */ }
     }
     this.saveListeners.forEach(fn => fn(this.data));
   }
 
   /**
-   * Подменяет данные целиком (загрузка из облака). Сохраняет в текущую ячейку без уведомления подписчиков —
-   * иначе облако тут же отправило бы обратно то, что только что получило.
+   * Подменяет данные состоянием с сервера. Объект data остаётся тем же (меняются поля), поэтому ссылки на него
+   * в сценах не устаревают. Подписчиков save() не зовёт — иначе полученное тут же ушло бы обратно.
    */
-  replaceData(data) {
-    this.data = { ...createDefaultState(), ...data };
-    if (this.storage) { try { this.storage.setItem(this.key, JSON.stringify(this.data)); } catch (e) { /* ignore */ } }
-    this.changed('replace');
-  }
-
-  /** Читает текущую ячейку; если там пусто — начинает с чистого состояния (ячейка не стирается). */
-  loadOrDefault() {
-    if (!this.load()) this.data = createDefaultState();
+  setData(next) {
+    const d = { ...createDefaultState(), ...next };
+    for (const k of Object.keys(this.data)) if (!(k in d)) delete this.data[k];
+    Object.assign(this.data, d);
     this.changed('replace');
   }
 
   reset() {
     this.data = createDefaultState();
-    if (this.storage) this.storage.removeItem(this.key);
+    if (this.storage) this.storage.removeItem(SAVE.key);
     this.changed('reset');
   }
 

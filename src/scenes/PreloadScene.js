@@ -33,8 +33,8 @@ export class PreloadScene extends Phaser.Scene {
       g.generateTexture(key, w, h);
       g.destroy();
     }
-    // ?skipmenu — сразу в игру (автотесты, быстрая проверка)
-    if (services.skipMenu) startGame(this);
+    // ?skipmenu — сразу в игру (автотесты, быстрая проверка); онлайн — только если персонаж уже загружен с сервера
+    if (services.skipMenu && (!services.session || services.session.ready)) startGame(this);
     else this.scene.start('MenuScene');
   }
 }

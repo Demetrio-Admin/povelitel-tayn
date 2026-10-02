@@ -1,13 +1,13 @@
 import Phaser from 'phaser';
-import { initServices, bootCloud } from '../services.js';
+import { initServices, bootSession } from '../services.js';
 
-// BootScene — инициализация состояния/сервисов и переход к загрузке.
+// BootScene — сервисы и (в онлайн-режиме) загрузка игрока с сервера, затем загрузка ассетов.
+// Игра не начинается, пока не известно, кто играет и какое у него состояние на сервере.
 export class BootScene extends Phaser.Scene {
   constructor() { super('BootScene'); }
 
   create() {
     initServices();
-    const next = () => this.scene.start('PreloadScene');
-    bootCloud().then(next, next); // вход восстанавливается параллельно, ждём не дольше нескольких секунд
+    bootSession().then(() => this.scene.start('PreloadScene'));
   }
 }

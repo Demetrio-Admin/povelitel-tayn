@@ -1,38 +1,45 @@
-// Клиент Supabase на чистом fetch (без библиотек): вход, регистрация, профиль, облачное сохранение.
-// Не зависит от Phaser; fetch подставляется снаружи, поэтому тестируется с фальшивым сервером.
+// Клиент Supabase на чистом fetch (без библиотек). Не зависит от Phaser; fetch подставляется снаружи,
+// поэтому всё проверяется на фальшивом сервере (tests/helpers/fake-supabase.mjs).
+//
+// Что использует игра:
+//   Auth  — анонимный вход (гость), вход по служебному адресу ника, обновление токена, выход, смена пароля;
+//   RPC   — create_player / get_player / sync_player / reset_player / nickname_available (supabase/schema.sql);
+//   Edge Function account — превращение гостя в игрока с ником (supabase/functions/account).
 
 export class CloudError extends Error {
   constructor(code, message, status = 0) { super(message); this.name = 'CloudError'; this.code = code; this.status = status; }
 }
 
+// Тексты для игрока. Технические ответы сервера сюда не попадают.
 const RU = {
-  network: 'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.',
-  timeout: 'Сервер долго не отвечает. Попробуйте ещё раз.',
-  invalid_credentials: 'Неверная почта или пароль.',
-  email_taken: 'Эта почта уже зарегистрирована. Войдите или восстановите пароль.',
-  weak_password: 'Пароль слишком простой. Используйте не меньше 8 символов.',
-  email_not_confirmed: 'Почта не подтверждена. Откройте письмо от игры и перейдите по ссылке.',
-  nickname_taken: 'Этот ник уже занят. Выберите другой.',
-  rate_limited: 'Слишком много попыток. Подождите минуту.',
-  bad_email: 'Не удалось отправить письмо на этот адрес.',
-  unauthorized: 'Сессия истекла. Войдите снова.',
-  not_configured: 'Облако не подключено.',
+  network: 'Не удалось связаться с сервером. Попробуйте ещё раз.',
+  timeout: 'Не удалось связаться с сервером. Попробуйте ещё раз.',
+  invalid_credentials: 'Неверный никнейм или пароль.',
+  nickname_taken: 'Этот никнейм уже используется.',
+  already_registered: 'У этого персонажа уже есть аккаунт.',
+  rate_limited: 'Слишком много попыток. Подождите минуту и попробуйте снова.',
+  guest_disabled: 'Гостевая игра сейчас недоступна. Создайте аккаунт или попробуйте позже.',
+  weak_password: 'Пароль слишком простой. Придумайте другой.',
+  unauthorized: 'Сессия завершилась. Войдите снова.',
+  not_configured: 'Сервер игры не подключён.',
   unknown: 'Что-то пошло не так. Попробуйте ещё раз.',
 };
 export const errorText = (code) => RU[code] || RU.unknown;
+export const isNetworkError = (e) => e instanceof CloudError && (e.code === 'network' || e.code === 'timeout');
+export const isAuthError = (e) => e instanceof CloudError && e.code === 'unauthorized';
 
-/** Приводит ответ GoTrue / PostgREST к понятному коду. */
+/** Ответ Auth / PostgREST / функции → понятный код. */
 export function mapError(status, body) {
   const msg = String(body?.msg || body?.message || body?.error_description || body?.error || '').toLowerCase();
   const code = String(body?.error_code || body?.code || '').toLowerCase();
-  if (status === 429 || code.includes('rate_limit')) return 'rate_limited';
-  if (code === 'invalid_credentials' || msg.includes('invalid login credentials')) return 'invalid_credentials';
-  if (code === 'user_already_exists' || code === 'email_exists' || msg.includes('already registered')) return 'email_taken';
-  if (code === 'weak_password' || msg.includes('password should be')) return 'weak_password';
-  if (code === 'email_not_confirmed' || msg.includes('email not confirmed')) return 'email_not_confirmed';
-  if (code === '23505' || msg.includes('duplicate key') || msg.includes('nickname')) return 'nickname_taken';
-  if (code === 'validation_failed' && msg.includes('email')) return 'bad_email';
-  if (status === 401 || code === 'pgrst301' || msg.includes('jwt')) return 'unauthorized';
+  if (status === 429 || code.includes('rate_limit') || code === 'over_request_rate_limit') return 'rate_limited';
+  if (code === 'invalid_credentials' || code === 'invalid_grant' || msg.includes('invalid login credentials')) return 'invalid_credentials';
+  if (code === 'nickname_taken' || code === '23505') return 'nickname_taken';
+  if (code === 'already_registered') return 'already_registered';
+  if (code === 'anonymous_provider_disabled' || code === 'signup_disabled') return 'guest_disabled';
+  if (code === 'weak_password') return 'weak_password';
+  if (status === 401 || (status === 403 && code === 'bad_jwt') || code === 'pgrst301' || code === 'pgrst303' || code === 'session_not_found'
+    || code === 'refresh_token_not_found' || code === 'refresh_token_already_used' || code === 'not_authenticated' || code === '28000') return 'unauthorized';
   return 'unknown';
 }
 
@@ -42,14 +49,15 @@ export function sessionFromResponse(j, now = Date.now()) {
     access_token: j.access_token,
     refresh_token: j.refresh_token,
     expires_at: j.expires_at ? j.expires_at * 1000 : now + expiresIn * 1000,
-    user: { id: j.user?.id, email: j.user?.email },
+    user: { id: j.user?.id },
   };
 }
 
 export class SupabaseApi {
-  constructor({ url = '', anonKey = '', fetchFn = null, timeoutMs = 9000, now = () => Date.now() } = {}) {
+  constructor({ url = '', anonKey = '', loginDomain = '', fetchFn = null, timeoutMs = 10000, now = () => Date.now() } = {}) {
     this.url = String(url).replace(/\/+$/, '');
     this.anonKey = anonKey;
+    this.loginDomain = loginDomain;
     this.fetchFn = fetchFn || (typeof fetch !== 'undefined' ? fetch.bind(globalThis) : null);
     this.timeoutMs = timeoutMs;
     this.now = now;
@@ -71,23 +79,28 @@ export class SupabaseApi {
         signal: ctrl?.signal,
       });
     } catch (e) {
-      throw new CloudError(e?.name === 'AbortError' ? 'timeout' : 'network', e?.name === 'AbortError' ? RU.timeout : RU.network);
+      const timeout = e?.name === 'AbortError';
+      throw new CloudError(timeout ? 'timeout' : 'network', RU.network);
     } finally { if (timer) clearTimeout(timer); }
     let json = null;
     try { const text = await res.text(); json = text ? JSON.parse(text) : null; } catch (e) { json = null; }
-    if (!res.ok) { const code = mapError(res.status, json); throw new CloudError(code, errorText(code), res.status); }
+    if (!res.ok) {
+      let code = mapError(res.status, json);
+      if (code === 'unknown' && res.status >= 500) code = 'server'; // сервер сломался — это не «нет связи», повтор не поможет сразу
+      throw new CloudError(code, errorText(code), res.status);
+    }
     return json;
   }
 
-  // ---------------------------------------------------------------- аккаунт
-  /** Возвращает { session } или { needsConfirm: true } (если в проекте включено подтверждение почты). */
-  async signUp(email, password, nickname) {
-    const j = await this._req('/auth/v1/signup', { method: 'POST', body: { email, password, data: { nickname } } });
-    if (j?.access_token) return { session: sessionFromResponse(j, this.now()) };
-    return { needsConfirm: true };
+  // ---------------------------------------------------------------- Auth
+  /** Гость: анонимный пользователь Supabase (настоящий user_id на сервере). */
+  async signInAnonymously() {
+    const j = await this._req('/auth/v1/signup', { method: 'POST', body: { data: {} } });
+    if (!j?.access_token) throw new CloudError('guest_disabled', errorText('guest_disabled'));
+    return sessionFromResponse(j, this.now());
   }
 
-  async signIn(email, password) {
+  async signInWithEmail(email, password) {
     const j = await this._req('/auth/v1/token?grant_type=password', { method: 'POST', body: { email, password } });
     return sessionFromResponse(j, this.now());
   }
@@ -97,38 +110,22 @@ export class SupabaseApi {
     return sessionFromResponse(j, this.now());
   }
 
-  async signOut(accessToken) { await this._req('/auth/v1/logout', { method: 'POST', token: accessToken }); }
+  // scope=local: закрывается только этот вход; другие устройства игрока остаются в игре
+  async signOut(accessToken) { await this._req('/auth/v1/logout?scope=local', { method: 'POST', token: accessToken }); }
 
-  async recover(email) { await this._req('/auth/v1/recover', { method: 'POST', body: { email } }); }
+  async updatePassword(accessToken, password) { await this._req('/auth/v1/user', { method: 'PUT', token: accessToken, body: { password } }); }
 
-  // ---------------------------------------------------------------- профиль
-  async nicknameAvailable(nick) {
-    const j = await this._req('/rest/v1/rpc/nickname_available', { method: 'POST', body: { nick } });
-    return j === true;
-  }
+  // ---------------------------------------------------------------- игрок (RPC)
+  rpc(name, args, token, opts = {}) { return this._req(`/rest/v1/rpc/${name}`, { method: 'POST', token, body: args || {}, ...opts }); }
 
-  async getProfile(session) {
-    const j = await this._req(`/rest/v1/profiles?id=eq.${encodeURIComponent(session.user.id)}&select=nickname`, { token: session.access_token });
-    return Array.isArray(j) && j[0] ? { nickname: j[0].nickname } : null;
-  }
+  nicknameAvailable(norm) { return this.rpc('nickname_available', { norm }); }
+  createPlayer(token, hero) { return this.rpc('create_player', { hero }, token); }
+  getPlayer(token) { return this.rpc('get_player', {}, token); }
+  resetPlayer(token, hero) { return this.rpc('reset_player', { hero }, token); }
+  syncPlayer(token, patch, { keepalive = false } = {}) { return this.rpc('sync_player', { patch }, token, { keepalive }); }
 
-  async setNickname(session, nickname) {
-    await this._req(`/rest/v1/profiles?id=eq.${encodeURIComponent(session.user.id)}`, { method: 'PATCH', token: session.access_token, headers: { Prefer: 'return=minimal' }, body: { nickname } });
-  }
-
-  // ---------------------------------------------------------------- сохранение
-  async getSave(session) {
-    const j = await this._req(`/rest/v1/saves?user_id=eq.${encodeURIComponent(session.user.id)}&select=data,version,updated_at`, { token: session.access_token });
-    return Array.isArray(j) && j[0] ? j[0] : null;
-  }
-
-  /** Записывает сохранение (upsert). Возвращает { updated_at }. */
-  async putSave(session, data, { keepalive = false } = {}) {
-    const row = { user_id: session.user.id, data, version: data?.version || 1, hero_level: data?.heroLevel ?? null, play_time_ms: Math.round(data?.stats?.playTimeMs || 0) };
-    const j = await this._req('/rest/v1/saves?on_conflict=user_id&select=updated_at', {
-      method: 'POST', token: session.access_token, keepalive,
-      headers: { Prefer: 'resolution=merge-duplicates,return=representation' }, body: row,
-    });
-    return Array.isArray(j) && j[0] ? { updated_at: j[0].updated_at } : { updated_at: new Date(this.now()).toISOString() };
+  // ---------------------------------------------------------------- регистрация ника (Edge Function)
+  claimNickname(token, nickname, password) {
+    return this._req('/functions/v1/account', { method: 'POST', token, body: { action: 'register', nickname, password } });
   }
 }

@@ -1,0 +1,269 @@
+// Сценарии онлайн-аккаунта (ТЗ, п. 42) на фальшивом Supabase с настоящими модулями игры.
+//   node tests/session-test.js            — серверные функции на JS-зеркале (быстро, без базы)
+//   BACKEND=pg node tests/session-test.js — серверные функции и права на настоящем Postgres (нужна схема в базе)
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { GameState } from '../src/state/GameState.js';
+import { SupabaseApi, CloudError } from '../src/cloud/api.js';
+import { PlayerSession, TOKENS_KEY } from '../src/cloud/PlayerSession.js';
+import { validateNickname, normalizeNickname, loginEmail, NICK_ERRORS } from '../src/cloud/nickname.js';
+import { checkNickname, loginEmail as fnLoginEmail, DEFAULT_LOGIN_DOMAIN } from '../supabase/functions/account/index.ts';
+import { CLOUD } from '../src/config/cloud.config.js';
+import { FakeSupabase } from './helpers/fake-supabase.mjs';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const BACKEND = process.env.BACKEND || 'model';
+let failures = 0;
+const ok = (cond, msg) => { if (cond) console.log('  ✓', msg); else { failures++; console.log('  ✗', msg); } };
+const rejects = async (fn) => { try { await fn(); return null; } catch (e) { return e; } };
+const memStorage = () => { const m = new Map(); return { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k), _m: m }; };
+const SUF = Math.random().toString(36).slice(2, 6).replace(/[0-9]/g, (d) => 'abcdefghij'[d]);
+const nickLat = (base) => `${base}_${SUF}`;                                   // уникальные ники: базу можно не чистить
+const nickCyr = (base) => `${base}_${[...SUF].map(c => 'абвгдежзийклмнопрстуфхцчш'[c.charCodeAt(0) - 97] || 'я').join('')}`;
+const PASS = 'Лунный-пароль-1';
+
+/** «Устройство»: своё хранилище токенов, своё состояние игры и сессия; сервер общий. */
+function device(srv, storage = memStorage()) {
+  const timers = [];
+  const state = new GameState(null);
+  const api = new SupabaseApi({ url: srv.url, anonKey: srv.anonKey, loginDomain: CLOUD.loginDomain, fetchFn: srv.fetch, timeoutMs: 2000, now: () => srv.now() });
+  const session = new PlayerSession({
+    api, state, storage, now: () => srv.now(), saveDelayMs: 600, minorDelayMs: 15000, retryDelaysMs: [2000],
+    setTimer: (f, ms) => { const t = { f, ms, live: true }; timers.push(t); return t; }, clearTimer: (t) => { if (t) t.live = false; },
+  });
+  const fire = async () => { const live = timers.filter(t => t.live); live.forEach(t => { t.live = false; }); for (const t of live) await t.f(); };
+  return { state, api, session, storage, timers, fire };
+}
+/** Немного игры: награда, событие, предмет — как это делает игра (методы GameState + save()). */
+function play(st, { xp = 70, coins = 15, event = 'combat_intro_01' } = {}) {
+  st.applyReward({ heroXP: xp, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 1 }, coins });
+  st.markEvent(event);
+  st.unlockAbility('telekinesis', 1);
+  st.data.player = { x: 1234, y: 4321 };
+  st.save();
+}
+
+const srv = new FakeSupabase({ backend: BACKEND });
+console.log(`\nСервер: ${BACKEND === 'pg' ? 'настоящий Postgres (supabase/schema.sql)' : 'JS-зеркало схемы'}`);
+
+console.log('\nНик и пароль: правила');
+{
+  ok(validateNickname('  Дмитрий ').ok && validateNickname('Dmitry_7').ok && validateNickname('ведьма_2000').ok, 'кириллица, латиница, цифры и _ допустимы; пробелы по краям убираются');
+  ok(validateNickname('Дм').error === NICK_ERRORS.short && validateNickname('x'.repeat(21)).error === NICK_ERRORS.long, 'от 3 до 20 символов, понятные ошибки');
+  ok(validateNickname('Дмит рий').error === NICK_ERRORS.chars && validateNickname('Dmitry!').error === NICK_ERRORS.chars, 'пробел внутри и спецсимволы запрещены');
+  ok(validateNickname('Dmitrу').error === NICK_ERRORS.mixed, 'латиница с русской «у» отклонена (защита от подделки чужого ника)');
+  ok(validateNickname('____').error === NICK_ERRORS.letter && validateNickname('12345').error === NICK_ERRORS.letter, 'нужна хотя бы одна буква');
+  ok(normalizeNickname('DMITRY') === normalizeNickname('dmitry') && normalizeNickname('Дмитрий') === normalizeNickname('ДМИТРИЙ'), 'регистр не важен: Dmitry = DMITRY');
+  const samples = ['Дмитрий', 'dmitry', 'Dmitrу', 'ab', 'x'.repeat(21), 'Ёжик_1', 'a b', '___', 'Witch_Lady', 'ведьма-1', ' Ann ', 'ЁЁЁ'];
+  ok(samples.every(s => validateNickname(s).ok === checkNickname(s).ok && validateNickname(s).norm === checkNickname(s).norm), 'правила ника в игре и в Edge Function совпадают');
+  ok(await loginEmail('дмитрий', 'd.test') === await fnLoginEmail('дмитрий', 'd.test') && CLOUD.loginDomain === DEFAULT_LOGIN_DOMAIN, 'служебный адрес для входа считается одинаково в игре и в функции');
+  ok(/^u[0-9a-f]{40}@/.test(await loginEmail('дмитрий', 'x.test')), 'служебный адрес не раскрывает ник и не содержит кириллицы');
+}
+
+console.log('\n1. Новый гость');
+const NICK = nickCyr('Дмитрий');
+const phoneStorage = memStorage();
+let guestId;
+{
+  const d = device(srv, phoneStorage);
+  ok(await d.session.restore() === 'signed_out', 'первый запуск: входа нет — стартовый экран');
+  await d.session.playAsGuest('witch');
+  guestId = d.session.userId;
+  ok(d.session.status === 'ready' && guestId && srv.users.get(guestId)?.anonymous, 'гость — настоящий пользователь сервера со своим user_id');
+  ok(!d.session.registered && d.session.nickname === '' && d.session.hero === 'witch', 'персонаж создан на сервере: без ника, выбранный герой');
+  const keys = [...phoneStorage._m.keys()];
+  ok(keys.length === 1 && keys[0] === TOKENS_KEY && !phoneStorage._m.get(TOKENS_KEY).includes('heroLevel'), 'на устройстве хранится только токен входа, прогресса там нет');
+
+  console.log('\n3. Прогресс сохраняется на сервере автоматически');
+  play(d.state);
+  ok(d.timers.some(t => t.live && t.ms === 600), 'после награды сохранение запланировано почти сразу (не вручную)');
+  await d.fire();
+  const srvSnap = await d.api.getPlayer(d.session.auth.access_token);
+  ok(srvSnap.level === 2 && srvSnap.inventory.coins === 15 && srvSnap.quests.includes('combat_intro_01') && srvSnap.abilities.telekinesis.unlocked, 'на сервере: уровень 2, монеты, событие, дар');
+  d.state.data.player = { x: 777, y: 888 }; d.state.save();
+  ok(d.timers.some(t => t.live && t.ms === 15000), 'позиция уходит реже (раз в 15 секунд)');
+  await d.fire();
+  ok((await d.api.getPlayer(d.session.auth.access_token)).pos.x === 777, 'позиция тоже на сервере');
+}
+
+console.log('\n2. Гость вернулся (перезагрузка, закрытый браузер)');
+{
+  const d = device(srv, phoneStorage);   // то же хранилище — тот же браузер
+  srv.advance(5 * 3600_000);             // прошло 5 часов: токен доступа истёк, обновится сам
+  ok(await d.session.restore() === 'ready', 'вход восстановлен без вопросов');
+  ok(d.session.userId === guestId && d.state.data.heroLevel === 2 && d.state.item('coins') === 15 && d.state.data.player.x === 777, 'тот же персонаж и прогресс, новый гость не создан');
+  ok([...srv.users.values()].filter(u => u.anonymous).length >= 1 && srv.users.size === new Set([...srv.users.keys()]).size, 'пользователей на сервере не прибавилось при перезапуске');
+}
+
+console.log('\n4–5. Гость создаёт аккаунт — персонаж тот же');
+{
+  const d = device(srv, phoneStorage);
+  await d.session.restore();
+  play(d.state, { xp: 100, coins: 20, event: 'lunar_quest_complete' }); // уровень 3
+  const e1 = await rejects(() => d.session.registerGuest({ nickname: NICK, password: PASS, password2: PASS + 'x' }));
+  ok(e1?.message === 'Пароли не совпадают.', 'пароли различаются — «Пароли не совпадают.»');
+  const e2 = await rejects(() => d.session.registerGuest({ nickname: NICK, password: '1234', password2: '1234' }));
+  ok(e2?.message === 'Пароль должен содержать минимум 8 символов.', 'короткий пароль — понятная ошибка');
+  const e3 = await rejects(() => d.session.registerGuest({ nickname: 'Дм', password: PASS, password2: PASS }));
+  ok(e3?.message === 'Никнейм должен содержать минимум 3 символа.', 'короткий ник — «Никнейм должен содержать минимум 3 символа.»');
+  await d.session.registerGuest({ nickname: NICK, password: PASS, password2: PASS });
+  ok(d.session.registered && d.session.nickname === NICK && d.session.userId === guestId, `аккаунт «${NICK}»: тот же user_id`);
+  ok(d.state.data.heroLevel === 3 && d.state.item('coins') === 35 && d.state.hasEvent('lunar_quest_complete') && d.state.isUnlocked('telekinesis'), 'уровень, монеты, события и дары на месте');
+  const u = srv.users.get(guestId);
+  ok(u.email && u.email.startsWith('u') && !u.email.includes(normalizeNickname(NICK)) && u.password === PASS && u.confirmed, 'пароль хранит Auth; служебный адрес подтверждён без писем');
+  ok(!JSON.stringify([...phoneStorage._m.values()]).includes(PASS), 'пароль не сохраняется на устройстве');
+}
+
+console.log('\n7. Вход по нику и паролю на другом устройстве');
+const pcStorage = memStorage();
+{
+  const d = device(srv, pcStorage);
+  ok(await d.session.restore() === 'signed_out', 'на новом устройстве входа нет');
+  await d.session.login({ nickname: NICK.toUpperCase(), password: PASS });
+  ok(d.session.userId === guestId && d.session.nickname === NICK, 'вход по нику в другом регистре: тот же игрок, ник в своём написании');
+  ok(d.state.data.heroLevel === 3 && d.state.item('coins') === 35 && d.state.data.player.x === 1234, 'тот же герой, уровень, монеты и место в мире');
+}
+
+console.log('\n10. Неверные данные входа');
+{
+  const d = device(srv);
+  const e1 = await rejects(() => d.session.login({ nickname: NICK, password: 'не-тот-пароль' }));
+  const e2 = await rejects(() => d.session.login({ nickname: nickLat('NobodyHere'), password: PASS }));
+  ok(e1?.message === 'Неверный никнейм или пароль.' && e2?.message === e1?.message, 'неверный пароль и несуществующий ник — одно и то же сообщение');
+  ok(d.session.status === 'signed_out' && !d.storage.getItem(TOKENS_KEY), 'после ошибки входа ничего не сохранено');
+}
+
+console.log('\n9. Второй аккаунт с тем же ником невозможен');
+{
+  const d = device(srv);
+  const e = await rejects(() => d.session.registerNew({ hero: 'witch', nickname: NICK.toUpperCase(), password: PASS, password2: PASS }));
+  ok(e?.message === 'Этот никнейм уже используется.', 'тот же ник в другом регистре — «Этот никнейм уже используется.»');
+  ok(!d.session.signedIn, 'при занятом нике гость впустую не создаётся');
+  // гонка: два гостя одновременно берут один и тот же свободный ник — проходит ровно один
+  const a = device(srv), b = device(srv);
+  await a.session.playAsGuest('witch'); await b.session.playAsGuest('witch');
+  const RACE = nickLat('Race');
+  const res = await Promise.allSettled([
+    a.session.registerGuest({ nickname: RACE, password: PASS, password2: PASS }),
+    b.session.registerGuest({ nickname: RACE.toLowerCase(), password: PASS, password2: PASS }),
+  ]);
+  const won = res.filter(r => r.status === 'fulfilled').length, lost = res.find(r => r.status === 'rejected');
+  ok(won === 1 && lost?.reason?.message === 'Этот никнейм уже используется.', 'одновременная регистрация одного ника: успешна ровно одна');
+  const loser = res[0].status === 'rejected' ? a : b;
+  ok(!loser.session.registered && loser.session.status === 'ready', 'проигравший остаётся гостем со своим персонажем и может выбрать другой ник');
+}
+
+console.log('\n6. Регистрация сразу при начале игры — без почты');
+const NEW = nickLat('Witch');
+{
+  const d = device(srv);
+  const e = await rejects(() => d.session.registerNew({ hero: 'witch', nickname: NEW, password: PASS, password2: PASS }));
+  ok(e === null && d.session.registered && d.session.nickname === NEW && d.session.status === 'ready', `аккаунт «${NEW}» создан: ник + пароль, без почты`);
+  ok(d.state.data.heroLevel === 1 && d.session.hero === 'witch', 'новый персонаж с выбранным героем, игра может начинаться');
+  const sent = srv.calls.filter(c => c.path === '/functions/v1/account').map(c => Object.keys(c.body || {}).sort().join(','));
+  ok(sent.every(k => k === 'action,nickname,password'), 'форма отправляет только ник и пароль — e-mail игра не спрашивает и не передаёт');
+}
+
+console.log('\n8. Выход и повторный вход');
+{
+  const d = device(srv, phoneStorage);
+  await d.session.restore();
+  const other = device(srv, pcStorage);
+  await other.session.restore();
+  await d.session.logout();
+  ok(d.session.status === 'signed_out' && !phoneStorage.getItem(TOKENS_KEY), 'выход: вход на устройстве закрыт');
+  ok(await device(srv, pcStorage).session.restore() === 'ready', 'другое устройство игрока при этом остаётся в игре');
+  const again = device(srv, phoneStorage);
+  await again.session.login({ nickname: NICK, password: PASS });
+  ok(again.state.data.heroLevel === 3 && again.state.item('coins') === 35, 'после выхода и входа — прогресс на месте (сервер ничего не стёр)');
+}
+
+console.log('\n12. После перезагрузки прогресс не откатывается; два устройства не затирают друг друга');
+{
+  const phone = device(srv, phoneStorage), pc = device(srv, pcStorage);
+  await phone.session.restore(); await pc.session.restore();
+  // телефон получает монеты и событие; компьютер (со старыми данными) — свою награду
+  phone.state.addItem('coins', 40); phone.state.markEvent('heavy_path_open'); phone.state.save(); await phone.session.flush();
+  pc.state.addItem('lunar_shard', 2); pc.state.markEvent('unlock_fire_1'); pc.state.save(); await pc.session.flush();
+  ok(pc.state.item('coins') === 75 && pc.state.hasEvent('heavy_path_open') && pc.state.item('lunar_shard') === 4, 'компьютер получил изменения телефона и не затёр их своими');
+  const fresh = device(srv, phoneStorage); await fresh.session.restore();
+  ok(fresh.state.item('coins') === 75 && fresh.state.hasEvent('unlock_fire_1') && fresh.state.hasEvent('heavy_path_open'), 'после перезагрузки — всё вместе, ничего не откатилось');
+}
+
+console.log('\nОбрыв связи');
+{
+  const d = device(srv, phoneStorage);
+  await d.session.restore();
+  const coins = d.state.item('coins');
+  srv.offline = true;
+  d.state.addItem('coins', 5); d.state.save();
+  ok(await d.session.flush() === false && d.session.status === 'offline' && d.session.saving === 'offline', 'нет сети — статус «Нет соединения», изменения ждут');
+  ok(![...phoneStorage._m.keys()].some(k => k !== TOKENS_KEY), 'никакого параллельного локального сохранения не появилось');
+  srv.offline = false;
+  ok(await d.session.retryNow() && d.session.status === 'ready', '«Повторить»: связь вернулась, игра продолжается');
+  ok((await d.api.getPlayer(d.session.auth.access_token)).inventory.coins === coins + 5, 'изменения, сделанные без связи, дошли до сервера');
+  // запрос дошёл, ответ потерялся — повтор не должен начислить второй раз
+  d.state.addItem('coins', 10); d.state.save();
+  srv.loseNext = 1;
+  await d.session.flush();
+  ok(d.session.status === 'offline', 'ответ потерялся — снова «Нет соединения»');
+  await d.session.retryNow();
+  ok((await d.api.getPlayer(d.session.auth.access_token)).inventory.coins === coins + 15 && d.state.item('coins') === coins + 15, 'повтор после потерянного ответа не начислил монеты дважды');
+  // при запуске сети нет
+  srv.offline = true;
+  const boot = device(srv, phoneStorage);
+  ok(await boot.session.restore() === 'offline', 'запуск без сети — «Нет соединения», игра не стартует на устаревших данных');
+  srv.offline = false;
+  ok(await boot.session.retryNow() && boot.state.item('coins') === coins + 15, 'связь появилась — персонаж загружен с сервера');
+}
+
+console.log('\nДоверие клиенту');
+{
+  const d = device(srv, phoneStorage);
+  await d.session.restore();
+  const coins = d.state.item('coins');
+  d.state.data.inventory.coins = 999999999; d.state.data.heroLevel = 99; d.state.save();
+  await d.session.flush();
+  ok(d.state.item('coins') === coins + 500 && d.state.data.heroLevel === 3, `подделка в браузере: сервер принял не больше 500 монет за раз, уровень 99 отклонён (${d.state.item('coins')}, ур. ${d.state.data.heroLevel})`);
+  const e = await rejects(() => d.api.rpc('claim_nickname', { uid: d.session.userId, nick: nickLat('Hack'), norm: nickLat('hack') }, d.session.auth.access_token));
+  ok(e instanceof CloudError && e.status === 403, 'служебная функция ника недоступна из браузера');
+}
+
+console.log('\nТокены, пароль, новая игра');
+{
+  const d = device(srv, phoneStorage);
+  await d.session.restore();
+  srv.expireAccess();
+  d.state.addItem('coins', 1); d.state.save();
+  ok(await d.session.flush() && d.session.status === 'ready', 'истёкший токен обновляется сам, сохранение проходит');
+  await d.session.changePassword({ password: 'Новый-пароль-2', password2: 'Новый-пароль-2' });
+  const x = device(srv);
+  ok((await rejects(() => x.session.login({ nickname: NICK, password: PASS })))?.code === 'invalid_credentials', 'смена пароля: старый пароль больше не подходит');
+  await x.session.login({ nickname: NICK, password: 'Новый-пароль-2' });
+  ok(x.session.userId === guestId, 'новый пароль работает');
+  await x.session.resetProgress('witch');
+  ok(x.state.data.heroLevel === 1 && x.state.item('coins') === 0 && x.session.nickname === NICK && x.session.userId === guestId, 'новая игра: прогресс с нуля, ник и аккаунт те же');
+  // токен отозван на сервере (например, после смены пароля на другом устройстве)
+  const y = device(srv);
+  await y.session.login({ nickname: NICK, password: 'Новый-пароль-2' });
+  srv.refreshT.clear(); srv.expireAccess();
+  let lost = false; y.session.onChange(r => { if (r === 'session-lost') lost = true; });
+  y.state.addItem('coins', 1); y.state.save(); await y.session.flush();
+  ok(lost && y.session.status === 'signed_out' && !y.storage.getItem(TOKENS_KEY), 'вход отозван — возврат на стартовый экран, без зависаний');
+}
+
+console.log('\n13–14. Старой «облачной» механики больше нет');
+{
+  const FORBIDDEN = ['Какое сохранение оставить', 'В облаке', 'На этом устройстве', 'Взять из облака', 'Оставить с устройства', 'Отправить в облако', 'Есть изменения, скоро отправим', 'showConflict', 'resolveConflict', 'pendingConflict'];
+  const files = [];
+  const walk = (dir) => { for (const f of fs.readdirSync(dir, { withFileTypes: true })) { const p = path.join(dir, f.name); if (f.isDirectory()) walk(p); else if (/\.(js|ts|html)$/.test(f.name)) files.push(p); } };
+  walk(path.join(ROOT, 'src')); walk(path.join(ROOT, 'supabase')); files.push(path.join(ROOT, 'index.html'));
+  const hits = [];
+  for (const f of files) { const t = fs.readFileSync(f, 'utf8'); for (const w of FORBIDDEN) if (t.includes(w)) hits.push(`${path.relative(ROOT, f)}: «${w}»`); }
+  ok(!hits.length, 'в коде нет окна выбора сохранения и кнопок «облака»' + (hits.length ? ': ' + hits.join('; ') : ''));
+  ok(!fs.existsSync(path.join(ROOT, 'src/cloud/Account.js')), 'старый модуль облачного сейва удалён');
+}
+
+console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Сценарии аккаунта пройдены');
+process.exit(failures ? 1 : 0);

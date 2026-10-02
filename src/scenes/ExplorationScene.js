@@ -94,6 +94,7 @@ export class ExplorationScene extends Phaser.Scene {
 
     this.setProviders();
     this.registry.set('savePosition', () => this.savePosition());
+    services.savePosition = () => this.savePosition(); // перед отправкой прогресса при сворачивании вкладки
     this.stepT = 0;
     if (services.edit) { this.editor = new MapEditor(this); return; } // режим ?edit: игра не идёт, карту правят руками
     if (!state.hasEvent('unlock_telekinesis_1')) {
@@ -279,7 +280,7 @@ export class ExplorationScene extends Phaser.Scene {
   }
 
   // ------------------------------------------------------------------ ввод
-  canAct() { return services.mode === 'exploration' && !services.modalOpen && this.scene.isActive(); }
+  canAct() { return services.mode === 'exploration' && !services.modalOpen && !services.offline && this.scene.isActive(); }
 
   onContext() {
     if (!this.canAct()) return;

@@ -4,9 +4,9 @@ import { ABILITIES } from '../config/balance.abilities.js';
 import { ENEMIES } from '../config/balance.enemies.js';
 import { UPGRADES, TIMER_MODE, ITEMS } from '../config/balance.progression.js';
 import { MSG } from '../state/EventBus.js';
-import { services, resetProgress } from '../services.js';
-import { showAuth, showAccount, showConflict } from '../ui/accountUI.js';
-import { shortNick } from '../cloud/validators.js';
+import { services, resetProgress, reloadToMenu } from '../services.js';
+import { showProfile } from '../ui/accountUI.js';
+import { shortNick } from '../cloud/nickname.js';
 import { InputController } from '../systems/InputController.js';
 import { ABILITY_ORDER } from '../systems/AbilitySystem.js';
 import { itemName, ROMAN } from '../objects/InteractiveObject.js';
@@ -76,7 +76,7 @@ export class UIScene extends Phaser.Scene {
     bus.on(MSG.OPEN_PAUSE, this.openPause, this);
     bus.on(MSG.CONTEXT_ACTION, () => { const t = services.tutorial; t.complete('interact'); if (this.focusInfo?.ability === 'telekinesis') t.complete('telekinesis'); }, this);
     bus.on(MSG.ABILITY_USE, (id) => { if (this.mode === 'exploration' && (id === 'telekinesis' || id === 'fire')) services.tutorial.complete(id); }, this);
-    const offAcc = services.account?.onChange(() => this.refreshHud());
+    const offAcc = services.session?.onChange((r) => { if (r === 'saving' || r === 'profile' || r === 'registered') this.refreshHud(); });
     this.events.once('shutdown', () => { bus.offContext(this); offAcc?.(); });
 
     this.refreshQuest();
@@ -117,7 +117,7 @@ export class UIScene extends Phaser.Scene {
     addMedallion(this, x + 52, y + 52, 84);
     const bx = x + 100, bw = 146;
     this.levelText = this.add.text(bx, y + 11, '', { fontFamily: FONT, fontSize: '16px', fontStyle: 'bold', color: COLORS.textGold, shadow: SH });
-    this.syncDot = this.add.circle(x + w - 14, y + 14, 5, 0x5fd68a).setStrokeStyle(1, 0x000000, 0.8).setVisible(false); // состояние облака
+    this.syncDot = this.add.circle(x + w - 14, y + 14, 5, 0x5fd68a).setStrokeStyle(1, 0x000000, 0.8).setVisible(false); // сохранение на сервере: зелёный — сохранено, жёлтый — сохраняется, красный — нет связи
     this.xpBar = new UIBar(this, bx, y + 38, bw, 10, 'xp');
     this.hpBar = new UIBar(this, bx, y + 60, bw, 20, 'hp');
     this.manaBar = new UIBar(this, bx, y + 86, bw, 20, 'mana');
@@ -263,12 +263,12 @@ export class UIScene extends Phaser.Scene {
     const hs = s.heroStats();
     const next = s.nextLevelXP();
     const cur = s.levelRow().xp;
-    const acc = services.account;
-    const nick = acc?.signedIn && acc.nickname ? shortNick(acc.nickname, 6) + ' · ' : '';
+    const ses = services.session;
+    const nick = ses?.registered ? shortNick(ses.nickname, 6) + ' · ' : '';
     this.levelText.setText(`${nick}Ур. ${s.data.heroLevel}`);
     if (this.syncDot) {
-      const st = acc?.signedIn ? acc.sync.state : null;
-      this.syncDot.setVisible(!!st).setFillStyle(st === 'ok' ? 0x5fd68a : st === 'error' ? 0xff6a5a : 0xe8c56a);
+      const st = ses?.ready ? ses.saving : null;
+      this.syncDot.setVisible(!!st).setFillStyle(st === 'saved' ? 0x5fd68a : st === 'offline' ? 0xff6a5a : 0xe8c56a);
     }
     this.xpBar.width = this.xpBar.fullWidth * (next ? Math.min(1, (s.data.heroXP - cur) / (next - cur)) : 1);
     this.coinText.setText(String(s.item('coins')));
@@ -504,37 +504,32 @@ export class UIScene extends Phaser.Scene {
 
   confirmReset() {
     this.openModal({
-      title: 'Сбросить прогресс?', color: COLORS.danger, text: 'Все события, дары и предметы будут удалены. Игра начнётся с дома ведьмы.',
+      title: 'Сбросить прогресс?', color: COLORS.danger,
+      text: 'Все события, дары и предметы будут удалены. Игра начнётся с дома ведьмы.' + (services.session?.registered ? ' Аккаунт и никнейм останутся.' : ''),
       buttons: [{ label: 'Отмена', primary: true }, { label: 'Сбросить', onClick: () => this.hardReset() }],
     });
   }
 
   async hardReset() {
     services.resetting = true;
-    await resetProgress(); // у вошедшего игрока пустое сохранение уходит и в облако
+    try { await resetProgress(); } catch (e) { services.resetting = false; this.toast('Не удалось связаться с сервером', COLORS.fire); return; }
     window.location.reload();
   }
 
-  /** Окна входа и профиля — обычный HTML поверх игры; пока они открыты, игра на паузе. */
+  /** Профиль — HTML-окно поверх игры; пока оно открыто, игра на паузе. */
   openAccount() {
-    const acc = services.account;
-    if (!acc || this.modal) return;
+    const ses = services.session;
+    if (!ses || this.modal) return;
     services.modalOpen = true;
     this.resetJoystick();
     this.bus.emit(MSG.MODAL_OPEN);
     const close = () => { services.modalOpen = false; this.bus.emit(MSG.MODAL_CLOSED); this.refreshHud(); };
-    const after = async () => {
-      if (acc.pendingConflict) { // вошли с другого устройства: выбираем, какое сохранение оставить
-        const c = acc.pendingConflict;
-        const choice = await showConflict({ cloud: { data: c.cloud.data, updatedAt: c.cloud.updated_at }, local: { data: c.local, source: c.source } });
-        await acc.resolveConflict(choice);
-      }
-      // загруженный прогресс заменяет текущий мир: перезапускаем игру с новым сохранением
-      const url = new URL(window.location.href); url.searchParams.delete('reset'); url.searchParams.delete('skipmenu');
-      window.location.href = url.toString();
-    };
-    if (acc.signedIn) showAccount(acc, { onClose: close, onSignedOut: after, onNickname: () => this.refreshHud() });
-    else showAuth(acc, { onClose: close, onDone: () => after() });
+    showProfile(ses, {
+      onClose: close,
+      onLogout: () => reloadToMenu(),     // выход — на стартовый экран
+      onSwitched: () => reloadToMenu(),   // вошли в другой аккаунт — мир перезагружается с его прогрессом
+      onRegistered: () => this.refreshHud(),
+    });
   }
 
   // ================================================================== пауза и настройки
@@ -556,8 +551,8 @@ export class UIScene extends Phaser.Scene {
       { label: 'Настройки', onClick: () => this.openSettings(true) },
     ];
     if (!inCombat) {
-      const acc = services.account;
-      if (acc) buttons.push({ label: acc.signedIn ? `Профиль · ${shortNick(acc.nickname, 10)}` : 'Войти / Регистрация', onClick: () => this.openAccount() });
+      const ses = services.session;
+      if (ses) buttons.push({ label: ses.registered ? `Профиль · ${shortNick(ses.nickname, 10)}` : 'Профиль (гость)', onClick: () => this.openAccount() });
       buttons.push({ label: 'Главное меню', onClick: () => this.goToMenu() });
       buttons.push({ label: 'Сбросить прогресс', onClick: () => this.confirmReset() });
     }
@@ -580,12 +575,9 @@ export class UIScene extends Phaser.Scene {
 
   goToMenu() {
     this.registry.get('savePosition')?.();
-    const url = new URL(window.location.href);
-    url.searchParams.delete('reset');
-    url.searchParams.delete('skipmenu');
-    const go = () => { window.location.href = url.toString(); };
-    const acc = services.account;
-    if (acc?.signedIn) Promise.race([acc.flush(), new Promise(r => setTimeout(r, 2500))]).then(go, go); // успеваем отправить прогресс
+    const go = () => reloadToMenu();
+    const ses = services.session;
+    if (ses?.ready) Promise.race([ses.flush(), new Promise(r => setTimeout(r, 2500))]).then(go, go); // успеваем отправить прогресс
     else go();
   }
 

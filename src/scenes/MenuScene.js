@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { VIEW, COLORS } from '../config/game.config.js';
-import { services, resetProgress } from '../services.js';
-import { showAuth, showAccount, showConflict } from '../ui/accountUI.js';
+import { services, resetProgress, reloadToMenu } from '../services.js';
+import { showLogin, showProfile } from '../ui/accountUI.js';
 import { startGame } from './PreloadScene.js';
 import { buildSettingsPanel } from '../ui/SettingsPanel.js';
 import { UI } from '../config/ui.config.js';
@@ -13,15 +13,20 @@ const W = VIEW.width;
 const H = VIEW.height;
 
 /**
- * MenuScene — титульный экран: Продолжить (если есть сохранение) / Новая игра / Настройки.
+ * MenuScene — стартовый экран.
+ *  Онлайн, вход есть (гость или игрок; персонаж уже загружен с сервера): Продолжить / Профиль / Настройки.
+ *  Онлайн, входа нет: Новая игра (→ выбор героя → как продолжить) / Войти / Настройки.
+ *  Без сервера (режим разработки): Продолжить / Новая игра / Настройки, прогресс в этом браузере.
  * Первое нажатие здесь же «разблокирует» звук в браузере.
  */
 export class MenuScene extends Phaser.Scene {
   constructor() { super('MenuScene'); }
 
   create() {
-    const { state, audio } = services;
+    const { audio } = services;
+    const session = services.session;
     this.overlay = null;
+    this.starting = false;
     this.buildBackground();
 
     const title = this.add.text(W / 2, 336, 'Witch RPG', { fontFamily: FONT, fontSize: '82px', fontStyle: 'bold', color: '#f6e3a1', stroke: '#1a0f08', strokeThickness: 12, shadow: { offsetX: 0, offsetY: 6, color: '#000', blur: 14, fill: true } }).setOrigin(0.5).setDepth(5);
@@ -29,75 +34,70 @@ export class MenuScene extends Phaser.Scene {
     addDivider(this, W / 2, 458, 460).setDepth(5);
     this.tweens.add({ targets: title, y: 328, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
-    const acc = services.account;
-    const hasSave = state.hasSave() && state.data.completedEvents.length > 0;
-    this.buildAccountLine(acc);
     let y = 650;
-    if (hasSave) { this.button(y, 'Продолжить', true, () => this.begin()); y += 108; }
-    this.button(y, 'Новая игра', !hasSave, () => (hasSave ? this.confirmNew() : this.begin()));
-    y += 108;
-    this.button(y, 'Настройки', false, () => this.openSettings());
-    y += 108;
-    if (acc) {
-      this.accountButton = this.button(y, acc.signedIn ? 'Профиль' : 'Войти / Регистрация', false, () => this.openAccount());
-      y += 108;
+    const next = (label, primary, fn) => { const b = this.button(y, label, primary, fn); y += 108; return b; };
+    if (session?.ready) {
+      this.line(session.registered ? `${session.nickname} · уровень ${session.level}` : `Гость · уровень ${session.level}`, COLORS.textGold);
+      this.line(session.registered ? 'Прогресс хранится на сервере' : 'Прогресс гостя хранится на сервере', COLORS.textDim, 566);
+      next('Продолжить', true, () => this.begin());
+      this.accountButton = next('Профиль', false, () => this.openProfile());
+      next('Настройки', false, () => this.openSettings());
+    } else if (session) {
+      this.line('Онлайн-RPG: персонаж хранится на сервере', COLORS.textDim);
+      next('Новая игра', true, () => this.newGame());
+      this.accountButton = next('Войти', false, () => this.openLogin());
+      next('Настройки', false, () => this.openSettings());
+    } else {
+      const { state } = services;
+      const hasSave = state.hasSave() && state.data.completedEvents.length > 0;
+      this.line('Режим разработки: сервер не подключён, прогресс в этом браузере', '#ffb07a');
+      if (hasSave) {
+        const d = state.data;
+        this.line(`Сохранение: уровень ${d.heroLevel} · побед ${d.stats.combats.filter(c => c.result === 'victory').length}`, COLORS.textDim, 566);
+        next('Продолжить', true, () => this.begin());
+      }
+      next('Новая игра', !hasSave, () => (hasSave ? this.confirmNew() : this.newGame()));
+      next('Настройки', false, () => this.openSettings());
     }
-
-    if (hasSave) {
-      const d = state.data;
-      this.add.text(W / 2, 566, `Сохранение: уровень ${d.heroLevel} · побед ${d.stats.combats.filter(c => c.result === 'victory').length}`, { fontFamily: FONT, fontSize: '19px', color: COLORS.textDim, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(5);
-    }
-    this.add.text(W / 2, H - 40, 'v0.5.0 · аккаунты и редактор', { fontFamily: FONT, fontSize: '16px', color: COLORS.textDim, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5);
+    this.add.text(W / 2, H - 40, 'v0.6.0 · онлайн-аккаунты', { fontFamily: FONT, fontSize: '16px', color: COLORS.textDim, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5);
 
     const kb = this.input.keyboard;
-    kb.on('keydown-ENTER', () => { if (!this.overlay) this.begin(); });
-    kb.on('keydown-SPACE', () => { if (!this.overlay) this.begin(); });
+    const enter = () => { if (this.overlay) return; if (session && !session.ready) this.newGame(); else this.begin(); };
+    kb.on('keydown-ENTER', enter);
+    kb.on('keydown-SPACE', enter);
     kb.on('keydown-ESC', () => this.closeOverlay());
 
     this.cameras.main.fadeIn(400);
     audio.setMusic('explore');
-
-    // вход мог восстановиться уже после показа меню, или после входа нужно выбрать сохранение
-    if (acc) {
-      this.offAccount = acc.onChange((reason) => {
-        if (this.starting || this.overlay) return;
-        if (reason === 'restore' || reason === 'sync-boot' || reason === 'signout') this.scene.restart();
-      });
-      this.events.once('shutdown', () => { this.offAccount?.(); });
-      if (acc.pendingConflict) this.askConflict();
-    }
   }
 
-  /** Строка под заголовком: кто играет и где хранится прогресс. */
-  buildAccountLine(acc) {
-    let text = '', color = COLORS.textDim;
-    if (acc?.signedIn) {
-      const s = acc.sync.state;
-      const where = s === 'error' ? 'нет связи, сохраним позже' : 'прогресс в облаке';
-      text = `${acc.nickname || 'Игрок'} · ${where}`; color = s === 'error' ? '#ffb07a' : COLORS.textGold;
-    } else if (acc) {
-      text = 'Гость · прогресс только на этом устройстве';
-    }
-    if (text) this.add.text(W / 2, 520, text, { fontFamily: FONT, fontSize: '21px', color, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(5);
+  line(text, color, y = 520) {
+    return this.add.text(W / 2, y, text, { fontFamily: FONT, fontSize: '21px', color, stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 640 } }).setOrigin(0.5).setDepth(5);
   }
 
-  openAccount() {
-    const acc = services.account;
-    this.overlay = { destroy: () => this.htmlWindow?.close?.() }; // пока открыто HTML-окно, кнопки меню не реагируют
-    const done = () => { this.overlay = null; this.htmlWindow = null; this.scene.restart(); };
-    this.htmlWindow = acc.signedIn
-      ? showAccount(acc, { onClose: () => { this.overlay = null; }, onSignedOut: done, onNickname: () => this.scene.restart() })
-      : showAuth(acc, { onDone: done, onClose: () => { this.overlay = null; } });
+  /** HTML-окно поверх меню: пока оно открыто, кнопки меню не реагируют. */
+  html(open) {
+    this.overlay = { destroy: () => { const h = this.htmlWindow; this.htmlWindow = null; h?.close?.(); } };
+    this.htmlWindow = open(() => { this.overlay = null; this.htmlWindow = null; });
   }
 
-  async askConflict() {
-    const acc = services.account, c = acc.pendingConflict;
-    if (!c) return;
-    this.overlay = { destroy() {} };
-    const choice = await showConflict({ cloud: { data: c.cloud.data, updatedAt: c.cloud.updated_at }, local: { data: c.local, source: c.source } });
-    await acc.resolveConflict(choice);
-    this.overlay = null;
-    this.scene.restart();
+  openLogin() {
+    this.html((closed) => showLogin(services.session, { onCancel: closed, onDone: () => { closed(); this.begin(); } }));
+  }
+
+  openProfile() {
+    this.html((closed) => showProfile(services.session, {
+      onClose: () => { closed(); if (!this.starting) this.scene.restart(); },
+      onLogout: () => reloadToMenu(),
+      onSwitched: () => reloadToMenu(),
+    }));
+  }
+
+  /** Новая игра: выбор героя, затем «Как продолжить?» (гость / создать аккаунт / войти). */
+  newGame() {
+    if (this.starting) return;
+    services.audio.unlock();
+    this.scene.start('HeroSelectScene');
   }
 
   buildBackground() {
@@ -124,6 +124,9 @@ export class MenuScene extends Phaser.Scene {
     addScreenVignette(this, W, H, 0.7).setDepth(2);
   }
 
+  /** Общий фон меню и выбора героя. */
+  static background(scene) { MenuScene.prototype.buildBackground.call(scene); }
+
   button(y, label, primary, onPress) {
     const b = addButton(this, W / 2, y, 440, 88, label, {
       primary, accent: COLORS.gold, fontSize: 30, depth: 5,
@@ -134,6 +137,7 @@ export class MenuScene extends Phaser.Scene {
 
   begin() {
     if (this.starting) return;
+    if (services.session && !services.session.ready) return; // онлайн: без загруженного персонажа игру не начинаем
     this.starting = true;
     services.audio.unlock();
     services.audio.play('modal_open');
@@ -156,7 +160,7 @@ export class MenuScene extends Phaser.Scene {
     mk(W / 2 + 134, 'Начать', false, async () => {
       this.closeOverlay();
       await resetProgress();
-      this.begin();
+      this.newGame();
     });
     this.overlay = c;
   }

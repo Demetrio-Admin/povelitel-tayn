@@ -77,7 +77,7 @@ export class CombatScene extends Phaser.Scene {
     });
   }
 
-  canAct() { return this.started && !this.ended && !services.modalOpen; }
+  canAct() { return this.started && !this.ended && !services.modalOpen && !services.offline; }
 
   // ------------------------------------------------------------------ построение
   buildArena() {
@@ -214,7 +214,7 @@ export class CombatScene extends Phaser.Scene {
     if (!this.started) return;
     this.updateHero(delta);
     if (this.ended) return;
-    if (!services.modalOpen) {
+    if (!services.modalOpen && !services.offline) { // без связи бой стоит: враг не бьёт, пока висит «Нет соединения»
       if (this.hitstop > 0) this.hitstop -= delta;
       else this.cm.tick(Math.min(delta, 50) / 1000 * this.timeScale);
     }

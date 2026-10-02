@@ -81,35 +81,47 @@ await mute(async () => {
   } catch (e) { err = e; }
   ok(!err, 'меню: с сохранением, без сохранения, подтверждение и настройки' + (err ? ': ' + err.stack.split('\n').slice(0, 3).join(' | ') : ''));
 
-  // ---- вошедший игрок: ник и облако в HUD, кнопка профиля в меню и паузе
+  // ---- онлайн-игрок: стартовый экран, выбор героя, HUD и пауза
   err = null;
   try {
-    const { Account } = await import('../src/cloud/Account.js');
+    const { PlayerSession } = await import('../src/cloud/PlayerSession.js');
     const { SupabaseApi } = await import('../src/cloud/api.js');
     const { FakeSupabase } = await import('./helpers/fake-supabase.mjs');
     const { services } = await import('../src/services.js');
-    await freshWorld('mid');
+    const { HeroSelectScene } = await import('../src/scenes/HeroSelectScene.js');
+    await freshWorld('new');
     const srv = new FakeSupabase();
-    const api = new SupabaseApi({ url: 'https://x.supabase.co', anonKey: 'k', fetchFn: srv.fetch, timeoutMs: 1000 });
+    const api = new SupabaseApi({ url: srv.url, anonKey: srv.anonKey, loginDomain: 'players.witch-rpg.invalid', fetchFn: srv.fetch });
     const store = (() => { const m = new Map(); return { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k) }; })();
-    const acc = new Account({ api, storage: store, state: services.state, setTimer: () => 0, clearTimer: () => {} });
-    services.account = acc;
-    const guestHud = new UIScene(); guestHud.create(); mkHud(guestHud); guestHud.refreshHud();
-    ok(!guestHud.syncDot.visible && guestHud.levelText.text === 'Ур. 3', 'HUD гостя: без ника и без значка облака');
-    await acc.signUp({ email: 'a@mail.ru', password: 'password-1', nickname: 'Нюта Лесная' });
+    services.state.storage = null;
+    const ses = new PlayerSession({ api, state: services.state, storage: store, setTimer: () => 0, clearTimer: () => {} });
+    services.session = ses;
+    // все тексты сцены, включая вложенные в контейнеры (заглушка Phaser хранит объекты в scene._list)
+    const labels = (scene) => { const out = []; const walk = (o) => { if (typeof o.text === 'string') out.push(o.text); (o.children || []).forEach(walk); }; scene._list.forEach(walk); return out; };
+    const m1 = new MenuScene(); m1.create();
+    ok(m1.accountButton?.text.text === 'Войти' && labels(m1).includes('Новая игра'), 'старт без входа: «Новая игра» и «Войти»');
+    const hs = new HeroSelectScene(); hs.create(); hs.onPick();
+    const choice = labels(hs);
+    ok(['Играть как гость', 'Создать аккаунт', 'У меня уже есть аккаунт'].every(t => choice.includes(t)), 'после выбора героя — «Как продолжить?» с тремя вариантами');
+    await ses.playAsGuest('witch');
+    const m2 = new MenuScene(); m2.create();
+    ok(labels(m2).includes('Продолжить') && labels(m2).some(t => String(t).startsWith('Гость · уровень 1')) && m2.accountButton?.text.text === 'Профиль', 'гость: «Продолжить», «Профиль», строка «Гость · уровень 1»');
+    const g = new UIScene(); g.create(); mkHud(g); g.refreshHud();
+    ok(g.levelText.text === 'Ур. 1' && g.syncDot.visible, 'HUD гостя: уровень и значок сохранения');
+    g.openPause(); ok((g.modal?.buttons || []).some(b => b.label === 'Профиль (гость)'), 'пауза гостя: «Профиль (гость)»'); g.closeModal(null);
+    await ses.registerGuest({ nickname: 'Нюта_Лесная', password: 'password-1', password2: 'password-1' });
     const u = new UIScene(); u.create(); mkHud(u); u.refreshHud();
-    ok(u.levelText.text.startsWith('Нюта') && u.syncDot.visible, 'HUD вошедшего: ник и значок облака (' + u.levelText.text + ')');
-    u.openPause(); const labels = (u.modal?.buttons || []).map(b => b.label);
-    ok(labels.some(l => l.startsWith('Профиль')), 'пауза: есть «Профиль · ник» (' + labels.join(', ') + ')');
+    ok(u.levelText.text.startsWith('Нюта_') && u.syncDot.visible, 'HUD игрока: ник и значок сохранения (' + u.levelText.text + ')');
+    u.openPause(); const pl = (u.modal?.buttons || []).map(b => b.label);
+    ok(pl.some(l => l.startsWith('Профиль · Нюта')), 'пауза игрока: «Профиль · ник» (' + pl.join(', ') + ')');
     u.closeModal(null);
     const m3 = new MenuScene(); m3.create();
-    ok(m3.accountButton && m3.accountButton.text.text === 'Профиль', 'меню вошедшего: кнопка «Профиль»');
-    acc.session = null; acc.nickname = '';
+    ok(labels(m3).some(t => String(t).startsWith('Нюта_Лесная · уровень')), 'стартовый экран игрока: ник и уровень');
+    services.session = null;
     const m4 = new MenuScene(); m4.create();
-    ok(m4.accountButton && m4.accountButton.text.text === 'Войти / Регистрация', 'меню гостя: кнопка «Войти / Регистрация»');
-    services.account = null;
+    ok(labels(m4).some(t => String(t).startsWith('Режим разработки')), 'без сервера меню честно пишет «Режим разработки»');
   } catch (e) { err = e; }
-  ok(!err, 'аккаунт: HUD, пауза и меню строятся' + (err ? ': ' + err.stack.split('\n').slice(0, 3).join(' | ') : ''));
+  ok(!err, 'аккаунт: меню, выбор героя, HUD и пауза строятся' + (err ? ': ' + err.stack.split('\n').slice(0, 3).join(' | ') : ''));
 
   // ---- бой
   err = null;

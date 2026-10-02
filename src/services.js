@@ -7,9 +7,10 @@ import { Settings } from './state/Settings.js';
 import { AudioManager } from './systems/AudioManager.js';
 import { TutorialSystem } from './systems/TutorialSystem.js';
 import { resolveMap } from './world/mapData.js';
-import { Account } from './cloud/Account.js';
+import { PlayerSession } from './cloud/PlayerSession.js';
 import { SupabaseApi } from './cloud/api.js';
 import { CLOUD } from './config/cloud.config.js';
+import { showLoading, showOffline, showNotice } from './ui/accountUI.js';
 
 export const services = {
   bus,
@@ -19,7 +20,11 @@ export const services = {
   settings: null,
   audio: null,
   tutorial: null,
-  account: null,   // вход и облачное сохранение (cloud/Account.js); в редакторе карты его нет
+  // Онлайн-режим: игрок и его прогресс живут на сервере (cloud/PlayerSession.js). null — режим разработки без сервера
+  // (не задан VITE_SUPABASE_URL): прогресс в localStorage этого браузера; так же работает автотест и редактор карты.
+  session: null,
+  offline: false,  // нет связи с сервером: игра стоит, пока висит окно «Нет соединения»
+  savePosition: null, // ExplorationScene: записать позицию героя в состояние (перед отправкой на сервер)
   hadSave: false,
   skipMenu: false,
   debug: false,
@@ -40,13 +45,17 @@ export function initServices() {
   // ?edit — редактор: прогресс игрока не читаем и не пишем (хранилище не подключено);
   // ?draft — играть с черновиком правок карты из этого браузера
   services.map = resolveMap({ storage, useDraft: (services.edit && !params.has('nodraft')) || params.has('draft') });
-  services.state = new GameState(services.edit ? null : storage);
-  if (!services.edit) {
-    const api = new SupabaseApi({ url: CLOUD.url, anonKey: CLOUD.anonKey, timeoutMs: CLOUD.timeoutMs });
-    services.account = new Account({ api, storage, state: services.state, pushDelayMs: CLOUD.pushDelayMs });
+  const api = new SupabaseApi({ url: CLOUD.url, anonKey: CLOUD.anonKey, loginDomain: CLOUD.loginDomain, timeoutMs: CLOUD.timeoutMs });
+  const online = api.enabled && !services.edit;
+  // онлайн: в браузере только токен входа, прогресс приходит с сервера; без сервера — localStorage (разработка)
+  services.state = new GameState(online || services.edit ? null : storage);
+  if (online) {
+    services.session = new PlayerSession({ api, state: services.state, storage, saveDelayMs: CLOUD.saveDelayMs, minorDelayMs: CLOUD.minorDelayMs });
+    installSessionUI(services.session);
+  } else {
+    if (params.has('reset') && !services.edit) services.state.reset();
+    services.hadSave = services.edit ? false : services.state.load();
   }
-  if (params.has('reset') && !services.edit) services.state.reset();
-  services.hadSave = services.edit ? false : services.state.load();
   services.skipMenu = params.has('skipmenu') || services.edit;
   services.settings = new Settings(storage);
   services.audio = new AudioManager(services.settings);
@@ -56,7 +65,7 @@ export function initServices() {
   services.quests = new QuestFlags(services.state, bus);
   services.abilities = new AbilitySystem(services.state, services.quests, bus);
   // отправляем прогресс, когда игрок сворачивает вкладку или закрывает игру
-  const flushNow = () => { services.account?.flush({ keepalive: true }); };
+  const flushNow = () => { if (!services.session) return; services.savePosition?.(); services.session.flush({ keepalive: true }).catch(() => {}); };
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });
   window.addEventListener('pagehide', flushNow);
   // для отладки из консоли браузера
@@ -64,22 +73,54 @@ export function initServices() {
   return services;
 }
 
-/** Восстанавливает вход при запуске, но не ждёт сервер дольше bootTimeoutMs: игра должна открываться и без связи. */
-export async function bootCloud() {
-  const acc = services.account;
-  if (!acc || !acc.enabled) return;
-  const slow = new Promise((resolve) => setTimeout(resolve, CLOUD.bootTimeoutMs, 'slow'));
-  try { await Promise.race([acc.restore(), slow]); } catch (e) { /* без облака играем как гость */ }
-  services.hadSave = services.state.hasSave();
+/** Окно «Нет соединения» и потеря входа — общие для всех сцен. */
+export function installSessionUI(session) {
+  let offlineWin = null;
+  session.onChange((reason) => {
+    if (reason === 'status') {
+      const off = session.status === 'offline';
+      services.offline = off;
+      if (off && !offlineWin) offlineWin = showOffline({ onRetry: () => session.retryNow() });
+      if (!off && offlineWin) { offlineWin.close(); offlineWin = null; }
+    }
+    if (reason === 'session-lost') {
+      showNotice({ title: 'Сессия завершилась', text: 'Войдите снова, чтобы продолжить игру.', button: 'На стартовый экран', onClose: () => reloadToMenu() });
+    }
+  });
 }
 
-/** «Новая игра» и «Сбросить прогресс»: у вошедшего игрока пустое сохранение должно уйти и в облако, иначе вход вернёт старый прогресс. */
-export async function resetProgress() {
-  const { state, account } = services;
-  state.reset();
-  if (account?.signedIn) {
-    state.save();
-    await Promise.race([account.flush(), new Promise((r) => setTimeout(r, 4000))]);
-  }
+/** Перезапуск игры с главного меню (после выхода, входа в другой аккаунт, потери входа). */
+export function reloadToMenu() {
+  const url = new URL(window.location.href);
+  for (const k of ['reset', 'skipmenu']) url.searchParams.delete(k);
+  window.location.href = url.toString();
+}
+
+/**
+ * Запуск: если на устройстве есть вход, загружаем персонажа с сервера и только потом открываем меню.
+ * Нет связи — окно «Нет соединения» (сессия сама повторяет попытки), игра ждёт.
+ */
+export async function bootSession() {
+  const session = services.session;
+  if (!session) return;
+  const loading = showLoading('Загрузка персонажа…');
+  try {
+    let r = await session.restore();
+    loading.close();
+    while (r === 'offline') {
+      r = await new Promise((resolve) => {
+        const off = session.onChange((reason) => {
+          if (reason === 'status' && session.status !== 'offline') { off(); resolve(session.status === 'ready' ? 'ready' : 'signed_out'); }
+        });
+      });
+    }
+  } finally { loading.close(); }
+}
+
+/** «Новая игра» / «Сбросить прогресс». Онлайн: прогресс на сервере с нуля, аккаунт и ник те же. */
+export async function resetProgress(hero) {
+  const { state, session } = services;
+  if (session?.ready) await session.resetProgress(hero);
+  else state.reset();
   services.hadSave = false;
 }

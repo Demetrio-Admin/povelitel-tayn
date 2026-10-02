@@ -1,16 +1,18 @@
-// Подключение к облаку (Supabase): аккаунты и сохранения в базе данных.
-// URL проекта и anon-ключ НЕ секретны — они рассчитаны на публичный клиент, а доступ к данным
-// защищают политики Row Level Security из supabase/schema.sql. Секретный service_role ключ сюда класть нельзя.
+// Подключение к серверу игры (Supabase): аккаунты, гости и прогресс игрока.
+// URL проекта и anon (publishable) ключ НЕ секретны — они рассчитаны на браузер; данные защищают политики и функции
+// из supabase/schema.sql. Ключ service_role в игру класть нельзя: он живёт только в Edge Function.
 //
-// Значения берутся из переменных сборки VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY (GitHub Actions: Settings →
-// Secrets and variables → Actions → Variables) либо вписываются ниже. Пока они пусты, игра работает как раньше:
-// без входа, прогресс только на этом устройстве.
+// Значения берутся из переменных сборки (GitHub Actions: Settings → Secrets and variables → Actions → Variables):
+//   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, необязательно VITE_LOGIN_EMAIL_DOMAIN.
+// Пока URL и ключ пусты, игра работает в режиме разработки без сервера (прогресс в этом браузере) и честно это пишет.
 const env = (typeof import.meta !== 'undefined' && import.meta.env) || {};
 
 export const CLOUD = {
   url: env.VITE_SUPABASE_URL || '',
   anonKey: env.VITE_SUPABASE_ANON_KEY || '',
-  pushDelayMs: 8000,   // как часто отправлять прогресс в облако (не чаще)
-  timeoutMs: 9000,     // ожидание ответа сервера
-  bootTimeoutMs: 3500, // сколько ждать облако при запуске игры
+  // домен служебных адресов для входа по нику; должен совпадать с LOGIN_EMAIL_DOMAIN в Edge Function account
+  loginDomain: env.VITE_LOGIN_EMAIL_DOMAIN || 'players.witch-rpg.invalid',
+  timeoutMs: 10000,      // ожидание ответа сервера
+  saveDelayMs: 600,      // важное (награда, предмет, событие) уходит на сервер почти сразу
+  minorDelayMs: 15000,   // позиция и время игры — не чаще раза в 15 секунд
 };

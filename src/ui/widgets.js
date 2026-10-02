@@ -162,7 +162,7 @@ export class UIBar {
  * onPress вызывается по отпусканию (pointerup), как у прежних кнопок меню и окон.
  */
 export function addButton(scene, x, y, w, h, label, o = {}) {
-  const { primary = false, accent = null, fontSize = 24, onPress = null, depth = null, sound = null } = o;
+  const { primary = false, accent = null, fontSize = UI.type.body, onPress = null, depth = null, sound = null } = o;
   const keyOf = (pr, pressed) => `ui:btn:${pr ? 'P' : 'S'}${pressed ? 'd' : 'u'}:${accKey(accent)}:${w}x${h}`;
   const make = (pr, pressed) => ensureTexture(scene, keyOf(pr, pressed), w, h, (ctx) => P.paintButton(ctx, w, h, { primary: pr, accent, pressed }), UI.pad - 6);
   const pad = UI.pad - 6;

@@ -13,14 +13,15 @@ import { itemName, ROMAN } from '../objects/InteractiveObject.js';
 import { buildSettingsPanel } from '../ui/SettingsPanel.js';
 import { UI } from '../config/ui.config.js';
 import { addPanel, addDivider, addOrb, setOrb, addBottomBar, addScreenVignette, addMedallion, addButton, drawPlate, releaseTexture, UIBar } from '../ui/widgets.js';
+import { addScrollViewport } from '../ui/scrollViewport.js';
 import { windows08 } from '../ui/windows08.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
 const W = VIEW.width;
 const H = VIEW.height;
-const BAR_Y = 1124;          // верх нижней панели
-const BTN_Y = 1192;
+const BAR_Y = 1096;          // верх нижней панели
+const BTN_Y = 1170;
 const BTN_R = 58;
 const hex = c => '#' + c.toString(16).padStart(6, '0');
 const fmtTime = (ms) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
@@ -105,32 +106,48 @@ export class UIScene extends Phaser.Scene {
 
   buildQuestPanel() {
     this.questPanel = this.add.container(0, 0);
-    const bg = addPanel(this, 14, 14, 420, 124, { accent: 0xe8c56a });
-    this.zoneText = this.add.text(32, 24, '', { fontFamily: FONT, fontSize: '21px', fontStyle: 'bold', color: COLORS.textGold, shadow: SH });
-    const rule = addDivider(this, 224, 52, 380);
-    this.objText = this.add.text(32, 60, '', { fontFamily: FONT, fontSize: '19px', color: COLORS.text, wordWrap: { width: 388 }, lineSpacing: 1, shadow: SH });
-    this.researchText = this.add.text(24, 150, '', { fontFamily: FONT, fontSize: '18px', color: hex(COLORS.telekinesis), stroke: '#000', strokeThickness: 4 });
-    this.questPanel.add([bg, this.zoneText, rule, this.objText]);
+    this.questBg = this.add.graphics();
+    this.zoneText = this.add.text(32, 132, '', { fontFamily: FONT, fontSize: UI.type.heading, fontStyle: 'bold', color: COLORS.textGold, shadow: SH, wordWrap: { width: 540 } });
+    this.questRule = addDivider(this, 330, 174, 590);
+    this.objText = this.add.text(32, 188, '', { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, wordWrap: { width: 580 }, lineSpacing: 2, shadow: SH });
+    this.researchText = this.add.text(32, 300, '', { fontFamily: FONT, fontSize: UI.type.small, color: hex(COLORS.telekinesis), wordWrap: { width: 610 }, stroke: '#000', strokeThickness: 4 });
+    this.questPanel.add([this.questBg, this.zoneText, this.questRule, this.objText]);
+  }
+
+  layoutQuestPanel() {
+    if (!this.sideLine) return;
+    // Full-width objective lets larger type wrap naturally without a tall narrow column.
+    const sideY = this.objText.y + this.objText.height + 8;
+    this.sideLine.setY(sideY);
+    this.questBottom = sideY + (this.sideLine.text ? this.sideLine.height + 8 : 0) + 10;
+    drawPlate(this.questBg, 692, this.questBottom - 122, { accent: 0xe8c56a });
+    this.questBg.setPosition(W / 2, (122 + this.questBottom) / 2);
+    this.questHit.setSize(692, this.questBottom - 122);
+    this.layoutHint();
+  }
+
+  layoutHint() {
+    const h = this.hintText?.height + 24 || 0;
+    if (this.hintPlate?.visible) this.hintPlate.setPosition(W / 2, this.questBottom + 10 + h / 2);
+    this.researchText.setY(this.questBottom + (this.hintPlate?.visible ? h + 20 : 12));
   }
 
   buildStatsPanel() {
-    const x = 448, y = 14, w = 258, h = 124;
-    addPanel(this, x, y, w, h, { seed: 9 });
-    addMedallion(this, x + 52, y + 52, 84);
-    const bx = x + 100, bw = 146;
-    this.levelText = this.add.text(bx, y + 11, '', { fontFamily: FONT, fontSize: '16px', fontStyle: 'bold', color: COLORS.textGold, shadow: SH });
-    this.syncDot = this.add.circle(x + w - 14, y + 14, 5, 0x5fd68a).setStrokeStyle(1, 0x000000, 0.8).setVisible(false); // сохранение на сервере: зелёный — сохранено, жёлтый — сохраняется, красный — нет связи
-    this.xpBar = new UIBar(this, bx, y + 38, bw, 10, 'xp');
-    this.hpBar = new UIBar(this, bx, y + 60, bw, 20, 'hp');
-    this.manaBar = new UIBar(this, bx, y + 86, bw, 20, 'mana');
-    const tx = bx + bw / 2;
-    const barText = (yy) => this.add.text(tx, yy, '', { fontFamily: FONT, fontSize: '14px', color: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5);
-    this.hpText = barText(y + 60);
-    this.manaText = barText(y + 86);
-    this.add.image(x + 32, y + 107, 'icon_coin').setScale(0.34);
-    this.coinText = this.add.text(x + 48, y + 107, '0', { fontFamily: FONT, fontSize: '18px', color: COLORS.text, shadow: SH }).setOrigin(0, 0.5);
-    this.add.image(x + 142, y + 107, 'icon_shard').setScale(0.34);
-    this.shardText = this.add.text(x + 158, y + 107, '0', { fontFamily: FONT, fontSize: '18px', color: COLORS.text, shadow: SH }).setOrigin(0, 0.5);
+    addPanel(this, 14, 14, 692, 96, { seed: 9 });
+    addMedallion(this, 54, 54, 62);
+    this.levelText = this.add.text(96, 24, '', { fontFamily: FONT, fontSize: UI.type.small, fontStyle: 'bold', color: COLORS.textGold, shadow: SH });
+    this.syncDot = this.add.circle(286, 30, 6, 0x5fd68a).setStrokeStyle(1, 0x000000, 0.8).setVisible(false);
+    this.xpBar = new UIBar(this, 96, 62, 190, 10, 'xp');
+    this.hpBar = new UIBar(this, 318, 64, 172, 34, 'hp');
+    this.manaBar = new UIBar(this, 514, 64, 172, 34, 'mana');
+    for (const [x, text] of [[404, 'Здоровье'], [600, 'Мана']]) this.add.text(x, 22, text, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, shadow: SH }).setOrigin(0.5, 0);
+    const barText = x => this.add.text(x, 64, '', { fontFamily: FONT, fontSize: UI.type.small, color: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5);
+    this.hpText = barText(404);
+    this.manaText = barText(600);
+    this.add.image(104, 89, 'icon_coin').setDisplaySize(28, 28);
+    this.coinText = this.add.text(124, 89, '0', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, shadow: SH }).setOrigin(0, 0.5);
+    this.add.image(224, 89, 'icon_shard').setDisplaySize(28, 28);
+    this.shardText = this.add.text(244, 89, '0', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, shadow: SH }).setOrigin(0, 0.5);
   }
 
   buildBottomBar() {
@@ -147,9 +164,9 @@ export class UIScene extends Phaser.Scene {
     const bg = this.add.zone(x, y, BTN_R * 2, BTN_R * 2);   // зона нажатия (прозрачная)
     const icon = this.add.image(x, y, iconKey).setScale(1.25);
     const cd = this.add.graphics();
-    const cdText = this.add.text(x, y, '', { fontFamily: FONT, fontSize: '26px', color: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5);
+    const cdText = this.add.text(x, y, '', { fontFamily: FONT, fontSize: UI.type.body, color: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5);
     const lock = this.add.image(x + 34, y - 34, 'icon_lock').setScale(0.42).setVisible(false);
-    const text = this.add.text(x, y + BTN_R + 12, label, { fontFamily: FONT, fontSize: '17px', color: COLORS.text, shadow: SH }).setOrigin(0.5);
+    const text = this.add.text(x, y + BTN_R + 10, label, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, shadow: SH, wordWrap: { width: 156 }, align: 'center' }).setOrigin(0.5);
     bg.setInteractive({ useHandCursor: true });
     bg.on('pointerdown', () => {
       if (this.modal) return;
@@ -161,12 +178,12 @@ export class UIScene extends Phaser.Scene {
   }
 
   buildContextButton() {
-    const x = 610, y = 1000;
+    const x = 610, y = 978;
     this.ctx = this.add.container(x, y).setVisible(false);
     this.ctxGlow = this.add.image(0, 0, 'fx_glow').setBlendMode('ADD').setScale(1.4).setAlpha(0.6);
     this.ctxBg = addOrb(this, 0, 0, UI.orb.context, COLORS.gold);
     this.ctxIcon = this.add.image(0, -4, 'icon_hand').setScale(0.95);
-    this.ctxLabel = this.add.text(0, 70, '', { fontFamily: FONT, fontSize: '19px', color: COLORS.text, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
+    this.ctxLabel = this.add.text(0, 70, '', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
     this.ctx.add([this.ctxGlow, this.ctxBg, this.ctxIcon, this.ctxLabel]);
     this.ctxBg.setInteractive({ useHandCursor: true });
     this.ctxBg.on('pointerdown', () => { if (!this.modal) this.bus.emit(MSG.CONTEXT_ACTION); });
@@ -221,6 +238,10 @@ export class UIScene extends Phaser.Scene {
   // ================================================================== обновление
   setMode(mode) {
     this.mode = mode;
+    if (mode === 'combat') {
+      this.toasts.forEach(t => t.destroy());
+      this.toasts = []; // exploration notifications must not follow the player into battle
+    }
     this.resetJoystick();
     this.ctx.setVisible(false);
     this.buttons.bag.bg.disableInteractive();
@@ -242,17 +263,21 @@ export class UIScene extends Phaser.Scene {
     if (this.zoneName && this.zoneName !== zone.name) services.audio.play('zone');
     this.zoneName = zone.name;
     this.refreshQuest();
-    const t = this.add.text(W / 2, 420, zone.name, { fontFamily: FONT, fontSize: '40px', color: COLORS.textGold, stroke: '#000', strokeThickness: 7 }).setOrigin(0.5).setAlpha(0);
+    const t = this.add.text(W / 2, 420, zone.name, { fontFamily: FONT, fontSize: UI.type.title, color: COLORS.textGold, stroke: '#000', strokeThickness: 7 }).setOrigin(0.5).setAlpha(0);
     this.tweens.add({ targets: t, alpha: 1, duration: 300, yoyo: true, hold: 1200, onComplete: () => t.destroy() });
   }
 
   refreshQuest() {
     const q = services.quests;
     const prev = this.objText.text;
+    this.questPanel.setVisible(this.mode !== 'combat');
+    this.questHit?.setVisible(this.mode !== 'combat');
+    this.hintPlate?.setVisible(this.mode !== 'combat' && !!this.hintText?.text);
     this.zoneText.setText(this.mode === 'combat' ? 'Бой' : (this.zoneName || 'Шепчущий лес'));
     const text = this.mode === 'combat' ? 'Прерывайте сильные атаки и победите врага' : q.objectiveText();
     this.objText.setText(text);
     this.refreshV08Hud();
+    this.layoutQuestPanel();
     if (prev && prev !== text && this.mode !== 'combat') {
       this.objText.setColor(COLORS.textGold);
       services.audio.play('quest_update', { minGap: 600 });
@@ -343,8 +368,12 @@ export class UIScene extends Phaser.Scene {
     this.updateDialogue(delta);
 
     // тосты
-    const baseY = this.mode === 'combat' ? 900 : 250;
-    this.toasts.forEach((t, i) => { t.y += ((baseY + i * 50) - t.y) * 0.25; });
+    const baseY = Math.max(360, (this.questBottom || 260) + 60);
+    let toastY = baseY;
+    this.toasts.forEach(t => {
+      const targetY = this.mode === 'combat' ? 440 + t.toastHeight / 2 : toastY;
+      t.y += (targetY - t.y) * 0.25; toastY += t.toastHeight + 12;
+    });
   }
 
   // ================================================================== тосты и награды
@@ -353,10 +382,15 @@ export class UIScene extends Phaser.Scene {
     const now = this.time.now;
     if (this.lastToast && this.lastToast.text === text && now - this.lastToast.t < 1500) return;
     this.lastToast = { text, t: now };
-    const y = (this.mode === 'combat' ? 900 : 250) + this.toasts.length * 50;
-    const label = this.add.text(0, 0, text, { fontFamily: FONT, fontSize: '20px', color: hex(color), align: 'center', wordWrap: { width: 600 }, shadow: SH }).setOrigin(0.5);
+    const label = this.add.text(0, 0, text, { fontFamily: FONT, fontSize: UI.type.body, color: hex(color), align: 'center', wordWrap: { width: 600 }, shadow: SH }).setOrigin(0.5);
+    if (this.mode === 'combat') {
+      this.toasts.forEach(t => t.destroy());
+      this.toasts = []; // one readable notification below the warning, never over the potion lane
+    }
+    const y = this.mode === 'combat' ? 440 + (label.height + 24) / 2 : Math.max(360, (this.questBottom || 260) + 60) + this.toasts.reduce((sum, t) => sum + t.toastHeight + 12, 0);
     const bg = drawPlate(this.add.graphics(), Math.min(660, label.width + 48), label.height + 24, { accent: color, fill: 0x120d0b, alpha: 0.9 });
     const c = this.add.container(W / 2, y, [bg, label]).setDepth(9000).setAlpha(0);
+    c.toastHeight = label.height + 24;
     this.toasts.push(c);
     if (this.toasts.length > 4) this.dropToast(this.toasts[0]);
     this.tweens.add({ targets: c, alpha: 1, duration: 160 });
@@ -395,48 +429,45 @@ export class UIScene extends Phaser.Scene {
     services.modalOpen = true;
     this.resetJoystick();
     if (!opts.silent) services.audio.play(opts.final ? 'victory' : 'modal_open');
-    const color = opts.color ?? COLORS.gold;
-    const pw = 640;
+    const color = opts.color ?? COLORS.gold, pw = 664, cw = pw - 80;
+    const left = (W - pw) / 2;
     const c = this.add.container(0, 0).setDepth(10000);
     const overlay = this.add.rectangle(0, 0, W, H, 0x000000, 0.66).setOrigin(0).setInteractive();
-    const title = this.add.text(W / 2, 0, opts.title || '', { fontFamily: FONT, fontSize: '31px', fontStyle: 'bold', color: hex(color), align: 'center', wordWrap: { width: pw - 60 }, shadow: SH }).setOrigin(0.5, 0);
-    const body = this.add.text(W / 2, 0, opts.text || '', { fontFamily: FONT, fontSize: '21px', color: COLORS.text, align: 'left', wordWrap: { width: pw - 70 }, lineSpacing: 5, shadow: SH }).setOrigin(0.5, 0);
+    const title = this.add.text(W / 2, 0, opts.title || '', { fontFamily: FONT, fontSize: UI.type.title, fontStyle: 'bold', color: hex(color), align: 'center', wordWrap: { width: pw - 64 }, shadow: SH }).setOrigin(0.5, 0);
+    const content = this.add.container(0, 0);
+    let contentH = 0;
+    if (opts.text) {
+      const body = this.add.text(0, 0, opts.text, { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, wordWrap: { width: cw }, lineSpacing: 5, shadow: SH });
+      content.add(body); contentH = body.height + 24;
+    }
+    if (opts.content) contentH += opts.content.build(content, 0, contentH, cw);
     const buttons = opts.buttons?.length ? opts.buttons : [{ label: 'Закрыть', primary: true }];
-    const btnH = 72;
+    const btnH = UI.touch.button;
     const vertical = !!opts.vertical;
     const btnBlock = vertical ? buttons.length * (btnH + 16) - 16 : btnH;
-    // v0.8: opts.content = { build(container, x, y, w) → высота } — своё содержимое между текстом и кнопками (журнал, алхимия, сумка)
-    let contentH = 0;
-    if (opts.content) {
-      const tmp = this.add.container(0, 0);
-      contentH = opts.content.build(tmp, 0, 0, pw - 70);
-      tmp.destroy(true);
-    }
-    const ph = 40 + title.height + 34 + (body.text ? body.height : -10) + (contentH ? contentH + 24 : 0) + 34 + btnBlock + 34;
-    const top = Math.max(60, (H - ph) / 2 - 40);
-    const left = (W - pw) / 2;
+    const headerH = 32 + title.height + 30, footerH = btnBlock + 70;
+    const viewH = Math.min(contentH, H - 112 - headerH - footerH);
+    const ph = headerH + viewH + footerH;
+    const top = Math.max(56, (H - ph) / 2 - 24);
     const panel = addPanel(this, left, top, pw, ph, { accent: color, seed: 3 });
-    const rule = addDivider(this, W / 2, top + 36 + title.height + 14, pw - 120, color);
-    title.setY(top + 36);
-    body.setY(top + 36 + title.height + 34);
-    c.add([overlay, panel, title, rule, body]);
-    if (contentH) opts.content.build(c, left + 35, top + 36 + title.height + 34 + (body.text ? body.height + 18 : 0), pw - 70);
-
-    const by0 = top + ph - 34 - btnBlock + btnH / 2;
-    const bw = vertical ? 420 : Math.min(280, (pw - 60) / buttons.length - 16);
+    title.setY(top + 32);
+    c.add([overlay, panel, title, addDivider(this, W / 2, top + headerH - 16, pw - 100, color)]);
+    const scroll = addScrollViewport(this, c, content, { x: left + 32, y: top + headerH, width: cw, height: viewH, contentHeight: contentH });
+    if (scroll.max) c.add(this.add.text(W / 2, top + headerH + viewH + 18, '↕ Проведите по содержимому', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim }).setOrigin(0.5));
+    const by0 = top + ph - 24 - btnBlock + btnH / 2;
+    const bw = vertical ? pw - 80 : (pw - 64 - (buttons.length - 1) * 16) / buttons.length;
     const views = buttons.map((b, i) => {
-      const bx = vertical ? W / 2 : W / 2 + (i - (buttons.length - 1) / 2) * (bw + 20);
+      const bx = vertical ? W / 2 : W / 2 + (i - (buttons.length - 1) / 2) * (bw + 16);
       const by = vertical ? by0 + i * (btnH + 16) : by0;
       const btn = addButton(this, bx, by, bw, btnH, b.label, {
-        primary: !!b.primary, accent: b.primary ? color : null, fontSize: 21,
+        primary: !!b.primary, accent: b.primary ? color : null, fontSize: UI.type.body,
         onPress: () => { services.audio.play(b.primary ? 'ui_click' : 'ui_back'); this.closeModal(b); },
       });
-      c.add(btn.parts);
-      return { b };
+      c.add(btn.parts); return { b, ...btn };
     });
     c.setAlpha(0);
     this.tweens.add({ targets: c, alpha: 1, duration: 150 });
-    this.modal = { container: c, buttons, views, final: !!opts.final, tempKeys: [panel.texKey], opts };
+    this.modal = { container: c, buttons, views, scroll, top, height: ph, final: !!opts.final, tempKeys: [panel.texKey], opts };
     this.bus.emit(MSG.MODAL_OPEN);
   }
 
@@ -444,11 +475,14 @@ export class UIScene extends Phaser.Scene {
   reopenModal() {
     if (!this.modal?.opts) return;
     const opts = this.modal.opts;
+    const offset = this.modal.scroll?.offset || 0;
+    this.modal.scroll?.destroy();
     this.modal.container.destroy();
     for (const k of this.modal.tempKeys || []) releaseTexture(this, k);
     this.modal = null;
     services.modalOpen = false;
     this.openModal({ ...opts, silent: true });
+    this.modal.scroll?.scrollTo(offset);
   }
 
   pressModalButton(primary) {
@@ -461,7 +495,9 @@ export class UIScene extends Phaser.Scene {
 
   closeModal(button) {
     if (!this.modal) return;
-    const { container, tempKeys } = this.modal;
+    if (this.modal.dialogue) { this.closeDialogue(true); return; }
+    const { container, tempKeys, scroll } = this.modal;
+    scroll?.destroy();
     container.destroy();
     for (const k of tempKeys || []) releaseTexture(this, k);   // панели окон разного размера не копим
     this.modal = null;
@@ -532,8 +568,8 @@ export class UIScene extends Phaser.Scene {
 
   // ================================================================== пауза и настройки
   buildPauseButton() {
-    const x = 672, y = 174;
-    const bg = addOrb(this, x, y, UI.orb.small, COLORS.gold, { gem: false });
+    const x = 660, y = 860;
+    const bg = addOrb(this, x, y, 96, COLORS.gold, { gem: false });
     const g = this.add.graphics();
     g.fillStyle(0xf1e3c2).fillRoundedRect(x - 11, y - 12, 7, 24, 2).fillRoundedRect(x + 4, y - 12, 7, 24, 2);
     bg.setInteractive({ useHandCursor: true });
@@ -583,7 +619,7 @@ export class UIScene extends Phaser.Scene {
   buildTutorial() {
     this.tut = this.add.container(0, 0).setDepth(8500).setVisible(false);
     this.tutBg = this.add.graphics();
-    this.tutText = this.add.text(W / 2, 0, '', { fontFamily: FONT, fontSize: '21px', color: '#e9fffb', align: 'center', wordWrap: { width: 520 }, lineSpacing: 3 }).setOrigin(0.5);
+    this.tutText = this.add.text(300, 0, '', { fontFamily: FONT, fontSize: UI.type.body, color: '#e9fffb', align: 'center', wordWrap: { width: 450 }, lineSpacing: 3 }).setOrigin(0.5);
     this.tutArrow = this.add.graphics();
     this.tutArrow.fillStyle(COLORS.telekinesis).fillTriangle(-22, -26, 22, -26, 0, 8).lineStyle(3, 0x000000, 0.6).strokeTriangle(-22, -26, 22, -26, 0, 8);
     this.tutHand = this.add.image(0, 0, 'icon_hand').setScale(1.4).setAlpha(0.9);
@@ -612,9 +648,9 @@ export class UIScene extends Phaser.Scene {
       bubbleY = 820; ax = 610; ay = 916;
     } else if (this.buttons[h.target]) {
       const b = this.buttons[h.target];
-      bubbleY = combat ? 1010 : 880; ax = b.x; ay = BTN_Y - BTN_R - 22;
+      bubbleY = combat ? 890 : 880; ax = b.x; ay = BTN_Y - BTN_R - 22;
     }
-    this.tutBg.setPosition(W / 2, bubbleY); this.tutText.setY(bubbleY);
+    this.tutBg.setPosition(300, bubbleY); this.tutText.setY(bubbleY);
     this.tutArrow.setVisible(ax !== null);
     if (ax !== null) { this.tutArrow.setPosition(ax, ay); this.tutArrowBase = ay; }
     this.tut.setVisible(true).setAlpha(0);

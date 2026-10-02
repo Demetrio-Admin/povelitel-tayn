@@ -229,7 +229,7 @@ export class ExplorationScene extends Phaser.Scene {
             break;
           }
           keep(this.add.rectangle(c.x, c.y - 20, c.w, c.h + 20, COLORS.woodLight).setOrigin(0).setStrokeStyle(3, COLORS.wood).setDepth(bottomDepth));
-          if (c.label) keep(this.add.text(c.x + c.w / 2, c.y + c.h / 2 - 10, c.label, { fontSize: '14px', color: COLORS.textDim }).setOrigin(0.5).setDepth(bottomDepth + 1));
+          if (c.label) keep(this.add.text(c.x + c.w / 2, c.y + c.h / 2 - 10, c.label, { fontSize: UI.type.small, color: COLORS.textDim }).setOrigin(0.5).setDepth(bottomDepth + 1));
           break;
         case 'ruin':
           keep(this.add.tileSprite(c.x, c.y - 30, c.w, c.h + 30, 'wall_ruin_01').setOrigin(0).setTileScale(0.5).setDepth(bottomDepth));
@@ -348,10 +348,10 @@ export class ExplorationScene extends Phaser.Scene {
     const k = 44 / maxSide;
     this.tweens.add({ targets: icon, scale: k, duration: 220, ease: 'Back.easeOut' });
     this.tweens.add({ targets: icon, y: y - 70, alpha: 0, delay: 500, duration: 700, ease: 'Quad.easeIn', onComplete: () => icon.destroy() });
-    if (text) this.floatText(x, y - 40, text, color, 20, 1300);
+    if (text) this.floatText(x, y - 40, text, color, UI.type.small, 1300);
   }
 
-  floatText(x, y, text, color, size = 22, ms = 900) {
+  floatText(x, y, text, color, size = UI.type.small, ms = 900) {
     const t = this.add.text(x, y, text, { fontFamily: UI.font, fontSize: `${size}px`, color: '#' + color.toString(16).padStart(6, '0'), stroke: '#000', strokeThickness: 5, fontStyle: 'bold' })
       .setOrigin(0.5).setDepth(DEPTH.markers + 1).setAlpha(0);
     this.tweens.add({ targets: t, alpha: 1, duration: 140 });
@@ -362,7 +362,7 @@ export class ExplorationScene extends Phaser.Scene {
   heroSay(text, ms = 3400) {
     if (!text || this.editor || !this.player) return;
     if (this.speech) { this.speech.c.destroy(); this.speech = null; }
-    const t = this.add.text(0, 0, text, { fontFamily: UI.font, fontSize: '20px', color: '#fff7e0', align: 'center', wordWrap: { width: 360 }, lineSpacing: 3 }).setOrigin(0.5);
+    const t = this.add.text(0, 0, text, { fontFamily: UI.font, fontSize: UI.type.body, color: '#fff7e0', align: 'center', wordWrap: { width: 360 }, lineSpacing: 3 }).setOrigin(0.5);
     const w = Math.max(120, t.width + 40), h = t.height + 24;
     const bg = drawPlate(this.add.graphics(), w, h, { accent: 0xe8c56a, fill: 0x1a120d, alpha: 0.93 });
     const tail = this.add.graphics().fillStyle(0x1a120d, 0.93).fillTriangle(-9, h / 2 - 2, 9, h / 2 - 2, 0, h / 2 + 12);

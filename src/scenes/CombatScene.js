@@ -74,7 +74,7 @@ export class CombatScene extends Phaser.Scene {
     const first = !state.data.stats.combats.length;
     this.time.delayedCall(COMBAT.introSec * 1000, () => {
       this.started = true;
-      if (first) this.toast('Враг атакует сам. Когда появится красное предупреждение — прервите его Телекинезом!', COLORS.telekinesis);
+      if (first) this.toast('Враг атакует сам. Прерывайте сильные атаки Телекинезом!', COLORS.telekinesis);
       else if (this.def.armor) this.toast('Броня Стража держится на кристалле. Выберите его и разбейте Телекинезом.', COLORS.telekinesis);
     });
   }
@@ -133,34 +133,34 @@ export class CombatScene extends Phaser.Scene {
     for (const o of this.cm.fieldObjects) {
       const img = applyDisplaySize(this.add.image(o.x, o.y, o.def.texture), o.def.texture).setOrigin(0.5, 1).setDepth(o.y);
       const ring = this.add.image(o.x, o.y - 4, 'fx_ring').setDisplaySize(img.displayWidth * 1.5, img.displayWidth * 0.6).setTint(COLORS.telekinesis).setAlpha(0).setDepth(o.y - 1);
-      const label = this.add.text(o.x, o.y + 6, o.def.name, { fontFamily: FONT, fontSize: '18px', color: COLORS.text, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5, 0).setDepth(o.y);
+      const label = this.add.text(o.x, o.y + 6, o.def.name, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 200 } }).setOrigin(0.5, 0).setDepth(o.y);
       // большая зона нажатия — без требований к точности
       const hit = this.add.zone(o.x, o.y - img.displayHeight / 2, Math.max(150, img.displayWidth * 1.6), Math.max(150, img.displayHeight * 1.6)).setInteractive({ useHandCursor: true });
       hit.on('pointerdown', () => { if (this.canAct()) { this.cm.selectObject(o.id); this.processEvents(); } });
       this.fieldViews.set(o.id, { img, ring, label, home: { x: o.x, y: o.y } });
     }
     if (this.cm.fieldObjects.length) {
-      this.add.text(VIEW.width / 2, 860, 'Нажмите на предмет, чтобы выбрать его для Телекинеза (Q — переключить)', {
-        fontFamily: FONT, fontSize: '17px', color: COLORS.textDim, align: 'center', wordWrap: { width: 600 },
+      this.fieldHint = this.add.text(VIEW.width / 2, 868, 'Коснитесь предмета, затем нажмите Телекинез', {
+        fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, align: 'center', wordWrap: { width: 600 },
       }).setOrigin(0.5).setDepth(2000);
     }
   }
 
   buildEnemyHud() {
     const W = VIEW.width;
-    const y = 190;
-    this.add.text(W / 2, y - 14, this.def.name + (this.def.tier === 'strong' ? '  ★' : ''), { fontFamily: FONT, fontSize: '26px', color: '#ffb3a8', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5, 1).setDepth(5000);
-    this.enemyHpBar = new UIBar(this, W / 2 - 260, y, 520, 26, 'hp', 5000);
-    this.enemyHpText = this.add.text(W / 2, y, '', { fontFamily: FONT, fontSize: '16px', color: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5002);
-    this.statusText = this.add.text(W / 2, y + 26, '', { fontFamily: FONT, fontSize: '18px', color: COLORS.textGold, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5, 0).setDepth(5000);
+    const y = 184;
+    this.add.text(W / 2, y - 14, this.def.name + (this.def.tier === 'strong' ? '  ★' : ''), { fontFamily: FONT, fontSize: UI.type.heading, color: '#ffb3a8', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5, 1).setDepth(5000);
+    this.enemyHpBar = new UIBar(this, W / 2 - 260, y, 520, 34, 'hp', 5000);
+    this.enemyHpText = this.add.text(W / 2, y, '', { fontFamily: FONT, fontSize: UI.type.small, color: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5002);
+    this.statusText = this.add.text(W / 2, y + 26, '', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textGold, stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 620 } }).setOrigin(0.5, 0).setDepth(5000);
 
     // предупреждение о сильной атаке (cast warning)
-    this.warn = this.add.container(W / 2, 290).setDepth(5100).setVisible(false);
-    const bg = drawPlate(this.add.graphics(), 580, 82, { accent: COLORS.danger, fill: 0x2a0806, alpha: 0.94 });
-    this.warnTitle = this.add.text(0, -20, '', { fontFamily: FONT, fontSize: '24px', color: '#ff6a5a', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
-    this.warnHint = this.add.text(0, 8, '', { fontFamily: FONT, fontSize: '18px', color: COLORS.text }).setOrigin(0.5);
-    this.warnBarBg = this.add.rectangle(-260, 30, 520, 8, 0x000000, 0.8).setOrigin(0, 0.5);
-    this.warnBar = this.add.rectangle(-260, 30, 520, 8, COLORS.danger).setOrigin(0, 0.5);
+    this.warn = this.add.container(W / 2, 352).setDepth(5100).setVisible(false);
+    const bg = drawPlate(this.add.graphics(), 644, 144, { accent: COLORS.danger, fill: 0x2a0806, alpha: 0.94 });
+    this.warnTitle = this.add.text(0, -50, '', { fontFamily: FONT, fontSize: UI.type.combat, color: '#ff6a5a', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
+    this.warnHint = this.add.text(0, -22, '', { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, align: 'center', wordWrap: { width: 600 }, lineSpacing: 2 }).setOrigin(0.5, 0);
+    this.warnBarBg = this.add.rectangle(-260, 56, 520, 10, 0x000000, 0.8).setOrigin(0, 0.5);
+    this.warnBar = this.add.rectangle(-260, 56, 520, 10, COLORS.danger).setOrigin(0, 0.5);
     this.warn.add([bg, this.warnTitle, this.warnHint, this.warnBarBg, this.warnBar]);
   }
 
@@ -169,12 +169,12 @@ export class CombatScene extends Phaser.Scene {
   buildPotions() {
     this.potionViews = new Map();
     POTION_ORDER.forEach((id, i) => {
-      const p = POTIONS[id], x = 58 + i * 86, y = 1048;
-      const ring = this.add.circle(x, y, 34, 0x1a120d, 0.92).setStrokeStyle(3, p.color).setDepth(5200);
+      const p = POTIONS[id], x = 68 + i * 114, y = 1028;
+      const ring = this.add.circle(x, y, UI.touch.potionRadius, 0x1a120d, 0.92).setStrokeStyle(3, p.color).setDepth(5200);
       const icon = this.add.image(x, y - 2, p.icon).setDepth(5201);
-      icon.setScale(44 / Math.max(icon.width, icon.height, 1));
-      const badge = this.add.text(x + 24, y + 22, '', { fontFamily: FONT, fontSize: '18px', fontStyle: 'bold', color: '#fff', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(5202);
-      const hit = this.add.zone(x, y, 80, 80).setInteractive({ useHandCursor: true }).setDepth(5203);
+      icon.setScale(UI.icon.combatPotion / Math.max(icon.width, icon.height, 1));
+      const badge = this.add.text(x + 30, y + 30, '', { fontFamily: FONT, fontSize: UI.type.small, fontStyle: 'bold', color: '#fff', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(5202);
+      const hit = this.add.zone(x, y, UI.touch.potion, UI.touch.potion).setInteractive({ useHandCursor: true }).setDepth(5203);
       hit.on('pointerdown', () => this.onPotion(id));
       this.potionViews.set(id, { ring, icon, badge, hit });
     });
@@ -270,6 +270,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   updateHud() {
+    this.fieldHint?.setVisible(!services.tutorial.active);
     const e = this.cm.enemy;
     this.enemyHpBar.setFraction(Math.max(0, e.hp / e.maxHp));
     this.enemyHpText.setText(`${Math.ceil(e.hp)} / ${e.maxHp}`);
@@ -363,8 +364,8 @@ export class CombatScene extends Phaser.Scene {
           break;
         case 'armorBack': this.toast('Броня Стража восстановилась'); break;
         case 'status':
-          if (ev.status === 'vulnerable') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Уязвим!', COLORS.fire, 26);
-          if (ev.status === 'defenseOff') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Защита снята', COLORS.fire, 26);
+          if (ev.status === 'vulnerable') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Уязвим!', COLORS.fire, UI.type.combat);
+          if (ev.status === 'defenseOff') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Защита снята', COLORS.fire, UI.type.combat);
           break;
         case 'result': services.audio.lowHp = false; services.tutorial.hide(); this.timeScale = 1; this.endCombat(ev.result, ev.time); break;
         default: break;
@@ -375,7 +376,7 @@ export class CombatScene extends Phaser.Scene {
   onDamage(ev) {
     if (ev.target === 'enemy') {
       const color = SCHOOL_COLOR[ev.school] || 0xffffff;
-      const size = ev.tick ? 20 : ev.school === 'auto' ? 22 : 32;
+      const size = ev.tick ? UI.type.small : ev.school === 'auto' ? UI.type.body : UI.type.title;
       const jx = Phaser.Math.Between(-60, 60);
       this.floatText(ENEMY_POS.x + jx, ENEMY_POS.y - this.enemySprite.displayHeight * 0.7, `${ev.amount}`, color, size);
       const a = services.audio;
@@ -450,7 +451,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   // ------------------------------------------------------------------ FX
-  floatText(x, y, text, color, size = 28) {
+  floatText(x, y, text, color, size = UI.type.combat) {
     const t = this.add.text(x, y, text, { fontFamily: FONT, fontSize: `${size}px`, color: hex(color), stroke: '#000', strokeThickness: 5, fontStyle: 'bold' }).setOrigin(0.5).setDepth(7000);
     t.setScale(1.7);
     this.tweens.add({ targets: t, scale: 1, duration: 160, ease: 'Back.easeOut' });
@@ -464,7 +465,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   showBanner(text, color) {
-    const t = this.add.text(VIEW.width / 2, 640, text, { fontFamily: FONT, fontSize: '44px', color: hex(color), stroke: '#000', strokeThickness: 7 }).setOrigin(0.5).setDepth(8000).setAlpha(0);
+    const t = this.add.text(VIEW.width / 2, 640, text, { fontFamily: FONT, fontSize: UI.type.title, align: 'center', wordWrap: { width: 620 }, color: hex(color), stroke: '#000', strokeThickness: 7 }).setOrigin(0.5).setDepth(8000).setAlpha(0);
     this.tweens.add({ targets: t, alpha: 1, duration: 200, yoyo: true, hold: COMBAT.introSec * 800, onComplete: () => t.destroy() });
   }
 

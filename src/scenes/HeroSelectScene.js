@@ -40,7 +40,7 @@ export class HeroSelectScene extends Phaser.Scene {
   }
 
   buildCards() {
-    const n = HEROES.length, cw = 520, ch = 620, gap = 30;
+    const n = HEROES.length, cw = 520, ch = 700, gap = 30;
     const x0 = W / 2 - ((n - 1) * (cw + gap)) / 2;
     HEROES.forEach((h, i) => {
       const cx = x0 + i * (cw + gap), top = 250;
@@ -50,12 +50,12 @@ export class HeroSelectScene extends Phaser.Scene {
       img.setScale(300 / img.height);
       this.tweens.add({ targets: img, y: top + 392, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       const name = this.add.text(cx, top + 440, h.name, { fontFamily: FONT, fontSize: '40px', fontStyle: 'bold', color: '#f6e3a1', shadow: SH }).setOrigin(0.5);
-      const title = this.add.text(cx, top + 486, h.title, { fontFamily: FONT, fontSize: '21px', color: COLORS.textGold, shadow: SH }).setOrigin(0.5);
-      const text = this.add.text(cx, top + 540, h.text, { fontFamily: FONT, fontSize: '19px', color: COLORS.text, align: 'center', wordWrap: { width: cw - 70 }, lineSpacing: 3, shadow: SH }).setOrigin(0.5, 0.5);
+      const title = this.add.text(cx, top + 486, h.title, { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.textGold, shadow: SH }).setOrigin(0.5);
+      const text = this.add.text(cx, top + 530, h.text, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, align: 'center', wordWrap: { width: cw - 70 }, lineSpacing: 3, shadow: SH }).setOrigin(0.5, 0);
       this.cards.add([panel, glow, img, name, title, text]);
     });
-    this.pick = addButton(this, W / 2, 960, 440, 88, 'Выбрать', { primary: true, accent: COLORS.gold, fontSize: 30, depth: 6, onPress: () => this.onPick() });
-    this.backBtn = addButton(this, W / 2, 1068, 440, 76, 'Назад', { fontSize: 26, depth: 6, onPress: () => this.back() });
+    this.pick = addButton(this, W / 2, 1030, 440, 88, 'Выбрать', { primary: true, accent: COLORS.gold, fontSize: UI.type.bodyLarge, depth: 6, onPress: () => this.onPick() });
+    this.backBtn = addButton(this, W / 2, 1140, 440, UI.touch.button, 'Назад', { fontSize: UI.type.body, depth: 6, onPress: () => this.back() });
   }
 
   back() {
@@ -81,18 +81,18 @@ export class HeroSelectScene extends Phaser.Scene {
   showChoice() {
     const c = this.add.container(0, 0).setDepth(10000);
     c.add(this.add.rectangle(0, 0, W, H, 0x000000, 0.66).setOrigin(0).setInteractive());
-    c.add(addPanel(this, 60, 360, 600, 580, { accent: COLORS.gold, seed: 21 }));
-    c.add(this.add.text(W / 2, 418, 'Как продолжить?', { fontFamily: FONT, fontSize: '36px', fontStyle: 'bold', color: '#f6e3a1', shadow: SH }).setOrigin(0.5));
+    c.add(addPanel(this, 36, 320, 648, 694, { accent: COLORS.gold, seed: 21 }));
+    c.add(this.add.text(W / 2, 418, 'Как продолжить?', { fontFamily: FONT, fontSize: UI.type.title, fontStyle: 'bold', color: '#f6e3a1', shadow: SH }).setOrigin(0.5));
     c.add(addDivider(this, W / 2, 458, 440));
     const mk = (y, label, primary, fn, hint) => {
-      const b = addButton(this, W / 2, y, 480, 84, label, { primary, accent: primary ? COLORS.gold : null, fontSize: 27, onPress: () => { if (this.busy || this.html) return; services.audio.play('ui_click'); fn(); } });
+      const b = addButton(this, W / 2, y, 480, UI.touch.button, label, { primary, accent: primary ? COLORS.gold : null, fontSize: UI.type.body, onPress: () => { if (this.busy || this.html) return; services.audio.play('ui_click'); fn(); } });
       c.add(b.parts);
-      if (hint) c.add(this.add.text(W / 2, y + 52, hint, { fontFamily: FONT, fontSize: '16px', color: COLORS.textDim, shadow: SH }).setOrigin(0.5));
+      if (hint) c.add(this.add.text(W / 2, y + 56, hint, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, shadow: SH, align: 'center', wordWrap: { width: 570 } }).setOrigin(0.5, 0));
     };
     mk(530, 'Играть как гость', true, () => this.asGuest(), 'Без регистрации. Аккаунт можно создать позже в профиле');
-    mk(660, 'Создать аккаунт', false, () => this.register(), 'Никнейм и пароль — почта не нужна');
-    mk(780, 'У меня уже есть аккаунт', false, () => this.login());
-    const back = addButton(this, W / 2, 884, 300, 64, 'Назад', { fontSize: 22, onPress: () => this.back() });
+    mk(718, 'Создать аккаунт', false, () => this.register(), 'Никнейм и пароль — почта не нужна');
+    mk(868, 'У меня уже есть аккаунт', false, () => this.login());
+    const back = addButton(this, W / 2, 970, 300, UI.touch.button, 'Назад', { fontSize: UI.type.small, onPress: () => this.back() });
     c.add(back.parts);
     this.choice = c;
   }

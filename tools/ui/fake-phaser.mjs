@@ -126,7 +126,7 @@ class FakeScene {
     };
     this.tweens = { add: (cfg) => { applyTween(cfg); return noopChain(); }, killTweensOf: () => {}, addCounter: () => noopChain() };
     this.time = { now: 5000, delayedCall: (ms, fn) => { this._timers.push({ ms, fn }); return noopChain(); }, addEvent: () => noopChain() };
-    this.input = { on() {}, off() {}, once() {}, keyboard: { on() {}, addKeys: (d) => Object.fromEntries(Object.keys(d).map(k => [k, { isDown: false }])), addCapture() {}, addKey: () => ({ isDown: false }) }, activePointer: { x: 0, y: 0 }, setDefaultCursor() {} };
+    this.input = { on() {}, off() {}, once() {}, keyboard: { on() {}, off() {}, addKeys: (d) => Object.fromEntries(Object.keys(d).map(k => [k, { isDown: false }])), addCapture() {}, addKey: () => ({ isDown: false }) }, activePointer: { x: 0, y: 0 }, setDefaultCursor() {} };
     this.registry = { get: k => this._reg.get(k), set: (k, v) => { this._reg.set(k, v); }, remove: k => this._reg.delete(k) };
     this.events = { on() {}, once() {}, off() {}, emit() {} };
     this.cameras = { main: noopChain() };

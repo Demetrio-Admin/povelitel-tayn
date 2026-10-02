@@ -1,4 +1,5 @@
 import { COLORS, DEPTH } from '../config/game.config.js';
+import { UI } from '../config/ui.config.js';
 import { NPCS } from '../config/npcs.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
@@ -29,8 +30,8 @@ export class NpcObject extends InteractiveObject {
       // «дыхание»: еле заметное сжатие-растяжение
       scene.tweens.add({ targets: this.sprite, scaleY: this.baseScale.y * 1.018, scaleX: this.baseScale.x * 0.992, duration: 1300 + Math.random() * 400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
-    this.nameText = scene.add.text(cfg.x, cfg.y - this.sprite.displayHeight - (cfg.elevated || 0) - 14, `${this.npc.name} · ${this.npc.title}`, {
-      fontFamily: 'Georgia, serif', fontSize: '19px', color: hex(this.npc.color), stroke: '#000', strokeThickness: 4,
+    this.nameText = scene.add.text(cfg.x, cfg.y - this.sprite.displayHeight - (cfg.elevated || 0) - 58, this.npc.name, {
+      fontFamily: UI.font, fontSize: UI.type.small, color: hex(this.npc.color), stroke: '#000', strokeThickness: 4,
     }).setOrigin(0.5, 1).setDepth(DEPTH.markers).setAlpha(0);
     this.badge = scene.add.text(cfg.x, cfg.y - this.sprite.displayHeight - (cfg.elevated || 0) - 8, '', {
       fontFamily: 'Georgia, serif', fontSize: '40px', fontStyle: 'bold', color: '#ffe08a', stroke: '#000', strokeThickness: 6,

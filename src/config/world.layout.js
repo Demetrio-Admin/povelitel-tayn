@@ -27,22 +27,22 @@ export const ZONES = [
 ];
 
 // Поверхности (Layer 1 — Ground). Базовая трава кладётся на весь мир автоматически.
+// Дороги и вода — кривые формы, они описаны в world.terrain.js. Здесь остался только пол дома.
 export const GROUND = [
   { tex: 'wooden_floor_01', x: 640,  y: 4880, w: 520, h: 420 },
-  // тропы
-  { tex: 'dirt_path_01', x: 860,  y: 4560, w: 80,  h: 330 },
-  { tex: 'dirt_path_01', x: 300,  y: 4560, w: 1300, h: 90 },
-  { tex: 'dirt_path_01', x: 1180, y: 3300, w: 140, h: 1300 },
-  { tex: 'dirt_path_01', x: 1180, y: 1880, w: 140, h: 1420 },
-  { tex: 'stone_path_01',x: 1150, y: 1450, w: 200, h: 220 },
-  { tex: 'dirt_path_01', x: 330,  y: 1100, w: 140, h: 3000 },
-  { tex: 'stone_path_01',x: 820,  y: 420,  w: 160, h: 700 },
-  { tex: 'stone_path_01',x: 330,  y: 980,  w: 650, h: 140 },
+];
+
+// Места, где генератор не ставит случайный декор: проёмы между блоками, проходы к воротам.
+export const KEEP_CLEAR = [
+  { x: 300,  y: 3990, w: 200, h: 200 },  // проём корней
+  { x: 1120, y: 1860, w: 260, h: 200 },  // проход под глыбу
+  { x: 250,  y: 1260, w: 300, h: 240 },  // проход Стража
+  { x: 820,  y: 330,  w: 160, h: 220 },  // ворота
 ];
 
 // Коллизии (Blueprint §6): крупные деревья, здания, вода, камни, стены руин.
-// kind определяет визуальное заполнение: trees → ряд деревьев, water → болото, wall → стена дома,
-// ruin → старый камень, furniture → мебель.
+// kind определяет визуальное заполнение: trees → лес (деревья в world.props.js), wall → стена дома,
+// ruin → старый камень, furniture → мебель. Вода — отдельно, world.terrain.js.
 export const COLLIDERS = [
   // границы мира (лес)
   { kind: 'trees', x: 0,    y: 0,    w: 100, h: 4880 },
@@ -65,12 +65,10 @@ export const COLLIDERS = [
   // B — стартовая поляна: вход в западный лес закрыт корнями (проем 300–500)
   { kind: 'trees', x: 100,  y: 4030, w: 200, h: 110 },
   { kind: 'trees', x: 500,  y: 4030, w: 200, h: 110 },
-  { kind: 'water', x: 700,  y: 1100, w: 120, h: 3040 },  // болотный ручей между двумя частями леса
   // C — лесная тропа
   { kind: 'trees', x: 820,  y: 3300, w: 130, h: 800 },
   { kind: 'trees', x: 1550, y: 3300, w: 150, h: 250 },
   { kind: 'trees', x: 1550, y: 3700, w: 150, h: 400 },
-  { kind: 'water', x: 1360, y: 3700, w: 150, h: 130 },
   // D — первая боевая поляна (коридор мимо врага)
   { kind: 'trees', x: 820,  y: 2900, w: 280, h: 220 },
   { kind: 'trees', x: 1400, y: 2900, w: 300, h: 220 },
@@ -93,10 +91,10 @@ export const COLLIDERS = [
   // L — древние ворота
   { kind: 'ruin',  x: 640,  y: 330,  w: 120, h: 110 },
   { kind: 'ruin',  x: 1040, y: 330,  w: 120, h: 110 },
-  { kind: 'water', x: 1200, y: 560,  w: 380, h: 260 },
 ];
 
-// Декор без коллизий (цветы, грибы, кусты) + фонари с тёплым светом.
+// ИСТОЧНИК для генератора карты (tools/world/bake.mjs). Игра читает готовый список из world.props.js,
+// а правки расстановки делаются в редакторе (?edit) и лежат в world.edits.js.
 // layer: back | main | front. light: радиус тёплого свечения.
 export const DECOR = [
   { key: 'candle_group_01', x: 1080, y: 4990, layer: 'main', light: 120 },
@@ -106,7 +104,7 @@ export const DECOR = [
   { key: 'signpost_01', x: 1100, y: 4200, layer: 'main' },
   { key: 'wooden_bridge_01', x: 1435, y: 3770, layer: 'back' },
   { key: 'lantern_02', x: 1150, y: 3650, layer: 'main', light: 160 },
-  { key: 'lantern_02', x: 1150, y: 3350, layer: 'main', light: 160 },
+  { key: 'lantern_02', x: 1116, y: 3350, layer: 'main', light: 160 },
   { key: 'mushroom_red_01', x: 1500, y: 3480, layer: 'main' },
   { key: 'mushroom_blue_01', x: 1000, y: 3950, layer: 'main' },
   { key: 'lantern_01', x: 1120, y: 2270, layer: 'main', light: 180 },
@@ -133,7 +131,7 @@ export const INTERACTIVES = [
   { id: 'glade_rock', kind: 'telekinesis', mode: 'push', x: 1150, y: 4520, texture: 'rock_medium_01',
     weight: 'medium', target: { x: 1300, y: 4590 }, collide: { w: 96, h: 40 },
     hiddenReward: { spawnPickup: { item: 'coins', amount: 20, texture: 'icon_coin' } }, countsAsFirstInteraction: true },
-  { id: 'moon_plant', kind: 'telekinesis', mode: 'pull', x: 520, y: 4520, texture: 'moon_plant_01',
+  { id: 'moon_plant', kind: 'telekinesis', mode: 'pull', x: 520, y: 4520, texture: 'moon_plant_01', collide: { w: 30, h: 14 },
     weight: 'light', reward: { items: { moon_herb: 1 } }, countsAsFirstInteraction: true },
   { id: 'glade_cache', kind: 'chest', x: 1580, y: 4300, texture: 'chest_01', reward: { items: { coins: 15 } }, collide: { w: 50, h: 24 } },
   { id: 'corrupted_roots', kind: 'fire', x: 400, y: 4120, texture: 'corrupted_roots_01',
@@ -160,7 +158,7 @@ export const INTERACTIVES = [
   // H
   { id: 'fire_circle', kind: 'fire_circle', x: 1250, y: 1580, texture: 'fire_circle_01', radius: 140 },
   { id: 'ritual_torch', kind: 'fire', x: 1470, y: 1520, texture: 'torch_01', persistent: true, collide: { w: 24, h: 16 } },
-  { id: 'dry_bush', kind: 'fire', x: 1030, y: 1720, texture: 'dry_bush_01', burnSec: 1.0,
+  { id: 'dry_bush', kind: 'fire', x: 1030, y: 1720, texture: 'dry_bush_01', burnSec: 1.0, collide: { w: 56, h: 24 },
     reveal: { spawnPickup: { item: 'crimson_ember', amount: 1, texture: 'icon_ember' } } },
   // J
   { id: 'moonstone', kind: 'pickup', x: 220, y: 3450, item: 'moonstone', amount: 1, texture: 'icon_shard' },

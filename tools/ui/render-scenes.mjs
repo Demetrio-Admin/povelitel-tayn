@@ -196,6 +196,29 @@ if (on('menu')) await guard('menu', async () => {
   m.confirmNew(); save('menu_confirm', renderScenes([m]));
 });
 
+// ---- 3б. Меню и HUD вошедшего игрока (фальшивый сервер)
+if (on('account')) await guard('account', async () => {
+  await freshWorld('mid');
+  const { Account } = await import('../../src/cloud/Account.js');
+  const { SupabaseApi } = await import('../../src/cloud/api.js');
+  const { FakeSupabase } = await import('../../tests/helpers/fake-supabase.mjs');
+  const { services } = await import('../../src/services.js');
+  const { MenuScene } = await import('../../src/scenes/MenuScene.js');
+  const { UIScene } = await import('../../src/scenes/UIScene.js');
+  const srv = new FakeSupabase();
+  const api = new SupabaseApi({ url: 'https://x.supabase.co', anonKey: 'k', fetchFn: srv.fetch, timeoutMs: 1000 });
+  const m0 = new Map(); const store = { getItem: k => m0.get(k) ?? null, setItem: (k, v) => m0.set(k, String(v)), removeItem: k => m0.delete(k) };
+  const acc = new Account({ api, storage: store, state: services.state, setTimer: () => 0, clearTimer: () => {} });
+  services.account = acc;
+  const mg = new MenuScene(); mg.create(); save('menu_guest', renderScenes([mg]));
+  await acc.signUp({ email: 'a@mail.ru', password: 'password-1', nickname: 'Нюта Лесная' });
+  services.state.data.heroLevel = 3; services.state.data.completedEvents = ['a', 'b', 'c'];
+  const ms = new MenuScene(); ms.create(); save('menu_signed', renderScenes([ms]));
+  const ui = new UIScene(); ui.create(); mkHud(ui); ui.zoneName = 'Стартовая поляна'; ui.refreshQuest(); ui.refreshHud(); ui.update(5000, 16);
+  ui.openPause();
+  save('hud_signed_pause', renderScenes([ui], (g) => forestBackdrop(g)));
+});
+
 // ---- 4. Бой
 if (on('combat')) await guard('combat', async () => {
   await freshWorld('mid');

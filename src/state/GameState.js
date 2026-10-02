@@ -39,13 +39,21 @@ export class GameState {
     this.now = now;
     this.data = createDefaultState();
     this.listeners = new Set();
+    this.saveListeners = new Set();
+    this.key = SAVE.key; // ячейка хранилища: гостевая или личная ячейка вошедшего игрока (см. cloud/Account.js)
   }
 
   // ---------- persistence ----------
+  /** Переключает ячейку хранилища. Данные не читает — после этого вызовите load(). */
+  useKey(key) { this.key = key || SAVE.key; }
+
+  /** Подписка на каждое сохранение (облако отправляет прогресс на сервер). */
+  onSave(fn) { this.saveListeners.add(fn); return () => this.saveListeners.delete(fn); }
+
   load() {
     if (!this.storage) return false;
     try {
-      const raw = this.storage.getItem(SAVE.key);
+      const raw = this.storage.getItem(this.key);
       if (!raw) return false;
       const parsed = JSON.parse(raw);
       if (parsed.version !== SAVE_VERSION) return false;
@@ -58,17 +66,36 @@ export class GameState {
   }
 
   hasSave() {
-    try { return !!(this.storage && this.storage.getItem(SAVE.key)); } catch (e) { return false; }
+    try { return !!(this.storage && this.storage.getItem(this.key)); } catch (e) { return false; }
   }
 
   save() {
-    if (!this.storage) return;
-    try { this.storage.setItem(SAVE.key, JSON.stringify(this.data)); } catch (e) { /* quota / private mode */ }
+    this.data.savedAt = this.now();
+    if (this.storage) {
+      try { this.storage.setItem(this.key, JSON.stringify(this.data)); } catch (e) { /* quota / private mode */ }
+    }
+    this.saveListeners.forEach(fn => fn(this.data));
+  }
+
+  /**
+   * Подменяет данные целиком (загрузка из облака). Сохраняет в текущую ячейку без уведомления подписчиков —
+   * иначе облако тут же отправило бы обратно то, что только что получило.
+   */
+  replaceData(data) {
+    this.data = { ...createDefaultState(), ...data };
+    if (this.storage) { try { this.storage.setItem(this.key, JSON.stringify(this.data)); } catch (e) { /* ignore */ } }
+    this.changed('replace');
+  }
+
+  /** Читает текущую ячейку; если там пусто — начинает с чистого состояния (ячейка не стирается). */
+  loadOrDefault() {
+    if (!this.load()) this.data = createDefaultState();
+    this.changed('replace');
   }
 
   reset() {
     this.data = createDefaultState();
-    if (this.storage) this.storage.removeItem(SAVE.key);
+    if (this.storage) this.storage.removeItem(this.key);
     this.changed('reset');
   }
 

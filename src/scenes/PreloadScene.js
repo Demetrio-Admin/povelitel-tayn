@@ -42,7 +42,7 @@ export class PreloadScene extends Phaser.Scene {
 /** Запуск игровых сцен (из Preload или из меню). */
 export function startGame(scene) {
   scene.scene.start('ExplorationScene');
-  scene.scene.launch('UIScene');
+  if (!services.edit) scene.scene.launch('UIScene');
 }
 
 // ---------------------------------------------------------------------------

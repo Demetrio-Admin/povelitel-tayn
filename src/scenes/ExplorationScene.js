@@ -1,6 +1,12 @@
 import Phaser from 'phaser';
 import { VIEW, CAMERA, PLAYER, DEPTH, COLORS, SAVE } from '../config/game.config.js';
-import { WORLD, ZONES, GROUND, COLLIDERS, DECOR, INTERACTIVES, ENEMY_SPAWNS } from '../config/world.layout.js';
+import { WORLD, ZONES, GROUND, COLLIDERS, INTERACTIVES, ENEMY_SPAWNS } from '../config/world.layout.js';
+import { ROADS, WATERS } from '../config/world.terrain.js';
+import { buildTerrain } from '../world/terrain.js';
+import { paintTerrainChunk, terrainChunks } from '../world/terrainPaint.js';
+import { applyPos } from '../world/mapData.js';
+import { propSolid, baseSolid } from '../world/solids.js';
+import { MapEditor } from '../systems/MapEditor.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { Player } from '../objects/Player.js';
@@ -23,8 +29,6 @@ const OBJECT_CLASSES = {
   pickup: PickupObject,
 };
 
-const TREE_KEYS = ['tree_dark_01', 'tree_dark_02', 'tree_autumn_01', 'tree_dark_01', 'tree_autumn_02', 'tree_dark_02', 'birch_01'];
-const SCATTER_KEYS = ['flower_white_01', 'flower_purple_01', 'bush_01', 'bush_02', 'mushroom_red_01', 'rock_small_01', 'flower_white_01', 'bush_01'];
 const EXTRA_BOTTOM = 500; // декоративная полоса леса ниже дома, чтобы героиня была на ~62% экрана
 
 // детерминированный ГПСЧ — карта выглядит одинаково при каждом запуске
@@ -48,10 +52,15 @@ export class ExplorationScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, WORLD.width, WORLD.height);
     this.solids = this.physics.add.staticGroup();
 
+    this.map = services.map;
+    this.terrain = buildTerrain({ ROADS, WATERS });
+    this.interactiveCfgs = applyPos(INTERACTIVES, this.map.pos);
+    this.enemyCfgs = applyPos(ENEMY_SPAWNS, this.map.pos);
+    this.propViews = new Map();
+
     this.buildGround();
     this.buildColliders();
-    this.buildDecor();
-    this.scatterDecor();
+    this.buildProps();
 
     this.interaction = new InteractionSystem(this, bus);
     const p = state.data.player;
@@ -59,8 +68,8 @@ export class ExplorationScene extends Phaser.Scene {
     this.physics.add.collider(this.player.sprite, this.solids);
 
     this.objects = [];
-    for (const cfg of INTERACTIVES) this.addObject(this.createObject(cfg));
-    this.enemies = ENEMY_SPAWNS.map(cfg => new EnemyTrigger(this, cfg));
+    for (const cfg of this.interactiveCfgs) this.addObject(this.createObject(cfg));
+    this.enemies = this.enemyCfgs.map(cfg => new EnemyTrigger(this, cfg));
     this.refreshAll();
 
     // камера: героиня немного ниже центра (Blueprint §7)
@@ -86,6 +95,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.setProviders();
     this.registry.set('savePosition', () => this.savePosition());
     this.stepT = 0;
+    if (services.edit) { this.editor = new MapEditor(this); return; } // режим ?edit: игра не идёт, карту правят руками
     if (!state.hasEvent('unlock_telekinesis_1')) {
       this.time.delayedCall(700, () => this.toast('Дом ведьмы. На столе светится старая книга…'));
     }
@@ -112,9 +122,26 @@ export class ExplorationScene extends Phaser.Scene {
   // ------------------------------------------------------------------ мир
   buildGround() {
     this.add.tileSprite(0, 0, WORLD.width, WORLD.height + EXTRA_BOTTOM, 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
+    this.paintTerrain();
     for (const g of GROUND) this.add.tileSprite(g.x, g.y, g.w, g.h, g.tex).setOrigin(0).setDepth(DEPTH.path);
-    // декоративный лес ниже границы мира
-    this.plantTrees({ x: 0, y: WORLD.height, w: WORLD.width, h: EXTRA_BOTTOM }, false);
+    // тёмная подстилка под лесом ниже границы мира (деревья — в world.props.js)
+    this.add.rectangle(0, WORLD.height, WORLD.width, EXTRA_BOTTOM, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
+  }
+
+  /** Дороги и вода: кривые формы рисуются кусками 512×512 и кладутся поверх травы. */
+  paintTerrain() {
+    const chunks = terrainChunks(this.terrain, WORLD.width, WORLD.height + EXTRA_BOTTOM);
+    const src = (k) => { try { return this.textures.get(k).getSourceImage(); } catch (e) { return null; } };
+    const imgs = { dirt: src('dirt_path_01'), stone: src('stone_path_01'), water: src('swamp_water_01') };
+    for (const c of chunks) {
+      const key = `terrain_${c.cx}_${c.cy}`;
+      if (this.textures.exists(key)) this.textures.remove(key);
+      const cv = document.createElement('canvas');
+      cv.width = c.w; cv.height = c.h;
+      paintTerrainChunk(cv.getContext('2d'), c, this.terrain, imgs);
+      this.textures.addCanvas(key, cv);
+      this.add.image(c.x, c.y, key).setOrigin(0).setDepth(DEPTH.path);
+    }
   }
 
   addBlocker(x, y, w, h) {
@@ -123,43 +150,13 @@ export class ExplorationScene extends Phaser.Scene {
     return z;
   }
 
-  plantTrees(r, single) {
-    this.add.rectangle(r.x, r.y, r.w, r.h, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
-    if (single) { this.addTree(r.x + r.w / 2, r.y + r.h); return; }
-    const sx = 82, sy = 66;
-    const cols = Math.max(1, Math.round(r.w / sx));
-    const rows = Math.max(1, Math.round(r.h / sy));
-    for (let j = 0; j < rows; j++) {
-      for (let i = 0; i < cols; i++) {
-        const x = r.x + (i + 0.5) * (r.w / cols) + (this.random() - 0.5) * 24;
-        const y = r.y + (j + 1) * (r.h / rows) - 4 + (this.random() - 0.5) * 14;
-        this.addTree(x, y);
-      }
-    }
-  }
-
-  addTree(x, y) {
-    const key = TREE_KEYS[Math.floor(this.random() * TREE_KEYS.length)];
-    const t = this.add.image(x, y, key).setOrigin(0.5, 1);
-    applyDisplaySize(t, key);
-    const s = 0.85 + this.random() * 0.3;
-    t.setScale(t.scaleX * s, t.scaleY * s).setFlipX(this.random() > 0.5).setDepth(DEPTH.mainBase + y);
-  }
-
   buildColliders() {
     for (const c of COLLIDERS) {
       const z = this.add.zone(c.x + c.w / 2, c.y + c.h / 2, c.w, c.h);
       this.solids.add(z);
       const bottomDepth = DEPTH.mainBase + c.y + c.h;
       switch (c.kind) {
-        case 'trees': this.plantTrees(c, c.single); break;
-        case 'water': {
-          this.add.tileSprite(c.x, c.y, c.w, c.h, 'swamp_water_01').setOrigin(0).setDepth(DEPTH.path);
-          for (let y = c.y + 60; y < c.y + c.h; y += 260 + this.random() * 200) {
-            applyDisplaySize(this.add.image(c.x + 10, y, 'reeds_01'), 'reeds_01').setOrigin(0.5, 1).setDepth(DEPTH.mainBase + y);
-          }
-          break;
-        }
+        case 'trees': this.add.rectangle(c.x, c.y, c.w, c.h, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1); break;
         case 'wall':
           this.add.tileSprite(c.x, c.y - 40, c.w, c.h + 40, 'wall_wood_01').setOrigin(0).setDepth(bottomDepth);
           break;
@@ -174,32 +171,36 @@ export class ExplorationScene extends Phaser.Scene {
         default: break;
       }
     }
+    // вода: форма кривая, а Arcade умеет только прямоугольники — вода режется на полосы
+    for (const r of this.terrain.waterRects) this.solids.add(this.add.zone(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h));
   }
 
-  buildDecor() {
-    for (const d of DECOR) {
-      const img = this.add.image(d.x, d.y, d.key).setOrigin(0.5, 1);
-      applyDisplaySize(img, d.key);
-      const depth = d.layer === 'back' ? DEPTH.backDecor : d.layer === 'front' ? DEPTH.frontDecor : DEPTH.mainBase + d.y;
-      img.setDepth(depth);
-      if (d.layer === 'front') img.setAlpha(0.85);
-      if (d.light) this.addGlow(d.x, d.y - img.displayHeight + 12, 0xffb36b, 0.4, null, d.light / 64);
-    }
+  /** Деревья, кусты, камни, грибы, цветы, фонари — всё из world.props.js (+ правки редактора). */
+  buildProps() {
+    for (const p of this.map.props) this.addProp(p);
   }
 
-  scatterDecor() {
-    const avoid = [...COLLIDERS, ...GROUND, ZONES.find(z => z.id === 'A')];
-    let placed = 0;
-    for (let i = 0; i < 1400 && placed < 340; i++) {
-      const x = 110 + this.random() * (WORLD.width - 220);
-      const y = 120 + this.random() * (WORLD.height - 200);
-      if (avoid.some(r => inRect(x, y, r, 18))) continue;
-      if (INTERACTIVES.some(o => Math.hypot(o.x - x, o.y - y) < 130)) continue;
-      if (ENEMY_SPAWNS.some(o => Math.hypot(o.x - x, o.y - y) < 120)) continue;
-      const key = SCATTER_KEYS[Math.floor(this.random() * SCATTER_KEYS.length)];
-      applyDisplaySize(this.add.image(x, y, key), key).setOrigin(0.5, 1).setDepth(DEPTH.mainBase + y).setAlpha(0.95);
-      placed++;
-    }
+  /** Один объект расстановки: картинка, свечение, физический блок. Запись в propViews нужна редактору. */
+  addProp(p) {
+    const img = this.add.image(p.x, p.y, p.k).setOrigin(0.5, 1);
+    applyDisplaySize(img, p.k);
+    if (p.s) img.setScale(img.scaleX * p.s, img.scaleY * p.s);
+    if (p.f) img.setFlipX(true);
+    const view = { p, img, glow: null, blocker: null };
+    this.placePropView(view);
+    if (p.light) view.glow = this.addGlow(p.x, p.y - img.displayHeight + 12, 0xffb36b, 0.4, null, p.light / 64);
+    const s = propSolid(p);
+    if (s) { view.blocker = this.add.zone(s.x + s.w / 2, s.y + s.h / 2, s.w, s.h); this.solids.add(view.blocker); }
+    this.propViews.set(p.id, view);
+    return view;
+  }
+
+  /** Слой и глубина объекта по его данным. */
+  placePropView(view) {
+    const { p, img } = view;
+    img.setPosition(p.x, p.y);
+    const depth = p.l === 'back' ? DEPTH.backDecor : p.l === 'front' ? DEPTH.frontDecor : DEPTH.mainBase + p.y;
+    img.setDepth(depth).setAlpha(p.l === 'front' ? 0.85 : 1);
   }
 
   addGlow(x, y, color, alpha = 0.4, owner = null, scale = 1) {
@@ -357,7 +358,7 @@ export class ExplorationScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------ цикл
   savePosition() {
-    if (!this.player || services.resetting) return;
+    if (!this.player || services.resetting || this.editor) return;
     services.state.data.player = { x: Math.round(this.player.x), y: Math.round(this.player.y) };
     services.state.save();
   }
@@ -371,6 +372,7 @@ export class ExplorationScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    if (this.editor) return;
     const dt = Math.min(delta, 50) / 1000;
     const { state } = services;
     state.data.stats.playTimeMs += delta;

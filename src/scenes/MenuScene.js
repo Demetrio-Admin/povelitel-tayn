@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { VIEW, COLORS } from '../config/game.config.js';
-import { services } from '../services.js';
+import { services, resetProgress } from '../services.js';
+import { showAuth, showAccount, showConflict } from '../ui/accountUI.js';
 import { startGame } from './PreloadScene.js';
 import { buildSettingsPanel } from '../ui/SettingsPanel.js';
 import { UI } from '../config/ui.config.js';
@@ -28,18 +29,25 @@ export class MenuScene extends Phaser.Scene {
     addDivider(this, W / 2, 458, 460).setDepth(5);
     this.tweens.add({ targets: title, y: 328, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
+    const acc = services.account;
     const hasSave = state.hasSave() && state.data.completedEvents.length > 0;
-    let y = 700;
-    if (hasSave) { this.button(y, 'Продолжить', true, () => this.begin()); y += 112; }
+    this.buildAccountLine(acc);
+    let y = 650;
+    if (hasSave) { this.button(y, 'Продолжить', true, () => this.begin()); y += 108; }
     this.button(y, 'Новая игра', !hasSave, () => (hasSave ? this.confirmNew() : this.begin()));
-    y += 112;
+    y += 108;
     this.button(y, 'Настройки', false, () => this.openSettings());
+    y += 108;
+    if (acc) {
+      this.accountButton = this.button(y, acc.signedIn ? 'Профиль' : 'Войти / Регистрация', false, () => this.openAccount());
+      y += 108;
+    }
 
     if (hasSave) {
       const d = state.data;
-      this.add.text(W / 2, y + 100, `Сохранение: уровень ${d.heroLevel} · побед ${d.stats.combats.filter(c => c.result === 'victory').length}`, { fontFamily: FONT, fontSize: '19px', color: COLORS.textDim, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(5);
+      this.add.text(W / 2, 566, `Сохранение: уровень ${d.heroLevel} · побед ${d.stats.combats.filter(c => c.result === 'victory').length}`, { fontFamily: FONT, fontSize: '19px', color: COLORS.textDim, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(5);
     }
-    this.add.text(W / 2, H - 40, 'v0.4.0 · interface', { fontFamily: FONT, fontSize: '16px', color: COLORS.textDim, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5);
+    this.add.text(W / 2, H - 40, 'v0.5.0 · аккаунты и редактор', { fontFamily: FONT, fontSize: '16px', color: COLORS.textDim, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5);
 
     const kb = this.input.keyboard;
     kb.on('keydown-ENTER', () => { if (!this.overlay) this.begin(); });
@@ -48,6 +56,48 @@ export class MenuScene extends Phaser.Scene {
 
     this.cameras.main.fadeIn(400);
     audio.setMusic('explore');
+
+    // вход мог восстановиться уже после показа меню, или после входа нужно выбрать сохранение
+    if (acc) {
+      this.offAccount = acc.onChange((reason) => {
+        if (this.starting || this.overlay) return;
+        if (reason === 'restore' || reason === 'sync-boot' || reason === 'signout') this.scene.restart();
+      });
+      this.events.once('shutdown', () => { this.offAccount?.(); });
+      if (acc.pendingConflict) this.askConflict();
+    }
+  }
+
+  /** Строка под заголовком: кто играет и где хранится прогресс. */
+  buildAccountLine(acc) {
+    let text = '', color = COLORS.textDim;
+    if (acc?.signedIn) {
+      const s = acc.sync.state;
+      const where = s === 'error' ? 'нет связи, сохраним позже' : 'прогресс в облаке';
+      text = `${acc.nickname || 'Игрок'} · ${where}`; color = s === 'error' ? '#ffb07a' : COLORS.textGold;
+    } else if (acc) {
+      text = 'Гость · прогресс только на этом устройстве';
+    }
+    if (text) this.add.text(W / 2, 520, text, { fontFamily: FONT, fontSize: '21px', color, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(5);
+  }
+
+  openAccount() {
+    const acc = services.account;
+    this.overlay = { destroy: () => this.htmlWindow?.close?.() }; // пока открыто HTML-окно, кнопки меню не реагируют
+    const done = () => { this.overlay = null; this.htmlWindow = null; this.scene.restart(); };
+    this.htmlWindow = acc.signedIn
+      ? showAccount(acc, { onClose: () => { this.overlay = null; }, onSignedOut: done, onNickname: () => this.scene.restart() })
+      : showAuth(acc, { onDone: done, onClose: () => { this.overlay = null; } });
+  }
+
+  async askConflict() {
+    const acc = services.account, c = acc.pendingConflict;
+    if (!c) return;
+    this.overlay = { destroy() {} };
+    const choice = await showConflict({ cloud: { data: c.cloud.data, updatedAt: c.cloud.updated_at }, local: { data: c.local, source: c.source } });
+    await acc.resolveConflict(choice);
+    this.overlay = null;
+    this.scene.restart();
   }
 
   buildBackground() {
@@ -103,10 +153,9 @@ export class MenuScene extends Phaser.Scene {
       c.add(b.parts);
     };
     mk(W / 2 - 134, 'Отмена', true, () => this.closeOverlay());
-    mk(W / 2 + 134, 'Начать', false, () => {
-      services.state.reset();
-      services.hadSave = false;
+    mk(W / 2 + 134, 'Начать', false, async () => {
       this.closeOverlay();
+      await resetProgress();
       this.begin();
     });
     this.overlay = c;

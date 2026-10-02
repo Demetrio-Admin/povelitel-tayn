@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { initServices } from '../services.js';
+import { initServices, bootCloud } from '../services.js';
 
 // BootScene — инициализация состояния/сервисов и переход к загрузке.
 export class BootScene extends Phaser.Scene {
@@ -7,6 +7,7 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     initServices();
-    this.scene.start('PreloadScene');
+    const next = () => this.scene.start('PreloadScene');
+    bootCloud().then(next, next); // вход восстанавливается параллельно, ждём не дольше нескольких секунд
   }
 }

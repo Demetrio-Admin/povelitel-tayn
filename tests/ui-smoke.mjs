@@ -81,6 +81,36 @@ await mute(async () => {
   } catch (e) { err = e; }
   ok(!err, 'меню: с сохранением, без сохранения, подтверждение и настройки' + (err ? ': ' + err.stack.split('\n').slice(0, 3).join(' | ') : ''));
 
+  // ---- вошедший игрок: ник и облако в HUD, кнопка профиля в меню и паузе
+  err = null;
+  try {
+    const { Account } = await import('../src/cloud/Account.js');
+    const { SupabaseApi } = await import('../src/cloud/api.js');
+    const { FakeSupabase } = await import('./helpers/fake-supabase.mjs');
+    const { services } = await import('../src/services.js');
+    await freshWorld('mid');
+    const srv = new FakeSupabase();
+    const api = new SupabaseApi({ url: 'https://x.supabase.co', anonKey: 'k', fetchFn: srv.fetch, timeoutMs: 1000 });
+    const store = (() => { const m = new Map(); return { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k) }; })();
+    const acc = new Account({ api, storage: store, state: services.state, setTimer: () => 0, clearTimer: () => {} });
+    services.account = acc;
+    const guestHud = new UIScene(); guestHud.create(); mkHud(guestHud); guestHud.refreshHud();
+    ok(!guestHud.syncDot.visible && guestHud.levelText.text === 'Ур. 3', 'HUD гостя: без ника и без значка облака');
+    await acc.signUp({ email: 'a@mail.ru', password: 'password-1', nickname: 'Нюта Лесная' });
+    const u = new UIScene(); u.create(); mkHud(u); u.refreshHud();
+    ok(u.levelText.text.startsWith('Нюта') && u.syncDot.visible, 'HUD вошедшего: ник и значок облака (' + u.levelText.text + ')');
+    u.openPause(); const labels = (u.modal?.buttons || []).map(b => b.label);
+    ok(labels.some(l => l.startsWith('Профиль')), 'пауза: есть «Профиль · ник» (' + labels.join(', ') + ')');
+    u.closeModal(null);
+    const m3 = new MenuScene(); m3.create();
+    ok(m3.accountButton && m3.accountButton.text.text === 'Профиль', 'меню вошедшего: кнопка «Профиль»');
+    acc.session = null; acc.nickname = '';
+    const m4 = new MenuScene(); m4.create();
+    ok(m4.accountButton && m4.accountButton.text.text === 'Войти / Регистрация', 'меню гостя: кнопка «Войти / Регистрация»');
+    services.account = null;
+  } catch (e) { err = e; }
+  ok(!err, 'аккаунт: HUD, пауза и меню строятся' + (err ? ': ' + err.stack.split('\n').slice(0, 3).join(' | ') : ''));
+
   // ---- бой
   err = null;
   try {

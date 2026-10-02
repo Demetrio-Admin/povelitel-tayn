@@ -1,0 +1,19 @@
+{
+  "name": "witch-rpg-prototype",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "test": "node tests/run-tests.js",
+    "e2e": "node tests/e2e/play.mjs"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

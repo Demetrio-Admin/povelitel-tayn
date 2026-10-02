@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { VIEW, CAMERA, PLAYER, DEPTH, COLORS, SAVE } from '../config/game.config.js';
-import { WORLD, ZONES, GROUND, COLLIDERS, INTERACTIVES, ENEMY_SPAWNS } from '../config/world.layout.js';
-import { ROADS, WATERS } from '../config/world.terrain.js';
+import { WORLD, ZONES, GROUND, INTERACTIVES, ENEMY_SPAWNS } from '../config/world.layout.js';
 import { buildTerrain } from '../world/terrain.js';
 import { paintTerrainChunk, terrainChunks } from '../world/terrainPaint.js';
 import { applyPos } from '../world/mapData.js';
@@ -53,7 +52,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.solids = this.physics.add.staticGroup();
 
     this.map = services.map;
-    this.terrain = buildTerrain({ ROADS, WATERS });
+    this.terrain = buildTerrain({ ROADS: this.map.roads, WATERS: this.map.waters });
     this.interactiveCfgs = applyPos(INTERACTIVES, this.map.pos);
     this.enemyCfgs = applyPos(ENEMY_SPAWNS, this.map.pos);
     this.propViews = new Map();
@@ -134,6 +133,8 @@ export class ExplorationScene extends Phaser.Scene {
     const chunks = terrainChunks(this.terrain, WORLD.width, WORLD.height + EXTRA_BOTTOM);
     const src = (k) => { try { return this.textures.get(k).getSourceImage(); } catch (e) { return null; } };
     const imgs = { dirt: src('dirt_path_01'), stone: src('stone_path_01'), water: src('swamp_water_01') };
+    for (const im of this.terrainImages || []) im.destroy(); // перерисовка после правки в редакторе
+    this.terrainImages = [];
     for (const c of chunks) {
       const key = `terrain_${c.cx}_${c.cy}`;
       if (this.textures.exists(key)) this.textures.remove(key);
@@ -141,8 +142,26 @@ export class ExplorationScene extends Phaser.Scene {
       cv.width = c.w; cv.height = c.h;
       paintTerrainChunk(cv.getContext('2d'), c, this.terrain, imgs);
       this.textures.addCanvas(key, cv);
-      this.add.image(c.x, c.y, key).setOrigin(0).setDepth(DEPTH.path);
+      this.terrainImages.push(this.add.image(c.x, c.y, key).setOrigin(0).setDepth(DEPTH.path));
     }
+    // тексты кусков, которых больше нет (дорогу убрали), чистим
+    for (const key of this.textures.getTextureKeys()) {
+      if (key.startsWith('terrain_') && !this.terrainImages.some(im => im.texture.key === key)) this.textures.remove(key);
+    }
+  }
+
+  /** После правки дорог и воды: форма, рисунок и коллизия воды пересобираются целиком. */
+  rebuildTerrain(roads, waters) {
+    this.map.roads = roads; this.map.waters = waters;
+    this.terrain = buildTerrain({ ROADS: roads, WATERS: waters });
+    this.paintTerrain();
+    this.buildWaterSolids();
+  }
+
+  /** После правки стен: старые блоки и их рисунок убираются, новые строятся по текущему списку. */
+  rebuildColliders(list) {
+    this.map.colliders = list;
+    this.buildColliders();
   }
 
   addBlocker(x, y, w, h) {
@@ -152,28 +171,41 @@ export class ExplorationScene extends Phaser.Scene {
   }
 
   buildColliders() {
-    for (const c of COLLIDERS) {
+    for (const o of this.colliderObjects || []) o.destroy();
+    this.colliderObjects = [];
+    const keep = (o) => { this.colliderObjects.push(o); return o; };
+    for (const c of this.map.colliders) {
       const z = this.add.zone(c.x + c.w / 2, c.y + c.h / 2, c.w, c.h);
       this.solids.add(z);
+      keep(z);
       const bottomDepth = DEPTH.mainBase + c.y + c.h;
       switch (c.kind) {
-        case 'trees': this.add.rectangle(c.x, c.y, c.w, c.h, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1); break;
+        case 'trees': keep(this.add.rectangle(c.x, c.y, c.w, c.h, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1)); break;
         case 'wall':
-          this.add.tileSprite(c.x, c.y - 40, c.w, c.h + 40, 'wall_wood_01').setOrigin(0).setDepth(bottomDepth);
+          keep(this.add.tileSprite(c.x, c.y - 40, c.w, c.h + 40, 'wall_wood_01').setOrigin(0).setDepth(bottomDepth));
           break;
         case 'furniture':
-          this.add.rectangle(c.x, c.y - 20, c.w, c.h + 20, COLORS.woodLight).setOrigin(0).setStrokeStyle(3, COLORS.wood).setDepth(bottomDepth);
-          if (c.label) this.add.text(c.x + c.w / 2, c.y + c.h / 2 - 10, c.label, { fontSize: '14px', color: COLORS.textDim }).setOrigin(0.5).setDepth(bottomDepth + 1);
+          keep(this.add.rectangle(c.x, c.y - 20, c.w, c.h + 20, COLORS.woodLight).setOrigin(0).setStrokeStyle(3, COLORS.wood).setDepth(bottomDepth));
+          if (c.label) keep(this.add.text(c.x + c.w / 2, c.y + c.h / 2 - 10, c.label, { fontSize: '14px', color: COLORS.textDim }).setOrigin(0.5).setDepth(bottomDepth + 1));
           break;
         case 'ruin':
-          this.add.tileSprite(c.x, c.y - 30, c.w, c.h + 30, 'wall_ruin_01').setOrigin(0).setTileScale(0.5).setDepth(bottomDepth);
-          this.add.rectangle(c.x, c.y - 30, c.w, c.h + 30).setOrigin(0).setStrokeStyle(3, 0x2f2d33).setDepth(bottomDepth + 1);
+          keep(this.add.tileSprite(c.x, c.y - 30, c.w, c.h + 30, 'wall_ruin_01').setOrigin(0).setTileScale(0.5).setDepth(bottomDepth));
+          keep(this.add.rectangle(c.x, c.y - 30, c.w, c.h + 30).setOrigin(0).setStrokeStyle(3, 0x2f2d33).setDepth(bottomDepth + 1));
           break;
         default: break;
       }
     }
-    // вода: форма кривая, а Arcade умеет только прямоугольники — вода режется на полосы
-    for (const r of this.terrain.waterRects) this.solids.add(this.add.zone(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h));
+    this.buildWaterSolids();
+  }
+
+  /** Вода: форма кривая, а Arcade умеет только прямоугольники — вода режется на полосы. */
+  buildWaterSolids() {
+    for (const z of this.waterZones || []) z.destroy();
+    this.waterZones = this.terrain.waterRects.map(r => {
+      const z = this.add.zone(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h);
+      this.solids.add(z);
+      return z;
+    });
   }
 
   /** Деревья, кусты, камни, грибы, цветы, фонари — всё из world.props.js (+ правки редактора). */

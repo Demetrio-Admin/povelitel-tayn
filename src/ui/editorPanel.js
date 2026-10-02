@@ -23,6 +23,8 @@ const CSS = `
 #me-panel .me-status{font-size:12.5px;color:#a8977a;min-height:2.6em;white-space:pre-line}
 #me-panel .me-hint{font-size:12px;color:#a8977a}
 #me-panel .me-warn{color:#ff9a8a}
+#me-panel .me-tabs button{flex:1 1 0;font-weight:700}
+#me-panel:not([data-mode=props]) [data-sec=props],#me-panel:not([data-mode=terrain]) [data-sec=terrain],#me-panel:not([data-mode=walls]) [data-sec=walls]{display:none}
 `;
 
 export function buildEditorPanel(actions) {
@@ -35,18 +37,49 @@ export function buildEditorPanel(actions) {
   root.innerHTML = `
     <header><span>Редактор карты</span><button data-a="min" title="Свернуть">▾</button></header>
     <div class="me-body">
+      <div class="me-row me-tabs">
+        <button data-a="mode_props">Объекты</button><button data-a="mode_terrain">Дороги и река</button><button data-a="mode_walls">Стены</button>
+      </div>
       <div class="me-info" data-r="info">Коснитесь объекта, чтобы выбрать. Тяните — переместить. Пустое место — двигать карту.</div>
       <div class="me-row">
         <button data-a="undo">↶ Отмена</button><button data-a="redo">↷ Повтор</button>
+      </div>
+      <div class="me-row" data-sec="props">
         <button data-a="dup">⧉ Копия</button><button data-a="flip">⇆ Зеркало</button>
         <button data-a="smaller">− Меньше</button><button data-a="bigger">+ Больше</button>
         <button data-a="delete" class="me-danger">🗑 Удалить</button>
+      </div>
+      <div data-sec="terrain" class="me-body" style="padding:0">
+        <div class="me-row">
+          <button data-a="pt_add">＋ Точка</button><button data-a="pt_add_start">＋ Точка в начале</button>
+          <button data-a="pt_del" class="me-danger">− Убрать точку</button>
+        </div>
+        <div class="me-row">
+          <button data-a="wider">↔ Шире</button><button data-a="narrower">↔ Уже</button>
+          <button data-a="smooth">〰 Сгладить</button><button data-a="join">⛓ Примкнуть к дороге</button>
+        </div>
+        <div class="me-row">
+          <button data-a="magnet">Магнит стыков</button>
+          <button data-a="road_new">＋ Тропа</button><button data-a="stone_new">＋ Каменная</button><button data-a="pond_new">＋ Водоём</button>
+          <button data-a="shape_del" class="me-danger">🗑 Убрать всю линию</button>
+        </div>
+      </div>
+      <div data-sec="walls" class="me-body" style="padding:0">
+        <div class="me-row">
+          <select data-r="wallkind"><option value="wall">Стена дома</option><option value="ruin">Руины</option><option value="trees">Лес (непроходимо)</option><option value="furniture">Мебель</option></select>
+          <button data-a="wall_add">＋ Добавить</button>
+        </div>
+        <div class="me-row">
+          <button data-a="w_minus">↔ −</button><button data-a="w_plus">↔ +</button>
+          <button data-a="h_minus">↕ −</button><button data-a="h_plus">↕ +</button>
+          <button data-a="wall_dup">⧉ Копия</button><button data-a="wall_del" class="me-danger">🗑 Удалить</button>
+        </div>
       </div>
       <div class="me-row">
         <button data-a="snap">Сетка: нет</button><button data-a="colliders">Коллизии</button>
         <button data-a="fit">Вся карта</button><button data-a="hero">К героине</button>
       </div>
-      <div class="me-row">
+      <div class="me-row" data-sec="props">
         <select data-r="palette"></select><button data-a="add">＋ Добавить</button>
       </div>
       <div class="me-row">
@@ -58,7 +91,7 @@ export function buildEditorPanel(actions) {
         <button data-a="reset" class="me-danger">Сбросить черновик</button><button data-a="exit">Выйти</button>
       </div>
       <div class="me-status" data-r="status"></div>
-      <div class="me-hint">Правки сохраняются в этом браузере сами. Чтобы они попали в игру для всех — «Скачать world.edits.js» и положить файл в src/config/ (или прислать мне).</div>
+      <div class="me-hint">Правки сохраняются в этом браузере сами. Чтобы они попали в игру для всех — «Скачать world.edits.js» и положить файл в src/config/ (или прислать мне). Дороги, река и стены хранятся в том же файле.</div>
     </div>`;
   document.body.appendChild(root);
 
@@ -78,9 +111,12 @@ export function buildEditorPanel(actions) {
     const a = b.dataset.a;
     if (a === 'min') { root.classList.toggle('me-min'); b.textContent = root.classList.contains('me-min') ? '▸' : '▾'; return; }
     if (a === 'add') { actions.add?.(sel.value); return; }
+    if (a === 'wall_add') { actions.wall_add?.(root.querySelector('[data-r=wallkind]').value); return; }
     actions[a]?.();
   });
   sel.addEventListener('change', () => sel.blur());
+  root.querySelector('[data-r=wallkind]').addEventListener('change', (e) => e.target.blur());
+  root.dataset.mode = 'props';
   // клавиши редактора не должны уходить в поле выбора
   root.addEventListener('keydown', (e) => e.stopPropagation());
 
@@ -89,6 +125,10 @@ export function buildEditorPanel(actions) {
     setInfo(text) { $('info').textContent = text; },
     setStatus(text, warn = false) { const el = $('status'); el.textContent = text; el.classList.toggle('me-warn', warn); },
     setToggle(name, on, label) { const b = btn(name); b.classList.toggle('me-on', !!on); if (label) b.textContent = label; },
+    setMode(m) {
+      root.dataset.mode = m;
+      for (const k of ['props', 'terrain', 'walls']) btn('mode_' + k).classList.toggle('me-on', k === m);
+    },
     setEnabled(name, on) { const b = btn(name); if (b) b.disabled = !on; },
     destroy() { root.remove(); css.remove(); },
   };

@@ -10,8 +10,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const OUT = process.argv[2] || path.join(ROOT, 'tools/world/shots');
 fs.mkdirSync(OUT, { recursive: true });
 
-import { WORLD, COLLIDERS, INTERACTIVES, ENEMY_SPAWNS, GROUND } from '../../src/config/world.layout.js';
-import { ROADS, WATERS } from '../../src/config/world.terrain.js';
+import { WORLD, INTERACTIVES, ENEMY_SPAWNS, GROUND } from '../../src/config/world.layout.js';
 import { ASSET_FILES, DISPLAY_SIZE } from '../../src/config/assets.manifest.js';
 import { buildTerrain } from '../../src/world/terrain.js';
 import { paintTerrainChunk, terrainChunks } from '../../src/world/terrainPaint.js';
@@ -21,8 +20,9 @@ import { ENEMIES } from '../../src/config/balance.enemies.js';
 
 const EXTRA = 500;
 const W = WORLD.width, H = WORLD.height + EXTRA;
-const terrain = buildTerrain({ ROADS, WATERS });
 const map = resolveMap({});
+const terrain = buildTerrain({ ROADS: map.roads, WATERS: map.waters });
+const COLLIDERS = map.colliders; // с правками из редактора
 const img = {};
 const load = async (k) => { if (!img[k] && ASSET_FILES[k]) img[k] = await loadImage(path.join(ROOT, 'public', ASSET_FILES[k])); return img[k]; };
 

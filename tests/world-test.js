@@ -7,7 +7,8 @@ import { buildTerrain, distToRoad, onWater } from '../src/world/terrain.js';
 import { PROP_DEFS } from '../src/world/propDefs.js';
 import { collectSolids, propSolid } from '../src/world/solids.js';
 import { buildWalkGrid, floodFrom, reachableNear } from '../src/world/walk.js';
-import { applyEdits, diffEdits, applyPos, diffPos, exportEditsFile, resolveMap, saveDraft, loadDraft, DRAFT_KEY } from '../src/world/mapData.js';
+import { applyEdits, diffEdits, applyPos, diffPos, exportEditsFile, resolveMap, saveDraft, loadDraft, DRAFT_KEY, baseTerrain, applyListEdits, applyTerrainEdits, diffList, diffTerrain } from '../src/world/mapData.js';
+import * as TE from '../src/world/terrainEdit.js';
 import { History, pickAt, snapValue, nextId, clamp } from '../src/world/editorCore.js';
 import { checkWalkability } from '../src/world/check.js';
 import { EDITS } from '../src/config/world.edits.js';
@@ -17,12 +18,14 @@ let failures = 0;
 const ok = (cond, msg) => { if (cond) console.log('  ✓', msg); else { failures++; console.log('  ✗', msg); } };
 const memStorage = () => { const m = new Map(); return { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, v), removeItem: k => m.delete(k) }; };
 
-const terrain = buildTerrain({ ROADS, WATERS });
-const solidsFor = (skip) => collectSolids({ colliders: COLLIDERS, props: PROPS, interactives: INTERACTIVES, enemies: ENEMY_SPAWNS, waterRects: terrain.waterRects, skip: new Set(skip) });
+// то, что реально в игре: базовые дороги, вода и стены + правки из world.edits.js
+const LIVE = resolveMap({ storage: null, useDraft: false });
+const terrain = buildTerrain({ ROADS: LIVE.roads, WATERS: LIVE.waters });
+const solidsFor = (skip) => collectSolids({ colliders: LIVE.colliders, props: PROPS, interactives: INTERACTIVES, enemies: ENEMY_SPAWNS, waterRects: terrain.waterRects, skip: new Set(skip) });
 
 console.log('\nМир: форма дорог и воды');
 {
-  ok(terrain.roads.length === ROADS.length && terrain.waters.length === WATERS.length, 'все дороги и водоёмы построены');
+  ok(terrain.roads.length === LIVE.roads.length && terrain.waters.length === LIVE.waters.length, 'все дороги и водоёмы построены');
   const wob = terrain.roads.every(r => r.poly.length > 40);
   ok(wob, 'у каждой дороги полигон с десятками точек (не прямоугольник)');
   // ручей: непрерывная стена на x 706–814 в зоне запертых проходов
@@ -92,19 +95,20 @@ console.log('\nМир: проходимость');
 console.log('\nМир: проверка редактора');
 {
   const ENEMIES = ENEMY_SPAWNS;
-  const none = checkWalkability({ colliders: COLLIDERS, props: PROPS, interactives: INTERACTIVES, enemies: ENEMIES, terrain });
+  const baseT = buildTerrain({ ROADS, WATERS });
+  const none = checkWalkability({ colliders: COLLIDERS, props: PROPS, interactives: INTERACTIVES, enemies: ENEMIES, terrain: baseT });
   ok(none.length === 0, 'checkWalkability: у базовой расстановки проблем нет' + (none.length ? ': ' + none.map(p => p.text).join('; ') : ''));
   // то, что реально в игре: базовая расстановка + правки из редактора (world.edits.js)
   const live = resolveMap({ storage: null, useDraft: false });
-  const withEdits = checkWalkability({ colliders: COLLIDERS, props: live.props, interactives: applyPos(INTERACTIVES, live.pos), enemies: applyPos(ENEMIES, live.pos), terrain });
-  ok(withEdits.length === 0, `checkWalkability: расстановка с правками из редактора проходима (${Object.keys(EDITS.props).length} правок)` + (withEdits.length ? ': ' + withEdits.map(p => p.text).join('; ') : ''));
+  const withEdits = checkWalkability({ colliders: live.colliders, props: live.props, interactives: applyPos(INTERACTIVES, live.pos), enemies: applyPos(ENEMIES, live.pos), terrain });
+  ok(withEdits.length === 0, `checkWalkability: карта с правками из редактора проходима (${Object.keys(EDITS.props).length} объектов, дорог ${Object.keys(EDITS.roads || {}).length}, воды ${Object.keys(EDITS.waters || {}).length}, стен ${Object.keys(EDITS.cols || {}).length})` + (withEdits.length ? ': ' + withEdits.map(p => p.text).join('; ') : ''));
   // «стена» из камней поперёк главной тропы в проходе между деревьями — проверка должна это заметить
   const wall = []; for (let x = 800; x < 1720; x += 30) wall.push({ id: 'w' + x, k: 'rock_small_01', x, y: 3200 });
-  const bad = checkWalkability({ colliders: COLLIDERS, props: [...PROPS, ...wall], interactives: INTERACTIVES, enemies: ENEMIES, terrain });
+  const bad = checkWalkability({ colliders: COLLIDERS, props: [...PROPS, ...wall], interactives: INTERACTIVES, enemies: ENEMIES, terrain: baseT });
   ok(bad.length > 5, 'checkWalkability: камни поперёк тропы замечены (' + bad.length + ' проблем)');
   // дыра в проходе корней: убрать «корни» из закрытых проходов нельзя, но можно сдвинуть блок деревьев
   const hole = COLLIDERS.filter(c => !(c.kind === 'trees' && c.x === 500 && c.y === 4030));
-  const leak = checkWalkability({ colliders: hole, props: PROPS, interactives: INTERACTIVES, enemies: ENEMIES, terrain });
+  const leak = checkWalkability({ colliders: hole, props: PROPS, interactives: INTERACTIVES, enemies: ENEMIES, terrain: baseT });
   ok(leak.some(p => /в обход/.test(p.text)), 'checkWalkability: щель в лесном блоке пускает в обход корней — замечено');
 }
 
@@ -150,6 +154,88 @@ console.log('\nМир: правки и черновик редактора');
   st.setItem(DRAFT_KEY, '{oops'); ok(loadDraft(st) === null, 'битый черновик игнорируется');
   const expected = PROPS.length - Object.values(EDITS.props).filter(v => v === null).length + EDITS.add.length;
   ok(resolveMap({ storage: st, useDraft: true }).props.length === expected, `битый черновик → расстановка из world.edits.js (${expected} объектов)`);
+}
+
+console.log('\nМир: правки дорог, воды и стен');
+{
+  const b = baseTerrain();
+  ok(b.roads.length === ROADS.length && b.waters.length === WATERS.length && b.cols.length === COLLIDERS.length, 'baseTerrain: все дороги, вода и стены на месте');
+  ok(b.cols[0].id === 'c0' && new Set(b.cols.map(c => c.id)).size === b.cols.length, 'у каждой стены есть id (c0, c1…), id уникальны');
+  ok(b.roads.every((r, i) => r.n === i), 'у базовых дорог номер шума = место в списке');
+  // без правок живой мир = исходные данные
+  const none = applyTerrainEdits({});
+  ok(JSON.stringify(none.roads) === JSON.stringify(b.roads) && JSON.stringify(none.colliders) === JSON.stringify(b.cols), 'без правок дороги и стены не меняются');
+  ok(JSON.stringify(diffTerrain({ roads: b.roads, waters: b.waters, colliders: b.cols })) === '{}', 'diffTerrain: без изменений — пусто (файл не раздувается)');
+
+  // сдвиг точки дороги, новая дорога, удаление воды, сдвиг и новая стена, удаление стены
+  const cur = baseTerrain();
+  cur.roads.find(r => r.id === 'main').pts[3] = [1200, 4100];
+  cur.roads.push({ id: 'rd001', kind: 'stone', w: 100, n: 7, pts: [[100, 100], [200, 150]] });
+  cur.roads = cur.roads.filter(r => r.id !== 'roots');
+  cur.waters = cur.waters.filter(w => w.id !== 'pond');
+  cur.cols.find(c => c.id === 'c5').x += 16;
+  cur.cols.push({ id: 'cn001', kind: 'wall', x: 10, y: 20, w: 30, h: 40 });
+  cur.cols = cur.cols.filter(c => c.id !== 'c6');
+  const d = diffTerrain({ roads: cur.roads, waters: cur.waters, colliders: cur.cols });
+  ok(Object.keys(d.roads).sort().join() === 'main,rd001,roots' && d.roads.roots === null && d.roads.main.pts[3][0] === 1200, 'diffTerrain: изменённая, новая и удалённая дорога');
+  ok(d.waters.pond === null && Object.keys(d.waters).length === 1, 'diffTerrain: удалённый водоём');
+  ok(d.cols.c6 === null && d.cols.cn001.w === 30 && d.cols.c5.x === b.cols[5].x + 16, 'diffTerrain: стены — сдвиг, новая, удалённая');
+  const back = applyTerrainEdits(d);
+  ok(JSON.stringify(back.roads.map(r => r.id)) === JSON.stringify(cur.roads.map(r => r.id)) && JSON.stringify(back.roads) === JSON.stringify(cur.roads), 'applyTerrainEdits(diff) воспроизводит дороги точь-в-точь');
+  ok(JSON.stringify(back.waters) === JSON.stringify(cur.waters) && JSON.stringify(back.colliders) === JSON.stringify(cur.cols), 'applyTerrainEdits(diff) воспроизводит воду и стены');
+  ok(ROADS[0].n === undefined && COLLIDERS[0].id === undefined, 'исходные world.terrain.js / world.layout.js не меняются');
+  // удаление дороги не меняет вид соседних: шум берётся из n, а не из позиции в списке
+  const t0 = buildTerrain({ ROADS: b.roads, WATERS: b.waters });
+  const t1 = buildTerrain({ ROADS: back.roads, WATERS: back.waters });
+  const mainA = t0.roads.find(r => r.id === 'main'), mainB = t1.roads.find(r => r.id === 'main');
+  const westA = t0.roads.find(r => r.id === 'west'), westB = t1.roads.find(r => r.id === 'west');
+  ok(JSON.stringify(westA.poly) === JSON.stringify(westB.poly), 'удаление «roots» не меняет форму соседней дороги «west»');
+  ok(mainA.poly.length !== mainB.poly.length || JSON.stringify(mainA.poly) !== JSON.stringify(mainB.poly), 'сдвиг точки меняет форму дороги');
+  // файл и черновик
+  const file = exportEditsFile({ v: 1, props: {}, add: [], pos: {}, ...d });
+  const parsed = JSON.parse(file.slice(file.indexOf('export const EDITS = ') + 21, file.lastIndexOf(';')));
+  ok(parsed.roads.rd001.pts.length === 2 && parsed.cols.cn001.kind === 'wall', 'exportEditsFile сохраняет дороги, воду и стены');
+  const st = memStorage();
+  saveDraft(st, { v: 1, props: {}, add: [], pos: {}, ...d });
+  const rm = resolveMap({ storage: st, useDraft: true });
+  ok(rm.fromDraft && rm.roads.length === cur.roads.length && rm.colliders.length === cur.cols.length && !rm.waters.some(w => w.id === 'pond'), 'resolveMap берёт дороги, воду и стены из черновика');
+  const rm2 = resolveMap({ storage: st, useDraft: false });
+  ok(!rm2.fromDraft && rm2.roads.length === LIVE.roads.length, 'без режима редактора черновик дорог не применяется');
+  // старый черновик/файл без разделов дорог по-прежнему читается
+  saveDraft(st, { v: 1, props: {}, add: [], pos: {} });
+  const rm3 = resolveMap({ storage: st, useDraft: true });
+  ok(rm3.roads.length === ROADS.length && rm3.colliders.length === COLLIDERS.length, 'черновик старого формата (без дорог и стен) читается');
+}
+
+console.log('\nМир: геометрия правки линий и стен');
+{
+  const pts = [[0, 0], [100, 0], [200, 0], [300, 0]];
+  const a = TE.addPointAfter(pts, 1);
+  ok(a.pts.length === 5 && a.index === 2 && Math.abs(a.pts[2][0] - 150) <= 1 && Math.abs(a.pts[2][1]) <= 1, 'addPointAfter: точка встаёт на кривую посередине отрезка');
+  const e = TE.addPointAfter(pts, 3);
+  ok(e.pts.length === 5 && e.index === 4 && e.pts[4][0] > 300 && e.pts[4][0] <= 300 + 140, 'addPointAfter у конца продолжает линию');
+  const s = TE.addPointBefore(pts);
+  ok(s.pts.length === 5 && s.pts[0][0] < 0 && s.index === 0, 'addPointBefore продолжает линию в начале');
+  ok(TE.removePoint(pts, 1).length === 3 && TE.removePoint([[0, 0], [1, 1]], 0) === null, 'removePoint: минимум две точки остаётся');
+  const zig = [[0, 0], [100, 80], [200, 0], [300, 80], [400, 0]];
+  const sm = TE.smoothPoints(zig);
+  ok(sm[0][1] === 0 && sm[4][1] === 0 && sm[1][1] < 80 && sm[2][1] > 0, 'smoothPoints: концы на месте, зигзаг сглаживается');
+  const roadsT = [{ id: 'a', pts: [[0, 0], [200, 0], [400, 0]] }, { id: 'b', pts: [[200, 100], [200, 300]] }];
+  const m1 = TE.magnet(260, 12, roadsT, 'b', 30, 26);
+  ok(m1 && m1.kind === 'line' && m1.y === 0 && Math.abs(m1.x - 260) <= 1, 'magnet: конец прилипает к оси соседней дороги');
+  const m2 = TE.magnet(190, 10, roadsT, 'b', 30, 26);
+  ok(m2 && m2.kind === 'point' && m2.x === 200 && m2.y === 0, 'magnet: к контрольной точке — приоритетнее оси');
+  ok(TE.magnet(200, 400, roadsT, 'b', 30, 26) === null && TE.magnet(0, 0, roadsT, 'a', 30, 26) === null, 'magnet: далеко или своя линия — не прилипает');
+  const near = TE.nearestOtherRoad(300, 500, roadsT, 'x');
+  ok(near && near.id === 'b', 'nearestOtherRoad: находит ближайшую дорогу');
+  const r = { x: 100, y: 100, w: 200, h: 50 };
+  ok(TE.hitRectHandle(r, 301, 99, 12) === 'ne' && TE.hitRectHandle(r, 200, 100, 12) === 'n' && TE.hitRectHandle(r, 200, 125, 12) === null, 'hitRectHandle: углы и стороны');
+  const r2 = TE.resizeRect(r, 'se', 400, 300);
+  ok(r2.x === 100 && r2.w === 300 && r2.h === 200, 'resizeRect: юго-восточная ручка тянет правый и нижний края');
+  const r3 = TE.resizeRect(r, 'w', 350, 0);
+  ok(r3.w === 10 && r3.x === 290, 'resizeRect: размер не меньше 10 даже за противоположный край');
+  ok(TE.pickRect([{ x: 0, y: 0, w: 1000, h: 1000 }, r], 150, 120).w === 200, 'pickRect: побеждает меньший прямоугольник');
+  ok(TE.nextNoise([{ n: 3 }], [{ n: 9 }]) === 10, 'nextNoise: больше всех существующих');
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты мира пройдены');

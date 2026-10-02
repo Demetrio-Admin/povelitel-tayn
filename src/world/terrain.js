@@ -3,17 +3,21 @@ import { catmullRom, ribbon, blob, valueNoise, polygonBounds, pointInPolygon, di
 
 export const WATER_CELL = 16;
 
-function buildRoad(r, index) {
+/** n — номер шума: у базовых фигур это их место в world.terrain.js, у новых из редактора — свой, сохранённый в правках. */
+export function buildRoad(r, index = 0) {
+  index = r.n ?? index;
   const nL = valueNoise(100 + index * 7), nR = valueNoise(300 + index * 11), nW = valueNoise(500 + index * 13);
   const center = catmullRom(r.pts, 10);
   const hw = r.w / 2;
   const left = (s) => hw * (0.86 + 0.28 * nL(s / 95) + 0.12 * (nW(s / 260) - 0.5));
   const right = (s) => hw * (0.86 + 0.28 * nR(s / 95) + 0.12 * (nW(s / 260) - 0.5));
   const poly = ribbon(center, left, right, { step: 10, taper: r.w * 0.55 });
-  return { id: r.id, kind: r.kind, poly, bounds: polygonBounds(poly) };
+  return { id: r.id, kind: r.kind, n: index, poly, bounds: polygonBounds(poly) };
 }
 
-function buildWater(w, index) {
+/** Только контур (без прямоугольников коллизии) — для быстрого показа в редакторе. */
+export function buildWater(w, index = 0, { rects: rects_ = true } = {}) {
+  index = w.n ?? index;
   let poly;
   if (w.type === 'river') {
     const nL = valueNoise(900 + index * 5), nR = valueNoise(950 + index * 5);
@@ -23,13 +27,13 @@ function buildWater(w, index) {
   } else {
     poly = blob(w.cx, w.cy, w.rx, w.ry, { seed: w.seed, amp: w.amp, rotate: w.rotate || 0 });
   }
-  const rects = polygonToRects(poly, WATER_CELL);
-  return { id: w.id, type: w.type, poly, bounds: polygonBounds(poly), rects };
+  const rects = rects_ ? polygonToRects(poly, WATER_CELL) : [];
+  return { id: w.id, type: w.type, n: index, poly, bounds: polygonBounds(poly), rects };
 }
 
 export function buildTerrain({ ROADS, WATERS }) {
-  const roads = ROADS.map(buildRoad);
-  const waters = WATERS.map(buildWater);
+  const roads = ROADS.map((r, i) => buildRoad(r, i));
+  const waters = WATERS.map((w, i) => buildWater(w, i));
   return { roads, waters, waterRects: waters.flatMap(w => w.rects) };
 }
 

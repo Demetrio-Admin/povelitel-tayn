@@ -133,8 +133,8 @@ export function paintTerrainChunk(ctx, chunk, terrain, imgs = {}) {
   ctx.save();
   ctx.clearRect(0, 0, chunk.w, chunk.h);
   ctx.translate(-chunk.x, -chunk.y);
-  terrain.waters.forEach((w, i) => { if (touches(w.bounds, chunk)) paintWater(ctx, w, chunk, imgs.water, i); });
-  const roads = terrain.roads.map((r, i) => [r, i]).filter(([r]) => touches(r.bounds, chunk));
+  terrain.waters.forEach((w, i) => { if (touches(w.bounds, chunk)) paintWater(ctx, w, chunk, imgs.water, w.n ?? i); });
+  const roads = terrain.roads.map((r, i) => [r, r.n ?? i]).filter(([r]) => touches(r.bounds, chunk));
   roads.forEach(([r]) => paintRoadBase(ctx, r));
   roads.forEach(([r, i]) => paintRoadFill(ctx, r, r.kind === 'stone' ? imgs.stone : imgs.dirt, i));
   ctx.restore();

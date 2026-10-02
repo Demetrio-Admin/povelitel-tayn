@@ -1,6 +1,8 @@
 // Данные карты: базовая расстановка + правки из редактора. Без Phaser и DOM.
 import { PROPS } from '../config/world.props.js';
 import { EDITS } from '../config/world.edits.js';
+import { ROADS, WATERS } from '../config/world.terrain.js';
+import { COLLIDERS } from '../config/world.layout.js';
 
 export const DRAFT_KEY = 'witch_rpg_map_draft_v1';
 
@@ -70,6 +72,74 @@ export function diffPos(list, current) {
   return out;
 }
 
+// ---------------------------------------------------------------- дороги, вода и стены
+// Базовые фигуры лежат в world.terrain.js и world.layout.js, правки — в EDITS.roads / waters / cols:
+//   { id: полное_описание | null } — изменённая или новая фигура целиком, null — удалена.
+// Стены (COLLIDERS) не имеют id в исходнике, поэтому базовым достаётся c0, c1… по порядку в списке (порядок не менять!).
+// Каждой фигуре кладётся n: у базовых это место в списке, у новых — своё, сохранённое в правках. По n считается
+// «дрожание» краёв, так что удаление одной дороги не меняет вид остальных.
+
+const clone = (v) => JSON.parse(JSON.stringify(v));
+
+/** Базовые списки с id и номером шума. Каждый раз новые копии: редактор их меняет. */
+export function baseTerrain() {
+  return {
+    roads: ROADS.map((r, i) => ({ ...clone(r), n: i })),
+    waters: WATERS.map((w, i) => ({ ...clone(w), n: i })),
+    cols: COLLIDERS.map((c, i) => ({ ...clone(c), id: `c${i}` })),
+  };
+}
+
+/** base + правки по id. Результат — новые копии. Порядок: базовые как были, новые в конец. */
+export function applyListEdits(base, patches = {}) {
+  const out = [];
+  const seen = new Set();
+  for (const b of base) {
+    seen.add(b.id);
+    const p = patches[b.id];
+    if (p === null) continue;
+    out.push(clone(p || b));
+  }
+  for (const [id, p] of Object.entries(patches)) if (p && !seen.has(id)) out.push(clone(p));
+  return out;
+}
+
+export function applyTerrainEdits(edits) {
+  const b = baseTerrain(), e = edits || {};
+  return {
+    roads: applyListEdits(b.roads, e.roads),
+    waters: applyListEdits(b.waters, e.waters),
+    colliders: applyListEdits(b.cols, e.cols),
+  };
+}
+
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+/** Отличия current от base: { id: описание | null }. */
+export function diffList(base, current) {
+  const out = {};
+  const byId = new Map(base.map(b => [b.id, b]));
+  const seen = new Set();
+  for (const c of current) {
+    seen.add(c.id);
+    const b = byId.get(c.id);
+    if (!b || !same(b, c)) out[c.id] = clone(c);
+  }
+  for (const id of byId.keys()) if (!seen.has(id)) out[id] = null;
+  return out;
+}
+
+/** Правки дорог, воды и стен для файла; пустые разделы не пишутся, чтобы файл не раздувался. */
+export function diffTerrain({ roads, waters, colliders }) {
+  const b = baseTerrain();
+  const out = {};
+  const r = diffList(b.roads, roads), w = diffList(b.waters, waters), c = diffList(b.cols, colliders);
+  if (Object.keys(r).length) out.roads = r;
+  if (Object.keys(w).length) out.waters = w;
+  if (Object.keys(c).length) out.cols = c;
+  return out;
+}
+
 export function loadDraft(storage) {
   try {
     const raw = storage?.getItem(DRAFT_KEY);
@@ -88,7 +158,7 @@ export function clearDraft(storage) { try { storage?.removeItem(DRAFT_KEY); } ca
 /** Файл world.edits.js для вставки в репозиторий. */
 export function exportEditsFile(edits) {
   const json = JSON.stringify(edits, null, 1).replace(/\n\s+/g, (m) => (m.length > 2 ? '\n ' : m));
-  return `// Правки расстановки, сделанные в редакторе карты (?edit → «Экспорт»). Заменяйте файл целиком.\n// props: { id: { x, y, f, s } | null } — сдвиг/зеркало/масштаб, null — удалён; add — добавленные; pos — интерактивные объекты и враги.\nexport const EDITS = ${JSON.stringify(edits)};\n`;
+  return `// Правки карты, сделанные в редакторе (?edit → «Скачать»). Заменяйте файл целиком.\n// props: { id: { x, y, f, s } | null } — сдвиг/зеркало/масштаб, null — удалён; add — добавленные; pos — интерактивные объекты и враги.\n// roads / waters / cols: { id: полное описание | null } — дороги, вода и стены (коллизии), изменённые, новые или удалённые.\nexport const EDITS = ${JSON.stringify(edits)};\n`;
 }
 
 /**
@@ -98,5 +168,5 @@ export function exportEditsFile(edits) {
 export function resolveMap({ storage = null, useDraft = false } = {}) {
   const draft = useDraft ? loadDraft(storage) : null;
   const edits = draft || EDITS;
-  return { base: PROPS, edits, props: applyEdits(PROPS, edits), pos: edits.pos || {}, fromDraft: !!draft };
+  return { base: PROPS, edits, props: applyEdits(PROPS, edits), pos: edits.pos || {}, ...applyTerrainEdits(edits), fromDraft: !!draft };
 }

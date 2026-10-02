@@ -310,6 +310,20 @@ const SFX = {
   locked: a => { a.tone({ f: 160, dur: 0.08, vol: 0.18, type: 'square' }); a.noise({ dur: 0.08, vol: 0.12, type: 'lowpass', f: 600 }); },
   combat_start: a => { a.tone({ f: 110, to: 55, dur: 0.8, vol: 0.4, type: 'sawtooth' }); a.noise({ dur: 0.7, vol: 0.2, f: 300, to: 3000, a: 0.2 }); },
   heartbeat: a => { a.tone({ f: 70, to: 45, dur: 0.12, vol: 0.4 }); a.tone({ f: 65, to: 42, dur: 0.14, vol: 0.32, at: 0.22 }); },
+  // v0.8: сбор, разговоры, варка
+  gather: a => { a.noise({ dur: 0.32, vol: 0.14, type: 'bandpass', f: 1800, to: 900, q: 1.2, a: 0.03 }); a.noise({ dur: 0.2, vol: 0.08, type: 'highpass', f: 3500, at: 0.12 }); },
+  gather_done: a => { [784, 988, 1319].forEach((f, i) => a.tone({ f, dur: 0.22, vol: 0.09, type: 'triangle', at: i * 0.07 })); a.tone({ f: 2093, dur: 0.35, vol: 0.04, at: 0.2 }); },
+  talk_open: a => { a.tone({ f: 440, dur: 0.14, vol: 0.06, type: 'sine' }); a.tone({ f: 660, dur: 0.2, vol: 0.05, at: 0.07 }); },
+  talk_blip: a => { a.tone({ f: 520 + Math.random() * 140, dur: 0.035, vol: 0.035, type: 'triangle' }); },
+  hero_say: a => { a.tone({ f: 740, to: 820, dur: 0.09, vol: 0.05, type: 'sine' }); },
+  journal: a => { a.noise({ dur: 0.14, vol: 0.09, type: 'bandpass', f: 2600, to: 1200, q: 0.8 }); a.tone({ f: 587, dur: 0.14, vol: 0.05, at: 0.05, type: 'triangle' }); },
+  brew: a => {
+    for (let i = 0; i < 6; i++) a.tone({ f: 300 + Math.random() * 300, to: 700 + Math.random() * 400, dur: 0.07, vol: 0.07, type: 'sine', at: i * 0.07 });
+    a.noise({ dur: 0.5, vol: 0.07, type: 'lowpass', f: 700, to: 1500 });
+    [523, 659, 784, 1047].forEach((f, i) => a.tone({ f, dur: 0.28, vol: 0.08, type: 'triangle', at: 0.4 + i * 0.08 }));
+  },
+  potion: a => { a.tone({ f: 260, to: 520, dur: 0.18, vol: 0.12, type: 'sine' }); a.tone({ f: 523, to: 784, dur: 0.22, vol: 0.09, type: 'triangle', at: 0.12 }); a.noise({ dur: 0.18, vol: 0.06, f: 1800, q: 2 }); },
+  purr: a => { for (let i = 0; i < 6; i++) a.tone({ f: 70 + (i % 2) * 8, dur: 0.1, vol: 0.06, type: 'sawtooth', at: i * 0.11 }); },
   hint: a => { a.tone({ f: 1047, dur: 0.15, vol: 0.06 }); a.tone({ f: 1568, dur: 0.25, vol: 0.05, at: 0.08 }); },
 };
 

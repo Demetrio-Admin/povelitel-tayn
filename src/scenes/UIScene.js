@@ -13,6 +13,7 @@ import { itemName, ROMAN } from '../objects/InteractiveObject.js';
 import { buildSettingsPanel } from '../ui/SettingsPanel.js';
 import { UI } from '../config/ui.config.js';
 import { addPanel, addDivider, addOrb, setOrb, addBottomBar, addScreenVignette, addMedallion, addButton, drawPlate, releaseTexture, UIBar } from '../ui/widgets.js';
+import { windows08 } from '../ui/windows08.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -50,6 +51,7 @@ export class UIScene extends Phaser.Scene {
     this.buildJoystick();
     this.buildPauseButton();
     this.buildTutorial();
+    this.buildV08Hud();
 
     this.controls = new InputController(this, bus, services.input, {
       isModal: () => !!this.modal,
@@ -250,6 +252,7 @@ export class UIScene extends Phaser.Scene {
     this.zoneText.setText(this.mode === 'combat' ? 'Бой' : (this.zoneName || 'Шепчущий лес'));
     const text = this.mode === 'combat' ? 'Прерывайте сильные атаки и победите врага' : q.objectiveText();
     this.objText.setText(text);
+    this.refreshV08Hud();
     if (prev && prev !== text && this.mode !== 'combat') {
       this.objText.setColor(COLORS.textGold);
       services.audio.play('quest_update', { minGap: 600 });
@@ -337,6 +340,7 @@ export class UIScene extends Phaser.Scene {
     }
     if (this.ctx.visible) this.ctxGlow.setAlpha(0.45 + Math.sin(time / 200) * 0.2);
     this.updateTutorial(time, delta);
+    this.updateDialogue(delta);
 
     // тосты
     const baseY = this.mode === 'combat' ? 900 : 250;
@@ -401,7 +405,14 @@ export class UIScene extends Phaser.Scene {
     const btnH = 72;
     const vertical = !!opts.vertical;
     const btnBlock = vertical ? buttons.length * (btnH + 16) - 16 : btnH;
-    const ph = 40 + title.height + 34 + (body.text ? body.height : -10) + 34 + btnBlock + 34;
+    // v0.8: opts.content = { build(container, x, y, w) → высота } — своё содержимое между текстом и кнопками (журнал, алхимия, сумка)
+    let contentH = 0;
+    if (opts.content) {
+      const tmp = this.add.container(0, 0);
+      contentH = opts.content.build(tmp, 0, 0, pw - 70);
+      tmp.destroy(true);
+    }
+    const ph = 40 + title.height + 34 + (body.text ? body.height : -10) + (contentH ? contentH + 24 : 0) + 34 + btnBlock + 34;
     const top = Math.max(60, (H - ph) / 2 - 40);
     const left = (W - pw) / 2;
     const panel = addPanel(this, left, top, pw, ph, { accent: color, seed: 3 });
@@ -409,6 +420,7 @@ export class UIScene extends Phaser.Scene {
     title.setY(top + 36);
     body.setY(top + 36 + title.height + 34);
     c.add([overlay, panel, title, rule, body]);
+    if (contentH) opts.content.build(c, left + 35, top + 36 + title.height + 34 + (body.text ? body.height + 18 : 0), pw - 70);
 
     const by0 = top + ph - 34 - btnBlock + btnH / 2;
     const bw = vertical ? 420 : Math.min(280, (pw - 60) / buttons.length - 16);
@@ -424,12 +436,24 @@ export class UIScene extends Phaser.Scene {
     });
     c.setAlpha(0);
     this.tweens.add({ targets: c, alpha: 1, duration: 150 });
-    this.modal = { container: c, buttons, views, final: !!opts.final, tempKeys: [panel.texKey] };
+    this.modal = { container: c, buttons, views, final: !!opts.final, tempKeys: [panel.texKey], opts };
     this.bus.emit(MSG.MODAL_OPEN);
+  }
+
+  /** Перерисовать то же окно (например, алхимия после варки) без звука открытия и без очереди. */
+  reopenModal() {
+    if (!this.modal?.opts) return;
+    const opts = this.modal.opts;
+    this.modal.container.destroy();
+    for (const k of this.modal.tempKeys || []) releaseTexture(this, k);
+    this.modal = null;
+    services.modalOpen = false;
+    this.openModal({ ...opts, silent: true });
   }
 
   pressModalButton(primary) {
     if (!this.modal) return;
+    if (this.modal.dialogue) { if (primary) this.modal.onPrimary(); else this.modal.onCancel(); return; }
     const bs = this.modal.buttons;
     const b = primary ? (bs.find(x => x.primary) || bs[0]) : (bs.find(x => x.cancel) || bs.find(x => !x.primary) || bs[0]);
     this.closeModal(b);
@@ -474,32 +498,6 @@ export class UIScene extends Phaser.Scene {
       }
     }
     this.openModal({ title: `Изучение: ${up.title}`, color: COLORS.telekinesis, text: lines.join('\n'), buttons });
-  }
-
-  // ================================================================== сумка
-  openBag() {
-    if (this.mode !== 'exploration' || this.modal) return;
-    services.tutorial.complete('bag');
-    const { state, abilities } = services;
-    const d = state.data;
-    const next = state.nextLevelXP();
-    const lines = [`Уровень героини: ${d.heroLevel}   (опыт ${d.heroXP}${next ? ` / ${next}` : ''})`, '', 'Дары:'];
-    for (const id of ABILITY_ORDER) {
-      const lv = abilities.level(id);
-      lines.push(`  ${ABILITIES[id].name}: ${lv ? ROMAN[lv] : '— не открыт'}   · опыт дара ${d.schoolXP[id] || 0}`);
-    }
-    lines.push('', 'Сумка:');
-    const inv = Object.entries(d.inventory).filter(([, v]) => v > 0);
-    if (!inv.length) lines.push('  пусто');
-    for (const [k, v] of inv) lines.push(`  ${ITEMS[k]?.name || k}: ${v}`);
-    if (d.stats.combats.length) {
-      lines.push('', 'Бои:');
-      for (const c of d.stats.combats.slice(-5)) lines.push(`  ${ENEMIES[c.enemy]?.name || c.enemy}: ${c.result === 'victory' ? 'победа' : 'поражение'}, ${c.timeSec} с`);
-    }
-    this.openModal({
-      title: 'Сумка ведьмы', color: COLORS.gold, text: lines.join('\n'),
-      buttons: [{ label: 'Закрыть', primary: true }, { label: 'Меню', onClick: () => this.openPause() }],
-    });
   }
 
   confirmReset() {
@@ -667,3 +665,5 @@ export class UIScene extends Phaser.Scene {
     });
   }
 }
+
+Object.assign(UIScene.prototype, windows08);

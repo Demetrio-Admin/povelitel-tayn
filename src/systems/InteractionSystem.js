@@ -34,7 +34,7 @@ export class InteractionSystem {
       if (obj.removed) { if (mk) { mk.m.destroy(); mk.glow.destroy(); this.markers.delete(obj); } continue; }
       const avail = obj.isAvailable();
       const d = Math.hypot(obj.x - player.x, obj.y - player.y);
-      const show = avail && d < INTERACTION.markerVisibleDistance;
+      const show = avail && d < (obj.markerDistance ?? INTERACTION.markerVisibleDistance);
       mk.m.setVisible(show); mk.glow.setVisible(show);
       if (show) {
         const bob = Math.sin(this.time * 3 + obj.x) * 5;
@@ -60,7 +60,7 @@ export class InteractionSystem {
     if (this.focus) { const mk = this.markers.get(this.focus); if (mk) { mk.m.setScale(0.5); mk.glow.setScale(0.6); } }
     this.focus = obj;
     this.bus.emit(MSG.FOCUS_CHANGED, obj ? this.focusInfo() : null);
-    if (obj) obj.onFocus();
+    if (obj) { obj.onFocus(); obj.focusPop?.(); }
   }
 
   focusInfo() {

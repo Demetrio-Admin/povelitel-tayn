@@ -33,6 +33,10 @@ export async function freshWorld(progress = 'mid') {
   const { AudioManager } = await import('../../src/systems/AudioManager.js');
   const { TutorialSystem } = await import('../../src/systems/TutorialSystem.js');
   const { EV } = await import('../../src/config/events.js');
+  const { QuestLog } = await import('../../src/state/QuestLog.js');
+  const { Alchemy } = await import('../../src/systems/Alchemy.js');
+  const { DialogueSystem } = await import('../../src/systems/DialogueSystem.js');
+  const { GuidanceSystem } = await import('../../src/systems/GuidanceSystem.js');
   const state = new GameState(memStorage());
   const quests = new QuestFlags(state, bus);
   services.state = state; services.quests = quests; services.session = null; services.offline = false;
@@ -40,6 +44,10 @@ export async function freshWorld(progress = 'mid') {
   services.settings = new Settings(memStorage());
   services.audio = new AudioManager(services.settings);
   services.tutorial = new TutorialSystem(state, services.settings, bus);
+  services.log = new QuestLog(state, bus);
+  services.alchemy = new Alchemy(state, bus);
+  services.dialogue = new DialogueSystem({ state, log: services.log, bus, goalText: () => quests.objectiveText() });
+  services.guidance = new GuidanceSystem({ state, quests, log: services.log, bus });
   services.input.move.x = services.input.move.y = 0;
   services.modalOpen = false; services.mode = 'exploration';
   if (progress !== 'new') {

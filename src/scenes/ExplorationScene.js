@@ -13,6 +13,15 @@ import { InteractionSystem } from '../systems/InteractionSystem.js';
 import { TelekinesisObject } from '../objects/TelekinesisObject.js';
 import { FireObject } from '../objects/FireObject.js';
 import { EnemyTrigger } from '../objects/EnemyTrigger.js';
+import { GatherObject } from '../objects/GatherObject.js';
+import { NpcObject } from '../objects/NpcObject.js';
+import { AlchemyObject } from '../objects/AlchemyObject.js';
+import { InspectObject } from '../objects/InspectObject.js';
+import { CONTENT_DECOR, AMBIENT } from '../config/world.content.js';
+import { POTIONS } from '../config/resources.js';
+import { HIGHLIGHT } from '../config/guidance.js';
+import { UI } from '../config/ui.config.js';
+import { drawPlate } from '../ui/widgets.js';
 import {
   applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject, SealObject,
 } from '../objects/InteractiveObject.js';
@@ -26,6 +35,10 @@ const OBJECT_CLASSES = {
   fire_circle: FireCircleObject,
   chest: ChestObject,
   pickup: PickupObject,
+  gather: GatherObject,
+  npc: NpcObject,
+  alchemy: AlchemyObject,
+  inspect: InspectObject,
 };
 
 const EXTRA_BOTTOM = 500; // декоративная полоса леса ниже дома, чтобы героиня была на ~62% экрана
@@ -69,6 +82,8 @@ export class ExplorationScene extends Phaser.Scene {
     this.objects = [];
     for (const cfg of this.interactiveCfgs) this.addObject(this.createObject(cfg));
     this.enemies = this.enemyCfgs.map(cfg => new EnemyTrigger(this, cfg));
+    this.buildContentDecor();
+    this.setupGuidance();
     this.refreshAll();
 
     // камера: героиня немного ниже центра (Blueprint §7)
@@ -85,7 +100,14 @@ export class ExplorationScene extends Phaser.Scene {
     bus.on(MSG.CONTEXT_ACTION, this.onContext, this);
     bus.on(MSG.ABILITY_USE, this.onAbility, this);
     bus.on(MSG.WORLD_TAP, this.onTap, this);
-    bus.on(MSG.WORLD_EVENT, () => this.refreshAll(), this);
+    bus.on(MSG.WORLD_EVENT, this.onWorldEvent, this);
+    bus.on(MSG.ZONE_CHANGED, this.onZoneLine, this);
+    bus.on(MSG.NPC_TALK_END, (id) => this.objects.forEach(o => { if (o instanceof NpcObject && o.npc.id === id) o.onTalkEnd(); services.guidance.noteProgress(); }), this);
+    bus.on(MSG.NPC_TALK, () => services.guidance.noteProgress(), this);
+    bus.on(MSG.QUEST_CHANGED, () => this.objects.forEach(o => { if (o instanceof NpcObject) o.updateBadge(); }), this);
+    bus.on(MSG.CRAFTED, ({ result }) => this.objects.find(o => o instanceof AlchemyObject)?.celebrate(POTIONS[result]?.color), this);
+    bus.on(MSG.HERO_SAY, (t, ms) => this.heroSay(t, ms), this);
+    bus.on(MSG.SIDE_QUEST, (id, what) => { this.refreshAll(); if (what === 'ready') services.audio.play('quest_update'); }, this);
     this.events.on('wake', this.onWake, this);
     this.events.once('shutdown', () => bus.offContext(this));
     window.addEventListener('beforeunload', () => this.savePosition());
@@ -104,6 +126,21 @@ export class ExplorationScene extends Phaser.Scene {
   follow() {
     this.cameras.main.startFollow(this.player.sprite, false, CAMERA.lerp, CAMERA.lerp, 0, this.followOffsetY);
     this.cameras.main.setDeadzone(CAMERA.deadzone.w, CAMERA.deadzone.h);
+  }
+
+  /** События мира: объекты пересчитываются, героиня может прокомментировать, «застряли» сбрасывается. */
+  onWorldEvent(key) {
+    this.refreshAll();
+    const g = services.guidance;
+    g.onEvent(key);
+    const l = g.lineFor({ event: key });
+    if (l) this.time.delayedCall(l.delayMs ?? 500, () => this.heroSay(l.text, 4200));
+    this.bus.emit(MSG.GUIDE_HINT, null);
+  }
+
+  onZoneLine(zone) {
+    const l = services.guidance.lineFor({ zone: zone.id });
+    if (l) this.time.delayedCall(900, () => this.heroSay(l.text, 3600));
   }
 
   setProviders() {
@@ -185,6 +222,12 @@ export class ExplorationScene extends Phaser.Scene {
           keep(this.add.tileSprite(c.x, c.y - 40, c.w, c.h + 40, 'wall_wood_01').setOrigin(0).setDepth(bottomDepth));
           break;
         case 'furniture':
+          if (c.tex) { // v0.8: мебель с картинкой — низ спрайта на нижней кромке коллизии
+            const im = this.add.image(c.x + c.w / 2, c.y + c.h, c.tex).setOrigin(0.5, 1).setDepth(bottomDepth);
+            applyDisplaySize(im, c.tex);
+            keep(im);
+            break;
+          }
           keep(this.add.rectangle(c.x, c.y - 20, c.w, c.h + 20, COLORS.woodLight).setOrigin(0).setStrokeStyle(3, COLORS.wood).setDepth(bottomDepth));
           if (c.label) keep(this.add.text(c.x + c.w / 2, c.y + c.h / 2 - 10, c.label, { fontSize: '14px', color: COLORS.textDim }).setOrigin(0.5).setDepth(bottomDepth + 1));
           break;
@@ -222,6 +265,11 @@ export class ExplorationScene extends Phaser.Scene {
     const view = { p, img, glow: null, blocker: null };
     this.placePropView(view);
     if (p.light) view.glow = this.addGlow(p.x, p.y - img.displayHeight + 12, 0xffb36b, 0.4, null, p.light / 64);
+    if (view.glow && /^candle/.test(p.k) && !services.edit) {
+      // свечи мерцают: быстрый «живой» огонёк поверх медленного дыхания свечения
+      const k = view.glow.scale;
+      this.tweens.add({ targets: view.glow, scale: { from: k * 0.88, to: k * 1.12 }, duration: 90 + this.random() * 130, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
     const s = propSolid(p);
     if (s) { view.blocker = this.add.zone(s.x + s.w / 2, s.y + s.h / 2, s.w, s.h); this.solids.add(view.blocker); }
     this.propViews.set(p.id, view);
@@ -241,6 +289,184 @@ export class ExplorationScene extends Phaser.Scene {
     this.tweens.add({ targets: g, alpha: alpha * 0.7, duration: 900 + this.random() * 600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     if (owner) (owner.glows ||= []).push(g);
     return g;
+  }
+
+  // ------------------------------------------------------------------ наполнение (v0.8)
+  /** Ковёр, пучки трав, горшок, костёр охотника и «живые мелочи» вроде пылинок в воздухе. */
+  buildContentDecor() {
+    for (const d of CONTENT_DECOR) {
+      const img = this.add.image(d.x, d.y, d.k).setOrigin(0.5, 1);
+      applyDisplaySize(img, d.k);
+      if (d.flip) img.setFlipX(true);
+      img.setDepth(d.floor ? DEPTH.path + 1 : DEPTH.mainBase + d.y);
+      if (d.fire && !services.edit) {
+        const top = d.y - img.displayHeight * 0.55;
+        const g = this.addGlow(d.x, top, 0xff8a3a, 0.55, null, 1.9);
+        this.tweens.add({ targets: g, scale: { from: 1.7, to: 2.1 }, duration: 120 + this.random() * 80, yoyo: true, repeat: -1 });
+        this.add.particles(d.x, top, 'fx_dot', {
+          x: { min: -8, max: 8 }, speedY: { min: -90, max: -40 }, speedX: { min: -12, max: 12 }, scale: { start: 0.75, end: 0 }, alpha: { start: 0.9, end: 0 },
+          lifespan: 620, frequency: 55, tint: [COLORS.fire, 0xffc46b, 0xff3b2f], blendMode: 'ADD',
+        }).setDepth(DEPTH.fx);
+      }
+    }
+    if (services.edit) return;
+    for (const a of AMBIENT) {
+      this.add.particles(0, 0, 'fx_dot', {
+        emitZone: { type: 'random', source: new Phaser.Geom.Rectangle(a.rect.x, a.rect.y, a.rect.w, a.rect.h) },
+        speedY: { min: -9, max: -2 }, speedX: { min: -7, max: 7 }, scale: { start: 0.38, end: 0 }, alpha: { start: 0.85, end: 0 },
+        lifespan: 4200, frequency: a.frequency, quantity: a.quantity, tint: a.color, blendMode: 'ADD',
+      }).setDepth(DEPTH.fx);
+    }
+  }
+
+  /** Мерцающая искорка. */
+  twinkle(x, y, color) {
+    const d = this.add.image(x, y, 'fx_dot').setTint(color).setBlendMode('ADD').setScale(0.15).setAlpha(0.95).setDepth(DEPTH.fx);
+    this.tweens.add({ targets: d, scale: 0.75, alpha: 0, y: y - 18, duration: 820, ease: 'Sine.easeOut', onComplete: () => d.destroy() });
+  }
+
+  /** Фонтанчик искр вверх (сундук, сбор, варка). */
+  sparkleShower(x, y, color) {
+    const e = this.add.particles(x, y, 'fx_dot', {
+      speed: { min: 40, max: 130 }, angle: { min: -135, max: -45 }, gravityY: 190, lifespan: 900,
+      scale: { start: 0.62, end: 0 }, tint: [color, 0xffffff], blendMode: 'ADD', emitting: false,
+    }).setDepth(DEPTH.fx);
+    e.explode(14);
+    this.time.delayedCall(1100, () => e.destroy());
+  }
+
+  /** Короткая вспышка света. */
+  addFlash(x, y, color) {
+    const g = this.add.image(x, y, 'fx_glow').setTint(color).setBlendMode('ADD').setScale(0.4).setAlpha(0.95).setDepth(DEPTH.fx);
+    this.tweens.add({ targets: g, scale: 2.4, alpha: 0, duration: 480, ease: 'Quad.easeOut', onComplete: () => g.destroy() });
+  }
+
+  /** Иконка предмета взлетает над местом сбора, рядом подпись «+1 …». */
+  floatIcon(x, y, texture, text, color) {
+    const icon = this.add.image(x, y, texture).setDepth(DEPTH.markers).setScale(0.2);
+    const maxSide = Math.max(icon.width, icon.height) || 64;
+    const k = 44 / maxSide;
+    this.tweens.add({ targets: icon, scale: k, duration: 220, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: icon, y: y - 70, alpha: 0, delay: 500, duration: 700, ease: 'Quad.easeIn', onComplete: () => icon.destroy() });
+    if (text) this.floatText(x, y - 40, text, color, 20, 1300);
+  }
+
+  floatText(x, y, text, color, size = 22, ms = 900) {
+    const t = this.add.text(x, y, text, { fontFamily: UI.font, fontSize: `${size}px`, color: '#' + color.toString(16).padStart(6, '0'), stroke: '#000', strokeThickness: 5, fontStyle: 'bold' })
+      .setOrigin(0.5).setDepth(DEPTH.markers + 1).setAlpha(0);
+    this.tweens.add({ targets: t, alpha: 1, duration: 140 });
+    this.tweens.add({ targets: t, y: y - 52, alpha: 0, delay: ms * 0.45, duration: ms * 0.55, ease: 'Quad.easeOut', onComplete: () => t.destroy() });
+  }
+
+  /** Облачко с мыслью героини над головой (контекстные реплики и подсказки). */
+  heroSay(text, ms = 3400) {
+    if (!text || this.editor || !this.player) return;
+    if (this.speech) { this.speech.c.destroy(); this.speech = null; }
+    const t = this.add.text(0, 0, text, { fontFamily: UI.font, fontSize: '20px', color: '#fff7e0', align: 'center', wordWrap: { width: 360 }, lineSpacing: 3 }).setOrigin(0.5);
+    const w = Math.max(120, t.width + 40), h = t.height + 24;
+    const bg = drawPlate(this.add.graphics(), w, h, { accent: 0xe8c56a, fill: 0x1a120d, alpha: 0.93 });
+    const tail = this.add.graphics().fillStyle(0x1a120d, 0.93).fillTriangle(-9, h / 2 - 2, 9, h / 2 - 2, 0, h / 2 + 12);
+    const c = this.add.container(0, 0, [bg, tail, t]).setDepth(DEPTH.markers + 5).setAlpha(0);
+    this.tweens.add({ targets: c, alpha: 1, duration: 160 });
+    this.speech = { c, h, until: this.time.now + ms };
+    services.audio.play('hero_say', { minGap: 400 });
+    this.placeSpeech();
+  }
+
+  placeSpeech() {
+    const sp = this.speech;
+    if (!sp) return;
+    sp.c.setPosition(this.player.x, this.player.y - PLAYER.displayHeight - 30 - sp.h / 2);
+    if (this.time.now > sp.until) {
+      const c = sp.c; this.speech = null;
+      this.tweens.add({ targets: c, alpha: 0, duration: 260, onComplete: () => c.destroy() });
+    }
+  }
+
+  // ------------------------------------------------------------------ мягкое наведение (v0.8)
+  setupGuidance() {
+    this.guideRing = this.add.image(0, 0, 'fx_ring').setTint(HIGHLIGHT.color).setBlendMode('ADD').setDepth(DEPTH.path + 3).setVisible(false);
+    this.guideT = 0; this.pollT = 0; this.pointerT = 0; this.guideTwinkle = 0;
+    this.lastInv = { ...services.state.data.inventory };
+    this.hintStep = null;
+    this.speech = null;
+  }
+
+  /** Цель выполнена или недоступна: пропускаем её и берём следующую из списка шага. */
+  targetDone(id) {
+    const o = this.objects.find(x => x.id === id);
+    if (o) return o.removed || !o.requirementsMet() || o.isDone();
+    const e = this.enemies.find(x => x.id === id);
+    if (e) return e.defeated || !e.requirementsMet();
+    return true; // объекта ещё нет (например, награда под камнем появится после сдвига)
+  }
+
+  targetPos(id) {
+    const o = this.objects.find(x => x.id === id);
+    if (o) return { x: o.x, y: o.baseY, h: o.sprite.displayHeight, w: o.sprite.displayWidth };
+    const e = this.enemies.find(x => x.id === id);
+    if (e) return { x: e.cfg.x, y: e.cfg.y, h: e.sprite.displayHeight, w: e.sprite.displayWidth };
+    return null;
+  }
+
+  /** Раз в полсекунды: что нового в сумке, готовы ли задания; мягкая подсказка при «застряли»; подсветка и стрелка цели. */
+  updateGuidance(dt) {
+    const g = services.guidance, log = services.log, inv = services.state.data.inventory;
+    this.pollT += dt;
+    if (this.pollT >= 0.5) {
+      this.pollT = 0;
+      let changed = false;
+      for (const k of Object.keys(inv)) {
+        if ((inv[k] || 0) > (this.lastInv[k] || 0)) {
+          changed = true;
+          const l = g.lineFor({ item: k });
+          if (l) this.time.delayedCall(700, () => this.heroSay(l.text, 3600));
+        } else if ((inv[k] || 0) !== (this.lastInv[k] || 0)) changed = true;
+      }
+      if (changed) { this.lastInv = { ...inv }; g.noteProgress(); this.bus.emit(MSG.QUEST_CHANGED); this.bus.emit(MSG.HUD_REFRESH); }
+      for (const id of log.checkReady()) {
+        const q = log.def(id);
+        this.toast(`Задание «${q.title}» выполнено — вернитесь к заказчику`, 0xffe08a);
+      }
+    }
+    const h = g.tick(dt);
+    const stepNow = g.step().id;
+    if (this.hintStep !== stepNow) { this.hintStep = stepNow; this.bus.emit(MSG.GUIDE_HINT, null); }
+    if (h) { this.heroSay(h.hint, 6200); this.bus.emit(MSG.GUIDE_HINT, h.hint); }
+
+    // подсветка цели и стрелка
+    const id = g.targetId((x) => this.targetDone(x));
+    const pos = id ? this.targetPos(id) : null;
+    const focused = this.interaction.focus && this.interaction.focus.id === id;
+    if (pos && !focused) {
+      const d = Math.hypot(pos.x - this.player.x, pos.y - this.player.y);
+      const show = d < HIGHLIGHT.showWithin && d > 60;
+      this.guideRing.setVisible(show).setPosition(pos.x, pos.y - 2)
+        .setDisplaySize(Math.max(110, pos.w * 1.2), Math.max(110, pos.w * 1.2) * 0.4)
+        .setAlpha(0.28 + (Math.sin(this.time.now / 380) + 1) * 0.16);
+      if (show) {
+        this.guideTwinkle -= dt;
+        if (this.guideTwinkle <= 0) { this.guideTwinkle = 0.9; this.twinkle(pos.x + (Math.random() - 0.5) * pos.w * 0.6, pos.y - 20 - Math.random() * Math.min(80, pos.h), HIGHLIGHT.color); }
+      }
+    } else this.guideRing.setVisible(false);
+
+    this.pointerT -= dt;
+    if (this.pointerT <= 0) {
+      this.pointerT = 0.12;
+      this.bus.emit(MSG.GUIDE_POINTER, pos && g.pointerActive() && !focused ? this.screenPointer(pos) : null);
+    }
+  }
+
+  /** Стрелка у края экрана, указывающая на цель (или null, если цель на экране). */
+  screenPointer(pos) {
+    const cam = this.cameras.main, v = cam.worldView;
+    const sx = (pos.x - v.x) * cam.zoom, sy = (pos.y - pos.h * 0.5 - v.y) * cam.zoom;
+    const W = VIEW.width, H = VIEW.height, m = 70;
+    if (sx > m && sx < W - m && sy > 170 && sy < H - 190) return null;
+    const cx = W / 2, cy = H * 0.5;
+    const dx = sx - cx, dy = sy - cy;
+    const k = Math.min((W / 2 - m) / Math.max(Math.abs(dx), 1), (H / 2 - 210) / Math.max(Math.abs(dy), 1));
+    return { x: cx + dx * k, y: Math.max(190, cy + dy * k), angle: Math.atan2(dy, dx), dist: Math.round(Math.hypot(pos.x - this.player.x, pos.y - this.player.y)) };
   }
 
   // ------------------------------------------------------------------ объекты
@@ -411,6 +637,7 @@ export class ExplorationScene extends Phaser.Scene {
     state.data.stats.playTimeMs += delta;
     if (!this.canAct()) {
       if (services.mode !== 'combat') this.player.stop();
+      this.placeSpeech();
       return;
     }
     this.player.update(dt, services.input.move);
@@ -421,6 +648,9 @@ export class ExplorationScene extends Phaser.Scene {
     } else this.stepT = 0;
     this.interaction.update(dt, this.player);
     this.updateZone();
+    for (const o of this.objects) o.update(dt, this.player);
+    this.updateGuidance(dt);
+    this.placeSpeech();
 
     for (const o of this.objects) {
       if (o instanceof PickupObject && o.isAvailable() && Math.hypot(o.x - this.player.x, o.y - this.player.y) < o.autoRadius) o.interact();

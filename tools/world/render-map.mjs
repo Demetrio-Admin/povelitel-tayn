@@ -10,6 +10,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const OUT = process.argv[2] || path.join(ROOT, 'tools/world/shots');
 fs.mkdirSync(OUT, { recursive: true });
 
+import { CONTENT_DECOR } from '../../src/config/world.content.js';
 import { WORLD, INTERACTIVES, ENEMY_SPAWNS, GROUND } from '../../src/config/world.layout.js';
 import { ASSET_FILES, DISPLAY_SIZE } from '../../src/config/assets.manifest.js';
 import { buildTerrain } from '../../src/world/terrain.js';
@@ -39,23 +40,25 @@ const items = [];
 for (const p of map.props) items.push({ k: p.k, x: p.x, y: p.y, f: p.f, s: p.s || 1 });
 const objs = applyPos(INTERACTIVES, map.pos), ens = applyPos(ENEMY_SPAWNS, map.pos);
 for (const o of objs) if (!['pickup'].includes(o.kind) || o.texture) items.push({ k: o.texture, x: o.x, y: o.y - (o.elevated || 0), s: 1 });
+for (const d of CONTENT_DECOR) items.push({ k: d.k, x: d.x, y: d.floor ? -1 : d.y, dy: d.y, f: d.flip, s: 1 });
+for (const c of COLLIDERS) if (c.tex) items.push({ k: c.tex, x: c.x + c.w / 2, y: c.y + c.h, s: 1 });
 for (const e of ens) items.push({ k: ENEMIES[e.enemy].texture, x: e.x, y: e.y, s: e.scale || 1 });
 items.sort((a, b) => a.y - b.y);
 for (const it of items) {
   const im = await load(it.k); if (!im) continue;
   const [dw, dh] = DISPLAY_SIZE[it.k] || [im.width, im.height];
   const w = dw * it.s, h = dh * it.s;
-  g.save(); g.translate(it.x, it.y);
+  g.save(); g.translate(it.x, it.dy ?? it.y);
   if (it.f) g.scale(-1, 1);
   g.drawImage(im, -w / 2, -h, w, h); g.restore();
 }
 // стены/руины (без текстуры — контуром)
-for (const c of COLLIDERS) if (c.kind !== 'trees') { g.fillStyle = c.kind === 'ruin' ? '#5b5a60' : '#6a4a30'; g.fillRect(c.x, c.y - 30, c.w, c.h + 30); }
+for (const c of COLLIDERS) if (c.kind !== 'trees' && !c.tex) { g.fillStyle = c.kind === 'ruin' ? '#5b5a60' : '#6a4a30'; g.fillRect(c.x, c.y - 30, c.w, c.h + 30); }
 
 const save = (name, cv) => fs.writeFileSync(path.join(OUT, name), cv.toBuffer('image/png'));
 const scaled = (sx, sy, sw, sh, sc) => { const c = createCanvas(Math.round(sw * sc), Math.round(sh * sc)); c.getContext('2d').drawImage(full, sx, sy, sw, sh, 0, 0, c.width, c.height); return c; };
 save('map_overview.png', scaled(0, 0, W, H, 0.3));
-for (const [n, x, y, w, h, sc] of [['map_start', 300, 4150, 1300, 950, 0.7], ['map_trail', 700, 3150, 1000, 1000, 0.7], ['map_west', 50, 2200, 800, 1000, 0.7], ['map_gate', 300, 250, 1400, 900, 0.7]]) save(n + '.png', scaled(x, y, w, h, sc));
+for (const [n, x, y, w, h, sc] of [['map_house', 600, 4850, 600, 500, 1.4], ['map_start', 300, 4150, 1300, 950, 0.7], ['map_trail', 700, 3150, 1000, 1000, 0.7], ['map_west', 50, 2200, 800, 1000, 0.7], ['map_altar', 850, 1950, 800, 1000, 0.8], ['map_gate', 300, 250, 1400, 900, 0.7]]) save(n + '.png', scaled(x, y, w, h, sc));
 
 // слой коллизий поверх обзора
 const solids = collectSolids({ colliders: COLLIDERS, props: map.props, interactives: objs, enemies: ens, waterRects: terrain.waterRects });

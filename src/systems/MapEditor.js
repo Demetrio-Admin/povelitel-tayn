@@ -101,7 +101,9 @@ export class MapEditor {
     for (const o of s.objects) {
       s.tweens.killTweensOf(o.sprite);
       o.sprite.setVisible(true).setAlpha(1);
+      if (o.baseScale) o.sprite.setScale(o.baseScale.x, o.baseScale.y).setAngle(0);
       for (const g of o.glows || []) g.setVisible(true);
+      o.onFreeze?.();
     }
     for (const e of s.enemies) {
       e.idle?.stop();
@@ -140,6 +142,7 @@ export class MapEditor {
       o.sprite.setPosition(x, y - (o.cfg.elevated || 0)).setDepth(DEPTH.mainBase + y);
       o.baseY = y;
       for (const g of o.glows || []) g.setPosition(g.x + dx, g.y + dy);
+      o.relocate?.(dx, dy);
       if (o.blocker) { o.blocker.setPosition(x, y - o.cfg.collide.h / 2); o.blocker.body.updateFromGameObject(); }
       this.pos[o.id] = { x, y };
     } else {

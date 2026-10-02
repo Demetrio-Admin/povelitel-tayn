@@ -73,6 +73,31 @@ await mute(async () => {
   ui.closeModal(null);
   ok(!Reg.textures.has(tmp), 'окна: временная панель освобождается при закрытии');
 
+  // ---- v0.8: журнал, алхимия, диалог, сумка с ресурсами, HUD цели
+  err = null;
+  try {
+    const { services: sv } = await import('../src/services.js');
+    const st = sv.state;
+    for (const k of ['moon_herb', 'forest_mushroom', 'tree_resin', 'rune_dust']) st.addItem(k, 3);
+    st.addItem('elixir_life', 1);
+    sv.log.accept('sq_herbs');
+    ui.refreshQuest(); ui.refreshV08Hud();
+    ui.onSideQuest('sq_herbs', 'ready'); ui.onGuideHint('Книга лежит в центре дома.'); ui.onGuidePointer({ x: 300, y: 200, angle: 1 }); ui.onGuidePointer(null);
+    ui.openJournal(); ui.update(8000, 16); ui.closeModal(null);
+    ui.openAlchemy(); ui.craftRecipe('elixir_life'); ui.craftRecipe('resin_flask'); ui.update(8100, 16); ui.closeModal(null);
+    ui.openBag(); ui.closeModal(null);
+    for (const npc of ['mirra', 'veda', 'goran', 'selena']) {
+      ui.openDialogue(npc);
+      for (let i = 0; i < 12 && sv.dialogue.active; i++) {
+        for (let k = 0; k < 40; k++) ui.update(8200 + k * 30, 30);
+        const v = sv.dialogue.view(); if (v?.choices) ui.dialogueChoose(v.choices.length - 1); else ui.dialogueTap();
+      }
+      if (sv.dialogue.active) ui.closeDialogue(true);
+    }
+    ui.update(9000, 16);
+  } catch (e) { err = e; }
+  ok(!err && ui.modal === null, 'v0.8: журнал, алхимия, сумка, диалоги с 4 NPC и HUD цели строятся и закрываются' + (err ? ': ' + err.stack.split('\n').slice(0, 4).join(' | ') : ''));
+
   // ---- меню
   err = null;
   try {

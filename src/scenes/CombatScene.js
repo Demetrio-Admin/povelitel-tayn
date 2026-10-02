@@ -11,6 +11,7 @@ import { HeroAnimator } from '../systems/HeroAnimator.js';
 import { UI } from '../config/ui.config.js';
 import { UIBar, drawPlate } from '../ui/widgets.js';
 import { applyDisplaySize, itemName } from '../objects/InteractiveObject.js';
+import { POTIONS, POTION_ORDER } from '../config/resources.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -48,6 +49,7 @@ export class CombatScene extends Phaser.Scene {
     this.buildFieldObjects();
     this.buildEnemyHud();
     this.buildHurtVignette();
+    this.buildPotions();
     this.hitstop = 0;
     this.timeScale = 1;
     this.enemyShake = 0;
@@ -160,6 +162,50 @@ export class CombatScene extends Phaser.Scene {
     this.warnBarBg = this.add.rectangle(-260, 30, 520, 8, 0x000000, 0.8).setOrigin(0, 0.5);
     this.warnBar = this.add.rectangle(-260, 30, 520, 8, COLORS.danger).setOrigin(0, 0.5);
     this.warn.add([bg, this.warnTitle, this.warnHint, this.warnBarBg, this.warnBar]);
+  }
+
+  // ------------------------------------------------------------------ расходники (v0.8)
+  /** Круглые кнопки зелий слева над панелью даров: показываются только те, что есть в сумке. */
+  buildPotions() {
+    this.potionViews = new Map();
+    POTION_ORDER.forEach((id, i) => {
+      const p = POTIONS[id], x = 58 + i * 86, y = 1048;
+      const ring = this.add.circle(x, y, 34, 0x1a120d, 0.92).setStrokeStyle(3, p.color).setDepth(5200);
+      const icon = this.add.image(x, y - 2, p.icon).setDepth(5201);
+      icon.setScale(44 / Math.max(icon.width, icon.height, 1));
+      const badge = this.add.text(x + 24, y + 22, '', { fontFamily: FONT, fontSize: '18px', fontStyle: 'bold', color: '#fff', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(5202);
+      const hit = this.add.zone(x, y, 80, 80).setInteractive({ useHandCursor: true }).setDepth(5203);
+      hit.on('pointerdown', () => this.onPotion(id));
+      this.potionViews.set(id, { ring, icon, badge, hit });
+    });
+    this.refreshPotions();
+    this.input.keyboard?.on('keydown-FOUR', () => this.onPotion('elixir_life'));
+    this.input.keyboard?.on('keydown-FIVE', () => this.onPotion('elixir_mana'));
+    this.input.keyboard?.on('keydown-SIX', () => this.onPotion('resin_flask'));
+  }
+
+  refreshPotions() {
+    for (const [id, v] of this.potionViews) {
+      const n = services.state.item(id);
+      for (const o of [v.ring, v.icon, v.badge, v.hit]) o.setVisible(n > 0);
+      v.badge.setText(String(n));
+    }
+  }
+
+  onPotion(id) {
+    if (!this.canAct()) return;
+    const res = this.cm.usePotion(id);
+    if (!res.ok) {
+      const msg = { full: id === 'elixir_life' ? 'Здоровье уже полное' : 'Мана уже полная', none: 'Таких зелий нет', limit: 'Больше зелий за бой не выпить' }[res.reason];
+      if (msg) this.toast(msg);
+      services.audio.play('locked');
+      return;
+    }
+    services.state.save();
+    this.refreshPotions();
+    services.audio.play('potion');
+    this.heroAnim.playCast('auto');
+    this.processEvents();
   }
 
   // красная рамка по краям экрана (урон по героине / мало HP)
@@ -299,6 +345,7 @@ export class CombatScene extends Phaser.Scene {
             this.toast(ev.hint || 'Эту атаку так не прервать', COLORS.danger);
           }
           break;
+        case 'potion': this.onPotionEvent(ev); break;
         case 'objectUsed': this.animateObject(ev); break;
         case 'objectRespawn': {
           const v = this.fieldViews.get(ev.id);
@@ -359,6 +406,25 @@ export class CombatScene extends Phaser.Scene {
       services.audio.vibrate(ev.strong ? [80, 40, 120] : 30);
       if (ev.strong) this.freeze(140);
     }
+  }
+
+  onPotionEvent(ev) {
+    const p = POTIONS[ev.id];
+    if (ev.kind === 'heal') {
+      this.floatText(HERO_POS.x - 60, HERO_POS.y - 150, `+${ev.amount}`, 0x7be28a, 36);
+      this.burst(HERO_POS.x, HERO_POS.y - 70, 0x7be28a, 26);
+    } else if (ev.kind === 'mana') {
+      this.floatText(HERO_POS.x - 60, HERO_POS.y - 150, `+${ev.amount}`, COLORS.mana, 36);
+      this.burst(HERO_POS.x, HERO_POS.y - 70, COLORS.mana, 26);
+    } else {
+      // бросок склянки: пламенный росчерк от героини к врагу
+      for (let i = 0; i < 8; i++) {
+        const d = this.add.image(HERO_POS.x, HERO_POS.y - 80, 'fx_dot').setTint(p.color).setBlendMode('ADD').setScale(1.3 - i * 0.12).setDepth(6000);
+        this.tweens.add({ targets: d, x: ENEMY_POS.x, y: ENEMY_POS.y - 80, delay: i * 25, duration: 260, onComplete: () => d.destroy() });
+      }
+      this.time.delayedCall(280, () => this.burst(ENEMY_POS.x, ENEMY_POS.y - 80, p.color, 30));
+    }
+    this.toast(p.name, p.color);
   }
 
   animateObject(ev) {

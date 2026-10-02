@@ -33,8 +33,14 @@ export class InteractiveObject {
     this.removed = false;
     this.saved = { ...(services.state.getObject(this.id) || {}) };
     this.baseY = cfg.y;
-    this.sprite = scene.add.image(cfg.x, cfg.y - (cfg.elevated || 0), cfg.texture).setOrigin(0.5, 1);
-    applyDisplaySize(this.sprite, cfg.texture);
+    if (cfg.ghost) {
+      // невидимая «зона осмотра» (мебель у стены, которая нарисована отдельно): без картинки, но с размером для маркера
+      this.sprite = scene.add.image(cfg.x, cfg.y, 'fx_dot').setOrigin(0.5, 1).setDisplaySize(cfg.ghost.w, cfg.ghost.h).setAlpha(0);
+    } else {
+      this.sprite = scene.add.image(cfg.x, cfg.y - (cfg.elevated || 0), cfg.texture).setOrigin(0.5, 1);
+      applyDisplaySize(this.sprite, cfg.texture);
+    }
+    this.baseScale = { x: this.sprite.scaleX, y: this.sprite.scaleY };
     this.sprite.setDepth(DEPTH.mainBase + cfg.y);
     this.blocker = cfg.collide ? scene.addBlocker(cfg.x, cfg.y, cfg.collide.w, cfg.collide.h) : null;
   }
@@ -46,6 +52,8 @@ export class InteractiveObject {
   get label() { return 'Осмотреть'; }
   get title() { return this.cfg.hint || ''; }
   get markerY() { return this.sprite.y - this.sprite.displayHeight - 22; }
+  /** Малозаметные объекты показывают значок только вблизи (null — как у всех). */
+  get markerDistance() { return this.cfg.markerDist ?? null; }
 
   get state() { return services.state; }
   get quests() { return services.quests; }
@@ -71,6 +79,27 @@ export class InteractiveObject {
 
   onFocus() {}
   interact() {}
+  /** Покадровая «жизнь» объекта (близость героини и т. п.). Вызывается сценой, пока объект не удалён. */
+  update() {}
+
+  /** Лёгкая реакция, когда объект становится целью: короткая «пружинка». */
+  focusPop(k = 1.07) {
+    if (this.removed || this.busy || !this.sprite.active || this.cfg.ghost) return;
+    const b = this.baseScale;
+    this.scene.tweens.add({ targets: this.sprite, scaleX: b.x * k, scaleY: b.y * (2 - k), duration: 110, yoyo: true, ease: 'Sine.easeOut',
+      onComplete: () => { if (this.sprite.active) this.sprite.setScale(b.x, b.y); } });
+  }
+
+  /** Реакция на действие: сжатие-растяжение и кружок света. */
+  react(color = 0xffffff, k = 1.14) {
+    if (this.removed || !this.sprite.active) return;
+    const b = this.baseScale;
+    this.scene.tweens.add({ targets: this.sprite, scaleX: b.x * k, scaleY: b.y * (2 - k), duration: 100, yoyo: true, ease: 'Quad.easeOut',
+      onComplete: () => { if (this.sprite.active) this.sprite.setScale(b.x, b.y); } });
+    const r = this.scene.add.image(this.x, this.baseY - 6, 'fx_ring').setTint(color).setBlendMode('ADD').setDepth(DEPTH.path + 3)
+      .setDisplaySize(40, 16).setAlpha(0.8);
+    this.scene.tweens.add({ targets: r, displayWidth: 150, displayHeight: 60, alpha: 0, duration: 520, ease: 'Quad.easeOut', onComplete: () => r.destroy() });
+  }
 
   /** Если игрок нажал не тот дар — подсказка. */
   rejectWrongAbility(abilityId) {
@@ -110,6 +139,14 @@ export class InteractiveObject {
 // ---------------------------------------------------------------------------
 // Магическая книга (зона A) — выдаёт Телекинез I.
 export class BookObject extends InteractiveObject {
+  constructor(scene, cfg) {
+    super(scene, cfg);
+    if (!this.isDone()) {
+      // книга «дышит»: чуть парит и подсвечивается
+      scene.tweens.add({ targets: this.sprite, y: this.sprite.y - 5, duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      scene.addGlow(cfg.x, cfg.y - 40, COLORS.telekinesis, 0.4, this, 1.1);
+    }
+  }
   get markerIcon() { return 'icon_telekinesis'; }
   get markerColor() { return COLORS.telekinesis; }
   get label() { return 'Читать'; }
@@ -124,6 +161,7 @@ export class BookObject extends InteractiveObject {
       buttons: [{
         label: 'Принять дар', primary: true,
         onClick: () => {
+          this.react(COLORS.telekinesis, 1.1);
           this.abilities.unlock('telekinesis', 1);
           this.persist({ state: 'read' });
           this.quests.complete(EV.UNLOCK_TELEKINESIS_1);
@@ -143,12 +181,22 @@ export class ChestObject extends InteractiveObject {
   }
   get label() { return 'Открыть'; }
   isDone() { return this.saved.state === 'opened'; }
+  /** Неоткрытый сундук изредка поблёскивает — его замечают и вдалеке. */
+  update(dt) {
+    if (this.removed || this.isDone() || !this.sprite.visible) return;
+    this.twinkle = (this.twinkle ?? 1 + Math.random() * 2) - dt;
+    if (this.twinkle <= 0) { this.twinkle = 2.2 + Math.random() * 2; this.scene.twinkle?.(this.x + (Math.random() - 0.5) * 36, this.sprite.y - 20 - Math.random() * 20, COLORS.gold); }
+  }
   interact() {
     this.sprite.setTexture('chest_01_open');
     applyDisplaySize(this.sprite, 'chest_01_open');
+    this.baseScale = { x: this.sprite.scaleX, y: this.sprite.scaleY };
     this.persist({ state: 'opened' });
     services.audio.play('chest');
-    this.scene.burst(this.x, this.sprite.y - 20, COLORS.gold, 16);
+    this.react(COLORS.gold, 1.22);
+    this.scene.burst(this.x, this.sprite.y - 20, COLORS.gold, 24);
+    this.scene.sparkleShower?.(this.x, this.sprite.y - 30, COLORS.gold);
+    this.scene.addFlash?.(this.x, this.sprite.y - 24, COLORS.gold);
     this.grantReward(this.cfg.reward, 'Сундук');
   }
 }
@@ -190,6 +238,18 @@ export class AltarObject extends InteractiveObject {
   constructor(scene, cfg) {
     super(scene, cfg);
     scene.addGlow(cfg.x, cfg.y - 70, 0x9fe9ff, 0.45, this, 1.6);
+    this.near = 0;
+  }
+  /** Чем ближе героиня, тем ярче и «живее» свечение алтаря. */
+  update(dt, player) {
+    if (this.removed || !this.glows?.length) return;
+    const d = Math.hypot(player.x - this.x, player.y - this.y);
+    const want = d < 320 ? 1 - d / 320 : 0;
+    this.near += (want - this.near) * Math.min(1, dt * 4);
+    const g = this.glows[0];
+    g.setScale(1.6 + this.near * 0.5);
+    this.twinkle = (this.twinkle ?? 1) - dt;
+    if (this.twinkle <= 0 && d < 520) { this.twinkle = 0.7 + Math.random(); this.scene.twinkle?.(this.x + (Math.random() - 0.5) * 120, this.baseY - 40 - Math.random() * 60, 0x9fe9ff); }
   }
   get markerIcon() { return 'icon_shard'; }
   get markerColor() { return 0x9fe9ff; }

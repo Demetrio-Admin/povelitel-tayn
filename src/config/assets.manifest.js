@@ -32,6 +32,9 @@ export const ASSET_FILES = {
   // UI-иконки
   icon_telekinesis: 'assets/sprites/icon_telekinesis.png', icon_fire: 'assets/sprites/icon_fire.png', icon_seal: 'assets/sprites/icon_seal.png', icon_bag: 'assets/sprites/icon_bag.png', icon_hand: 'assets/sprites/icon_hand.png',
   icon_coin: 'assets/sprites/icon_coin.png', icon_shard: 'assets/sprites/icon_shard.png', icon_ember: 'assets/sprites/icon_ember.png', icon_core: 'assets/sprites/icon_core.png', icon_lock: 'assets/sprites/icon_lock.png',
+  // v0.8: NPC, интерьер, ресурсы, иконки
+  npc_mirra: 'assets/sprites/npc_mirra.png', npc_veda: 'assets/sprites/npc_veda.png', npc_goran: 'assets/sprites/npc_goran.png', npc_selena: 'assets/sprites/npc_selena.png', bed_01: 'assets/sprites/bed_01.png', table_01: 'assets/sprites/table_01.png', bookshelf_01: 'assets/sprites/bookshelf_01.png', cauldron_01: 'assets/sprites/cauldron_01.png', wardrobe_01: 'assets/sprites/wardrobe_01.png', rug_01: 'assets/sprites/rug_01.png', herb_bundle_01: 'assets/sprites/herb_bundle_01.png', plant_pot_01: 'assets/sprites/plant_pot_01.png', cat_01: 'assets/sprites/cat_01.png', trunk_01: 'assets/sprites/trunk_01.png', moon_herb_01: 'assets/sprites/moon_herb_01.png', mushrooms_brown_01: 'assets/sprites/mushrooms_brown_01.png', resin_log_01: 'assets/sprites/resin_log_01.png', rune_sigil_01: 'assets/sprites/rune_sigil_01.png', rune_slab_01: 'assets/sprites/rune_slab_01.png', bramble_01: 'assets/sprites/bramble_01.png', campfire_01: 'assets/sprites/campfire_01.png',
+  portrait_mirra: 'assets/sprites/portrait_mirra.png', portrait_veda: 'assets/sprites/portrait_veda.png', portrait_goran: 'assets/sprites/portrait_goran.png', portrait_selena: 'assets/sprites/portrait_selena.png', icon_mushroom: 'assets/sprites/icon_mushroom.png', icon_resin: 'assets/sprites/icon_resin.png', icon_dust: 'assets/sprites/icon_dust.png', icon_potion_life: 'assets/sprites/icon_potion_life.png', icon_potion_mana: 'assets/sprites/icon_potion_mana.png', icon_potion_fire: 'assets/sprites/icon_potion_fire.png', icon_talk: 'assets/sprites/icon_talk.png', icon_gather: 'assets/sprites/icon_gather.png', icon_alchemy: 'assets/sprites/icon_alchemy.png', icon_inspect: 'assets/sprites/icon_inspect.png', icon_journal: 'assets/sprites/icon_journal.png',
   // FX
   fx_dot: null, fx_glow: null, fx_ring: null,
 };
@@ -51,5 +54,7 @@ export const DISPLAY_SIZE = {
   field_rock_light: [76, 66], field_rock_heavy: [116, 93], field_crystal: [88, 110],
   // партия 3
   lunar_flame_01: [36, 48],
+  // v0.8
+  npc_mirra: [84, 126], npc_veda: [80, 120], npc_goran: [90, 132], npc_selena: [80, 128], bed_01: [112, 120], table_01: [112, 86], bookshelf_01: [150, 128], cauldron_01: [88, 100], wardrobe_01: [84, 136], rug_01: [250, 150], herb_bundle_01: [34, 62], plant_pot_01: [48, 72], cat_01: [54, 38], trunk_01: [84, 58], moon_herb_01: [56, 50], mushrooms_brown_01: [60, 46], resin_log_01: [84, 66], rune_sigil_01: [90, 50], rune_slab_01: [96, 56], bramble_01: [96, 80], campfire_01: [64, 56], portrait_mirra: [128, 128], portrait_veda: [128, 128], portrait_goran: [128, 128], portrait_selena: [128, 128], icon_mushroom: [64, 64], icon_resin: [64, 64], icon_dust: [64, 64], icon_potion_life: [64, 64], icon_potion_mana: [64, 64], icon_potion_fire: [64, 64], icon_talk: [64, 64], icon_gather: [64, 64], icon_alchemy: [64, 64], icon_inspect: [64, 64], icon_journal: [64, 64],
 
 };

@@ -19,6 +19,9 @@ export const EV = {
   // адаптация: дополнительный ключ для маленького врага у огонька C
   LUNAR_GUARD_01: 'lunar_guard_01',
   HEAVY_BLOCKED_01: 'heavy_blocked_01',
+  // v0.8
+  MIRRA_TAUGHT_ALCHEMY: 'mirra_taught_alchemy',
+  HUNTER_THREAT_01: 'hunter_threat_01',
 };
 
 // Шаги маршрута. Текущая цель = первый невыполненный шаг.

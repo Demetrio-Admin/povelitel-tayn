@@ -7,6 +7,8 @@
 //   A Дом → B Поляна → C Тропа → D Боевая поляна → E/F Лунный алтарь → G Тяжёлая глыба
 //   → H Круг Огня → (возврат) I Корни у поляны → J Новая часть леса → K Страж → L Ворота
 
+import { CONTENT_INTERACTIVES, CONTENT_ENEMIES, CACHE_RESOURCE_REWARDS } from './world.content.js';
+
 export const WORLD = {
   width: 1800,
   height: 5400,
@@ -56,10 +58,11 @@ export const COLLIDERS = [
   { kind: 'wall', x: 640,  y: 4880, w: 30,  h: 420 },
   { kind: 'wall', x: 1130, y: 4880, w: 30,  h: 420 },
   { kind: 'wall', x: 640,  y: 5270, w: 520, h: 30 },
-  { kind: 'furniture', x: 690,  y: 5150, w: 90,  h: 100, label: 'кровать' },
-  { kind: 'furniture', x: 1010, y: 4960, w: 100, h: 60,  label: 'стол' },
-  { kind: 'furniture', x: 690,  y: 4910, w: 150, h: 34,  label: 'полки' },
-  { kind: 'furniture', x: 960,  y: 4910, w: 140, h: 34,  label: 'полки' },
+  // v0.8: tex — картинка мебели (вместо прямоугольника с подписью); размер на экране — DISPLAY_SIZE
+  { kind: 'furniture', x: 690,  y: 5150, w: 90,  h: 100, label: 'кровать', tex: 'bed_01' },
+  { kind: 'furniture', x: 1010, y: 4960, w: 100, h: 60,  label: 'стол', tex: 'table_01' },
+  { kind: 'furniture', x: 690,  y: 4910, w: 150, h: 34,  label: 'полки', tex: 'bookshelf_01' },
+  { kind: 'furniture', x: 960,  y: 4910, w: 140, h: 34,  label: 'полки', tex: 'bookshelf_01' },
   { kind: 'trees', x: 100,  y: 4880, w: 540, h: 520 },
   { kind: 'trees', x: 1160, y: 4880, w: 640, h: 520 },
   // B — стартовая поляна: вход в западный лес закрыт корнями (проем 300–500)
@@ -124,7 +127,7 @@ export const DECOR = [
 
 // Интерактивные объекты (Layer 4). Все — отдельные GameObjects (Blueprint §4).
 // kind: book | telekinesis | fire | seal | altar | fire_circle | chest | pickup
-export const INTERACTIVES = [
+const BASE_INTERACTIVES = [
   // A
   { id: 'magic_book', kind: 'book', x: 900, y: 5050, texture: 'magic_book_01', collide: { w: 44, h: 22 } },
   // B
@@ -168,11 +171,19 @@ export const INTERACTIVES = [
     lockedEvent: 'seal_required_01', completeEvent: 'prototype_complete', requiresEvent: 'guardian_defeated' },
 ];
 
+// v0.8: к существующим сундукам добавлены ресурсы (тайники), остальное наполнение — в world.content.js
+for (const o of BASE_INTERACTIVES) {
+  const extra = CACHE_RESOURCE_REWARDS[o.id];
+  if (extra) o.reward = { ...o.reward, items: { ...(o.reward.items || {}), ...extra } };
+}
+export const INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES];
+
 // Враги-триггеры на карте. Бой начинается при входе в радиус.
-export const ENEMY_SPAWNS = [
+const BASE_ENEMY_SPAWNS = [
   { id: 'scavenger_01', enemy: 'forest_scavenger', x: 1250, y: 3010, radius: 180, startEvent: 'combat_intro_01' },
   { id: 'lunar_guard', enemy: 'young_scavenger', x: 1500, y: 2610, radius: 120, startEvent: 'lunar_guard_01',
     requiresEvent: 'lunar_quest_start' },
   { id: 'forest_guardian_01', enemy: 'forest_guardian', x: 400, y: 1400, radius: 230, collide: { w: 240, h: 80 },
     startEvent: 'forest_guardian_01', defeatEvent: 'guardian_defeated', opensPath: 'gate_path', scale: 1.5 },
 ];
+export const ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES];

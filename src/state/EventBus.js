@@ -46,4 +46,15 @@ export const MSG = {
   ZONE_CHANGED: 'world:zone',         // (zone)
   TUTORIAL: 'ui:tutorial',            // ({ id, text, target, ttl } | null)
   OPEN_PAUSE: 'ui:pause',
+  // v0.8
+  OPEN_JOURNAL: 'ui:journal',
+  OPEN_ALCHEMY: 'ui:alchemy',
+  NPC_TALK: 'npc:talk',               // (npcId) — открыть окно диалога
+  NPC_TALK_END: 'npc:talk-end',       // (npcId)
+  CRAFTED: 'alchemy:crafted',         // ({ recipeId, result, amount })
+  GATHERED: 'gather:done',            // ({ item, amount, id })
+  HERO_SAY: 'hero:say',               // (text) — реплика героини над головой
+  GUIDE_HINT: 'guide:hint',           // (text | null) — мягкая подсказка под панелью цели
+  GUIDE_POINTER: 'guide:pointer',     // ({ x, y, angle, dist } | null) — стрелка к цели на краю экрана
+  SIDE_QUEST: 'quest:side',           // (questId, 'start' | 'ready' | 'done')
 };

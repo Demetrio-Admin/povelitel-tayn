@@ -178,6 +178,7 @@ export class GameState {
         const needXP = up.cost.schoolXP - (this.data.schoolXP[school] || 0);
         if (needXP > 0) { this.addSchoolXP(school, needXP); granted.schoolXP[school] = (granted.schoolXP[school] || 0) + needXP; }
         for (const [k, v] of Object.entries(up.cost.items || {})) {
+          if (up.cost.noTopUp?.includes(k)) continue; // ресурсы, которые игрок добывает сам
           const need = v - this.item(k);
           if (need > 0) { this.addItem(k, need); granted.items[k] = (granted.items[k] || 0) + need; }
         }

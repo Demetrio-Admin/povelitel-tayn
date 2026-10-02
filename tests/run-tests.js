@@ -87,9 +87,13 @@ console.log('\n[1] Прогрессия по маршруту');
   ok(quests.currentStep().id === 'return', '3 огонька → цель «верните к алтарю»');
   quests.complete(EV.LUNAR_QUEST_COMPLETE);
   ok(state.data.heroLevel >= 3, `после лунного задания — уровень ${state.data.heroLevel}`);
+  const lacking = state.upgradeStatus('telekinesis_2');
+  ok(!lacking.ok, 'v0.8: Телекинез II без лунной травы и рунической пыли недоступен');
+  state.addItem('moon_herb', 2); state.addItem('rune_dust', 1);
   const st = state.upgradeStatus('telekinesis_2');
   ok(st.ok, `Телекинез II доступен (TK XP ${state.data.schoolXP.telekinesis}, осколки ${state.item('lunar_shard')})`);
   ok(abilities.startResearch('telekinesis_2'), 'исследование запущено');
+  ok(state.item('moon_herb') === 0 && state.item('rune_dust') === 0, 'v0.8: трава и пыль списаны по стоимости и не «добираются» обратно');
   ok(state.hasEvent(EV.TELEKINESIS_2_START), 'событие telekinesis_2_start');
   clock.t += 30000; abilities.update();
   ok(state.abilityLevel('telekinesis') === 1, 'через 30 с ещё идёт изучение');
@@ -341,6 +345,166 @@ console.log('\nИнтерфейс: рисование и виджеты');
   const g = new Proxy({}, { get: (t, k) => (k === 'then' ? undefined : (...a) => { calls++; return g; }) });
   threw = null; try { UIW.drawPlate(g, 300, 60, { accent: 0xff0000 }); } catch (e) { threw = e; }
   ok(!threw && calls > 8, 'drawPlate: рисует плашку и уголки');
+}
+
+console.log('\n[v0.8] Журнал, алхимия, диалоги, подсказки');
+{
+  const { QuestLog } = await import('../src/state/QuestLog.js');
+  const { Alchemy } = await import('../src/systems/Alchemy.js');
+  const { DialogueSystem } = await import('../src/systems/DialogueSystem.js');
+  const { GuidanceSystem } = await import('../src/systems/GuidanceSystem.js');
+  const { SIDE_QUESTS, SIDE_QUEST_ORDER } = await import('../src/config/quests.js');
+  const { RECIPES } = await import('../src/config/recipes.js');
+  const { RESOURCES, POTIONS } = await import('../src/config/resources.js');
+  const { NPCS } = await import('../src/config/npcs.js');
+  const { DIALOGUES } = await import('../src/config/dialogues.js');
+  const { STEP_GUIDE, HERO_LINES } = await import('../src/config/guidance.js');
+  const { CONTENT_INTERACTIVES, CONTENT_ENEMIES } = await import('../src/config/world.content.js');
+  const { ITEMS } = await import('../src/config/balance.progression.js');
+  const { QUEST_STEPS } = await import('../src/config/events.js');
+
+  const mk = () => {
+    const clock = { t: 0 }; const w = makeWorld(clock);
+    const log = new QuestLog(w.state, w.bus), alch = new Alchemy(w.state, w.bus);
+    const dlg = new DialogueSystem({ state: w.state, log, bus: w.bus, goalText: () => w.quests.objectiveText() });
+    const guide = new GuidanceSystem({ state: w.state, quests: w.quests, log, bus: w.bus });
+    return { ...w, log, alch, dlg, guide };
+  };
+
+  // --- данные
+  ok(Object.keys(RESOURCES).length === 5, '5 видов ресурсов');
+  ok(Object.keys(RESOURCES).every(k => ITEMS[k]), 'каждый ресурс есть в ITEMS (имя, иконка)');
+  ok(Object.values(RECIPES).every(r => Object.keys(r.needs).every(k => ITEMS[k]) && ITEMS[r.result]), 'рецепты ссылаются на существующие предметы');
+  ok(Object.keys(RECIPES).length >= 2 && Object.keys(RECIPES).length <= 3, 'алхимия: 2–3 рецепта (' + Object.keys(RECIPES).length + ')');
+  ok(Object.keys(NPCS).length >= 4 && Object.keys(NPCS).every(id => DIALOGUES[id]), 'NPC ≥ 4, у каждого есть диалоги');
+  ok(SIDE_QUEST_ORDER.length >= 2 && SIDE_QUEST_ORDER.length <= 3, 'побочных заданий 2–3');
+  const dialogOk = Object.values(DIALOGUES).every(vs => vs.every(v => Object.values(v.nodes).every(n => n.lines.length >= 1 && n.lines.length <= 5 && (n.choices || []).every(c => !c.next || v.nodes[c.next]))));
+  ok(dialogOk, 'диалоги: 1–5 реплик в узле, ветки ведут в существующие узлы');
+  const gatherSrc = new Set(CONTENT_INTERACTIVES.filter(o => o.kind === 'gather').map(o => o.res));
+  ok(Object.keys(RESOURCES).every(k => gatherSrc.has(k) || CONTENT_INTERACTIVES.some(o => JSON.stringify(o).includes(k))), 'каждый ресурс можно получить в мире');
+  const ids = new Set(CONTENT_INTERACTIVES.map(o => o.id));
+  ok(ids.size === CONTENT_INTERACTIVES.length, 'id объектов v0.8 уникальны');
+  ok(QUEST_STEPS.every(s => s.id === 'end' || STEP_GUIDE[s.id]), 'для каждого шага основного маршрута есть подсказки');
+  ok(HERO_LINES.every(l => l.id && l.text), 'реплики героини заполнены');
+
+  // --- журнал: побочное задание Веды
+  {
+    const { state, log } = mk();
+    ok(log.status('sq_herbs') === 'available', 'sq_herbs: доступно сразу');
+    ok(log.status('sq_dust') === 'locked', 'sq_dust: закрыто, пока алтарь не заговорил');
+    ok(log.accept('sq_herbs') && log.status('sq_herbs') === 'active', 'sq_herbs: принято → active');
+    ok(!log.accept('sq_herbs'), 'sq_herbs: нельзя принять дважды');
+    state.addItem('moon_herb', 2);
+    ok(log.status('sq_herbs') === 'active' && /2\/3/.test(log.hudLine()), 'sq_herbs: 2/3 → всё ещё active, HUD «2/3»');
+    ok(log.turnIn('sq_herbs') === null, 'sq_herbs: сдать раньше времени нельзя');
+    state.addItem('moon_herb', 1);
+    ok(log.status('sq_herbs') === 'ready' && log.checkReady().includes('sq_herbs') && log.checkReady().length === 0, 'sq_herbs: 3/3 → ready, объявляется один раз');
+    const coins = state.item('coins');
+    ok(!!log.turnIn('sq_herbs'), 'sq_herbs: сдано');
+    ok(state.item('moon_herb') === 0 && state.item('coins') === coins + 25 && state.item('elixir_life') === 1, 'sq_herbs: травы ушли, награда выдана (25 монет, настой жизни)');
+    ok(log.status('sq_herbs') === 'done' && log.done().includes('sq_herbs') && !log.turnIn('sq_herbs'), 'sq_herbs: done и награда не дублируется');
+  }
+  // --- sq_dust требует событие, sq_hunter — победу над врагом
+  {
+    const { state, quests, log } = mk();
+    quests.complete(EV.LUNAR_QUEST_START);
+    ok(log.status('sq_dust') === 'available', 'sq_dust: открыто после lunar_quest_start');
+    log.accept('sq_dust'); state.addItem('rune_dust', 1);
+    const sh = state.item('lunar_shard');
+    log.turnIn('sq_dust');
+    ok(state.item('lunar_shard') === sh + 1 && state.item('elixir_mana') === 1 && state.item('rune_dust') === 0, 'sq_dust: осколок и лунный эликсир выданы, пыль отдана');
+    log.accept('sq_hunter');
+    ok(log.status('sq_hunter') === 'active', 'sq_hunter: активно');
+    state.markEnemyDefeated('scavenger_02');
+    ok(log.status('sq_hunter') === 'ready', 'sq_hunter: победа над scavenger_02 → ready');
+    log.turnIn('sq_hunter');
+    ok(state.item('resin_flask') === 1 && state.item('tree_resin') === 2, 'sq_hunter: смоляная склянка и смола выданы');
+  }
+  ok(CONTENT_ENEMIES.some(e => e.id === 'scavenger_02' && e.requiresEvent === 'sq_hunter_start'), 'scavenger_02 появляется только после согласия помочь Горану');
+
+  // --- алхимия
+  {
+    const { state, alch, bus } = mk();
+    let crafted = 0; bus.on(MSG.CRAFTED, () => crafted++);
+    ok(!alch.check('elixir_life').ok && alch.maxCount('elixir_life') === 0, 'алхимия: без ингредиентов нельзя');
+    const r0 = alch.craft('elixir_life');
+    ok(!r0.ok && r0.missing.length === 2, 'алхимия: craft без ингредиентов → missing');
+    state.addItem('moon_herb', 5); state.addItem('forest_mushroom', 2);
+    ok(alch.maxCount('elixir_life') === 2, 'алхимия: maxCount = 2 (по грибам)');
+    const r1 = alch.craft('elixir_life');
+    ok(r1.ok && state.item('elixir_life') === 1 && state.item('moon_herb') === 3 && state.item('forest_mushroom') === 1 && crafted === 1, 'алхимия: ингредиенты списаны, зелье добавлено, событие CRAFTED');
+    ok(!alch.craft('несуществующий').ok, 'алхимия: неизвестный рецепт не падает');
+  }
+
+  // --- зелья в бою
+  {
+    const clock = { t: 0 }; const w = makeWorld(clock);
+    w.abilities.unlock('telekinesis', 1);
+    const cm = new CombatManager({ enemyType: 'forest_scavenger', state: w.state, abilities: w.abilities });
+    ok(cm.usePotion('elixir_life').reason === 'none', 'зелье: нет в сумке → отказ');
+    w.state.addItem('elixir_life', 1); w.state.addItem('elixir_mana', 1); w.state.addItem('resin_flask', 1);
+    ok(cm.usePotion('elixir_life').reason === 'full', 'зелье: при полном здоровье не тратится');
+    ok(w.state.item('elixir_life') === 1, 'зелье: отказ не списывает предмет');
+    cm.hero.hp = 40; const hp0 = cm.hero.hp;
+    const u = cm.usePotion('elixir_life');
+    ok(u.ok && cm.hero.hp > hp0 && w.state.item('elixir_life') === 0, `зелье жизни лечит (${hp0} → ${cm.hero.hp}) и тратится`);
+    cm.hero.mana = 10; ok(cm.usePotion('elixir_mana').ok && cm.hero.mana > 10, 'лунный эликсир восполняет ману');
+    const eh = cm.enemy.hp; const f = cm.usePotion('resin_flask');
+    ok(f.ok && cm.enemy.hp < eh, 'смоляная склянка ранит врага');
+    ok(cm.potionsAvailable().length === 0, 'potionsAvailable пусто после использования');
+    w.state.addItem('elixir_mana', 6); cm.hero.mana = 0; let n = 0; while (cm.usePotion('elixir_mana').ok && n < 10) { n++; cm.hero.mana = 0; }
+    ok(n + 3 === 4 && cm.usePotion('elixir_mana').reason === 'limit', 'зелья: не больше 4 за бой');
+  }
+
+  // --- диалоги
+  {
+    const { state, quests, log, dlg, bus } = mk();
+    ok(dlg.pick('mirra').id === 'mirra_first_steps' || dlg.pick('mirra'), 'Мирра: реплика выбирается по прогрессу');
+    const v0 = dlg.pick('veda').id;
+    ok(/ask/.test(v0) && dlg.badge('veda') === '!', 'Веда: предлагает задание, над ней «!»');
+    let ended = 0; bus.on(MSG.NPC_TALK_END, () => ended++);
+    ok(dlg.start('veda') && dlg.active, 'диалог начался');
+    let guard = 0; let v = dlg.view();
+    while (dlg.active && guard++ < 20) { v = dlg.view(); if (v.choices) break; dlg.advance(); }
+    ok(v.choices && v.choices.length >= 2, 'у диалога есть варианты ответа (' + (v.choices ? v.choices.map(c => c.label).join(' / ') : '-') + ')');
+    const accept = v.choices.findIndex(c => /возьм|помог|принест|соглас|да/i.test(c.label));
+    dlg.choose(accept >= 0 ? accept : 0);
+    while (dlg.active && guard++ < 40) { const vv = dlg.view(); if (vv.choices) dlg.choose(vv.choices.length - 1); else dlg.advance(); }
+    ok(!dlg.active && ended === 1, 'диалог закрылся, NPC_TALK_END один раз');
+    ok(log.status('sq_herbs') === 'active', 'ответ «согласна» принимает задание');
+    ok(dlg.pick('veda').id.endsWith('_active') && dlg.badge('veda') === '?', 'Веда: вариант и значок меняются после принятия');
+    state.addItem('moon_herb', 3);
+    ok(dlg.pick('veda').id.endsWith('_ready') && dlg.badge('veda') === '!', 'Веда: травы собраны → «!» и вариант сдачи');
+    dlg.start('veda'); guard = 0;
+    while (dlg.active && guard++ < 40) { const vv = dlg.view(); if (vv.choices) dlg.choose(0); else dlg.advance(); }
+    ok(log.status('sq_herbs') === 'done', 'диалог сдачи завершает задание');
+    ok(dlg.fmt('есть {n:moon_herb} шт.').includes('0'), 'токен {n:item} подставляет количество');
+    ok(!dlg.start('несуществующий'), 'диалог с неизвестным NPC не падает');
+  }
+  // --- Мирра подсказывает вернуться к корням после Огня
+  {
+    const { state, quests, abilities, dlg } = mk();
+    abilities.unlock('fire', 1); quests.complete(EV.UNLOCK_FIRE_1);
+    ok(dlg.pick('mirra').id === 'mirra_roots', 'после Огня Мирра направляет к чёрным корням');
+    quests.complete(EV.FIRE_GATE_OPEN);
+    ok(dlg.pick('mirra').id !== 'mirra_roots', 'после сожжённых корней подсказка про корни исчезает');
+  }
+
+  // --- мягкое наведение
+  {
+    const { state, quests, guide } = mk();
+    ok(guide.objective().text.length > 3 && guide.objective().stepId === 'book', 'цель: «' + guide.objective().full + '»');
+    ok(guide.targetId(() => false) === 'magic_book', 'цель шага «book» — книга');
+    let hint = null; for (let t = 0; t < 100 && !hint; t++) hint = guide.tick(1);
+    ok(hint && hint.hint, 'застряли 45 с → подсказка: «' + (hint && hint.hint) + '»');
+    guide.noteProgress();
+    ok(guide.tick(1) === null, 'прогресс сбрасывает ожидание');
+    ok(guide.lineFor({ item: 'moon_herb' }) && guide.lineFor({ item: 'moon_herb' }) === null, 'реплика героини на предмет — один раз');
+    ok(guide.lineFor({ zone: 'B' }) && guide.lineFor({ zone: 'B' }) === null, 'реплика героини на зону — один раз');
+    quests.complete(EV.UNLOCK_TELEKINESIS_1);
+    guide.onEvent('unlock_fire_1');
+    ok(guide.pointerActive(), 'после Огня включается стрелка к цели');
+  }
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Все тесты пройдены');

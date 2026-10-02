@@ -5,6 +5,7 @@ import { ENEMIES, FIELD_OBJECTS, ARENAS } from '../config/balance.enemies.js';
 import { HERO_BASE } from '../config/balance.hero.js';
 import { Enemy } from '../objects/Enemy.js';
 import { ABILITY_ORDER } from './AbilitySystem.js';
+import { POTIONS, POTION_BATTLE_LIMIT } from '../config/resources.js';
 
 export class CombatManager {
   /**
@@ -85,6 +86,44 @@ export class CombatManager {
     else if (id === 'seal') this.castSeal(s);
     this.checkResult();
     return { ok: true };
+  }
+
+  /**
+   * v0.8: расходник из сумки (настой жизни / лунный эликсир / смоляная склянка). Мгновенно, без перезарядки и маны.
+   * Возвращает { ok, reason? }. Предмет списывается из сумки; сохранение — на стороне сцены (state.save()).
+   */
+  usePotion(id) {
+    if (this.result) return { ok: false, reason: 'over' };
+    const p = POTIONS[id];
+    if (!p) return { ok: false, reason: 'unknown' };
+    if (this.state.item(id) < 1) return { ok: false, reason: 'none' };
+    if ((this.stats.potions || 0) >= POTION_BATTLE_LIMIT) return { ok: false, reason: 'limit' };
+    const h = this.hero, e = p.effect;
+    if (e.type === 'heal') {
+      if (h.hp >= h.maxHp) return { ok: false, reason: 'full' };
+      const gain = Math.min(h.maxHp - h.hp, Math.round(h.maxHp * e.amount));
+      h.hp += gain;
+      this.emit({ type: 'potion', id, kind: 'heal', amount: gain });
+    } else if (e.type === 'mana') {
+      if (h.mana >= h.maxMana) return { ok: false, reason: 'full' };
+      const gain = Math.min(h.maxMana - h.mana, Math.round(h.maxMana * e.amount));
+      h.mana += gain;
+      this.emit({ type: 'potion', id, kind: 'mana', amount: gain });
+    } else if (e.type === 'damage') {
+      const dmg = this.enemy.takeDamage(e.amount, 'fire', 1);
+      this.emit({ type: 'potion', id, kind: 'damage', amount: dmg });
+      this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'fire' });
+      if (e.burn) { this.enemy.applyBurn(e.burn.dps, e.burn.durationSec); this.emit({ type: 'status', status: 'burn', sec: e.burn.durationSec }); }
+    } else return { ok: false, reason: 'unknown' };
+    this.state.removeItem(id, 1);
+    this.stats.potions = (this.stats.potions || 0) + 1;
+    this.checkResult();
+    return { ok: true };
+  }
+
+  /** Расходники, которые есть в сумке (для кнопок боя): [{ id, count }]. */
+  potionsAvailable() {
+    return Object.keys(POTIONS).map(id => ({ id, count: this.state.item(id) })).filter(p => p.count > 0);
   }
 
   castTelekinesis(s) {

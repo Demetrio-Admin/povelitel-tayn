@@ -116,6 +116,9 @@ window.__bot = async function () {
     await enemy('lunar_guard');
     await act('flame_c', null, '(pickup)');
     snap('flames');
+    // v0.8: для Телекинеза II нужны лунная трава ×2 и рунная пыль ×1 — собираем руками
+    await act('herb_a1', null, '(gather)'); await act('herb_g1', null, '(gather)'); await act('rune_sigil', null, '(gather)');
+    L('  resources: herb=' + S.state.item('moon_herb') + ' dust=' + S.state.item('rune_dust'));
     await act('lunar_altar', null, '(complete + research)');
     await act('lunar_altar', null, '(check research)');
     S.abilities.update(true); await sleep(800); await settle(); snap('research forced');

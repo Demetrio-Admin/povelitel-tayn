@@ -98,6 +98,52 @@ await mute(async () => {
   } catch (e) { err = e; }
   ok(!err && ui.modal === null, 'v0.8: журнал, алхимия, сумка, диалоги с 4 NPC и HUD цели строятся и закрываются' + (err ? ': ' + err.stack.split('\n').slice(0, 4).join(' | ') : ''));
 
+  // v0.8.1 regression: real choices must dispatch only after the dialogue modal is destroyed.
+  {
+    const { services: sv } = await import('../src/services.js');
+    const { MSG } = await import('../src/state/EventBus.js');
+    const cases = [
+      ['mirra', ['seal_required_01'], 'Сварить зелье', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
+      ['mirra', ['seal_required_01'], 'Открыть журнал', MSG.OPEN_JOURNAL, 'Журнал'],
+      ['mirra', ['first_world_interaction'], 'Покажи котёл', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
+      ['selena', ['lunar_quest_start', 'sq_dust_done'], 'Открыть алтарь', MSG.OPEN_UPGRADE, 'Изучение: Телекинез II'],
+    ];
+    sv.bus.offContext(ui);
+    for (const [npc, events, answer, event, title] of cases) {
+      await freshWorld('new');
+      events.forEach(k => sv.state.markEvent(k));
+      const dialogUI = new UIScene(); dialogUI.create(); mkHud(dialogUI);
+      let emissions = 0, closedFirst = false;
+      const off = sv.bus.on(event, () => { emissions++; });
+      // Observer runs before the registered UI listener, so it sees the unlocked state.
+      const original = event === MSG.OPEN_ALCHEMY ? 'openAlchemy' : event === MSG.OPEN_JOURNAL ? 'openJournal' : 'openUpgrade';
+      sv.bus.off(event, dialogUI[original], dialogUI);
+      const inspect = (...args) => {
+        closedFirst = dialogUI.dlg === null && dialogUI.modal === null && !sv.modalOpen;
+        dialogUI[original](...args);
+      };
+      sv.bus.on(event, inspect, dialogUI);
+      sv.dialogue.start(npc);
+      let guard = 0;
+      while (sv.dialogue.active && !sv.dialogue.view().choices && guard++ < 10) { dialogUI.finishTyping(); dialogUI.dialogueTap(); }
+      dialogUI.finishTyping();
+      const choice = sv.dialogue.view().choices.find(c => c.label === answer);
+      const oldContainer = dialogUI.dlg.container;
+      dialogUI.dialogueChoose(choice.index);
+      ok(closedFirst && oldContainer.destroyed && emissions === 1 && dialogUI.modal?.opts.title === title && !dialogUI.modalQueue.length,
+        `диалог → ${title}: ${answer}, старое окно закрыто до открытия нового`);
+      sv.dialogue.flushAfterClose(); dialogUI.closeDialogue(false);
+      ok(emissions === 1, `${answer}: повторный flush/close не дублирует действие`);
+      dialogUI.closeModal(null); sv.bus.offContext(dialogUI); off();
+    }
+    await freshWorld('new');
+    const cancelled = new UIScene(); cancelled.create(); mkHud(cancelled);
+    sv.state.markEvent('seal_required_01'); sv.dialogue.start('mirra');
+    cancelled.closeDialogue(true);
+    ok(!sv.dialogue.active && !cancelled.modal && !sv.modalOpen, 'диалог: отмена без ответа не открывает другое окно');
+    sv.bus.offContext(cancelled);
+  }
+
   // ---- меню
   err = null;
   try {

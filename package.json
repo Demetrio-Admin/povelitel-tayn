@@ -1,6 +1,6 @@
 {
   "name": "witch-rpg-prototype",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,12 +11,14 @@
     "ui:shots": "node --import ./tools/ui/register.mjs tools/ui/render-scenes.mjs",
     "e2e": "node tests/e2e/play.mjs",
     "test:db": "node tools/sql/security-test.mjs && node tools/sql/diff-test.mjs && BACKEND=pg node tests/session-test.js",
-    "test:browser": "python3 tools/ui/dom/dom-test.py"
+    "test:browser": "python3 tools/ui/dom/dom-test.py",
+    "test:mobile": "node tests/e2e/mobile-ui.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
   },
   "devDependencies": {
+    "playwright": "^1.63.0",
     "vite": "^6.0.0"
   }
 }

@@ -130,10 +130,15 @@ export class DialogueSystem {
     this.cur = null;
     this.state.save();
     this.bus?.emit(MSG.NPC_TALK_END, npcId);
-    // отложенные открытия окон: UI открывает их сразу после закрытия диалога
-    const after = this.pendingAfter; this.pendingAfter = [];
-    for (const a of after) a();
     return false;
+  }
+
+  /** Called by the UI only after destroying the dialogue modal and clearing its lock. */
+  flushAfterClose() {
+    if (this.active) return;
+    const after = this.pendingAfter;
+    this.pendingAfter = []; // consume before dispatch; repeated close/flush is harmless
+    for (const action of after) action();
   }
 
   /** Досрочно закрыть (кнопка «закрыть», Esc). Эффекты выбранных ответов уже применены. */

@@ -2,6 +2,11 @@
 // Размеры — в логических пикселях игры (720×1280). Текстуры UI рисуются в texScale раз крупнее ради чёткости.
 export const UI = {
   texScale: 2,
+  // Mobile type scale: 720 logical px → 360 CSS px with Scale.FIT.
+  // small is the minimum for player-facing supporting text (12 CSS px at 360).
+  type: { small: 24, body: 28, bodyLarge: 30, heading: 30, title: 36, combat: 30 },
+  icon: { journal: 56, resource: 64, ingredient: 48, potion: 76, combatPotion: 62 },
+  touch: { button: 88, potion: 100, potionRadius: 46 },
   pad: 14,                 // запас под тень вокруг панелей (логических px)
   radius: 16,              // скругление панелей
   radiusButton: 14,

@@ -1,3 +1,4 @@
+import { UI } from '../config/ui.config.js';
 import { ENEMIES } from '../config/balance.enemies.js';
 import { COLORS, DEPTH } from '../config/game.config.js';
 import { services } from '../services.js';
@@ -23,7 +24,7 @@ export class EnemyTrigger {
     if (cfg.scale) this.sprite.setScale(this.sprite.scaleX * cfg.scale, this.sprite.scaleY * cfg.scale);
     this.sprite.setDepth(DEPTH.mainBase + cfg.y);
     this.label = scene.add.text(cfg.x, cfg.y - this.sprite.displayHeight - 14, this.def.name, {
-      fontFamily: 'Georgia, serif', fontSize: '20px', color: '#ff8a7a', stroke: '#000', strokeThickness: 4,
+      fontFamily: UI.font, fontSize: UI.type.small, color: '#ff8a7a', stroke: '#000', strokeThickness: 4,
     }).setOrigin(0.5, 1).setDepth(DEPTH.markers);
     this.baseScaleY = this.sprite.scaleY;
     this.idle = scene.tweens.add({ targets: this.sprite, scaleY: this.baseScaleY * 1.04, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });

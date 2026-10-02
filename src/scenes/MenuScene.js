@@ -30,7 +30,7 @@ export class MenuScene extends Phaser.Scene {
     this.buildBackground();
 
     const title = this.add.text(W / 2, 336, 'Witch RPG', { fontFamily: FONT, fontSize: '82px', fontStyle: 'bold', color: '#f6e3a1', stroke: '#1a0f08', strokeThickness: 12, shadow: { offsetX: 0, offsetY: 6, color: '#000', blur: 14, fill: true } }).setOrigin(0.5).setDepth(5);
-    this.add.text(W / 2, 414, 'Шепчущий лес · прототип', { fontFamily: FONT, fontSize: '26px', color: COLORS.text, stroke: '#000', strokeThickness: 5, shadow: SH }).setOrigin(0.5).setDepth(5);
+    this.add.text(W / 2, 414, 'Шепчущий лес · прототип', { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, stroke: '#000', strokeThickness: 5, shadow: SH }).setOrigin(0.5).setDepth(5);
     addDivider(this, W / 2, 458, 460).setDepth(5);
     this.tweens.add({ targets: title, y: 328, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
@@ -59,7 +59,7 @@ export class MenuScene extends Phaser.Scene {
       next('Новая игра', !hasSave, () => (hasSave ? this.confirmNew() : this.newGame()));
       next('Настройки', false, () => this.openSettings());
     }
-    this.add.text(W / 2, H - 40, 'v0.8.0 · мир оживает', { fontFamily: FONT, fontSize: '16px', color: COLORS.textDim, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5);
+    this.add.text(W / 2, H - 40, 'v0.8.1 · мобильный интерфейс', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5);
 
     const kb = this.input.keyboard;
     const enter = () => { if (this.overlay) return; if (session && !session.ready) this.newGame(); else this.begin(); };
@@ -72,7 +72,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   line(text, color, y = 520) {
-    return this.add.text(W / 2, y, text, { fontFamily: FONT, fontSize: '21px', color, stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 640 } }).setOrigin(0.5).setDepth(5);
+    return this.add.text(W / 2, y, text, { fontFamily: FONT, fontSize: UI.type.body, color, stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 640 } }).setOrigin(0.5).setDepth(5);
   }
 
   /** HTML-окно поверх меню: пока оно открыто, кнопки меню не реагируют. */
@@ -129,7 +129,7 @@ export class MenuScene extends Phaser.Scene {
 
   button(y, label, primary, onPress) {
     const b = addButton(this, W / 2, y, 440, 88, label, {
-      primary, accent: COLORS.gold, fontSize: 30, depth: 5,
+      primary, accent: COLORS.gold, fontSize: UI.type.bodyLarge, depth: 5,
       onPress: () => { if (this.overlay) return; services.audio.unlock(); services.audio.play('ui_click'); onPress(); },
     });
     return b;
@@ -149,11 +149,11 @@ export class MenuScene extends Phaser.Scene {
     const c = this.add.container(0, 0).setDepth(10000);
     c.add(this.add.rectangle(0, 0, W, H, 0x000000, 0.66).setOrigin(0).setInteractive());
     c.add(addPanel(this, 60, 460, 600, 340, { accent: COLORS.danger, seed: 4 }));
-    c.add(this.add.text(W / 2, 520, 'Начать заново?', { fontFamily: FONT, fontSize: '32px', fontStyle: 'bold', color: '#ff6a5a', shadow: SH }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 520, 'Начать заново?', { fontFamily: FONT, fontSize: UI.type.title, fontStyle: 'bold', color: '#ff6a5a', shadow: SH }).setOrigin(0.5));
     c.add(addDivider(this, W / 2, 558, 440, COLORS.danger));
-    c.add(this.add.text(W / 2, 622, 'Текущее сохранение будет удалено.\nНастройки звука останутся.', { fontFamily: FONT, fontSize: '21px', color: COLORS.text, align: 'center', lineSpacing: 4, shadow: SH }).setOrigin(0.5));
+    c.add(this.add.text(W / 2, 622, 'Текущее сохранение будет удалено.\nНастройки звука останутся.', { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, align: 'center', lineSpacing: 4, shadow: SH }).setOrigin(0.5));
     const mk = (x, label, primary, fn) => {
-      const b = addButton(this, x, 730, 250, 72, label, { primary, accent: primary ? COLORS.gold : null, fontSize: 23, onPress: () => { services.audio.play('ui_click'); fn(); } });
+      const b = addButton(this, x, 730, 250, 72, label, { primary, accent: primary ? COLORS.gold : null, fontSize: UI.type.small, onPress: () => { services.audio.play('ui_click'); fn(); } });
       c.add(b.parts);
     };
     mk(W / 2 - 134, 'Отмена', true, () => this.closeOverlay());

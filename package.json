@@ -1,15 +1,20 @@
 {
-  "name": "povelitel-tayn",
-  "version": "0.1.0",
+  "name": "witch-rpg-prototype",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
-  "description": "Stage 7 technical shell for the mobile/browser fantasy RPG Повелитель Тайн",
   "scripts": {
-    "dev": "node scripts/dev-server.mjs",
-    "test": "node scripts/check-project.mjs",
-    "build": "node tools/inline-assets.mjs index.html dist/povelitel_tayn_standalone.html && node scripts/check-build.mjs"
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "test": "node tests/run-tests.js && node --import ./tools/ui/register.mjs tests/ui-smoke.mjs",
+    "ui:shots": "node --import ./tools/ui/register.mjs tools/ui/render-scenes.mjs",
+    "e2e": "node tests/e2e/play.mjs"
   },
-  "engines": {
-    "node": ">=18"
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
   }
 }

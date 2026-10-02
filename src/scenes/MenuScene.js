@@ -3,8 +3,11 @@ import { VIEW, COLORS } from '../config/game.config.js';
 import { services } from '../services.js';
 import { startGame } from './PreloadScene.js';
 import { buildSettingsPanel } from '../ui/SettingsPanel.js';
+import { UI } from '../config/ui.config.js';
+import { addPanel, addDivider, addButton, addScreenVignette } from '../ui/widgets.js';
 
-const FONT = 'Georgia, serif';
+const FONT = UI.font;
+const SH = UI.shadow;
 const W = VIEW.width;
 const H = VIEW.height;
 
@@ -20,9 +23,10 @@ export class MenuScene extends Phaser.Scene {
     this.overlay = null;
     this.buildBackground();
 
-    const title = this.add.text(W / 2, 330, 'Witch RPG', { fontFamily: FONT, fontSize: '76px', color: COLORS.textGold, stroke: '#1a0f08', strokeThickness: 10 }).setOrigin(0.5);
-    this.add.text(W / 2, 410, 'Шепчущий лес · прототип', { fontFamily: FONT, fontSize: '26px', color: COLORS.text, stroke: '#000', strokeThickness: 5 }).setOrigin(0.5);
-    this.tweens.add({ targets: title, y: 322, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    const title = this.add.text(W / 2, 336, 'Witch RPG', { fontFamily: FONT, fontSize: '82px', fontStyle: 'bold', color: '#f6e3a1', stroke: '#1a0f08', strokeThickness: 12, shadow: { offsetX: 0, offsetY: 6, color: '#000', blur: 14, fill: true } }).setOrigin(0.5).setDepth(5);
+    this.add.text(W / 2, 414, 'Шепчущий лес · прототип', { fontFamily: FONT, fontSize: '26px', color: COLORS.text, stroke: '#000', strokeThickness: 5, shadow: SH }).setOrigin(0.5).setDepth(5);
+    addDivider(this, W / 2, 458, 460).setDepth(5);
+    this.tweens.add({ targets: title, y: 328, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
     const hasSave = state.hasSave() && state.data.completedEvents.length > 0;
     let y = 700;
@@ -33,9 +37,9 @@ export class MenuScene extends Phaser.Scene {
 
     if (hasSave) {
       const d = state.data;
-      this.add.text(W / 2, y + 100, `Сохранение: уровень ${d.heroLevel} · побед ${d.stats.combats.filter(c => c.result === 'victory').length}`, { fontFamily: FONT, fontSize: '19px', color: COLORS.textDim }).setOrigin(0.5);
+      this.add.text(W / 2, y + 100, `Сохранение: уровень ${d.heroLevel} · побед ${d.stats.combats.filter(c => c.result === 'victory').length}`, { fontFamily: FONT, fontSize: '19px', color: COLORS.textDim, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(5);
     }
-    this.add.text(W / 2, H - 50, 'v0.3.1 · art preview', { fontFamily: FONT, fontSize: '16px', color: COLORS.textDim }).setOrigin(0.5);
+    this.add.text(W / 2, H - 40, 'v0.4.0 · interface', { fontFamily: FONT, fontSize: '16px', color: COLORS.textDim, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5);
 
     const kb = this.input.keyboard;
     kb.on('keydown-ENTER', () => { if (!this.overlay) this.begin(); });
@@ -67,14 +71,15 @@ export class MenuScene extends Phaser.Scene {
       x: { min: 0, max: W }, y: { min: 300, max: H }, lifespan: 4000, speedY: { min: -20, max: -5 }, speedX: { min: -10, max: 10 },
       scale: { start: 0.35, end: 0 }, alpha: { start: 0.9, end: 0 }, tint: [0x9fe9ff, 0xe8c56a], blendMode: 'ADD', frequency: 220,
     });
+    addScreenVignette(this, W, H, 0.7).setDepth(2);
   }
 
   button(y, label, primary, onPress) {
-    const r = this.add.rectangle(W / 2, y, 420, 88, primary ? 0x3a2a1a : 0x231912, 0.95).setStrokeStyle(3, primary ? COLORS.gold : 0x8a7a5a).setInteractive({ useHandCursor: true });
-    const t = this.add.text(W / 2, y, label, { fontFamily: FONT, fontSize: '30px', color: primary ? COLORS.textGold : COLORS.text }).setOrigin(0.5);
-    r.on('pointerdown', () => { this.tweens.add({ targets: [r, t], scale: 0.95, duration: 70, yoyo: true }); });
-    r.on('pointerup', () => { if (this.overlay) return; services.audio.unlock(); services.audio.play('ui_click'); onPress(); });
-    return r;
+    const b = addButton(this, W / 2, y, 440, 88, label, {
+      primary, accent: COLORS.gold, fontSize: 30, depth: 5,
+      onPress: () => { if (this.overlay) return; services.audio.unlock(); services.audio.play('ui_click'); onPress(); },
+    });
+    return b;
   }
 
   begin() {
@@ -89,20 +94,16 @@ export class MenuScene extends Phaser.Scene {
   confirmNew() {
     const c = this.add.container(0, 0).setDepth(10000);
     c.add(this.add.rectangle(0, 0, W, H, 0x000000, 0.66).setOrigin(0).setInteractive());
-    const g = this.add.graphics();
-    g.fillStyle(0x1e1510, 0.97).fillRoundedRect(60, 460, 600, 340, 18);
-    g.lineStyle(4, COLORS.danger, 0.9).strokeRoundedRect(60, 460, 600, 340, 18);
-    c.add(g);
-    c.add(this.add.text(W / 2, 520, 'Начать заново?', { fontFamily: FONT, fontSize: '30px', color: '#ff6a5a' }).setOrigin(0.5));
-    c.add(this.add.text(W / 2, 600, 'Текущее сохранение будет удалено.\nНастройки звука останутся.', { fontFamily: FONT, fontSize: '21px', color: COLORS.text, align: 'center' }).setOrigin(0.5));
+    c.add(addPanel(this, 60, 460, 600, 340, { accent: COLORS.danger, seed: 4 }));
+    c.add(this.add.text(W / 2, 520, 'Начать заново?', { fontFamily: FONT, fontSize: '32px', fontStyle: 'bold', color: '#ff6a5a', shadow: SH }).setOrigin(0.5));
+    c.add(addDivider(this, W / 2, 558, 440, COLORS.danger));
+    c.add(this.add.text(W / 2, 622, 'Текущее сохранение будет удалено.\nНастройки звука останутся.', { fontFamily: FONT, fontSize: '21px', color: COLORS.text, align: 'center', lineSpacing: 4, shadow: SH }).setOrigin(0.5));
     const mk = (x, label, primary, fn) => {
-      const r = this.add.rectangle(x, 720, 240, 72, primary ? 0x3a2a1a : 0x231912).setStrokeStyle(3, primary ? COLORS.gold : 0x8a7a5a).setInteractive({ useHandCursor: true });
-      const t = this.add.text(x, 720, label, { fontFamily: FONT, fontSize: '22px', color: primary ? COLORS.textGold : COLORS.text }).setOrigin(0.5);
-      r.on('pointerup', () => { services.audio.play('ui_click'); fn(); });
-      c.add([r, t]);
+      const b = addButton(this, x, 730, 250, 72, label, { primary, accent: primary ? COLORS.gold : null, fontSize: 23, onPress: () => { services.audio.play('ui_click'); fn(); } });
+      c.add(b.parts);
     };
-    mk(W / 2 - 130, 'Отмена', true, () => this.closeOverlay());
-    mk(W / 2 + 130, 'Начать', false, () => {
+    mk(W / 2 - 134, 'Отмена', true, () => this.closeOverlay());
+    mk(W / 2 + 134, 'Начать', false, () => {
       services.state.reset();
       services.hadSave = false;
       this.closeOverlay();

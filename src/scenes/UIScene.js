@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { VIEW, COLORS, CONTROLS } from '../config/game.config.js';
 import { ABILITIES } from '../config/balance.abilities.js';
+import { ENEMIES } from '../config/balance.enemies.js';
 import { UPGRADES, TIMER_MODE, ITEMS } from '../config/balance.progression.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
@@ -8,8 +9,11 @@ import { InputController } from '../systems/InputController.js';
 import { ABILITY_ORDER } from '../systems/AbilitySystem.js';
 import { itemName, ROMAN } from '../objects/InteractiveObject.js';
 import { buildSettingsPanel } from '../ui/SettingsPanel.js';
+import { UI } from '../config/ui.config.js';
+import { addPanel, addDivider, addOrb, setOrb, addBottomBar, addScreenVignette, addMedallion, addButton, drawPlate, releaseTexture, UIBar } from '../ui/widgets.js';
 
-const FONT = 'Georgia, serif';
+const FONT = UI.font;
+const SH = UI.shadow;
 const W = VIEW.width;
 const H = VIEW.height;
 const BAR_Y = 1124;          // верх нижней панели
@@ -90,85 +94,73 @@ export class UIScene extends Phaser.Scene {
   }
 
   // ================================================================== построение
-  panel(x, y, w, h, alpha = 0.82) {
-    const g = this.add.graphics();
-    g.fillStyle(COLORS.wood, alpha).fillRoundedRect(x, y, w, h, 14);
-    g.lineStyle(3, COLORS.gold, 0.85).strokeRoundedRect(x, y, w, h, 14);
-    g.lineStyle(1, COLORS.gold, 0.35).strokeRoundedRect(x + 5, y + 5, w - 10, h - 10, 10);
-    return g;
-  }
-
   buildVignette() {
-    const g = this.add.graphics();
-    g.fillStyle(0x000000, 0.35).fillRect(0, 0, W, 8).fillRect(0, H - 8, W, 8);
+    addScreenVignette(this, W, H, 0.55).setDepth(-5);
   }
 
   buildQuestPanel() {
     this.questPanel = this.add.container(0, 0);
-    const bg = this.panel(14, 14, 420, 124);
-    this.zoneText = this.add.text(32, 26, '', { fontFamily: FONT, fontSize: '20px', color: COLORS.textGold });
-    this.objText = this.add.text(32, 56, '', { fontFamily: FONT, fontSize: '19px', color: COLORS.text, wordWrap: { width: 388 }, lineSpacing: 2 });
-    this.researchText = this.add.text(24, 148, '', { fontFamily: FONT, fontSize: '18px', color: hex(COLORS.telekinesis), stroke: '#000', strokeThickness: 4 });
-    this.questPanel.add([bg, this.zoneText, this.objText]);
+    const bg = addPanel(this, 14, 14, 420, 124, { accent: 0xe8c56a });
+    this.zoneText = this.add.text(32, 24, '', { fontFamily: FONT, fontSize: '21px', fontStyle: 'bold', color: COLORS.textGold, shadow: SH });
+    const rule = addDivider(this, 224, 52, 380);
+    this.objText = this.add.text(32, 60, '', { fontFamily: FONT, fontSize: '19px', color: COLORS.text, wordWrap: { width: 388 }, lineSpacing: 1, shadow: SH });
+    this.researchText = this.add.text(24, 150, '', { fontFamily: FONT, fontSize: '18px', color: hex(COLORS.telekinesis), stroke: '#000', strokeThickness: 4 });
+    this.questPanel.add([bg, this.zoneText, rule, this.objText]);
   }
 
   buildStatsPanel() {
-    const x = 448, y = 14, w = 258;
-    this.panel(x, y, w, 124);
-    this.levelText = this.add.text(x + 16, y + 10, '', { fontFamily: FONT, fontSize: '18px', color: COLORS.textGold });
-    this.xpBar = this.bar(x + 100, y + 21, 140, 8, 0xe8c56a);
-    this.hpBar = this.bar(x + 16, y + 46, 226, 18, COLORS.hp);
-    this.manaBar = this.bar(x + 16, y + 72, 226, 18, COLORS.mana);
-    this.hpText = this.add.text(x + 129, y + 46, '', { fontFamily: FONT, fontSize: '14px', color: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5);
-    this.manaText = this.add.text(x + 129, y + 72, '', { fontFamily: FONT, fontSize: '14px', color: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5);
-    this.add.image(x + 30, y + 104, 'icon_coin').setScale(0.36);
-    this.coinText = this.add.text(x + 46, y + 104, '0', { fontFamily: FONT, fontSize: '18px', color: COLORS.text }).setOrigin(0, 0.5);
-    this.add.image(x + 140, y + 104, 'icon_shard').setScale(0.36);
-    this.shardText = this.add.text(x + 156, y + 104, '0', { fontFamily: FONT, fontSize: '18px', color: COLORS.text }).setOrigin(0, 0.5);
-  }
-
-  bar(x, y, w, h, color) {
-    this.add.rectangle(x, y, w, h, 0x000000, 0.7).setOrigin(0, 0.5).setStrokeStyle(1, 0x000000);
-    const fill = this.add.rectangle(x + 1, y, w - 2, h - 2, color).setOrigin(0, 0.5);
-    fill.fullWidth = w - 2;
-    return fill;
+    const x = 448, y = 14, w = 258, h = 124;
+    addPanel(this, x, y, w, h, { seed: 9 });
+    addMedallion(this, x + 52, y + 52, 84);
+    const bx = x + 100, bw = 146;
+    this.levelText = this.add.text(bx, y + 11, '', { fontFamily: FONT, fontSize: '16px', fontStyle: 'bold', color: COLORS.textGold, shadow: SH });
+    this.xpBar = new UIBar(this, bx, y + 38, bw, 10, 'xp');
+    this.hpBar = new UIBar(this, bx, y + 60, bw, 20, 'hp');
+    this.manaBar = new UIBar(this, bx, y + 86, bw, 20, 'mana');
+    const tx = bx + bw / 2;
+    const barText = (yy) => this.add.text(tx, yy, '', { fontFamily: FONT, fontSize: '14px', color: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5);
+    this.hpText = barText(y + 60);
+    this.manaText = barText(y + 86);
+    this.add.image(x + 32, y + 107, 'icon_coin').setScale(0.34);
+    this.coinText = this.add.text(x + 48, y + 107, '0', { fontFamily: FONT, fontSize: '18px', color: COLORS.text, shadow: SH }).setOrigin(0, 0.5);
+    this.add.image(x + 142, y + 107, 'icon_shard').setScale(0.34);
+    this.shardText = this.add.text(x + 158, y + 107, '0', { fontFamily: FONT, fontSize: '18px', color: COLORS.text, shadow: SH }).setOrigin(0, 0.5);
   }
 
   buildBottomBar() {
-    const g = this.add.graphics();
-    g.fillStyle(COLORS.wood, 0.92).fillRect(0, BAR_Y, W, H - BAR_Y);
-    g.lineStyle(3, COLORS.gold, 0.8).lineBetween(0, BAR_Y, W, BAR_Y);
-    this.buttons = {};
     const xs = [100, 260, 420, 610];
+    addBottomBar(this, BAR_Y, W, H - BAR_Y, [(xs[0] + xs[1]) / 2, (xs[1] + xs[2]) / 2, (xs[2] + xs[3]) / 2 - 8]);
+    this.buttons = {};
     ABILITY_ORDER.forEach((id, i) => { this.buttons[id] = this.makeButton(xs[i], BTN_Y, `icon_${id}`, ABILITIES[id].name, COLORS[ABILITIES[id].color], () => this.bus.emit(MSG.ABILITY_USE, id)); });
     this.buttons.bag = this.makeButton(xs[3], BTN_Y, 'icon_bag', 'Сумка', COLORS.gold, () => this.bus.emit(MSG.OPEN_BAG));
   }
 
   makeButton(x, y, iconKey, label, color, onPress) {
     const glow = this.add.image(x, y, 'fx_glow').setTint(color).setBlendMode('ADD').setScale(1.5).setAlpha(0);
-    const bg = this.add.circle(x, y, BTN_R, 0x1a120d).setStrokeStyle(4, color, 0.9);
+    const orb = addOrb(this, x, y, UI.orb.ability, color);
+    const bg = this.add.zone(x, y, BTN_R * 2, BTN_R * 2);   // зона нажатия (прозрачная)
     const icon = this.add.image(x, y, iconKey).setScale(1.25);
     const cd = this.add.graphics();
     const cdText = this.add.text(x, y, '', { fontFamily: FONT, fontSize: '26px', color: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5);
     const lock = this.add.image(x + 34, y - 34, 'icon_lock').setScale(0.42).setVisible(false);
-    const text = this.add.text(x, y + BTN_R + 10, label, { fontFamily: FONT, fontSize: '16px', color: COLORS.text }).setOrigin(0.5);
+    const text = this.add.text(x, y + BTN_R + 12, label, { fontFamily: FONT, fontSize: '17px', color: COLORS.text, shadow: SH }).setOrigin(0.5);
     bg.setInteractive({ useHandCursor: true });
     bg.on('pointerdown', () => {
       if (this.modal) return;
       services.audio.play('ui_click');
-      this.tweens.add({ targets: [bg, icon], scale: '*=0.9', duration: 70, yoyo: true });
+      this.tweens.add({ targets: [orb, icon], scale: '*=0.92', duration: 70, yoyo: true });
       onPress();
     });
-    return { x, y, glow, bg, icon, cd, cdText, lock, text, color, baseIconScale: 1.25 };
+    return { x, y, glow, orb, bg, icon, cd, cdText, lock, text, color, baseIconScale: 1.25 };
   }
 
   buildContextButton() {
     const x = 610, y = 1000;
     this.ctx = this.add.container(x, y).setVisible(false);
     this.ctxGlow = this.add.image(0, 0, 'fx_glow').setBlendMode('ADD').setScale(1.4).setAlpha(0.6);
-    this.ctxBg = this.add.circle(0, 0, 54, 0x1a120d, 0.92).setStrokeStyle(4, COLORS.gold);
+    this.ctxBg = addOrb(this, 0, 0, UI.orb.context, COLORS.gold);
     this.ctxIcon = this.add.image(0, -4, 'icon_hand').setScale(0.95);
-    this.ctxLabel = this.add.text(0, 66, '', { fontFamily: FONT, fontSize: '18px', color: COLORS.text, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
+    this.ctxLabel = this.add.text(0, 70, '', { fontFamily: FONT, fontSize: '19px', color: COLORS.text, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
     this.ctx.add([this.ctxGlow, this.ctxBg, this.ctxIcon, this.ctxLabel]);
     this.ctxBg.setInteractive({ useHandCursor: true });
     this.ctxBg.on('pointerdown', () => { if (!this.modal) this.bus.emit(MSG.CONTEXT_ACTION); });
@@ -227,7 +219,7 @@ export class UIScene extends Phaser.Scene {
     this.ctx.setVisible(false);
     this.buttons.bag.bg.disableInteractive();
     if (mode === 'exploration') this.buttons.bag.bg.setInteractive({ useHandCursor: true });
-    this.buttons.bag.bg.setAlpha(mode === 'exploration' ? 1 : 0.4);
+    this.buttons.bag.orb.setAlpha(mode === 'exploration' ? 1 : 0.4);
     this.buttons.bag.icon.setAlpha(mode === 'exploration' ? 1 : 0.4);
     this.pauseBtn?.setVisible(true);
     const { audio, tutorial } = services;
@@ -279,7 +271,7 @@ export class UIScene extends Phaser.Scene {
     if (!info || this.mode !== 'exploration') { this.ctx.setVisible(false); return; }
     this.ctx.setVisible(true);
     this.ctxIcon.setTexture(info.icon);
-    this.ctxBg.setStrokeStyle(4, info.color);
+    setOrb(this.ctxBg, this, info.color, UI.orb.context, false);
     this.ctxGlow.setTint(info.color);
     this.ctxLabel.setText(info.label);
     this.ctx.setScale(0.6);
@@ -323,7 +315,7 @@ export class UIScene extends Phaser.Scene {
       const locked = st.state === 'locked';
       b.lock.setVisible(locked);
       b.icon.setAlpha(locked ? 0.3 : st.state === 'nomana' ? 0.45 : 1);
-      b.bg.setStrokeStyle(4, locked ? 0x555555 : b.color, locked ? 0.5 : 0.95);
+      setOrb(b.orb, this, b.color, UI.orb.ability, locked);
       b.text.setText(locked ? ABILITIES[id].name : services.abilities.label(id));
       b.cd.clear();
       if (st.state === 'cooldown') {
@@ -348,8 +340,8 @@ export class UIScene extends Phaser.Scene {
     if (this.lastToast && this.lastToast.text === text && now - this.lastToast.t < 1500) return;
     this.lastToast = { text, t: now };
     const y = (this.mode === 'combat' ? 900 : 250) + this.toasts.length * 50;
-    const label = this.add.text(0, 0, text, { fontFamily: FONT, fontSize: '20px', color: hex(color), align: 'center', wordWrap: { width: 600 } }).setOrigin(0.5);
-    const bg = this.add.rectangle(0, 0, Math.min(660, label.width + 40), label.height + 18, 0x120d0b, 0.88).setStrokeStyle(2, color, 0.7);
+    const label = this.add.text(0, 0, text, { fontFamily: FONT, fontSize: '20px', color: hex(color), align: 'center', wordWrap: { width: 600 }, shadow: SH }).setOrigin(0.5);
+    const bg = drawPlate(this.add.graphics(), Math.min(660, label.width + 48), label.height + 24, { accent: color, fill: 0x120d0b, alpha: 0.9 });
     const c = this.add.container(W / 2, y, [bg, label]).setDepth(9000).setAlpha(0);
     this.toasts.push(c);
     if (this.toasts.length > 4) this.dropToast(this.toasts[0]);
@@ -392,37 +384,37 @@ export class UIScene extends Phaser.Scene {
     const color = opts.color ?? COLORS.gold;
     const pw = 640;
     const c = this.add.container(0, 0).setDepth(10000);
-    const overlay = this.add.rectangle(0, 0, W, H, 0x000000, 0.62).setOrigin(0).setInteractive();
-    const title = this.add.text(W / 2, 0, opts.title || '', { fontFamily: FONT, fontSize: '30px', color: hex(color), align: 'center', wordWrap: { width: pw - 60 } }).setOrigin(0.5, 0);
-    const body = this.add.text(W / 2, 0, opts.text || '', { fontFamily: FONT, fontSize: '21px', color: COLORS.text, align: 'left', wordWrap: { width: pw - 70 }, lineSpacing: 5 }).setOrigin(0.5, 0);
+    const overlay = this.add.rectangle(0, 0, W, H, 0x000000, 0.66).setOrigin(0).setInteractive();
+    const title = this.add.text(W / 2, 0, opts.title || '', { fontFamily: FONT, fontSize: '31px', fontStyle: 'bold', color: hex(color), align: 'center', wordWrap: { width: pw - 60 }, shadow: SH }).setOrigin(0.5, 0);
+    const body = this.add.text(W / 2, 0, opts.text || '', { fontFamily: FONT, fontSize: '21px', color: COLORS.text, align: 'left', wordWrap: { width: pw - 70 }, lineSpacing: 5, shadow: SH }).setOrigin(0.5, 0);
     const buttons = opts.buttons?.length ? opts.buttons : [{ label: 'Закрыть', primary: true }];
     const btnH = 72;
     const vertical = !!opts.vertical;
     const btnBlock = vertical ? buttons.length * (btnH + 16) - 16 : btnH;
-    const ph = 40 + title.height + 20 + (body.text ? body.height : -10) + 34 + btnBlock + 34;
+    const ph = 40 + title.height + 34 + (body.text ? body.height : -10) + 34 + btnBlock + 34;
     const top = Math.max(60, (H - ph) / 2 - 40);
-    const g = this.add.graphics();
-    g.fillStyle(0x1e1510, 0.97).fillRoundedRect((W - pw) / 2, top, pw, ph, 18);
-    g.lineStyle(4, color, 0.9).strokeRoundedRect((W - pw) / 2, top, pw, ph, 18);
-    g.lineStyle(1, COLORS.gold, 0.4).strokeRoundedRect((W - pw) / 2 + 8, top + 8, pw - 16, ph - 16, 12);
+    const left = (W - pw) / 2;
+    const panel = addPanel(this, left, top, pw, ph, { accent: color, seed: 3 });
+    const rule = addDivider(this, W / 2, top + 36 + title.height + 14, pw - 120, color);
     title.setY(top + 36);
-    body.setY(top + 36 + title.height + 20);
-    c.add([overlay, g, title, body]);
+    body.setY(top + 36 + title.height + 34);
+    c.add([overlay, panel, title, rule, body]);
 
     const by0 = top + ph - 34 - btnBlock + btnH / 2;
     const bw = vertical ? 420 : Math.min(280, (pw - 60) / buttons.length - 16);
     const views = buttons.map((b, i) => {
       const bx = vertical ? W / 2 : W / 2 + (i - (buttons.length - 1) / 2) * (bw + 20);
       const by = vertical ? by0 + i * (btnH + 16) : by0;
-      const r = this.add.rectangle(bx, by, bw, btnH, b.primary ? 0x3a2a1a : 0x231912).setStrokeStyle(3, b.primary ? color : 0x8a7a5a);
-      const t = this.add.text(bx, by, b.label, { fontFamily: FONT, fontSize: '21px', color: b.primary ? COLORS.textGold : COLORS.text, align: 'center', wordWrap: { width: bw - 16 } }).setOrigin(0.5);
-      r.setInteractive({ useHandCursor: true }).on('pointerup', () => { services.audio.play(b.primary ? 'ui_click' : 'ui_back'); this.closeModal(b); });
-      c.add([r, t]);
+      const btn = addButton(this, bx, by, bw, btnH, b.label, {
+        primary: !!b.primary, accent: b.primary ? color : null, fontSize: 21,
+        onPress: () => { services.audio.play(b.primary ? 'ui_click' : 'ui_back'); this.closeModal(b); },
+      });
+      c.add(btn.parts);
       return { b };
     });
     c.setAlpha(0);
     this.tweens.add({ targets: c, alpha: 1, duration: 150 });
-    this.modal = { container: c, buttons, views, final: !!opts.final };
+    this.modal = { container: c, buttons, views, final: !!opts.final, tempKeys: [panel.texKey] };
     this.bus.emit(MSG.MODAL_OPEN);
   }
 
@@ -435,7 +427,9 @@ export class UIScene extends Phaser.Scene {
 
   closeModal(button) {
     if (!this.modal) return;
-    this.modal.container.destroy();
+    const { container, tempKeys } = this.modal;
+    container.destroy();
+    for (const k of tempKeys || []) releaseTexture(this, k);   // панели окон разного размера не копим
     this.modal = null;
     services.modalOpen = false;
     this.bus.emit(MSG.MODAL_CLOSED);
@@ -490,7 +484,7 @@ export class UIScene extends Phaser.Scene {
     for (const [k, v] of inv) lines.push(`  ${ITEMS[k]?.name || k}: ${v}`);
     if (d.stats.combats.length) {
       lines.push('', 'Бои:');
-      for (const c of d.stats.combats.slice(-5)) lines.push(`  ${c.enemy}: ${c.result === 'victory' ? 'победа' : 'поражение'}, ${c.timeSec} с`);
+      for (const c of d.stats.combats.slice(-5)) lines.push(`  ${ENEMIES[c.enemy]?.name || c.enemy}: ${c.result === 'victory' ? 'победа' : 'поражение'}, ${c.timeSec} с`);
     }
     this.openModal({
       title: 'Сумка ведьмы', color: COLORS.gold, text: lines.join('\n'),
@@ -514,7 +508,7 @@ export class UIScene extends Phaser.Scene {
   // ================================================================== пауза и настройки
   buildPauseButton() {
     const x = 672, y = 174;
-    const bg = this.add.circle(x, y, 30, 0x1a120d, 0.9).setStrokeStyle(3, COLORS.gold, 0.85);
+    const bg = addOrb(this, x, y, UI.orb.small, COLORS.gold, { gem: false });
     const g = this.add.graphics();
     g.fillStyle(0xf1e3c2).fillRoundedRect(x - 11, y - 12, 7, 24, 2).fillRoundedRect(x + 4, y - 12, 7, 24, 2);
     bg.setInteractive({ useHandCursor: true });
@@ -561,7 +555,7 @@ export class UIScene extends Phaser.Scene {
   // ================================================================== обучение
   buildTutorial() {
     this.tut = this.add.container(0, 0).setDepth(8500).setVisible(false);
-    this.tutBg = this.add.rectangle(W / 2, 0, 560, 70, 0x0e1a1c, 0.92).setStrokeStyle(3, COLORS.telekinesis, 0.9);
+    this.tutBg = this.add.graphics();
     this.tutText = this.add.text(W / 2, 0, '', { fontFamily: FONT, fontSize: '21px', color: '#e9fffb', align: 'center', wordWrap: { width: 520 }, lineSpacing: 3 }).setOrigin(0.5);
     this.tutArrow = this.add.graphics();
     this.tutArrow.fillStyle(COLORS.telekinesis).fillTriangle(-22, -26, 22, -26, 0, 8).lineStyle(3, 0x000000, 0.6).strokeTriangle(-22, -26, 22, -26, 0, 8);
@@ -579,7 +573,7 @@ export class UIScene extends Phaser.Scene {
     }
     this.tutHint = h;
     this.tutText.setText(h.text);
-    this.tutBg.setSize(Math.min(640, this.tutText.width + 48), this.tutText.height + 26);
+    drawPlate(this.tutBg, Math.min(640, this.tutText.width + 56), this.tutText.height + 30, { accent: COLORS.telekinesis, fill: 0x0e1a1c, alpha: 0.94 });
     const combat = this.mode === 'combat';
     let bubbleY = 880, ax = null, ay = 0;
     this.tutHand.setVisible(false);
@@ -593,7 +587,7 @@ export class UIScene extends Phaser.Scene {
       const b = this.buttons[h.target];
       bubbleY = combat ? 1010 : 880; ax = b.x; ay = BTN_Y - BTN_R - 22;
     }
-    this.tutBg.setY(bubbleY); this.tutText.setY(bubbleY);
+    this.tutBg.setPosition(W / 2, bubbleY); this.tutText.setY(bubbleY);
     this.tutArrow.setVisible(ax !== null);
     if (ax !== null) { this.tutArrow.setPosition(ax, ay); this.tutArrowBase = ay; }
     this.tut.setVisible(true).setAlpha(0);

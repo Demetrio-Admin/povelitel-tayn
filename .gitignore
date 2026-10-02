@@ -4,3 +4,4 @@ dist/
 *.log
 __pycache__/
 tools/art/out*/
+tools/ui/shots/

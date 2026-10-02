@@ -9,7 +9,7 @@ p.on('console', m => { const t = m.text(); if (m.type() === 'error' || m.type() 
 p.on('requestfailed', r => errs.push('REQFAIL ' + r.url()));
 p.on('response', r => { if (r.status() >= 400) errs.push('HTTP ' + r.status() + ' ' + r.url()); });
 await p.goto((process.env.GAME_URL || 'http://localhost:4173/') + '?reset&skipmenu', { waitUntil: 'load' });
-await new Promise(r => setTimeout(r, 2500));
+await new Promise(r => setTimeout(r, 4500));
 await p.addScriptTag({ content: fs.readFileSync(new URL('./bot.js', import.meta.url), 'utf8') });
 const shots = null;
 const log = await p.evaluate(() => window.__bot());

@@ -12,6 +12,9 @@ import { AudioManager, SFX_NAMES } from '../src/systems/AudioManager.js';
 import { MSG } from '../src/state/EventBus.js';
 import { HeroAnimator, sampleKeys } from '../src/systems/HeroAnimator.js';
 import { HERO_ANIM } from '../src/config/hero.anim.js';
+import * as UIW from '../src/ui/widgets.js';
+import * as Paint from '../src/ui/uiPaint.js';
+import { UI } from '../src/config/ui.config.js';
 
 let failures = 0;
 const ok = (cond, msg) => { if (cond) console.log('  ✓', msg); else { failures++; console.log('  ✗', msg); } };
@@ -243,6 +246,101 @@ console.log('\nАнимации героини');
 
   const z = new HeroAnimator();
   ok(finite(z.update(0, { speed: 1, dir: 1 })) && finite(z.update(-1, {})), 'dt = 0 и отрицательный dt не ломают позу');
+}
+
+console.log('\nИнтерфейс: рисование и виджеты');
+{
+  // фейковый Canvas 2D: принимает любые вызовы, градиенты умеют addColorStop
+  const ctxStub = () => new Proxy({}, {
+    get: (t, k) => (k in t ? t[k] : (k === 'createLinearGradient' || k === 'createRadialGradient') ? () => ({ addColorStop() {} }) : k === 'measureText' ? () => ({ width: 10 }) : () => {}),
+    set: (t, k, v) => { t[k] = v; return true; },
+  });
+  let created = 0;
+  UIW.env.createCanvas = (w, h) => { created++; return { width: w, height: h, getContext: () => ctxStub() }; };
+  const fakeObj = (type) => {
+    const o = { type, w: 1000, h: 200, visible: true, tex: null, crop: null, handlers: {} };
+    const p = new Proxy(o, {
+      get: (t, k) => {
+        if (k === 'width') return t.w; if (k === 'height') return t.h;
+        if (k === 'texture') return { key: t.tex };
+        if (k in t) return t[k];
+        return (...a) => {
+          if (k === 'setVisible') t.visible = a[0];
+          if (k === 'setCrop') t.crop = a;
+          if (k === 'setTexture') t.tex = a[0];
+          if (k === 'on') t.handlers[a[0]] = a[1];
+          return p;
+        };
+      },
+      set: (t, k, v) => { t[k] = v; return true; },
+    });
+    return p;
+  };
+  const tex = new Map();
+  const scene = {
+    textures: { exists: k => tex.has(k), addCanvas: (k, c) => tex.set(k, c), remove: k => tex.delete(k), get: () => ({ getSourceImage: () => ({ width: 64, height: 128 }) }) },
+    add: { image: (x, y, k) => { const o = fakeObj('image'); o.tex = k; return o; }, text: () => fakeObj('text'), zone: () => fakeObj('zone'), graphics: () => fakeObj('g') },
+  };
+
+  // --- текстуры: создаются один раз, освобождаются, размер холста = (размер + 2·запас) × texScale
+  let drawn = 0;
+  UIW.ensureTexture(scene, 't1', 100, 50, () => { drawn++; });
+  UIW.ensureTexture(scene, 't1', 100, 50, () => { drawn++; });
+  ok(drawn === 1 && tex.size === 1, 'ensureTexture: рисует один раз, повторный вызов берёт кэш');
+  ok(tex.get('t1').width === Math.ceil((100 + UI.pad * 2) * UI.texScale), 'ensureTexture: размер холста = (w + 2·pad) × texScale');
+  UIW.releaseTexture(scene, 't1'); UIW.releaseTexture(scene, 'нет-такой');
+  ok(tex.size === 0, 'releaseTexture: удаляет текстуру, неизвестный ключ не ломает');
+
+  // --- полоса
+  const bar = new UIW.UIBar(scene, 10, 20, 150, 20, 'hp', 5000);
+  ok(bar.fullWidth === 146, 'UIBar: рабочая ширина = ширина жёлоба − 4');
+  bar.setFraction(0.5);
+  ok(bar.fill.crop[2] === 500 && bar.fill.visible, 'UIBar: заливка обрезается по доле (в пикселях текстуры)');
+  bar.setFraction(0); ok(!bar.fill.visible, 'UIBar: при 0 заливка скрыта');
+  bar.setFraction(NaN); ok(bar.frac === 0 && !bar.fill.visible, 'UIBar: NaN → 0, без падения');
+  bar.width = bar.fullWidth * 0.25; ok(Math.abs(bar.frac - 0.25) < 1e-9 && bar.fill.visible, 'UIBar: совместимость width = fullWidth × доля');
+  bar.setFraction(7); ok(bar.frac === 1, 'UIBar: доля больше 1 обрезается до 1');
+  bar.setVisible(false); ok(!bar.trough.visible && !bar.fill.visible, 'UIBar: setVisible(false) прячет обе части');
+  bar.setVisible(true); bar.setFraction(0.3); bar.setVisible(true); ok(bar.fill.visible, 'UIBar: setVisible(true) возвращает заливку');
+
+  // --- кнопка
+  let presses = 0;
+  const btn = UIW.addButton(scene, 0, 0, 200, 72, 'Ок', { primary: true, onPress: () => presses++ });
+  const h = btn.hit.handlers;
+  ok(btn.bg.tex.includes(':Pu:'), 'кнопка: в покое обычная текстура');
+  h.pointerup?.(); ok(presses === 0, 'кнопка: отпускание без нажатия не срабатывает');
+  h.pointerdown(); ok(btn.bg.tex.includes(':Pd:'), 'кнопка: при нажатии — текстура «вдавлена»');
+  h.pointerup(); ok(presses === 1 && btn.bg.tex.includes(':Pu:'), 'кнопка: срабатывает по отпусканию и возвращает вид');
+  h.pointerdown(); h.pointerout(); h.pointerup(); ok(presses === 1, 'кнопка: увод пальца с кнопки отменяет нажатие');
+  btn.setPrimary(false); ok(btn.bg.tex.includes(':Su:'), 'кнопка: setPrimary(false) меняет вид');
+
+  // --- орб
+  ok(UIW.orbKey(scene, 0x4fe3c1, 128, false) === UIW.orbKey(scene, 0x4fe3c1, 128, false) && UIW.orbKey(scene, 0x4fe3c1, 128, true) !== UIW.orbKey(scene, 0x4fe3c1, 128, false), 'орб: ключ стабилен; locked — отдельная текстура');
+  const orb = UIW.addOrb(scene, 0, 0, 128, 0x4fe3c1);
+  const before = orb.tex; UIW.setOrb(orb, scene, 0x4fe3c1, 128, true);
+  ok(orb.tex !== before && orb.tex.includes(':L'), 'орб: setOrb переключает вид на закрытый');
+  const sizeCalls = []; const origSize = orb.setDisplaySize; orb.setDisplaySize = (...a) => { sizeCalls.push(a); return orb; };
+  UIW.setOrb(orb, scene, 0x4fe3c1, 128, true); UIW.setOrb(orb, scene, 0x4fe3c1, 128, true);
+  ok(sizeCalls.length === 0, 'орб: setOrb с тем же видом не трогает размер (не перебивает анимацию нажатия)');
+
+  // --- painters на фейковом контексте: ни один не падает
+  let threw = null;
+  try {
+    const c = ctxStub();
+    for (const variant of ['wood', 'dark', 'inset']) { Paint.paintPanel(c, 420, 124, { variant, accent: 0x4fe3c1 }); Paint.paintPanel(c, 20, 20, { variant }); }
+    Paint.paintButton(c, 280, 72, { primary: true, accent: 0xffffff }); Paint.paintButton(c, 64, 64, { pressed: true });
+    Paint.paintOrb(c, 128, { accent: 0xff6a2b }); Paint.paintOrb(c, 128, { locked: true }); Paint.paintOrb(c, 68, { gem: false });
+    for (const k of ['hp', 'mana', 'xp', 'danger', 'неизвестно']) Paint.paintBarFill(c, 146, 20, k);
+    Paint.paintBarTrough(c, 146, 10); Paint.paintBottomBar(c, 720, 156, [180, 340], 22); Paint.paintDivider(c, 380);
+    Paint.paintCrescent(c, 96); Paint.paintMedallion(c, 84, null, null); Paint.paintScreenVignette(c, 360, 640);
+  } catch (e) { threw = e; }
+  ok(!threw, 'painters: все рисуются без ошибок' + (threw ? ': ' + threw.message : ''));
+
+  // --- плашка на Graphics
+  let calls = 0;
+  const g = new Proxy({}, { get: (t, k) => (k === 'then' ? undefined : (...a) => { calls++; return g; }) });
+  threw = null; try { UIW.drawPlate(g, 300, 60, { accent: 0xff0000 }); } catch (e) { threw = e; }
+  ok(!threw && calls > 8, 'drawPlate: рисует плашку и уголки');
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Все тесты пройдены');

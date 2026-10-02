@@ -1,7 +1,10 @@
 import { VIEW, COLORS } from '../config/game.config.js';
 import { services } from '../services.js';
+import { UI } from '../config/ui.config.js';
+import { addPanel, addDivider, addButton } from './widgets.js';
 
-const FONT = 'Georgia, serif';
+const FONT = UI.font;
+const SH = UI.shadow;
 const hex = c => '#' + c.toString(16).padStart(6, '0');
 
 /**
@@ -16,31 +19,29 @@ export function buildSettingsPanel(scene, { onDone, depth = 10000 } = {}) {
   const left = (W - pw) / 2, top = (H - ph) / 2 - 40;
   const c = scene.add.container(0, 0).setDepth(depth);
   const overlay = scene.add.rectangle(0, 0, W, H, 0x000000, 0.66).setOrigin(0).setInteractive();
-  const g = scene.add.graphics();
-  g.fillStyle(0x1e1510, 0.97).fillRoundedRect(left, top, pw, ph, 18);
-  g.lineStyle(4, COLORS.gold, 0.9).strokeRoundedRect(left, top, pw, ph, 18);
-  g.lineStyle(1, COLORS.gold, 0.4).strokeRoundedRect(left + 8, top + 8, pw - 16, ph - 16, 12);
-  const title = scene.add.text(W / 2, top + 44, 'Настройки', { fontFamily: FONT, fontSize: '32px', color: COLORS.textGold }).setOrigin(0.5);
-  c.add([overlay, g, title]);
+  const panel = addPanel(scene, left, top, pw, ph, { seed: 5 });
+  const title = scene.add.text(W / 2, top + 46, 'Настройки', { fontFamily: FONT, fontSize: '34px', fontStyle: 'bold', color: COLORS.textGold, shadow: SH }).setOrigin(0.5);
+  const rule = addDivider(scene, W / 2, top + 84, pw - 140);
+  c.add([overlay, panel, title, rule]);
 
   const pct = v => `${Math.round(v * 100)}%`;
   const onOff = v => (v ? 'Вкл' : 'Выкл');
 
   const smallBtn = (x, y, w, label, onPress) => {
-    const r = scene.add.rectangle(x, y, w, 64, 0x2a1d14).setStrokeStyle(3, COLORS.gold, 0.8).setInteractive({ useHandCursor: true });
-    const t = scene.add.text(x, y, label, { fontFamily: FONT, fontSize: '28px', color: COLORS.text }).setOrigin(0.5);
-    r.on('pointerdown', () => { scene.tweens.add({ targets: [r, t], scale: 0.92, duration: 60, yoyo: true }); onPress(); });
-    c.add([r, t]);
-    return { r, t };
+    const b = addButton(scene, x, y, w, 64, label, { fontSize: 28, onPress });
+    c.add(b.parts);
+    return { r: b.bg, t: b.text };
   };
 
   let y = top + 140;
-  const rowLabel = (text) => c.add(scene.add.text(left + 40, y, text, { fontFamily: FONT, fontSize: '24px', color: COLORS.text }).setOrigin(0, 0.5));
+  const rowLabel = (text) => c.add(scene.add.text(left + 40, y, text, { fontFamily: FONT, fontSize: '25px', color: COLORS.text, shadow: SH }).setOrigin(0, 0.5));
+
+  for (let i = 0; i < 4; i++) c.add(addPanel(scene, left + 28, top + 140 + i * 100 - 38, pw - 56, 76, { variant: 'inset' }));
 
   // громкости
   for (const [key, label] of [['sfx', 'Звуки'], ['music', 'Музыка']]) {
     rowLabel(label);
-    const value = scene.add.text(left + 430, y, pct(settings.get(key)), { fontFamily: FONT, fontSize: '24px', color: COLORS.textGold }).setOrigin(0.5);
+    const value = scene.add.text(left + 430, y, pct(settings.get(key)), { fontFamily: FONT, fontSize: '24px', fontStyle: 'bold', color: COLORS.textGold, shadow: SH }).setOrigin(0.5);
     c.add(value);
     smallBtn(left + 340, y, 64, '−', () => { value.setText(pct(settings.stepVolume(key, -1))); audio.play('ui_click'); });
     smallBtn(left + 520, y, 64, '+', () => { value.setText(pct(settings.stepVolume(key, +1))); audio.play('ui_click'); });
@@ -60,10 +61,10 @@ export function buildSettingsPanel(scene, { onDone, depth = 10000 } = {}) {
     y += 100;
   }
 
-  const done = scene.add.rectangle(W / 2, top + ph - 70, 280, 72, 0x3a2a1a).setStrokeStyle(3, COLORS.gold).setInteractive({ useHandCursor: true });
-  const doneT = scene.add.text(W / 2, top + ph - 70, 'Готово', { fontFamily: FONT, fontSize: '24px', color: COLORS.textGold }).setOrigin(0.5);
-  done.on('pointerup', () => { audio.play('ui_back'); onDone?.(); });
-  c.add([done, doneT]);
+  const done = addButton(scene, W / 2, top + ph - 62, 280, 72, 'Готово', {
+    primary: true, accent: COLORS.gold, fontSize: 25, onPress: () => { audio.play('ui_back'); onDone?.(); },
+  });
+  c.add(done.parts);
   c.add(scene.add.text(W / 2, top + ph + 24, 'Настройки не сбрасываются вместе с прогрессом', { fontFamily: FONT, fontSize: '16px', color: hex(0x9a8a6a) }).setOrigin(0.5));
   c.setAlpha(0);
   scene.tweens.add({ targets: c, alpha: 1, duration: 150 });

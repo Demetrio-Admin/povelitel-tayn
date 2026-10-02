@@ -8,9 +8,12 @@ import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { CombatManager } from '../systems/CombatManager.js';
 import { HeroAnimator } from '../systems/HeroAnimator.js';
+import { UI } from '../config/ui.config.js';
+import { UIBar, drawPlate } from '../ui/widgets.js';
 import { applyDisplaySize, itemName } from '../objects/InteractiveObject.js';
 
-const FONT = 'Georgia, serif';
+const FONT = UI.font;
+const SH = UI.shadow;
 const SCHOOL_COLOR = { telekinesis: COLORS.telekinesis, fire: COLORS.fire, seal: COLORS.seal, auto: 0xf1e3c2 };
 const ENEMY_POS = { x: VIEW.width / 2, y: 560 };
 const HERO_POS = { x: VIEW.width / 2, y: 1040 };
@@ -145,18 +148,17 @@ export class CombatScene extends Phaser.Scene {
     const W = VIEW.width;
     const y = 190;
     this.add.text(W / 2, y - 14, this.def.name + (this.def.tier === 'strong' ? '  ★' : ''), { fontFamily: FONT, fontSize: '26px', color: '#ffb3a8', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5, 1).setDepth(5000);
-    this.add.rectangle(W / 2, y, 520, 26, 0x000000, 0.7).setStrokeStyle(2, COLORS.gold).setDepth(5000);
-    this.enemyHpBar = this.add.rectangle(W / 2 - 256, y, 512, 18, COLORS.hp).setOrigin(0, 0.5).setDepth(5001);
+    this.enemyHpBar = new UIBar(this, W / 2 - 260, y, 520, 26, 'hp', 5000);
     this.enemyHpText = this.add.text(W / 2, y, '', { fontFamily: FONT, fontSize: '16px', color: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5002);
     this.statusText = this.add.text(W / 2, y + 26, '', { fontFamily: FONT, fontSize: '18px', color: COLORS.textGold, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5, 0).setDepth(5000);
 
     // предупреждение о сильной атаке (cast warning)
     this.warn = this.add.container(W / 2, 290).setDepth(5100).setVisible(false);
-    const bg = this.add.rectangle(0, 0, 560, 74, 0x2a0806, 0.9).setStrokeStyle(3, COLORS.danger);
+    const bg = drawPlate(this.add.graphics(), 580, 82, { accent: COLORS.danger, fill: 0x2a0806, alpha: 0.94 });
     this.warnTitle = this.add.text(0, -20, '', { fontFamily: FONT, fontSize: '24px', color: '#ff6a5a', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
     this.warnHint = this.add.text(0, 8, '', { fontFamily: FONT, fontSize: '18px', color: COLORS.text }).setOrigin(0.5);
-    this.warnBarBg = this.add.rectangle(-260, 28, 520, 8, 0x000000).setOrigin(0, 0.5);
-    this.warnBar = this.add.rectangle(-260, 28, 520, 8, COLORS.danger).setOrigin(0, 0.5);
+    this.warnBarBg = this.add.rectangle(-260, 30, 520, 8, 0x000000, 0.8).setOrigin(0, 0.5);
+    this.warnBar = this.add.rectangle(-260, 30, 520, 8, COLORS.danger).setOrigin(0, 0.5);
     this.warn.add([bg, this.warnTitle, this.warnHint, this.warnBarBg, this.warnBar]);
   }
 
@@ -223,7 +225,7 @@ export class CombatScene extends Phaser.Scene {
 
   updateHud() {
     const e = this.cm.enemy;
-    this.enemyHpBar.width = 512 * Math.max(0, e.hp / e.maxHp);
+    this.enemyHpBar.setFraction(Math.max(0, e.hp / e.maxHp));
     this.enemyHpText.setText(`${Math.ceil(e.hp)} / ${e.maxHp}`);
     const st = [];
     if (e.hasArmor) st.push(e.armorActive ? `Броня −${Math.round(this.def.armor.value * 100)}%` : `Броня разбита ${e.armorDisabledLeft.toFixed(0)}с`);

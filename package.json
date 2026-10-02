@@ -1,13 +1,14 @@
 {
   "name": "witch-rpg-prototype",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host",
-    "test": "node tests/run-tests.js",
+    "test": "node tests/run-tests.js && node --import ./tools/ui/register.mjs tests/ui-smoke.mjs",
+    "ui:shots": "node --import ./tools/ui/register.mjs tools/ui/render-scenes.mjs",
     "e2e": "node tests/e2e/play.mjs"
   },
   "dependencies": {

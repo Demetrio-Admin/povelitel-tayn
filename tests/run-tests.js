@@ -507,5 +507,23 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
   }
 }
 
+console.log('\n[v0.8.2] Опыт до следующего уровня');
+{
+  const { xpProgress } = await import('../src/state/heroProgress.js');
+  const { state } = makeWorld({ t: 0 });
+  let x = xpProgress(state);
+  ok(x.level === 1 && x.progress === 0 && x.caption === 'До 2 ур.: 60 опыта', 'начало: ' + x.caption);
+  state.addHeroXP(30); x = xpProgress(state);
+  ok(Math.abs(x.progress - 0.5) < 1e-9 && x.remaining === 30, 'внутри уровня: 50%, осталось 30');
+  state.data.heroLevel = 4; state.data.heroXP = 370; x = xpProgress(state);
+  ok(Math.abs(x.progress - 0.625) < 1e-9 && x.caption === 'До 5 ур.: 60 опыта', 'пример из ТЗ: ур. 4, 370 → 62,5%, «До 5 ур.: 60 опыта»');
+  const ups = state.addHeroXP(60); x = xpProgress(state);
+  ok(ups.length === 1 && x.level === 5 && x.max && x.progress === 1 && x.caption === 'Максимальный уровень', 'повышение до 5 → максимальный уровень');
+  state.addHeroXP(500); x = xpProgress(state);
+  ok(x.level === 5 && x.remaining === 0 && !/NaN|null|6/.test(x.caption), 'после максимума нет шестого уровня, NaN и отрицательных чисел');
+  state.data.heroLevel = 2; state.data.heroXP = 10; x = xpProgress(state);   // повреждённое сохранение: опыт меньше порога
+  ok(x.progress === 0 && x.remaining === 140, 'опыт ниже порога уровня не даёт отрицательную полосу');
+}
+
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Все тесты пройдены');
 process.exit(failures ? 1 : 0);

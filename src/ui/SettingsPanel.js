@@ -10,12 +10,14 @@ const hex = c => '#' + c.toString(16).padStart(6, '0');
 /**
  * Панель настроек (звуки, музыка, вибрация, подсказки). Используется в MenuScene и UIScene.
  * Возвращает container (уже добавлен в сцену). onDone вызывается кнопкой «Готово».
+ * extra — служебные кнопки внизу ([{ label, onPress }], v0.8.2: «Главное меню», «Сбросить прогресс» в игре).
  * Уничтожение контейнера — на стороне вызывающего.
  */
-export function buildSettingsPanel(scene, { onDone, depth = 10000 } = {}) {
+export function buildSettingsPanel(scene, { onDone, depth = 10000, extra = [] } = {}) {
   const { settings, audio } = services;
   const W = VIEW.width, H = VIEW.height;
-  const pw = 648, ph = 700;
+  const extraH = extra.length ? 112 : 0;
+  const pw = 648, ph = 700 + extraH;
   const left = (W - pw) / 2, top = (H - ph) / 2 - 40;
   const c = scene.add.container(0, 0).setDepth(depth);
   const overlay = scene.add.rectangle(0, 0, W, H, 0x000000, 0.66).setOrigin(0).setInteractive();
@@ -61,11 +63,19 @@ export function buildSettingsPanel(scene, { onDone, depth = 10000 } = {}) {
     y += 100;
   }
 
-  const done = addButton(scene, W / 2, top + ph - 62, 280, UI.touch.button, 'Готово', {
+  const doneY = top + ph - 62;
+  const done = addButton(scene, W / 2, doneY, 280, UI.touch.button, 'Готово', {
     primary: true, accent: COLORS.gold, fontSize: UI.type.body, onPress: () => { audio.play('ui_back'); onDone?.(); },
   });
   c.add(done.parts);
-  c.add(scene.add.text(W / 2, top + ph - 140, 'Настройки не сбрасываются вместе с прогрессом', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, align: 'center', wordWrap: { width: pw - 70 } }).setOrigin(0.5));
+  if (extra.length) {
+    const bw = (pw - 56 - (extra.length - 1) * 16) / extra.length;
+    extra.forEach((b, i) => {
+      const btn = addButton(scene, left + 28 + bw / 2 + i * (bw + 16), doneY - 108, bw, UI.touch.button, b.label, { fontSize: UI.type.small, onPress: () => { audio.play('ui_click'); b.onPress?.(); } });
+      c.add(btn.parts);
+    });
+  }
+  c.add(scene.add.text(W / 2, doneY - extraH - 78, 'Настройки не сбрасываются вместе с прогрессом', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, align: 'center', wordWrap: { width: pw - 70 } }).setOrigin(0.5));
   c.setAlpha(0);
   scene.tweens.add({ targets: c, alpha: 1, duration: 150 });
   return c;

@@ -4,7 +4,7 @@ export const UI = {
   texScale: 2,
   // Mobile type scale: 720 logical px → 360 CSS px with Scale.FIT.
   // small is the minimum for player-facing supporting text (12 CSS px at 360).
-  type: { small: 24, body: 28, bodyLarge: 30, heading: 30, title: 36, combat: 30 },
+  type: { small: 24, body: 28, bodyLarge: 30, heading: 30, title: 36, combat: 30, badge: 24 },
   icon: { journal: 56, resource: 64, ingredient: 48, potion: 76, combatPotion: 62 },
   touch: { button: 88, potion: 100, potionRadius: 46 },
   pad: 14,                 // запас под тень вокруг панелей (логических px)
@@ -27,4 +27,28 @@ export const UI = {
   },
   shadow: { offsetX: 0, offsetY: 2, color: '#000000', blur: 4, fill: true },   // тень текста Phaser
   orb: { ability: 128, small: 68, context: 112 },   // диаметры кнопок-«жемчужин»
+
+  // v0.8.2 — компактный HUD без сплошных плашек. Все размеры в логических px (720×1280).
+  hud: {
+    top: 172,              // нижняя граница постоянной верхней зоны (дальше — мир)
+    portrait: 104, portraitHit: 112, portraitX: 72, portraitY: 72,
+    level: 34,             // «Ур. N»
+    caption: 24,           // «До 5 ур.: 60 опыта»
+    number: 26,            // числа HP/маны
+    resNumber: 28,         // монеты и осколки
+    statIcon: 32, statH: 40, resIcon: 38,
+    xp: { w: 180, h: 18 },
+    shade: 0.55,           // мягкое затемнение под верхним HUD (сверху вниз до нуля)
+    bottomShade: 0.5,      // и под нижними кнопками
+  },
+  side: {                  // правая колонка: Журнал над Меню
+    x: 656, orb: 92, icon: 60, hitW: 104, label: 24,
+    journalY: 62, menuY: 214, gap: 16,
+    badge: 24, badgeR: 20,
+  },
+  menu: {                  // раскрывающееся меню 3×2
+    cols: 3, orb: 96, icon: 68, hit: 120, label: 24, cellW: 184, rowH: 168,
+    left: 16, top: 176, animMs: 210, dim: 0.28,
+  },
+  banner: { ms: 4200 },    // временное уведомление о новой цели
 };

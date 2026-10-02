@@ -34,15 +34,7 @@ export const windows08 = {
   // ================================================================== HUD: журнал-иконка, подсказка, стрелка
   buildV08Hud() {
     const { bus } = services;
-    // иконка журнала с числом заданий в правом верхнем углу панели цели; вся панель открывает журнал
-    this.journalIcon = fit(this.add.image(652, 158, 'icon_journal'), UI.icon.journal).setAlpha(0.95);
-    this.journalBadge = this.add.container(682, 134);
-    this.journalBadge.add([this.add.circle(0, 0, 19, 0xc8443a).setStrokeStyle(2, 0xf6e3a1), this.journalBadgeText = this.add.text(0, 0, '0', { fontFamily: FONT, fontSize: UI.type.small, fontStyle: 'bold', color: '#fff' }).setOrigin(0.5)]);
-    this.questHit = this.add.zone(14, 122, 692, 150).setOrigin(0).setInteractive({ useHandCursor: true });
-    this.questHit.on('pointerup', () => { if (!this.modal && this.mode === 'exploration') { services.audio.play('ui_click'); this.openJournal(); } });
-    this.sideLine = this.add.text(32, 248, '', { fontFamily: FONT, fontSize: UI.type.small, color: hex(0x9fe9ff), shadow: SH, wordWrap: { width: 640 } });
-    this.questPanel.add([this.journalIcon, this.journalBadge, this.sideLine]);
-
+    // v0.8.2: постоянной панели цели и её невидимой зоны нажатия (questHit) больше нет — Журнал открывается кнопкой справа.
     this.hintPlate = this.add.container(W / 2, 300).setDepth(40).setVisible(false);
     this.hintBg = this.add.graphics();
     this.hintText = this.add.text(0, 0, '', { fontFamily: FONT, fontSize: UI.type.small, color: '#f6e3a1', align: 'left', wordWrap: { width: 628 }, lineSpacing: 2 }).setOrigin(0.5);
@@ -66,13 +58,7 @@ export const windows08 = {
   },
 
   refreshV08Hud() {
-    const log = services.log;
-    if (!log || !this.sideLine) return;
-    const n = log.activeCount();
-    this.journalBadge.setVisible(n > 0 && this.mode !== 'combat');
-    this.journalBadgeText.setText(String(n));
-    this.journalIcon.setVisible(this.mode !== 'combat');
-    this.sideLine.setText(this.mode === 'combat' ? '' : (log.hudLine() ? '◆ ' + log.hudLine() : ''));
+    this.refreshSideBadge?.();
   },
 
   onSideQuest(id, what) {
@@ -103,7 +89,7 @@ export const windows08 = {
 
   onGuidePointer(p) {
     if (!p || this.modal || this.mode !== 'exploration') { this.pointer.setVisible(false); return; }
-    const top = this.researchText.y + (this.researchText.text ? this.researchText.height : 0) + 46;
+    const top = (this.questBottom || this.fieldTop()) + 46;
     this.pointer.setVisible(true).setPosition(p.x, Math.max(top, p.y));
     this.pointerArrow.setRotation(p.angle);
     this.pointerArrow.setScale(1 + Math.sin(this.time.now / 220) * 0.08);
@@ -421,7 +407,7 @@ export const windows08 = {
     };
     this.openModal({
       title: 'Сумка ведьмы', color: COLORS.gold, text: '', content,
-      buttons: [{ label: 'Закрыть', primary: true }, { label: 'Журнал', onClick: () => this.openJournal() }, { label: 'Меню', onClick: () => this.openPause() }],
+      buttons: [{ label: 'Закрыть', primary: true }, { label: 'Журнал', onClick: () => this.openJournal() }, { label: 'Меню', onClick: () => this.openMenu() }],
     });
   },
 };

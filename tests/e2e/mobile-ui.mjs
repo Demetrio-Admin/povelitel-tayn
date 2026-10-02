@@ -116,7 +116,7 @@ try {
     const menuBtn = await ui(()=>{const r=window.__game.scene.getScene('UIScene').menuBtn.hit.getBounds();return {x:r.centerX,y:r.centerY};});
     await tap(menuBtn.x, menuBtn.y);
     await page.waitForFunction(()=>{const m=window.__game.scene.getScene('UIScene').modal;return m?.menu && m.container.x===0 && m.container.alpha===1;});
-    await shot('menu');
+    await shot('game-menu');
     const heroBefore = await ui(()=>{const p=window.__game.scene.getScene('ExplorationScene').player;window.__tapSeen=0;return {x:p.x,y:p.y};});
     await tap(360, 900); await page.waitForTimeout(400);
     const after = await ui(()=>{const u=window.__game.scene.getScene('UIScene'),p=window.__game.scene.getScene('ExplorationScene').player;return {modal:u.modal,open:window.__witch.modalOpen,x:p.x,y:p.y,taps:window.__tapSeen};});

@@ -10,6 +10,7 @@ import { buildWalkGrid, floodFrom, reachableNear } from '../src/world/walk.js';
 import { applyEdits, diffEdits, applyPos, diffPos, exportEditsFile, resolveMap, saveDraft, loadDraft, DRAFT_KEY } from '../src/world/mapData.js';
 import { History, pickAt, snapValue, nextId, clamp } from '../src/world/editorCore.js';
 import { checkWalkability } from '../src/world/check.js';
+import { EDITS } from '../src/config/world.edits.js';
 import { polygonToRects, pointInPolygon, polygonBounds } from '../src/world/geometry.js';
 
 let failures = 0;
@@ -93,6 +94,10 @@ console.log('\nМир: проверка редактора');
   const ENEMIES = ENEMY_SPAWNS;
   const none = checkWalkability({ colliders: COLLIDERS, props: PROPS, interactives: INTERACTIVES, enemies: ENEMIES, terrain });
   ok(none.length === 0, 'checkWalkability: у базовой расстановки проблем нет' + (none.length ? ': ' + none.map(p => p.text).join('; ') : ''));
+  // то, что реально в игре: базовая расстановка + правки из редактора (world.edits.js)
+  const live = resolveMap({ storage: null, useDraft: false });
+  const withEdits = checkWalkability({ colliders: COLLIDERS, props: live.props, interactives: applyPos(INTERACTIVES, live.pos), enemies: applyPos(ENEMIES, live.pos), terrain });
+  ok(withEdits.length === 0, `checkWalkability: расстановка с правками из редактора проходима (${Object.keys(EDITS.props).length} правок)` + (withEdits.length ? ': ' + withEdits.map(p => p.text).join('; ') : ''));
   // «стена» из камней поперёк главной тропы в проходе между деревьями — проверка должна это заметить
   const wall = []; for (let x = 800; x < 1720; x += 30) wall.push({ id: 'w' + x, k: 'rock_small_01', x, y: 3200 });
   const bad = checkWalkability({ colliders: COLLIDERS, props: [...PROPS, ...wall], interactives: INTERACTIVES, enemies: ENEMIES, terrain });
@@ -143,7 +148,8 @@ console.log('\nМир: правки и черновик редактора');
   saveDraft(st, { v: 1, props: { t0001: null }, add: [], pos: {} });
   ok(loadDraft(st)?.props.t0001 === null && resolveMap({ storage: st, useDraft: true }).fromDraft && resolveMap({ storage: st, useDraft: false }).fromDraft === false, 'черновик применяется только в режиме редактора/?draft');
   st.setItem(DRAFT_KEY, '{oops'); ok(loadDraft(st) === null, 'битый черновик игнорируется');
-  ok(resolveMap({ storage: st, useDraft: true }).props.length === PROPS.length, 'без правок число объектов = базовому');
+  const expected = PROPS.length - Object.values(EDITS.props).filter(v => v === null).length + EDITS.add.length;
+  ok(resolveMap({ storage: st, useDraft: true }).props.length === expected, `битый черновик → расстановка из world.edits.js (${expected} объектов)`);
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты мира пройдены');

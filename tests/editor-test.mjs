@@ -59,6 +59,11 @@ function mkEditor(storage = null) {
 const P = (x, y) => ({ x, y, isDown: true });
 const drag = (ed, from, to) => { ed.onDown(P(...from)); ed.onMove(P(...to)); ed.onUp(P(...to)); };
 const draft = () => JSON.parse(store.get(DRAFT_KEY) || 'null');
+// В world.edits.js уже могут быть правки дорог и стен (их делает владелец карты). Черновик хранит их вместе с новыми,
+// поэтому «ничего не изменилось» = совпадает с файлом.
+const { EDITS: FILE_EDITS } = await import('../src/config/world.edits.js');
+const same = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {});
+const without = (o, k) => { const c = { ...(o || {}) }; delete c[k]; return c; };
 
 console.log('\nРедактор: дороги и река');
 {
@@ -72,9 +77,9 @@ console.log('\nРедактор: дороги и река');
   ok(ed.tsel?.id === 'door' && ed.tsel.i === 0, 'касание точки выбирает дорогу и её точку');
   ok(door().pts[0][0] === end[0] + 40 && door().pts[0][1] === end[1] - 25, 'перетаскивание сдвигает точку линии');
   ok(scene.log.terrain === 1, 'после отпускания дорога и вода пересобираются один раз');
-  ok(draft()?.roads?.door?.pts[0][0] === end[0] + 40 && !draft().waters && !draft().cols, 'черновик хранит только изменённую дорогу');
+  ok(draft()?.roads?.door?.pts[0][0] === end[0] + 40 && same(without(draft().roads, 'door'), FILE_EDITS.roads) && same(draft().waters, FILE_EDITS.waters) && same(draft().cols, FILE_EDITS.cols), 'черновик хранит только изменённую дорогу');
   ed.doUndo();
-  ok(door().pts[0][0] === end[0] && scene.log.terrain === 2 && !draft()?.roads, 'отмена возвращает точку, пересобирает мир и убирает правку из черновика');
+  ok(door().pts[0][0] === end[0] && scene.log.terrain === 2 && same(draft()?.roads, FILE_EDITS.roads), 'отмена возвращает точку, пересобирает мир и убирает правку из черновика');
   ed.doRedo();
   ok(door().pts[0][0] === end[0] + 40 && draft()?.roads?.door, 'повтор возвращает правку');
   ed.doUndo();
@@ -197,7 +202,7 @@ console.log('\nРедактор: стены');
   drag(ed, [cur.x + cur.w, cur.y + cur.h], [cur.x + cur.w + 50, cur.y + cur.h + 20]);
   ok(w().w === w0.w + 50 && w().h === w0.h + 20 && w().x === w0.x + 32, 'ручка угла меняет размер, положение не уезжает');
   ed.doUndo(); ed.doUndo();
-  ok(w().x === w0.x && w().w === w0.w && !draft()?.cols, 'две отмены вернули стену, из черновика правка ушла');
+  ok(w().x === w0.x && w().w === w0.w && same(draft()?.cols, FILE_EDITS.cols), 'две отмены вернули стену, из черновика правка ушла');
   ed.doRedo(); ed.doRedo();
   // кнопки размера
   ed.selectC(wallId);
@@ -212,7 +217,8 @@ console.log('\nРедактор: стены');
   ed.newWall('ruin'); ok(ed.cols.length === n + 1 && ed.selCol.kind === 'ruin', 'новая стена-руина в центре экрана');
   ed.newWall('trees'); ok(ed.selCol.kind === 'trees' && ed.selCol.h === 120, 'новый участок леса');
   const e = ed.buildEdits();
-  ok(Object.keys(e.cols).length === 3 && Object.values(e.cols).filter(v => v && v.id.startsWith('cn')).length === 2, 'в файле: сдвинутая стена и две новых');
+  const newCols = Object.fromEntries(Object.entries(e.cols).filter(([k]) => !(k in (FILE_EDITS.cols || {})) || k === wallId));
+  ok(Object.keys(newCols).length === 3 && Object.values(newCols).filter(v => v && v.id.startsWith('cn')).length === 2, 'в файле: сдвинутая стена и две новых');
   // удаление базовой стены попадает в файл как null
   const base1 = ed.cols.find(c => c.id === 'c10');
   ed.selectC('c10'); ed.delWall();

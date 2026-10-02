@@ -6,29 +6,29 @@ import { UPGRADES, TIMER_MODE, ITEMS } from '../config/balance.progression.js';
 import { MSG } from '../state/EventBus.js';
 import { services, resetProgress, reloadToMenu } from '../services.js';
 import { showProfile } from '../ui/accountUI.js';
-import { shortNick } from '../cloud/nickname.js';
 import { InputController } from '../systems/InputController.js';
 import { ABILITY_ORDER } from '../systems/AbilitySystem.js';
 import { itemName, ROMAN } from '../objects/InteractiveObject.js';
 import { buildSettingsPanel } from '../ui/SettingsPanel.js';
 import { UI } from '../config/ui.config.js';
-import { addPanel, addDivider, addOrb, setOrb, addBottomBar, addScreenVignette, addMedallion, addButton, drawPlate, releaseTexture, UIBar } from '../ui/widgets.js';
+import { addPanel, addDivider, addOrb, setOrb, addScreenVignette, addButton, drawPlate, releaseTexture } from '../ui/widgets.js';
 import { addScrollViewport } from '../ui/scrollViewport.js';
 import { windows08 } from '../ui/windows08.js';
+import { hud082 } from '../ui/hud082.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
 const W = VIEW.width;
 const H = VIEW.height;
-const BAR_Y = 1096;          // верх нижней панели
+const BAR_Y = 1096;          // верх зоны нижних кнопок (касания ниже — только кнопки)
 const BTN_Y = 1170;
 const BTN_R = 58;
 const hex = c => '#' + c.toString(16).padStart(6, '0');
 const fmtTime = (ms) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
 /**
- * UIScene — всегда поверх игровых сцен. Quest panel, HP/мана/ресурсы, панель даров,
- * кнопка действия, плавающий джойстик, тосты и модальные окна (диалоги, изучение, сумка).
+ * UIScene — всегда поверх игровых сцен. Верхний HUD (портрет, уровень, опыт, ресурсы, HP/мана), колонка «Журнал / Меню»,
+ * плавающие кнопки даров, кнопка действия, джойстик, тосты и модальные окна (диалоги, изучение, сумка, меню, профиль).
  * Данные берёт из GameState и из provider-функций активной сцены (registry: hudProvider, abilityProvider).
  */
 export class UIScene extends Phaser.Scene {
@@ -45,19 +45,19 @@ export class UIScene extends Phaser.Scene {
     this.hudTimer = 0;
 
     this.buildVignette();
-    this.buildQuestPanel();
-    this.buildStatsPanel();
+    this.buildTopHud();
+    this.buildResearchLine();
     this.buildBottomBar();
     this.buildContextButton();
     this.buildJoystick();
-    this.buildPauseButton();
+    this.buildSideColumn();
     this.buildTutorial();
     this.buildV08Hud();
 
     this.controls = new InputController(this, bus, services.input, {
       isModal: () => !!this.modal,
       onModalPrimary: () => this.pressModalButton(true),
-      onEscape: () => (this.modal ? this.pressModalButton(false) : this.openPause()),
+      onEscape: () => (this.modal ? this.pressModalButton(false) : this.openMenu()),
       onDebug: () => { if (services.debug) { services.abilities.update(true); this.toast('[debug] изучение завершено'); } },
     });
     this.setupPointer();
@@ -76,7 +76,7 @@ export class UIScene extends Phaser.Scene {
     bus.on(MSG.FINAL_SCREEN, this.openFinal, this);
     bus.on(MSG.WORLD_EVENT, this.onWorldEvent, this);
     bus.on(MSG.TUTORIAL, this.onTutorial, this);
-    bus.on(MSG.OPEN_PAUSE, this.openPause, this);
+    bus.on(MSG.OPEN_PAUSE, this.openMenu, this);
     bus.on(MSG.CONTEXT_ACTION, () => { const t = services.tutorial; t.complete('interact'); if (this.focusInfo?.ability === 'telekinesis') t.complete('telekinesis'); }, this);
     bus.on(MSG.ABILITY_USE, (id) => { if (this.mode === 'exploration' && (id === 'telekinesis' || id === 'fire')) services.tutorial.complete(id); }, this);
     const offAcc = services.session?.onChange((r) => { if (r === 'saving' || r === 'profile' || r === 'registered') this.refreshHud(); });
@@ -84,6 +84,14 @@ export class UIScene extends Phaser.Scene {
 
     this.refreshQuest();
     this.refreshHud();
+    // постоянной панели цели нет — текущую цель коротко показываем при входе в игру
+    // (ждём, пока закончится вступление и закроются окна; не дольше ~10 с)
+    let tries = 0;
+    const intro = () => {
+      if (this.mode === 'exploration' && !this.modal && services.mode === 'exploration') this.showGoalBanner(services.quests.objectiveText(), 'Цель');
+      else if (++tries < 20) this.time.delayedCall(500, intro);
+    };
+    this.time.delayedCall(1500, intro);
     services.audio.setMusic(services.mode === 'combat' ? 'combat' : 'explore');
     this.moveT = 0;
     if (services.tutorial.canShow('move')) this.time.delayedCall(1200, () => { if (this.mode === 'exploration') services.tutorial.show('move'); });
@@ -104,55 +112,21 @@ export class UIScene extends Phaser.Scene {
     addScreenVignette(this, W, H, 0.55).setDepth(-5);
   }
 
-  buildQuestPanel() {
-    this.questPanel = this.add.container(0, 0);
-    this.questBg = this.add.graphics();
-    this.zoneText = this.add.text(32, 132, '', { fontFamily: FONT, fontSize: UI.type.heading, fontStyle: 'bold', color: COLORS.textGold, shadow: SH, wordWrap: { width: 540 } });
-    this.questRule = addDivider(this, 330, 174, 590);
-    this.objText = this.add.text(32, 188, '', { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, wordWrap: { width: 580 }, lineSpacing: 2, shadow: SH });
-    this.researchText = this.add.text(32, 300, '', { fontFamily: FONT, fontSize: UI.type.small, color: hex(COLORS.telekinesis), wordWrap: { width: 610 }, stroke: '#000', strokeThickness: 4 });
-    this.questPanel.add([this.questBg, this.zoneText, this.questRule, this.objText]);
+  /** Строка таймера изучения под HP/маной (раньше жила в панели цели). */
+  buildResearchLine() {
+    this.researchText = this.add.text(this.statRow.x0, this.statRow.y + this.statRow.h / 2 + 8, '', { fontFamily: FONT, fontSize: UI.type.small, color: hex(COLORS.telekinesis), wordWrap: { width: this.statRow.right - this.statRow.x0 }, stroke: '#000', strokeThickness: 4 });
   }
 
-  layoutQuestPanel() {
-    if (!this.sideLine) return;
-    // Full-width objective lets larger type wrap naturally without a tall narrow column.
-    const sideY = this.objText.y + this.objText.height + 8;
-    this.sideLine.setY(sideY);
-    this.questBottom = sideY + (this.sideLine.text ? this.sideLine.height + 8 : 0) + 10;
-    drawPlate(this.questBg, 692, this.questBottom - 122, { accent: 0xe8c56a });
-    this.questBg.setPosition(W / 2, (122 + this.questBottom) / 2);
-    this.questHit.setSize(692, this.questBottom - 122);
-    this.layoutHint();
-  }
-
+  /** Подсказка «если застряли» — под колонкой Журнал/Меню, на всю ширину. */
   layoutHint() {
     const h = this.hintText?.height + 24 || 0;
-    if (this.hintPlate?.visible) this.hintPlate.setPosition(W / 2, this.questBottom + 10 + h / 2);
-    this.researchText.setY(this.questBottom + (this.hintPlate?.visible ? h + 20 : 12));
+    if (this.hintPlate?.visible) this.hintPlate.setPosition(W / 2, this.fieldTop() + h / 2);
+    this.questBottom = this.fieldTop() + (this.hintPlate?.visible ? h + 12 : 0);   // где начинаются тосты
   }
 
-  buildStatsPanel() {
-    addPanel(this, 14, 14, 692, 96, { seed: 9 });
-    addMedallion(this, 54, 54, 62);
-    this.levelText = this.add.text(96, 24, '', { fontFamily: FONT, fontSize: UI.type.small, fontStyle: 'bold', color: COLORS.textGold, shadow: SH });
-    this.syncDot = this.add.circle(286, 30, 6, 0x5fd68a).setStrokeStyle(1, 0x000000, 0.8).setVisible(false);
-    this.xpBar = new UIBar(this, 96, 62, 190, 10, 'xp');
-    this.hpBar = new UIBar(this, 318, 64, 172, 34, 'hp');
-    this.manaBar = new UIBar(this, 514, 64, 172, 34, 'mana');
-    for (const [x, text] of [[404, 'Здоровье'], [600, 'Мана']]) this.add.text(x, 22, text, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, shadow: SH }).setOrigin(0.5, 0);
-    const barText = x => this.add.text(x, 64, '', { fontFamily: FONT, fontSize: UI.type.small, color: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5);
-    this.hpText = barText(404);
-    this.manaText = barText(600);
-    this.add.image(104, 89, 'icon_coin').setDisplaySize(28, 28);
-    this.coinText = this.add.text(124, 89, '0', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, shadow: SH }).setOrigin(0, 0.5);
-    this.add.image(224, 89, 'icon_shard').setDisplaySize(28, 28);
-    this.shardText = this.add.text(244, 89, '0', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, shadow: SH }).setOrigin(0, 0.5);
-  }
-
+  /** Дары и Сумка — отдельные плавающие кнопки без общей плашки (мир виден между ними). */
   buildBottomBar() {
     const xs = [100, 260, 420, 610];
-    addBottomBar(this, BAR_Y, W, H - BAR_Y, [(xs[0] + xs[1]) / 2, (xs[1] + xs[2]) / 2, (xs[2] + xs[3]) / 2 - 8]);
     this.buttons = {};
     ABILITY_ORDER.forEach((id, i) => { this.buttons[id] = this.makeButton(xs[i], BTN_Y, `icon_${id}`, ABILITIES[id].name, COLORS[ABILITIES[id].color], () => this.bus.emit(MSG.ABILITY_USE, id)); });
     this.buttons.bag = this.makeButton(xs[3], BTN_Y, 'icon_bag', 'Сумка', COLORS.gold, () => this.bus.emit(MSG.OPEN_BAG));
@@ -166,7 +140,7 @@ export class UIScene extends Phaser.Scene {
     const cd = this.add.graphics();
     const cdText = this.add.text(x, y, '', { fontFamily: FONT, fontSize: UI.type.body, color: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5);
     const lock = this.add.image(x + 34, y - 34, 'icon_lock').setScale(0.42).setVisible(false);
-    const text = this.add.text(x, y + BTN_R + 10, label, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, shadow: SH, wordWrap: { width: 156 }, align: 'center' }).setOrigin(0.5);
+    const text = this.add.text(x, y + BTN_R + 12, label, { fontFamily: FONT, fontSize: UI.type.small, color: '#fbefd2', shadow: SH, stroke: '#120b07', strokeThickness: 4, wordWrap: { width: 156 }, align: 'center' }).setOrigin(0.5);
     bg.setInteractive({ useHandCursor: true });
     bg.on('pointerdown', () => {
       if (this.modal) return;
@@ -248,7 +222,8 @@ export class UIScene extends Phaser.Scene {
     if (mode === 'exploration') this.buttons.bag.bg.setInteractive({ useHandCursor: true });
     this.buttons.bag.orb.setAlpha(mode === 'exploration' ? 1 : 0.4);
     this.buttons.bag.icon.setAlpha(mode === 'exploration' ? 1 : 0.4);
-    this.pauseBtn?.setVisible(true);
+    if (mode === 'combat') { this.goalBanner?.destroy(); this.goalBanner = null; }
+    this.layoutSideColumn();
     const { audio, tutorial } = services;
     audio.setMusic(mode === 'combat' ? 'combat' : 'explore');
     if (mode !== 'combat') audio.lowHp = false;
@@ -267,41 +242,24 @@ export class UIScene extends Phaser.Scene {
     this.tweens.add({ targets: t, alpha: 1, duration: 300, yoyo: true, hold: 1200, onComplete: () => t.destroy() });
   }
 
+  /** Цель больше не висит на экране: при её смене — короткое уведомление (3–5 с), полный текст — в Журнале. */
   refreshQuest() {
-    const q = services.quests;
-    const prev = this.objText.text;
-    this.questPanel.setVisible(this.mode !== 'combat');
-    this.questHit?.setVisible(this.mode !== 'combat');
+    const text = services.quests.objectiveText();
+    const prev = this.lastObjective;
+    this.lastObjective = text;
     this.hintPlate?.setVisible(this.mode !== 'combat' && !!this.hintText?.text);
-    this.zoneText.setText(this.mode === 'combat' ? 'Бой' : (this.zoneName || 'Шепчущий лес'));
-    const text = this.mode === 'combat' ? 'Прерывайте сильные атаки и победите врага' : q.objectiveText();
-    this.objText.setText(text);
     this.refreshV08Hud();
-    this.layoutQuestPanel();
+    this.layoutHint();
     if (prev && prev !== text && this.mode !== 'combat') {
-      this.objText.setColor(COLORS.textGold);
       services.audio.play('quest_update', { minGap: 600 });
-      this.tweens.add({ targets: this.questPanel, x: { from: -8, to: 0 }, duration: 260, ease: 'Back.easeOut' });
-      this.time.delayedCall(900, () => this.objText.setColor(COLORS.text));
+      this.showGoalBanner(text);
     }
   }
 
   refreshHud() {
-    const s = services.state;
-    const hs = s.heroStats();
-    const next = s.nextLevelXP();
-    const cur = s.levelRow().xp;
-    const ses = services.session;
-    const nick = ses?.registered ? shortNick(ses.nickname, 6) + ' · ' : '';
-    this.levelText.setText(`${nick}Ур. ${s.data.heroLevel}`);
-    if (this.syncDot) {
-      const st = ses?.ready ? ses.saving : null;
-      this.syncDot.setVisible(!!st).setFillStyle(st === 'saved' ? 0x5fd68a : st === 'offline' ? 0xff6a5a : 0xe8c56a);
-    }
-    this.xpBar.width = this.xpBar.fullWidth * (next ? Math.min(1, (s.data.heroXP - cur) / (next - cur)) : 1);
-    this.coinText.setText(String(s.item('coins')));
-    this.shardText.setText(String(s.item('lunar_shard')));
-    this.lastHs = hs;
+    this.refreshTopHud();
+    this.refreshSideBadge();
+    this.lastHs = services.state.heroStats();
   }
 
   onFocus(info) {
@@ -333,8 +291,8 @@ export class UIScene extends Phaser.Scene {
     // HP / мана из активной сцены
     const hud = this.registry.get('hudProvider')?.();
     if (hud) {
-      this.hpBar.width = this.hpBar.fullWidth * Math.max(0, hud.hp / hud.maxHp);
-      this.manaBar.width = this.manaBar.fullWidth * Math.max(0, hud.mana / hud.maxMana);
+      this.hpBar.setFraction(hud.hp / hud.maxHp);
+      this.manaBar.setFraction(hud.mana / hud.maxMana);
       this.hudTimer -= delta;
       if (this.hudTimer <= 0) {
         this.hudTimer = 100;
@@ -368,7 +326,7 @@ export class UIScene extends Phaser.Scene {
     this.updateDialogue(delta);
 
     // тосты
-    const baseY = Math.max(360, (this.questBottom || 260) + 60);
+    const baseY = (this.questBottom || this.fieldTop()) + 30;
     let toastY = baseY;
     this.toasts.forEach(t => {
       const targetY = this.mode === 'combat' ? 440 + t.toastHeight / 2 : toastY;
@@ -387,7 +345,7 @@ export class UIScene extends Phaser.Scene {
       this.toasts.forEach(t => t.destroy());
       this.toasts = []; // one readable notification below the warning, never over the potion lane
     }
-    const y = this.mode === 'combat' ? 440 + (label.height + 24) / 2 : Math.max(360, (this.questBottom || 260) + 60) + this.toasts.reduce((sum, t) => sum + t.toastHeight + 12, 0);
+    const y = this.mode === 'combat' ? 440 + (label.height + 24) / 2 : (this.questBottom || this.fieldTop()) + 30 + this.toasts.reduce((sum, t) => sum + t.toastHeight + 12, 0);
     const bg = drawPlate(this.add.graphics(), Math.min(660, label.width + 48), label.height + 24, { accent: color, fill: 0x120d0b, alpha: 0.9 });
     const c = this.add.container(W / 2, y, [bg, label]).setDepth(9000).setAlpha(0);
     c.toastHeight = label.height + 24;
@@ -487,6 +445,7 @@ export class UIScene extends Phaser.Scene {
 
   pressModalButton(primary) {
     if (!this.modal) return;
+    if (this.modal.menu) { this.closeMenu(); return; }
     if (this.modal.dialogue) { if (primary) this.modal.onPrimary(); else this.modal.onCancel(); return; }
     const bs = this.modal.buttons;
     const b = primary ? (bs.find(x => x.primary) || bs[0]) : (bs.find(x => x.cancel) || bs.find(x => !x.primary) || bs[0]);
@@ -495,6 +454,7 @@ export class UIScene extends Phaser.Scene {
 
   closeModal(button) {
     if (!this.modal) return;
+    if (this.modal.menu) { this.closeMenu(); return; }
     if (this.modal.dialogue) { this.closeDialogue(true); return; }
     const { container, tempKeys, scroll } = this.modal;
     scroll?.destroy();
@@ -566,44 +526,28 @@ export class UIScene extends Phaser.Scene {
     });
   }
 
-  // ================================================================== пауза и настройки
-  buildPauseButton() {
-    const x = 660, y = 860;
-    const bg = addOrb(this, x, y, 96, COLORS.gold, { gem: false });
-    const g = this.add.graphics();
-    g.fillStyle(0xf1e3c2).fillRoundedRect(x - 11, y - 12, 7, 24, 2).fillRoundedRect(x + 4, y - 12, 7, 24, 2);
-    bg.setInteractive({ useHandCursor: true });
-    bg.on('pointerdown', () => { if (!this.modal) { services.audio.play('ui_click'); this.openPause(); } });
-    this.pauseBtn = this.add.container(0, 0, [bg, g]);
-  }
+  // ================================================================== меню и настройки
+  /** Прежняя «Пауза» теперь — раскрывающееся меню (кнопка «Меню», Esc, MSG.OPEN_PAUSE). */
+  openPause() { this.openMenu(); }
 
-  openPause() {
-    if (this.modal) return;
-    const inCombat = this.mode === 'combat';
-    const buttons = [
-      { label: 'Продолжить', primary: true, cancel: true },
-      { label: 'Настройки', onClick: () => this.openSettings(true) },
-    ];
-    if (!inCombat) {
-      const ses = services.session;
-      if (ses) buttons.push({ label: ses.registered ? `Профиль · ${shortNick(ses.nickname, 10)}` : 'Профиль (гость)', onClick: () => this.openAccount() });
-      buttons.push({ label: 'Главное меню', onClick: () => this.goToMenu() });
-      buttons.push({ label: 'Сбросить прогресс', onClick: () => this.confirmReset() });
-    }
-    this.openModal({
-      title: 'Пауза', color: COLORS.gold, vertical: true,
-      text: inCombat ? 'Бой остановлен. Выход в меню — после боя.' : '',
-      buttons,
-    });
-  }
-
-  openSettings(backToPause = false) {
+  /**
+   * Рабочие настройки (ui/SettingsPanel.js). В исследовании внизу — служебные «Главное меню» и «Сбросить прогресс»
+   * (в бою их нет, как и раньше). Каждое действие сначала закрывает окно настроек, потом выполняется.
+   */
+  openSettings() {
     if (this.modal) return;
     services.modalOpen = true;
     this.resetJoystick();
-    const done = { label: 'Готово', primary: true, onClick: backToPause ? () => this.openPause() : null };
-    const container = buildSettingsPanel(this, { onDone: () => this.closeModal(done), depth: 10000 });
-    this.modal = { container, buttons: [done], views: [], final: false };
+    const done = { label: 'Готово', primary: true };
+    const extra = this.mode === 'combat' ? [] : [
+      { label: 'Главное меню', onClick: () => this.goToMenu() },
+      { label: 'Сбросить прогресс', onClick: () => this.confirmReset() },
+    ];
+    const container = buildSettingsPanel(this, {
+      onDone: () => this.closeModal(done), depth: 10000,
+      extra: extra.map(b => ({ label: b.label, onPress: () => this.closeModal(b) })),
+    });
+    this.modal = { container, buttons: [done], views: [], final: false, settings: true };
     this.bus.emit(MSG.MODAL_OPEN);
   }
 
@@ -676,7 +620,7 @@ export class UIScene extends Phaser.Scene {
   }
 
   levelFx() {
-    const r = this.add.image(577, 76, 'fx_ring').setTint(COLORS.gold).setBlendMode('ADD').setScale(0.4).setDepth(8000);
+    const r = this.add.image(UI.hud.portraitX, UI.hud.portraitY, 'fx_ring').setTint(COLORS.gold).setBlendMode('ADD').setScale(0.4).setDepth(8000);
     this.tweens.add({ targets: r, scale: 3, alpha: 0, duration: 800, ease: 'Quad.easeOut', onComplete: () => r.destroy() });
     this.tweens.add({ targets: this.levelText, scale: { from: 1.6, to: 1 }, duration: 500, ease: 'Back.easeOut' });
   }
@@ -702,4 +646,4 @@ export class UIScene extends Phaser.Scene {
   }
 }
 
-Object.assign(UIScene.prototype, windows08);
+Object.assign(UIScene.prototype, windows08, hud082);

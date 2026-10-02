@@ -144,6 +144,105 @@ await mute(async () => {
     sv.bus.offContext(cancelled);
   }
 
+
+  // ---- v0.8.2: компактный HUD, меню 3×2, заглушки, настройки, профиль героя
+  {
+    const { services: sv } = await import('../src/services.js');
+    const { MSG } = await import('../src/state/EventBus.js');
+    await freshWorld('mid');
+    const h = new UIScene(); h.create(); mkHud(h, { hp: 41, mana: 17 });
+    const texts = (o) => { const out = []; const walk = (x) => { if (typeof x.text === 'string') out.push(x.text); (x.children || []).forEach(walk); }; walk(o); return out; };
+    // опыт: обычный уровень, новый уровень, максимум
+    sv.state.data.heroLevel = 4; sv.state.data.heroXP = 370; h.refreshHud();
+    ok(h.levelText.text === 'Ур. 4' && h.xpCaption.text === 'До 5 ур.: 60 опыта' && Math.abs(h.xpBar.frac - 0.625) < 1e-6, 'HUD: ур. 4, 370 опыта → полоса 62,5%, «До 5 ур.: 60 опыта»');
+    const ups = sv.state.addHeroXP(80); h.onReward({ granted: { heroXP: 80 }, levelUps: ups });
+    ok(h.levelText.text === 'Ур. 5' && h.xpCaption.text === 'Максимальный уровень' && h.xpBar.frac === 1, 'HUD: после нового уровня 5 — «Максимальный уровень», без шестого уровня');
+    ok(!/NaN|null|undefined|-/.test(h.xpCaption.text), 'HUD: подпись опыта без NaN/null/отрицательных');
+    // HP и мана — из активной сцены (бой/исследование), не из максимума героя
+    h.update(20000, 200);
+    ok(h.hpText.text === '41 / 138' && h.manaText.text === '17 / 100', 'HUD: HP и мана — текущие значения активного режима (' + h.hpText.text + ', ' + h.manaText.text + ')');
+    // старой панели цели и её зоны нажатия нет
+    ok(!h.questHit && !h.questPanel && !h.sideLine, 'панель цели и её невидимая зона нажатия (questHit) удалены');
+    // журнал: отдельная кнопка, badge — реальное число заданий
+    sv.state.markEvent('lunar_quest_start'); ['sq_herbs', 'sq_hunter'].forEach(id => sv.log.accept(id)); h.refreshQuest();
+    ok(h.journalBadge.visible && h.journalBadgeText.text === String(sv.log.activeCount()), 'Журнал: значок с реальным числом заданий (' + h.journalBadgeText.text + ')');
+    h.journalBtn.hit.emit('pointerdown');
+    ok(h.modal?.opts?.title === 'Журнал', 'кнопка «Журнал» открывает полный журнал');
+    h.closeModal(null);
+    // смена цели — временное уведомление, без повтора на каждом обновлении
+    h.goalBanner?.destroy(); h.goalBanner = null;
+    h.refreshQuest(); ok(!h.goalBanner, 'обычное обновление HUD не показывает уведомление');
+    h.lastObjective = 'Прежняя цель'; h.refreshQuest();   // цель сменилась (как после события мира)
+    const banner = h.goalBanner;
+    ok(banner && banner.bannerText === sv.quests.objectiveText(), 'смена цели → короткое уведомление «Новая цель»');
+    h.refreshQuest(); ok(h.goalBanner === banner, 'повторное обновление не создаёт второе уведомление');
+
+    // меню: шесть пунктов в порядке, без общей надписи «В разработке»
+    h.menuBtn.hit.emit('pointerdown');
+    ok(h.modal?.menu && sv.modalOpen, 'Меню открывается кнопкой, игра на паузе (modalOpen)');
+    ok(h.modal.items.map(i => i.item.label).join(',') === 'Город,Банк,Рейтинг,Чат,Форум,Настройки', 'меню: шесть пунктов 3×2 в порядке ' + h.modal.items.map(i => i.item.label).join(', '));
+    ok(!texts(h.modal.container).some(t => /разработ/i.test(t)), 'меню: нет общей надписи «В разработке»');
+    h.modal.overlay.emit('pointerdown');
+    ok(!h.modal && !sv.modalOpen, 'касание вне панели закрывает меню и снимает паузу');
+    // быстрые повторные нажатия
+    for (let i = 0; i < 7; i++) h.menuBtn.hit.emit('pointerdown');
+    ok(h.modal?.menu && sv.modalOpen, 'нечётное число быстрых нажатий — меню открыто');
+    h.menuBtn.hit.emit('pointerdown');
+    ok(!h.modal && !sv.modalOpen && !h.modalQueue.length, 'быстрые открытия/закрытия не оставляют блокировку и очередь окон');
+    // Esc закрывает
+    h.openMenu(); h.pressModalButton(false); ok(!h.modal && !sv.modalOpen, 'Esc закрывает меню');
+
+    // пять заглушек: окно с текстом, без изменений в игре
+    const snap = () => JSON.stringify({ inv: sv.state.data.inventory, ev: sv.state.data.completedEvents, lvl: sv.state.data.heroLevel, mode: sv.mode });
+    for (const id of ['city', 'bank', 'rating', 'chat', 'forum']) {
+      const before = snap();
+      h.openMenu();
+      const it = h.modal.items.find(x => x.item.id === id);
+      it.hit.emit('pointerdown');
+      const t = h.modal ? texts(h.modal.container).join(' ') : '';
+      ok(h.modal?.opts?.stub === id && !h.modal?.menu && t.includes('Раздел в разработке') && (id !== 'city' || t.includes('магазины')), `заглушка «${it.item.label}»: меню закрыто, окно «Раздел в разработке»`);
+      h.closeModal(h.modal.buttons[0]);
+      ok(!h.modal && !sv.modalOpen && snap() === before, `заглушка «${it.item.label}»: закрытие без изменений в игре`);
+    }
+
+    // настройки работают: меню → настройки → изменение → «Готово» → значение сохранено
+    h.openMenu();
+    h.modal.items.find(x => x.item.id === 'settings').hit.emit('pointerdown');
+    ok(h.modal?.settings && sv.modalOpen, 'Меню → настоящие Настройки (меню закрыто до открытия)');
+    const sfx0 = sv.settings.get('sfx');
+    const settingTexts = texts(h.modal.container);
+    ok(['Звуки', 'Музыка', 'Вибрация', 'Подсказки', 'Готово', 'Главное меню', 'Сбросить прогресс'].every(x => settingTexts.includes(x)), 'настройки: звуки, музыка, вибрация, подсказки, «Готово» и служебные действия');
+    const hits = h.modal.container.children.filter(o => o.type === 'Zone' || o.interactive);
+    const btnBy = (label) => { const tx = h.modal.container.children.find(o => o.text === label); return h.modal.container.children.find(o => o !== tx && o.handlers?.pointerup && Math.abs(o.x - tx.x) < 2 && Math.abs(o.y - (tx.y + 1)) < 3); };
+    const minus = h.modal.container.children.filter(o => o.handlers?.pointerup && h.modal.container.children.some(t => t.text === '−' && Math.abs(t.x - o.x) < 2 && Math.abs(t.y + 1 - o.y) < 3))[0];
+    minus.emit('pointerdown'); minus.emit('pointerup');
+    ok(sv.settings.get('sfx') < sfx0, 'настройки: «−» уменьшает громкость звуков');
+    const done = btnBy('Готово'); done.emit('pointerdown'); done.emit('pointerup');
+    ok(!h.modal && !sv.modalOpen, '«Готово» возвращает в игру с закрытым меню');
+    ok(sv.settings.get('sfx') < sfx0 && hits.length > 0, 'настройки: значение сохранилось после закрытия (' + Math.round(sv.settings.get('sfx') * 100) + '%)');
+
+    // профиль героя по портрету: реальные данные, ничего не меняет
+    const before = snap();
+    h.portraitHit.emit('pointerdown');
+    const pt = texts(h.modal.container).join(' | ');
+    ok(h.modal?.opts?.profile && pt.includes('Уровень 5') && pt.includes('41 / 138') && pt.includes('Лунные осколки') && pt.includes('Максимальный уровень'), 'портрет → профиль героя с реальными данными');
+    h.closeModal(null);
+    ok(!h.modal && !sv.modalOpen && snap() === before, 'профиль героя закрывается и не меняет сохранение');
+
+    // в бою: меню доступно, журнала нет, служебных выходов в настройках нет
+    h.setMode('combat');
+    ok(!h.journalBtn.c.visible && h.menuBtn.c.visible, 'бой: Журнал скрыт, Меню доступно');
+    h.openMenu(); h.modal.items.find(x => x.item.id === 'settings').hit.emit('pointerdown');
+    const ct = texts(h.modal.container);
+    ok(h.modal?.settings && !ct.includes('Главное меню') && !ct.includes('Сбросить прогресс'), 'бой: настройки без выхода в меню и сброса');
+    h.closeModal(null);
+    const modeBefore = sv.mode;
+    h.openMenu(); h.modal.items.find(x => x.item.id === 'city').hit.emit('pointerdown'); h.closeModal(null);
+    ok(sv.mode === modeBefore && h.mode === 'combat' && !h.modal, 'бой: заглушка Города не выводит из боя');
+    h.setMode('exploration');
+    sv.bus.offContext(h);
+  }
+
   // ---- меню
   err = null;
   try {
@@ -179,13 +278,20 @@ await mute(async () => {
     ok(labels(m2).includes('Продолжить') && labels(m2).some(t => String(t).startsWith('Гость · уровень 1')) && m2.accountButton?.text.text === 'Профиль', 'гость: «Продолжить», «Профиль», строка «Гость · уровень 1»');
     const g = new UIScene(); g.create(); mkHud(g); g.refreshHud();
     ok(g.levelText.text === 'Ур. 1' && g.syncDot.visible, 'HUD гостя: уровень и значок сохранения');
-    g.openPause(); ok((g.modal?.buttons || []).some(b => b.label === 'Профиль (гость)'), 'пауза гостя: «Профиль (гость)»'); g.closeModal(null);
+    // v0.8.2: аккаунт — из профиля героя (портрет), а не из паузы; профиль героя закрывается до открытия окна аккаунта
+    let accOrder = null;
+    g.openAccount = () => { accOrder = g.modal === null && !services.modalOpen; };
+    g.portraitHit.emit('pointerdown');
+    ok(g.modal?.opts?.profile && (g.modal?.buttons || []).some(b => b.label === 'Аккаунт'), 'гость: портрет → профиль героя с кнопкой «Аккаунт»');
+    g.closeModal(g.modal.buttons.find(b => b.label === 'Аккаунт'));
+    ok(accOrder === true, 'профиль героя → аккаунт: окно героя закрыто до открытия аккаунта');
     await ses.registerGuest({ nickname: 'Нюта_Лесная', password: 'password-1', password2: 'password-1' });
     const u = new UIScene(); u.create(); mkHud(u); u.refreshHud();
-    ok(u.levelText.text.startsWith('Нюта_') && u.syncDot.visible, 'HUD игрока: ник и значок сохранения (' + u.levelText.text + ')');
-    u.openPause(); const pl = (u.modal?.buttons || []).map(b => b.label);
-    ok(pl.some(l => l.startsWith('Профиль · Нюта')), 'пауза игрока: «Профиль · ник» (' + pl.join(', ') + ')');
+    ok(u.levelText.text === 'Ур. 1' && u.syncDot.visible && !labels(u).some(t => String(t).includes('Нюта')), 'HUD игрока: ника в HUD нет, уровень и значок сохранения');
+    u.openHeroProfile();
+    ok(labels(u).some(t => String(t) === 'Ник: Нюта_Лесная'), 'профиль героя: полный ник игрока');
     u.closeModal(null);
+    ok(!u.modal && !services.modalOpen, 'профиль героя закрывается без блокировки');
     const m3 = new MenuScene(); m3.create();
     ok(labels(m3).some(t => String(t).startsWith('Нюта_Лесная · уровень')), 'стартовый экран игрока: ник и уровень');
     services.session = null;

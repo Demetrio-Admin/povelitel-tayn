@@ -43,7 +43,7 @@ export class FireObject extends InteractiveObject {
       services.audio.play('locked');
       return;
     }
-    this.scene.player.castAt(this.x, this.baseY);
+    this.scene.player.castAt(this.x, this.baseY, 'fire');
     this.scene.castFx(this.x, this.baseY - 30, COLORS.fire);
     this.ignite();
   }

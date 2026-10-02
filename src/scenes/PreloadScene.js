@@ -186,6 +186,6 @@ const DRAWERS = {
 
   // ---- FX ----
   fx_dot: sized([16, 16], (g) => g.fillStyle(0xffffff).fillCircle(8, 8, 8)),
-  fx_glow: sized([128, 128], (g) => { for (let r = 64; r > 0; r -= 4) g.fillStyle(0xffffff, 0.05).fillCircle(64, 64, r); }),
+  fx_glow: sized([128, 128], (g) => { for (let r = 64; r > 0; r -= 2) g.fillStyle(0xffffff, 0.025).fillCircle(64, 64, r); }),
   fx_ring: sized([128, 128], (g) => g.lineStyle(6, 0xffffff).strokeCircle(64, 64, 58)),
 };

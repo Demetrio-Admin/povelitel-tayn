@@ -35,7 +35,7 @@ export class MenuScene extends Phaser.Scene {
       const d = state.data;
       this.add.text(W / 2, y + 100, `Сохранение: уровень ${d.heroLevel} · побед ${d.stats.combats.filter(c => c.result === 'victory').length}`, { fontFamily: FONT, fontSize: '19px', color: COLORS.textDim }).setOrigin(0.5);
     }
-    this.add.text(W / 2, H - 50, 'v0.3.0 · art preview', { fontFamily: FONT, fontSize: '16px', color: COLORS.textDim }).setOrigin(0.5);
+    this.add.text(W / 2, H - 50, 'v0.3.1 · art preview', { fontFamily: FONT, fontSize: '16px', color: COLORS.textDim }).setOrigin(0.5);
 
     const kb = this.input.keyboard;
     kb.on('keydown-ENTER', () => { if (!this.overlay) this.begin(); });

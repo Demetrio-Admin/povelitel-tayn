@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { PLAYER, DEPTH } from '../config/game.config.js';
+import { HeroAnimator } from '../systems/HeroAnimator.js';
 
 // Player — геройня в exploration. Pivot — низ по центру, hitbox — у ступней (Hero Spec §13).
 // 4 направления: down / up / side (лево = зеркало side).
@@ -7,10 +8,15 @@ export class Player {
   constructor(scene, x, y) {
     this.scene = scene;
     this.shadow = scene.add.image(x, y, 'hero_shadow').setDepth(DEPTH.path + 1).setAlpha(0.8);
-    this.sprite = scene.physics.add.sprite(x, y, 'hero_down').setOrigin(0.5, 1);
+    // sprite — физическое тело (невидимое), view — то, что рисуется и анимируется:
+    // смещения анимации не должны попадать в физику.
+    this.sprite = scene.physics.add.sprite(x, y, 'hero_down').setOrigin(0.5, 1).setVisible(false);
+    this.view = scene.add.image(x, y, 'hero_down').setOrigin(0.5, 1);
     const tex = this.sprite.texture.getSourceImage();
     this.baseScale = PLAYER.displayHeight / tex.height;
     this.sprite.setScale(this.baseScale);
+    this.view.setScale(this.baseScale);
+    this.anim = new HeroAnimator();
     // размеры body задаются в пикселях исходника (до масштаба)
     const bw = PLAYER.hitbox.w / this.baseScale;
     const bh = PLAYER.hitbox.h / this.baseScale;
@@ -18,6 +24,7 @@ export class Player {
     this.sprite.body.setOffset((tex.width - bw) / 2, tex.height - bh);
     this.sprite.setCollideWorldBounds(true);
     this.shadow.setDisplaySize(PLAYER.hitbox.w * 1.6, PLAYER.hitbox.h * 0.9);
+    this.shadowBase = { x: this.shadow.scaleX, y: this.shadow.scaleY };
 
     this.facing = 'down';
     this.walkT = 0;
@@ -44,21 +51,23 @@ export class Player {
   stop() {
     this.sprite.setVelocity(0, 0);
     this.moveTarget = null;
-    this.updateVisual(0, 0, 0);
+    this.updateVisual(0, 0, Math.min(this.scene.game.loop.delta, 50) / 1000);
   }
 
-  /** Каст: короткая поза + поворот к цели. */
-  castAt(tx, ty) {
+  /** Каст: поворот к цели + поза по виду магии ('telekinesis' | 'fire' | 'seal'). */
+  castAt(tx, ty, kind = 'telekinesis') {
     this.face(tx - this.x, ty - this.y);
-    this.casting = 0.35;
-    this.scene.tweens.add({ targets: this.sprite, scaleY: this.baseScale * 1.08, duration: 120, yoyo: true });
+    this.casting = this.anim.castDuration(kind);
+    this.anim.playCast(kind);
   }
 
   face(dx, dy) {
     if (Math.abs(dx) > Math.abs(dy)) { this.facing = 'side'; this.sprite.setFlipX(dx < 0); }
     else { this.facing = dy < 0 ? 'up' : 'down'; this.sprite.setFlipX(false); }
-    this.sprite.setTexture(`hero_${this.facing}`);
+    this.view.setTexture(`hero_${this.facing}`).setFlipX(this.sprite.flipX);
   }
+
+  get dir() { return this.facing === 'side' ? (this.sprite.flipX ? -1 : 1) : 0; }
 
   /** input: { x, y } — нормализованный вектор (клавиатура или джойстик). */
   update(dt, input) {
@@ -89,16 +98,15 @@ export class Player {
   }
 
   updateVisual(vx, vy, dt) {
-    const moving = Math.hypot(vx, vy) > 0.05;
-    if (moving && this.casting <= 0) this.face(vx, vy);
-    if (moving) {
-      this.walkT += dt * 12;
-      this.sprite.setScale(this.baseScale * (1 - Math.abs(Math.sin(this.walkT)) * 0.03), this.baseScale * (1 + Math.abs(Math.sin(this.walkT)) * 0.04));
-    } else if (this.casting <= 0) {
-      this.walkT = 0;
-      this.sprite.setScale(this.baseScale);
-    }
-    this.sprite.setDepth(DEPTH.mainBase + this.sprite.y);
+    const speed = Math.hypot(vx, vy);
+    if (speed > 0.05 && this.casting <= 0) this.face(vx, vy);
+    const pose = this.anim.update(dt, { speed: Math.min(1, speed), dir: this.dir, face: this.facing });
+    const H = PLAYER.displayHeight, v = this.view;
+    v.setPosition(this.sprite.x + pose.dx * H, this.sprite.y + pose.dy * H);
+    v.setScale(this.baseScale * pose.sx, this.baseScale * pose.sy).setAngle(pose.rot).setAlpha(pose.alpha);
+    if (pose.flash) v.setTintFill(0xffffff); else v.clearTint();
+    v.setDepth(DEPTH.mainBase + this.sprite.y);
     this.shadow.setPosition(this.sprite.x, this.sprite.y - 2);
+    this.shadow.setScale(this.shadowBase.x * pose.shadowScale, this.shadowBase.y * pose.shadowScale).setAlpha(0.8 * pose.shadowAlpha);
   }
 }

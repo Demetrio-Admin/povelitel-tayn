@@ -7,6 +7,7 @@ import { ABILITIES } from '../config/balance.abilities.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { CombatManager } from '../systems/CombatManager.js';
+import { HeroAnimator } from '../systems/HeroAnimator.js';
 import { applyDisplaySize, itemName } from '../objects/InteractiveObject.js';
 
 const FONT = 'Georgia, serif';
@@ -106,8 +107,20 @@ export class CombatScene extends Phaser.Scene {
   }
 
   buildHero() {
-    this.add.image(HERO_POS.x, HERO_POS.y - 2, 'hero_shadow').setDepth(HERO_POS.y - 1);
+    this.heroShadow = this.add.image(HERO_POS.x, HERO_POS.y - 2, 'hero_shadow').setDepth(HERO_POS.y - 1);
     this.heroSprite = this.add.image(HERO_POS.x, HERO_POS.y, 'hero_up').setOrigin(0.5, 1); this.heroSprite.setScale(144 / this.heroSprite.height); this.heroSprite.setDepth(HERO_POS.y);
+    this.heroBaseScale = this.heroSprite.scaleX;
+    this.heroAnim = new HeroAnimator();
+  }
+
+  /** Анимация героини в бою: дыхание, каст, удар, падение. Идёт по реальному времени (не по timeScale). */
+  updateHero(delta) {
+    const pose = this.heroAnim.update(Math.min(delta, 50) / 1000, { speed: 0, dir: 0, face: 'up' });
+    const H = 144, b = this.heroBaseScale, s = this.heroSprite;
+    s.setPosition(HERO_POS.x + pose.dx * H, HERO_POS.y + pose.dy * H);
+    s.setScale(b * pose.sx, b * pose.sy).setAngle(pose.rot).setAlpha(pose.alpha);
+    if (pose.flash) s.setTintFill(COLORS.danger); else s.clearTint();
+    this.heroShadow.setScale(pose.shadowScale).setAlpha(pose.shadowAlpha);
   }
 
   buildFieldObjects() {
@@ -176,12 +189,12 @@ export class CombatScene extends Phaser.Scene {
       return;
     }
     services.audio.play(id === 'fire' ? 'fire_cast' : 'telekinesis_cast');
-    this.heroCast(SCHOOL_COLOR[id], obj);
+    this.heroCast(SCHOOL_COLOR[id], obj, id);
     this.processEvents();
   }
 
-  heroCast(color, obj) {
-    this.tweens.add({ targets: this.heroSprite, y: HERO_POS.y - 14, duration: 110, yoyo: true });
+  heroCast(color, obj, id = 'telekinesis') {
+    this.heroAnim.playCast(id);
     const from = obj ? this.fieldViews.get(obj.id).img : this.heroSprite;
     const sx = from.x, sy = from.y - from.displayHeight / 2;
     const tx = ENEMY_POS.x, ty = ENEMY_POS.y - this.enemySprite.displayHeight / 2;
@@ -196,7 +209,9 @@ export class CombatScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------ цикл
   update(time, delta) {
-    if (!this.started || this.ended) return;
+    if (!this.started) return;
+    this.updateHero(delta);
+    if (this.ended) return;
     if (!services.modalOpen) {
       if (this.hitstop > 0) this.hitstop -= delta;
       else this.cm.tick(Math.min(delta, 50) / 1000 * this.timeScale);
@@ -326,6 +341,7 @@ export class CombatScene extends Phaser.Scene {
         if (ev.school !== 'auto') this.freeze(ev.heavy ? 120 : 60);
       }
       if (ev.school === 'auto') {
+        this.heroAnim.playCast('auto');
         const d = this.add.image(HERO_POS.x, HERO_POS.y - 80, 'fx_dot').setTint(0xf1e3c2).setBlendMode('ADD').setDepth(6000);
         this.tweens.add({ targets: d, x: ENEMY_POS.x, y: ENEMY_POS.y - 80, duration: 220, onComplete: () => d.destroy() });
       }
@@ -333,8 +349,7 @@ export class CombatScene extends Phaser.Scene {
       // атака врага: рывок вперёд и удар по героине
       this.tweens.add({ targets: this.enemySprite, y: ENEMY_POS.y + (ev.strong ? 90 : 40), duration: 120, yoyo: true, ease: 'Quad.easeIn' });
       this.floatText(HERO_POS.x + 70, HERO_POS.y - 140, `−${ev.amount}`, COLORS.danger, ev.strong ? 40 : 28);
-      this.heroSprite.setTintFill(COLORS.danger);
-      this.time.delayedCall(90, () => this.heroSprite.clearTint());
+      this.heroAnim.playHurt(ev.strong);
       this.cameras.main.shake(ev.strong ? 300 : 120, ev.strong ? 0.014 : 0.004);
       if (ev.strong) this.cameras.main.flash(150, 120, 0, 0);
       this.hurtFlash = ev.strong ? 1 : 0.6;
@@ -424,7 +439,7 @@ export class CombatScene extends Phaser.Scene {
       const lost = Math.min(state.item('coins'), HERO_RECOVERY.coinsLostOnDefeat);
       if (lost) state.removeItem('coins', lost);
       state.save();
-      this.tweens.add({ targets: this.heroSprite, alpha: 0.3, angle: -80, duration: 500 });
+      this.heroAnim.playDeath();
       services.audio.setMusic(null);
       services.audio.play('defeat');
       services.audio.vibrate(200);

@@ -10,6 +10,8 @@ import { Settings, SETTINGS_KEY } from '../src/state/Settings.js';
 import { TutorialSystem } from '../src/systems/TutorialSystem.js';
 import { AudioManager, SFX_NAMES } from '../src/systems/AudioManager.js';
 import { MSG } from '../src/state/EventBus.js';
+import { HeroAnimator, sampleKeys } from '../src/systems/HeroAnimator.js';
+import { HERO_ANIM } from '../src/config/hero.anim.js';
 
 let failures = 0;
 const ok = (cond, msg) => { if (cond) console.log('  ✓', msg); else { failures++; console.log('  ✗', msg); } };
@@ -190,6 +192,57 @@ console.log('\n[3] Механики боя');
   let threw = false;
   try { for (const n of SFX_NAMES) audio.play(n); audio.setMusic('combat'); audio.vibrate(10); } catch (e) { threw = true; }
   ok(!threw && SFX_NAMES.length >= 25, `звук без AudioContext не падает (${SFX_NAMES.length} эффектов)`);
+}
+
+console.log('\nАнимации героини');
+{
+  const run = (a, secs, opts) => { let p; for (let i = 0; i < Math.round(secs * 60); i++) p = a.update(1 / 60, opts); return p; };
+  const finite = p => Object.entries(p).every(([k, v]) => k === 'flash' || Number.isFinite(v));
+  ok(sampleKeys([[0, 0], [1, 10]], 0.5) === 5 && sampleKeys([[0, 1], [1, 3]], 2) === 3, 'sampleKeys: середина и выход за границы');
+
+  const a = new HeroAnimator();
+  const idle = run(a, 2, { speed: 0 });
+  ok(Math.abs(idle.sy - 1) <= HERO_ANIM.idle.sy + 1e-9 && idle.dy === 0 && idle.rot === 0, 'покой: только лёгкое дыхание');
+
+  let minDy = 0, maxRot = 0, ok2 = true;
+  for (let i = 0; i < 120; i++) { const p = a.update(1 / 60, { speed: 1, dir: 1, face: 'side' }); minDy = Math.min(minDy, p.dy); maxRot = Math.max(maxRot, Math.abs(p.rot)); ok2 = ok2 && finite(p) && p.dy <= 0; }
+  ok(ok2 && minDy < -HERO_ANIM.walk.hop * 0.5 && minDy >= -HERO_ANIM.walk.hop - 1e-9, 'ходьба: подскок вверх, не больше hop');
+  ok(maxRot > 1 && maxRot < 8, `ходьба: покачивание в разумных пределах (${maxRot.toFixed(1)}°)`);
+
+  // средний угол за несколько шагов = наклон вперёд (покачивание усредняется в ноль)
+  const meanRot = dir => { const m = new HeroAnimator(); run(m, 0.5, { speed: 1, dir, face: 'side' }); let sum = 0, n = 0; for (let i = 0; i < 6 * 30; i++) { sum += m.update(1 / 60, { speed: 1, dir, face: 'side' }).rot; n++; } return sum / n; };
+  const mr = meanRot(1), ml = meanRot(-1);
+  ok(mr > 1 && ml < -1 && Math.abs(mr + ml) < 0.5, `наклон вперёд зеркален для влево/вправо (${ml.toFixed(1)}° / ${mr.toFixed(1)}°)`);
+
+  for (const kind of ['telekinesis', 'fire', 'auto', 'seal']) {
+    const c = new HeroAnimator(); c.playCast(kind);
+    ok(c.isCasting && c.castDuration(kind) > 0, `каст ${kind}: запущен, длительность > 0`);
+    let fin = true; for (let i = 0; i < 90; i++) fin = fin && finite(c.update(1 / 60, { dir: 1, face: 'side' }));
+    const end = c.update(1 / 60, { dir: 1, face: 'side' });
+    ok(fin && !c.isCasting && Math.abs(end.dx) < 1e-9 && Math.abs(end.sx - 1) < 0.02, `каст ${kind}: завершается и возвращается в позу покоя`);
+  }
+  const fw = new HeroAnimator(); fw.playCast('fire');
+  let maxDx = 0; for (let i = 0; i < 30; i++) maxDx = Math.max(maxDx, fw.update(1 / 60, { dir: 1, face: 'side' }).dx);
+  const bw = new HeroAnimator(); bw.playCast('fire');
+  let minDx = 0; for (let i = 0; i < 30; i++) minDx = Math.min(minDx, bw.update(1 / 60, { dir: -1, face: 'side' }).dx);
+  ok(maxDx > 0.03 && minDx < -0.03, 'огонь: рывок вперёд в сторону взгляда');
+
+  const h = new HeroAnimator(); h.playHurt(false);
+  const first = h.update(1 / 60, {});
+  ok(first.flash === 'hurt', 'удар: вспышка в начале');
+  const hp = run(h, 0.5, {});
+  ok(hp.flash === null && Math.abs(hp.dx) < 1e-9 && Math.abs(hp.sy - 1) < 0.02, 'удар: заканчивается, поза возвращается');
+  const w = new HeroAnimator(), st = new HeroAnimator(); w.playHurt(false); st.playHurt(true);
+  let amplW = 0, amplS = 0; for (let i = 0; i < 20; i++) { amplW = Math.max(amplW, Math.abs(w.update(1 / 60, {}).dx)); amplS = Math.max(amplS, Math.abs(st.update(1 / 60, {}).dx)); }
+  ok(amplS > amplW, 'сильный удар трясёт сильнее обычного');
+
+  const d = new HeroAnimator(); d.playDeath();
+  const dead = run(d, 2, {});
+  ok(d.isDead && Math.abs(dead.rot - HERO_ANIM.death.angle) < 1 && Math.abs(dead.alpha - HERO_ANIM.death.alpha) < 1e-6, 'поражение: героиня лежит и полупрозрачна');
+  d.reset(); ok(!d.isDead && run(d, 0.1, {}).alpha === 1, 'reset() снимает состояние поражения');
+
+  const z = new HeroAnimator();
+  ok(finite(z.update(0, { speed: 1, dir: 1 })) && finite(z.update(-1, {})), 'dt = 0 и отрицательный dt не ломают позу');
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Все тесты пройдены');

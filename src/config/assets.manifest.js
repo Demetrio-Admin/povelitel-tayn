@@ -21,7 +21,7 @@ export const ASSET_FILES = {
   lantern_01: 'assets/sprites/lantern_01.png', lantern_02: 'assets/sprites/lantern_02.png', signpost_01: 'assets/sprites/signpost_01.png', wooden_bridge_01: 'assets/sprites/wooden_bridge_01.png', chest_01: 'assets/sprites/chest_01.png', chest_01_open: 'assets/sprites/chest_01_open.png',
   candle_group_01: 'assets/sprites/candle_group_01.png', torch_01: 'assets/sprites/torch_01.png', claw_marks_01: 'assets/sprites/claw_marks_01.png',
   // ключевые объекты
-  magic_book_01: 'assets/sprites/magic_book_01.png', lunar_altar_01: 'assets/sprites/lunar_altar_01.png', lunar_flame_01: null, fire_circle_01: 'assets/sprites/fire_circle_01.png',
+  magic_book_01: 'assets/sprites/magic_book_01.png', lunar_altar_01: 'assets/sprites/lunar_altar_01.png', lunar_flame_01: 'assets/sprites/lunar_flame_01.png', fire_circle_01: 'assets/sprites/fire_circle_01.png',
   corrupted_roots_01: 'assets/sprites/corrupted_roots_01.png', ancient_gate_01: 'assets/sprites/ancient_gate_01.png',
   // ground tiles
   grass_ground_01: 'assets/sprites/grass_ground_01.png', dirt_path_01: 'assets/sprites/dirt_path_01.png', stone_path_01: 'assets/sprites/stone_path_01.png', swamp_water_01: 'assets/sprites/swamp_water_01.png', wooden_floor_01: 'assets/sprites/wooden_floor_01.png', wall_wood_01: 'assets/sprites/wall_wood_01.png', wall_ruin_01: 'assets/sprites/wall_ruin_01.png',
@@ -49,5 +49,7 @@ export const DISPLAY_SIZE = {
   reeds_01: [64, 70], moon_plant_01: [60, 53], rock_small_01: [56, 47], lantern_01: [25, 90], lantern_02: [50, 100], signpost_01: [53, 90], torch_01: [36, 90],
   candle_group_01: [27, 44], claw_marks_01: [62, 72], wooden_bridge_01: [180, 145], fire_circle_01: [240, 167], enemy_scavenger_small: [101, 104], enemy_rootling: [71, 96],
   field_rock_light: [76, 66], field_rock_heavy: [116, 93], field_crystal: [88, 110],
+  // партия 3
+  lunar_flame_01: [36, 48],
 
 };

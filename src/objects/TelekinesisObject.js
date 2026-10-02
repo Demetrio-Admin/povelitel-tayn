@@ -77,7 +77,7 @@ export class TelekinesisObject extends InteractiveObject {
       return;
     }
     this.busy = true;
-    this.scene.player.castAt(this.x, this.baseY);
+    this.scene.player.castAt(this.x, this.baseY, 'telekinesis');
     this.scene.castFx(this.x, this.sprite.y - this.sprite.displayHeight / 2, COLORS.telekinesis);
     this.sprite.setTint(COLORS.telekinesis);
     if (this.cfg.mode === 'pull') this.pull(); else this.push();

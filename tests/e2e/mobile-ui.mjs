@@ -344,6 +344,21 @@ try {
     const longY=await page.evaluate(()=>window.__game.scene.getScene('UIScene').dlg.scroll.y);
     for(let i=0;i<5;i++)await drag(350,longY+620,longY+80);
     await shot('dialogue-long-bottom');await close();
+    // v0.10.0: сюжетные предметы в сумке, журнал с составом рецепта, сюжетные рецепты котла
+    await page.evaluate(()=>{
+      const st=window.__witch.state, chapter=['chapter_1_complete','gate_marks_revealed','unlock_seal_1','seal_training_complete','ancient_gate_open','chapter_trial_defeated','revealing_compound_crafted','restoration_bundle_crafted','guardian_defeated'];
+      st.data.completedEvents=st.data.completedEvents.filter(e=>!chapter.includes(e));
+      for(const e of ['lunar_quest_start','lunar_quest_complete','telekinesis_2_start','telekinesis_2_complete','heavy_path_open','unlock_fire_1','fire_gate_open']) st.markEvent(e);
+      Object.assign(st.data.inventory,{lunar_wick:0,revealing_compound:1,restoration_bundle:1,rare_core:1,moon_herb:1,forest_mushroom:0,rune_dust:1});
+    });
+    await page.evaluate(()=>window.__game.scene.getScene('UIScene').openJournal());await shot('v10-journal-recipe');await close();
+    await page.evaluate(()=>window.__game.scene.getScene('UIScene').openBag());
+    { const y=await page.evaluate(()=>window.__game.scene.getScene('UIScene').modal.scroll.y); for(let i=0;i<4;i++)await drag(350,y+600,y+80); }
+    await shot('v10-bag-story');await close();
+    await page.evaluate(()=>window.__game.scene.getScene('UIScene').openAlchemy());
+    { for(let i=0;i<4;i++)await drag(350,900,350); }
+    await shot('v10-alchemy-story');await close();
+    await page.evaluate(()=>window.__game.scene.getScene('UIScene').openFinal({reward:'+100 опыта, +30 монет'}));await shot('v10-final');await close();
     for(const [name,method] of [['upgrade','openUpgrade'],['final','openFinal']]){
       await page.evaluate(({method})=>window.__game.scene.getScene('UIScene')[method](method==='openUpgrade'?'telekinesis_2':undefined),{method});
       await shot(name);await close();
@@ -383,6 +398,16 @@ try {
     await page.evaluate(()=>{const s=window.__witch;s.settings.set('hints',true);s.tutorial.show('combat_warning');window.__game.scene.getScene('CombatScene').updateHud();});
     await shot('combat-tutorial');
     assert.equal(await page.evaluate(()=>{const c=window.__game.scene.getScene('CombatScene'),u=window.__game.scene.getScene('UIScene');return !c.fieldHint.visible && u.tutText.getBounds().bottom+15<c.potionViews.values().next().value.hit.getBounds().top;}),true);
+    // v0.10.0: испытание — три фазы Стража узла (сообщения и предупреждение не мельче 24 px, ничего не вылезает)
+    await page.evaluate(()=>{ const g=window.__game; if(g.scene.isActive('CombatScene')) g.scene.stop('CombatScene'); g.scene.sleep('ExplorationScene'); g.scene.start('CombatScene',{spawnId:'node_trial',enemyType:'node_guardian'}); window.__witch.tutorial.hide(); });
+    await page.waitForFunction(()=>{const g=window.__game,c=g.scene.getScene('CombatScene');return g.scene.isActive('CombatScene')&&c.spawnId==='node_trial'&&!!c.cm&&!c.ended;},null,{timeout:120000});
+    await page.evaluate(()=>{const c=window.__game.scene.getScene('CombatScene');c.started=true;c.cm.tick=()=>{};c.updateHud();});
+    await shot('v10-trial-phase1');
+    await page.evaluate(()=>{const c=window.__game.scene.getScene('CombatScene');c.cm.enemy.hp=590;c.cm.enemy.checkPhase();c.cm.flushPhases();c.processEvents();c.updateHud();});
+    await page.waitForTimeout(400);await shot('v10-trial-phase2');
+    await page.evaluate(()=>{const c=window.__game.scene.getScene('CombatScene');c.cm.enemy.hp=280;c.cm.enemy.checkPhase();c.cm.flushPhases();c.processEvents();
+      c.cm.enemy.prepLeft=1.5;c.warnTitle.setText('⚠ Удар узла!');c.warnHint.setText('Прервите Печатью!');c.warn.setVisible(true);c.updateHud();});
+    await page.waitForTimeout(400);await shot('v10-trial-phase3');
     await page.evaluate(()=>{const g=window.__game;g.scene.stop('CombatScene');g.scene.stop('UIScene');g.scene.stop('ExplorationScene');g.scene.start('MenuScene');});
     await page.waitForFunction(()=>window.__game.scene.isActive('MenuScene'));
     {

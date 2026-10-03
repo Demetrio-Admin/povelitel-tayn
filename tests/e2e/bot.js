@@ -177,9 +177,20 @@ window.__bot = async function () {
     L(`  stood near ${id} for ${Math.round((performance.now() - t0) / 1000)}s: auto-combat=${started}, retry button=${ex().interaction.focusInfo()?.label || '-'}`);
   }
 
+  /** v0.10.0: перед сильным боем — отдохнуть в доме Мирры (мана +2/с), пока мана и HP не наберутся (как сделал бы игрок). */
+  async function prepare(frac = 0.9) {
+    const v0 = vit();
+    if (v0.mana >= v0.maxMana * frac && v0.hp >= v0.maxHp * 0.9) return;
+    tp(900, 5150); await sleep(500);
+    const t0 = performance.now();
+    while ((vit().mana < vit().maxMana * frac || vit().hp < vit().maxHp * 0.9) && performance.now() - t0 < 300000) { await sleep(1000); await settle(); }
+    L(`  rest at home ${Math.round((performance.now() - t0) / 1000)}s → hp=${Math.round(vit().hp)} mana=${Math.round(vit().mana)}`);
+  }
+
   async function enemy(id) {
     await settle();
     const t = ex().enemies.find(e => e.id === id);
+    if (t.def.tier === 'strong' && !LOSE.has(id)) await prepare(0.9);
     L(`> enemy ${id} visible=${t.sprite?.visible} retry=${t.awaitingRetry}`);
     if (t.awaitingRetry) {   // v0.9: после поражения — только «Сразиться снова»
       const v = vit();

@@ -234,7 +234,7 @@ declare
   k text; v jsonb; n numeric; q numeric; cnt int; arr jsonb; mx_hp numeric; mx_mana numeric;
   max_spend   constant numeric := 100000000;  -- тратить можно сколько есть
   max_counter constant numeric := 1000000000;
-  -- Сколько можно получить за одно сохранение. Самая большая награда игры сейчас — 150 опыта и 60 монет (Страж),
+  -- Сколько можно получить за одно сохранение. Самая большая награда игры сейчас — 220 опыта и 80 монет (Страж узла, v0.10),
   -- клиент сохраняет через секунду после события, поэтому честная игра в эти потолки не упирается.
   gain_xp     constant numeric := 1000;
   gain_school constant numeric := 500;

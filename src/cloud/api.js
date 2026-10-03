@@ -7,7 +7,8 @@
 //   Edge Function account — превращение гостя в игрока с ником (supabase/functions/account).
 
 export class CloudError extends Error {
-  constructor(code, message, status = 0) { super(message); this.name = 'CloudError'; this.code = code; this.status = status; }
+  /** detail — технический код ответа сервера (PostgREST/Postgres, напр. 'P0001', 'PGRST202'): только для отладки. */
+  constructor(code, message, status = 0, detail = '') { super(message); this.name = 'CloudError'; this.code = code; this.status = status; this.detail = detail; }
 }
 
 // Тексты для игрока. Технические ответы сервера сюда не попадают.
@@ -87,7 +88,7 @@ export class SupabaseApi {
     if (!res.ok) {
       let code = mapError(res.status, json);
       if (code === 'unknown' && res.status >= 500) code = 'server'; // сервер сломался — это не «нет связи», повтор не поможет сразу
-      throw new CloudError(code, errorText(code), res.status);
+      throw new CloudError(code, errorText(code), res.status, String(json?.code || json?.error_code || json?.message || '').slice(0, 80));
     }
     return json;
   }

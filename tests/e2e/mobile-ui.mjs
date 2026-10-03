@@ -30,7 +30,7 @@ try {
     page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
     await page.goto(new URL('?reset&skipmenu', BASE).href);
     await page.waitForFunction(() => window.__game?.scene.isActive('UIScene'));
-    assert.match(await page.title(), /v0\.9\.0/);
+    assert.match(await page.title(), /v0\.9\.\d/);
     assert.equal(await page.locator('vite-error-overlay').count(), 0);
     assert.equal(await page.locator('canvas').count(), 1);
     const cdp = await context.newCDPSession(page);

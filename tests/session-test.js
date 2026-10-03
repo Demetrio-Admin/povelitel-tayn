@@ -11,6 +11,8 @@ import { validateNickname, normalizeNickname, loginEmail, NICK_ERRORS } from '..
 import { checkNickname, loginEmail as fnLoginEmail, DEFAULT_LOGIN_DOMAIN } from '../supabase/functions/account/index.ts';
 import { CLOUD } from '../src/config/cloud.config.js';
 import { FakeSupabase } from './helpers/fake-supabase.mjs';
+import { PlayerActions } from '../src/systems/PlayerActions.js';
+import { advanceWorld, serverActionBusy } from '../src/systems/WorldClock.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BACKEND = process.env.BACKEND || 'model';
@@ -287,6 +289,114 @@ console.log('\nv0.9. Общие HP/мана на сервере, лечение 
   const off = await fresh.session.runAction({ op: 'heal' });
   srv.offline = false;
   ok(!off.ok && off.reason === 'network', 'без связи лечение не выполняется и ничего не списывает');
+}
+
+console.log('\nv0.9.1. Действие сервера, пока мир «живёт» (регрессия: ложное «Нет связи», player_action не вызывался)');
+{
+  const rpcCalls = (from, name) => srv.calls.slice(from).filter(c => c.path === `/rest/v1/rpc/${name}`).length;
+  /** Мир крутится как ExplorationScene.update: каждые ~4 мс кадр 16 мс (общая функция advanceWorld). */
+  const runWorld = (st, actions, { freeze = true } = {}) => {
+    const w = { changedWhileBusy: 0, frames: 0 };
+    let last = null;
+    const id = setInterval(() => {
+      const busy = actions ? serverActionBusy({ actions }) : false;
+      const before = JSON.stringify([st.data.stats.playTimeMs, st.data.hp, st.data.mana]);
+      advanceWorld(st, 16, { frozen: freeze && busy, active: !(freeze && busy), inHouse: true });
+      w.frames++;
+      const after = JSON.stringify([st.data.stats.playTimeMs, st.data.hp, st.data.mana]);
+      if (busy && before !== after) w.changedWhileBusy++;
+      last = after;
+    }, 4);
+    w.stop = () => clearInterval(id);
+    return w;
+  };
+
+  const d = device(srv);
+  await d.session.playAsGuest('witch');
+  const st = d.state;
+  const actions = new PlayerActions({ state: st, getSession: () => d.session });
+  st.markEvent('unlock_telekinesis_1'); st.addItem('coins', 40); st.data.hp = 50; st.data.mana = 10; st.save();
+  await d.session.flush();
+
+  // 1) медленный сервер (500 мс) + мир идёт: стартовый набор
+  srv.delayMs = 500;
+  const world = runWorld(st, actions);
+  await new Promise(r => setTimeout(r, 60));          // мир успел «пожить»: время игры, HP и мана изменились (dirty)
+  ok(d.session.dirty, 'перед действием есть несохранённые изменения (время игры, восстановление)');
+  let from = srv.calls.length;
+  const kit = await actions.starterKit();
+  ok(kit.ok, `стартовый набор выдан при медленном сервере и живом мире (ответ: ${JSON.stringify(kit)})`);
+  ok(rpcCalls(from, 'sync_player') <= 1 && rpcCalls(from, 'player_action') === 1, `перед действием не больше одного sync_player, затем ровно один player_action (sync: ${rpcCalls(from, 'sync_player')}, action: ${rpcCalls(from, 'player_action')})`);
+  ok(world.changedWhileBusy === 0, 'пока действие выполняется, время игры, HP и мана не меняются (мир стоит)');
+  ok(st.item('elixir_life') === 1 && st.item('elixir_mana') === 1 && st.hasEvent('mirra_starter_kit'), 'в сумке 1 Настой жизни и 1 Лунный эликсир, событие отмечено');
+  await new Promise(r => setTimeout(r, 40));
+  ok(st.data.stats.playTimeMs > 0 && world.frames > 10, 'после действия мир снова идёт');
+
+  // 2) повторный разговор: второго набора нет, и это не «нет связи»
+  from = srv.calls.length;
+  const kit2 = await actions.starterKit();
+  ok(!kit2.ok && kit2.reason === 'already' && st.item('elixir_life') === 1, 'повторно набор не выдаётся (reason: already, не network)');
+
+  // 3) лечение при медленном сервере: player_action один раз, полное HP, списаны монеты по цене сервера
+  st.data.hp = 37; st.save();
+  const coins0 = st.item('coins');
+  from = srv.calls.length;
+  const heal = await actions.heal();
+  ok(heal.ok && heal.price > 0 && st.data.hp === 120 && st.item('coins') === coins0 - heal.price, `лечение: HP 120/120, −${heal.price} монет (ответ: ${JSON.stringify(heal)})`);
+  ok(rpcCalls(from, 'player_action') === 1 && rpcCalls(from, 'sync_player') <= 1, 'лечение: один sync_player перед действием и один player_action');
+
+  // 4) двойное нажатие: второе — «занято», сервер получает одно действие, одно списание
+  st.data.hp = 60; st.save();
+  const coins1 = st.item('coins');
+  from = srv.calls.length;
+  const [h1, h2] = await Promise.all([actions.heal(), actions.heal()]);
+  ok(h1.ok && !h2.ok && h2.reason === 'busy' && rpcCalls(from, 'player_action') === 1 && st.item('coins') === coins1 - h1.price, 'двойное нажатие: одно действие на сервере, одно списание');
+
+  // 5) несколько действий подряд — ни одного ложного 'network'
+  const seq = [];
+  for (const op of ['heal', 'starter_kit', 'heal']) seq.push(await actions.run({ op }));
+  ok(seq.every(r => r.reason !== 'network'), `несколько действий подряд без ложного «Нет связи» (${seq.map(r => r.ok ? 'ok' : r.reason).join(', ')})`);
+  world.stop();
+
+  // 6) даже если что-то меняет состояние во время запроса (мир не заморожен), flush — барьер, а не «догонялки»:
+  //    до v0.9.1 это давало 5 sync_player подряд и ложное reason:'network' без вызова player_action
+  st.data.hp = 80; st.save();
+  const live = runWorld(st, null, { freeze: false });
+  await new Promise(r => setTimeout(r, 30));
+  from = srv.calls.length;
+  const r6 = await d.session.runAction({ op: 'heal' });
+  live.stop();
+  ok(r6.ok && rpcCalls(from, 'player_action') === 1 && rpcCalls(from, 'sync_player') <= 2, `состояние меняется каждый кадр — действие всё равно доходит до сервера (sync: ${rpcCalls(from, 'sync_player')}, ответ: ${JSON.stringify(r6)})`);
+  from = srv.calls.length;
+  const live2 = runWorld(st, null, { freeze: false });
+  await new Promise(r => setTimeout(r, 30));
+  const fl = await d.session.flush();
+  live2.stop();
+  ok(fl === true && rpcCalls(from, 'sync_player') === 1, `обычное автосохранение при живом мире — один sync_player, не пять (было ${rpcCalls(from, 'sync_player')})`);
+  srv.delayMs = 0;
+
+  // 7) после перезагрузки набор и лечение на месте
+  await d.session.flush();
+  const re = device(srv, d.storage); await re.session.restore();
+  ok(re.state.item('elixir_life') === 1 && re.state.item('elixir_mana') === 1 && re.state.hasEvent('mirra_starter_kit'), 'после перезагрузки набор в сумке, событие сохранено');
+
+  // 8) ошибки различаются: сервер 5xx/4xx — 'server', без связи — 'network'
+  const origRoute = srv.route;
+  srv.route = async function (m, u, h, b) { return u.pathname.endsWith('/player_action') ? this.reply(500, { code: 'XX000', message: 'boom' }) : origRoute.call(this, m, u, h, b); };
+  re.state.data.hp = 70; re.state.save();
+  const e500 = await re.session.runAction({ op: 'heal' });
+  srv.route = async function (m, u, h, b) { return u.pathname.endsWith('/sync_player') ? this.reply(400, { code: '22023', message: 'bad_patch' }) : origRoute.call(this, m, u, h, b); };
+  re.state.data.hp = 71; re.state.save();
+  const e400 = await re.session.runAction({ op: 'heal' });
+  srv.route = origRoute;
+  ok(e500.reason === 'server' && e500.error?.rpc === 'player_action' && e500.error?.status === 500 && re.session.status === 'ready', `ошибка сервера в player_action — reason 'server' с деталями, не «Нет связи» (${JSON.stringify(e500)})`);
+  ok(e400.reason === 'server' && e400.error?.rpc === 'sync_player' && e400.error?.status === 400, `сервер отверг sync_player — reason 'server', не network (${JSON.stringify(e400)})`);
+  srv.offline = true;
+  re.state.data.hp = 72; re.state.save();
+  const eNet = await re.session.runAction({ op: 'heal' });
+  srv.offline = false;
+  ok(!eNet.ok && eNet.reason === 'network', 'настоящая потеря связи — reason network');
+  await re.session.retryNow();
 }
 
 console.log('\n13–14. Старой «облачной» механики больше нет');

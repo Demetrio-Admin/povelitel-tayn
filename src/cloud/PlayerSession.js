@@ -46,6 +46,7 @@ export class PlayerSession {
     this.busy = null;          // текущий flush()
     this.listeners = new Set();
     this.lastError = null;
+    this.lastFlushError = null; // { rpc, code, status } — сервер отверг последнее сохранение (не «нет связи»)
     state.onSave(() => this.onStateSaved());
   }
 
@@ -271,20 +272,35 @@ export class PlayerSession {
   get dirty() { return !!this.inflight || (!!this.base && !isEmpty(diffSnapshots(this.base, toSnapshot(this.state.data)))); }
 
   /**
-   * Отправляет изменения на сервер. true — всё на сервере. Нет связи — false, статус offline, повтор по таймеру.
+   * Отправляет изменения на сервер. true — на сервере всё, что было изменено ДО вызова flush().
+   * Нет связи — false, статус offline, повтор по таймеру. Сервер отверг изменения — false (lastFlushError, статус ready).
    * keepalive — при закрытии вкладки (браузер дошлёт запрос сам).
+   *
+   * v0.9.1: flush — барьер, а не «догонялки». Игра меняет состояние каждый кадр (время игры, восстановление HP/маны),
+   * поэтому «дождаться, пока изменений не останется совсем» нельзя: раньше это давало 5 sync_player подряд и false,
+   * хотя сервер отвечал 200. Теперь изменения, сделанные во время запроса, кладутся поверх ответа сервера и уходят
+   * обычным автосохранением (таймер), а flush сообщает только о том, что требовалось на момент вызова.
    */
   async flush({ keepalive = false } = {}) {
     if (!this.base || !this.auth) return false;
-    if (this.busy) { await this.busy.catch(() => {}); if (!this.dirty) return true; }
+    if (this.busy) {
+      // уже идёт отправка; её снимок мог быть сделан до последних изменений — тогда отправляем ещё раз
+      const target = toSnapshot(this.state.data);
+      const ok = await this.busy.catch(() => false);
+      if (!ok) return false;
+      if (!this.base || isEmpty(diffSnapshots(this.base, target))) return true;
+    }
     if (this.timer) { this.clearTimer(this.timer); this.timer = null; }
     this.busy = this._flushLoop(keepalive);
     try { return await this.busy; } finally { this.busy = null; }
   }
 
   async _flushLoop(keepalive) {
-    for (let guard = 0; guard < 5; guard++) {
-      if (!this.inflight) {
+    this.lastFlushError = null;
+    // не больше двух запросов: (1) повтор отправки, ответ на которую потерялся (тот же id), (2) текущее состояние
+    for (let pass = 0; pass < 2; pass++) {
+      const resend = !!this.inflight;
+      if (!resend) {
         const sent = toSnapshot(this.state.data);
         const patch = diffSnapshots(this.base, sent);
         if (isEmpty(patch)) { this._setSaving('saved'); return true; }
@@ -298,6 +314,7 @@ export class PlayerSession {
       } catch (e) {
         this.lastError = e;
         if (isNetworkError(e)) { this._goOffline(); return false; }
+        this.lastFlushError = { rpc: 'sync_player', code: e?.code || 'unknown', status: e?.status || 0, detail: e?.detail || '' };
         if (this.status === 'signed_out') return false; // вход потерян (_lostSession уже сработал)
         // сервер отверг изменения: не повторяем их бесконечно, берём его состояние
         this.inflight = null;
@@ -312,30 +329,47 @@ export class PlayerSession {
       this.inflight = null;
       this.state.setData(fromSnapshot(applyPatch(snapshot, later), this.state.data));
       this._backOnline();
-      if (isEmpty(later)) { this._setSaving('saved'); return true; }
+      // отправленный снимок сделан уже внутри этого вызова — всё, что было до flush(), на сервере
+      if (!resend || isEmpty(later)) {
+        this._setSaving('saved');
+        if (!isEmpty(later)) this.onStateSaved();   // свежие изменения — обычным автосохранением
+        return true;
+      }
     }
-    return !this.dirty;
+    return true;
   }
 
   // ---------------------------------------------------------------- v0.9: атомарные действия сервера
   /**
    * Лечение за монеты / стартовый набор: проверка и списание — на сервере (player_action), не дельтами patch.
    * Сначала отправляются накопленные изменения, затем действие с id (повтор того же id сервер не применит дважды).
-   * Возвращает { ok, reason?, price? }. Без связи ничего не меняется (reason: 'network').
+   * Возвращает { ok, reason?, price?, error? }. reason:
+   *   'network' — только настоящая потеря связи (ошибка fetch, таймаут, статус offline); ничего не меняется;
+   *   'server'  — сервер ответил ошибкой (4xx/5xx) или отверг сохранение; error = { rpc, code, status };
+   *   'session' — нет входа (сессия завершилась); иначе — ответ сервера (coins, full, already, …).
    */
   async runAction(action) {
-    if (!this.base || !this.auth || this.status !== 'ready') return { ok: false, reason: 'network' };
-    if (!(await this.flush())) return { ok: false, reason: 'network' };
+    if (this.status === 'offline') return { ok: false, reason: 'network' };
+    if (!this.base || !this.auth || this.status !== 'ready') return { ok: false, reason: 'session' };
+    if (!(await this.flush())) {
+      if (this.status === 'offline') return { ok: false, reason: 'network' };
+      if (this.status === 'signed_out') return { ok: false, reason: 'session' };
+      return { ok: false, reason: 'server', error: this.lastFlushError || { rpc: 'sync_player', code: this.lastError?.code || 'unknown', status: this.lastError?.status || 0 } };
+    }
     const act = { ...action, id: action.id || randomId() };
     const sent = toSnapshot(this.state.data);
     let raw = null;
     for (let attempt = 0; attempt < 2 && !raw; attempt++) {
       try { raw = await this._authed(t => this.api.playerAction(t, act)); } catch (e) {
         this.lastError = e;
-        if (!isNetworkError(e)) return { ok: false, reason: 'error' };
+        if (!isNetworkError(e)) {
+          if (this.status === 'signed_out') return { ok: false, reason: 'session' };
+          return { ok: false, reason: 'server', error: { rpc: 'player_action', code: e?.code || 'unknown', status: e?.status || 0, detail: e?.detail || '' } };
+        }
         if (attempt === 1) { this._goOffline(); return { ok: false, reason: 'network' }; }
       }
     }
+    if (!raw) return { ok: false, reason: 'server', error: { rpc: 'player_action', code: 'empty_response', status: 200 } };
     // пока ждали, игра могла что-то изменить (не HP и не ману — их задаёт действие)
     const later = diffSnapshots(sent, toSnapshot(this.state.data));
     delete later.hp; delete later.mana;
@@ -346,9 +380,9 @@ export class PlayerSession {
     if (Object.keys(later).length) this.onStateSaved();
     if (res?.reason === 'duplicate') {   // ответ на первую попытку потерялся: итог видно по состоянию
       const ok = act.op === 'heal' ? snapshot.hp === maxVitals(snapshot.level).hp : snapshot.quests.includes(STARTER_KIT.event);
-      return { ok, reason: ok ? undefined : 'error' };
+      return ok ? { ok } : { ok, reason: 'server', error: { rpc: 'player_action', code: 'duplicate_unconfirmed', status: 200 } };
     }
-    return res || { ok: false, reason: 'error' };
+    return res || { ok: false, reason: 'server', error: { rpc: 'player_action', code: 'no_result', status: 200 } };
   }
 
   _goOffline() {

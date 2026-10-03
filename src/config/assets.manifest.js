@@ -41,6 +41,8 @@ export const ASSET_FILES = {
   icon_moon_herb: 'assets/sprites/icon_moon_herb.png?v=art-20261003',
   // v0.8.2: меню и HUD
   icon_menu: 'assets/sprites/icon_menu.png', icon_close: 'assets/sprites/icon_close.png', icon_city: 'assets/sprites/icon_city.png', icon_bank: 'assets/sprites/icon_bank.png', icon_rating: 'assets/sprites/icon_rating.png', icon_chat: 'assets/sprites/icon_chat.png', icon_forum: 'assets/sprites/icon_forum.png', icon_settings: 'assets/sprites/icon_settings.png', icon_heart: 'assets/sprites/icon_heart.png', icon_drop: 'assets/sprites/icon_drop.png',
+  // v0.10.0: сюжетные предметы первой главы (tools/art/v10_icons.py)
+  icon_wick: 'assets/sprites/icon_wick.png', icon_compound: 'assets/sprites/icon_compound.png', icon_bundle: 'assets/sprites/icon_bundle.png',
   // FX
   fx_dot: null, fx_glow: null, fx_ring: null,
 };
@@ -49,6 +51,7 @@ export const ASSET_FILES = {
 export const DISPLAY_SIZE = {
   hero_down: [64, 128], hero_up: [64, 128], hero_side: [64, 128],
   warlock_down: [64, 128], warlock_up: [64, 128], warlock_side: [64, 128],
+  icon_wick: [64, 64], icon_compound: [64, 64], icon_bundle: [64, 64],
   tree_autumn_01: [150, 210], tree_autumn_02: [140, 200], tree_dark_01: [150, 220], tree_dark_02: [140, 210],
   dead_tree_01: [110, 170], birch_01: [90, 220],
   heavy_boulder_01: [210, 150], rock_medium_01: [100, 77],

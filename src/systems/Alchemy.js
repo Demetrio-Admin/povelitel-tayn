@@ -1,7 +1,8 @@
 // Алхимия (v0.8): котёл в доме ведьмы. Без Phaser. Рецепт — это «ингредиенты → расходник», без шансов и уровней.
+// v0.10.0: шесть рецептов (три сюжетных). Изготовление — атомарная операция (services.actions.craft → player_action
+// { op: 'craft' }); здесь — только проверки для окна котла и журнала (ничего не меняют).
 import { RECIPES, RECIPE_ORDER } from '../config/recipes.js';
 import { ITEMS } from '../config/balance.progression.js';
-import { MSG } from '../state/EventBus.js';
 
 export class Alchemy {
   constructor(state, bus = null) {
@@ -29,18 +30,22 @@ export class Alchemy {
     return Math.min(...c.needs.map(n => Math.floor(n.have / n.need)));
   }
 
-  /** Варит один раз. Возвращает { ok, result, amount } или { ok:false, missing }. */
-  craft(recipeId) {
-    const c = this.check(recipeId);
-    if (!c.ok) return { ok: false, missing: c.needs.filter(n => !n.ok) };
+  /**
+   * Состояние рецепта для окна котла (те же условия, что у операции сервера):
+   *   'locked'  — сюжетный рецепт ещё неизвестен (нет событий requires): показать, откуда придёт знание;
+   *   'have'    — сюжетный предмет уже изготовлен и лежит в сумке (применить);   'used' — задача выполнена;
+   *   'ready'   — можно варить;   'missing' — не хватает ингредиентов.
+   */
+  status(recipeId) {
     const r = RECIPES[recipeId];
-    for (const [id, need] of Object.entries(r.needs)) this.state.removeItem(id, need);
-    this.state.addItem(r.result, r.amount);
-    this.state.save();
-    const out = { ok: true, recipeId, result: r.result, amount: r.amount };
-    this.bus?.emit(MSG.CRAFTED, out);
-    this.bus?.emit(MSG.HUD_REFRESH);
-    this.bus?.emit(MSG.QUEST_CHANGED);
-    return out;
+    if (!r) return { state: 'unknown', chk: { ok: false, needs: [] } };
+    const chk = this.check(recipeId);
+    const has = (ev) => this.state.hasEvent(ev);
+    if ((r.requires || []).some(ev => !has(ev))) return { state: 'locked', chk };
+    if ((r.blockedBy || []).some(has)) return { state: this.state.item(r.result) > 0 ? 'have' : 'used', chk };
+    return { state: chk.ok ? 'ready' : 'missing', chk };
   }
+
+  /** Нехватка для рецепта: [{ id, name, have, need }] (пусто — хватает). */
+  missing(recipeId) { return this.check(recipeId).needs.filter(n => !n.ok); }
 }

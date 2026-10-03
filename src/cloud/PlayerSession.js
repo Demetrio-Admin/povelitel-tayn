@@ -378,7 +378,8 @@ export class PlayerSession {
     this.meta = { ...this.meta, ...meta };
     this.state.setData(fromSnapshot(applyPatch(snapshot, later), this.state.data));
     if (Object.keys(later).length) this.onStateSaved();
-    if (res?.reason === 'duplicate') {   // ответ на первую попытку потерялся: итог видно по состоянию
+    if (res?.duplicate) return res;      // v0.10: сервер вернул сохранённый результат первой попытки
+    if (res?.reason === 'duplicate') {   // ответ на первую попытку потерялся (действие до v0.10): итог видно по состоянию
       const ok = act.op === 'heal' ? snapshot.hp === maxVitals(snapshot.level).hp : snapshot.quests.includes(STARTER_KIT.event);
       return ok ? { ok } : { ok, reason: 'server', error: { rpc: 'player_action', code: 'duplicate_unconfirmed', status: 200 } };
     }

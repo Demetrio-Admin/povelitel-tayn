@@ -456,6 +456,48 @@ console.log('\nv0.9.2. Герой (ведьма / колдун) — метада
   ok(o2.session.hero === 'witch', 'старый профиль без героя — ведьма');
 }
 
+console.log('\nv0.10.0. Крафт и сюжетные предметы — одной операцией сервера');
+{
+  const d = device(srv);
+  await d.session.playAsGuest('witch');
+  const st = d.state;
+  const actions = new PlayerActions({ state: st, getSession: () => d.session });
+  st.addItem('moon_herb', 4); st.addItem('tree_resin', 2); st.addItem('rune_dust', 3); st.addItem('lunar_flame', 2); st.save();
+  let r = await actions.craft('lunar_wick');
+  ok(!r.ok && r.reason === 'locked' && st.item('moon_herb') === 4, 'фитиль до знакомства с алтарём: рецепт неизвестен, ничего не потрачено');
+  st.markEvent('lunar_quest_start'); st.save();
+  r = await actions.craft('lunar_wick');
+  ok(!r.ok && r.reason === 'missing' && r.missing.join() === 'lunar_flame' && st.item('moon_herb') === 4 && st.item('lunar_flame') === 2, 'не хватает огонька: остальные ингредиенты не тратятся');
+  st.addItem('lunar_flame', 1); st.save(); await d.session.flush();
+  // ответ на первую попытку потерялся: повтор того же id возвращает сохранённый результат, второго фитиля нет
+  srv.loseNext = 1;
+  r = await d.session.runAction({ op: 'craft', recipe: 'lunar_wick', id: 'wick-0000-retry' });
+  const re = device(srv, d.storage); await re.session.restore();
+  ok(r.ok && r.duplicate && r.result === 'lunar_wick' && re.state.item('lunar_wick') === 1 && re.state.item('lunar_flame') === 0 && re.state.hasEvent('lunar_wick_crafted') && re.state.data.heroXP === 15,
+    'потерянный ответ: повтор того же id — сохранённый результат, один фитиль, огоньки списаны один раз, +15 опыта один раз');
+  // новый id не обходит уже выполненное: второй фитиль не варится (с двух устройств тоже)
+  const r2 = await re.session.runAction({ op: 'craft', recipe: 'lunar_wick' });
+  ok(!r2.ok && r2.reason === 'done', 'второй фитиль с новым id — отказ «уже изготовлен»');
+  // применение: событие, награда и списание вместе; повтор не даёт второй награды
+  const before = re.state.data.heroXP;
+  const u1 = await re.session.runAction({ op: 'use', item: 'lunar_wick' });
+  const u2 = await re.session.runAction({ op: 'use', item: 'lunar_wick' });
+  ok(u1.ok && !u2.ok && u2.reason === 'done' && re.state.hasEvent('lunar_quest_complete') && re.state.item('lunar_wick') === 0 && re.state.data.heroXP === before + 50
+    && re.state.data.schoolXP.telekinesis >= 150 && re.state.item('lunar_shard') >= 5, 'фитиль у алтаря: свет, +50 опыта и гарантия цены ТК II — один раз');
+  // ремонт: без маны ничего не меняется
+  re.state.markEvent('chapter_trial_defeated'); re.state.markEvent('unlock_seal_1'); re.state.addItem('restoration_bundle', 1); re.state.data.mana = 5; re.state.save(); await re.session.flush();
+  const m1 = await re.session.runAction({ op: 'use', item: 'restoration_bundle' });
+  ok(!m1.ok && m1.reason === 'mana' && re.state.item('restoration_bundle') === 1 && !re.state.hasEvent('chapter_1_complete'), 'ремонт без 20 маны: связка и узел не тронуты');
+  re.state.data.mana = 50; re.state.save(); await re.session.flush();
+  const m2 = await re.session.runAction({ op: 'use', item: 'restoration_bundle' });
+  ok(m2.ok && re.state.hasEvent('chapter_1_complete') && re.state.item('restoration_bundle') === 0 && Math.abs(re.state.data.mana - 30) < 1e-9, 'ремонт: связка и ровно 20 маны одной операцией, узел восстановлен');
+  // миграция: ядро Стража — только если его нет и связку не делали; повтор ничего не даёт
+  const g = device(srv); await g.session.playAsGuest('witch');
+  g.state.markEnemyDefeated('forest_guardian_01'); g.state.save(); await g.session.flush();
+  const g1 = await g.session.runAction({ op: 'migrate_v10' }), g2 = await g.session.runAction({ op: 'migrate_v10' });
+  ok(g1.ok && g1.core === 1 && !g2.ok && g2.reason === 'already' && g.state.item('rare_core') === 1, 'миграция старого сейва: одно ядро Стража, повтор не выдаёт второе');
+}
+
 console.log('\n13–14. Старой «облачной» механики больше нет');
 {
   const FORBIDDEN = ['Какое сохранение оставить', 'В облаке', 'На этом устройстве', 'Взять из облака', 'Оставить с устройства', 'Отправить в облако', 'Есть изменения, скоро отправим', 'showConflict', 'resolveConflict', 'pendingConflict'];

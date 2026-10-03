@@ -346,6 +346,9 @@ export class CombatScene extends Phaser.Scene {
     for (const ev of events) {
       switch (ev.type) {
         case 'damage': this.onDamage(ev); break;
+        case 'select':   // v0.10.0: тяжёлый камень с Телекинезом I не поднять — коротко объяснить
+          if (ev.refused) { services.audio.play('locked'); this.toast('Тяжёлый камень — нужен Телекинез II', COLORS.danger); }
+          break;
         case 'warning':
           this.warnTitle.setText(`⚠ ${ev.name}!`);
           this.warnHint.setText(ev.needsHeavy ? 'Выберите тяжёлый камень и нажмите Телекинез' : (ev.hint || ''));

@@ -11,10 +11,11 @@ export const ENEMIES = {
     name: 'Лесной Падальщик',
     texture: 'enemy_scavenger',
     tier: 'normal',
-    hp: 190,
-    normalAttack: { damage: 10, intervalSec: 3 },
+    // v0.10.0: первая встреча мягче (обучение до Огня) — 160 HP вместо 190, обычный удар 8 вместо 10, первый рывок через 6 с вместо 5
+    hp: 160,
+    normalAttack: { damage: 8, intervalSec: 3 },
     strongAttack: {
-      name: 'Рывок', damage: 24, prepSec: 2, cooldownSec: 9, firstDelaySec: 5,
+      name: 'Рывок', damage: 24, prepSec: 2, cooldownSec: 9, firstDelaySec: 6,
       interruptBy: ['telekinesis', 'seal'],
       hint: 'Прервите Телекинезом!',
     },
@@ -45,8 +46,8 @@ export const ENEMIES = {
     arena: 'glade_small',
   },
 
-  // Враг со слабостью из Combat Math §7. В маршрут прототипа не поставлен,
-  // но механика поддержана CombatManager (defense + отключение брони Огнём).
+  // Враг со слабостью из Combat Math §7. v0.10.0: пять Корневиков в старом лесу (world.layout.js, rootling_01…05).
+  // Защита 20%, Огонь +50% и снимает защиту на 6 с. Первая победа на месте — rewards; повторная (возобновляемые места) — repeatRewards.
   rootling: {
     name: 'Корневик',
     texture: 'enemy_rootling',
@@ -58,7 +59,8 @@ export const ENEMIES = {
     defense: 0.2,
     weaknesses: { fire: 0.5 },
     onFireHit: { disableDefenseSec: 6 },
-    rewards: { heroXP: 60, schoolXP: { fire: 30 }, items: {}, coins: 15 },
+    rewards: { heroXP: 60, schoolXP: { fire: 30 }, items: { tree_resin: 1 }, coins: 15 },
+    repeatRewards: { heroXP: 20, schoolXP: { fire: 3 }, items: { tree_resin: 1 }, coins: 6 },
     arena: 'glade',
   },
 

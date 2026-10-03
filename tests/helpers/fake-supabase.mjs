@@ -222,12 +222,16 @@ export class FakeSupabase {
         if (!pl) return err(404, 'P0002', 'no_player');
         const act = a.action;
         if (!act || typeof act !== 'object' || Array.isArray(act)) return err(400, '22023', 'bad_action');
-        if (typeof act.id === 'string' && pl.recent.includes(act.id)) return this.reply(200, { ...this.snapshot(uid), action: { ok: null, reason: 'duplicate' } });
+        if (typeof act.id === 'string' && pl.recent.includes(act.id)) {   // повтор: сохранённый результат первой попытки (v0.10)
+          const prev = (pl.recentActions || []).find(e => e.id === act.id);
+          return this.reply(200, { ...this.snapshot(uid), action: prev ? { ...prev.result, duplicate: true } : { ok: null, reason: 'duplicate' } });
+        }
         if (typeof act.id === 'string' && act.id.length >= 8 && act.id.length <= 64) pl.recent = [...pl.recent, act.id].slice(-20);
         const base = { ...pl.snap, pos: pl.snap.pos || { x: 0, y: 0 }, safe: pl.snap.safe || { x: 0, y: 0 } };
         const { snapshot: next, result } = applyAction(base, act);
         pl.snap = { ...next, pos: pl.snap.pos, safe: pl.snap.safe };
         pl.rev++;
+        if (typeof act.id === 'string' && act.id.length >= 8 && act.id.length <= 64) pl.recentActions = [...(pl.recentActions || []), { id: act.id, result }].slice(-20);
         this.actionCalls = (this.actionCalls || 0) + 1;
         return this.reply(200, { ...this.snapshot(uid), action: result });
       }

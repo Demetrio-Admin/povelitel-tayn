@@ -125,6 +125,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.stepT = 0;
     if (services.edit) { this.editor = new MapEditor(this); return; } // режим ?edit: игра не идёт, карту правят руками
     this.scheduleStory();
+    this.migrateV10();
   }
 
   // ------------------------------------------------------------------ v0.9: завязка и стартовый набор
@@ -138,6 +139,21 @@ export class ExplorationScene extends Phaser.Scene {
   needsStarterKit() {
     const s = services.state;
     return s.hasEvent('unlock_telekinesis_1') && !s.hasEvent(STORY.starterKitEvent) && !s.hasEvent('first_world_interaction');
+  }
+
+  /**
+   * v0.10.0: разовая миграция старого сохранения (атомарно, флаг mig_v10): ядро Стража тем, кто победил его до главы,
+   * если ядра нет и связку не делали. Новому персонажу просто ставится флаг. Перезагрузка и повтор ничего не выдают.
+   */
+  migrateV10() {
+    if (this.editor || services.state.hasEvent('mig_v10')) return;
+    const tryRun = async () => {
+      if (!this.scene.isActive() || services.state.hasEvent('mig_v10')) return;
+      if (services.actions.busy || services.mode !== 'exploration') { this.time.delayedCall(1500, tryRun); return; }
+      const r = await services.actions.migrateV10();
+      if (r.ok && r.core) this.toast('Мирра сохранила ядро Стража — оно в сумке: из него можно сделать восстановительную связку.', COLORS.gold);
+    };
+    this.time.delayedCall(1200, tryRun);
   }
 
   scheduleStory() {

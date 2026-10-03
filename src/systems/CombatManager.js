@@ -51,12 +51,14 @@ export class CombatManager {
   selectObject(id) {
     const o = this.fieldObjects.find(f => f.id === id);
     if (!o || !o.available) return false;
+    // v0.10.0: вес проверяется в бою так же, как в мире — тяжёлый камень только с Телекинезом II
+    if (o.def.throwable && !this.canLift(o)) { this.emit({ type: 'select', id: this.selectedId, refused: id, reason: 'heavy' }); return false; }
     this.selectedId = this.selectedId === id ? null : id;
     this.emit({ type: 'select', id: this.selectedId });
     return true;
   }
   cycleSelection() {
-    const avail = this.fieldObjects.filter(f => f.available);
+    const avail = this.fieldObjects.filter(f => f.available && (!f.def.throwable || this.canLift(f)));
     if (!avail.length) { this.selectedId = null; return; }
     const idx = avail.findIndex(f => f.id === this.selectedId);
     const next = idx + 1 >= avail.length ? null : avail[idx + 1].id;
@@ -64,6 +66,8 @@ export class CombatManager {
     this.emit({ type: 'select', id: next });
   }
   selectedObject() { return this.fieldObjects.find(f => f.id === this.selectedId && f.available) || null; }
+  /** Можно ли поднять объект текущим уровнем Телекинеза (ТК I — лёгкие и средние, ТК II — тяжёлые). */
+  canLift(o) { return !o.def.weight || this.abilities.canMoveWeight(o.def.weight); }
 
   // ---------- состояние кнопок ----------
   abilityState(id) {
@@ -148,7 +152,7 @@ export class CombatManager {
     }
 
     let base = s.damage;
-    if (obj && obj.def.throwable) {
+    if (obj && obj.def.throwable && this.canLift(obj)) {
       const heavy = obj.def.weight === 'heavy';
       if (heavy) { base *= 1 + s.heavyObjectBonus; tags.push('telekinesis_heavy'); }
       base *= 1 + (s.throwDamageBonus || 0);

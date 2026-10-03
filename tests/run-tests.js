@@ -5,6 +5,8 @@ import { QuestFlags } from '../src/state/QuestFlags.js';
 import { EventBus } from '../src/state/EventBus.js';
 import { AbilitySystem } from '../src/systems/AbilitySystem.js';
 import { CombatManager } from '../src/systems/CombatManager.js';
+import { PlayerActions } from '../src/systems/PlayerActions.js';
+import { ENEMIES } from '../src/config/balance.enemies.js';
 import { EV } from '../src/config/events.js';
 import { Settings, SETTINGS_KEY } from '../src/state/Settings.js';
 import { TutorialSystem } from '../src/systems/TutorialSystem.js';
@@ -145,9 +147,19 @@ console.log('\n[3] Механики боя');
   const w = makeWorld(clock);
   w.abilities.unlock('telekinesis', 1); w.abilities.unlock('fire', 1);
   const cm = new CombatManager({ enemyType: 'forest_scavenger', state: w.state, abilities: w.abilities });
+  // v0.10.0: Телекинез I не поднимает тяжёлый камень в бою (как в мире): выбор отклонён, бросок — обычный удар
+  ok(!cm.selectObject('heavy_a') && cm.selectedId === null && cm.drainEvents().some(e => e.refused === 'heavy_a'), 'ТК I: тяжёлый камень не выбирается');
   cm.selectedId = 'heavy_a';
   cm.useAbility('telekinesis');
-  ok(cm.enemy.hp === 190 - 30, `бросок тяжёлого объекта = 30 урона (факт ${190 - cm.enemy.hp})`);
+  const HP0 = ENEMIES.forest_scavenger.hp;
+  ok(HP0 === 160 && cm.enemy.hp === HP0 - 20 && cm.fieldObjects.find(o => o.id === 'heavy_a').available, `ТК I без тяжёлого бонуса: 20 урона, камень на месте (факт ${HP0 - cm.enemy.hp})`);
+  { // ТК II: тяжёлый бросок 20 × 1,5 × 1,35 = 40,5 → 41 и тег тяжёлого прерывания
+    const w2 = makeWorld({ t: 0 }); w2.abilities.unlock('telekinesis', 2);
+    const c2 = new CombatManager({ enemyType: 'forest_scavenger', state: w2.state, abilities: w2.abilities });
+    ok(c2.selectObject('heavy_a'), 'ТК II: тяжёлый камень выбирается');
+    c2.useAbility('telekinesis');
+    ok(c2.enemy.hp === HP0 - 41, `ТК II: тяжёлый бросок = 41 урон (40,5) (факт ${HP0 - c2.enemy.hp})`);
+  }
   ok(cm.useAbility('telekinesis').ok === false, 'перезарядка блокирует повтор');
   const hp0 = cm.enemy.hp;
   cm.useAbility('fire');
@@ -160,9 +172,10 @@ console.log('\n[3] Механики боя');
   ok(!cm.enemy.isPreparing && cm.stats.interrupts === 1, 'Телекинез прерывает рывок');
 
   w.state.data.mana = null; w.state.data.hp = null;   // v0.9: прошлый бой в этом мире потратил ману — для проверки брони начинаем с полной
+  w.abilities.unlock('telekinesis', 2);   // v0.10.0: тяжёлый камень в бою — только с Телекинезом II (к Стражу он уже есть)
   const g = new CombatManager({ enemyType: 'forest_guardian', state: w.state, abilities: w.abilities });
   const before = g.enemy.hp; g.useAbility('telekinesis');
-  ok(before - g.enemy.hp === 11, `броня Стража −45% (20 → ${before - g.enemy.hp})`);
+  ok(before - g.enemy.hp === 11, `броня Стража −45% (20 → ${before - g.enemy.hp})`);   // ТК II: удар без броска тот же 20
   g.cooldowns.telekinesis = 0; g.selectedId = 'crystal_a'; g.useAbility('telekinesis');
   ok(!g.enemy.armorActive, 'Телекинез разбивает кристалл → броня отключена');
   g.enemy.strongCd = 0; g.enemy.update(0.01); g.cooldowns.telekinesis = 0; g.useAbility('telekinesis');
@@ -356,7 +369,7 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
   const { DialogueSystem } = await import('../src/systems/DialogueSystem.js');
   const { GuidanceSystem } = await import('../src/systems/GuidanceSystem.js');
   const { SIDE_QUESTS, SIDE_QUEST_ORDER } = await import('../src/config/quests.js');
-  const { RECIPES } = await import('../src/config/recipes.js');
+  const { RECIPES, RECIPE_ORDER } = await import('../src/config/recipes.js');
   const { RESOURCES, POTIONS } = await import('../src/config/resources.js');
   const { NPCS } = await import('../src/config/npcs.js');
   const { DIALOGUES } = await import('../src/config/dialogues.js');
@@ -377,7 +390,7 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
   ok(Object.keys(RESOURCES).length === 5, '5 видов ресурсов');
   ok(Object.keys(RESOURCES).every(k => ITEMS[k]), 'каждый ресурс есть в ITEMS (имя, иконка)');
   ok(Object.values(RECIPES).every(r => Object.keys(r.needs).every(k => ITEMS[k]) && ITEMS[r.result]), 'рецепты ссылаются на существующие предметы');
-  ok(Object.keys(RECIPES).length >= 2 && Object.keys(RECIPES).length <= 3, 'алхимия: 2–3 рецепта (' + Object.keys(RECIPES).length + ')');
+  ok(Object.keys(RECIPES).length === 6 && RECIPE_ORDER.length === 6 && RECIPE_ORDER.filter(id => RECIPES[id].kind === 'story').length === 3, 'алхимия: шесть рецептов, три сюжетных');
   ok(Object.keys(NPCS).length >= 4 && Object.keys(NPCS).every(id => DIALOGUES[id]), 'NPC ≥ 4, у каждого есть диалоги');
   ok(SIDE_QUEST_ORDER.length >= 2 && SIDE_QUEST_ORDER.length <= 3, 'побочных заданий 2–3');
   const dialogOk = Object.values(DIALOGUES).every(vs => vs.every(v => Object.values(v.nodes).every(n => n.lines.length >= 1 && n.lines.length <= 5 && (n.choices || []).every(c => !c.next || v.nodes[c.next]))));
@@ -429,13 +442,18 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
     const { state, alch, bus } = mk();
     let crafted = 0; bus.on(MSG.CRAFTED, () => crafted++);
     ok(!alch.check('elixir_life').ok && alch.maxCount('elixir_life') === 0, 'алхимия: без ингредиентов нельзя');
-    const r0 = alch.craft('elixir_life');
-    ok(!r0.ok && r0.missing.length === 2, 'алхимия: craft без ингредиентов → missing');
+    // v0.10.0: изготовление — атомарная операция PlayerActions (локально — то же правило, что на сервере)
+    const actions = new PlayerActions({ state, bus });
+    const r0 = await actions.craft('elixir_life');
+    ok(!r0.ok && r0.reason === 'missing' && r0.missing.length === 2 && state.item('elixir_life') === 0, 'алхимия: без ингредиентов → missing, ничего не меняется');
     state.addItem('moon_herb', 5); state.addItem('forest_mushroom', 2);
-    ok(alch.maxCount('elixir_life') === 2, 'алхимия: maxCount = 2 (по грибам)');
-    const r1 = alch.craft('elixir_life');
-    ok(r1.ok && state.item('elixir_life') === 1 && state.item('moon_herb') === 3 && state.item('forest_mushroom') === 1 && crafted === 1, 'алхимия: ингредиенты списаны, зелье добавлено, событие CRAFTED');
-    ok(!alch.craft('несуществующий').ok, 'алхимия: неизвестный рецепт не падает');
+    ok(alch.maxCount('elixir_life') === 2 && alch.status('elixir_life').state === 'ready', 'алхимия: maxCount = 2 (по грибам), рецепт готов');
+    const r1 = await actions.craft('elixir_life');
+    ok(r1.ok && state.item('elixir_life') === 1 && state.item('moon_herb') === 3 && state.item('forest_mushroom') === 1 && r1.firstCraft && state.data.heroXP === 15, 'алхимия: ингредиенты списаны, зелье добавлено, первый крафт +15 опыта');
+    const r2 = await actions.craft('elixir_life');
+    ok(r2.ok && !r2.firstCraft && state.data.heroXP === 15, 'второй крафт опыта героя не даёт');
+    ok(!(await actions.craft('несуществующий')).ok, 'алхимия: неизвестный рецепт не падает');
+    ok(crafted === 0, 'событие CRAFTED шлёт окно котла (не операция)');
   }
 
   // --- зелья в бою
@@ -520,9 +538,17 @@ console.log('\n[v0.8.2] Опыт до следующего уровня');
   state.data.heroLevel = 4; state.data.heroXP = 370; x = xpProgress(state);
   ok(Math.abs(x.progress - 0.625) < 1e-9 && x.caption === 'До 5 ур.: 60 опыта', 'пример из ТЗ: ур. 4, 370 → 62,5%, «До 5 ур.: 60 опыта»');
   const ups = state.addHeroXP(60); x = xpProgress(state);
-  ok(ups.length === 1 && x.level === 5 && x.max && x.progress === 1 && x.caption === 'Максимальный уровень', 'повышение до 5 → максимальный уровень');
-  state.addHeroXP(500); x = xpProgress(state);
-  ok(x.level === 5 && x.remaining === 0 && !/NaN|null|6/.test(x.caption), 'после максимума нет шестого уровня, NaN и отрицательных чисел');
+  ok(ups.length === 1 && x.level === 5 && !x.max && x.caption === 'До 6 ур.: 220 опыта', 'повышение до 5 → дальше уровень 6 (v0.10.0): ' + x.caption);
+  // v0.10.0: границы новых уровней 650 / 940 / 1300 и максимальный 10-й
+  state.data.heroLevel = 1; state.data.heroXP = 0;
+  ok(state.addHeroXP(649).length === 4 && state.data.heroLevel === 5, '649 опыта — уровень 5');
+  ok(state.addHeroXP(1).length === 1 && state.data.heroLevel === 6 && state.heroStats().maxHp === 152 && state.heroStats().maxMana === 125, '650 — уровень 6: 152 HP, 125 маны');
+  state.addHeroXP(290); ok(state.data.heroLevel === 7 && state.heroStats().maxHp === 160, '940 — уровень 7: 160 HP');
+  state.addHeroXP(359); ok(state.data.heroLevel === 7, '1299 — ещё 7');
+  state.addHeroXP(1); ok(state.data.heroLevel === 8 && state.heroStats().maxMana === 140, '1300 — уровень 8: 140 маны');
+  state.addHeroXP(5000); x = xpProgress(state);
+  ok(x.level === 10 && x.max && x.progress === 1 && x.caption === 'Максимальный уровень', 'уровень 10 — максимальный');
+  ok(x.remaining === 0 && !/NaN|null|11/.test(x.caption), 'после максимума нет 11-го уровня, NaN и отрицательных чисел');
   state.data.heroLevel = 2; state.data.heroXP = 10; x = xpProgress(state);   // повреждённое сохранение: опыт меньше порога
   ok(x.progress === 0 && x.remaining === 140, 'опыт ниже порога уровня не даёт отрицательную полосу');
 }
@@ -588,7 +614,7 @@ console.log('\n[v0.9] Общие HP и мана, зелья, обучение б
     cm.enemy.strongCd = 999; cm.enemy.normalCd = 999;
     const hp0 = cm.hero.hp; for (let i = 0; i < 300; i++) cm.tick(1 / 30, { holdEnemy: true });
     ok(cm.hero.hp === hp0 && vitals.hp(w.state) === hp0, 'в бою HP сам не восстанавливается');
-    ok(Math.abs(cm.hero.mana - 46) < 0.01, 'мана в бою восстанавливается одним механизмом (4/с)');
+    ok(Math.abs(cm.hero.mana - 36) < 0.01, 'мана в бою восстанавливается одним механизмом (3/с, v0.10.0)');
     ok(cm.cooldowns.telekinesis === 0 && cm.time === 0, 'holdEnemy: враг и время боя стоят, перезарядка дара идёт');
   }
   // --- зелья вне боя

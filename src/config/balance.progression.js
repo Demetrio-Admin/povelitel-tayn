@@ -1,6 +1,7 @@
 // Развитие даров, ресурсы, таймеры и награды за события.
 // Источник: Progression & Economy v0.1, First Location Blueprint v0.1 (зоны E, F).
 import { RESOURCE_ITEMS } from './resources.js';
+import { STORY_ITEMS } from './storyItems.js';
 
 export const ITEMS = {
   coins:        { name: 'Монеты',          icon: 'icon_coin' },
@@ -11,6 +12,8 @@ export const ITEMS = {
   moonstone:    { name: 'Лунный камень (редкий)', icon: 'icon_shard' },
   rare_core:    { name: 'Редкое ядро',      icon: 'icon_core' },
   ...RESOURCE_ITEMS, // v0.8: лесные грибы, смола, пыль и расходники (названия лунной травы и осколка берутся отсюда)
+  // v0.10.0: сюжетные предметы первой главы
+  ...Object.fromEntries(Object.entries(STORY_ITEMS).map(([id, it]) => [id, { name: it.name, icon: it.icon }])),
 };
 
 // Прототипные таймеры — секунды. Live-значения храним рядом для справки.

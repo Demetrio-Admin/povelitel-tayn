@@ -14,6 +14,7 @@
 // а не дельты patch (иначе при нехватке монет сервер обрезал бы списание до нуля, а HP всё равно стало бы полным).
 import { createDefaultState } from '../state/GameState.js';
 import { HERO_LEVELS, HEALING } from '../config/balance.hero.js';
+import { serverRules } from '../config/storyItems.js';
 
 export const ABILITY_IDS = ['telekinesis', 'fire', 'seal'];
 export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal'];
@@ -209,14 +210,94 @@ export function healPriceOf(s) {
   return Math.ceil((max - cur) / HEALING.hpPerCoin - 1e-9);
 }
 
+// ---------------------------------------------------------------- v0.10.0: крафт, сюжетные предметы, миграция
+const RULES = serverRules();
+const has = (s, ev) => s.quests.includes(ev);
+const addEvent = (s, ev) => { if (!s.quests.includes(ev)) s.quests = [...s.quests, ev]; };
+const addItem = (s, id, n) => { s.inventory[id] = clamp((s.inventory[id] || 0) + n, 0, LIMITS.maxCounter); };
+
+/**
+ * Разовая награда операции (зеркало SQL _grant): опыт героя (уровень растёт по таблице; перед повышением «полные» HP/мана
+ * фиксируются числом, как GameState.addHeroXP), монеты, предметы, опыт школ, topUp — «не меньше» (гарантия цены изучения).
+ */
+function grant(s, reward = {}) {
+  if (reward.heroXP) {
+    const before = s.level;
+    s.xp = clamp(s.xp + reward.heroXP, 0, LIMITS.maxXp);
+    const lvl = Math.max(s.level, levelForXp(s.xp));
+    if (lvl > before) {
+      const mx = maxVitals(before);
+      if (!num(s.hp)) s.hp = mx.hp;
+      if (!num(s.mana)) s.mana = mx.mana;
+    }
+    s.level = lvl;
+  }
+  if (reward.coins) addItem(s, 'coins', reward.coins);
+  for (const [k, v] of Object.entries(reward.items || {})) addItem(s, k, v);
+  for (const [k, v] of Object.entries(reward.schoolXP || {})) s.school[k] = clamp((s.school[k] || 0) + v, 0, LIMITS.maxCounter);
+  for (const [k, v] of Object.entries(reward.topUp?.school || {})) s.school[k] = Math.max(s.school[k] || 0, v);
+  for (const [k, v] of Object.entries(reward.topUp?.items || {})) s.inventory[k] = Math.max(s.inventory[k] || 0, v);
+}
+
+/** Изготовление: рецепт известен, не уже сделан (сюжетный), ингредиентов хватает — иначе ничего не меняется. */
+function craft(s, id) {
+  const r = typeof id === 'string' && Object.hasOwn(RULES.recipes, id) ? RULES.recipes[id] : null;
+  if (!r) return { ok: false, reason: 'unknown' };
+  if (!r.requires.every(ev => has(s, ev))) return { ok: false, reason: 'locked' };
+  if (r.blockedBy.some(ev => has(s, ev))) return { ok: false, reason: 'done' };
+  const missing = Object.entries(r.needs).filter(([k, n]) => (s.inventory[k] || 0) < n).map(([k]) => k).sort();
+  if (missing.length) return { ok: false, reason: 'missing', missing };
+  for (const [k, n] of Object.entries(r.needs)) addItem(s, k, -n);
+  addItem(s, r.result, r.amount);
+  if (r.crafted) addEvent(s, r.crafted);
+  let firstCraft = false;
+  if (!has(s, RULES.firstCraft.event)) { addEvent(s, RULES.firstCraft.event); grant(s, RULES.firstCraft.reward); firstCraft = true; }
+  return { ok: true, recipe: id, result: r.result, amount: r.amount, firstCraft };
+}
+
+/** Применение сюжетного предмета: условия, предмет (и мана) списываются вместе с событием и наградой — одной операцией. */
+function useItem(s, id) {
+  const u = typeof id === 'string' && Object.hasOwn(RULES.uses, id) ? RULES.uses[id] : null;
+  if (!u) return { ok: false, reason: 'unknown' };
+  if (u.blockedBy.some(ev => has(s, ev))) return { ok: false, reason: 'done' };
+  if (!u.requires.every(ev => has(s, ev))) return { ok: false, reason: 'locked' };
+  if ((s.inventory[id] || 0) < 1) return { ok: false, reason: 'missing' };
+  if (u.mana) {
+    const cur = num(s.mana) ? clamp(s.mana, 0, maxVitals(s.level).mana) : maxVitals(s.level).mana;
+    if (cur < u.mana) return { ok: false, reason: 'mana', mana: u.mana };
+    s.mana = cur - u.mana;
+  }
+  addItem(s, id, -1);
+  for (const ev of u.events) addEvent(s, ev);
+  grant(s, u.reward);
+  return { ok: true, item: id, events: u.events };
+}
+
+/** Разовая миграция v0.10: ядро Стража тем, кто победил его до главы и не имеет ядра (флаг — всегда). */
+function migrateV10(s) {
+  const m = RULES.migration;
+  if (has(s, m.event)) return { ok: false, reason: 'already' };
+  addEvent(s, m.event);
+  const core = s.enemies.includes(m.guardian) && !(s.inventory[m.item] > 0) && !m.notIf.some(ev => has(s, ev));
+  if (core) addItem(s, m.item, 1);
+  return { ok: true, core: core ? 1 : 0 };
+}
+
 /**
  * Атомарные действия сервера (зеркало player_action в supabase/schema.sql). Возвращает { snapshot, result }.
  *   { op: 'heal' }        — полное HP за монеты; при нехватке ничего не меняется
  *   { op: 'starter_kit' } — один раз: событие mirra_starter_kit + настой жизни и лунный эликсир
+ *   v0.10.0:
+ *   { op: 'craft', recipe } — изготовление в котле (первый крафт: +15 опыта один раз)
+ *   { op: 'use', item }     — применение сюжетного предмета (фитиль, состав, связка + 20 маны)
+ *   { op: 'migrate_v10' }   — разовая компенсация ядра старым сохранениям
  */
 export function applyAction(snap, action = {}) {
   const s = JSON.parse(JSON.stringify(snap));
   const op = isObj(action) ? action.op : null;
+  if (op === 'craft') { const result = craft(s, action.recipe); return { snapshot: result.ok ? s : JSON.parse(JSON.stringify(snap)), result }; }
+  if (op === 'use') { const result = useItem(s, action.item); return { snapshot: result.ok ? s : JSON.parse(JSON.stringify(snap)), result }; }
+  if (op === 'migrate_v10') { const result = migrateV10(s); return { snapshot: result.ok ? s : JSON.parse(JSON.stringify(snap)), result }; }
   if (op === 'heal') {
     const price = healPriceOf(s);
     if (price <= 0) return { snapshot: s, result: { ok: false, reason: 'full', price: 0 } };

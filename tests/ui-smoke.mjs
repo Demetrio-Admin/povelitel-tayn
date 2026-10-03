@@ -185,7 +185,7 @@ await mute(async () => {
     sv.state.data.heroLevel = 4; sv.state.data.heroXP = 370; h.refreshHud();
     ok(h.levelText.text === 'Ур. 4' && h.xpCaption.text === 'До 5 ур.: 60 опыта' && Math.abs(h.xpBar.frac - 0.625) < 1e-6, 'HUD: ур. 4, 370 опыта → полоса 62,5%, «До 5 ур.: 60 опыта»');
     const ups = sv.state.addHeroXP(80); h.onReward({ granted: { heroXP: 80 }, levelUps: ups });
-    ok(h.levelText.text === 'Ур. 5' && h.xpCaption.text === 'Максимальный уровень' && h.xpBar.frac === 1, 'HUD: после нового уровня 5 — «Максимальный уровень», без шестого уровня');
+    ok(h.levelText.text === 'Ур. 5' && h.xpCaption.text === 'До 6 ур.: 200 опыта', 'HUD: после нового уровня 5 — дальше «До 6 ур.» (v0.10.0: уровни до 10)');
     ok(!/NaN|null|undefined|-/.test(h.xpCaption.text), 'HUD: подпись опыта без NaN/null/отрицательных');
     // HP и мана — из активной сцены (бой/исследование), не из максимума героя
     h.update(20000, 200);
@@ -254,7 +254,7 @@ await mute(async () => {
     const before = snap();
     h.portraitHit.emit('pointerdown');
     const pt = texts(h.modal.container).join(' | ');
-    ok(h.modal?.opts?.profile && pt.includes('Уровень 5') && pt.includes('41 / 144') && pt.includes('Лунные осколки') && pt.includes('Максимальный уровень'), 'портрет → профиль героя с реальными данными');
+    ok(h.modal?.opts?.profile && pt.includes('Уровень 5') && pt.includes('41 / 144') && pt.includes('Лунные осколки') && pt.includes('До 6 ур.'), 'портрет → профиль героя с реальными данными');
     h.closeModal(null);
     ok(!h.modal && !sv.modalOpen && snap() === before, 'профиль героя закрывается и не меняет сохранение');
 

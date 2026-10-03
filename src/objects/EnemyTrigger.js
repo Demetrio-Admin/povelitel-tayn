@@ -8,6 +8,26 @@ import * as vitals from '../state/vitals.js';
 
 /** Ключ состояния попытки боя в state.data.worldObjects (сохраняется на сервере, «последний записал»). */
 export const encKey = (spawnId) => `enc:${spawnId}`;
+/**
+ * v0.10.0: живое состояние возобновляемого места (cfg.repeatSec): { wins — победных циклов, at — время последней победы }.
+ * История первой победы (state.enemies) не очищается; враг снова на месте, когда прошло repeatSec с последней победы.
+ * Возврат через несколько часов даёт одного врага (и одну выдачу запаса), а не несколько циклов.
+ */
+export const repKey = (spawnId) => `rep:${spawnId}`;
+export function repState(state, spawnId) { return state.getObject(repKey(spawnId)) || null; }
+/** Записать победу на возобновляемом месте (вызывает CombatScene вместе с наградой, до сохранения). */
+export function recordRepeatWin(state, spawnId) {
+  const r = repState(state, spawnId);
+  state.setObject(repKey(spawnId), { wins: (r?.wins || 0) + 1, at: state.now() });
+}
+/** Побеждён ли враг сейчас (с учётом возрождения возобновляемых мест). */
+export function enemyDownNow(state, cfg) {
+  if (!state.isEnemyDefeated(cfg.id)) return false;
+  if (!cfg.repeatSec) return true;
+  const r = repState(state, cfg.id);
+  if (!r || !Number.isFinite(r.at)) return false;  // старая победа без отметки времени — место уже восстановилось
+  return state.now() - r.at < cfg.repeatSec * 1000;
+}
 
 /**
  * EnemyTrigger — враг на карте exploration. При входе героини в radius сцена запускает CombatScene.
@@ -24,12 +44,15 @@ export class EnemyTrigger {
     this.id = cfg.id;
     this.def = ENEMIES[cfg.enemy];
     this.grace = 0;
-    this.defeated = services.state.isEnemyDefeated(cfg.id);
+    this.repeatable = !!cfg.repeatSec;
+    this.defeated = enemyDownNow(services.state, cfg);
+    this.mustLeave = false;   // возродился рядом с героиней — бой только после того, как она выйдет из круга и вернётся
 
     this.ring = scene.add.ellipse(cfg.x, cfg.y, cfg.radius * 2, cfg.radius * 1.1)
       .setStrokeStyle(2, COLORS.danger, 0.35).setFillStyle(COLORS.danger, 0.05).setDepth(DEPTH.path + 1);
     this.sprite = scene.add.image(cfg.x, cfg.y, this.def.texture).setOrigin(0.5, 1);
     applyDisplaySize(this.sprite, this.def.texture);
+    if (this.def.tint) this.sprite.setTint(this.def.tint);
     if (cfg.scale) this.sprite.setScale(this.sprite.scaleX * cfg.scale, this.sprite.scaleY * cfg.scale);
     this.sprite.setDepth(DEPTH.mainBase + cfg.y);
     this.nameText = scene.add.text(cfg.x, cfg.y - this.sprite.displayHeight - 14, this.def.name, {
@@ -39,8 +62,36 @@ export class EnemyTrigger {
     this.idle = scene.tweens.add({ targets: this.sprite, scaleY: this.baseScaleY * 1.04, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     this.blocker = cfg.collide ? scene.addBlocker(cfg.x, cfg.y, cfg.collide.w, cfg.collide.h) : null;
 
-    if (this.defeated) this.clear(false);
+    if (this.defeated) { if (this.repeatable) this.hide(false); else this.clear(false); }
     else this.refresh();
+  }
+
+  get visuals() { return [this.sprite, this.nameText, this.ring]; }
+
+  /** Возобновляемое место: враг уходит до следующего цикла (объекты не уничтожаются). */
+  hide(animate = true) {
+    this.defeated = true;
+    if (this.blocker) { this.blocker.destroy(); this.blocker = null; }
+    if (animate) this.scene.tweens.add({ targets: this.visuals, alpha: 0, duration: 700, onComplete: () => this.visuals.forEach(o => o.setVisible(false)) });
+    else this.visuals.forEach(o => o.setVisible(false).setAlpha(0));
+  }
+
+  /** Прошло repeatSec — охрана снова на месте. Если героиня стоит рядом, бой не начинается, пока она не отойдёт. */
+  respawn(player = this.scene.player) {
+    this.defeated = false;
+    const cfg = this.cfg, p = player;
+    if (cfg.collide && !this.blocker) this.blocker = this.scene.addBlocker(cfg.x, cfg.y, cfg.collide.w, cfg.collide.h);
+    this.mustLeave = !!p && this.inside(p, 1.4);
+    this.refresh();
+    this.visuals.forEach(o => o.setAlpha(0));
+    this.scene.tweens.add({ targets: this.visuals, alpha: 1, duration: 900 });
+    this.scene.twinkle?.(cfg.x, cfg.y - 40, COLORS.danger);
+  }
+
+  inside(p, k = 1) {
+    const dx = (p.x - this.cfg.x) / (this.cfg.radius * k);
+    const dy = (p.y - this.cfg.y) / (this.cfg.radius * 0.55 * k);
+    return dx * dx + dy * dy <= 1;
   }
 
   requirementsMet() {
@@ -94,16 +145,17 @@ export class EnemyTrigger {
   }
 
   update(dt, player) {
+    if (this.repeatable && this.defeated && !enemyDownNow(services.state, this.cfg)) this.respawn(player);
     if (!this.isActive() || this.awaitingRetry) return false;   // после поражения — только по кнопке
     this.grace = Math.max(0, this.grace - dt);
     if (this.grace > 0) return false;
-    const dx = (player.x - this.cfg.x) / this.cfg.radius;
-    const dy = (player.y - this.cfg.y) / (this.cfg.radius * 0.55);
-    return dx * dx + dy * dy <= 1;
+    if (this.mustLeave) { if (!this.inside(player, 1.4)) this.mustLeave = false; return false; }
+    return this.inside(player);
   }
 
-  /** Враг побеждён — убираем с карты. */
+  /** Враг побеждён — убираем с карты (возобновляемое место — только прячем до следующего цикла). */
   clear(animate = true) {
+    if (this.repeatable && this.sprite?.active) { this.hide(animate); return; }
     this.defeated = true;
     this.idle?.stop();
     if (this.blocker) { this.blocker.destroy(); this.blocker = null; }

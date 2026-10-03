@@ -6,6 +6,7 @@ import { EV } from '../config/events.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import * as vitals from '../state/vitals.js';
+import { useFailText } from '../ui/windows09.js';
 
 export const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 
@@ -271,38 +272,62 @@ export class AltarObject extends InteractiveObject {
     this.twinkle = (this.twinkle ?? 1) - dt;
     if (this.twinkle <= 0 && d < 520) { this.twinkle = 0.7 + Math.random(); this.scene.twinkle?.(this.x + (Math.random() - 0.5) * 120, this.baseY - 40 - Math.random() * 60, 0x9fe9ff); }
   }
-  get markerIcon() { return 'icon_shard'; }
+  get markerIcon() { return this.wickReady ? 'icon_wick' : 'icon_shard'; }
   get markerColor() { return 0x9fe9ff; }
-  get label() { return 'Алтарь'; }
+  get label() { return this.wickReady ? 'Вставить фитиль' : 'Алтарь'; }
+  /** v0.10.0: фитиль сварен и ждёт в сумке, алтарь ещё не горит. */
+  get wickReady() { const s = this.state; return s.hasEvent(EV.LUNAR_QUEST_START) && !s.hasEvent(EV.LUNAR_QUEST_COMPLETE) && s.item('lunar_wick') > 0; }
 
   interact() {
+    if (this.busy) return;
     const s = this.state;
     const need = LUNAR_QUEST.flamesRequired;
     if (!s.hasEvent(EV.LUNAR_QUEST_START)) {
       this.scene.dialog({
         title: 'Лунный алтарь', color: 0x9fe9ff,
-        text: `Алтарь потускнел. В чашах не хватает ${need} лунных огоньков.\n\nОдин висит на высокой ветке, другой спрятан под камнем, третий стережёт маленький зверь. Верните свет — и алтарь усилит ваш дар.`,
+        text: `Алтарь потускнел. Свет в нём держится на Лунном фитиле — а фитиль выгорел.\n\n`
+          + `Нужны ${need} лунных огонька: один висит на высокой ветке, другой спрятан под камнем, третий стережёт маленький зверь. `
+          + 'Из огоньков, травы, смолы и рунической пыли в котле Мирры получится новый фитиль.',
         buttons: [{ label: 'Найти огоньки', primary: true, onClick: () => { this.quests.complete(EV.LUNAR_QUEST_START); this.scene.refreshAll(); } }],
       });
       return;
     }
     if (!s.hasEvent(EV.LUNAR_QUEST_COMPLETE)) {
+      if (this.wickReady) { this.insertWick(); return; }
+      // v0.10.0: сырые огоньки алтарь не принимает — из них варят Лунный фитиль
       const have = s.flamesCollected();
-      if (have < need) { this.scene.toast(`Лунные огоньки: ${have}/${need}`, 0x9fe9ff); return; }
-      s.removeItem('lunar_flame', need);
-      this.scene.burst(this.x, this.sprite.y - 60, 0x9fe9ff, 30);
-      const res = this.quests.complete(EV.LUNAR_QUEST_COMPLETE);
-      const g = res?.granted;
-      this.scene.dialog({
-        title: 'Алтарь пробудился', color: 0x9fe9ff,
-        text: 'Огоньки заняли свои места. Лунный свет наполняет вас.\n\n'
-          + (g ? `Награда: +${g.heroXP} опыта, +${g.schoolXP.telekinesis || 0} опыта Телекинеза, +${g.items.lunar_shard || 0} лунн. осколков.\n\n` : '')
-          + 'Теперь у алтаря можно начать изучение Телекинеза II.',
-        buttons: [{ label: 'К изучению', primary: true, onClick: () => services.bus.emit(MSG.OPEN_UPGRADE, 'telekinesis_2') }, { label: 'Позже' }],
-      });
+      if (have < need && !s.hasEvent('lunar_wick_crafted')) this.scene.toast(`Лунные огоньки: ${have}/${need}. Из них в котле Мирры варят фитиль.`, 0x9fe9ff);
+      else this.scene.toast('Огоньки собраны. Сварите Лунный фитиль у котла Мирры: огоньки, трава, смола и пыль.', 0x9fe9ff);
       return;
     }
     services.bus.emit(MSG.OPEN_UPGRADE, Object.keys(UPGRADES)[0]);
+  }
+
+  /** Применить Лунный фитиль: одна операция — фитиль списан, алтарь горит, разовая награда (как раньше за огоньки). */
+  async insertWick() {
+    if (services.actions.busy) return;
+    this.busy = true;
+    const tk0 = this.state.data.schoolXP?.telekinesis || 0;
+    let r;
+    try { r = await services.actions.use('lunar_wick'); } finally { this.busy = false; }
+    if (!r.ok) {
+      const t = useFailText(r, 'Лунный фитиль');
+      if (t) this.scene.toast(t, COLORS.danger);
+      return;
+    }
+    services.audio.play('quest_update');
+    this.scene.burst(this.x, this.sprite.y - 60, 0x9fe9ff, 30);
+    this.scene.sparkleShower?.(this.x, this.sprite.y - 70, 0x9fe9ff);
+    const o = r.outcome || {};
+    const shards = o.items?.lunar_shard || 0;
+    const tk = Math.max(0, (this.state.data.schoolXP?.telekinesis || 0) - tk0);
+    this.scene.dialog({
+      title: 'Алтарь пробудился', color: 0x9fe9ff,
+      text: 'Фитиль занялся ровным лунным пламенем. Свет наполняет вас.\n\n'
+        + `Награда: +${o.heroXP || 0} опыта, +${tk} опыта Телекинеза${shards ? `, +${shards} лунн. осколков` : ''}.\n\n`
+        + 'Теперь у алтаря можно начать изучение Телекинеза II. Но лес всё ещё тревожится — Селена что-то чувствует.',
+      buttons: [{ label: 'К изучению', primary: true, onClick: () => services.bus.emit(MSG.OPEN_UPGRADE, 'telekinesis_2') }, { label: 'Позже' }],
+    });
   }
 }
 
@@ -337,31 +362,4 @@ export class FireCircleObject extends InteractiveObject {
   }
 }
 
-// ---------------------------------------------------------------------------
-// SealObject — Древние ворота (зона L). Печать в прототипе не реализована → SEAL_REQUIRED.
-export class SealObject extends InteractiveObject {
-  constructor(scene, cfg) {
-    super(scene, cfg);
-    this.ability = 'seal';
-    scene.addGlow(cfg.x, cfg.y - 120, COLORS.seal, 0.5, this, 2.4);
-  }
-  // ворота видны всегда (v0.3: реальный спрайт); до победы над Стражем они просто «молчат»
-  refresh() { if (this.removed) return; this.sprite.setVisible(true); for (const g of this.glows || []) g.setVisible(true); }
-  get markerIcon() { return 'icon_seal'; }
-  get markerColor() { return COLORS.seal; }
-  get label() { return 'Печать'; }
-  isAvailable() { return !this.removed; }
-  onFocus() { if (!this.state.hasEvent(this.cfg.completeEvent)) this.interact(); }
-  interact() {
-    // ворота открываются для финала только после победы над Лесным Стражем (маршрут прототипа)
-    if (this.cfg.requiresEvent && !this.state.hasEvent(this.cfg.requiresEvent)) {
-      this.scene.toast('Древние ворота молчат. Путь к ним стережёт Лесной Страж.', COLORS.seal);
-      return;
-    }
-    if (this.abilities.isUnlocked('seal')) { this.scene.toast('Печать настраивается… (следующий этап)'); return; }
-    this.scene.burst(this.x, this.baseY - 140, COLORS.seal, 24);
-    this.quests.complete(this.cfg.lockedEvent);
-    this.quests.complete(this.cfg.completeEvent);
-    services.bus.emit(MSG.FINAL_SCREEN);
-  }
-}
+// v0.10.0: Древние ворота — GateObject в objects/ChapterObjects.js (вместо SealObject прототипа).

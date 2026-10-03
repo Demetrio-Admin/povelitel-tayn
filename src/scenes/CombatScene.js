@@ -11,6 +11,7 @@ import { HeroAnimator } from '../systems/HeroAnimator.js';
 import { UI } from '../config/ui.config.js';
 import { UIBar, drawPlate } from '../ui/widgets.js';
 import { applyDisplaySize, itemName } from '../objects/InteractiveObject.js';
+import { recordRepeatWin } from '../objects/EnemyTrigger.js';
 import { POTIONS, POTION_ORDER, POTION_BATTLE_LIMIT } from '../config/resources.js';
 import { CombatTutorial } from '../systems/CombatTutorial.js';
 import { STORY, COMBAT_HINTS } from '../config/story.js';
@@ -89,6 +90,7 @@ export class CombatScene extends Phaser.Scene {
       this.started = true;
       if (this.tut.active) { const r = this.tut.reminder; if (r) this.tut.feedback = { text: r, left: 3 }; }
       else if (first) this.toast('Враг атакует сам. Прерывайте сильные атаки Телекинезом!', COLORS.telekinesis);
+      else if (this.def.phases) this.toast('Три фазы: кристалл — Телекинез, кора — Огонь, разрыв связи — Печать.', COLORS.seal);
       else if (this.def.armor) this.toast('Броня Стража держится на кристалле. Выберите его и разбейте Телекинезом.', COLORS.telekinesis);
       if (state.item('resin_flask') > 0) this.queueHint(COMBAT_HINTS.flask, 'flask');
     });
@@ -119,6 +121,8 @@ export class CombatScene extends Phaser.Scene {
     const mul = this.def.tier === 'strong' ? 1.5 : 1.7;
     s.setScale(s.scaleX * mul, s.scaleY * mul).setDepth(ENEMY_POS.y);
     this.enemySprite = s;
+    this.enemyTint = this.def.tint || null;   // v0.10.0: Страж узла отличается оттенком от Лесного Стража
+    if (this.enemyTint) s.setTint(this.enemyTint);
     this.enemyBase = { sx: s.scaleX, sy: s.scaleY };
     this.add.image(ENEMY_POS.x, ENEMY_POS.y - 4, 'hero_shadow').setDisplaySize(s.displayWidth * 0.9, 34).setDepth(ENEMY_POS.y - 1);
     this.idle = this.tweens.add({ targets: s, scaleY: s.scaleY * 1.04, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -297,10 +301,10 @@ export class CombatScene extends Phaser.Scene {
     this.enemyHpBar.setFraction(Math.max(0, e.hp / e.maxHp));
     this.enemyHpText.setText(`${Math.ceil(e.hp)} / ${e.maxHp}`);
     const st = [];
-    if (e.hasArmor) st.push(e.armorActive ? `Броня −${Math.round(this.def.armor.value * 100)}%` : `Броня разбита ${e.armorDisabledLeft.toFixed(0)}с`);
+    if (e.hasArmor) st.push(e.armorActive ? `Броня −${Math.round(e.def.armor.value * 100)}%` : `Броня разбита ${e.armorDisabledLeft.toFixed(0)}с`);
     if (e.burning) st.push(`Горение ${e.burn.left.toFixed(0)}с`);
     if (e.staggerLeft > 0) st.push('Оглушён');
-    if (e.defenseActive) st.push(`Защита −${Math.round(this.def.defense * 100)}%`);
+    if (e.defenseActive) st.push(`Защита −${Math.round(e.def.defense * 100)}%`);
     this.statusText.setText(st.join('   ·   '));
     this.armorGlow.setAlpha(e.armorActive ? 0.45 + Math.sin(this.time.now / 300) * 0.15 : 0);
     this.enemySprite.setTint(e.burning ? 0xffb38a : e.staggerLeft > 0 ? 0xb0b0ff : 0xffffff);
@@ -346,6 +350,9 @@ export class CombatScene extends Phaser.Scene {
     for (const ev of events) {
       switch (ev.type) {
         case 'damage': this.onDamage(ev); break;
+        case 'select':   // v0.10.0: тяжёлый камень с Телекинезом I не поднять — коротко объяснить
+          if (ev.refused) { services.audio.play('locked'); this.toast('Тяжёлый камень — нужен Телекинез II', COLORS.danger); }
+          break;
         case 'warning':
           this.warnTitle.setText(`⚠ ${ev.name}!`);
           this.warnHint.setText(ev.needsHeavy ? 'Выберите тяжёлый камень и нажмите Телекинез' : (ev.hint || ''));
@@ -388,6 +395,15 @@ export class CombatScene extends Phaser.Scene {
           this.burst(ENEMY_POS.x, ENEMY_POS.y - 120, 0xc9b5ff, 30);
           break;
         case 'armorBack': this.toast('Броня Стража восстановилась'); break;
+        case 'phase':   // v0.10.0: Страж узла сменил фазу — заметное изменение и короткое сообщение
+          // сообщение — между врагом и героиней (не поверх врага и предупреждения сильного удара)
+          this.showBanner(`Фаза ${ev.phase}\n${ev.message}`, ev.phase === 3 ? COLORS.seal : COLORS.fire, 2600, UI.type.combat);
+          if (ev.tint) { this.enemyTint = ev.tint; this.enemySprite.setTint(ev.tint); }
+          this.burst(ENEMY_POS.x, ENEMY_POS.y - this.enemySprite.displayHeight * 0.5, ev.tint || 0xffffff, 40);
+          this.cameras.main.shake(260, 0.01);
+          services.audio.play('armor_break');
+          services.audio.vibrate([40, 30, 60]);
+          break;
         case 'status':
           if (ev.status === 'vulnerable') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Уязвим!', COLORS.fire, UI.type.combat);
           if (ev.status === 'defenseOff') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Защита снята', COLORS.fire, UI.type.combat);
@@ -411,7 +427,7 @@ export class CombatScene extends Phaser.Scene {
       else a.play('enemy_hit');
       if (!ev.tick) {
         this.enemySprite.setTintFill(0xffffff);
-        this.time.delayedCall(70, () => this.enemySprite.clearTint());
+        this.time.delayedCall(70, () => { if (this.enemyTint) this.enemySprite.setTint(this.enemyTint); else this.enemySprite.clearTint(); });
         this.enemyShake = Math.max(this.enemyShake, ev.school === 'auto' ? 0.35 : 0.9);
         if (ev.school !== 'auto') this.freeze(ev.heavy ? 120 : 60);
       }
@@ -492,9 +508,9 @@ export class CombatScene extends Phaser.Scene {
     this.time.delayedCall(800, () => e.destroy());
   }
 
-  showBanner(text, color) {
-    const t = this.add.text(VIEW.width / 2, 640, text, { fontFamily: FONT, fontSize: UI.type.title, align: 'center', wordWrap: { width: 620 }, color: hex(color), stroke: '#000', strokeThickness: 7 }).setOrigin(0.5).setDepth(8000).setAlpha(0);
-    this.tweens.add({ targets: t, alpha: 1, duration: 200, yoyo: true, hold: COMBAT.introSec * 800, onComplete: () => t.destroy() });
+  showBanner(text, color, holdMs = COMBAT.introSec * 800, fontSize = UI.type.title) {
+    const t = this.add.text(VIEW.width / 2, 640, text, { fontFamily: FONT, fontSize, align: 'center', wordWrap: { width: 620 }, color: hex(color), stroke: '#000', strokeThickness: 7 }).setOrigin(0.5).setDepth(8000).setAlpha(0);
+    this.tweens.add({ targets: t, alpha: 1, duration: 200, yoyo: true, hold: holdMs, onComplete: () => t.destroy() });
   }
 
   toast(text, color) { this.bus.emit(MSG.TOAST, text, color); }
@@ -594,12 +610,15 @@ export class CombatScene extends Phaser.Scene {
       services.audio.play('victory');
       services.audio.vibrate([40, 40, 80]);
       this.burst(ENEMY_POS.x, ENEMY_POS.y - 80, COLORS.gold, 40);
+      // v0.10.0: первая победа на месте — полная награда; повторная (возобновляемое место) — уменьшенная, без разовых бонусов
+      const first = !state.isEnemyDefeated(this.spawnId);
       state.markEnemyDefeated(this.spawnId);
-      const r = state.applyReward(this.def.rewards);
+      if (this.spawn.repeatSec) recordRepeatWin(state, this.spawnId);
+      const r = state.applyReward(first || !this.def.repeatRewards ? this.def.rewards : this.def.repeatRewards);
       vitals.afterVictory(state, this.cm.hero.mana);   // HP — новый максимум после наград, мана — фактический остаток
       if (this.spawn.opensPath) state.openPath(this.spawn.opensPath);
       state.save();
-      if (this.spawn.defeatEvent) quests.complete(this.spawn.defeatEvent, { spawnId: this.spawnId });
+      if (this.spawn.defeatEvent && first) quests.complete(this.spawn.defeatEvent, { spawnId: this.spawnId });
       this.bus.emit(MSG.QUEST_CHANGED);
       this.bus.emit(MSG.HUD_REFRESH);
       const g = r.granted;
@@ -624,7 +643,7 @@ export class CombatScene extends Phaser.Scene {
       services.audio.vibrate(200);
       this.time.delayedCall(700, () => this.bus.emit(MSG.DIALOG, {
         title: 'Поражение', color: COLORS.danger,
-        text: `${STORY.defeat}\n\nЗдоровье: ${v.hp} / ${v.maxHp}   ·   мана: ${v.mana} / ${v.maxMana}${lost ? `\nПотеряно монет: ${lost}.` : ''}\n\n${STORY.retryHint}\nСовет: следите за красным предупреждением и держите Телекинез готовым для прерывания.${this.def.armor ? ' Сначала разбейте кристалл, чтобы снять броню.' : ''}`,
+        text: `${STORY.defeat}\n\nЗдоровье: ${v.hp} / ${v.maxHp}   ·   мана: ${v.mana} / ${v.maxMana}${lost ? `\nПотеряно монет: ${lost}.` : ''}\n\n${STORY.retryHint}\nСовет: следите за красным предупреждением и держите Телекинез готовым для прерывания.${this.def.phases ? ' Кристалл снимает броню, Огонь — кору, а в третьей фазе сильный удар прерывает только Печать.' : this.def.armor ? ' Сначала разбейте кристалл, чтобы снять броню.' : ''}`,
         buttons: [{ label: 'Вернуться', primary: true, onClick: () => this.exit('defeat') }],
       }));
     }

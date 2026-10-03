@@ -84,7 +84,7 @@ export function initServices() {
   services.alchemy = new Alchemy(services.state, bus);
   services.dialogue = new DialogueSystem({ state: services.state, log: services.log, bus, goalText: () => services.quests.objectiveText() });
   services.guidance = new GuidanceSystem({ state: services.state, quests: services.quests, log: services.log, bus });
-  services.actions = new PlayerActions({ state: services.state, getSession: () => services.session });
+  services.actions = new PlayerActions({ state: services.state, getSession: () => services.session, bus });
   // отправляем прогресс, когда игрок сворачивает вкладку или закрывает игру
   const flushNow = () => { if (!services.session) return; services.savePosition?.(); services.session.flush({ keepalive: true }).catch(() => {}); };
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });

@@ -40,7 +40,7 @@ console.log('\nБаза: подделки клиента');
   q(`insert into auth.users (id) values ('${C}');`); q(`select public.create_player('witch');`, C);
   const c1 = JSON.parse(q(`select public.sync_player('{"level":100,"inv":{"coins":999999999,"lunar_shard":1000},"xp":999999999,"school":{"fire":1000000},"play":999999999}');`, C).out);
   ok(c1.inventory.coins === 500 && c1.inventory.lunar_shard === 50, 'gold = 999999999 не принимается: за раз не больше 500 монет и 50 предметов (' + c1.inventory.coins + ')');
-  ok(c1.xp === 1000 && c1.level === 5, 'опыт за раз не больше 1000; уровень сервер считает сам по порогам (' + c1.level + '), «level: 100» игнорируется');
+  ok(c1.xp === 1000 && c1.level === 7, 'опыт за раз не больше 1000; уровень сервер считает сам по порогам (' + c1.level + '), «level: 100» игнорируется');
   ok(c1.school.fire === 500 && c1.play === 600000, 'опыт дара и время игры тоже ограничены');
   const c2 = JSON.parse(q(`select public.sync_player('{"inv":{"coins":-200}}');`, C).out);
   ok(c2.inventory.coins === 300, 'трата работает дельтой');

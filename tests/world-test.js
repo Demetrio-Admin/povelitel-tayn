@@ -1,13 +1,12 @@
 // Тесты мира: форма дорог и воды, таблица коллизий, проходимость маршрута. node tests/world-test.js
 import { WORLD, COLLIDERS, INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
 import { ROADS, WATERS } from '../src/config/world.terrain.js';
-import { PROPS } from '../src/config/world.props.js';
 import { ASSET_FILES } from '../src/config/assets.manifest.js';
 import { buildRoad, buildTerrain, distToRoad, onWater } from '../src/world/terrain.js';
 import { PROP_DEFS } from '../src/world/propDefs.js';
 import { collectSolids, propSolid } from '../src/world/solids.js';
 import { buildWalkGrid, floodFrom, reachableNear } from '../src/world/walk.js';
-import { applyEdits, diffEdits, applyPos, diffPos, exportEditsFile, resolveMap, saveDraft, loadDraft, DRAFT_KEY, baseTerrain, applyListEdits, applyTerrainEdits, diffList, diffTerrain } from '../src/world/mapData.js';
+import { PROPS, applyEdits, diffEdits, applyPos, diffPos, exportEditsFile, resolveMap, saveDraft, loadDraft, DRAFT_KEY, baseTerrain, applyListEdits, applyTerrainEdits, diffList, diffTerrain } from '../src/world/mapData.js';
 import * as TE from '../src/world/terrainEdit.js';
 import { History, pickAt, snapValue, nextId, clamp } from '../src/world/editorCore.js';
 import { checkWalkability } from '../src/world/check.js';
@@ -81,7 +80,7 @@ console.log('\nМир: таблица коллизий');
 console.log('\nМир: проходимость');
 {
   const W = WORLD.width, H = WORLD.height;
-  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01'];
+  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial'];
   const objById = Object.fromEntries([...INTERACTIVES, ...ENEMY_SPAWNS].map(o => [o.id, o]));
   const near = (grid, seen, id, r) => { const o = objById[id]; return reachableNear(grid, seen, o.x, o.y, r ?? Math.min(o.radius || 100, 120)); };
 
@@ -90,7 +89,7 @@ console.log('\nМир: проходимость');
   for (const id of ['magic_book', 'glade_rock', 'moon_plant', 'glade_cache', 'trail_cache', 'scavenger_01', 'lunar_altar', 'flame_a', 'altar_stone', 'flame_c', 'lunar_guard']) {
     ok(near(closed, seenC, id), `ворота закрыты: «${id}» достижим`);
   }
-  for (const id of ['moonstone', 'west_chest', 'forest_guardian_01', 'fire_circle', 'dry_bush', 'ancient_gate']) {
+  for (const id of ['moonstone', 'west_chest', 'forest_guardian_01', 'fire_circle', 'dry_bush', 'ancient_gate', 'rootling_01', 'dust_stash', 'approach_cache', 'node_trial', 'forest_node']) {
     ok(!near(closed, seenC, id), `ворота закрыты: «${id}» НЕ достижим (нет обхода)`);
   }
 
@@ -99,6 +98,18 @@ console.log('\nМир: проходимость');
   for (const o of [...INTERACTIVES, ...ENEMY_SPAWNS]) {
     if (['flame_c'].includes(o.id)) continue;
     ok(near(open, seenO, o.id), `ворота открыты: «${o.id}» достижим`);
+  }
+  // v0.10.0: Древние ворота — настоящая преграда (стена по бокам), а узел за ними стережёт испытание
+  {
+    const g1 = buildWalkGrid({ width: W, height: H, solids: solidsFor(['corrupted_roots', 'heavy_boulder', 'forest_guardian_01']) });
+    const s1 = floodFrom(g1, WORLD.playerStart.x, WORLD.playerStart.y);
+    ok(near(g1, s1, 'ancient_gate') && !near(g1, s1, 'forest_node') && !near(g1, s1, 'node_trial'), 'ворота закрыты Печатью: поляна узла не достижима в обход ворот');
+    // зона, где испытание начинается само (эллипс триггера), считается непроходимой: обойти его к узлу нельзя
+    const t = objById.node_trial, rx = t.radius * 0.7, ry = t.radius * 0.55 * 0.7;
+    const zone = { x: t.x - rx, y: t.y - ry, w: rx * 2, h: ry * 2, src: 'trigger' };
+    const g2 = buildWalkGrid({ width: W, height: H, solids: [...solidsFor(['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate']), zone] });
+    const s2 = floodFrom(g2, WORLD.playerStart.x, WORLD.playerStart.y);
+    ok(reachableNear(g2, s2, t.x - t.radius, t.y, 60) && !near(g2, s2, 'forest_node', 60), 'ворота открыты: к испытанию подойти можно, к узлу мимо него — нет');
   }
   // каждая дорога достижима по всей длине (кроме мест за закрытыми воротами)
   const roadOk = terrain.roads.every(r => { const mid = r.poly[Math.floor(r.poly.length / 4)]; return reachableNear(open, seenO, mid[0], mid[1], 60); });

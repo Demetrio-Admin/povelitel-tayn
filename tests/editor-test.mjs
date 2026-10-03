@@ -62,6 +62,9 @@ const draft = () => JSON.parse(store.get(DRAFT_KEY) || 'null');
 // В world.edits.js уже могут быть правки дорог и стен (их делает владелец карты). Черновик хранит их вместе с новыми,
 // поэтому «ничего не изменилось» = совпадает с файлом.
 const { EDITS: FILE_EDITS } = await import('../src/config/world.edits.js');
+// Механику редактора проверяем на базовой дорожке «door» (src/config/world.terrain.js). В настоящей карте её можно удалить
+// в редакторе (world.edits.js: roads.door = null) — тогда для этого теста возвращаем её, остальные правки карты не трогаем.
+if (FILE_EDITS.roads && FILE_EDITS.roads.door === null) delete FILE_EDITS.roads.door;
 const same = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {});
 const without = (o, k) => { const c = { ...(o || {}) }; delete c[k]; return c; };
 
@@ -170,8 +173,13 @@ console.log('\nРедактор: дороги и река');
   ok(ed.waters.find(w => w.id === 'creek').base > bw, 'река: «Шире»');
   // касание тела дороги выбирает её, пустое место — снимает выбор
   ed.selectT(null);
-  const cp = ed.roads.find(r => r.id === 'cross').pts, mp = [(cp[6][0] + cp[7][0]) / 2, (cp[6][1] + cp[7][1]) / 2];
-  ed.onDown(P(mp[0], mp[1] + 20)); ed.onUp(P(mp[0], mp[1] + 20));
+  // отрезок «cross», который не перекрыт другими дорогами карты (карту правят в редакторе — пересечения меняются)
+  const cp = ed.roads.find(r => r.id === 'cross').pts;
+  for (let i = 0; i < cp.length - 1; i++) {
+    const mp = [(cp[i][0] + cp[i + 1][0]) / 2, (cp[i][1] + cp[i + 1][1]) / 2];
+    ed.selectT(null); ed.onDown(P(mp[0], mp[1] + 20)); ed.onUp(P(mp[0], mp[1] + 20));
+    if (ed.tsel?.id === 'cross') break;
+  }
   ok(ed.tsel?.id === 'cross' && ed.tsel.i === null && ed.tsel.seg != null, 'касание тела дороги выбирает дорогу и отрезок');
   ed.onDown(P(50, 50)); ed.onUp(P(50, 50));
   ok(ed.tsel === null, 'касание пустого места снимает выбор');

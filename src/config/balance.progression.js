@@ -1,6 +1,7 @@
 // Развитие даров, ресурсы, таймеры и награды за события.
 // Источник: Progression & Economy v0.1, First Location Blueprint v0.1 (зоны E, F).
 import { RESOURCE_ITEMS } from './resources.js';
+import { STORY_ITEMS } from './storyItems.js';
 
 export const ITEMS = {
   coins:        { name: 'Монеты',          icon: 'icon_coin' },
@@ -11,6 +12,8 @@ export const ITEMS = {
   moonstone:    { name: 'Лунный камень (редкий)', icon: 'icon_shard' },
   rare_core:    { name: 'Редкое ядро',      icon: 'icon_core' },
   ...RESOURCE_ITEMS, // v0.8: лесные грибы, смола, пыль и расходники (названия лунной травы и осколка берутся отсюда)
+  // v0.10.0: сюжетные предметы первой главы
+  ...Object.fromEntries(Object.entries(STORY_ITEMS).map(([id, it]) => [id, { name: it.name, icon: it.icon }])),
 };
 
 // Прототипные таймеры — секунды. Live-значения храним рядом для справки.
@@ -48,6 +51,11 @@ export const EVENT_REWARDS = {
   heavy_path_open:         { heroXP: 20 },
   unlock_fire_1:           { heroXP: 30 },
   fire_gate_open:          { heroXP: 20, schoolXP: { fire: 20 } },
+  // v0.10.0: Селена открывает Печать I сюжетно — без уровня, платы и таймера. Учебный знак и ворота дают только
+  // обычный школьный опыт мира (+6), отдельной награды «за обучение» нет.
+  unlock_seal_1:           { heroXP: 60 },
 };
+// lunar_quest_complete теперь выдаёт атомарная операция «применить Лунный фитиль» (storyItems.js STORY_USES.lunar_wick,
+// те же числа); запись выше осталась для старого пути QuestFlags.complete и тестов — алтарь его больше не вызывает.
 
 export const LUNAR_QUEST = { flamesRequired: 3 };

@@ -206,7 +206,7 @@ export class GameState {
     if (this.data.research) return { ok: false, reason: this.data.research.upgradeId === upgradeId ? 'in_progress' : 'busy' };
     const r = up.requires || {};
     const checks = [];
-    if (r.heroLevel) checks.push({ label: `Уровень героя ${r.heroLevel}`, have: this.data.heroLevel, need: r.heroLevel });
+    if (r.heroLevel) checks.push({ label: `Уровень ${r.heroLevel}`, have: this.data.heroLevel, need: r.heroLevel });
     if (r.abilityLevel) checks.push({ label: `${up.ability} ${r.abilityLevel}`, have: this.abilityLevel(up.ability), need: r.abilityLevel, hidden: true });
     checks.push({ label: 'Опыт дара', have: this.data.schoolXP[up.ability] || 0, need: up.cost.schoolXP });
     for (const [k, v] of Object.entries(up.cost.items || {})) checks.push({ label: k, item: k, have: this.item(k), need: v });

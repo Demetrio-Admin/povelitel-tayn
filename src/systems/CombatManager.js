@@ -51,12 +51,14 @@ export class CombatManager {
   selectObject(id) {
     const o = this.fieldObjects.find(f => f.id === id);
     if (!o || !o.available) return false;
+    // v0.10.0: вес проверяется в бою так же, как в мире — тяжёлый камень только с Телекинезом II
+    if (o.def.throwable && !this.canLift(o)) { this.emit({ type: 'select', id: this.selectedId, refused: id, reason: 'heavy' }); return false; }
     this.selectedId = this.selectedId === id ? null : id;
     this.emit({ type: 'select', id: this.selectedId });
     return true;
   }
   cycleSelection() {
-    const avail = this.fieldObjects.filter(f => f.available);
+    const avail = this.fieldObjects.filter(f => f.available && (!f.def.throwable || this.canLift(f)));
     if (!avail.length) { this.selectedId = null; return; }
     const idx = avail.findIndex(f => f.id === this.selectedId);
     const next = idx + 1 >= avail.length ? null : avail[idx + 1].id;
@@ -64,6 +66,8 @@ export class CombatManager {
     this.emit({ type: 'select', id: next });
   }
   selectedObject() { return this.fieldObjects.find(f => f.id === this.selectedId && f.available) || null; }
+  /** Можно ли поднять объект текущим уровнем Телекинеза (ТК I — лёгкие и средние, ТК II — тяжёлые). */
+  canLift(o) { return !o.def.weight || this.abilities.canMoveWeight(o.def.weight); }
 
   // ---------- состояние кнопок ----------
   abilityState(id) {
@@ -89,9 +93,28 @@ export class CombatManager {
     if (id === 'telekinesis') this.castTelekinesis(s);
     else if (id === 'fire') this.castFire(s);
     else if (id === 'seal') this.castSeal(s);
+    this.flushPhases();
     this.checkResult();
     this.commit();
     return { ok: true };
+  }
+
+  /**
+   * v0.10.0: смена фазы врага (Страж узла) → событие для сцены. В фазах без брони кристалл поля больше не нужен —
+   * он рассыпается и не возвращается (его роль — только первая фаза).
+   */
+  flushPhases() {
+    for (const ev of this.enemy.drainPhaseEvents()) {
+      if (!this.enemy.hasArmor) {
+        for (const o of this.fieldObjects) {
+          if (!o.def.breaksArmor || o.gone) continue;
+          o.gone = true; o.available = false; o.respawnLeft = Infinity;
+          if (this.selectedId === o.id) this.selectedId = null;
+          this.emit({ type: 'objectUsed', id: o.id, action: 'shatter' });
+        }
+      }
+      this.emit(ev);
+    }
   }
 
   /**
@@ -123,6 +146,7 @@ export class CombatManager {
     } else return { ok: false, reason: 'unknown' };
     this.state.removeItem(id, 1);
     this.stats.potions = (this.stats.potions || 0) + 1;
+    this.flushPhases();
     this.checkResult();
     this.commit();
     return { ok: true };
@@ -139,16 +163,17 @@ export class CombatManager {
     if (obj && obj.def.breaksArmor) {
       obj.available = false;
       this.selectedId = null;
+      const armor = this.enemy.def.armor;
       const broke = this.enemy.breakArmor();
-      obj.respawnLeft = (this.def.armor ? this.def.armor.disabledSec : 0) + (obj.def.respawnAfterArmorSec || 0);
+      obj.respawnLeft = (armor ? armor.disabledSec : 0) + (obj.def.respawnAfterArmorSec || 0);
       this.emit({ type: 'objectUsed', id: obj.id, action: 'shatter' });
-      if (broke) this.emit({ type: 'armorBroken', sec: this.def.armor.disabledSec });
+      if (broke) this.emit({ type: 'armorBroken', sec: armor.disabledSec });
       this.handleInterrupt(tags);
       return;
     }
 
     let base = s.damage;
-    if (obj && obj.def.throwable) {
+    if (obj && obj.def.throwable && this.canLift(obj)) {
       const heavy = obj.def.weight === 'heavy';
       if (heavy) { base *= 1 + s.heavyObjectBonus; tags.push('telekinesis_heavy'); }
       base *= 1 + (s.throwDamageBonus || 0);
@@ -183,7 +208,7 @@ export class CombatManager {
     const r = this.enemy.tryInterrupt(tags);
     if (!r.attempted) return;
     if (r.ok) { this.stats.interrupts++; this.emit({ type: 'interrupt', ok: true }); }
-    else this.emit({ type: 'interrupt', ok: false, hint: this.def.strongAttack?.hint });
+    else this.emit({ type: 'interrupt', ok: false, hint: this.enemy.def.strongAttack?.hint });
   }
 
   // ---------- симуляция ----------
@@ -198,7 +223,7 @@ export class CombatManager {
     for (const id of ABILITY_ORDER) this.cooldowns[id] = Math.max(0, this.cooldowns[id] - dt);
     if (holdEnemy) {
       for (const o of this.fieldObjects) {
-        if (o.available) continue;
+        if (o.available || o.gone) continue;
         o.respawnLeft -= dt;
         if (o.respawnLeft <= 0) { o.available = true; this.emit({ type: 'objectRespawn', id: o.id }); }
       }
@@ -218,7 +243,7 @@ export class CombatManager {
 
     // объекты поля
     for (const o of this.fieldObjects) {
-      if (o.available) continue;
+      if (o.available || o.gone) continue;
       o.respawnLeft -= dt;
       if (o.respawnLeft <= 0) { o.available = true; this.emit({ type: 'objectRespawn', id: o.id }); }
     }
@@ -234,6 +259,7 @@ export class CombatManager {
         default: this.emit({ type: 'status', status: a.type });
       }
     }
+    this.flushPhases();
     this.checkResult();
     this.commit();
   }

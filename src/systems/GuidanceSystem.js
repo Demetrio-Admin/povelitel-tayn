@@ -2,6 +2,7 @@
 // Не знает про карту: возвращает id объектов, а координаты и рисунок подсветки берёт сцена.
 import { STEP_GUIDE, IDLE, HERO_LINES, RESOURCE_WHERE, NUDGES } from '../config/guidance.js';
 import { UPGRADES, ITEMS } from '../config/balance.progression.js';
+import { RECIPES } from '../config/recipes.js';
 import { MSG } from '../state/EventBus.js';
 
 export class GuidanceSystem {
@@ -46,11 +47,23 @@ export class GuidanceSystem {
     return 'Для изучения не хватает: ' + lack.map(c => `${ITEMS[c.item]?.name || c.item} ${c.have}/${c.need} (${RESOURCE_WHERE[c.item] || 'в лесу'})`).join('; ') + '.';
   }
 
-  /** Подсказки текущего шага (с учётом нехватки ресурсов на шаге изучения). */
+  /** v0.10.0: чего не хватает для сюжетного рецепта шага: [{ item, name, have, need, where }]. */
+  craftShortage(recipeId) {
+    const r = RECIPES[recipeId];
+    if (!r) return [];
+    return Object.entries(r.needs).map(([item, need]) => ({ item, name: ITEMS[item]?.name || item, have: this.state.item(item), need, where: RESOURCE_WHERE[item] || 'в лесу' }))
+      .filter(c => c.have < c.need);
+  }
+
+  /** Подсказки текущего шага (с учётом нехватки ресурсов на шаге изучения и на шаге сюжетного рецепта). */
   hints() {
     const s = this.step();
     const base = [...(STEP_GUIDE[s.id]?.hints || [])];
     if (s.id === 'research') { const sh = this.shortageText(); if (sh) base.unshift(sh); }
+    if (s.craft) {
+      const lack = this.craftShortage(s.craft);
+      if (lack.length) base.unshift('Для рецепта не хватает: ' + lack.map(c => `${c.name} ${c.have}/${c.need} (${c.where})`).join('; ') + '.');
+    }
     return base;
   }
 

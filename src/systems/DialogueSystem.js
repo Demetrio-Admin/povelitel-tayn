@@ -31,6 +31,7 @@ export class DialogueSystem {
       quest: (id) => log.status(id),
       defeated: (id) => s.isEnemyDefeated(id),
       hpMissing: vitals.hp(s) < vitals.maxHp(s) - 1e-9,   // v0.9: Мирра предлагает лечение
+      seen: (variantId) => this.seen(variantId),           // v0.10.0: разговор уже слышали (пояснение один раз)
     };
   }
 
@@ -161,6 +162,7 @@ export class DialogueSystem {
       else if (e.upgrade) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_UPGRADE, e.upgrade));
       else if (e.heal) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_HEAL));
       else if (e.kit) this.pendingAfter.push(() => this.bus?.emit(MSG.STARTER_KIT));
+      else if (e.seal) this.pendingAfter.push(() => this.bus?.emit(MSG.UNLOCK_SEAL));   // v0.10.0
     }
   }
 }

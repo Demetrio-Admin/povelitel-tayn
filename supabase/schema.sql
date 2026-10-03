@@ -108,7 +108,9 @@ create table if not exists public.game_hero_levels (
 -- v0.9: максимум HP и маны уровня — сервер не примет запас больше максимума
 alter table public.game_hero_levels add column if not exists max_hp int, add column if not exists max_mana int;
 insert into public.game_hero_levels (level, xp, max_hp, max_mana) values
-  (1, 0, 120, 100), (2, 60, 126, 110), (3, 150, 132, 110), (4, 270, 138, 115), (5, 430, 144, 120)
+  (1, 0, 120, 100), (2, 60, 126, 110), (3, 150, 132, 110), (4, 270, 138, 115), (5, 430, 144, 120),
+  -- v0.10.0: уровни 6–10 (первая глава)
+  (6, 650, 152, 125), (7, 940, 160, 135), (8, 1300, 170, 140), (9, 1750, 180, 145), (10, 2350, 190, 155)
   on conflict (level) do update set xp = excluded.xp, max_hp = excluded.max_hp, max_mana = excluded.max_mana;
 alter table public.game_hero_levels enable row level security;
 
@@ -232,7 +234,7 @@ declare
   k text; v jsonb; n numeric; q numeric; cnt int; arr jsonb; mx_hp numeric; mx_mana numeric;
   max_spend   constant numeric := 100000000;  -- тратить можно сколько есть
   max_counter constant numeric := 1000000000;
-  -- Сколько можно получить за одно сохранение. Самая большая награда игры сейчас — 150 опыта и 60 монет (Страж),
+  -- Сколько можно получить за одно сохранение. Самая большая награда игры сейчас — 220 опыта и 80 монет (Страж узла, v0.10),
   -- клиент сохраняет через секунду после события, поэтому честная игра в эти потолки не упирается.
   gain_xp     constant numeric := 1000;
   gain_school constant numeric := 500;
@@ -377,18 +379,81 @@ begin
   return _snapshot(uid);
 end $$;
 
--- ---------------------------------------------------------------- v0.9: атомарные действия игрока
--- То, что нельзя доверить дельтам patch: проверка и списание происходят здесь, в одной транзакции.
+-- ---------------------------------------------------------------- v0.10.0: правила крафта и сюжетных предметов
+-- Генерируется из src/config/recipes.js и src/config/storyItems.js (serverRules): node tools/sql/gen-rules.mjs. Руками не править.
+-- @rules:begin
+create or replace function public._game_rules() returns jsonb language sql immutable as $r$ select '{"recipes":{"elixir_life":{"result":"elixir_life","amount":1,"needs":{"moon_herb":2,"forest_mushroom":1},"requires":[],"crafted":null,"blockedBy":[]},"elixir_mana":{"result":"elixir_mana","amount":1,"needs":{"moon_herb":1,"rune_dust":1},"requires":[],"crafted":null,"blockedBy":[]},"resin_flask":{"result":"resin_flask","amount":1,"needs":{"tree_resin":2,"rune_dust":1},"requires":[],"crafted":null,"blockedBy":[]},"lunar_wick":{"result":"lunar_wick","amount":1,"needs":{"moon_herb":1,"tree_resin":1,"rune_dust":1,"lunar_flame":3},"requires":["lunar_quest_start"],"crafted":"lunar_wick_crafted","blockedBy":["lunar_wick_crafted","lunar_quest_complete"]},"revealing_compound":{"result":"revealing_compound","amount":1,"needs":{"moon_herb":1,"forest_mushroom":1,"rune_dust":1},"requires":["lunar_quest_complete"],"crafted":"revealing_compound_crafted","blockedBy":["revealing_compound_crafted","gate_marks_revealed"]},"restoration_bundle":{"result":"restoration_bundle","amount":1,"needs":{"moon_herb":2,"tree_resin":2,"rune_dust":2,"lunar_shard":1,"rare_core":1},"requires":["lunar_quest_complete"],"crafted":"restoration_bundle_crafted","blockedBy":["restoration_bundle_crafted","chapter_1_complete"]}},"uses":{"lunar_wick":{"requires":["lunar_quest_start"],"blockedBy":["lunar_quest_complete"],"events":["lunar_quest_complete"],"reward":{"heroXP":50,"schoolXP":{"telekinesis":40},"items":{"lunar_shard":3},"topUp":{"school":{"telekinesis":150},"items":{"lunar_shard":5}}}},"revealing_compound":{"requires":["guardian_defeated"],"blockedBy":["gate_marks_revealed"],"events":["gate_marks_revealed"],"reward":{"heroXP":30}},"restoration_bundle":{"requires":["chapter_trial_defeated","unlock_seal_1"],"blockedBy":["chapter_1_complete"],"mana":20,"events":["chapter_1_complete"],"reward":{"heroXP":100,"coins":30,"schoolXP":{"seal":40}}}},"firstCraft":{"event":"first_craft_complete","reward":{"heroXP":15}},"migration":{"event":"mig_v10","guardian":"forest_guardian_01","item":"rare_core","notIf":["restoration_bundle_crafted","chapter_1_complete"]}}'::jsonb $r$;
+-- @rules:end
+
+-- ---------------------------------------------------------------- v0.9 / v0.10.0: атомарные действия игрока
+-- То, что нельзя доверить дельтам patch: проверка, списание, событие и награда происходят здесь, в одной транзакции.
 --   {"op":"heal","id":"…"}        — лечение у Мирры: цена ceil((max_hp − hp) / 10) монет; при нехватке ничего не меняется
 --   {"op":"starter_kit","id":"…"} — один раз на персонажа: событие mirra_starter_kit + настой жизни и лунный эликсир
--- Ответ: состояние игрока + "action": {"ok", "reason", "price"}. Повтор того же id (ответ потерялся) ничего не применяет.
--- Зеркало на JS — applyAction в src/cloud/playerModel.js.
+--   v0.10.0 (правила — _game_rules(), из src/config/recipes.js и storyItems.js):
+--   {"op":"craft","recipe":"…"}   — изготовление в котле: рецепт известен, сюжетный не сделан, хватает всего; первый крафт +15 опыта
+--   {"op":"use","item":"…"}       — применение сюжетного предмета (фитиль / состав / связка + 20 маны): событие и награда один раз
+--   {"op":"migrate_v10"}          — разовая компенсация ядра старым сохранениям (флаг mig_v10)
+-- Ответ: состояние игрока + "action": {"ok", "reason", …}. Повтор того же id (ответ потерялся) ничего не применяет и возвращает
+-- сохранённый результат (+ "duplicate": true). Новый id не обходит уже выполненное событие: условия проверяются заново.
+-- Зеркало на JS — applyAction в src/cloud/playerModel.js; совпадение — tools/sql/diff-test.mjs.
+alter table public.player_progress add column if not exists recent_actions jsonb not null default '[]';  -- v0.10: [{id, result}] последних 20 действий
+
+create or replace function public._has_event(uid uuid, ev text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from player_quests where user_id = uid and quest_id = ev and status = 'done')
+$$;
+create or replace function public._inv(uid uuid, item text) returns numeric
+language sql stable security definer set search_path = public as $$
+  select coalesce((select quantity::numeric from player_inventory where user_id = uid and item_id = item), 0)
+$$;
+create or replace function public._inv_add(uid uuid, item text, delta numeric) returns void
+language sql security definer set search_path = public as $$
+  insert into player_inventory (user_id, item_id, quantity) values (uid, item, _clamp(delta, 0, 1000000000))
+    on conflict (user_id, item_id) do update set quantity = _clamp(player_inventory.quantity + delta, 0, 1000000000)
+$$;
+create or replace function public._add_event(uid uuid, ev text) returns void
+language sql security definer set search_path = public as $$
+  insert into player_quests (user_id, quest_id) values (uid, ev) on conflict (user_id, quest_id) do update set status = 'done'
+$$;
+
+-- Разовая награда операции (зеркало grant в playerModel.js): опыт и уровень по таблице (перед повышением «полные» HP/мана
+-- фиксируются числом), монеты, предметы, опыт школ, topUp — «не меньше».
+create or replace function public._grant(uid uuid, pr player_progress, reward jsonb) returns player_progress
+language plpgsql security definer set search_path = public as $$
+declare before int; lvl int; mx_hp numeric; mx_mana numeric; k text; v jsonb;
+begin
+  if coalesce((reward ->> 'heroXP')::numeric, 0) > 0 then
+    before := pr.hero_level;
+    pr.hero_xp := _clamp(pr.hero_xp + (reward ->> 'heroXP')::numeric, 0, 100000000);
+    lvl := greatest(pr.hero_level, coalesce((select max(level) from game_hero_levels where xp <= pr.hero_xp), 1));
+    if lvl > before then
+      select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels where level = before;
+      if pr.hp is null then pr.hp := mx_hp; end if;
+      if pr.mana is null then pr.mana := mx_mana; end if;
+    end if;
+    pr.hero_level := lvl;
+  end if;
+  if coalesce((reward ->> 'coins')::numeric, 0) <> 0 then perform _inv_add(uid, 'coins', (reward ->> 'coins')::numeric); end if;
+  for k, v in select * from jsonb_each(coalesce(reward -> 'items', '{}'::jsonb)) loop perform _inv_add(uid, k, (v #>> '{}')::numeric); end loop;
+  for k, v in select * from jsonb_each(coalesce(reward -> 'schoolXP', '{}'::jsonb)) loop
+    pr.school_xp := jsonb_set(pr.school_xp, array[k], to_jsonb(_clamp(coalesce((pr.school_xp ->> k)::numeric, 0) + (v #>> '{}')::numeric, 0, 1000000000)));
+  end loop;
+  for k, v in select * from jsonb_each(coalesce(reward -> 'topUp' -> 'school', '{}'::jsonb)) loop
+    pr.school_xp := jsonb_set(pr.school_xp, array[k], to_jsonb(greatest(coalesce((pr.school_xp ->> k)::numeric, 0), (v #>> '{}')::numeric)));
+  end loop;
+  for k, v in select * from jsonb_each(coalesce(reward -> 'topUp' -> 'items', '{}'::jsonb)) loop
+    perform _inv_add(uid, k, greatest(0, (v #>> '{}')::numeric - _inv(uid, k)));
+  end loop;
+  return pr;
+end $$;
+
 create or replace function public.player_action(action jsonb) returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare
   uid uuid := auth.uid();
   pr player_progress%rowtype;
-  op text; aid text; mx_hp numeric; cur numeric; price numeric; coins numeric; res jsonb;
+  op text; aid text; mx_hp numeric; mx_mana numeric; cur numeric; price numeric; coins numeric; res jsonb;
+  rules jsonb; r jsonb; u jsonb; m jsonb; k text; v jsonb; missing jsonb; first boolean; prev jsonb; core boolean;
 begin
   if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
   if action is null or jsonb_typeof(action) <> 'object' then raise exception 'bad_action' using errcode = '22023'; end if;
@@ -397,16 +462,18 @@ begin
   op := action ->> 'op';
   aid := case when jsonb_typeof(action -> 'id') = 'string' and char_length(action ->> 'id') between 8 and 64 then action ->> 'id' end;
   if aid is not null and pr.recent_syncs ? aid then
-    return _snapshot(uid) || jsonb_build_object('action', jsonb_build_object('ok', null, 'reason', 'duplicate'));
+    -- повтор: сохранённый результат первой попытки (или просто «повтор» для действий до v0.10)
+    select e -> 'result' into prev from jsonb_array_elements(pr.recent_actions) e where e ->> 'id' = aid limit 1;
+    return _snapshot(uid) || jsonb_build_object('action', coalesce(prev || '{"duplicate": true}'::jsonb, jsonb_build_object('ok', null, 'reason', 'duplicate')));
   end if;
   if aid is not null then
     pr.recent_syncs := (select coalesce(jsonb_agg(e order by i), '[]'::jsonb) from (
       select e, i from jsonb_array_elements(pr.recent_syncs || to_jsonb(aid)) with ordinality as t(e, i) order by i desc limit 20) z);
   end if;
-
+  select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels where level = pr.hero_level;
+  if mx_hp is null then select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels order by level desc limit 1; end if;
+  rules := _game_rules();
   if op = 'heal' then
-    select max_hp into mx_hp from game_hero_levels where level = pr.hero_level;
-    if mx_hp is null then select max_hp into mx_hp from game_hero_levels order by level desc limit 1; end if;
     cur := _clamp(coalesce(pr.hp::numeric, mx_hp), 0, mx_hp);
     price := ceil((mx_hp - cur) / 10.0 - 1e-9);
     select quantity into coins from player_inventory where user_id = uid and item_id = 'coins';
@@ -427,11 +494,63 @@ begin
         on conflict (user_id, item_id) do update set quantity = least(player_inventory.quantity + 1, 1000000000);
       res := jsonb_build_object('ok', true);
     end if;
+  elsif op = 'craft' then
+    r := case when jsonb_typeof(action -> 'recipe') = 'string' then rules -> 'recipes' -> (action ->> 'recipe') end;
+    if r is null then res := jsonb_build_object('ok', false, 'reason', 'unknown');
+    elsif exists (select 1 from jsonb_array_elements_text(r -> 'requires') e where not _has_event(uid, e)) then res := jsonb_build_object('ok', false, 'reason', 'locked');
+    elsif exists (select 1 from jsonb_array_elements_text(r -> 'blockedBy') e where _has_event(uid, e)) then res := jsonb_build_object('ok', false, 'reason', 'done');
+    else
+      select coalesce(jsonb_agg(key order by key collate "C"), '[]'::jsonb) into missing
+        from jsonb_each(r -> 'needs') where _inv(uid, key) < (value #>> '{}')::numeric;
+      if jsonb_array_length(missing) > 0 then res := jsonb_build_object('ok', false, 'reason', 'missing', 'missing', missing);
+      else
+        for k, v in select * from jsonb_each(r -> 'needs') loop perform _inv_add(uid, k, -(v #>> '{}')::numeric); end loop;
+        perform _inv_add(uid, r ->> 'result', (r ->> 'amount')::numeric);
+        if r ->> 'crafted' is not null then perform _add_event(uid, r ->> 'crafted'); end if;
+        first := not _has_event(uid, rules -> 'firstCraft' ->> 'event');
+        if first then
+          perform _add_event(uid, rules -> 'firstCraft' ->> 'event');
+          pr := _grant(uid, pr, rules -> 'firstCraft' -> 'reward');
+        end if;
+        res := jsonb_build_object('ok', true, 'recipe', action ->> 'recipe', 'result', r ->> 'result', 'amount', (r ->> 'amount')::numeric, 'firstCraft', first);
+      end if;
+    end if;
+  elsif op = 'use' then
+    u := case when jsonb_typeof(action -> 'item') = 'string' then rules -> 'uses' -> (action ->> 'item') end;
+    if u is null then res := jsonb_build_object('ok', false, 'reason', 'unknown');
+    elsif exists (select 1 from jsonb_array_elements_text(u -> 'blockedBy') e where _has_event(uid, e)) then res := jsonb_build_object('ok', false, 'reason', 'done');
+    elsif exists (select 1 from jsonb_array_elements_text(u -> 'requires') e where not _has_event(uid, e)) then res := jsonb_build_object('ok', false, 'reason', 'locked');
+    elsif _inv(uid, action ->> 'item') < 1 then res := jsonb_build_object('ok', false, 'reason', 'missing');
+    elsif u ? 'mana' and _clamp(coalesce(pr.mana::numeric, mx_mana), 0, mx_mana) < (u ->> 'mana')::numeric then
+      res := jsonb_build_object('ok', false, 'reason', 'mana', 'mana', (u ->> 'mana')::numeric);
+    else
+      if u ? 'mana' then pr.mana := _clamp(coalesce(pr.mana::numeric, mx_mana), 0, mx_mana) - (u ->> 'mana')::numeric; end if;
+      perform _inv_add(uid, action ->> 'item', -1);
+      for k in select * from jsonb_array_elements_text(u -> 'events') loop perform _add_event(uid, k); end loop;
+      pr := _grant(uid, pr, u -> 'reward');
+      res := jsonb_build_object('ok', true, 'item', action ->> 'item', 'events', u -> 'events');
+    end if;
+  elsif op = 'migrate_v10' then
+    m := rules -> 'migration';
+    if _has_event(uid, m ->> 'event') then res := jsonb_build_object('ok', false, 'reason', 'already');
+    else
+      perform _add_event(uid, m ->> 'event');
+      core := exists (select 1 from player_world where user_id = uid and kind = 'enemy' and key = m ->> 'guardian')
+        and _inv(uid, m ->> 'item') <= 0
+        and not exists (select 1 from jsonb_array_elements_text(m -> 'notIf') e where _has_event(uid, e));
+      if core then perform _inv_add(uid, m ->> 'item', 1); end if;
+      res := jsonb_build_object('ok', true, 'core', case when core then 1 else 0 end);
+    end if;
   else
     res := jsonb_build_object('ok', false, 'reason', 'unknown');
   end if;
-
-  update player_progress set hp = pr.hp, recent_syncs = pr.recent_syncs, rev = pr.rev + 1, updated_at = now() where user_id = uid;
+  if aid is not null then
+    pr.recent_actions := (select coalesce(jsonb_agg(e order by i), '[]'::jsonb) from (
+      select e, i from jsonb_array_elements(pr.recent_actions || jsonb_build_array(jsonb_build_object('id', aid, 'result', res))) with ordinality as t(e, i)
+      order by i desc limit 20) z);
+  end if;
+  update player_progress set hp = pr.hp, mana = pr.mana, hero_xp = pr.hero_xp, hero_level = pr.hero_level, school_xp = pr.school_xp,
+    recent_syncs = pr.recent_syncs, recent_actions = pr.recent_actions, rev = pr.rev + 1, updated_at = now() where user_id = uid;
   return _snapshot(uid) || jsonb_build_object('action', res);
 end $$;
 
@@ -454,6 +573,9 @@ $$;
 
 -- ---------------------------------------------------------------- права на функции
 revoke all on function public._num(jsonb), public._clamp(numeric, numeric, numeric), public._valid_id(text), public._snapshot(uuid) from public, anon, authenticated;
+-- v0.10.0: служебные функции действий — только изнутри player_action
+revoke all on function public._game_rules(), public._has_event(uuid, text), public._inv(uuid, text), public._inv_add(uuid, text, numeric),
+  public._add_event(uuid, text), public._grant(uuid, player_progress, jsonb) from public, anon, authenticated;
 revoke all on function public.create_player(text), public.get_player(), public.reset_player(text), public.sync_player(jsonb), public.player_action(jsonb) from public, anon;
 grant execute on function public.create_player(text), public.get_player(), public.reset_player(text), public.sync_player(jsonb), public.player_action(jsonb) to authenticated;
 revoke all on function public.nickname_available(text) from public;

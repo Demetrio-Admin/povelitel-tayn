@@ -164,6 +164,22 @@ export class ExplorationScene extends Phaser.Scene {
   }
 
   /**
+   * v0.10.0: стена у Древних ворот появилась в главе. Старое сохранение могло оставить героиню внутри новой стены или
+   * за воротами, которые ещё не открыты Печатью, — тогда ставим её рядом, перед воротами (не к дому).
+   */
+  fixStartPosition(p) {
+    const st = services.state;
+    if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y) || services.edit) return p;
+    const inWall = p.y >= 330 && p.y <= 440 && ((p.x >= 100 && p.x <= 640) || (p.x >= 1160 && p.x <= 1700) || (p.x > 640 && p.x < 1160 && !st.hasEvent('ancient_gate_open')));
+    const behind = p.y < 330 && !st.hasEvent('ancient_gate_open');
+    if (!inWall && !behind) return p;
+    const fixed = { x: 900, y: 540 };
+    st.data.player = fixed;
+    console.info('[v0.10] позиция из старого сохранения в новой стене / за закрытыми воротами → перед воротами', p, fixed);
+    return fixed;
+  }
+
+  /**
    * v0.10.0: Селена открывает Печать I — сюжетно, без уровня, платы и таймера: дар, событие unlock_seal_1 и разовые +60 опыта.
    * Повторный вызов ничего не выдаёт (событие уже есть).
    */

@@ -48,6 +48,8 @@ window.__bot = async function () {
       // зелья по ситуации (как сделал бы игрок)
       if (cm.hero.hp < cm.hero.maxHp * 0.35 && S.state.item('elixir_life') > 0) { c.onPotion('elixir_life'); L('    potion: life'); continue; }
       if (cm.hero.mana < 14 && S.state.item('elixir_mana') > 0 && e.hp > 60) { c.onPotion('elixir_mana'); L('    potion: mana'); continue; }
+      // v0.10.0: смоляная склянка — по сильному врагу (бережёт ману для даров)
+      if (S.state.item('resin_flask') > 0 && cm.def.tier === 'strong' && e.hp > 120 && !e.isPreparing && (cm.stats.potions || 0) < 4) { c.onPotion('resin_flask'); L('    potion: flask'); continue; }
       const tk = cm.abilityState('telekinesis').state === 'ready';
       const fire = cm.abilityState('fire').state === 'ready';
       const fo = id => cm.fieldObjects.find(o => o.available && o.def && (o.id === id));
@@ -221,6 +223,20 @@ window.__bot = async function () {
     const got = Object.entries(S.state.data.inventory).filter(([k, v]) => v !== (before[k] || 0)).map(([k, v]) => `${k}:${v - (before[k] || 0)}`).join(' ');
     L(`> craft ${id}: ${got || 'nothing'}`);
   }
+  /** v0.10.0: запас перед испытанием — собрать доступное и сварить зелья (как в плане ТЗ: 2 настоя, 2 эликсира). */
+  async function stock(life = 2, manaP = 2, flask = 1) {
+    const nodes = ['herb_g1', 'herb_g2', 'herb_g3', 'herb_t1', 'herb_a1', 'mush_t1', 'mush_a1', 'mush_j1', 'rune_sigil', 'resin_t1', 'resin_a1'];
+    for (let round = 0; round < 3; round++) {
+      await gather(...nodes);
+      for (const [id, n] of [['elixir_life', life], ['elixir_mana', manaP], ['resin_flask', flask]]) {
+        while (S.state.item(id) < n && S.alchemy.missing(id).length === 0) { const k = S.state.item(id); await craft(id); if (S.state.item(id) === k) break; }
+      }
+      if (S.state.item('elixir_life') >= life && S.state.item('elixir_mana') >= manaP) break;
+      L(`  stock: waiting for regrowth (life=${S.state.item('elixir_life')} mana=${S.state.item('elixir_mana')} flask=${S.state.item('resin_flask')})`);
+      await sleep(80000);
+    }
+    L(`  stock: life=${S.state.item('elixir_life')} mana=${S.state.item('elixir_mana')} flask=${S.state.item('resin_flask')}`);
+  }
   async function gather(...ids) { for (const id of ids) { const o = obj(id); if (o && o.isAvailable()) await act(id, null, '(gather)'); else L(`  skip ${id}: not ready`); } }
 
   const snap = (tag) => {
@@ -310,10 +326,11 @@ window.__bot = async function () {
     // связка и испытание
     await gather('herb_a1', 'herb_t1', 'herb_g1', 'rune_sigil');
     await craft('restoration_bundle');
+    await stock();
     if (vit().hp < vit().maxHp * 0.8) await healAtMirra();
     for (let i = 0; i < 3 && !S.state.hasEvent('chapter_trial_defeated'); i++) {
       await enemy('node_trial'); snap('after trial try ' + (i + 1));
-      if (!S.state.hasEvent('chapter_trial_defeated')) { afterDefeatCheck('node_trial'); await healAtMirra(); }
+      if (!S.state.hasEvent('chapter_trial_defeated')) { afterDefeatCheck('node_trial'); await healAtMirra(); await stock(); }
     }
     await act('forest_node', null, '(repair)');
     await sleep(1500); await settle();

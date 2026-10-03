@@ -63,6 +63,7 @@ try {
         const walk = (o, parentVisible=true) => {
           const visible=parentVisible && o.visible && o.alpha>0.05;
           if (visible && o.type==='Text' && o.text && parseInt(o.style.fontSize)<24) issues.push('small text: '+o.text);
+          if (visible && o.type==='Text' && /\[object|undefined|NaN/.test(o.text)) issues.push('broken text: '+o.text);
           if (o.list) o.list.forEach(c=>walk(c,visible));
         };
         ui.children.list.forEach(o=>walk(o));

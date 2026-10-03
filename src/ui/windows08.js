@@ -262,10 +262,11 @@ export const windows08 = {
     dlg.body = this.add.text(0, 0, '', style); content.add(dlg.body);
     let contentH = bodyH + 24;
     dlg.choiceViews = choices.map((ch, index) => {
-      const measure = this.add.text(0, 0, ch.label, { fontFamily: FONT, fontSize: UI.type.body, wordWrap: { width: cw - 28 } });
+      const label = T(ch.label);   // v0.9.2: ответ героя может иметь варианты для ведьмы / колдуна
+      const measure = this.add.text(0, 0, label, { fontFamily: FONT, fontSize: UI.type.body, wordWrap: { width: cw - 28 } });
       const bh = Math.max(UI.touch.button, measure.height + 28); measure.destroy();
       const by = contentH + bh / 2;
-      const button = addButton(this, cw / 2, by, cw, bh, ch.label, {
+      const button = addButton(this, cw / 2, by, cw, bh, label, {
         primary: index === 0, accent: index === 0 ? npc.color : null, fontSize: UI.type.body,
         onPress: () => { if (dlg.scroll.canTap()) { services.audio.play('ui_click'); this.dialogueChoose(index); } },
       });

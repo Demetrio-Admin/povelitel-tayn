@@ -75,6 +75,7 @@ await mute(async () => {
 
   // ---- v0.8: журнал, алхимия, диалог, сумка с ресурсами, HUD цели
   err = null;
+  const brokenTexts = [];
   try {
     const { services: sv } = await import('../src/services.js');
     const st = sv.state;
@@ -86,16 +87,42 @@ await mute(async () => {
     ui.openJournal(); ui.update(8000, 16); ui.closeModal(null);
     ui.openAlchemy(); ui.craftRecipe('elixir_life'); ui.craftRecipe('resin_flask'); ui.update(8100, 16); ui.closeModal(null);
     ui.openBag(); ui.closeModal(null);
-    for (const npc of ['mirra', 'veda', 'goran', 'selena']) {
-      ui.openDialogue(npc);
-      for (let i = 0; i < 12 && sv.dialogue.active; i++) {
-        for (let k = 0; k < 40; k++) ui.update(8200 + k * 30, 30);
-        const v = sv.dialogue.view(); if (v?.choices) ui.dialogueChoose(v.choices.length - 1); else ui.dialogueTap();
+    // v0.9.2: окно диалога обоими героями — ни одна надпись (реплика или кнопка ответа) не «[object Object]»
+    const { setHeroSource } = await import('../src/state/hero.js');
+    const { heroIdNow } = await import('../src/services.js');
+    const texts = () => { const out = []; const walk = (o) => { if (typeof o.text === 'string') out.push(o.text); (o.list || o.children || []).forEach?.(walk); }; (ui._list || ui.children?.list || []).forEach(walk); return out; };
+    for (const hero of ['witch', 'warlock']) {
+      setHeroSource(() => hero);
+      for (const npc of ['mirra', 'veda', 'goran', 'selena']) {
+        sv.dialogue.start(npc); ui.openDialogue(npc);   // окно открывается для уже начатого разговора
+        for (let i = 0; i < 12 && sv.dialogue.active; i++) {
+          for (let k = 0; k < 40; k++) ui.update(8200 + k * 30, 30);
+          brokenTexts.push(...[...texts(), ...(ui.dlg?.choiceViews || []).map(b => b.text.text)].filter(t => /\[object|undefined/.test(t)).map(t => `${hero}/${npc}: ${t}`));
+          const v = sv.dialogue.view(); if (v?.choices) ui.dialogueChoose(v.choices.length - 1); else ui.dialogueTap();
+        }
+        if (sv.dialogue.active) ui.closeDialogue(true);
+        for (let k = 0; k < 20; k++) ui.update(8800 + k * 30, 30);
+        for (let k = 0; k < 5 && (ui.modal || ui.modalQueue.length); k++) ui.closeModal(null);   // окна, открытые ответами (котёл, журнал, алтарь)
       }
-      if (sv.dialogue.active) ui.closeDialogue(true);
     }
+    // вступление Мирры (ответы героя с вариантами: «Что я должна/должен искать?», «Поняла./Понял.»): новый персонаж
+    const savedEvents = [...sv.state.data.completedEvents];
+    for (const hero of ['witch', 'warlock']) {
+      setHeroSource(() => hero);
+      sv.state.data.completedEvents = [];
+      sv.dialogue.start('mirra'); ui.openDialogue('mirra');
+      for (let k = 0; k < 60; k++) ui.update(9000 + k * 30, 30);
+      for (let i = 0; i < 8 && sv.dialogue.active && !sv.dialogue.view()?.choices; i++) { ui.dialogueTap(); for (let k = 0; k < 60; k++) ui.update(9000 + k * 30, 30); }
+      const shown = [...texts(), ...(ui.dlg?.choiceViews || []).map(b => b.text.text), ui.dlg?.body?.text || ''];   // кнопки ответов лежат в прокручиваемом контейнере
+      brokenTexts.push(...shown.filter(t => /\[object|undefined/.test(t)).map(t => `${hero}/mirra_intro: ${t}`));
+      if (!shown.includes(hero === 'witch' ? 'Что я должна искать?' : 'Что я должен искать?')) brokenTexts.push(`${hero}: нет кнопки «Что я ${hero === 'witch' ? 'должна' : 'должен'} искать?»`);
+      ui.closeDialogue(true);
+    }
+    sv.state.data.completedEvents = savedEvents;
+    setHeroSource(() => heroIdNow());
     ui.update(9000, 16);
   } catch (e) { err = e; }
+  ok(!brokenTexts.length, 'диалоги обоими героями: нет «[object Object]» в репликах и кнопках ответов' + (brokenTexts.length ? ': ' + [...new Set(brokenTexts)].join('; ') : ''));
   ok(!err && ui.modal === null, 'v0.8: журнал, алхимия, сумка, диалоги с 4 NPC и HUD цели строятся и закрываются' + (err ? ': ' + err.stack.split('\n').slice(0, 4).join(' | ') : ''));
 
   // v0.8.1 regression: real choices must dispatch only after the dialogue modal is destroyed.

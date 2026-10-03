@@ -108,7 +108,7 @@ export const windows09 = {
     } else if (r.reason === 'full') {
       this.toast('Здоровье уже полное.');
     } else if (r.reason !== 'busy') {
-      this.toast('Нет связи с сервером — лечение не выполнено, монеты не списаны.', COLORS.danger);
+      this.toast(actionFailText(r, 'лечение не выполнено, монеты не списаны'), COLORS.danger);
     }
     if (vitals.hp(services.state) !== before) this.refreshHud();
     this.refreshHud();
@@ -124,9 +124,24 @@ export const windows09 = {
       this.refreshHud(); this.refreshQuest();
     } else if (r.reason === 'network') {
       this.toast('Нет связи — Мирра отдаст зелья, когда связь вернётся. Поговорите с ней ещё раз.', COLORS.danger);
+    } else if (r.reason !== 'busy' && r.reason !== 'already') {
+      this.toast(actionFailText(r, 'зелья пока не выданы', 'Поговорите с Миррой ещё раз.'), COLORS.danger);
     }
   },
 };
+
+/**
+ * Текст отказа действия сервера. «Нет связи» — только при настоящей потере связи (reason 'network');
+ * ошибка сервера и сбой клиента — отдельный текст, техническая причина — в консоль (и на экран в режиме ?debug).
+ */
+export function actionFailText(r, what, retry = 'Попробуйте ещё раз.') {
+  if (r.reason === 'network') return `Нет связи с сервером — ${what}.`;
+  if (r.reason === 'session') return 'Сессия завершилась. Войдите снова.';
+  const e = r.error || {};
+  console.error('[PlayerActions] действие не выполнено:', r.reason, `rpc=${e.rpc || '?'} status=${e.status ?? '?'} code=${e.code || '?'}${e.detail ? ` detail=${e.detail}` : ''}`);
+  const tech = services.debug ? `\n[${e.rpc || '?'} · HTTP ${e.status ?? '?'} · ${e.code || r.reason}${e.detail ? ` · ${e.detail}` : ''}]` : '';
+  return `${r.reason === 'error' ? 'Что-то пошло не так' : 'Ошибка сервера'}: ${what}. ${retry}${tech}`;
+}
 
 function coinWord(n) {
   const a = n % 100, b = n % 10;

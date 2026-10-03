@@ -14,6 +14,7 @@ import { TelekinesisObject } from '../objects/TelekinesisObject.js';
 import { FireObject } from '../objects/FireObject.js';
 import { EnemyTrigger, encKey } from '../objects/EnemyTrigger.js';
 import * as vitals from '../state/vitals.js';
+import { advanceWorld, serverActionBusy } from '../systems/WorldClock.js';
 import { VITALS } from '../config/balance.hero.js';
 import { STORY } from '../config/story.js';
 import { GatherObject } from '../objects/GatherObject.js';
@@ -588,7 +589,8 @@ export class ExplorationScene extends Phaser.Scene {
   }
 
   // ------------------------------------------------------------------ ввод
-  canAct() { return services.mode === 'exploration' && !services.modalOpen && !services.offline && this.scene.isActive(); }
+  // v0.9.1: пока сервер выполняет действие (лечение, стартовый набор), мир стоит — см. systems/WorldClock.js
+  canAct() { return services.mode === 'exploration' && !services.modalOpen && !services.offline && !serverActionBusy(services) && this.scene.isActive(); }
 
   onContext() {
     if (!this.canAct()) return;
@@ -723,15 +725,15 @@ export class ExplorationScene extends Phaser.Scene {
     if (this.editor) return;
     const dt = Math.min(delta, 50) / 1000;
     const { state } = services;
-    state.data.stats.playTimeMs += delta;
-    if (!this.canAct()) {
+    const active = this.canAct();
+    // время игры и восстановление HP/маны вне боя (в доме Мирры мана быстрее); во время действия сервера — ничего
+    if (advanceWorld(state, delta, { frozen: serverActionBusy(services), active, inHouse: this.zone?.id === VITALS.houseZone })) this.vitalsDirty = true;
+    if (!active) {
       if (services.mode !== 'combat') this.player.stop();
       this.placeSpeech();
       return;
     }
     this.player.update(dt, services.input.move);
-    // v0.9: восстановление HP и маны вне боя (только во время активной игры; в доме Мирры мана быстрее)
-    if (vitals.regen(state, dt, { inHouse: this.zone?.id === VITALS.houseZone })) this.vitalsDirty = true;
     // шаги
     if (this.player.sprite.body.speed > 30) {
       this.stepT -= delta;

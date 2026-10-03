@@ -322,7 +322,7 @@ try {
     // Every deferred action is exercised by tapping its actual dialogue choice.
     for(const [npc,answer,title] of [['mirra','Сварить зелье','Котёл Мирры'],['mirra','Открыть журнал','Журнал'],['selena','Открыть алтарь','Изучение: Телекинез II']]) {
       await page.evaluate(npc=>{
-        const s=window.__witch;s.state.markEvent('seal_required_01');s.state.markEvent('sq_dust_done');s.dialogue.start(npc);
+        const s=window.__witch;s.state.markEvent('chapter_1_complete');s.state.markEvent('sq_dust_done');s.dialogue.start(npc);
         const u=window.__game.scene.getScene('UIScene');let n=0;while(!s.dialogue.view().choices&&n++<10){u.finishTyping();u.dialogueTap();}u.finishTyping();
       },npc);
       if(npc==='mirra'&&answer==='Сварить зелье')await shot('dialogue');

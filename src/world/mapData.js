@@ -1,8 +1,16 @@
 // Данные карты: базовая расстановка + правки из редактора. Без Phaser и DOM.
-import { PROPS } from '../config/world.props.js';
+import { PROPS as RAW_PROPS } from '../config/world.props.js';
 import { EDITS } from '../config/world.edits.js';
 import { ROADS, WATERS } from '../config/world.terrain.js';
-import { COLLIDERS } from '../config/world.layout.js';
+import { COLLIDERS, CLEARINGS } from '../config/world.layout.js';
+import { PROP_DEFS } from './propDefs.js';
+
+/**
+ * v0.10.0: базовая расстановка без твёрдых объектов на полянах CLEARINGS (поляна узла за воротами).
+ * Цветы и деревья-заполнители остаются; правки редактора (EDITS) накладываются уже на этот список.
+ */
+const inClearing = (p) => CLEARINGS.some(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
+export const PROPS = RAW_PROPS.filter(p => !(inClearing(p) && !p.fill && PROP_DEFS[p.k]?.solid));
 
 export const DRAFT_KEY = 'witch_rpg_map_draft_v1';
 

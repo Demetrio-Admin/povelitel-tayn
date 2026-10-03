@@ -5,6 +5,7 @@ import { ABILITIES } from '../config/balance.abilities.js';
 import { ENEMIES } from '../config/balance.enemies.js';
 import { UPGRADES, TIMER_MODE, ITEMS } from '../config/balance.progression.js';
 import { MSG } from '../state/EventBus.js';
+import { CHAPTER_1_FINAL } from '../config/events.js';
 import { services, resetProgress, reloadToMenu } from '../services.js';
 import { showProfile } from '../ui/accountUI.js';
 import { InputController } from '../systems/InputController.js';
@@ -105,7 +106,7 @@ export class UIScene extends Phaser.Scene {
   onWorldEvent(key) {
     const { audio, tutorial } = services;
     if (key === 'fire_required_01') this.flashButton('fire');
-    if (['unlock_telekinesis_1', 'unlock_fire_1', 'lunar_quest_complete', 'telekinesis_2_complete'].includes(key)) {
+    if (['unlock_telekinesis_1', 'unlock_fire_1', 'lunar_quest_complete', 'telekinesis_2_complete', 'unlock_seal_1', 'chapter_1_complete'].includes(key)) {
       audio.play('unlock_magic');
       audio.vibrate([30, 40, 30]);
     }
@@ -646,22 +647,25 @@ export class UIScene extends Phaser.Scene {
   }
 
   // ================================================================== финал прототипа
-  openFinal() {
+  /** v0.10.0: финал первой главы — узел восстановлен (связка + Печать). Награда уже выдана операцией сервера. */
+  openFinal(info = {}) {
     // не открываем второй финальный экран, если он уже показан или стоит в очереди
     if (this.modal?.final || this.modalQueue.some(m => m.final)) return;
     const d = services.state.data;
     const wins = d.stats.combats.filter(c => c.result === 'victory');
     const lines = [
-      'Древние ворота запечатаны фиолетовым кругом. Ни Телекинез, ни Огонь не действуют на них.',
-      'Чтобы пройти дальше, нужен дар Печати.', '',
-      '★ Прототип пройден!', '',
+      'Кристалл узла засиял ровным бирюзовым светом. Корни отступают, звери затихают — лес снова узнаёт своих.',
+      'Но на камне остался след: силу вытянули нарочно, и тянется он в сторону города.', '',
+      `★ ${CHAPTER_1_FINAL}`, '',
+      ...(info.reward ? [`Награда: ${info.reward}.`, ''] : []),
       `Время игры: ${fmtTime(d.stats.playTimeMs)}`,
       T(fm(`Уровень героини: ${d.heroLevel}`, `Уровень героя: ${d.heroLevel}`)),
-      `Побед: ${wins.length}${wins.length ? ' (' + wins.map(c => `${c.timeSec} с`).join(', ') + ')' : ''}`,
+      `Побед: ${wins.length}`, '',
+      'Город — следующая глава. А пока можно собирать травы, варить зелья и возвращаться к Корневикам старого леса. Мирра ждёт рассказа.',
     ];
     this.openModal({
-      final: true, title: 'SEAL_REQUIRED\nТребуется Печать', color: COLORS.seal, text: lines.join('\n'),
-      buttons: [{ label: 'Продолжить', primary: true }, { label: 'Начать заново', onClick: () => this.confirmReset() }],
+      final: true, title: 'Глава I завершена\nЛес, который забыл нас', color: 0x7be2c8, text: lines.join('\n'),
+      buttons: [{ label: 'Продолжить', primary: true }, { label: 'Открыть журнал', onClick: () => this.bus.emit(MSG.OPEN_JOURNAL) }],
     });
   }
 }

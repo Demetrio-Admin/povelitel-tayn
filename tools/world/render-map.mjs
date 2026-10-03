@@ -25,7 +25,7 @@ const map = resolveMap({});
 const terrain = buildTerrain({ ROADS: map.roads, WATERS: map.waters });
 const COLLIDERS = map.colliders; // с правками из редактора
 const img = {};
-const load = async (k) => { if (!img[k] && ASSET_FILES[k]) img[k] = await loadImage(path.join(ROOT, 'public', ASSET_FILES[k])); return img[k]; };
+const load = async (k) => { if (!img[k] && ASSET_FILES[k]) img[k] = await loadImage(path.join(ROOT, 'public', ASSET_FILES[k].split('?')[0])); return img[k]; };
 
 const full = createCanvas(W, H), g = full.getContext('2d');
 g.fillStyle = g.createPattern(await load('grass_ground_01'), 'repeat'); g.fillRect(0, 0, W, H);
@@ -59,6 +59,8 @@ const save = (name, cv) => fs.writeFileSync(path.join(OUT, name), cv.toBuffer('i
 const scaled = (sx, sy, sw, sh, sc) => { const c = createCanvas(Math.round(sw * sc), Math.round(sh * sc)); c.getContext('2d').drawImage(full, sx, sy, sw, sh, 0, 0, c.width, c.height); return c; };
 save('map_overview.png', scaled(0, 0, W, H, 0.3));
 for (const [n, x, y, w, h, sc] of [['map_house', 600, 4850, 600, 500, 1.4], ['map_start', 300, 4150, 1300, 950, 0.7], ['map_trail', 700, 3150, 1000, 1000, 0.7], ['map_west', 50, 2200, 800, 1000, 0.7], ['map_altar', 850, 1950, 800, 1000, 0.8], ['map_gate', 300, 250, 1400, 900, 0.7]]) save(n + '.png', scaled(x, y, w, h, sc));
+// дополнительные кадры: CROPS="имя:x,y,w,h,масштаб;…"
+for (const part of (process.env.CROPS || '').split(';').filter(Boolean)) { const [n, a] = part.split(':'); const [x, y, w, h, sc] = a.split(',').map(Number); save(n + '.png', scaled(x, y, w, h, sc || 0.7)); }
 
 // слой коллизий поверх обзора
 const solids = collectSolids({ colliders: COLLIDERS, props: map.props, interactives: objs, enemies: ens, waterRects: terrain.waterRects });

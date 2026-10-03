@@ -28,14 +28,18 @@ import { HIGHLIGHT } from '../config/guidance.js';
 import { UI } from '../config/ui.config.js';
 import { drawPlate } from '../ui/widgets.js';
 import {
-  applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject, SealObject,
+  applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject,
 } from '../objects/InteractiveObject.js';
+import { GateObject, SealSigilObject, DustStashObject, ForestNodeObject } from '../objects/ChapterObjects.js';
 
 const OBJECT_CLASSES = {
   book: BookObject,
   telekinesis: TelekinesisObject,
   fire: FireObject,
-  seal: SealObject,
+  gate: GateObject,
+  seal_sigil: SealSigilObject,
+  stash: DustStashObject,
+  forest_node: ForestNodeObject,
   altar: AltarObject,
   fire_circle: FireCircleObject,
   chest: ChestObject,
@@ -113,6 +117,7 @@ export class ExplorationScene extends Phaser.Scene {
     bus.on(MSG.QUEST_CHANGED, () => this.objects.forEach(o => { if (o instanceof NpcObject) o.updateBadge(); }), this);
     bus.on(MSG.CRAFTED, ({ result }) => this.objects.find(o => o instanceof AlchemyObject)?.celebrate(POTIONS[result]?.color), this);
     bus.on(MSG.HERO_SAY, (t, ms) => this.heroSay(t, ms), this);
+    bus.on(MSG.UNLOCK_SEAL, this.unlockSeal, this);
     bus.on(MSG.SIDE_QUEST, (id, what) => { this.refreshAll(); if (what === 'ready') services.audio.play('quest_update'); }, this);
     this.events.on('wake', this.onWake, this);
     this.events.once('shutdown', () => bus.offContext(this));
@@ -154,6 +159,26 @@ export class ExplorationScene extends Phaser.Scene {
       if (r.ok && r.core) this.toast('Мирра сохранила ядро Стража — оно в сумке: из него можно сделать восстановительную связку.', COLORS.gold);
     };
     this.time.delayedCall(1200, tryRun);
+  }
+
+  /**
+   * v0.10.0: Селена открывает Печать I — сюжетно, без уровня, платы и таймера: дар, событие unlock_seal_1 и разовые +60 опыта.
+   * Повторный вызов ничего не выдаёт (событие уже есть).
+   */
+  unlockSeal() {
+    const { state, abilities, quests } = services;
+    if (state.hasEvent('unlock_seal_1')) return;
+    abilities.unlock('seal', 1);
+    quests.complete('unlock_seal_1');
+    this.burst(this.player.x, this.player.y - 60, COLORS.seal, 34);
+    this.toast('Получен дар: Печать I', COLORS.seal);
+    this.dialog({
+      title: 'Печать I', color: COLORS.seal,
+      text: 'Новый дар связывает разорванное. Печать стоит 20 маны.\n\n'
+        + 'В мире она восстанавливает знаки и запоры связи. В бою — на миг сковывает врага, ослабляет его удары и прерывает сильную подготовку, которую не берут ни камень, ни огонь.\n\n'
+        + 'Опробуйте её спокойно — на учебном знаке рядом с алтарём (кнопка Печати или действие).',
+      buttons: [{ label: 'К знаку', primary: true }],
+    });
   }
 
   scheduleStory() {

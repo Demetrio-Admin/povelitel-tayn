@@ -42,7 +42,8 @@ export const MSG = {
   MODAL_CLOSED: 'ui:modal-closed',
   FOCUS_CHANGED: 'interaction:focus', // (info | null)
   COMBAT_CYCLE: 'combat:cycle',
-  FINAL_SCREEN: 'ui:final',
+  FINAL_SCREEN: 'ui:final',          // v0.10.0: ({ outcome, reward }) — финал первой главы
+  UNLOCK_SEAL: 'story:unlock-seal',   // v0.10.0: Селена открывает Печать I (после закрытия диалога)
   ZONE_CHANGED: 'world:zone',         // (zone)
   TUTORIAL: 'ui:tutorial',            // ({ id, text, target, ttl } | null)
   OPEN_PAUSE: 'ui:pause',

@@ -7,6 +7,8 @@ import { AbilitySystem } from '../src/systems/AbilitySystem.js';
 import { CombatManager } from '../src/systems/CombatManager.js';
 import { PlayerActions } from '../src/systems/PlayerActions.js';
 import { ENEMIES } from '../src/config/balance.enemies.js';
+import { ABILITIES } from '../src/config/balance.abilities.js';
+const ABILITIES_SEAL_COST = () => ABILITIES.seal.levels[1].manaCost;
 import { EV } from '../src/config/events.js';
 import { Settings, SETTINGS_KEY } from '../src/state/Settings.js';
 import { TutorialSystem } from '../src/systems/TutorialSystem.js';
@@ -37,8 +39,13 @@ function bot(cm, policy) {
   const heavy = cm.fieldObjects.find(o => o.available && o.def.weight === 'heavy' && o.def.throwable);
   const crystal = cm.fieldObjects.find(o => o.available && o.def.breaksArmor);
   if (policy === 'idle') return;
+  // зелья из сумки (если есть): здоровье ниже 40 % — настой, мана на исходе — эликсир (лимит боя проверяет CombatManager)
+  if (cm.hero.hp < cm.hero.maxHp * 0.4 && cm.state.item('elixir_life') > 0) cm.usePotion('elixir_life');
+  if (cm.hero.mana < 20 && cm.state.item('elixir_mana') > 0) cm.usePotion('elixir_mana');
   if (policy === 'spam') { if (ready('fire')) cm.useAbility('fire'); if (ready('telekinesis')) cm.useAbility('telekinesis'); return; }
   // smart
+  const sealCan = e.isPreparing && e.def.strongAttack.interruptBy.includes('seal') && ready('seal') && policy !== 'noseal';
+  if (sealCan && (!e.def.strongAttack.interruptBy.some(t => t.startsWith('telekinesis')) || !ready('telekinesis') || !heavy)) { cm.useAbility('seal'); return; }
   if (e.isPreparing) {
     const needsHeavy = !e.def.strongAttack.interruptBy.includes('telekinesis');
     if (ready('telekinesis') && (!needsHeavy || heavy)) {
@@ -49,6 +56,9 @@ function bot(cm, policy) {
   }
   // держим Телекинез под прерывание, если сильная атака скоро
   const strongSoon = e.def.strongAttack && e.strongCd < 2.5 && !e.isPreparing;
+  // v0.10.0: в третьей фазе Стража узла ману держим под Печать (прерывание только ею)
+  const sealOnly = e.def.strongAttack && !e.def.strongAttack.interruptBy.some(t => t.startsWith('telekinesis')) && policy !== 'noseal';
+  if (sealOnly && cm.hero.mana < 20 + 24 && e.strongCd < 4) return;
   if (crystal && e.armorActive && ready('telekinesis') && !strongSoon) { cm.selectedId = crystal.id; cm.useAbility('telekinesis'); return; }
   if (ready('fire')) { cm.useAbility('fire'); return; }
   if (ready('telekinesis') && !strongSoon) {
@@ -65,7 +75,7 @@ function simulate(enemyType, setup, policy = 'smart', maxSec = 300) {
   const dt = 1 / 30;
   let t = 0;
   while (!cm.result && t < maxSec) { bot(cm, policy); cm.tick(dt); t += dt; }
-  return { result: cm.result, time: +cm.time.toFixed(1), heroHp: Math.round(cm.hero.hp), maxHp: cm.hero.maxHp, uses: cm.stats.abilityUses, interrupts: cm.stats.interrupts };
+  return { result: cm.result, time: +cm.time.toFixed(1), heroHp: Math.round(cm.hero.hp), maxHp: cm.hero.maxHp, enemyHp: cm.enemy.hp, potions: cm.stats.potions || 0, uses: cm.stats.abilityUses, interrupts: cm.stats.interrupts };
 }
 
 // ---------------------------------------------------------------
@@ -86,7 +96,10 @@ console.log('\n[1] Прогрессия по маршруту');
   quests.complete(EV.LUNAR_QUEST_START);
   state.applyReward({ heroXP: 40, schoolXP: { telekinesis: 30 }, items: { lunar_shard: 1 } });
   state.addItem('lunar_flame', 3);
-  ok(quests.currentStep().id === 'return', '3 огонька → цель «верните к алтарю»');
+  ok(quests.currentStep().id === 'wick', '3 огонька → цель «сварите Лунный фитиль» (v0.10.0)');
+  state.removeItem('lunar_flame', 3); state.markEvent('lunar_wick_crafted'); state.addItem('lunar_wick', 1);
+  ok(quests.currentStep().id === 'return', 'фитиль сварен, огоньков в сумке 0 → цель «вставьте фитиль», шаг сбора не возвращается');
+  state.removeItem('lunar_wick', 1);
   quests.complete(EV.LUNAR_QUEST_COMPLETE);
   ok(state.data.heroLevel >= 3, `после лунного задания — уровень ${state.data.heroLevel}`);
   const lacking = state.upgradeStatus('telekinesis_2');
@@ -106,6 +119,8 @@ console.log('\n[1] Прогрессия по маршруту');
   abilities.unlock('fire', 1); quests.complete(EV.UNLOCK_FIRE_1);
   quests.complete(EV.FIRE_GATE_OPEN);
   state.applyReward({ heroXP: 15 }); // сундук в новой части леса
+  ok(quests.currentStep().id === 'compound', 'после корней — сварить Проявляющий состав (v0.10.0)');
+  state.markEvent('revealing_compound_crafted');
   ok(quests.currentStep().id === 'guardian', 'цель — Лесной Страж');
   console.log(`    уровень перед Стражем: ${state.data.heroLevel}, HP ${state.heroStats().maxHp}, мана ${state.heroStats().maxMana}`);
   // сохранение / загрузка
@@ -729,6 +744,69 @@ console.log('\n[v0.9] Общие HP и мана, зелья, обучение б
     ok(!t3.active, 'другие бои без обучения');
   }
   ok(WORLD_MANA_COST.gather === 4 && WORLD_MANA_COST.push.heavy === 20 && WORLD_MANA_COST.fire === 16, 'цены магии в мире — из конфига');
+}
+
+// ---------------------------------------------------------------
+console.log('\n[v0.10] Страж узла: фазы, прерывания, бой');
+{
+  const NG = ENEMIES.node_guardian;
+  ok(NG.hp === 900 && NG.normalAttack.damage === 12 && NG.normalAttack.intervalSec === 4.5 && NG.strongAttack.damage === 30
+    && NG.strongAttack.prepSec === 2.5 && NG.strongAttack.cooldownSec === 10 && NG.strongAttack.firstDelaySec === 6 && NG.interruptedCooldownSec === 7,
+    'Страж узла: 900 HP, удар 12 / 4,5 с, сильный 30 (подготовка 2,5, КД 10, первый через 6, после прерывания 7)');
+  ok(ENEMIES.forest_guardian.hp === 420, 'Страж ворот остаётся 420 HP');
+  const mk = (lvl = 2) => { const w = makeWorld({ t: 0 }); w.abilities.unlock('telekinesis', lvl); w.abilities.unlock('fire', 1); w.abilities.unlock('seal', 1); w.state.addHeroXP(650); w.state.data.hp = null; w.state.data.mana = null; return { w, cm: new CombatManager({ enemyType: 'node_guardian', state: w.state, abilities: w.abilities }) }; };
+  { // фаза 1: броня 45 %, кристалл; переход ровно на 600
+    const { cm } = mk(); const e = cm.enemy;
+    ok(e.phase === 0 && e.armorActive && e.def.armor.value === 0.45 && !e.defenseActive, 'фаза 1 (> 600): кристаллическая броня 45 %');
+    e.hp = 601; e.takeDamage(1, 'telekinesis'); cm.flushPhases();
+    const ev = cm.drainEvents();
+    ok(e.hp === 600 && e.phase === 1 && !e.hasArmor && e.defenseActive && e.def.defense === 0.2 && e.def.weaknesses.fire === 0.5, 'ровно 600 HP → фаза 2: брони нет, защита 20 %, Огонь +50 %');
+    ok(ev.some(x => x.type === 'phase' && x.phase === 2) && ev.some(x => x.type === 'objectUsed' && x.action === 'shatter') && cm.fieldObjects.find(o => o.def.breaksArmor).gone, 'смена фазы: событие для сцены, кристалл больше не нужен и не возвращается');
+    e.onFireHit();
+    ok(!e.defenseActive && e.defenseDisabledLeft === 6, 'фаза 2: Огонь снимает защиту на 6 с');
+    e.hp = 301; e.burn = { left: 4, dps: 4, tick: 0.01 }; e.update(0.02); cm.flushPhases();
+    ok(e.phase === 2 && e.hp <= 300 && !e.defenseActive && !e.def.weaknesses && e.defenseDisabledLeft === 0, 'фаза 3 включается и от горения; защита и слабость прошлой фазы сняты');
+    ok(e.def.strongAttack.damage === 36 && e.def.strongAttack.interruptBy.join() === 'seal', 'фаза 3: сильный удар 36, прерывает только Печать');
+  }
+  { // один удар через два порога
+    const { cm } = mk(); const e = cm.enemy;
+    e.hp = 610; e.armorDisabledLeft = 5; e.takeDamage(400, 'telekinesis'); cm.flushPhases();
+    const ph = cm.drainEvents().filter(x => x.type === 'phase');
+    ok(e.phase === 2 && !e.hasArmor && !e.defenseActive && e.armorDisabledLeft === 0 && ph.length === 1 && ph[0].phase === 3, 'удар через 600 и 300 сразу → фаза 3 без остатков брони и защиты');
+  }
+  { // прерывания по фазам
+    const { cm } = mk(); const e = cm.enemy;
+    e.strongCd = 0; e.update(0.01);
+    cm.selectObject('heavy_a'); cm.useAbility('telekinesis');
+    ok(!e.isPreparing && e.strongCd === 7, 'фаза 1: тяжёлый ТК прерывает, следующий сильный удар — через 7 с');
+    e.hp = 250; e.checkPhase(); cm.flushPhases(); cm.drainEvents();
+    e.staggerLeft = 0; e.strongCd = 0; e.update(0.01);
+    cm.cooldowns.telekinesis = 0; cm.hero.mana = 100;
+    cm.fieldObjects.forEach(o => { if (!o.gone) { o.available = true; } });
+    cm.selectObject('heavy_a'); cm.useAbility('telekinesis');
+    ok(e.isPreparing, 'фаза 3: тяжёлый ТК не отменяет подготовку');
+    cm.useAbility('fire');
+    ok(e.isPreparing, 'фаза 3: Огонь не отменяет подготовку');
+    cm.useAbility('seal');
+    ok(!e.isPreparing && cm.stats.interrupts >= 2, 'фаза 3: Печать прерывает');
+    ok(ABILITIES_SEAL_COST() === 20, 'Печать в бою стоит 20 маны');
+  }
+  { // ТК I не прерывает тяжёлым в фазе 1
+    const { cm } = mk(1); const e = cm.enemy;
+    e.strongCd = 0; e.update(0.01);
+    ok(!cm.selectObject('heavy_a'), 'ТК I: тяжёлый камень в испытании не выбирается');
+  }
+  const bare = w => { w.abilities.unlock('telekinesis', 2); w.abilities.unlock('fire', 1); w.abilities.unlock('seal', 1); w.state.addHeroXP(650); w.state.data.hp = null; w.state.data.mana = null; };
+  // подготовка по плану главы: 2 настоя и 2 эликсира в сумке (лимит боя — 4 расходника)
+  const prepared = w => { bare(w); w.state.addItem('elixir_life', 2); w.state.addItem('elixir_mana', 2); };
+  const nb = simulate('node_guardian', bare);
+  console.log('    Страж узла без зелий:', nb);
+  const r = simulate('node_guardian', prepared);
+  console.log('    Страж узла (подготовленный, мгновенная реакция бота):', r);
+  ok(r.result === 'victory' && r.time >= 55 && r.time <= 130, `испытание проходимо за 55–130 с (факт ${r.time} с)`);
+  const ns = simulate('node_guardian', prepared, 'noseal');
+  console.log('    Страж узла без Печати:', ns);
+  ok(ns.result === 'defeat' || ns.heroHp < r.heroHp, 'без Печати третья фаза заметно опаснее');
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Все тесты пройдены');

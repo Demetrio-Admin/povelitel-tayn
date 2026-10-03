@@ -130,16 +130,16 @@ await mute(async () => {
     const { services: sv } = await import('../src/services.js');
     const { MSG } = await import('../src/state/EventBus.js');
     const cases = [
-      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'seal_required_01'], 'Сварить зелье', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
-      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'seal_required_01'], 'Открыть журнал', MSG.OPEN_JOURNAL, 'Журнал'],
+      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'chapter_1_complete'], 'Сварить зелье', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
+      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'chapter_1_complete'], 'Открыть журнал', MSG.OPEN_JOURNAL, 'Журнал'],
       ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'mirra_starter_kit', 'first_world_interaction'], 'Покажи котёл', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
-      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'seal_required_01'], 'Восстановить здоровье', MSG.OPEN_HEAL, 'Лечение у Мирры'],
-      ['selena', ['lunar_quest_start', 'sq_dust_done'], 'Открыть алтарь', MSG.OPEN_UPGRADE, 'Изучение: Телекинез II'],
+      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'chapter_1_complete'], 'Восстановить здоровье', MSG.OPEN_HEAL, 'Лечение у Мирры'],
+      ['selena', ['lunar_quest_start', 'sq_dust_done', 'dlg:selena_wick'], 'Открыть алтарь', MSG.OPEN_UPGRADE, 'Изучение: Телекинез II'],
     ];
     sv.bus.offContext(ui);
     for (const [npc, events, answer, event, title] of cases) {
       await freshWorld('new');
-      events.forEach(k => sv.state.markEvent(k));
+      events.forEach(k => (k.startsWith('dlg:') ? sv.dialogue.markSeen(k.slice(4)) : sv.state.markEvent(k)));   // dlg: — разговор уже слышали
       sv.state.data.hp = 40; sv.state.addItem('coins', 20);   // v0.9: есть что лечить и чем платить
       const dialogUI = new UIScene(); dialogUI.create(); mkHud(dialogUI);
       let emissions = 0, closedFirst = false;
@@ -167,7 +167,7 @@ await mute(async () => {
     }
     await freshWorld('new');
     const cancelled = new UIScene(); cancelled.create(); mkHud(cancelled);
-    ['prologue_seen', 'unlock_telekinesis_1', 'seal_required_01'].forEach(k => sv.state.markEvent(k)); sv.dialogue.start('mirra');
+    ['prologue_seen', 'unlock_telekinesis_1', 'chapter_1_complete'].forEach(k => sv.state.markEvent(k)); sv.dialogue.start('mirra');
     cancelled.closeDialogue(true);
     ok(!sv.dialogue.active && !cancelled.modal && !sv.modalOpen, 'диалог: отмена без ответа не открывает другое окно');
     sv.bus.offContext(cancelled);

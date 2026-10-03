@@ -144,6 +144,16 @@ export function actionFailText(r, what, retry = 'Попробуйте ещё р�
   return `${r.reason === 'error' ? 'Что-то пошло не так' : 'Ошибка сервера'}: ${what}. ${retry}${tech}`;
 }
 
+/** v0.10.0: понятная причина, почему сюжетный предмет не применился (ничего не списано). */
+export function useFailText(r, itemName = 'предмет') {
+  if (r.reason === 'busy') return '';
+  if (r.reason === 'missing') return `В сумке нет: ${itemName}. Его варят у котла Мирры.`;
+  if (r.reason === 'mana') return `Не хватает маны: нужно ${r.mana || 20}. Отдохните или выпейте Лунный эликсир — ничего не потрачено.`;
+  if (r.reason === 'locked') return 'Пока рано: сначала выполните предыдущий шаг задания.';
+  if (r.reason === 'done') return 'Это уже сделано.';
+  return actionFailText(r, 'ничего не потрачено');
+}
+
 function coinWord(n) {
   const a = n % 100, b = n % 10;
   if (a >= 11 && a <= 14) return 'монет';

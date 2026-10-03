@@ -43,6 +43,10 @@ export const ASSET_FILES = {
   icon_menu: 'assets/sprites/icon_menu.png', icon_close: 'assets/sprites/icon_close.png', icon_city: 'assets/sprites/icon_city.png', icon_bank: 'assets/sprites/icon_bank.png', icon_rating: 'assets/sprites/icon_rating.png', icon_chat: 'assets/sprites/icon_chat.png', icon_forum: 'assets/sprites/icon_forum.png', icon_settings: 'assets/sprites/icon_settings.png', icon_heart: 'assets/sprites/icon_heart.png', icon_drop: 'assets/sprites/icon_drop.png',
   // v0.10.0: сюжетные предметы первой главы (tools/art/v10_icons.py)
   icon_wick: 'assets/sprites/icon_wick.png', icon_compound: 'assets/sprites/icon_compound.png', icon_bundle: 'assets/sprites/icon_bundle.png',
+  // v0.10.0: объекты мира первой главы (tools/art/v10_world.py)
+  forest_node_broken: 'assets/sprites/forest_node_broken.png', forest_node_restored: 'assets/sprites/forest_node_restored.png',
+  seal_sigil_dim: 'assets/sprites/seal_sigil_dim.png', seal_sigil_lit: 'assets/sprites/seal_sigil_lit.png',
+  dust_stash_01: 'assets/sprites/dust_stash_01.png', dust_stash_empty: 'assets/sprites/dust_stash_empty.png',
   // FX
   fx_dot: null, fx_glow: null, fx_ring: null,
 };
@@ -52,6 +56,8 @@ export const DISPLAY_SIZE = {
   hero_down: [64, 128], hero_up: [64, 128], hero_side: [64, 128],
   warlock_down: [64, 128], warlock_up: [64, 128], warlock_side: [64, 128],
   icon_wick: [64, 64], icon_compound: [64, 64], icon_bundle: [64, 64],
+  forest_node_broken: [300, 209], forest_node_restored: [300, 209], seal_sigil_dim: [108, 60], seal_sigil_lit: [108, 60],
+  dust_stash_01: [96, 70], dust_stash_empty: [96, 70],
   tree_autumn_01: [150, 210], tree_autumn_02: [140, 200], tree_dark_01: [150, 220], tree_dark_02: [140, 210],
   dead_tree_01: [110, 170], birch_01: [90, 220],
   heavy_boulder_01: [210, 150], rock_medium_01: [100, 77],

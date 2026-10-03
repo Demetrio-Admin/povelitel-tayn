@@ -51,6 +51,11 @@ export const EVENT_REWARDS = {
   heavy_path_open:         { heroXP: 20 },
   unlock_fire_1:           { heroXP: 30 },
   fire_gate_open:          { heroXP: 20, schoolXP: { fire: 20 } },
+  // v0.10.0: Селена открывает Печать I сюжетно — без уровня, платы и таймера. Учебный знак и ворота дают только
+  // обычный школьный опыт мира (+6), отдельной награды «за обучение» нет.
+  unlock_seal_1:           { heroXP: 60 },
 };
+// lunar_quest_complete теперь выдаёт атомарная операция «применить Лунный фитиль» (storyItems.js STORY_USES.lunar_wick,
+// те же числа); запись выше осталась для старого пути QuestFlags.complete и тестов — алтарь его больше не вызывает.
 
 export const LUNAR_QUEST = { flamesRequired: 3 };

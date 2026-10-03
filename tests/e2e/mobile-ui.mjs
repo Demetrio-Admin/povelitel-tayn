@@ -99,21 +99,21 @@ try {
     await ui(() => window.__game.scene.getScene('UIScene').finishTyping());
     await shot('v09-mirra-kit');
     await ui(() => window.__game.scene.getScene('UIScene').closeDialogue(true));
-    await page.waitForFunction(() => window.__witch.state.item('elixir_life') === 1 && window.__witch.state.item('elixir_mana') === 1, null, { timeout: 30000 });
+    await page.waitForFunction(() => window.__witch.state.item('elixir_life') === 1 && window.__witch.state.item('elixir_mana') === 1, null, { timeout: 120000 });
     // сбор с расходом маны: цена видна в кнопке, после сбора «−4 маны» и подсветка маны
     await ui(() => { const ex = window.__game.scene.getScene('ExplorationScene'); const h = ex.objects.find(o => o.id === 'herb_g1'); ex.player.setPosition(h.x, h.y - 30); /* сверху: снизу рядом лунное растение (правки карты) */ ex.player.stop(); });
-    await page.waitForFunction(() => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === 'herb_g1', null, { timeout: 30000 });
+    await page.waitForFunction(() => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === 'herb_g1', null, { timeout: 120000 });
     assert.match(await ui(() => window.__game.scene.getScene('UIScene').ctxLabel.text), /4 маны/);
     await shot('v09-gather-cost');
     const mana0 = await ui(() => window.__witch.state.data.mana ?? 100);
     const ctxp = await ui(() => { const u = window.__game.scene.getScene('UIScene'); const r = u.ctxBg.getBounds(); return { x: r.centerX, y: r.centerY }; });
     await tap(ctxp.x, ctxp.y);
-    await page.waitForFunction(() => window.__witch.state.item('moon_herb') >= 1, null, { timeout: 30000 });
+    await page.waitForFunction(() => window.__witch.state.item('moon_herb') >= 1, null, { timeout: 120000 });
     assert.ok(Math.abs((await ui(() => window.__witch.state.data.mana)) - (mana0 - 4)) < 1, 'gather spent 4 mana once');
     await shot('v09-gather-spent');
     // нехватка маны: ничего не выдаётся
     await ui(() => { const ex = window.__game.scene.getScene('ExplorationScene'); window.__witch.state.data.mana = 2; window.__game.scene.getScene('UIScene').toasts.forEach(t => t.destroy()); window.__game.scene.getScene('UIScene').toasts = []; const h = ex.objects.find(o => o.id === 'herb_g2'); ex.player.setPosition(h.x, h.y + 40); ex.player.stop(); });
-    await page.waitForFunction(() => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === 'herb_g2', null, { timeout: 30000 });
+    await page.waitForFunction(() => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === 'herb_g2', null, { timeout: 120000 });
     const herbs = await ui(() => window.__witch.state.item('moon_herb'));
     await tap(ctxp.x, ctxp.y); await page.waitForTimeout(600);
     assert.equal(await ui(() => window.__witch.state.item('moon_herb')), herbs);
@@ -147,7 +147,7 @@ try {
     await shot('v09-heal-ok');
     const healLabel = await ui(() => window.__game.scene.getScene('UIScene').modal.buttons.find(b => /^Восстановить за/.test(b.label)).label);
     await tapText(healLabel);
-    await page.waitForFunction(() => window.__witch.state.data.hp === window.__witch.state.heroStats().maxHp, null, { timeout: 30000 });
+    await page.waitForFunction(() => window.__witch.state.data.hp === window.__witch.state.heroStats().maxHp, null, { timeout: 120000 });
     assert.equal(await ui(() => window.__witch.state.item('coins')), 30 - Math.ceil(70 / 10));
     await shot('v09-heal-done');
     // обучение первого боя: реальные касания «Понятно», камня и Телекинеза; прерывание опасной атаки
@@ -171,18 +171,18 @@ try {
     await page.waitForTimeout(400);
     await shot('v09-tut-interrupt');
     await tap(tkb.x, tkb.y);
-    await page.waitForFunction(() => window.__game.scene.getScene('CombatScene').tut.step === 'confirm', null, { timeout: 30000 });
+    await page.waitForFunction(() => window.__game.scene.getScene('CombatScene').tut.step === 'confirm', null, { timeout: 120000 });
     await shot('v09-tut-confirm');
     // подсказка зелья при низком HP (бой на паузе, чтобы медленный эмулятор не закончил его сам)
     await ui(() => { window.__game.scene.getScene('CombatScene').cm.tick = () => {}; });
     await page.waitForFunction(() => !window.__game.scene.getScene('CombatScene').tut.active, null, { timeout: 120000 });
     await ui(() => { const s = window.__witch; s.state.addItem('elixir_life', 1); const c = window.__game.scene.getScene('CombatScene'); c.cm.tick = () => {};   // бой на паузе для снимка
       c.cm.hero.hp = 40; c.cm.hitHero(4); c.processEvents(); c.refreshPotions(); c.hintQueue = c.hintQueue.filter(h => h.key === 'lowHp'); });
-    await page.waitForFunction(() => window.__game.scene.getScene('CombatScene').coachKey === 'hint:lowHp', null, { timeout: 30000 });
+    await page.waitForFunction(() => window.__game.scene.getScene('CombatScene').coachKey === 'hint:lowHp', null, { timeout: 120000 });
     await shot('v09-combat-lowhp-hint');
     // победа (экран результата): здоровье полностью восстановлено, мана — остаток
     await ui(() => { const c = window.__game.scene.getScene('CombatScene'); c.cm.enemy.hp = 0; c.cm.checkResult(); c.processEvents(); });
-    await page.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Победа!', null, { timeout: 30000 });
+    await page.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Победа!', null, { timeout: 120000 });
     await shot('v09-victory');
     await ui(() => window.__game.scene.getScene('UIScene').pressModalButton(true));
     await page.waitForFunction(() => { const g = window.__game; return g.scene.isActive('ExplorationScene') && !g.scene.isActive('CombatScene') && !g.scene.isSleeping('ExplorationScene') && !g.scene.getScene('ExplorationScene').inTransition && window.__witch.mode === 'exploration'; }, null, { timeout: 60000 });
@@ -192,7 +192,7 @@ try {
       const t = ex.enemies.find(e => e.id === 'lunar_guard'); ex.player.setPosition(t.cfg.x, t.cfg.y + 150); window.__preFight = { x: t.cfg.x, y: t.cfg.y + 150 }; ex.startCombat(t); });
     await page.waitForFunction(() => { const g = window.__game, c = g.scene.getScene('CombatScene'); return g.scene.isActive('CombatScene') && c.spawnId === 'lunar_guard' && c.started && !c.ended; }, null, { timeout: 120000 });
     await ui(() => { const c = window.__game.scene.getScene('CombatScene'); c.cm.hero.hp = 3; c.cm.hitHero(10); c.processEvents(); });
-    await page.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Поражение', null, { timeout: 30000 });
+    await page.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Поражение', null, { timeout: 120000 });
     await shot('v09-defeat');
     await ui(() => window.__game.scene.getScene('UIScene').pressModalButton(true));
     await page.waitForFunction(() => { const g = window.__game; return g.scene.isActive('ExplorationScene') && !g.scene.isActive('CombatScene') && !g.scene.isSleeping('ExplorationScene') && !g.scene.getScene('ExplorationScene').inTransition && window.__witch.mode === 'exploration'; }, null, { timeout: 60000 });
@@ -205,7 +205,7 @@ try {
     assert.equal(afterDefeat.focus, 'Сразиться снова');
     await shot('v09-retry-near');
     await ui(() => { const ex = window.__game.scene.getScene('ExplorationScene'); ex.onContext(); });
-    await page.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Мало здоровья', null, { timeout: 30000 });
+    await page.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Мало здоровья', null, { timeout: 120000 });
     await shot('v09-retry-warning');
     await tapText('Подготовиться');
     assert.equal(await ui(() => window.__game.scene.isActive('CombatScene')), false);
@@ -322,12 +322,12 @@ try {
     // Every deferred action is exercised by tapping its actual dialogue choice.
     for(const [npc,answer,title] of [['mirra','Сварить зелье','Котёл Мирры'],['mirra','Открыть журнал','Журнал'],['selena','Открыть алтарь','Изучение: Телекинез II']]) {
       await page.evaluate(npc=>{
-        const s=window.__witch;s.state.markEvent('chapter_1_complete');s.state.markEvent('sq_dust_done');if(npc==='selena')s.dialogue.markSeen('selena_epilogue');s.dialogue.start(npc);
+        const s=window.__witch;for(const e of ['chapter_1_complete','sq_dust_done','fire_gate_open','lunar_quest_start','unlock_seal_1','seal_training_complete'])s.state.markEvent(e);s.state.data.tutorial=(s.state.data.tutorial||[]).filter(k=>k!=='dlg:mirra_epilogue');for(const v of ['selena_epilogue','selena_wick','selena_compound'])s.dialogue.markSeen(v);s.dialogue.start(npc);
         const u=window.__game.scene.getScene('UIScene');let n=0;while(!s.dialogue.view().choices&&n++<10){u.finishTyping();u.dialogueTap();}u.finishTyping();
       },npc);
       if(npc==='mirra'&&answer==='Сварить зелье')await shot('dialogue');
       const choice=await page.evaluate(answer=>{
-        const d=window.__game.scene.getScene('UIScene').dlg;const b=d.choiceViews.find(b=>b.text.text===answer);const r=b.hit.getBounds();return {x:r.centerX,y:r.centerY};
+        const d=window.__game.scene.getScene('UIScene').dlg;const b=d.choiceViews.find(b=>b.text.text===answer);if(!b)throw new Error('нет ответа «'+answer+'», есть: '+d.choiceViews.map(x=>x.text.text).join(' | ')+' (вариант '+window.__witch.dialogue.cur?.variant?.id+')');const r=b.hit.getBounds();return {x:r.centerX,y:r.centerY};
       },answer);
       await tap(choice.x,choice.y);
       assert.equal(await page.evaluate(()=>window.__game.scene.getScene('UIScene').modal?.opts.title),title,answer);

@@ -8,7 +8,8 @@ import { ENEMIES } from '../config/balance.enemies.js';
 import { ITEMS } from '../config/balance.progression.js';
 import { RESOURCES, POTIONS, RESOURCE_ORDER, POTION_ORDER } from '../config/resources.js';
 import { RECIPES } from '../config/recipes.js';
-import { STORY_ITEMS } from '../config/storyItems.js';
+import { STORY_ITEMS, STORY_ITEM_ORDER } from '../config/storyItems.js';
+import { RESOURCE_WHERE } from '../config/guidance.js';
 import { actionFailText } from './windows09.js';
 import { SIDE_QUESTS } from '../config/quests.js';
 import { addScrollViewport } from './scrollViewport.js';
@@ -120,7 +121,22 @@ export const windows08 = {
         row(objective.full, { style: { fontSize: UI.type.body } });
         const why = STEP_WHY[objective.stepId];
         if (why) row('Зачем: ' + why, { style: { color: hex(0x9fe9ff), fontSize: UI.type.small }, gap: 4 });
-        if (hints[0]) row('Подсказка: ' + hints[0], { style: { color: COLORS.textDim, fontSize: UI.type.small }, gap: 8 });
+        // v0.10.0: что нужно для шага — состав сюжетного рецепта и где взять недостающее, или предмет для применения
+        const step = quests.currentStep();
+        if (step.craft) {
+          const r = RECIPES[step.craft];
+          row(`Нужно для «${STORY_ITEMS[r.result]?.name || r.result}» (котёл Мирры):`, { style: { fontSize: UI.type.small, color: COLORS.textGold }, gap: 2 });
+          for (const [item, need] of Object.entries(r.needs)) {
+            const have = services.state.item(item), okk = have >= need;
+            row(`${okk ? '☑' : '☐'} ${ITEMS[item]?.name || item} ${Math.min(have, need)}/${need}${okk ? '' : ' — ' + (RESOURCE_WHERE[item] || 'в лесу')}`,
+              { indent: 14, style: { fontSize: UI.type.small, color: okk ? '#9be8a0' : COLORS.text }, gap: 1 });
+          }
+          cy += 6;
+        } else if (step.use) {
+          const have = services.state.item(step.use) > 0;
+          row(`${have ? '☑' : '☐'} ${STORY_ITEMS[step.use].name} в сумке${have ? '' : ' — сварите в котле Мирры'}`, { style: { fontSize: UI.type.small, color: have ? '#9be8a0' : COLORS.text }, gap: 6 });
+        }
+        if (hints[0] && !(step.craft && hints[0].startsWith('Для рецепта'))) row('Подсказка: ' + hints[0], { style: { color: COLORS.textDim, fontSize: UI.type.small }, gap: 8 });
         cy += 6;
         const act = log.active();
         sec('Побочные задания', hex(0x9fe9ff));
@@ -470,8 +486,29 @@ export const windows08 = {
           }
           cy = Math.max(role.y + role.height, top + 96) + 16;
         }
+        // v0.10.0: сюжетные предметы — отдельной группой карточек: иконка, количество, назначение и место применения
+        const story = [...STORY_ITEM_ORDER, 'lunar_flame', 'rare_core'].filter(id => state.item(id) > 0);
+        if (story.length) {
+          cy += 4;
+          sec('Сюжетные предметы', hex(0x9fe9ff));
+          for (const id of story) {
+            const si = STORY_ITEMS[id], have = state.item(id), top = cy;
+            const icon = si?.icon || ITEMS[id]?.icon;
+            const slot = this.add.graphics().setPosition(x + w / 2, cy + 50);
+            c.add(slot);
+            c.add(fit(this.add.image(x + 40, cy + 44, icon), UI.icon.resource));
+            const nm = label(this, c, x + 88, cy + 6, `${ITEMS[id]?.name || id} · ${have}`, { fontSize: UI.type.body, fontStyle: 'bold', color: hex(si?.color || 0x9fe9ff), wordWrap: { width: w - 96 } });
+            const purpose = si?.purpose || (id === 'lunar_flame' ? 'Свет алтаря. Три огонька идут в Лунный фитиль (котёл Мирры).' : 'Сердце Лесного Стража. Нужно для Восстановительной связки.');
+            const pt = label(this, c, x + 88, nm.y + nm.height + 4, purpose, { fontSize: UI.type.small, color: COLORS.text, wordWrap: { width: w - 96 }, lineSpacing: 2 });
+            const h = Math.max(pt.y + pt.height - top, 92) + 10;
+            drawPlate(slot, w, h, { accent: si?.color || 0x9fe9ff, fill: 0x18141f, alpha: 0.8, radius: 10 });
+            slot.setPosition(x + w / 2, top + h / 2 - 4);
+            c.sendToBack(slot);
+            cy = top + h + 10;
+          }
+        }
         cy += 8;
-        const other = Object.entries(d.inventory).filter(([k, v]) => v > 0 && !RESOURCES[k] && !POTIONS[k]);
+        const other = Object.entries(d.inventory).filter(([k, v]) => v > 0 && !RESOURCES[k] && !POTIONS[k] && !STORY_ITEMS[k] && k !== 'lunar_flame' && k !== 'rare_core' && k !== 'coins');
         if (other.length) { cy += 4; row(other.map(([k, v]) => `${ITEMS[k]?.name || k}: ${v}`).join('   ·   '), { fontSize: UI.type.small }); }
         if (d.stats.combats.length) {
           cy += 4;

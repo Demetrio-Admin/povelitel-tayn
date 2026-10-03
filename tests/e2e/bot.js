@@ -51,20 +51,26 @@ window.__bot = async function () {
       const tk = cm.abilityState('telekinesis').state === 'ready';
       const fire = cm.abilityState('fire').state === 'ready';
       const fo = id => cm.fieldObjects.find(o => o.available && o.def && (o.id === id));
-      const heavyCast = e.isPreparing && cm.def.strongAttack && !(cm.def.strongAttack.interruptBy || []).includes('telekinesis');
+      const sa = e.def.strongAttack;   // v0.10.0: у Стража узла параметры зависят от фазы
+      const heavyCast = e.isPreparing && sa && !(sa.interruptBy || []).includes('telekinesis');
+      const sealOnly = sa && !(sa.interruptBy || []).some(t => t.startsWith('telekinesis'));
+      const seal = cm.abilityState('seal').state === 'ready';
+      if (e.isPreparing && seal && (sa.interruptBy || []).includes('seal') && (sealOnly || !tk)) { c.onAbility('seal'); L('    interrupt: seal @', ((performance.now() - t0) / 1000).toFixed(1)); continue; }
+      if (e.isPreparing && sealOnly) continue;   // ТК и Огонь эту подготовку не отменят — ждём Печать
+      if (sealOnly && e.strongCd < 4 && cm.hero.mana < 44) continue;   // держим ману под Печать
       if (e.isPreparing && tk) {
         const heavy = cm.fieldObjects.find(o => o.available && o.def.weight === 'heavy');
         if (heavy && cm.selectedId !== heavy.id) cm.selectObject(heavy.id);
         c.onAbility('telekinesis'); L('    interrupt try @', ((performance.now() - t0) / 1000).toFixed(1), heavyCast ? '(heavy)' : ''); continue;
       }
-      const strongSoon = cm.def.strongAttack && e.strongCd < 2.5 && !e.isPreparing;
+      const strongSoon = sa && e.strongCd < 2.5 && !e.isPreparing;
       if (e.armorActive && tk && !strongSoon) {
         const cr = cm.fieldObjects.find(o => o.available && o.def.breaksArmor);
         if (cr) { if (cm.selectedId !== cr.id) cm.selectObject(cr.id); c.onAbility('telekinesis'); continue; }
       }
       if (fire) { c.onAbility('fire'); continue; }
       // TK оставляем под прерывание, если враг умеет кастовать
-      if (tk && !strongSoon && (!cm.def.strongAttack || cm.hero.mana > 40)) {
+      if (tk && !strongSoon && (!sa || cm.hero.mana > 40)) {
         const light = cm.fieldObjects.find(o => o.available && o.def.throwable && o.def.weight !== 'heavy');
         if (light && cm.selectedId !== light.id) cm.selectObject(light.id);
         c.onAbility('telekinesis');
@@ -195,6 +201,17 @@ window.__bot = async function () {
     await sleep(1500); await settle();
   }
 
+  /** v0.10.0: сварить в котле Мирры (тот же путь, что кнопка «Сварить» в окне котла). */
+  async function craft(id) {
+    await settle();
+    const before = { ...S.state.data.inventory };
+    await ui().craftRecipe(id);
+    await sleep(400); await settle();
+    const got = Object.entries(S.state.data.inventory).filter(([k, v]) => v !== (before[k] || 0)).map(([k, v]) => `${k}:${v - (before[k] || 0)}`).join(' ');
+    L(`> craft ${id}: ${got || 'nothing'}`);
+  }
+  async function gather(...ids) { for (const id of ids) { const o = obj(id); if (o && o.isAvailable()) await act(id, null, '(gather)'); else L(`  skip ${id}: not ready`); } }
+
   const snap = (tag) => {
     const d = S.state.data, v = vit();
     L(`== ${tag}: lvl=${d.heroLevel} xp=${d.heroXP} hp=${Math.round(v.hp)}/${v.maxHp} mana=${Math.round(v.mana)}/${v.maxMana} tk=${d.telekinesisLevel} fire=${d.fireLevel} items=${JSON.stringify(d.inventory || d.items)} quest="${S.quests.objectiveText()}"`);
@@ -225,11 +242,14 @@ window.__bot = async function () {
     await act('altar_stone', 'telekinesis');
     await enemy('lunar_guard');
     await act('flame_c', null, '(pickup)');
+    await act('guard_cache');
     snap('flames');
-    // v0.8: для Телекинеза II нужны лунная трава ×2 и рунная пыль ×1 — собираем руками
-    await act('herb_a1', null, '(gather)'); await act('herb_g1', null, '(gather)'); await act('rune_sigil', null, '(gather)');
-    L('  resources: herb=' + S.state.item('moon_herb') + ' dust=' + S.state.item('rune_dust'));
-    await act('lunar_altar', null, '(complete + research)');
+    // v0.10.0: огоньки → Лунный фитиль (трава, смола, пыль) → алтарь; трава ×2 и пыль ×1 — ещё и на Телекинез II
+    await gather('herb_a1', 'herb_t1', 'herb_g1', 'resin_a1', 'rune_sigil');
+    L('  resources: herb=' + S.state.item('moon_herb') + ' resin=' + S.state.item('tree_resin') + ' dust=' + S.state.item('rune_dust'));
+    await act('lunar_altar', null, '(expect: brew wick first)');
+    await craft('lunar_wick');
+    await act('lunar_altar', null, '(insert wick + research)');
     await act('lunar_altar', null, '(check research)');
     { const t0 = performance.now(); while (!S.state.hasEvent('telekinesis_2_complete') && performance.now() - t0 < 180000) { await sleep(1000); await settle(); }
       L(`  research: waited ${Math.round((performance.now() - t0) / 1000)}s (real timer, no debug)`); }
@@ -238,10 +258,25 @@ window.__bot = async function () {
     await act('fire_circle'); snap('fire');
     await act('ritual_torch', 'fire');
     await act('dry_bush', 'fire');
+    await gather('herb_g2', 'herb_g3');
     await act('corrupted_roots', 'fire');
     await sleep(1500);
+    // старый лес: три Корневика, запас пыли, тайники
+    await enemy('rootling_01');
+    await gather('resin_j1');
+    await enemy('rootling_02');
+    await act('dust_stash');
+    await act('dust_stash', null, '(expect: already taken this cycle)');
+    await gather('mush_j1');
+    await act('hollow_cache');
     await act('moonstone', null, '(pickup)');
+    await enemy('rootling_03');
     await act('west_chest');
+    await gather('mush_a1');
+    await craft('revealing_compound');
+    await enemy('rootling_04');
+    await enemy('rootling_05');
+    await act('approach_cache');
     snap('before guardian');
     await act('ancient_gate', 'seal', '(expect refuse: guardian alive)');
     for (let i = 0; i < 3 && !S.state.data.defeatedEnemies.includes('forest_guardian_01'); i++) {
@@ -252,7 +287,24 @@ window.__bot = async function () {
         await healAtMirra();
       }
     }
+    // знаки, Печать, обучение, ворота
+    await act('ancient_gate', null, '(reveal marks)');
+    await act('ancient_gate', 'seal', '(expect: seal not learned)');
+    await talk('selena', 'Научи меня.');
+    await settle(); snap('seal');
+    await act('seal_sigil', 'seal');
+    await act('ancient_gate', 'fire', '(expect: only seal)');
     await act('ancient_gate', 'seal');
+    await sleep(1500); await settle();
+    // связка и испытание
+    await gather('herb_a1', 'herb_t1', 'herb_g1', 'rune_sigil');
+    await craft('restoration_bundle');
+    if (vit().hp < vit().maxHp * 0.8) await healAtMirra();
+    for (let i = 0; i < 3 && !S.state.hasEvent('chapter_trial_defeated'); i++) {
+      await enemy('node_trial'); snap('after trial try ' + (i + 1));
+      if (!S.state.hasEvent('chapter_trial_defeated')) { afterDefeatCheck('node_trial'); await healAtMirra(); }
+    }
+    await act('forest_node', null, '(repair)');
     await sleep(1500); await settle();
     snap('end');
     L('completedEvents=' + JSON.stringify(S.state.data.completedEvents));

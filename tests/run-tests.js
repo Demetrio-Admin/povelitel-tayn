@@ -809,5 +809,18 @@ console.log('\n[v0.10] Страж узла: фазы, прерывания, бо
   ok(ns.result === 'defeat' || ns.heroHp < r.heroHp, 'без Печати третья фаза заметно опаснее');
 }
 
+console.log('\n[v0.10] Старые сохранения: цель главы с достигнутого места');
+{
+  const at = (events, inv = {}, enemies = []) => { const w = makeWorld({ t: 0 }); for (const e of events) w.state.markEvent(e); Object.assign(w.state.data.inventory, inv); for (const id of enemies) w.state.markEnemyDefeated(id); return w.quests.currentStep().id; };
+  const base = ['unlock_telekinesis_1', 'first_world_interaction'];
+  ok(at([...base, 'lunar_quest_start'], { lunar_flame: 3 }, ['scavenger_01']) === 'wick', 'до алтаря с тремя огоньками → «сварите фитиль» (огоньки сохранены)');
+  ok(at([...base, 'lunar_quest_start'], { lunar_flame: 1 }, ['scavenger_01']) === 'flames', 'до алтаря с одним огоньком → сбор огоньков продолжается');
+  ok(at([...base, 'lunar_quest_start', 'lunar_quest_complete'], {}, ['scavenger_01']) === 'research', 'алтарь уже восстановлен → фитиль не нужен, дальше изучение');
+  ok(at([...base, 'lunar_quest_start', 'lunar_quest_complete', 'telekinesis_2_start'], {}, ['scavenger_01']) === 'wait', 'ТК II уже запущен → ждём, повторной цены нет');
+  const late = [...base, 'lunar_quest_start', 'lunar_quest_complete', 'telekinesis_2_start', 'telekinesis_2_complete', 'heavy_path_open', 'unlock_fire_1', 'fire_gate_open', 'guardian_defeated', 'seal_required_01', 'prototype_complete'];
+  ok(at(late, { rare_core: 1 }, ['scavenger_01', 'forest_guardian_01']) === 'compound', 'финал прототипа (seal_required_01, prototype_complete) → продолжение главы, а не её конец');
+  ok(at(late, { revealing_compound: 1 }, ['scavenger_01', 'forest_guardian_01']) !== 'end', 'prototype_complete не равен chapter_1_complete');
+}
+
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Все тесты пройдены');
 process.exit(failures ? 1 : 0);

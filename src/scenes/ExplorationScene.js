@@ -51,6 +51,8 @@ const OBJECT_CLASSES = {
 };
 
 const EXTRA_BOTTOM = 500; // декоративная полоса леса ниже дома, чтобы героиня была на ~62% экрана
+// v0.10.0: полоса леса выше северного края — поляна узла за воротами (y 110–330) не прячется под HUD
+const EXTRA_TOP = 340;
 
 // детерминированный ГПСЧ — карта выглядит одинаково при каждом запуске
 function rng(seed) {
@@ -84,7 +86,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.buildProps();
 
     this.interaction = new InteractionSystem(this, bus);
-    const p = state.data.player;
+    const p = this.fixStartPosition(state.data.player);
     this.player = new Player(this, p.x, p.y);
     this.physics.add.collider(this.player.sprite, this.solids);
 
@@ -98,7 +100,7 @@ export class ExplorationScene extends Phaser.Scene {
 
     // камера: героиня немного ниже центра (Blueprint §7)
     const cam = this.cameras.main;
-    cam.setBounds(0, 0, WORLD.width, WORLD.height + EXTRA_BOTTOM);
+    cam.setBounds(0, -EXTRA_TOP, WORLD.width, WORLD.height + EXTRA_BOTTOM + EXTRA_TOP);
     this.followOffsetY = (CAMERA.heroScreenY - 0.5) * VIEW.height + PLAYER.displayHeight * 0.4;
     this.follow();
     cam.fadeIn(500);
@@ -238,6 +240,18 @@ export class ExplorationScene extends Phaser.Scene {
     for (const g of GROUND) this.add.tileSprite(g.x, g.y, g.w, g.h, g.tex).setOrigin(0).setDepth(DEPTH.path);
     // тёмная подстилка под лесом ниже границы мира (деревья — в world.props.js)
     this.add.rectangle(0, WORLD.height, WORLD.width, EXTRA_BOTTOM, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
+    // v0.10.0: тёмный лес над северной границей (только картинка, за край мира пройти нельзя)
+    this.add.rectangle(0, -EXTRA_TOP, WORLD.width, EXTRA_TOP, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
+    const r = rng(9001), keys = ['tree_dark_01', 'tree_dark_02', 'tree_autumn_01', 'tree_autumn_02'];
+    for (let y = -EXTRA_TOP + 90; y <= 0; y += 85) {
+      for (let x = -20; x < WORLD.width + 40; x += 70 + r() * 30) {
+        const k = keys[Math.floor(r() * keys.length)];
+        const im = this.add.image(x + (r() - 0.5) * 20, y + (r() - 0.5) * 20, k).setOrigin(0.5, 1);
+        applyDisplaySize(im, k);
+        if (r() < 0.5) im.setFlipX(true);
+        im.setDepth(DEPTH.mainBase + im.y);
+      }
+    }
   }
 
   /** Дороги и вода: кривые формы рисуются кусками 512×512 и кладутся поверх травы. */

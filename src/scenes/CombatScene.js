@@ -396,8 +396,8 @@ export class CombatScene extends Phaser.Scene {
           break;
         case 'armorBack': this.toast('Броня Стража восстановилась'); break;
         case 'phase':   // v0.10.0: Страж узла сменил фазу — заметное изменение и короткое сообщение
-          this.showBanner(`Фаза ${ev.phase}`, ev.phase === 3 ? COLORS.seal : COLORS.fire);
-          this.toast(ev.message, ev.phase === 3 ? COLORS.seal : COLORS.fire);
+          // сообщение — между врагом и героиней (не поверх врага и предупреждения сильного удара)
+          this.showBanner(`Фаза ${ev.phase}\n${ev.message}`, ev.phase === 3 ? COLORS.seal : COLORS.fire, 2600, UI.type.combat);
           if (ev.tint) { this.enemyTint = ev.tint; this.enemySprite.setTint(ev.tint); }
           this.burst(ENEMY_POS.x, ENEMY_POS.y - this.enemySprite.displayHeight * 0.5, ev.tint || 0xffffff, 40);
           this.cameras.main.shake(260, 0.01);
@@ -508,9 +508,9 @@ export class CombatScene extends Phaser.Scene {
     this.time.delayedCall(800, () => e.destroy());
   }
 
-  showBanner(text, color) {
-    const t = this.add.text(VIEW.width / 2, 640, text, { fontFamily: FONT, fontSize: UI.type.title, align: 'center', wordWrap: { width: 620 }, color: hex(color), stroke: '#000', strokeThickness: 7 }).setOrigin(0.5).setDepth(8000).setAlpha(0);
-    this.tweens.add({ targets: t, alpha: 1, duration: 200, yoyo: true, hold: COMBAT.introSec * 800, onComplete: () => t.destroy() });
+  showBanner(text, color, holdMs = COMBAT.introSec * 800, fontSize = UI.type.title) {
+    const t = this.add.text(VIEW.width / 2, 640, text, { fontFamily: FONT, fontSize, align: 'center', wordWrap: { width: 620 }, color: hex(color), stroke: '#000', strokeThickness: 7 }).setOrigin(0.5).setDepth(8000).setAlpha(0);
+    this.tweens.add({ targets: t, alpha: 1, duration: 200, yoyo: true, hold: holdMs, onComplete: () => t.destroy() });
   }
 
   toast(text, color) { this.bus.emit(MSG.TOAST, text, color); }

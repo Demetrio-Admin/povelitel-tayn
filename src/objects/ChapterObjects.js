@@ -21,7 +21,7 @@ export function outcomeText(out) {
   if (!out) return '';
   const parts = [];
   if (out.heroXP) parts.push(`+${out.heroXP} опыта`);
-  for (const [k, v] of Object.entries(out.items || {})) if (v > 0) parts.push(`+${v} ${itemName(k)}`);
+  for (const [k, v] of Object.entries(out.items || {})) if (v > 0) parts.push(k === 'coins' ? `+${v} монет` : `+${v} ${itemName(k)}`);
   for (const lv of out.levelUps || []) parts.push(`новый уровень ${lv.level}`);
   return parts.join(', ');
 }

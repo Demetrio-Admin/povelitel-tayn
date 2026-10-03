@@ -6,12 +6,16 @@ import { UPGRADES, TIMER_MODE } from '../config/balance.progression.js';
 import { WORLD } from '../config/world.layout.js';
 import { SAVE } from '../config/game.config.js';
 import { materialize } from './vitals.js';
+import { DEFAULT_HERO_ID } from '../config/heroes.js';
 
 const SAVE_VERSION = 1;
 
-export function createDefaultState() {
+export function createDefaultState(heroId = DEFAULT_HERO_ID) {
   return {
     version: SAVE_VERSION,
+    // v0.9.2: герой без сервера (режим разработки). Старое сохранение без поля — ведьма (подставляется при load).
+    // Онлайн герой — метаданные профиля (PlayerSession.hero), в прогресс и patch на сервер не входит.
+    heroId,
     heroLevel: 1,
     heroXP: 0,
     telekinesisLevel: 0,
@@ -90,8 +94,9 @@ export class GameState {
     this.changed('replace');
   }
 
-  reset() {
-    this.data = createDefaultState();
+  /** Новая игра. heroId — выбранный герой (без него — ведьма). */
+  reset(heroId = DEFAULT_HERO_ID) {
+    this.data = createDefaultState(typeof heroId === 'string' && heroId ? heroId : DEFAULT_HERO_ID);
     if (this.storage) this.storage.removeItem(SAVE.key);
     this.changed('reset');
   }

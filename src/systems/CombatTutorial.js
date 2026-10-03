@@ -5,6 +5,7 @@
 // Пока идут intro/select/throw, враг и автоатака стоят (CombatManager.tick({ holdEnemy })); на шаге interrupt удерживается
 // только подготовка опасной атаки — перезарядка и мана героини продолжают идти, поэтому нужный дар всегда станет доступен.
 // Это НЕ modal-lock: кнопки боя работают (CombatScene.canAct не зависит от обучения).
+import { T } from '../state/hero.js';
 import { COMBAT_TUTORIAL } from '../config/story.js';
 
 export const ctKey = (step) => `ct:${step}`;
@@ -56,14 +57,15 @@ export class CombatTutorial {
   get reminder() {
     if (this.reminded || this.step !== 'throw') return null;
     this.reminded = true;
-    return COMBAT_TUTORIAL.text.remindSelect;
+    return T(COMBAT_TUTORIAL.text.remindSelect);
   }
 
   /** Текст для панели и что подсветить: { step, text, target: 'object'|'telekinesis'|null, button: 'ok'|null }. */
   view() {
     const s = this.step;
     if (!s) return null;
-    const t = COMBAT_TUTORIAL.text;
+    // v0.9.2: тексты обучения — по герою (ведьма / колдун); шаги и отметки общие
+    const t = Object.fromEntries(Object.entries(COMBAT_TUTORIAL.text).map(([k, v]) => [k, T(v)]));
     if (s === 'intro') return { step: s, text: t.intro, target: null, button: 'ok' };
     if (s === 'select') return { step: s, text: t.select, target: 'object', button: null };
     if (s === 'throw') return { step: s, text: this.cm.selectedObject() ? t.throw : t.select, target: this.cm.selectedObject() ? 'telekinesis' : 'object', button: null };
@@ -82,7 +84,7 @@ export class CombatTutorial {
     if (this.feedback) { this.feedback.left -= dt; if (this.feedback.left <= 0) this.feedback = null; }
   }
 
-  say(key) { this.feedback = { text: COMBAT_TUTORIAL.feedback[key], left: 2.6 }; }
+  say(key) { this.feedback = { text: T(COMBAT_TUTORIAL.feedback[key]), left: 2.6 }; }
 
   /** Попытка дара (до CombatManager.useAbility): неверные действия дают пояснение и не продвигают шаг. */
   beforeAbility(id, state) {

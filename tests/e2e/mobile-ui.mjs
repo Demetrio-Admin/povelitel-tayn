@@ -18,6 +18,7 @@ if (!process.env.UI_BASE_URL) {
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined,
   args: ['--no-sandbox', '--disable-dev-shm-usage', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const summary = [];
+const HERO = process.env.UI_HERO || '';
 try {
   const viewports = [[360, 800], [390, 844], [412, 915]].filter(([w]) => !process.env.UI_VIEWPORTS || process.env.UI_VIEWPORTS.split(',').includes(String(w)));
   for (const [width, height] of viewports) {
@@ -28,8 +29,10 @@ try {
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
-    await page.goto(new URL('?reset&skipmenu', BASE).href);
+    // UI_HERO=warlock — тот же сценарий колдуном (v0.9.2); снимки — с суффиксом героя
+    await page.goto(new URL(`?reset&skipmenu${HERO ? `&hero=${HERO}` : ''}`, BASE).href);
     await page.waitForFunction(() => window.__game?.scene.isActive('UIScene'));
+    if (HERO) assert.equal(await page.evaluate(() => window.__game.scene.getScene('ExplorationScene').player.view.texture.key), `${HERO === 'witch' ? 'hero' : HERO}_down`, 'в мире выбранный герой');
     assert.match(await page.title(), /v0\.9\.\d/);
     assert.equal(await page.locator('vite-error-overlay').count(), 0);
     assert.equal(await page.locator('canvas').count(), 1);
@@ -53,7 +56,7 @@ try {
     const shot = async name => {
       screenshotCount++;
       await page.waitForTimeout(180);
-      await page.screenshot({ path: path.join(out, `${width}x${height}-${name}.png`) });
+      await page.screenshot({ path: path.join(out, `${width}x${height}${HERO ? '-' + HERO : ''}-${name}.png`) });
       const issues = await page.evaluate(() => {
         const ui = window.__game.scene.getScene('UIScene'), issues=[];
         if (ui.modal?.opts && (ui.modal.top < 0 || ui.modal.top+ui.modal.height > 1280)) issues.push('modal overflows');
@@ -266,12 +269,12 @@ try {
       const p = await ui(id=>{const u=window.__game.scene.getScene('UIScene');const r=u.modal.items.find(i=>i.item.id===id).orb.getBounds();return {x:r.centerX,y:r.centerY};}, id);
       await tap(p.x, p.y); await page.waitForTimeout(250); };
     for (const id of ['city','bank','rating','chat','forum']) {
-      const before = await ui(()=>JSON.stringify({...window.__witch.state.data,hp:0,mana:0,stats:{...window.__witch.state.data.stats,playTimeMs:0}}))   /* v0.9: HP/мана сами восстанавливаются со временем */;
+      const before = await ui(()=>JSON.stringify({...window.__witch.state.data,hp:0,mana:0,stats:{...window.__witch.state.data.stats,playTimeMs:0},tutorial:window.__witch.state.data.tutorial.filter(t=>!t.startsWith('hero:'))}))   /* v0.9: HP/мана восстанавливаются сами; v0.9.2: отложенные реплики героя о новых предметах не зависят от заглушки */;
       await menuItem(id);
       assert.equal(await ui(()=>window.__game.scene.getScene('UIScene').modal?.opts?.stub), id);
       if (id === 'city') await shot('stub-city');
       await close();
-      assert.equal(await ui(()=>JSON.stringify({...window.__witch.state.data,hp:0,mana:0,stats:{...window.__witch.state.data.stats,playTimeMs:0}}))   /* v0.9: HP/мана сами восстанавливаются со временем */, before, id + ' stub changes nothing');
+      assert.equal(await ui(()=>JSON.stringify({...window.__witch.state.data,hp:0,mana:0,stats:{...window.__witch.state.data.stats,playTimeMs:0},tutorial:window.__witch.state.data.tutorial.filter(t=>!t.startsWith('hero:'))}))   /* v0.9: HP/мана восстанавливаются сами; v0.9.2: отложенные реплики героя о новых предметах не зависят от заглушки */, before, id + ' stub changes nothing');
       assert.equal(await ui(()=>window.__witch.modalOpen), false);
     }
     await menuItem('settings');
@@ -381,11 +384,50 @@ try {
     assert.equal(await page.evaluate(()=>{const c=window.__game.scene.getScene('CombatScene'),u=window.__game.scene.getScene('UIScene');return !c.fieldHint.visible && u.tutText.getBounds().bottom+15<c.potionViews.values().next().value.hit.getBounds().top;}),true);
     await page.evaluate(()=>{const g=window.__game;g.scene.stop('CombatScene');g.scene.stop('UIScene');g.scene.stop('ExplorationScene');g.scene.start('MenuScene');});
     await page.waitForFunction(()=>window.__game.scene.isActive('MenuScene'));
+    {
+    // v0.9.2: стартовый экран — с сохранением в предпросмотре герой сохранения, «Продолжить»; «Новая игра» → выбор героя
+    const menuLayout = () => page.evaluate(() => {
+      const m = window.__game.scene.getScene('MenuScene'), issues = [];
+      const texts = m.children.list.filter(o => o.type === 'Text' && o.visible && o.alpha > 0.05 && o.text && o.depth >= 5);
+      const boxes = texts.map(t => ({ t: t.text, b: t.getBounds() }));
+      for (const { t, b } of boxes) {
+        if (b.left < 0 || b.right > 720 || b.top < 0 || b.bottom > 1280) issues.push('за экраном: ' + t);
+        const tt = texts.find(x => x.text === t); if (parseInt(tt.style.fontSize) < 24) issues.push('мелкий текст: ' + t);
+      }
+      for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i].b, c = boxes[j].b;
+        if (a.left < c.right - 2 && c.left < a.right - 2 && a.top < c.bottom - 2 && c.top < a.bottom - 2) issues.push(`наложение: «${boxes[i].t}» / «${boxes[j].t}»`);
+      }
+      if (m.primary.hit.height < 96) issues.push('главная кнопка ниже 96');
+      return issues;
+    });
+    await page.waitForFunction(()=>!window.__game.scene.getScene('MenuScene').cameras.main.fadeEffect.isRunning);
     await shot('menu');
-    await page.evaluate(()=>window.__game.scene.getScene('MenuScene').scene.start('HeroSelectScene'));
-    await page.waitForFunction(()=>window.__game.scene.isActive('HeroSelectScene'));await shot('hero');
-    // Compose account choice, without requiring external Supabase credentials.
-    await page.evaluate(()=>window.__game.scene.getScene('HeroSelectScene').showChoice());await shot('hero-choice');
+    const saved = await page.evaluate(()=>({ hero: window.__witch.state.data.heroId, events: window.__witch.state.data.completedEvents.length, tex: window.__game.scene.getScene('MenuScene').picker.image.texture.key, toggles: window.__game.scene.getScene('MenuScene').picker.toggles.length }));
+    assert.equal(saved.tex, `${saved.hero === 'warlock' ? 'warlock' : 'hero'}_down`, 'меню с сохранением: в предпросмотре герой сохранения');
+    assert.equal(saved.toggles, 0, 'с сохранением переключателя нет');
+    assert.deepEqual(await menuLayout(), [], 'меню с сохранением: раскладка');
+    await page.evaluate(()=>window.__game.scene.getScene('MenuScene').confirmNew()); await shot('menu-confirm-new');
+    await page.evaluate(()=>{const m=window.__game.scene.getScene('MenuScene');m.closeOverlay();m.scene.restart({ newGame: true, hero: window.__witch.state.data.heroId });});
+    await page.waitForFunction(()=>{const m=window.__game.scene.getScene('MenuScene');return m.scene.isActive()&&m.picker?.toggles.length===2&&!m.cameras.main.fadeEffect.isRunning;});
+    await shot('start-select');
+    assert.deepEqual(await menuLayout(), [], 'стартовый экран: раскладка');
+    // нажатие на вариант (настоящий тап по зоне переключателя) сразу меняет рисунок, имя и роль и ничего не сохраняет
+    for (const id of ['warlock', 'witch', 'warlock']) {
+      const t = await page.evaluate((id)=>{const b=window.__game.scene.getScene('MenuScene').picker.toggles.find(t=>t.heroId===id);return {x:b.hit.x,y:b.hit.y};}, id);
+      await tap(t.x, t.y);
+      const st = await page.evaluate(()=>{const m=window.__game.scene.getScene('MenuScene');return { id:m.hero, tex:m.picker.image.texture.key, labels:m.children.list.filter(o=>o.type==='Text').map(o=>o.text) };});
+      assert.equal(st.id, id); assert.equal(st.tex, `${id === 'witch' ? 'hero' : id}_down`);
+      assert.ok(st.labels.includes(id === 'witch' ? 'Ученица лесной ведьмы' : 'Ученик лесной ведьмы'), 'роль под предпросмотром');
+      await shot(`start-${id}`);
+      assert.deepEqual(await menuLayout(), [], `стартовый экран (${id}): раскладка`);
+    }
+    const after = await page.evaluate(()=>({ hero: window.__witch.state.data.heroId, events: window.__witch.state.data.completedEvents.length }));
+    assert.deepEqual(after, { hero: saved.hero, events: saved.events }, 'переключение предпросмотра не меняет и не сбрасывает сохранение');
+    // «Как продолжить?» (онлайн-вариант) — без внешнего Supabase, только раскладка окна
+    await page.evaluate(()=>window.__game.scene.getScene('MenuScene').showChoice());await shot('hero-choice');
+    await page.evaluate(()=>window.__game.scene.getScene('MenuScene').back());
+    }
     assert.deepEqual(errors,[],`${width}×${height}: browser console`);
     summary.push({width,height,status:'passed',screenshots:screenshotCount});
     await context.close();

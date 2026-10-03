@@ -1,17 +1,20 @@
 import Phaser from 'phaser';
 import { PLAYER, DEPTH } from '../config/game.config.js';
 import { HeroAnimator } from '../systems/HeroAnimator.js';
+import { currentHero } from '../state/hero.js';
 
-// Player — геройня в exploration. Pivot — низ по центру, hitbox — у ступней (Hero Spec §13).
-// 4 направления: down / up / side (лево = зеркало side).
+// Player — герой (ведьма или колдун) в exploration. Pivot — низ по центру, hitbox — у ступней (Hero Spec §13).
+// 4 направления: down / up / side (лево = зеркало side). v0.9.2: текстуры — из определения выбранного героя
+// (config/heroes.js); размер на экране, hitbox, тень и скорость общие (PLAYER), поэтому силуэт рисунка на игру не влияет.
 export class Player {
   constructor(scene, x, y) {
     this.scene = scene;
+    this.tex = currentHero().textures;
     this.shadow = scene.add.image(x, y, 'hero_shadow').setDepth(DEPTH.path + 1).setAlpha(0.8);
     // sprite — физическое тело (невидимое), view — то, что рисуется и анимируется:
     // смещения анимации не должны попадать в физику.
-    this.sprite = scene.physics.add.sprite(x, y, 'hero_down').setOrigin(0.5, 1).setVisible(false);
-    this.view = scene.add.image(x, y, 'hero_down').setOrigin(0.5, 1);
+    this.sprite = scene.physics.add.sprite(x, y, this.tex.down).setOrigin(0.5, 1).setVisible(false);
+    this.view = scene.add.image(x, y, this.tex.down).setOrigin(0.5, 1);
     const tex = this.sprite.texture.getSourceImage();
     this.baseScale = PLAYER.displayHeight / tex.height;
     this.sprite.setScale(this.baseScale);
@@ -64,7 +67,7 @@ export class Player {
   face(dx, dy) {
     if (Math.abs(dx) > Math.abs(dy)) { this.facing = 'side'; this.sprite.setFlipX(dx < 0); }
     else { this.facing = dy < 0 ? 'up' : 'down'; this.sprite.setFlipX(false); }
-    this.view.setTexture(`hero_${this.facing}`).setFlipX(this.sprite.flipX);
+    this.view.setTexture(this.tex[this.facing]).setFlipX(this.sprite.flipX);
   }
 
   get dir() { return this.facing === 'side' ? (this.sprite.flipX ? -1 : 1) : 0; }

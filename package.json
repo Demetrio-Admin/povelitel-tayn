@@ -1,20 +1,21 @@
 {
   "name": "witch-rpg-prototype",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host",
-    "test": "node tests/run-tests.js && node tests/world-test.js && node --import ./tools/ui/register.mjs tests/editor-test.mjs && node tests/session-test.js && node --import ./tools/ui/register.mjs tests/ui-smoke.mjs && node --import ./tools/ui/register.mjs tests/objects-test.mjs",
+    "test": "node tests/run-tests.js && node tests/world-test.js && node --import ./tools/ui/register.mjs tests/editor-test.mjs && node tests/session-test.js && node --import ./tools/ui/register.mjs tests/ui-smoke.mjs && node --import ./tools/ui/register.mjs tests/objects-test.mjs && node --import ./tools/ui/register.mjs tests/hero-test.mjs",
     "ui:shots": "node --import ./tools/ui/register.mjs tools/ui/render-scenes.mjs",
     "e2e": "node tests/e2e/play.mjs",
     "test:db": "node tools/sql/security-test.mjs && node tools/sql/diff-test.mjs && node tools/sql/migration-test.mjs && BACKEND=pg node tests/session-test.js",
     "test:browser": "python3 tools/ui/dom/dom-test.py",
     "test:mobile": "node tests/e2e/mobile-ui.mjs",
     "test:reload": "node tests/e2e/reload-mid-combat.mjs",
-    "test:actions": "node tests/e2e/server-actions.mjs"
+    "test:actions": "node tests/e2e/server-actions.mjs",
+    "test:heroes": "node tests/e2e/hero-online.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

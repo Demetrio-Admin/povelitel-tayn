@@ -10,6 +10,8 @@
 export const ASSET_FILES = {
   // герой (Hero & Sprite Spec v0.1 §18 — минимальный набор)
   hero_down: 'assets/sprites/hero_down.png', hero_up: 'assets/sprites/hero_up.png', hero_side: 'assets/sprites/hero_side.png', hero_shadow: null,
+  // v0.9.2: колдун — те же три ракурса, тот же холст 166×240 (config/heroes.js). ВРЕМЕННАЯ графика — см. TEMPORARY_ART
+  warlock_down: 'assets/sprites/warlock_down.png', warlock_up: 'assets/sprites/warlock_up.png', warlock_side: 'assets/sprites/warlock_side.png',
   // деревья
   tree_autumn_01: 'assets/sprites/tree_autumn_01.png', tree_autumn_02: 'assets/sprites/tree_autumn_02.png', tree_dark_01: 'assets/sprites/tree_dark_01.png', tree_dark_02: 'assets/sprites/tree_dark_02.png', dead_tree_01: 'assets/sprites/dead_tree_01.png', birch_01: 'assets/sprites/birch_01.png',
   // камни
@@ -46,6 +48,7 @@ export const ASSET_FILES = {
 // Размер объекта в мире (px при viewport 720×1280). Не зависит от разрешения исходника.
 export const DISPLAY_SIZE = {
   hero_down: [64, 128], hero_up: [64, 128], hero_side: [64, 128],
+  warlock_down: [64, 128], warlock_up: [64, 128], warlock_side: [64, 128],
   tree_autumn_01: [150, 210], tree_autumn_02: [140, 200], tree_dark_01: [150, 220], tree_dark_02: [140, 210],
   dead_tree_01: [110, 170], birch_01: [90, 220],
   heavy_boulder_01: [210, 150], rock_medium_01: [100, 77],
@@ -63,3 +66,13 @@ export const DISPLAY_SIZE = {
   npc_mirra: [84, 126], npc_veda: [80, 120], npc_goran: [90, 132], npc_selena: [80, 128], bed_01: [112, 120], table_01: [112, 86], bookshelf_01: [150, 128], cauldron_01: [88, 100], wardrobe_01: [84, 136], rug_01: [250, 150], herb_bundle_01: [34, 62], plant_pot_01: [48, 72], cat_01: [76, 54], trunk_01: [84, 58], moon_herb_01: [56, 50], mushrooms_brown_01: [60, 46], resin_log_01: [84, 66], rune_sigil_01: [90, 50], rune_slab_01: [96, 56], bramble_01: [96, 80], campfire_01: [64, 56], portrait_mirra: [128, 128], portrait_veda: [128, 128], portrait_goran: [128, 128], portrait_selena: [128, 128], icon_moon_herb: [64, 64], icon_mushroom: [64, 64], icon_resin: [64, 64], icon_dust: [64, 64], icon_potion_life: [64, 64], icon_potion_mana: [64, 64], icon_potion_fire: [64, 64], icon_talk: [64, 64], icon_gather: [64, 64], icon_alchemy: [64, 64], icon_inspect: [64, 64], icon_journal: [64, 64],
 
 };
+
+/**
+ * v0.9.2 — ВРЕМЕННАЯ графика: рисунки-заглушки, по которым нельзя выпускать релиз.
+ * warlock_* сделаны из рисунков ведьмы (tools/art/warlock_placeholder.py: короткие каштановые волосы, брюки) только для
+ * проверки выбора героя, сцен, медальона и анимаций. Пока ключ здесь, стартовый экран показывает метку «Временный рисунок»,
+ * а тесты печатают предупреждение. Финальные ракурсы: заменить PNG (166×240, RGBA, тот же масштаб и линия ног)
+ * и убрать ключи из списка.
+ */
+export const TEMPORARY_ART = ['warlock_down', 'warlock_up', 'warlock_side'];
+

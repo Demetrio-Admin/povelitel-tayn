@@ -10,7 +10,8 @@ import { PlayerSession, TOKENS_KEY } from '../src/cloud/PlayerSession.js';
 import { validateNickname, normalizeNickname, loginEmail, NICK_ERRORS } from '../src/cloud/nickname.js';
 import { checkNickname, loginEmail as fnLoginEmail, DEFAULT_LOGIN_DOMAIN } from '../supabase/functions/account/index.ts';
 import { CLOUD } from '../src/config/cloud.config.js';
-import { FakeSupabase } from './helpers/fake-supabase.mjs';
+import { FakeSupabase, pg } from './helpers/fake-supabase.mjs';
+import { heroById } from '../src/config/heroes.js';
 import { PlayerActions } from '../src/systems/PlayerActions.js';
 import { advanceWorld, serverActionBusy } from '../src/systems/WorldClock.js';
 
@@ -397,6 +398,62 @@ console.log('\nv0.9.1. Действие сервера, пока мир «жив
   srv.offline = false;
   ok(!eNet.ok && eNet.reason === 'network', 'настоящая потеря связи — reason network');
   await re.session.retryNow();
+}
+
+console.log('\nv0.9.2. Герой (ведьма / колдун) — метаданные профиля: создание, регистрация, вход, новая игра');
+{
+  const rpcBodies = (from, name) => srv.calls.slice(from).filter(c => c.path === `/rest/v1/rpc/${name}`).map(c => c.body);
+  // новый гость-колдун: hero уходит только в create_player, профиль хранит warlock
+  const d = device(srv);
+  let from = srv.calls.length;
+  await d.session.playAsGuest('warlock');
+  ok(rpcBodies(from, 'create_player').some(b => b?.hero === 'warlock') && d.session.hero === 'warlock', 'гость-колдун: create_player { hero: "warlock" }, профиль — warlock');
+  play(d.state); await d.session.flush();
+  ok(srv.calls.filter(c => c.path === '/rest/v1/rpc/sync_player').every(c => !('hero' in (c.body?.patch || {})) && !('heroId' in (c.body?.patch || {}))), 'герой не входит в обычные patch прогресса (sync_player)');
+  const back = device(srv, d.storage); await back.session.restore();
+  ok(back.session.hero === 'warlock' && back.state.item('lunar_shard') === 1, 'перезапуск: тот же колдун и его прогресс');
+
+  // новая регистрация колдуна → вход с другого устройства восстанавливает колдуна
+  const r = device(srv);
+  const nickW = nickLat('Kolya');
+  await r.session.registerNew({ hero: 'warlock', nickname: nickW, password: PASS, password2: PASS });
+  const other = device(srv); await other.session.login({ nickname: nickW, password: PASS });
+  ok(r.session.hero === 'warlock' && other.session.hero === 'warlock', 'регистрация колдуна: вход с другого устройства — колдун');
+
+  // аккаунт ведьмы: вход с устройства, где выбран предпросмотр колдуна, загружает ведьму (выбор не передаётся при входе)
+  const wv = device(srv); const nickV = nickLat('Vedma');
+  await wv.session.registerNew({ hero: 'witch', nickname: nickV, password: PASS, password2: PASS });
+  play(wv.state, { coins: 7 }); await wv.session.flush();
+  const pick = device(srv);   // на этом устройстве в меню выбран колдун — это только предпросмотр, на сервер не уходит
+  from = srv.calls.length;
+  await pick.session.login({ nickname: nickV, password: PASS });
+  ok(pick.session.hero === 'witch' && !rpcBodies(from, 'create_player').length && !rpcBodies(from, 'reset_player').length && pick.state.item('coins') === 7,
+    'предпросмотр колдуна → вход в аккаунт ведьмы: ведьма, прогресс на месте, профиль не переписан');
+  const pick2 = device(srv);   // обратный случай: предпросмотр ведьмы → аккаунт колдуна
+  await pick2.session.login({ nickname: nickW, password: PASS });
+  ok(pick2.session.hero === 'warlock', 'предпросмотр ведьмы → вход в аккаунт колдуна: колдун');
+
+  // подтверждённая новая игра: reset_player с выбранным героем; без аргумента — прежний герой
+  await pick.session.resetProgress('warlock');
+  ok(pick.session.hero === 'warlock' && pick.state.item('coins') === 0, 'новая игра колдуном: reset_player меняет героя и обнуляет прогресс');
+  await pick.session.resetProgress();
+  ok(pick.session.hero === 'warlock', 'новая игра без выбора — герой прежний');
+
+  // неизвестный id в профиле: показываем ведьмой, но сам id не переписываем
+  const u = device(srv); await u.session.playAsGuest('witch');
+  if (BACKEND === 'pg') pg(`update public.profiles set hero_id = 'druid' where id = '${u.session.userId}'`);
+  else srv.players.get(u.session.userId).hero = 'druid';
+  const u2 = device(srv, u.storage); await u2.session.restore();
+  play(u2.state); await u2.session.flush();
+  const u3 = device(srv, u.storage); await u3.session.restore();
+  ok(u2.session.hero === 'druid' && heroById(u2.session.hero).id === 'witch' && u3.session.hero === 'druid', 'неизвестный герой профиля: показ — ведьма, значение в профиле не переписано после сохранения');
+
+  // старый профиль без hero_id — ведьма
+  const o = device(srv); await o.session.playAsGuest('witch');
+  if (BACKEND === 'pg') pg(`update public.profiles set hero_id = null where id = '${o.session.userId}'`);
+  else srv.players.get(o.session.userId).hero = null;
+  const o2 = device(srv, o.storage); await o2.session.restore();
+  ok(o2.session.hero === 'witch', 'старый профиль без героя — ведьма');
 }
 
 console.log('\n13–14. Старой «облачной» механики больше нет');

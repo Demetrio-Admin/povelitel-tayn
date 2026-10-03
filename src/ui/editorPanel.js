@@ -81,7 +81,7 @@ export function buildEditorPanel(actions) {
       </div>
       <div class="me-row">
         <button data-a="snap">Сетка: нет</button><button data-a="colliders">Коллизии</button>
-        <button data-a="fit">Вся карта</button><button data-a="hero">К героине</button>
+        <button data-a="fit">Вся карта</button><button data-a="hero">К герою</button>
       </div>
       <div class="me-row" data-sec="props">
         <select data-r="palette"></select><button data-a="add">＋ Добавить</button>

@@ -1,3 +1,4 @@
+import { T, fm } from '../state/hero.js';
 import Phaser from 'phaser';
 import { VIEW, COLORS, CONTROLS } from '../config/game.config.js';
 import { ABILITIES } from '../config/balance.abilities.js';
@@ -343,6 +344,7 @@ export class UIScene extends Phaser.Scene {
 
   // ================================================================== тосты и награды
   toast(text, color = 0xf1e3c2) {
+    text = T(text);   // v0.9.2: варианты для ведьмы / колдуна
     // одинаковый тост подряд (фокус + нажатие) не дублируем
     const now = this.time.now;
     if (this.lastToast && this.lastToast.text === text && now - this.lastToast.t < 1500) return;
@@ -394,6 +396,8 @@ export class UIScene extends Phaser.Scene {
   /** opts: { title, text, color, buttons: [{ label, primary, onClick }] } */
   openModal(opts) {
     if (this.modal) { this.modalQueue.push(opts); return; }
+    // v0.9.2: заголовок, текст и кнопки могут иметь варианты для ведьмы / колдуна
+    opts = { ...opts, title: T(opts.title), text: T(opts.text), buttons: opts.buttons?.map(b => ({ ...b, label: T(b.label) })) };
     services.modalOpen = true;
     this.resetJoystick();
     if (!opts.silent) services.audio.play(opts.final ? 'victory' : 'modal_open');
@@ -652,7 +656,7 @@ export class UIScene extends Phaser.Scene {
       'Чтобы пройти дальше, нужен дар Печати.', '',
       '★ Прототип пройден!', '',
       `Время игры: ${fmtTime(d.stats.playTimeMs)}`,
-      `Уровень героини: ${d.heroLevel}`,
+      T(fm(`Уровень героини: ${d.heroLevel}`, `Уровень героя: ${d.heroLevel}`)),
       `Побед: ${wins.length}${wins.length ? ' (' + wins.map(c => `${c.timeSec} с`).join(', ') + ')' : ''}`,
     ];
     this.openModal({

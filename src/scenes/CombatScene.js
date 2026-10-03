@@ -15,6 +15,7 @@ import { POTIONS, POTION_ORDER, POTION_BATTLE_LIMIT } from '../config/resources.
 import { CombatTutorial } from '../systems/CombatTutorial.js';
 import { STORY, COMBAT_HINTS } from '../config/story.js';
 import { VITALS } from '../config/balance.hero.js';
+import { currentHero, T, fm } from '../state/hero.js';
 import * as vitals from '../state/vitals.js';
 import { addButton } from '../ui/widgets.js';
 
@@ -127,7 +128,7 @@ export class CombatScene extends Phaser.Scene {
 
   buildHero() {
     this.heroShadow = this.add.image(HERO_POS.x, HERO_POS.y - 2, 'hero_shadow').setDepth(HERO_POS.y - 1);
-    this.heroSprite = this.add.image(HERO_POS.x, HERO_POS.y, 'hero_up').setOrigin(0.5, 1); this.heroSprite.setScale(144 / this.heroSprite.height); this.heroSprite.setDepth(HERO_POS.y);
+    this.heroSprite = this.add.image(HERO_POS.x, HERO_POS.y, currentHero().textures.up).setOrigin(0.5, 1);   // v0.9.2: выбранный герой this.heroSprite.setScale(144 / this.heroSprite.height); this.heroSprite.setDepth(HERO_POS.y);
     this.heroBaseScale = this.heroSprite.scaleX;
     this.heroAnim = new HeroAnimator();
   }
@@ -506,7 +507,7 @@ export class CombatScene extends Phaser.Scene {
     this.hintsShown.add(key);
     if (hint.id) { services.state.data.tutorial.push(hint.id); }
     if (key === 'firstDamage') this.bus.emit(MSG.HUD_HIGHLIGHT, 'hp');
-    this.hintQueue.push({ text: hint.text, key, left: 4.2 });
+    this.hintQueue.push({ text: T(hint.text), key, left: 4.2 });
     this.hintQueue.sort((a, b) => (a.key === 'lowHp' ? -1 : 0) - (b.key === 'lowHp' ? -1 : 0));
   }
 
@@ -603,7 +604,7 @@ export class CombatScene extends Phaser.Scene {
       this.bus.emit(MSG.HUD_REFRESH);
       const g = r.granted;
       const v = vitals.view(state);
-      const lines = [STORY.victory, `Мана: ${v.mana} / ${v.maxMana}`, '', `Время боя: ${secs} сек   ·   прерываний: ${this.cm.stats.interrupts}`, '', `+${g.heroXP} опыта героини`];
+      const lines = [STORY.victory, `Мана: ${v.mana} / ${v.maxMana}`, '', `Время боя: ${secs} сек   ·   прерываний: ${this.cm.stats.interrupts}`, '', T(fm(`+${g.heroXP} опыта героини`, `+${g.heroXP} опыта героя`))];
       for (const [k, v] of Object.entries(g.schoolXP)) lines.push(`+${v} опыта дара «${ABILITIES[k].name}»`);
       for (const [k, v] of Object.entries(g.items)) lines.push(`+${v} ${itemName(k)}`);
       for (const lv of r.levelUps) lines.push('', `★ Новый уровень ${lv.level}! ${lv.note || ''}`);

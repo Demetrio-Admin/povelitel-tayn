@@ -11,7 +11,7 @@
 //  • Нет связи — игра блокируется окном «Нет соединения», изменения ждут в памяти, параллельного локального сейва нет.
 import { CloudError, errorText, isNetworkError, isAuthError } from './api.js';
 import { validateNickname, checkPasswordPair, normalizeNickname, loginEmail } from './nickname.js';
-import { toSnapshot, fromSnapshot, diffSnapshots, applyPatch, fillDefaults, isMinorPatch } from './playerModel.js';
+import { toSnapshot, fromSnapshot, diffSnapshots, applyPatch, fillDefaults, isMinorPatch, maxVitals, STARTER_KIT } from './playerModel.js';
 
 export const TOKENS_KEY = 'witch_rpg_auth_v2';
 export const DEFAULT_HERO = 'witch';
@@ -315,6 +315,40 @@ export class PlayerSession {
       if (isEmpty(later)) { this._setSaving('saved'); return true; }
     }
     return !this.dirty;
+  }
+
+  // ---------------------------------------------------------------- v0.9: атомарные действия сервера
+  /**
+   * Лечение за монеты / стартовый набор: проверка и списание — на сервере (player_action), не дельтами patch.
+   * Сначала отправляются накопленные изменения, затем действие с id (повтор того же id сервер не применит дважды).
+   * Возвращает { ok, reason?, price? }. Без связи ничего не меняется (reason: 'network').
+   */
+  async runAction(action) {
+    if (!this.base || !this.auth || this.status !== 'ready') return { ok: false, reason: 'network' };
+    if (!(await this.flush())) return { ok: false, reason: 'network' };
+    const act = { ...action, id: action.id || randomId() };
+    const sent = toSnapshot(this.state.data);
+    let raw = null;
+    for (let attempt = 0; attempt < 2 && !raw; attempt++) {
+      try { raw = await this._authed(t => this.api.playerAction(t, act)); } catch (e) {
+        this.lastError = e;
+        if (!isNetworkError(e)) return { ok: false, reason: 'error' };
+        if (attempt === 1) { this._goOffline(); return { ok: false, reason: 'network' }; }
+      }
+    }
+    // пока ждали, игра могла что-то изменить (не HP и не ману — их задаёт действие)
+    const later = diffSnapshots(sent, toSnapshot(this.state.data));
+    delete later.hp; delete later.mana;
+    const { snapshot, meta, action: res } = fillDefaults(raw);
+    this.base = snapshot;
+    this.meta = { ...this.meta, ...meta };
+    this.state.setData(fromSnapshot(applyPatch(snapshot, later), this.state.data));
+    if (Object.keys(later).length) this.onStateSaved();
+    if (res?.reason === 'duplicate') {   // ответ на первую попытку потерялся: итог видно по состоянию
+      const ok = act.op === 'heal' ? snapshot.hp === maxVitals(snapshot.level).hp : snapshot.quests.includes(STARTER_KIT.event);
+      return { ok, reason: ok ? undefined : 'error' };
+    }
+    return res || { ok: false, reason: 'error' };
   }
 
   _goOffline() {

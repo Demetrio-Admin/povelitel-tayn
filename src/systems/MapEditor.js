@@ -107,7 +107,7 @@ export class MapEditor {
     }
     for (const e of s.enemies) {
       e.idle?.stop();
-      [e.sprite, e.label, e.ring].forEach(x => x && x.setVisible(true).setAlpha(1));
+      [e.sprite, e.nameText, e.ring].forEach(x => x && x.setVisible(true).setAlpha(1));
     }
   }
 
@@ -149,7 +149,7 @@ export class MapEditor {
       const t = e.ref;
       t.cfg.x = x; t.cfg.y = y;
       t.sprite.setPosition(x, y).setDepth(DEPTH.mainBase + y);
-      t.label.setPosition(x, y - t.sprite.displayHeight - 14);
+      t.nameText.setPosition(x, y - t.sprite.displayHeight - 14);
       t.ring.setPosition(x, y);
       if (t.blocker) { t.blocker.setPosition(x, y - t.cfg.collide.h / 2); t.blocker.body.updateFromGameObject(); }
       this.pos[t.id] = { x, y };

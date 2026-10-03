@@ -118,6 +118,7 @@ const firstFight = w => { w.abilities.unlock('telekinesis', 1); };
 const guardianFight = w => {
   w.abilities.unlock('telekinesis', 2); w.abilities.unlock('fire', 1);
   w.state.addHeroXP(275);
+  w.state.data.hp = null; w.state.data.mana = null;   // v0.9: к Стражу игрок подходит восстановившимся (запасы общие)
 };
 {
   const r = simulate('forest_scavenger', firstFight);
@@ -158,6 +159,7 @@ console.log('\n[3] Механики боя');
   cm.useAbility('telekinesis');
   ok(!cm.enemy.isPreparing && cm.stats.interrupts === 1, 'Телекинез прерывает рывок');
 
+  w.state.data.mana = null; w.state.data.hp = null;   // v0.9: прошлый бой в этом мире потратил ману — для проверки брони начинаем с полной
   const g = new CombatManager({ enemyType: 'forest_guardian', state: w.state, abilities: w.abilities });
   const before = g.enemy.hp; g.useAbility('telekinesis');
   ok(before - g.enemy.hp === 11, `броня Стража −45% (20 → ${before - g.enemy.hp})`);
@@ -484,7 +486,7 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
   // --- Мирра подсказывает вернуться к корням после Огня
   {
     const { state, quests, abilities, dlg } = mk();
-    abilities.unlock('fire', 1); quests.complete(EV.UNLOCK_FIRE_1);
+    quests.complete(EV.UNLOCK_TELEKINESIS_1); abilities.unlock('fire', 1); quests.complete(EV.UNLOCK_FIRE_1);
     ok(dlg.pick('mirra').id === 'mirra_roots', 'после Огня Мирра направляет к чёрным корням');
     quests.complete(EV.FIRE_GATE_OPEN);
     ok(dlg.pick('mirra').id !== 'mirra_roots', 'после сожжённых корней подсказка про корни исчезает');

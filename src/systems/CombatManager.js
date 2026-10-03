@@ -6,6 +6,7 @@ import { HERO_BASE } from '../config/balance.hero.js';
 import { Enemy } from '../objects/Enemy.js';
 import { ABILITY_ORDER } from './AbilitySystem.js';
 import { POTIONS, POTION_BATTLE_LIMIT } from '../config/resources.js';
+import * as vitals from '../state/vitals.js';
 
 export class CombatManager {
   /**
@@ -22,9 +23,10 @@ export class CombatManager {
     this.enemy = new Enemy(enemyType, this.def);
 
     const hs = state.heroStats();
+    // v0.9: бой начинается с текущих запасов героини (не с полных); всё, что изменилось в бою, пишется обратно (commit)
     this.hero = {
-      maxHp: hs.maxHp, hp: hs.maxHp,
-      maxMana: hs.maxMana, mana: hs.maxMana,
+      maxHp: hs.maxHp, hp: vitals.hp(state),
+      maxMana: hs.maxMana, mana: vitals.mana(state),
       regen: hs.manaRegen, damageMult: hs.damageMult,
       autoTimer: HERO_BASE.autoAttack.intervalSec,
     };
@@ -40,6 +42,9 @@ export class CombatManager {
   }
 
   emit(e) { this.queue.push(e); }
+
+  /** v0.9: текущие HP и мана боя → общее состояние героини (HUD, профиль, сохранение видят одно и то же). */
+  commit() { vitals.setHp(this.state, this.hero.hp); vitals.setMana(this.state, this.hero.mana); }
   drainEvents() { const q = this.queue; this.queue = []; return q; }
 
   // ---------- выбор объектов поля ----------
@@ -85,6 +90,7 @@ export class CombatManager {
     else if (id === 'fire') this.castFire(s);
     else if (id === 'seal') this.castSeal(s);
     this.checkResult();
+    this.commit();
     return { ok: true };
   }
 
@@ -118,6 +124,7 @@ export class CombatManager {
     this.state.removeItem(id, 1);
     this.stats.potions = (this.stats.potions || 0) + 1;
     this.checkResult();
+    this.commit();
     return { ok: true };
   }
 
@@ -180,12 +187,25 @@ export class CombatManager {
   }
 
   // ---------- симуляция ----------
-  tick(dt) {
+  /**
+   * holdEnemy (v0.9, обучение): враг, его подготовка атаки и автоатака героини стоят, а мана героини, перезарядка даров
+   * и возврат предметов поля идут — нужное действие никогда не блокируется. Восстановление маны в бою — только здесь.
+   */
+  tick(dt, { holdEnemy = false } = {}) {
     if (this.result) return;
-    this.time += dt;
     const h = this.hero;
     h.mana = Math.min(h.maxMana, h.mana + h.regen * dt);
     for (const id of ABILITY_ORDER) this.cooldowns[id] = Math.max(0, this.cooldowns[id] - dt);
+    if (holdEnemy) {
+      for (const o of this.fieldObjects) {
+        if (o.available) continue;
+        o.respawnLeft -= dt;
+        if (o.respawnLeft <= 0) { o.available = true; this.emit({ type: 'objectRespawn', id: o.id }); }
+      }
+      this.commit();
+      return;
+    }
+    this.time += dt;
 
     // автоатака героя
     h.autoTimer -= dt;
@@ -215,6 +235,7 @@ export class CombatManager {
       }
     }
     this.checkResult();
+    this.commit();
   }
 
   hitHero(damage, strong, name) {

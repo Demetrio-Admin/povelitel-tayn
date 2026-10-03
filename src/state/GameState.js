@@ -5,6 +5,7 @@ import { HERO_LEVELS } from '../config/balance.hero.js';
 import { UPGRADES, TIMER_MODE } from '../config/balance.progression.js';
 import { WORLD } from '../config/world.layout.js';
 import { SAVE } from '../config/game.config.js';
+import { materialize } from './vitals.js';
 
 const SAVE_VERSION = 1;
 
@@ -27,7 +28,8 @@ export function createDefaultState() {
     research: null, // { upgradeId, startedAt, durationMs }
     player: { x: WORLD.playerStart.x, y: WORLD.playerStart.y },
     safePoint: { ...WORLD.defaultSafePoint },
-    hp: null, // null = полное
+    hp: null,   // null = полное (старые сохранения и новый персонаж); дальше — число 0…max (v0.9: общее для мира и боя)
+    mana: null, // v0.9: текущая мана, та же семантика
     stats: { playTimeMs: 0, combats: [] },
     tutorial: [], // id показанных подсказок (TutorialSystem)
   };
@@ -144,6 +146,7 @@ export class GameState {
     for (;;) {
       const next = HERO_LEVELS.find(r => r.level === this.data.heroLevel + 1);
       if (!next || this.data.heroXP < next.xp) break;
+      if (!gained.length) materialize(this); // новый максимум не даёт скрытого полного восстановления
       this.data.heroLevel = next.level;
       gained.push(next);
     }

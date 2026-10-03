@@ -103,20 +103,22 @@ await mute(async () => {
     const { services: sv } = await import('../src/services.js');
     const { MSG } = await import('../src/state/EventBus.js');
     const cases = [
-      ['mirra', ['seal_required_01'], 'Сварить зелье', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
-      ['mirra', ['seal_required_01'], 'Открыть журнал', MSG.OPEN_JOURNAL, 'Журнал'],
-      ['mirra', ['first_world_interaction'], 'Покажи котёл', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
+      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'seal_required_01'], 'Сварить зелье', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
+      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'seal_required_01'], 'Открыть журнал', MSG.OPEN_JOURNAL, 'Журнал'],
+      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'mirra_starter_kit', 'first_world_interaction'], 'Покажи котёл', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
+      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'seal_required_01'], 'Восстановить здоровье', MSG.OPEN_HEAL, 'Лечение у Мирры'],
       ['selena', ['lunar_quest_start', 'sq_dust_done'], 'Открыть алтарь', MSG.OPEN_UPGRADE, 'Изучение: Телекинез II'],
     ];
     sv.bus.offContext(ui);
     for (const [npc, events, answer, event, title] of cases) {
       await freshWorld('new');
       events.forEach(k => sv.state.markEvent(k));
+      sv.state.data.hp = 40; sv.state.addItem('coins', 20);   // v0.9: есть что лечить и чем платить
       const dialogUI = new UIScene(); dialogUI.create(); mkHud(dialogUI);
       let emissions = 0, closedFirst = false;
       const off = sv.bus.on(event, () => { emissions++; });
       // Observer runs before the registered UI listener, so it sees the unlocked state.
-      const original = event === MSG.OPEN_ALCHEMY ? 'openAlchemy' : event === MSG.OPEN_JOURNAL ? 'openJournal' : 'openUpgrade';
+      const original = event === MSG.OPEN_ALCHEMY ? 'openAlchemy' : event === MSG.OPEN_JOURNAL ? 'openJournal' : event === MSG.OPEN_HEAL ? 'openHeal' : 'openUpgrade';
       sv.bus.off(event, dialogUI[original], dialogUI);
       const inspect = (...args) => {
         closedFirst = dialogUI.dlg === null && dialogUI.modal === null && !sv.modalOpen;
@@ -138,7 +140,7 @@ await mute(async () => {
     }
     await freshWorld('new');
     const cancelled = new UIScene(); cancelled.create(); mkHud(cancelled);
-    sv.state.markEvent('seal_required_01'); sv.dialogue.start('mirra');
+    ['prologue_seen', 'unlock_telekinesis_1', 'seal_required_01'].forEach(k => sv.state.markEvent(k)); sv.dialogue.start('mirra');
     cancelled.closeDialogue(true);
     ok(!sv.dialogue.active && !cancelled.modal && !sv.modalOpen, 'диалог: отмена без ответа не открывает другое окно');
     sv.bus.offContext(cancelled);
@@ -160,7 +162,7 @@ await mute(async () => {
     ok(!/NaN|null|undefined|-/.test(h.xpCaption.text), 'HUD: подпись опыта без NaN/null/отрицательных');
     // HP и мана — из активной сцены (бой/исследование), не из максимума героя
     h.update(20000, 200);
-    ok(h.hpText.text === '41 / 138' && h.manaText.text === '17 / 100', 'HUD: HP и мана — текущие значения активного режима (' + h.hpText.text + ', ' + h.manaText.text + ')');
+    ok(h.hpText.text === '41 / 144' && h.manaText.text === '17 / 120', 'HUD: HP и мана — текущие общие запасы героини, новый уровень не восстанавливает их скрыто (' + h.hpText.text + ', ' + h.manaText.text + ')');
     // старой панели цели и её зоны нажатия нет
     ok(!h.questHit && !h.questPanel && !h.sideLine, 'панель цели и её невидимая зона нажатия (questHit) удалены');
     // журнал: отдельная кнопка, badge — реальное число заданий
@@ -225,7 +227,7 @@ await mute(async () => {
     const before = snap();
     h.portraitHit.emit('pointerdown');
     const pt = texts(h.modal.container).join(' | ');
-    ok(h.modal?.opts?.profile && pt.includes('Уровень 5') && pt.includes('41 / 138') && pt.includes('Лунные осколки') && pt.includes('Максимальный уровень'), 'портрет → профиль героя с реальными данными');
+    ok(h.modal?.opts?.profile && pt.includes('Уровень 5') && pt.includes('41 / 144') && pt.includes('Лунные осколки') && pt.includes('Максимальный уровень'), 'портрет → профиль героя с реальными данными');
     h.closeModal(null);
     ok(!h.modal && !sv.modalOpen && snap() === before, 'профиль героя закрывается и не меняет сохранение');
 

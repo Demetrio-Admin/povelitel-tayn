@@ -1,4 +1,4 @@
--- Witch RPG v0.6: серверный игрок (Supabase). Схема v2.
+-- Witch RPG v0.6: серверный игрок (Supabase). Схема v2 (+ v0.9: мана, максимумы HP/маны по уровню, player_action).
 -- Выполните целиком: Supabase → SQL Editor → New query → Run. Скрипт можно запускать повторно.
 --
 -- Модель: у каждого игрока (в том числе гостя) есть постоянный user_id из Supabase Auth. Всё, что принадлежит игроку,
@@ -63,6 +63,8 @@ create table if not exists public.player_progress (
 );
 alter table public.player_progress
   add column if not exists recent_syncs jsonb not null default '[]';  -- id последних сохранений: повтор после обрыва связи не начислит дважды
+-- v0.9: текущая мана (null — «полный запас», как у hp; старые персонажи получают максимум при первой загрузке клиентом)
+alter table public.player_progress add column if not exists mana double precision;
 alter table public.player_progress
   alter column pos_x type double precision, alter column pos_y type double precision,
   alter column safe_x type double precision, alter column safe_y type double precision, alter column hp type double precision;
@@ -103,8 +105,11 @@ create table if not exists public.game_hero_levels (
   level int primary key check (level between 1 and 100),
   xp    bigint not null check (xp >= 0)
 );
-insert into public.game_hero_levels (level, xp) values (1, 0), (2, 60), (3, 150), (4, 270), (5, 430)
-  on conflict (level) do update set xp = excluded.xp;
+-- v0.9: максимум HP и маны уровня — сервер не примет запас больше максимума
+alter table public.game_hero_levels add column if not exists max_hp int, add column if not exists max_mana int;
+insert into public.game_hero_levels (level, xp, max_hp, max_mana) values
+  (1, 0, 120, 100), (2, 60, 126, 110), (3, 150, 132, 110), (4, 270, 138, 115), (5, 430, 144, 120)
+  on conflict (level) do update set xp = excluded.xp, max_hp = excluded.max_hp, max_mana = excluded.max_mana;
 alter table public.game_hero_levels enable row level security;
 
 -- ---------------------------------------------------------------- Row Level Security
@@ -161,7 +166,7 @@ begin
     'research', pr.research,
     'pos',  case when pr.pos_x  is null then null else jsonb_build_object('x', pr.pos_x,  'y', pr.pos_y)  end,
     'safe', case when pr.safe_x is null then null else jsonb_build_object('x', pr.safe_x, 'y', pr.safe_y) end,
-    'hp', pr.hp, 'play', pr.play_ms, 'combats', pr.combats, 'tutorial', pr.tutorial,
+    'hp', pr.hp, 'mana', pr.mana, 'play', pr.play_ms, 'combats', pr.combats, 'tutorial', pr.tutorial,
     'meta', jsonb_build_object('hero', pf.hero_id, 'nickname', pf.nickname, 'registered', pf.nickname is not null,
                                'rev', pr.rev, 'createdAt', pf.created_at, 'registeredAt', pf.registered_at, 'lastSeenAt', pf.last_seen_at)
   );
@@ -212,7 +217,7 @@ begin
   insert into player_progress (user_id) values (uid)
     on conflict (user_id) do update set rev = player_progress.rev + 1, hero_level = 1, hero_xp = 0,
       school_xp = '{"telekinesis":0,"fire":0,"seal":0}', research = null, pos_x = null, pos_y = null, safe_x = null, safe_y = null,
-      hp = null, play_ms = 0, combats = '[]', tutorial = '[]', updated_at = now();
+      hp = null, mana = null, play_ms = 0, combats = '[]', tutorial = '[]', updated_at = now();
   return _snapshot(uid);
 end $$;
 
@@ -224,7 +229,7 @@ language plpgsql security definer set search_path = public as $$
 declare
   uid uuid := auth.uid();
   pr player_progress%rowtype;
-  k text; v jsonb; n numeric; q numeric; cnt int; arr jsonb;
+  k text; v jsonb; n numeric; q numeric; cnt int; arr jsonb; mx_hp numeric; mx_mana numeric;
   max_spend   constant numeric := 100000000;  -- тратить можно сколько есть
   max_counter constant numeric := 1000000000;
   -- Сколько можно получить за одно сохранение. Самая большая награда игры сейчас — 150 опыта и 60 монет (Страж),
@@ -338,7 +343,15 @@ begin
   if jsonb_typeof(patch -> 'safe') = 'object' and _num(patch -> 'safe' -> 'x') is not null and _num(patch -> 'safe' -> 'y') is not null then
     pr.safe_x := _num(patch -> 'safe' -> 'x'); pr.safe_y := _num(patch -> 'safe' -> 'y');
   end if;
-  if jsonb_typeof(patch -> 'hp') = 'object' and (patch -> 'hp') ? 'value' then pr.hp := _num(patch -> 'hp' -> 'value'); end if;
+  -- HP и мана: последний записал, в пределах 0…максимум текущего уровня (v0.9)
+  select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels where level = pr.hero_level;
+  if mx_hp is null then select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels order by level desc limit 1; end if;
+  if jsonb_typeof(patch -> 'hp') = 'object' and (patch -> 'hp') ? 'value' then
+    n := _num(patch -> 'hp' -> 'value'); pr.hp := case when n is null then null else _clamp(n, 0, mx_hp) end;   -- null — «полный запас»
+  end if;
+  if jsonb_typeof(patch -> 'mana') = 'object' and (patch -> 'mana') ? 'value' then
+    n := _num(patch -> 'mana' -> 'value'); pr.mana := case when n is null then null else _clamp(n, 0, mx_mana) end;
+  end if;
 
   -- время игры: дельта (за раз не больше 10 минут)
   n := _num(patch -> 'play'); if n is not null then pr.play_ms := pr.play_ms + _clamp(trunc(n), 0, gain_play); end if;
@@ -357,11 +370,69 @@ begin
   end if;
 
   update player_progress set hero_level = pr.hero_level, hero_xp = pr.hero_xp, school_xp = pr.school_xp, research = pr.research,
-    pos_x = pr.pos_x, pos_y = pr.pos_y, safe_x = pr.safe_x, safe_y = pr.safe_y, hp = pr.hp, play_ms = pr.play_ms,
+    pos_x = pr.pos_x, pos_y = pr.pos_y, safe_x = pr.safe_x, safe_y = pr.safe_y, hp = pr.hp, mana = pr.mana, play_ms = pr.play_ms,
     combats = pr.combats, tutorial = pr.tutorial, recent_syncs = pr.recent_syncs, rev = pr.rev + 1, updated_at = now()
     where user_id = uid;
   update profiles set last_seen_at = now() where id = uid;
   return _snapshot(uid);
+end $$;
+
+-- ---------------------------------------------------------------- v0.9: атомарные действия игрока
+-- То, что нельзя доверить дельтам patch: проверка и списание происходят здесь, в одной транзакции.
+--   {"op":"heal","id":"…"}        — лечение у Мирры: цена ceil((max_hp − hp) / 10) монет; при нехватке ничего не меняется
+--   {"op":"starter_kit","id":"…"} — один раз на персонажа: событие mirra_starter_kit + настой жизни и лунный эликсир
+-- Ответ: состояние игрока + "action": {"ok", "reason", "price"}. Повтор того же id (ответ потерялся) ничего не применяет.
+-- Зеркало на JS — applyAction в src/cloud/playerModel.js.
+create or replace function public.player_action(action jsonb) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  pr player_progress%rowtype;
+  op text; aid text; mx_hp numeric; cur numeric; price numeric; coins numeric; res jsonb;
+begin
+  if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  if action is null or jsonb_typeof(action) <> 'object' then raise exception 'bad_action' using errcode = '22023'; end if;
+  select * into pr from player_progress where user_id = uid for update;
+  if not found then raise exception 'no_player' using errcode = 'P0002'; end if;
+  op := action ->> 'op';
+  aid := case when jsonb_typeof(action -> 'id') = 'string' and char_length(action ->> 'id') between 8 and 64 then action ->> 'id' end;
+  if aid is not null and pr.recent_syncs ? aid then
+    return _snapshot(uid) || jsonb_build_object('action', jsonb_build_object('ok', null, 'reason', 'duplicate'));
+  end if;
+  if aid is not null then
+    pr.recent_syncs := (select coalesce(jsonb_agg(e order by i), '[]'::jsonb) from (
+      select e, i from jsonb_array_elements(pr.recent_syncs || to_jsonb(aid)) with ordinality as t(e, i) order by i desc limit 20) z);
+  end if;
+
+  if op = 'heal' then
+    select max_hp into mx_hp from game_hero_levels where level = pr.hero_level;
+    if mx_hp is null then select max_hp into mx_hp from game_hero_levels order by level desc limit 1; end if;
+    cur := _clamp(coalesce(pr.hp::numeric, mx_hp), 0, mx_hp);
+    price := ceil((mx_hp - cur) / 10.0 - 1e-9);
+    select quantity into coins from player_inventory where user_id = uid and item_id = 'coins';
+    coins := coalesce(coins, 0);
+    if price <= 0 then res := jsonb_build_object('ok', false, 'reason', 'full', 'price', 0);
+    elsif coins < price then res := jsonb_build_object('ok', false, 'reason', 'coins', 'price', price);
+    else
+      update player_inventory set quantity = quantity - price where user_id = uid and item_id = 'coins';
+      pr.hp := mx_hp;
+      res := jsonb_build_object('ok', true, 'price', price);
+    end if;
+  elsif op = 'starter_kit' then
+    if exists (select 1 from player_quests where user_id = uid and quest_id = 'mirra_starter_kit') then
+      res := jsonb_build_object('ok', false, 'reason', 'already');
+    else
+      insert into player_quests (user_id, quest_id) values (uid, 'mirra_starter_kit');
+      insert into player_inventory (user_id, item_id, quantity) values (uid, 'elixir_life', 1), (uid, 'elixir_mana', 1)
+        on conflict (user_id, item_id) do update set quantity = least(player_inventory.quantity + 1, 1000000000);
+      res := jsonb_build_object('ok', true);
+    end if;
+  else
+    res := jsonb_build_object('ok', false, 'reason', 'unknown');
+  end if;
+
+  update player_progress set hp = pr.hp, recent_syncs = pr.recent_syncs, rev = pr.rev + 1, updated_at = now() where user_id = uid;
+  return _snapshot(uid) || jsonb_build_object('action', res);
 end $$;
 
 -- ---------------------------------------------------------------- превращение гостя в игрока с ником
@@ -383,8 +454,8 @@ $$;
 
 -- ---------------------------------------------------------------- права на функции
 revoke all on function public._num(jsonb), public._clamp(numeric, numeric, numeric), public._valid_id(text), public._snapshot(uuid) from public, anon, authenticated;
-revoke all on function public.create_player(text), public.get_player(), public.reset_player(text), public.sync_player(jsonb) from public, anon;
-grant execute on function public.create_player(text), public.get_player(), public.reset_player(text), public.sync_player(jsonb) to authenticated;
+revoke all on function public.create_player(text), public.get_player(), public.reset_player(text), public.sync_player(jsonb), public.player_action(jsonb) from public, anon;
+grant execute on function public.create_player(text), public.get_player(), public.reset_player(text), public.sync_player(jsonb), public.player_action(jsonb) to authenticated;
 revoke all on function public.nickname_available(text) from public;
 grant execute on function public.nickname_available(text) to anon, authenticated;
 revoke all on function public.claim_nickname(uuid, text, text), public.release_nickname(uuid) from public, anon, authenticated;

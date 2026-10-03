@@ -9,7 +9,7 @@
 const randomUUID = () => globalThis.crypto.randomUUID();
 let spawnSync = null;
 if (typeof process !== 'undefined' && process.versions?.node) ({ spawnSync } = await import('child_process'));
-import { applyPatch, emptySnapshot, levelForXp } from '../../src/cloud/playerModel.js';
+import { applyPatch, applyAction, emptySnapshot, levelForXp } from '../../src/cloud/playerModel.js';
 import { handle as accountFunction } from '../../supabase/functions/account/index.ts';
 
 const ANON = 'anon-key', SERVICE = 'service-key';
@@ -216,6 +216,21 @@ export class FakeSupabase {
         pl.rev++;
         return this.reply(200, this.snapshot(uid));
       }
+      case 'player_action': {   // v0.9: лечение / стартовый набор (зеркало player_action)
+        if (!authed()) return err(403, '28000', 'not_authenticated');
+        const pl = this.players.get(uid);
+        if (!pl) return err(404, 'P0002', 'no_player');
+        const act = a.action;
+        if (!act || typeof act !== 'object' || Array.isArray(act)) return err(400, '22023', 'bad_action');
+        if (typeof act.id === 'string' && pl.recent.includes(act.id)) return this.reply(200, { ...this.snapshot(uid), action: { ok: null, reason: 'duplicate' } });
+        if (typeof act.id === 'string' && act.id.length >= 8 && act.id.length <= 64) pl.recent = [...pl.recent, act.id].slice(-20);
+        const base = { ...pl.snap, pos: pl.snap.pos || { x: 0, y: 0 }, safe: pl.snap.safe || { x: 0, y: 0 } };
+        const { snapshot: next, result } = applyAction(base, act);
+        pl.snap = { ...next, pos: pl.snap.pos, safe: pl.snap.safe };
+        pl.rev++;
+        this.actionCalls = (this.actionCalls || 0) + 1;
+        return this.reply(200, { ...this.snapshot(uid), action: result });
+      }
       case 'claim_nickname': {
         if (role !== 'service') return err(403, '42501', 'permission denied for function claim_nickname');
         const pl = this.players.get(a.uid);
@@ -239,7 +254,7 @@ export class FakeSupabase {
   // ---------------------------------------------------------------- RPC на настоящем Postgres
   rpcPg(fn, a, role, uid) {
     const SIG = {
-      nickname_available: ['norm'], create_player: ['hero'], get_player: [], reset_player: ['hero'], sync_player: ['patch'],
+      nickname_available: ['norm'], create_player: ['hero'], get_player: [], reset_player: ['hero'], sync_player: ['patch'], player_action: ['action'],
       claim_nickname: ['uid', 'nick', 'norm'], release_nickname: ['uid'],
     };
     if (!SIG[fn]) return this.reply(404, { code: 'PGRST202', message: 'function not found' });

@@ -66,7 +66,8 @@ export class InteractionSystem {
   focusInfo() {
     const f = this.focus;
     if (!f) return null;
-    return { label: f.label, icon: f.markerIcon, color: f.markerColor, ability: f.ability, abilityName: f.ability ? ABILITIES[f.ability].name : null };
+    const cost = f.manaCost?.() || 0;   // v0.9: цена видна до нажатия — «Сдвинуть · 8 маны»
+    return { label: cost ? `${f.label} · ${cost} маны` : f.label, icon: f.markerIcon, color: f.markerColor, ability: f.ability, abilityName: f.ability ? ABILITIES[f.ability].name : null, cost };
   }
 
   /** Действие игрока: abilityId = null — универсальная кнопка / E. */

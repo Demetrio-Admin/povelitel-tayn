@@ -15,6 +15,8 @@ import { services } from '../services.js';
 import { ABILITY_ORDER } from '../systems/AbilitySystem.js';
 import { ROMAN } from '../objects/InteractiveObject.js';
 import { addPanel, addDivider, addButton, drawPlate, releaseTexture } from './widgets.js';
+import { STEP_WHY, POTION_ROLE } from '../config/story.js';
+import * as vitals from '../state/vitals.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -111,6 +113,8 @@ export const windows08 = {
         const row = (text, o = {}) => { const t = label(this, c, x + (o.indent || 0), cy, text, { wordWrap: { width: w - (o.indent || 0) }, lineSpacing: 2, ...o.style }); cy += t.height + (o.gap ?? 6); return t; };
         sec('Главная цель');
         row(objective.full, { style: { fontSize: UI.type.body } });
+        const why = STEP_WHY[objective.stepId];
+        if (why) row('Зачем: ' + why, { style: { color: hex(0x9fe9ff), fontSize: UI.type.small }, gap: 4 });
         if (hints[0]) row('Подсказка: ' + hints[0], { style: { color: COLORS.textDim, fontSize: UI.type.small }, gap: 8 });
         cy += 6;
         const act = log.active();
@@ -137,6 +141,14 @@ export const windows08 = {
           sec('Выполнено', COLORS.textDim);
           for (const id of done) row(`✓ ${SIDE_QUESTS[id].title}`, { style: { fontSize: UI.type.small, color: COLORS.textDim }, gap: 2 });
         }
+        // v0.9: правила здоровья и маны — коротко (в том числе для давних персонажей, которые не видели вступление)
+        cy += 8;
+        sec('Здоровье и мана', COLORS.textGold);
+        for (const t of [
+          'Сбор и магия в лесу тратят ману; она восстанавливается сама, в доме Мирры — быстрее.',
+          'Здоровье одно на мир и бой. Вне боя оно медленно возвращается; Мирра подлечит за монеты.',
+          'После поражения героиня остаётся у врага с 20% здоровья. Новый бой — кнопкой «Сразиться снова».',
+        ]) row('• ' + t, { style: { fontSize: UI.type.small, color: COLORS.textDim }, gap: 3 });
         return cy - y;
       },
     };
@@ -192,7 +204,7 @@ export const windows08 = {
       },
     };
     this.openModal({
-      title: 'Котёл Мирры', color: 0x8fe39a, text: 'Сварите расходники из собранных трав, грибов, смолы и пыли. Они пригодятся в бою.', content,
+      title: 'Котёл Мирры', color: 0x8fe39a, text: 'То, что собрано в лесу, помогает готовиться к следующему выходу. Настой и эликсир можно выпить и из сумки, смоляная склянка — для боя.', content,
       buttons: [{ label: 'Закрыть', primary: true }],
     });
   },
@@ -394,7 +406,28 @@ export const windows08 = {
           cy += 12;
         };
         grid('Ресурсы', RESOURCE_ORDER, (id) => RESOURCES[id]);
-        grid('Расходники (в бою)', POTION_ORDER, (id) => POTIONS[id]);
+        // v0.9: расходники — строкой: эффект, когда применять, «Выпить» для восстановительных
+        sec('Расходники');
+        for (const id of POTION_ORDER) {
+          const p = POTIONS[id], have = state.item(id);
+          const top = cy;
+          c.add(fit(this.add.image(x + 40, cy + 44, p.icon), UI.icon.resource).setAlpha(have ? 1 : 0.45));
+          const nm = label(this, c, x + 88, cy + 6, `${p.name} · ${have}`, { fontSize: UI.type.body, fontStyle: 'bold', color: have ? hex(p.color) : COLORS.textDim, wordWrap: { width: w - 88 - (p.outside ? 196 : 0) } });
+          const eff = label(this, c, x + 88, nm.y + nm.height + 4, p.text, { fontSize: UI.type.small, color: COLORS.text, wordWrap: { width: w - 88 - (p.outside ? 196 : 0) } });
+          const role = label(this, c, x + 88, eff.y + eff.height + 2, POTION_ROLE[id], { fontSize: UI.type.small, color: COLORS.textDim, wordWrap: { width: w - 88 }, lineSpacing: 2 });
+          if (p.outside) {
+            const full = p.effect.type === 'heal' ? vitals.hp(state) >= vitals.maxHp(state) : vitals.mana(state) >= vitals.maxMana(state);
+            const can = have > 0 && !full;
+            const b = addButton(this, x + w - 92, top + 44, 184, UI.touch.button, full && have ? 'Полно' : 'Выпить', {
+              primary: can, accent: can ? p.color : null, fontSize: UI.type.body,
+              onPress: () => { if (this.modal?.scroll?.canTap()) this.drinkFromBag(id); },
+            });
+            if (!can) b.text.setAlpha(0.6);
+            c.add(b.parts);
+          }
+          cy = Math.max(role.y + role.height, top + 96) + 16;
+        }
+        cy += 8;
         const other = Object.entries(d.inventory).filter(([k, v]) => v > 0 && !RESOURCES[k] && !POTIONS[k]);
         if (other.length) { cy += 4; row(other.map(([k, v]) => `${ITEMS[k]?.name || k}: ${v}`).join('   ·   '), { fontSize: UI.type.small }); }
         if (d.stats.combats.length) {

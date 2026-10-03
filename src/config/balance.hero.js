@@ -19,7 +19,21 @@ export const HERO_LEVELS = [
 
 export const HERO_RECOVERY = {
   // Смерть не наказывает сильно (Combat Math §10).
-  restoreHpAfterVictory: true,
-  restoreHpAfterDefeat: true,
-  coinsLostOnDefeat: 5,
+  restoreHpAfterVictory: true,     // v0.9: победа восстанавливает HP полностью (мана — фактический остаток)
+  defeatHpFraction: 0.2,           // v0.9: после поражения — 20% максимума HP (минимум 1), героиня остаётся рядом с врагом
+  coinsLostOnDefeat: 5,            // штраф не больше 5 монет (не увеличивать)
 };
+
+// v0.9 — общие HP и мана героини (мир + бой). Стартовые значения для теста, см. README «Баланс v0.9».
+export const VITALS = {
+  hpRegenPerSec: 1,          // вне боя (в бою HP сам не восстанавливается)
+  manaRegenWorld: 0.5,       // в мире
+  manaRegenHouse: 2,         // в доме Мирры (зона A) — быстрее и бесплатно
+  houseZone: 'A',
+  maxTickSec: 0.25,          // один кадр не может начислить больше (скрытая вкладка, подвисание)
+  lowHpRetryWarn: 0.4,       // перед «Сразиться снова» при HP ниже 40% — предупреждение
+  combatLowHpHint: 0.45,     // в бою при HP ниже 45% подсказываем настой жизни
+};
+
+// v0.9 — лечение у Мирры за монеты: цена = ceil(недостающее HP / hpPerCoin)
+export const HEALING = { hpPerCoin: 10 };

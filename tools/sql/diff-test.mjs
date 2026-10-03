@@ -4,7 +4,7 @@
 // В базе должна быть схема из supabase/schema.sql и заглушка Supabase Auth (tools/sql/auth-stub.sql).
 import { execFileSync } from 'child_process';
 import { randomUUID } from 'crypto';
-import { applyPatch, fillDefaults, emptySnapshot } from '../../src/cloud/playerModel.js';
+import { applyPatch, applyAction, fillDefaults, emptySnapshot } from '../../src/cloud/playerModel.js';
 import { HERO_LEVELS } from '../../src/config/balance.hero.js';
 
 const SERIES = Number(process.argv[2]) || 60, STEPS = 14;
@@ -28,7 +28,8 @@ function randomPatch() {
   set('research', maybe(0.2, () => pick([{ value: null }, { value: { upgradeId: 'tk2', startedAt: 1700000000000, durationMs: 60000 } }, { value: 5 }, {}, 'x'])));
   set('pos', maybe(0.3, () => pick([{ x: 100, y: 200 }, { x: 1.5, y: -2 }, { x: 'a', y: 2 }, { x: 1 }, 7])));
   set('safe', maybe(0.15, () => pick([{ x: 900, y: 4820 }, { x: null, y: 1 }])));
-  set('hp', maybe(0.2, () => pick([{ value: 55.5 }, { value: null }, { value: 'x' }, {}, 3])));
+  set('hp', maybe(0.2, () => pick([{ value: 55.5 }, { value: null }, { value: 'x' }, {}, 3, { value: 0 }, { value: -4 }, { value: 9999 }, { value: 30.25 }])));
+  set('mana', maybe(0.2, () => pick([{ value: 12.5 }, { value: null }, { value: 0 }, { value: -1 }, { value: 500 }, { value: 'x' }, {}, 7])));
   set('play', maybe(0.4, () => pick([1000, 60000, 86400000, 99999999999, -5, 'x', 2.9])));
   set('combats', maybe(0.25, () => rnd() < 0.05 ? 'x' : arrOf(() => pick([{ enemy: 'forest_scavenger', result: 'victory', timeSec: 26.5 }, { enemy: 'x', result: 'defeat', timeSec: 3 }, 5, null, [1]]), 30)));
   return p;
@@ -44,25 +45,39 @@ function psql(script) {
 
 let bad = 0, steps = 0;
 { // пороги уровней на сервере = HERO_LEVELS
-  const rows = execFileSync('psql', ['-X', '-q', '-At', '-c', 'select level, xp from public.game_hero_levels order by level'], { encoding: 'utf8', env: process.env }).trim().split('\n').map(l => l.split('|').map(Number));
-  const want = HERO_LEVELS.map(r => [r.level, r.xp]);
+  const rows = execFileSync('psql', ['-X', '-q', '-At', '-c', 'select level, xp, max_hp, max_mana from public.game_hero_levels order by level'], { encoding: 'utf8', env: process.env }).trim().split('\n').map(l => l.split('|').map(Number));
+  const want = HERO_LEVELS.map(r => [r.level, r.xp, r.maxHp, r.maxMana]);
   if (JSON.stringify(rows) !== JSON.stringify(want)) { bad++; console.log('✗ game_hero_levels не совпадает с HERO_LEVELS:', JSON.stringify(rows), JSON.stringify(want)); }
   else console.log('  ✓ пороги уровней на сервере совпадают с HERO_LEVELS');
 }
 for (let s = 0; s < SERIES; s++) {
   const uid = randomUUID();
-  const patches = Array.from({ length: STEPS }, randomPatch);
+  // шаг — либо обычный patch, либо атомарное действие v0.9 (лечение / стартовый набор; иногда повтор того же id)
+  const actionIds = [];
+  const patches = Array.from({ length: STEPS }, () => {
+    if (rnd() < 0.3) {
+      const id = actionIds.length && rnd() < 0.3 ? pick(actionIds) : randomUUID();
+      actionIds.push(id);
+      return { __action: { op: pick(['heal', 'heal', 'starter_kit', 'bogus']), id } };
+    }
+    const p = randomPatch();
+    if (rnd() < 0.2) p.inv = { ...(typeof p.inv === 'object' && !Array.isArray(p.inv) ? p.inv : {}), coins: pick([5, 20, 100]) };
+    return p;
+  });
   const script = [
     `insert into auth.users (id, email) values ('${uid}', null);`,
     `set role authenticated; select set_config('request.jwt.claim.sub', '${uid}', false);`,
     `select public.create_player('witch');`,
-    ...patches.map(p => `select public.sync_player($j$${JSON.stringify(p)}$j$::jsonb);`),
+    ...patches.map(p => (p.__action ? `select public.player_action($j$${JSON.stringify(p.__action)}$j$::jsonb);` : `select public.sync_player($j$${JSON.stringify(p)}$j$::jsonb);`)),
   ].join('\n');
   const out = psql(script);
   if (out.length !== STEPS + 1) { console.log(`✗ серия ${s}: ожидали ${STEPS + 1} ответов, пришло ${out.length}`); bad++; continue; }
   let model = fillDefaults(JSON.parse(out[0])).snapshot;
+  const seen = new Set();
   for (let i = 0; i < STEPS; i++) {
-    model = applyPatch(model, patches[i]);
+    const a = patches[i].__action;
+    if (a) { if (!seen.has(a.id)) { seen.add(a.id); model = applyAction(model, a).snapshot; } }
+    else model = applyPatch(model, patches[i]);
     const server = fillDefaults(JSON.parse(out[i + 1])).snapshot;
     steps++;
     if (canon(comparable(model)) !== canon(comparable(server))) {

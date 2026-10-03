@@ -11,7 +11,12 @@ import { HeroAnimator } from '../systems/HeroAnimator.js';
 import { UI } from '../config/ui.config.js';
 import { UIBar, drawPlate } from '../ui/widgets.js';
 import { applyDisplaySize, itemName } from '../objects/InteractiveObject.js';
-import { POTIONS, POTION_ORDER } from '../config/resources.js';
+import { POTIONS, POTION_ORDER, POTION_BATTLE_LIMIT } from '../config/resources.js';
+import { CombatTutorial } from '../systems/CombatTutorial.js';
+import { STORY, COMBAT_HINTS } from '../config/story.js';
+import { VITALS } from '../config/balance.hero.js';
+import * as vitals from '../state/vitals.js';
+import { addButton } from '../ui/widgets.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -50,16 +55,23 @@ export class CombatScene extends Phaser.Scene {
     this.buildEnemyHud();
     this.buildHurtVignette();
     this.buildPotions();
+    // v0.9: пошаговое обучение первого боя и контекстные подсказки (не modal: кнопки боя работают)
+    this.tut = new CombatTutorial({ state, settings: services.settings, spawnId: this.spawnId, cm: this.cm });
+    this.hintsShown = new Set();
+    this.hintQueue = [];
+    this.saveT = 0;
+    this.buildCoach();
     this.hitstop = 0;
     this.timeScale = 1;
     this.enemyShake = 0;
     this.firstCombat = !state.data.stats.combats.length;
 
-    this.registry.set('hudProvider', () => ({ hp: this.cm.hero.hp, maxHp: this.cm.hero.maxHp, mana: this.cm.hero.mana, maxMana: this.cm.hero.maxMana }));
+    this.registry.set('hudProvider', () => vitals.view(state));   // те же общие запасы, что в мире (CombatManager.commit)
     this.registry.set('abilityProvider', (id) => {
       const st = this.cm.abilityState(id);
       const e = this.cm.enemy;
-      st.suggested = st.state === 'ready' && e.isPreparing && id === 'telekinesis';
+      const tutTarget = this.tut?.view()?.target;
+      st.suggested = id === 'telekinesis' && (tutTarget === 'telekinesis' || (st.state === 'ready' && e.isPreparing));
       return st;
     });
 
@@ -74,8 +86,10 @@ export class CombatScene extends Phaser.Scene {
     const first = !state.data.stats.combats.length;
     this.time.delayedCall(COMBAT.introSec * 1000, () => {
       this.started = true;
-      if (first) this.toast('Враг атакует сам. Прерывайте сильные атаки Телекинезом!', COLORS.telekinesis);
+      if (this.tut.active) { const r = this.tut.reminder; if (r) this.tut.feedback = { text: r, left: 3 }; }
+      else if (first) this.toast('Враг атакует сам. Прерывайте сильные атаки Телекинезом!', COLORS.telekinesis);
       else if (this.def.armor) this.toast('Броня Стража держится на кристалле. Выберите его и разбейте Телекинезом.', COLORS.telekinesis);
+      if (state.item('resin_flask') > 0) this.queueHint(COMBAT_HINTS.flask, 'flask');
     });
   }
 
@@ -136,7 +150,7 @@ export class CombatScene extends Phaser.Scene {
       const label = this.add.text(o.x, o.y + 6, o.def.name, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 200 } }).setOrigin(0.5, 0).setDepth(o.y);
       // большая зона нажатия — без требований к точности
       const hit = this.add.zone(o.x, o.y - img.displayHeight / 2, Math.max(150, img.displayWidth * 1.6), Math.max(150, img.displayHeight * 1.6)).setInteractive({ useHandCursor: true });
-      hit.on('pointerdown', () => { if (this.canAct()) { this.cm.selectObject(o.id); this.processEvents(); } });
+      hit.on('pointerdown', () => { if (this.canAct()) { this.tut?.beforeSelect(o.id); this.cm.selectObject(o.id); this.processEvents(); } });
       this.fieldViews.set(o.id, { img, ring, label, home: { x: o.x, y: o.y } });
     }
     if (this.cm.fieldObjects.length) {
@@ -227,10 +241,12 @@ export class CombatScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------ действия
   onAbility(id) {
-    if (!this.canAct()) return;
+    if (!this.canAct() || this.tut?.step === 'intro') return;   // сначала «Понятно»
     const obj = id === 'telekinesis' ? this.cm.selectedObject() : null;
+    this.tut?.beforeAbility(id, this.cm.abilityState(id).state);
     const res = this.cm.useAbility(id);
     if (!res.ok) {
+      if (res.reason === 'nomana' && services.state.item('elixir_mana') > 0) this.queueHint(COMBAT_HINTS.lowMana, 'lowMana');
       const msg = { cooldown: 'Перезарядка…', nomana: 'Не хватает маны', locked: `${ABILITIES[id].name}: дар ещё не изучен` }[res.reason];
       if (msg) this.toast(msg);
       services.audio.play('locked');
@@ -261,16 +277,21 @@ export class CombatScene extends Phaser.Scene {
     this.updateHero(delta);
     if (this.ended) return;
     if (!services.modalOpen && !services.offline) { // без связи бой стоит: враг не бьёт, пока висит «Нет соединения»
+      const dt = Math.min(delta, 50) / 1000;
       if (this.hitstop > 0) this.hitstop -= delta;
-      else this.cm.tick(Math.min(delta, 50) / 1000 * this.timeScale);
+      else this.cm.tick(dt * this.timeScale, { holdEnemy: this.tut.holdEnemy() });
+      this.tut.tick(dt);
+      // текущие HP/мана боя сохраняются раз в несколько секунд: перезагрузка посреди боя не вернёт полный запас
+      this.saveT += delta;
+      if (this.saveT > 3000) { this.saveT = 0; services.state.save(); }
     }
     this.processEvents();
     this.updateHud();
+    this.updateCoach();
     this.updateJuice(delta);
   }
 
   updateHud() {
-    this.fieldHint?.setVisible(!services.tutorial.active);
     const e = this.cm.enemy;
     this.enemyHpBar.setFraction(Math.max(0, e.hp / e.maxHp));
     this.enemyHpText.setText(`${Math.ceil(e.hp)} / ${e.maxHp}`);
@@ -296,6 +317,7 @@ export class CombatScene extends Phaser.Scene {
       v.ring.setAlpha(o.id === this.cm.selectedId ? 0.7 + Math.sin(this.time.now / 150) * 0.3 : 0);
       v.img.setTint(o.id === this.cm.selectedId ? COLORS.telekinesis : 0xffffff);
     }
+    this.fieldHint?.setVisible(!services.tutorial.active && !this.coach?.visible);
   }
 
   updateJuice(delta) {
@@ -318,7 +340,9 @@ export class CombatScene extends Phaser.Scene {
   }
 
   processEvents() {
-    for (const ev of this.cm.drainEvents()) {
+    const events = this.cm.drainEvents();
+    this.tut?.onEvents(events);
+    for (const ev of events) {
       switch (ev.type) {
         case 'damage': this.onDamage(ev); break;
         case 'warning':
@@ -328,7 +352,7 @@ export class CombatScene extends Phaser.Scene {
           this.tweens.add({ targets: this.warn, scale: { from: 1.25, to: 1 }, duration: 260, ease: 'Back.easeOut' });
           services.audio.play('warning');
           services.audio.vibrate(25);
-          if (this.firstCombat && !ev.needsHeavy && services.tutorial.show('combat_warning')) this.timeScale = 0.35;
+          // v0.9: обучение прерыванию ведёт CombatTutorial (атака удерживается до действия игрока)
           break;
         case 'interrupt':
           if (ev.ok) {
@@ -404,6 +428,9 @@ export class CombatScene extends Phaser.Scene {
       if (ev.strong) this.cameras.main.flash(150, 120, 0, 0);
       this.hurtFlash = ev.strong ? 1 : 0.6;
       services.audio.play(ev.strong ? 'strong_hurt' : 'hero_hurt');
+      this.queueHint(COMBAT_HINTS.firstDamage, 'firstDamage');
+      const h = this.cm.hero;
+      if (h.hp > 0 && h.hp < h.maxHp * VITALS.combatLowHpHint && services.state.item('elixir_life') > 0 && (this.cm.stats.potions || 0) < POTION_BATTLE_LIMIT) this.queueHint(COMBAT_HINTS.lowHp, 'lowHp');
       services.audio.vibrate(ev.strong ? [80, 40, 120] : 30);
       if (ev.strong) this.freeze(140);
     }
@@ -471,6 +498,84 @@ export class CombatScene extends Phaser.Scene {
 
   toast(text, color) { this.bus.emit(MSG.TOAST, text, color); }
 
+  // ------------------------------------------------------------------ v0.9: панель обучения и подсказок боя
+  /** Подсказка из очереди (по важности). key — один раз за бой; hint.id — один раз на персонажа. */
+  queueHint(hint, key) {
+    if (!hint || this.hintsShown.has(key) || services.settings?.get('hints') === false) return;
+    if (hint.id && (services.state.data.tutorial || []).includes(hint.id)) return;
+    this.hintsShown.add(key);
+    if (hint.id) { services.state.data.tutorial.push(hint.id); }
+    if (key === 'firstDamage') this.bus.emit(MSG.HUD_HIGHLIGHT, 'hp');
+    this.hintQueue.push({ text: hint.text, key, left: 4.2 });
+    this.hintQueue.sort((a, b) => (a.key === 'lowHp' ? -1 : 0) - (b.key === 'lowHp' ? -1 : 0));
+  }
+
+  buildCoach() {
+    this.coach = this.add.container(VIEW.width / 2, 872).setDepth(7400).setVisible(false);
+    this.coachBg = this.add.graphics();
+    this.coachText = this.add.text(0, 0, '', { fontFamily: FONT, fontSize: UI.type.body, color: '#e9fffb', align: 'center', wordWrap: { width: 600 }, lineSpacing: 3, shadow: SH }).setOrigin(0.5);
+    this.coach.add([this.coachBg, this.coachText]);
+    this.coachButtons = [];
+    this.coachKey = '';
+  }
+
+  /** Что показать в панели: шаг обучения → ошибка игрока → контекстная подсказка. */
+  coachState() {
+    const t = this.tut.view();
+    const fb = this.tut.feedback;
+    if (t && t.step === 'intro') return { key: 'intro', text: t.text, buttons: ['ok', 'skip'], accent: COLORS.telekinesis };
+    if (fb) return { key: 'fb:' + fb.text, text: fb.text, buttons: t ? ['skip'] : [], accent: COLORS.gold };
+    if (t) return { key: t.step + ':' + t.text, text: t.text, buttons: t.step === 'confirm' ? [] : ['skip'], accent: t.step === 'confirm' ? 0x7be28a : COLORS.telekinesis };
+    const h = this.hintQueue[0];
+    if (h) return { key: 'hint:' + h.key, text: h.text, buttons: [], accent: COLORS.gold };
+    return null;
+  }
+
+  updateCoach() {
+    if (!this.coach || this.ended) return;
+    const dt = this.game.loop.delta / 1000;
+    const st = this.started && !services.modalOpen ? this.coachState() : null;
+    if (st?.key.startsWith('hint:')) { this.hintQueue[0].left -= dt; if (this.hintQueue[0].left <= 0) this.hintQueue.shift(); }
+    const key = st ? st.key : '';
+    if (key !== this.coachKey) {
+      this.coachKey = key;
+      this.coachButtons.forEach(b => b.destroy()); this.coachButtons = [];
+      if (!st) { this.coach.setVisible(false); }
+      else {
+        this.coachText.setText(st.text);
+        const bh = st.buttons.length ? UI.touch.button + 18 : 0;
+        const w = 660, h = this.coachText.height + 36 + bh;
+        drawPlate(this.coachBg, w, h, { accent: st.accent, fill: 0x0e1a1c, alpha: 0.93 });
+        this.coachText.setY(-h / 2 + 18 + this.coachText.height / 2);
+        const by = this.coach.y + h / 2 - UI.touch.button / 2 - 14;
+        const defs = st.buttons.map(b => (b === 'ok'
+          ? { label: 'Понятно', primary: true, w: 220, on: () => { if (this.tut.confirmIntro()) services.audio.play('ui_click'); } }
+          : { label: 'Пропустить обучение', primary: false, w: 330, on: () => { this.tut.skip(); services.audio.play('ui_back'); } }));
+        const total = defs.reduce((a, d) => a + d.w, 0) + (defs.length - 1) * 20;
+        let x = VIEW.width / 2 - total / 2;
+        for (const d of defs) {
+          const btn = addButton(this, x + d.w / 2, by, d.w, UI.touch.button, d.label, { primary: d.primary, accent: d.primary ? COLORS.telekinesis : null, fontSize: UI.type.small, depth: 7450, onPress: d.on });
+          this.coachButtons.push(btn);
+          x += d.w + 20;
+        }
+        this.coach.setVisible(true);
+      }
+    }
+    // подсветка цели обучения: бросаемые предметы поля
+    const target = this.tut.view()?.target;
+    for (const o of this.cm.fieldObjects) {
+      const v = this.fieldViews.get(o.id);
+      if (target === 'object' && o.available && o.def.throwable && o.id !== this.cm.selectedId) v.ring.setAlpha(0.45 + Math.sin(this.time.now / 160) * 0.35).setTint(0xffe08a);
+      else if (o.id !== this.cm.selectedId) v.ring.setTint(COLORS.telekinesis);
+    }
+    // подсветка зелья при подсказке
+    const hk = this.hintQueue[0]?.key;
+    for (const [id, v] of this.potionViews) {
+      const on = (hk === 'lowHp' && id === 'elixir_life') || (hk === 'lowMana' && id === 'elixir_mana') || (hk === 'flask' && id === 'resin_flask');
+      v.ring.setScale(on ? 1 + Math.sin(this.time.now / 140) * 0.12 : 1);
+    }
+  }
+
   // ------------------------------------------------------------------ итог
   endCombat(result, time) {
     if (this.ended) return;
@@ -480,7 +585,7 @@ export class CombatScene extends Phaser.Scene {
     const secs = Math.round(time * 10) / 10;
     state.data.stats.combats.push({ enemy: this.enemyType, spawnId: this.spawnId, result, timeSec: secs, interrupts: this.cm.stats.interrupts, uses: this.cm.stats.abilityUses });
     console.info(`[combat] ${this.enemyType} ${result} in ${secs}s`, this.cm.stats);
-    state.data.hp = null;
+    this.coach?.setVisible(false);
 
     if (result === 'victory') {
       this.tweens.add({ targets: this.enemySprite, alpha: 0, scaleY: 0.2, duration: 600 });
@@ -490,13 +595,15 @@ export class CombatScene extends Phaser.Scene {
       this.burst(ENEMY_POS.x, ENEMY_POS.y - 80, COLORS.gold, 40);
       state.markEnemyDefeated(this.spawnId);
       const r = state.applyReward(this.def.rewards);
+      vitals.afterVictory(state, this.cm.hero.mana);   // HP — новый максимум после наград, мана — фактический остаток
       if (this.spawn.opensPath) state.openPath(this.spawn.opensPath);
       state.save();
       if (this.spawn.defeatEvent) quests.complete(this.spawn.defeatEvent, { spawnId: this.spawnId });
       this.bus.emit(MSG.QUEST_CHANGED);
       this.bus.emit(MSG.HUD_REFRESH);
       const g = r.granted;
-      const lines = [`Время боя: ${secs} сек   ·   прерываний: ${this.cm.stats.interrupts}`, '', `+${g.heroXP} опыта героини`];
+      const v = vitals.view(state);
+      const lines = [STORY.victory, `Мана: ${v.mana} / ${v.maxMana}`, '', `Время боя: ${secs} сек   ·   прерываний: ${this.cm.stats.interrupts}`, '', `+${g.heroXP} опыта героини`];
       for (const [k, v] of Object.entries(g.schoolXP)) lines.push(`+${v} опыта дара «${ABILITIES[k].name}»`);
       for (const [k, v] of Object.entries(g.items)) lines.push(`+${v} ${itemName(k)}`);
       for (const lv of r.levelUps) lines.push('', `★ Новый уровень ${lv.level}! ${lv.note || ''}`);
@@ -507,14 +614,16 @@ export class CombatScene extends Phaser.Scene {
     } else {
       const lost = Math.min(state.item('coins'), HERO_RECOVERY.coinsLostOnDefeat);
       if (lost) state.removeItem('coins', lost);
+      vitals.afterDefeat(state, this.cm.hero.mana);    // 20% HP, мана — фактический остаток; позицию у врага ставит ExplorationScene
       state.save();
+      const v = vitals.view(state);
       this.heroAnim.playDeath();
       services.audio.setMusic(null);
       services.audio.play('defeat');
       services.audio.vibrate(200);
       this.time.delayedCall(700, () => this.bus.emit(MSG.DIALOG, {
         title: 'Поражение', color: COLORS.danger,
-        text: `Ведьма отступает к безопасной тропе.${lost ? `\nПотеряно ${lost} монет.` : ''}\n\nСовет: следите за красным предупреждением и держите Телекинез готовым для прерывания.${this.def.armor ? ' Сначала разбейте кристалл, чтобы снять броню.' : ''}`,
+        text: `${STORY.defeat}\n\nЗдоровье: ${v.hp} / ${v.maxHp}   ·   мана: ${v.mana} / ${v.maxMana}${lost ? `\nПотеряно монет: ${lost}.` : ''}\n\n${STORY.retryHint}\nСовет: следите за красным предупреждением и держите Телекинез готовым для прерывания.${this.def.armor ? ' Сначала разбейте кристалл, чтобы снять броню.' : ''}`,
         buttons: [{ label: 'Вернуться', primary: true, onClick: () => this.exit('defeat') }],
       }));
     }

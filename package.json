@@ -12,7 +12,8 @@
     "e2e": "node tests/e2e/play.mjs",
     "test:db": "node tools/sql/security-test.mjs && node tools/sql/diff-test.mjs && node tools/sql/migration-test.mjs && BACKEND=pg node tests/session-test.js",
     "test:browser": "python3 tools/ui/dom/dom-test.py",
-    "test:mobile": "node tests/e2e/mobile-ui.mjs"
+    "test:mobile": "node tests/e2e/mobile-ui.mjs",
+    "test:reload": "node tests/e2e/reload-mid-combat.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

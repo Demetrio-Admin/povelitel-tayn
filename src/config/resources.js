@@ -3,7 +3,7 @@
 
 /** Пять ресурсов: способ добычи указан в world.resources.js, здесь — название, иконка и подпись. */
 export const RESOURCES = {
-  moon_herb:       { name: 'Лунная трава',      icon: 'moon_plant_01', color: 0x9fe9ff, hint: 'Растёт на полянах ночным светом. Нужна для настоев и изучения Телекинеза II.' },
+  moon_herb:       { name: 'Лунная трава',      icon: 'icon_moon_herb', color: 0x9fe9ff, hint: 'Растёт на полянах ночным светом. Нужна для настоев и изучения Телекинеза II.' },
   lunar_shard:     { name: 'Лунный осколок',    icon: 'icon_shard',    color: 0x9fe9ff, hint: 'Застывший лунный свет. Нужен для изучения даров.' },
   forest_mushroom: { name: 'Лесные грибы',      icon: 'icon_mushroom', color: 0xd9744a, hint: 'Растут в тени старого леса. Основа целебных настоев.' },
   tree_resin:      { name: 'Древесная смола',   icon: 'icon_resin',    color: 0xe8b04a, hint: 'Липкая и горючая. Её собирают с коры или достают из сожжённых зарослей.' },

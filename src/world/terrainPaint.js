@@ -117,12 +117,39 @@ function paintRoadFill(ctx, r, img, index) {
   ctx.lineJoin = 'round';
   pathPoly(ctx, r.poly);
   ctx.fillStyle = pattern(ctx, img, r.kind === 'stone' ? '#5d6068' : '#7b5a3a'); ctx.fill();
+  if (r.seamless) { ctx.restore(); return; }
   ctx.clip();
   const stone = r.kind === 'stone';
   ctx.strokeStyle = stone ? 'rgba(24,38,20,0.5)' : 'rgba(44,28,12,0.42)'; ctx.lineWidth = 22; ctx.stroke();
   ctx.strokeStyle = stone ? 'rgba(14,22,12,0.5)' : 'rgba(30,18,8,0.4)'; ctx.lineWidth = 8; ctx.stroke();
   ctx.restore();
   fringe(ctx, r.poly, 3000 + index * 31, stone ? 'stone' : 'dirt');
+}
+
+/** Clip away neighbours before painting edges: only the boundary of the road network remains.
+ * Separate even-odd clips also work for three-way overlaps, unlike a single even-odd union.
+ * Fills share world-space texture coordinates, including across chunk boundaries.
+ */
+function paintJoinedRoadEdge(ctx, r, roads, chunk, index) {
+  ctx.save();
+  for (const other of roads) {
+    if (other === r || !other.seamless || other.kind !== r.kind) continue;
+    if (other.bounds.x > r.bounds.x1 + MARGIN || other.bounds.x1 < r.bounds.x - MARGIN ||
+        other.bounds.y > r.bounds.y1 + MARGIN || other.bounds.y1 < r.bounds.y - MARGIN) continue;
+    pathPoly(ctx, other.poly);
+    ctx.rect(chunk.x - MARGIN, chunk.y - MARGIN, chunk.w + MARGIN * 2, chunk.h + MARGIN * 2);
+    ctx.clip('evenodd');
+  }
+  ctx.save();
+  pathPoly(ctx, r.poly);
+  ctx.clip();
+  ctx.lineJoin = 'round';
+  const stone = r.kind === 'stone';
+  ctx.strokeStyle = stone ? 'rgba(24,38,20,0.5)' : 'rgba(44,28,12,0.42)'; ctx.lineWidth = 22; ctx.stroke();
+  ctx.strokeStyle = stone ? 'rgba(14,22,12,0.5)' : 'rgba(30,18,8,0.4)'; ctx.lineWidth = 8; ctx.stroke();
+  ctx.restore();
+  fringe(ctx, r.poly, 3000 + index * 31, stone ? 'stone' : 'dirt');
+  ctx.restore();
 }
 
 /**
@@ -137,6 +164,8 @@ export function paintTerrainChunk(ctx, chunk, terrain, imgs = {}) {
   const roads = terrain.roads.map((r, i) => [r, r.n ?? i]).filter(([r]) => touches(r.bounds, chunk));
   roads.forEach(([r]) => paintRoadBase(ctx, r));
   roads.forEach(([r, i]) => paintRoadFill(ctx, r, r.kind === 'stone' ? imgs.stone : imgs.dirt, i));
+  const joined = roads.map(([r]) => r);
+  roads.forEach(([r, i]) => { if (r.seamless) paintJoinedRoadEdge(ctx, r, joined, chunk, i); });
   ctx.restore();
 }
 

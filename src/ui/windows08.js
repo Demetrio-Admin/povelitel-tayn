@@ -17,6 +17,7 @@ import { ROMAN } from '../objects/InteractiveObject.js';
 import { addPanel, addDivider, addButton, drawPlate, releaseTexture } from './widgets.js';
 import { STEP_WHY, POTION_ROLE } from '../config/story.js';
 import * as vitals from '../state/vitals.js';
+import { addNoticeClose } from './noticeClose.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -39,8 +40,9 @@ export const windows08 = {
     // v0.8.2: постоянной панели цели и её невидимой зоны нажатия (questHit) больше нет — Журнал открывается кнопкой справа.
     this.hintPlate = this.add.container(W / 2, 300).setDepth(40).setVisible(false);
     this.hintBg = this.add.graphics();
-    this.hintText = this.add.text(0, 0, '', { fontFamily: FONT, fontSize: UI.type.small, color: '#f6e3a1', align: 'left', wordWrap: { width: 628 }, lineSpacing: 2 }).setOrigin(0.5);
+    this.hintText = this.add.text(-32, 0, '', { fontFamily: FONT, fontSize: UI.type.small, color: '#f6e3a1', align: 'left', wordWrap: { width: 556 }, lineSpacing: 2 }).setOrigin(0.5);
     this.hintPlate.add([this.hintBg, this.hintText]);
+    this.hintClose = addNoticeClose(this, this.hintPlate, () => this.onGuideHint(null), { x: 308 });
 
     // стрелка к цели у края экрана
     this.pointer = this.add.container(0, 0).setDepth(8400).setVisible(false);
@@ -74,13 +76,13 @@ export const windows08 = {
   onGuideHint(text) {
     this.tweens.killTweensOf(this.hintPlate);
     if (!text) {
-      if (this.hintPlate.visible) this.tweens.add({ targets: this.hintPlate, alpha: 0, duration: 200, onComplete: () => this.hintPlate.setVisible(false) });
+      this.hintText.setText(''); // refreshQuest must not restore a dismissed hint
       this.hintPlate.setVisible(false);
       this.layoutHint();
       return;
     }
     this.hintText.setText('✦ ' + text);
-    const w = 692, h = this.hintText.height + 24;
+    const w = 692, h = Math.max(72, this.hintText.height + 24);
     drawPlate(this.hintBg, w, h, { accent: 0xe8c56a, fill: 0x1a120d, alpha: 0.88, radius: 10 });
     this.hintPlate.setVisible(true).setAlpha(0);
     this.layoutHint();

@@ -9,6 +9,7 @@ import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { xpProgress } from '../state/heroProgress.js';
 import * as vitals from '../state/vitals.js';
+import { addNoticeClose } from './noticeClose.js';
 import { ABILITY_ORDER } from '../systems/AbilitySystem.js';
 import { ROMAN } from '../objects/InteractiveObject.js';
 import { ensureTexture, addOrb, addMedallion, drawPlate, UIBar } from './widgets.js';
@@ -159,8 +160,8 @@ export const hud082 = {
     this.goalBanner?.destroy();
     const w = UI.side.x - UI.side.hitW / 2 - 8 - 20;      // слева от колонки Журнал/Меню
     const cx = 20 + w / 2;
-    const head = this.add.text(0, 0, '✦ ' + title, { fontFamily: FONT, fontSize: UI.type.small, fontStyle: 'bold', color: COLORS.textGold }).setOrigin(0.5, 0);
-    const body = this.add.text(0, 0, text, { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, align: 'center', wordWrap: { width: w - 40 }, lineSpacing: 2 }).setOrigin(0.5, 0);
+    const head = this.add.text(-30, 0, '✦ ' + title, { fontFamily: FONT, fontSize: UI.type.small, fontStyle: 'bold', color: COLORS.textGold }).setOrigin(0.5, 0);
+    const body = this.add.text(-30, 0, text, { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, align: 'center', wordWrap: { width: w - 104 }, lineSpacing: 2 }).setOrigin(0.5, 0);
     const h = head.height + body.height + 30;
     head.setY(-h / 2 + 12); body.setY(head.y + head.height + 4);
     const bg = drawPlate(this.add.graphics(), w, h, { accent: COLORS.gold, fill: 0x120d0b, alpha: 0.86, radius: 14 });
@@ -168,6 +169,11 @@ export const hud082 = {
     const c = this.add.container(cx, top + h / 2, [bg, head, body]).setDepth(8200).setAlpha(0);
     c.bannerText = text;
     this.goalBanner = c;
+    addNoticeClose(this, c, () => {
+      this.tweens.killTweensOf(c);
+      if (this.goalBanner === c) this.goalBanner = null;
+      c.destroy();
+    }, { x: w / 2 - 34, y: -h / 2 + 34 });
     this.tweens.add({ targets: c, alpha: 1, y: { from: top + h / 2 - 10, to: top + h / 2 }, duration: 220 });
     this.time.delayedCall(UI.banner.ms, () => {
       if (this.goalBanner !== c) return;

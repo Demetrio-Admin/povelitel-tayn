@@ -12,7 +12,7 @@ export function buildRoad(r, index = 0) {
   const left = (s) => hw * (0.86 + 0.28 * nL(s / 95) + 0.12 * (nW(s / 260) - 0.5));
   const right = (s) => hw * (0.86 + 0.28 * nR(s / 95) + 0.12 * (nW(s / 260) - 0.5));
   const poly = ribbon(center, left, right, { step: 10, taper: r.w * 0.55 });
-  return { id: r.id, kind: r.kind, n: index, poly, bounds: polygonBounds(poly) };
+  return { id: r.id, kind: r.kind, seamless: r.seamless === true, n: index, poly, bounds: polygonBounds(poly) };
 }
 
 /** Только контур (без прямоугольников коллизии) — для быстрого показа в редакторе. */

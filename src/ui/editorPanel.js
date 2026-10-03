@@ -61,6 +61,8 @@ export function buildEditorPanel(actions) {
         <div class="me-row">
           <button data-a="magnet">Магнит стыков</button>
           <button data-a="road_new">＋ Тропа</button><button data-a="stone_new">＋ Каменная</button><button data-a="pond_new">＋ Водоём</button>
+          <button data-a="road_joined">＋ Тропа без швов</button><button data-a="stone_joined">＋ Каменная без швов</button>
+          <button data-a="seamless">Стыки: со швом</button>
           <button data-a="shape_del" class="me-danger">🗑 Убрать всю линию</button>
         </div>
       </div>

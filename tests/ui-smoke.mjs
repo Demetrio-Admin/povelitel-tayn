@@ -134,6 +134,8 @@ await mute(async () => {
       ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'chapter_1_complete'], 'Открыть журнал', MSG.OPEN_JOURNAL, 'Журнал'],
       ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'mirra_starter_kit', 'first_world_interaction'], 'Покажи котёл', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
       ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'chapter_1_complete'], 'Восстановить здоровье', MSG.OPEN_HEAL, 'Лечение у Мирры'],
+      // v0.10.0: новые переходы диалог → котёл (фитиль у Мирры, связка после Печати)
+      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'mirra_starter_kit', 'first_world_interaction', 'mirra_taught_alchemy', 'lunar_quest_start', 'lunar_quest_complete', 'unlock_seal_1'], 'Сварить связку', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
       ['selena', ['lunar_quest_start', 'sq_dust_done', 'dlg:selena_wick'], 'Открыть алтарь', MSG.OPEN_UPGRADE, 'Изучение: Телекинез II'],
     ];
     sv.bus.offContext(ui);

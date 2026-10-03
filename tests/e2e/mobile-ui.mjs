@@ -101,7 +101,7 @@ try {
     await ui(() => window.__game.scene.getScene('UIScene').closeDialogue(true));
     await page.waitForFunction(() => window.__witch.state.item('elixir_life') === 1 && window.__witch.state.item('elixir_mana') === 1, null, { timeout: 30000 });
     // сбор с расходом маны: цена видна в кнопке, после сбора «−4 маны» и подсветка маны
-    await ui(() => { const ex = window.__game.scene.getScene('ExplorationScene'); const h = ex.objects.find(o => o.id === 'herb_g1'); ex.player.setPosition(h.x, h.y + 40); ex.player.stop(); });
+    await ui(() => { const ex = window.__game.scene.getScene('ExplorationScene'); const h = ex.objects.find(o => o.id === 'herb_g1'); ex.player.setPosition(h.x, h.y - 30); /* сверху: снизу рядом лунное растение (правки карты) */ ex.player.stop(); });
     await page.waitForFunction(() => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === 'herb_g1', null, { timeout: 30000 });
     assert.match(await ui(() => window.__game.scene.getScene('UIScene').ctxLabel.text), /4 маны/);
     await shot('v09-gather-cost');
@@ -322,7 +322,7 @@ try {
     // Every deferred action is exercised by tapping its actual dialogue choice.
     for(const [npc,answer,title] of [['mirra','Сварить зелье','Котёл Мирры'],['mirra','Открыть журнал','Журнал'],['selena','Открыть алтарь','Изучение: Телекинез II']]) {
       await page.evaluate(npc=>{
-        const s=window.__witch;s.state.markEvent('chapter_1_complete');s.state.markEvent('sq_dust_done');s.dialogue.start(npc);
+        const s=window.__witch;s.state.markEvent('chapter_1_complete');s.state.markEvent('sq_dust_done');if(npc==='selena')s.dialogue.markSeen('selena_epilogue');s.dialogue.start(npc);
         const u=window.__game.scene.getScene('UIScene');let n=0;while(!s.dialogue.view().choices&&n++<10){u.finishTyping();u.dialogueTap();}u.finishTyping();
       },npc);
       if(npc==='mirra'&&answer==='Сварить зелье')await shot('dialogue');

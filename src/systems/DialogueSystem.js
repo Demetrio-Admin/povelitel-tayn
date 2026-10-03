@@ -1,5 +1,6 @@
 // Диалоги (v0.8): выбор варианта по прогрессу, показ реплик, ответы и эффекты. Без Phaser.
 // Данные — config/dialogues.js, персонажи — config/npcs.js. Окно рисует UIScene по view().
+import { T } from '../state/hero.js';
 import { DIALOGUES } from '../config/dialogues.js';
 import { NPCS } from '../config/npcs.js';
 import { MSG } from '../state/EventBus.js';
@@ -84,7 +85,9 @@ export class DialogueSystem {
   node() { return this.cur ? this.cur.variant.nodes[this.cur.nodeId] : null; }
 
   fmt(text) {
-    if (text && typeof text === 'object' && 'hero' in text) text = `Вы: «${text.hero}»`;   // v0.9: реплика героини
+    // v0.9.2: варианты для ведьмы / колдуна ({ female, male }) разрешаются до подстановок {n:…} и {goal}
+    text = T(text);
+    if (text && typeof text === 'object' && 'hero' in text) text = `Вы: «${T(text.hero)}»`;   // v0.9: реплика героя
     return String(text)
       .replace(/\{n:([A-Za-z0-9_]+)\}/g, (m, id) => String(this.state.item(id)))
       .replace(/\{goal\}/g, () => this.goalText() || 'идти вперёд.');
@@ -97,7 +100,7 @@ export class DialogueSystem {
     const npc = NPCS[this.cur.npcId];
     const lines = n.lines;
     const last = this.cur.line >= lines.length - 1;
-    const choices = last && n.choices ? n.choices.filter(ch => !ch.when || ch.when(this.context())).map((ch, i) => ({ index: i, label: ch.label })) : null;
+    const choices = last && n.choices ? n.choices.filter(ch => !ch.when || ch.when(this.context())).map((ch, i) => ({ index: i, label: T(ch.label) })) : null;
     return { npc, text: this.fmt(lines[this.cur.line]), line: this.cur.line, lines: lines.length, last, choices, hasChoices: !!n.choices };
   }
 

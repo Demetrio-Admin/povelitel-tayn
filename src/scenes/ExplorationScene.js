@@ -1,3 +1,4 @@
+import { T } from '../state/hero.js';
 import Phaser from 'phaser';
 import { VIEW, CAMERA, PLAYER, DEPTH, COLORS, SAVE } from '../config/game.config.js';
 import { WORLD, ZONES, GROUND, INTERACTIVES, ENEMY_SPAWNS } from '../config/world.layout.js';
@@ -403,14 +404,15 @@ export class ExplorationScene extends Phaser.Scene {
   onManaShort(cost, obj) {
     const st = services.state, cur = Math.floor(vitals.mana(st) + 1e-9);
     const elixir = st.item('elixir_mana') > 0;
-    this.toast(`Не хватает маны: ${cur} / ${cost}.\n${STORY.manaShortHelp(elixir)}`, COLORS.mana);
+    this.toast(`Не хватает маны: ${cur} / ${cost}.\n${T(STORY.manaShortHelp, elixir)}`, COLORS.mana);
     this.bus.emit(MSG.HUD_HIGHLIGHT, 'mana');
     services.audio.play('locked');
     if (obj?.sprite) this.tweens.add({ targets: obj.sprite, x: obj.sprite.x + 3, duration: 50, yoyo: true, repeat: 2 });
   }
 
-  /** Облачко с мыслью героини над головой (контекстные реплики и подсказки). */
+  /** Облачко с мыслью героя над головой (контекстные реплики и подсказки). */
   heroSay(text, ms = 3400) {
+    text = T(text);   // v0.9.2: варианты для ведьмы / колдуна
     if (!text || this.editor || !this.player) return;
     if (this.speech) { this.speech.c.destroy(); this.speech = null; }
     const t = this.add.text(0, 0, text, { fontFamily: UI.font, fontSize: UI.type.body, color: '#fff7e0', align: 'center', wordWrap: { width: 360 }, lineSpacing: 3 }).setOrigin(0.5);

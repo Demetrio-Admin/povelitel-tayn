@@ -7,29 +7,13 @@
 //   по умолчанию — JS-зеркало схемы.
 // Игра должна быть собрана с VITE_SUPABASE_URL=http://127.0.0.1:8174 и VITE_SUPABASE_ANON_KEY=anon-key.
 // Запуск: UI_BASE_URL=http://…/ [BACKEND=pg] node tests/e2e/server-actions.mjs
-import http from 'http';
 import { chromium } from 'playwright';
-import { FakeSupabase } from '../helpers/fake-supabase.mjs';
+import { startFakeHttp } from '../helpers/fake-http.mjs';
 
 const BASE = process.env.UI_BASE_URL || 'http://127.0.0.1:5173/';
 const PORT = +(process.env.SERVER_PORT || 8174);
 const DELAY = +(process.env.SERVER_DELAY_MS || 300);
-const srv = new FakeSupabase({ backend: process.env.BACKEND || 'model', url: `http://127.0.0.1:${PORT}` });
-srv.delayMs = DELAY;
-
-// ---------------------------------------------------------------- HTTP-обёртка над фальшивым Supabase (с CORS, как настоящий)
-const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
-const server = http.createServer(async (req, res) => {
-  if (req.method === 'OPTIONS') { res.writeHead(204, CORS); res.end(); return; }
-  const chunks = []; for await (const c of req) chunks.push(c);
-  const body = chunks.length ? Buffer.concat(chunks).toString() : undefined;
-  try {
-    const r = await srv.fetch(srv.url + req.url, { method: req.method, headers: req.headers, body });
-    const text = await r.text();
-    res.writeHead(r.status, { ...CORS, 'Content-Type': 'application/json' }); res.end(text);
-  } catch (e) { res.destroy(); }
-});
-await new Promise(r => server.listen(PORT, '127.0.0.1', r));
+const { srv, close: closeServer } = await startFakeHttp({ backend: process.env.BACKEND || 'model', port: PORT, delayMs: DELAY });
 
 let failures = 0;
 const ok = (c, m) => { if (c) console.log('  ✓', m); else { failures++; console.log('  ✗', m); } };
@@ -169,5 +153,5 @@ ok(after.coins === h1.coins && after.hp === after.max, 'после переза�
 ok(!errs.length, 'без ошибок в консоли страницы' + (errs.length ? ': ' + errs.join('; ') : ''));
 
 console.log(failures ? `\n✗ Провалено проверок: ${failures}` : '\n✓ Стартовый набор и лечение работают через player_action');
-await b.close(); server.close();
+await b.close(); await closeServer();
 process.exit(failures ? 1 : 0);

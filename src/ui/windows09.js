@@ -1,6 +1,7 @@
 // v0.9 — HUD-подсветка запасов, зелья из сумки, лечение у Мирры за монеты, стартовый набор зелий.
 // Методы подмешиваются в UIScene (как windows08/hud082), `this` — UIScene. Логика — в state/vitals.js,
 // systems/Consumables.js и systems/PlayerActions.js; здесь только окна и обратная связь.
+import { fm } from '../state/hero.js';
 import { COLORS } from '../config/game.config.js';
 import { POTIONS } from '../config/resources.js';
 import { STORY } from '../config/story.js';
@@ -76,7 +77,7 @@ export const windows09 = {
     const cur = vitals.hp(st), max = vitals.maxHp(st), coins = st.item('coins');
     const price = vitals.healPrice(cur, max);
     if (price <= 0) {
-      this.openModal({ title: 'Лечение у Мирры', color: 0x7be28a, text: 'Ты цела, ведьма. Лечить нечего.', buttons: [{ label: 'Закрыть', primary: true }] });
+      this.openModal({ title: 'Лечение у Мирры', color: 0x7be28a, text: fm('Ты цела, ведьма. Лечить нечего.', 'Ты цел, колдун. Лечить нечего.'), buttons: [{ label: 'Закрыть', primary: true }] });
       return;
     }
     const head = `Здоровье: ${Math.ceil(cur)} / ${max}  →  ${max} / ${max}\nЦена: ${price} ${coinWord(price)}   ·   у вас: ${coins}`;

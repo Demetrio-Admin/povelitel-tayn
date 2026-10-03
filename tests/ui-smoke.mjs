@@ -260,7 +260,6 @@ await mute(async () => {
     const { SupabaseApi } = await import('../src/cloud/api.js');
     const { FakeSupabase } = await import('./helpers/fake-supabase.mjs');
     const { services } = await import('../src/services.js');
-    const { HeroSelectScene } = await import('../src/scenes/HeroSelectScene.js');
     await freshWorld('new');
     const srv = new FakeSupabase();
     const api = new SupabaseApi({ url: srv.url, anonKey: srv.anonKey, loginDomain: 'players.witch-rpg.invalid', fetchFn: srv.fetch });
@@ -271,15 +270,34 @@ await mute(async () => {
     // все тексты сцены, включая вложенные в контейнеры (заглушка Phaser хранит объекты в scene._list)
     const labels = (scene) => { const out = []; const walk = (o) => { if (typeof o.text === 'string') out.push(o.text); (o.children || []).forEach(walk); }; scene._list.forEach(walk); return out; };
     const m1 = new MenuScene(); m1.create();
-    ok(m1.accountButton?.text.text === 'Войти' && labels(m1).includes('Новая игра'), 'старт без входа: «Новая игра» и «Войти»');
-    const hs = new HeroSelectScene(); hs.create(); hs.onPick();
-    const choice = labels(hs);
-    ok(['Играть как гость', 'Создать аккаунт', 'У меня уже есть аккаунт'].every(t => choice.includes(t)), 'после выбора героя — «Как продолжить?» с тремя вариантами');
-    await ses.playAsGuest('witch');
+    // v0.9.2: выбор героя — прямо на стартовом экране (переключатель «Ведьма | Колдун» и один предпросмотр)
+    ok(m1.accountButton?.text.text === 'Войти' && labels(m1).includes('Начать игру') && labels(m1).includes('✓ Ведьма') && labels(m1).includes('Колдун') && labels(m1).includes('Дары и характеристики одинаковые'),
+      'старт без входа: «Ведьма | Колдун», «Начать игру», «Войти», «Дары и характеристики одинаковые»');
+    ok(m1.picker.image.texture.key === 'hero_down' && labels(m1).includes('Ученица лесной ведьмы'), 'по умолчанию — ведьма: рисунок и роль');
+    m1.picker.toggles.find(t => t.heroId === 'warlock').hit.emit('pointerdown'); m1.picker.toggles.find(t => t.heroId === 'warlock').hit.emit('pointerup');
+    ok(m1.hero === 'warlock' && m1.picker.image.texture.key === 'warlock_down' && labels(m1).includes('✓ Колдун') && labels(m1).includes('Ученик лесной ведьмы') && labels(m1).includes('Временный\nрисунок'),
+      'нажатие «Колдун»: сразу меняются рисунок, имя и роль; временная графика помечена');
+    ok(!ses.signedIn && !srv.calls.length, 'переключение предпросмотра не создаёт профиль и не обращается к серверу');
+    m1.startNew();
+    const choice = labels(m1);
+    ok(['Играть как гость', 'Создать аккаунт', 'У меня уже есть аккаунт'].every(t => choice.includes(t)), '«Начать игру» → «Как продолжить?» с тремя вариантами');
+    m1.back();
+    ok(!m1.choice && m1.hero === 'warlock', '«Назад» из «Как продолжить?» — выбор героя сохранён');
+    await ses.playAsGuest(m1.hero);
+    ok(ses.hero === 'warlock', 'гость создан колдуном (hero передан в create_player)');
     const m2 = new MenuScene(); m2.create();
     ok(labels(m2).includes('Продолжить') && labels(m2).some(t => String(t).startsWith('Гость · уровень 1')) && m2.accountButton?.text.text === 'Профиль', 'гость: «Продолжить», «Профиль», строка «Гость · уровень 1»');
     const g = new UIScene(); g.create(); mkHud(g); g.refreshHud();
     ok(g.levelText.text === 'Ур. 1' && g.syncDot.visible, 'HUD гостя: уровень и значок сохранения');
+    // v0.9.2: портрет HUD — выбранный герой; ключ кэша медальона включает текстуру героя (нет «чужого» медальона)
+    const { setHeroSource } = await import('../src/state/hero.js');
+    const { heroIdNow } = await import('../src/services.js');
+    const kW = g.portrait.texture.key;
+    setHeroSource(() => 'witch');
+    const gw = new UIScene(); gw.create(); mkHud(gw);
+    const kH = gw.portrait.texture.key;
+    setHeroSource(() => heroIdNow());
+    ok(kW.includes('warlock_down') && kH.includes('hero_down') && kW !== kH, `медальон: колдун и ведьма — разные ключи кэша (${kW} / ${kH})`);
     // v0.8.2: аккаунт — из профиля героя (портрет), а не из паузы; профиль героя закрывается до открытия окна аккаунта
     let accOrder = null;
     g.openAccount = () => { accOrder = g.modal === null && !services.modalOpen; };
@@ -292,6 +310,7 @@ await mute(async () => {
     ok(u.levelText.text === 'Ур. 1' && u.syncDot.visible && !labels(u).some(t => String(t).includes('Нюта')), 'HUD игрока: ника в HUD нет, уровень и значок сохранения');
     u.openHeroProfile();
     ok(labels(u).some(t => String(t) === 'Ник: Нюта_Лесная'), 'профиль героя: полный ник игрока');
+    ok(u.modal?.opts?.title === 'Колдун' && labels(u).includes('Ученик лесной ведьмы'), 'профиль: «Колдун», «Ученик лесной ведьмы» (герой профиля)');
     u.closeModal(null);
     ok(!u.modal && !services.modalOpen, 'профиль героя закрывается без блокировки');
     const m3 = new MenuScene(); m3.create();

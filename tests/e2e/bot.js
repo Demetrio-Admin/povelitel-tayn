@@ -10,6 +10,14 @@ window.__bot = async function () {
   S.bus.on('ui:toast', (t) => L('  toast:', String(t).replace(/\n/g, ' ')));
   S.bus.on('world:event', (k) => L('  EVENT:', k));
   S.bus.on('ui:final', () => L('  FINAL_SCREEN'));
+  // v0.9.2: какой герой, его текстуры и все показанные тексты (проверка обращений)
+  const seenTexts = new Set();
+  { const v0 = S.dialogue.view.bind(S.dialogue); S.dialogue.view = () => { const v = v0(); if (v) { seenTexts.add(v.text); (v.choices || []).forEach(c => seenTexts.add(c.label)); } return v; }; }
+  const HT = window.__witchHero.T;
+  S.bus.on('ui:toast', (t) => seenTexts.add(String(HT(t))));
+  { const e = G.scene.getScene('ExplorationScene'), h0 = e.heroSay.bind(e); e.heroSay = (t, ms) => { seenTexts.add(String(HT(t))); return h0(t, ms); }; }
+  { const u = G.scene.getScene('UIScene'), m0 = u.openModal.bind(u); u.openModal = (o) => { seenTexts.add(String(HT(o.title))); if (o.text) seenTexts.add(String(HT(o.text))); return m0(o); }; }
+  L(`HERO: ${S.state.data.heroId} world=${G.scene.getScene('ExplorationScene').player.view.texture.key}`);
 
   // v0.9: запасы героини и обучение
   const V = () => ({ hp: S.state.data.hp ?? 999, mana: S.state.data.mana ?? 999 });
@@ -21,7 +29,7 @@ window.__bot = async function () {
 
   async function fight() {
     const c = cb();
-    L('  COMBAT start:', c.enemyType, `hp=${Math.round(c.cm.hero.hp)}/${c.cm.hero.maxHp} mana=${Math.round(c.cm.hero.mana)}`);
+    L('  COMBAT start:', c.enemyType, `hp=${Math.round(c.cm.hero.hp)}/${c.cm.hero.maxHp} mana=${Math.round(c.cm.hero.mana)} hero=${c.heroSprite.texture.key}`);
     const t0 = performance.now();
     while (G.scene.isActive('CombatScene') && !c.ended) {
       await sleep(120);
@@ -248,6 +256,11 @@ window.__bot = async function () {
     await sleep(1500); await settle();
     snap('end');
     L('completedEvents=' + JSON.stringify(S.state.data.completedEvents));
+    const FEM = /(Поняла|принесла|нашла|заслужила|Проснулась|Вернулась|ведьмочка|помощница|Ты не одна|должна искать|героин[яиеую]|Ты цела|отдохни, ведьма|милая)/;
+    const MALE = /(Понял(?![а-яё])|принёс|нашёл|заслужил(?![а-яё])|Проснулся|Вернулся|Эй, колдун|помощник|Ты не один|должен искать|Герой атакует|героя(?![а-яё])|Ты цел,|милый)/;
+    const texts = [...seenTexts];
+    L(`TEXTS seen=${texts.length} female=${texts.filter(t => FEM.test(t)).length} male=${texts.filter(t => MALE.test(t)).length}`);
+    texts.filter(t => FEM.test(t) || MALE.test(t)).forEach(t => L('  form: ' + t.replace(/\n/g, ' ')));
     L('defeated=' + JSON.stringify(S.state.data.defeatedEnemies));
   } catch (e) { L('!! EXCEPTION ' + e.message + ' ' + e.stack); }
   return log;

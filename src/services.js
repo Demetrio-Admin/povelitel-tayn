@@ -11,6 +11,7 @@ import { Alchemy } from './systems/Alchemy.js';
 import { DialogueSystem } from './systems/DialogueSystem.js';
 import { GuidanceSystem } from './systems/GuidanceSystem.js';
 import { PlayerActions } from './systems/PlayerActions.js';
+import { setHeroSource, T, currentHero } from './state/hero.js';
 import { resolveMap } from './world/mapData.js';
 import { PlayerSession } from './cloud/PlayerSession.js';
 import { SupabaseApi } from './cloud/api.js';
@@ -48,6 +49,9 @@ export const services = {
   input: { joy: { x: 0, y: 0 }, kb: { x: 0, y: 0 }, move: { x: 0, y: 0 } },
 };
 
+// v0.9.2: внешность и обращения — по герою профиля (онлайн) или сохранения (без сервера); источник один для всех сцен
+setHeroSource(() => heroIdNow());
+
 export function initServices() {
   const params = new URLSearchParams(window.location.search);
   const storage = window.localStorage;
@@ -64,7 +68,8 @@ export function initServices() {
     services.session = new PlayerSession({ api, state: services.state, storage, saveDelayMs: CLOUD.saveDelayMs, minorDelayMs: CLOUD.minorDelayMs });
     installSessionUI(services.session);
   } else {
-    if (params.has('reset') && !services.edit) services.state.reset();
+    // ?reset — новая игра; ?reset&hero=warlock — новая игра колдуном (автотесты)
+    if (params.has('reset') && !services.edit) { const h = params.get('hero'); services.state.reset(h || undefined); if (h) services.state.save(); }
     services.hadSave = services.edit ? false : services.state.load();
   }
   services.skipMenu = params.has('skipmenu') || services.edit;
@@ -86,6 +91,7 @@ export function initServices() {
   window.addEventListener('pagehide', flushNow);
   // для отладки из консоли браузера
   window.__witch = services;
+  window.__witchHero = { T, currentHero, heroIdNow };   // v0.9.2: проверка обращений в автотестах
   return services;
 }
 
@@ -108,7 +114,7 @@ export function installSessionUI(session) {
 /** Перезапуск игры с главного меню (после выхода, входа в другой аккаунт, потери входа). */
 export function reloadToMenu() {
   const url = new URL(window.location.href);
-  for (const k of ['reset', 'skipmenu']) url.searchParams.delete(k);
+  for (const k of ['reset', 'skipmenu', 'hero']) url.searchParams.delete(k);
   window.location.href = url.toString();
 }
 
@@ -133,10 +139,20 @@ export async function bootSession() {
   } finally { loading.close(); }
 }
 
-/** «Новая игра» / «Сбросить прогресс». Онлайн: прогресс на сервере с нуля, аккаунт и ник те же. */
+/**
+ * «Новая игра» / «Сбросить прогресс». Онлайн: прогресс на сервере с нуля, аккаунт и ник те же (герой — hero или прежний).
+ * Без сервера: новое сохранение с выбранным героем (v0.9.2: раньше аргумент терялся); без hero — прежний герой.
+ */
 export async function resetProgress(hero) {
   const { state, session } = services;
-  if (session?.ready) await session.resetProgress(hero);
-  else state.reset();
+  if (session?.ready) await session.resetProgress(hero || session.hero);
+  else { state.reset(hero || state.data.heroId); state.save(); }
   services.hadSave = false;
+}
+
+/** id текущего героя: онлайн — из профиля сессии, без сервера — из сохранения (state/hero.js). */
+export function heroIdNow() {
+  const { session, state } = services;
+  if (session) return session.signedIn ? session.hero : state?.data?.heroId;
+  return state?.data?.heroId;
 }

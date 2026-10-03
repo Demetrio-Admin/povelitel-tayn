@@ -204,7 +204,6 @@ if (on('account')) await guard('account', async () => {
   const { FakeSupabase } = await import('../../tests/helpers/fake-supabase.mjs');
   const { services } = await import('../../src/services.js');
   const { MenuScene } = await import('../../src/scenes/MenuScene.js');
-  const { HeroSelectScene } = await import('../../src/scenes/HeroSelectScene.js');
   const { UIScene } = await import('../../src/scenes/UIScene.js');
   const srv = new FakeSupabase();
   const api = new SupabaseApi({ url: srv.url, anonKey: srv.anonKey, loginDomain: 'players.witch-rpg.invalid', fetchFn: srv.fetch });
@@ -213,8 +212,8 @@ if (on('account')) await guard('account', async () => {
   const ses = new PlayerSession({ api, state: services.state, storage: store, setTimer: () => 0, clearTimer: () => {} });
   services.session = ses;
   const m1 = new MenuScene(); m1.create(); save('menu_online_start', renderScenes([m1]));
-  const hs = new HeroSelectScene(); hs.create(); save('hero_select', renderScenes([hs]));
-  hs.onPick(); save('hero_choice', renderScenes([hs]));
+  m1.picker.select('warlock', true); save('menu_online_warlock', renderScenes([m1]));
+  m1.startNew(); save('hero_choice', renderScenes([m1]));
   await ses.playAsGuest('witch');
   const mg = new MenuScene(); mg.create(); save('menu_guest', renderScenes([mg]));
   await ses.registerGuest({ nickname: 'Дмитрий', password: 'password-1', password2: 'password-1' });

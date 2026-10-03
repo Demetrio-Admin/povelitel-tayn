@@ -1,6 +1,7 @@
 // v0.8 — окна и HUD-элементы нового слоя: журнал, диалог, алхимия, сумка, стрелка к цели, мягкая подсказка.
 // Методы подмешиваются в UIScene (Object.assign(UIScene.prototype, windows08)), поэтому `this` — UIScene.
 // Все данные берутся из сервисов (services.log / alchemy / dialogue / guidance) и конфигов, здесь — только рисунок и ввод.
+import { T, fm } from '../state/hero.js';
 import { VIEW, COLORS } from '../config/game.config.js';
 import { ABILITIES } from '../config/balance.abilities.js';
 import { ENEMIES } from '../config/balance.enemies.js';
@@ -147,8 +148,9 @@ export const windows08 = {
         for (const t of [
           'Сбор и магия в лесу тратят ману; она восстанавливается сама, в доме Мирры — быстрее.',
           'Здоровье одно на мир и бой. Вне боя оно медленно возвращается; Мирра подлечит за монеты.',
-          'После поражения героиня остаётся у врага с 20% здоровья. Новый бой — кнопкой «Сразиться снова».',
-        ]) row('• ' + t, { style: { fontSize: UI.type.small, color: COLORS.textDim }, gap: 3 });
+          fm('После поражения героиня остаётся у врага с 20% здоровья. Новый бой — кнопкой «Сразиться снова».',
+            'После поражения герой остаётся у врага с 20% здоровья. Новый бой — кнопкой «Сразиться снова».'),
+        ]) row('• ' + T(t), { style: { fontSize: UI.type.small, color: COLORS.textDim }, gap: 3 });
         return cy - y;
       },
     };
@@ -373,7 +375,7 @@ export const windows08 = {
         let cy = y;
         const sec = (text, color = COLORS.textGold) => { const t = label(this, c, x, cy, text, { fontSize: UI.type.body, fontStyle: 'bold', color }); cy += t.height + 6; };
         const row = (text, style = {}) => { const t = label(this, c, x, cy, text, { fontSize: UI.type.small, wordWrap: { width: w }, ...style }); cy += t.height + 3; };
-        row(`Уровень героини: ${d.heroLevel}   ·   опыт ${d.heroXP}${next ? ` / ${next}` : ''}`, { fontSize: UI.type.body });
+        row(T(fm(`Уровень героини: ${d.heroLevel}`, `Уровень героя: ${d.heroLevel}`)) + `   ·   опыт ${d.heroXP}${next ? ` / ${next}` : ''}`, { fontSize: UI.type.body });
         { const v = vitals.view(state); row(`Здоровье ${v.hp} / ${v.maxHp}   ·   мана ${v.mana} / ${v.maxMana}`, { fontSize: UI.type.body, color: COLORS.textGold }); }
         cy += 4;
         sec('Дары');
@@ -440,7 +442,7 @@ export const windows08 = {
       },
     };
     this.openModal({
-      title: 'Сумка ведьмы', color: COLORS.gold, text: '', content,
+      title: fm('Сумка ведьмы', 'Сумка колдуна'), color: COLORS.gold, text: '', content,
       buttons: [{ label: 'Закрыть', primary: true }, { label: 'Журнал', onClick: () => this.openJournal() }, { label: 'Меню', onClick: () => this.openMenu() }],
     });
   },

@@ -96,6 +96,10 @@ const DRAWERS = {
   hero_down: sized([64, 128], hero('down')),
   hero_up: sized([64, 128], hero('up')),
   hero_side: sized([64, 128], hero('side')),
+  // v0.9.2: без PNG колдуна — серая схема (заметно, что рисунка нет), а не ведьма
+  warlock_down: sized([64, 128], hero('down')),
+  warlock_up: sized([64, 128], hero('up')),
+  warlock_side: sized([64, 128], hero('side')),
   hero_shadow: sized([64, 20], (g, w, h) => g.fillStyle(0x000000, 0.4).fillEllipse(w / 2, h / 2, w, h)),
 
   // ---- деревья ----

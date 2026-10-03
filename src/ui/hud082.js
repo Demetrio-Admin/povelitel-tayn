@@ -1,6 +1,7 @@
 // v0.8.2 — компактный мобильный HUD: портрет (профиль героя), уровень и опыт, ресурсы, HP и мана в одном ряду,
 // правая колонка «Журнал / Меню», раскрывающееся меню 3×2, заглушки разделов и временное уведомление о цели.
 // Методы подмешиваются в UIScene (как windows08), поэтому `this` — UIScene. Размеры — UI.hud / UI.side / UI.menu.
+import { currentHero } from '../state/hero.js';
 import { VIEW, COLORS } from '../config/game.config.js';
 import { ABILITIES } from '../config/balance.abilities.js';
 import { UI } from '../config/ui.config.js';
@@ -271,6 +272,7 @@ export const hud082 = {
         const tx = x + 140;
         const lv = this.add.text(tx, cy + 4, `Уровень ${xp.level}`, { fontFamily: FONT, fontSize: UI.type.title, fontStyle: 'bold', color: COLORS.textGold, shadow: SH });
         c.add(lv);
+        c.add(this.add.text(tx + lv.width + 16, cy + 4 + lv.height / 2, currentHero().title, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, shadow: SH, wordWrap: { width: Math.max(120, w - 160 - lv.width) } }).setOrigin(0, 0.5));
         const barW = w - 140, barY = cy + 62;
         const g = this.add.graphics();
         g.fillStyle(0x000000, 0.55).fillRoundedRect(tx, barY, barW, 20, 10);
@@ -311,6 +313,6 @@ export const hud082 = {
     };
     const buttons = [{ label: 'Закрыть', primary: true, cancel: true }];
     if (ses && this.mode === 'exploration') buttons.push({ label: 'Аккаунт', onClick: () => this.openAccount() });   // окно героя уже закрыто
-    this.openModal({ title: 'Героиня', color: COLORS.gold, content, buttons, profile: true });
+    this.openModal({ title: currentHero().name, color: COLORS.gold, content, buttons, profile: true });   // v0.9.2: «Ведьма» / «Колдун»
   },
 };

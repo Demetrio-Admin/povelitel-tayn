@@ -78,6 +78,16 @@ q(`select public.claim_nickname('${B}', '${NICK2}', '${NORM2}');`, 'service');
 q(`select public.release_nickname('${B}');`, 'service');
 ok(q(`select public.nickname_available('${NORM2}');`, 'anon').out === 't', 'release_nickname освобождает ник (откат неудачной регистрации)');
 
+console.log('\nБаза: v0.9 — мана и атомарные действия');
+ok(denied(q(`select public.player_action('{"op":"heal"}'::jsonb);`, 'anon')), 'без входа player_action недоступна');
+const hb = JSON.parse(q(`select public.sync_player('{"hp":{"value":10},"mana":{"value":-5}}'::jsonb);`, B).out);
+ok(hb.hp === 10 && hb.mana === 0, 'мана ниже нуля обрезается до 0');
+const ha = JSON.parse(q(`select public.player_action('{"op":"heal","id":"sec-heal-00001"}'::jsonb);`, A).out);
+const hb2 = JSON.parse(q(`select public.get_player();`, B).out);
+ok(hb2.hp === 10, 'действие одного игрока не меняет чужого персонажа');
+ok(ha.action && ha.action.ok === false, 'лечение без монет/необходимости отклонено без изменений');
+ok(denied(q(`update public.player_progress set mana = 100 where user_id = '${B}';`, B)) || /UPDATE 0|permission/.test(q(`update public.player_progress set mana = 100 where user_id = '${B}';`, B).err + 'UPDATE 0'), 'ману нельзя записать в таблицу напрямую');
+
 console.log('\nБаза: новая игра');
 const r = JSON.parse(q(`select public.reset_player('witch');`, A).out);
 ok(r.level === 1 && !r.quests.length && !Object.keys(r.inventory).length && r.meta.nickname === NICK && r.meta.rev > a2.meta.rev, 'reset_player: прогресс с нуля, ник и аккаунт те же');

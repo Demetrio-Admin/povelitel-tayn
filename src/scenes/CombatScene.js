@@ -246,7 +246,7 @@ export class CombatScene extends Phaser.Scene {
     this.tut?.beforeAbility(id, this.cm.abilityState(id).state);
     const res = this.cm.useAbility(id);
     if (!res.ok) {
-      if (res.reason === 'nomana' && services.state.item('elixir_mana') > 0) this.queueHint(COMBAT_HINTS.lowMana, 'lowMana');
+      if (res.reason === 'nomana' && services.state.item('elixir_mana') > 0 && (this.cm.stats.potions || 0) < POTION_BATTLE_LIMIT) this.queueHint(COMBAT_HINTS.lowMana, 'lowMana');
       const msg = { cooldown: 'Перезарядка…', nomana: 'Не хватает маны', locked: `${ABILITIES[id].name}: дар ещё не изучен` }[res.reason];
       if (msg) this.toast(msg);
       services.audio.play('locked');

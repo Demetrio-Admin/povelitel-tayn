@@ -149,7 +149,9 @@ export class ExplorationScene extends Phaser.Scene {
     this.time.delayedCall(900, tick);
     // после чтения книги Мирра сама подзывает героиню (только в доме и только пока набор не выдан)
     this.bus.on(MSG.MODAL_CLOSED, () => this.time.delayedCall(350, () => {
-      if (this.needsStarterKit() && this.zone?.id === VITALS.houseZone && services.mode === 'exploration' && !services.modalOpen && !services.dialogue.active) {
+      // один раз за сессию и не пока выдача ещё идёт на сервере (иначе разговор открылся бы повторно)
+      if (!this.kitPrompted && !services.actions?.busy && this.needsStarterKit() && this.zone?.id === VITALS.houseZone && services.mode === 'exploration' && !services.modalOpen && !services.dialogue.active) {
+        this.kitPrompted = true;
         services.dialogue.start('mirra');
       }
     }), this);

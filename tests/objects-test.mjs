@@ -13,7 +13,7 @@ await setupStage({ createCanvas: (w, h) => ({ width: w, height: h, getContext: (
 
 // «Игровой объект»: хранит базовые поля, любой другой вызов — цепочка (возвращает себя), tweens/time выполняются сразу
 function go(x = 0, y = 0) {
-  const o = { x, y, scaleX: 1, scaleY: 1, displayWidth: 60, displayHeight: 60, alpha: 1, active: true, visible: true, depth: 0, angle: 0, text: '' };
+  const o = { x, y, scaleX: 1, scaleY: 1, displayWidth: 60, displayHeight: 60, alpha: 1, active: true, visible: true, depth: 0, angle: 0, text: '', body: { updateFromGameObject() {}, setSize() {} } };
   const p = new Proxy(o, {
     get: (t, k) => {
       if (k in t) return t[k];
@@ -118,6 +118,92 @@ const CLS = { gather: GatherObject, npc: NpcObject, alchemy: AlchemyObject, insp
   c.interact(); runDelayed();
   ok(opened === 1, 'котёл: открывает окно алхимии');
   c.celebrate(0x8fe39a);
+}
+
+// --- v0.9: мана за действия в мире — ровно один раз, неуспешное бесплатно, ввод любым способом
+{
+  const vitals = await import('../src/state/vitals.js');
+  const { TelekinesisObject } = await import('../src/objects/TelekinesisObject.js');
+  const { FireObject } = await import('../src/objects/FireObject.js');
+  const { INTERACTIVES } = await import('../src/config/world.layout.js');
+  const { InteractionSystem } = await import('../src/systems/InteractionSystem.js');
+  const st = sv.state;
+  const shorts = [], spent = [];
+  const mkSc = () => { const sc = mkScene(); sc.onManaShort = (c) => shorts.push(c); sc.onManaSpent = (c) => spent.push(c); sc.castFx = () => {}; sc.toast = () => {}; sc.panTo = () => {}; sc.spawnPickup = () => null;
+    sc.tweens.chain = (c) => { c.onComplete?.(); return {}; }; sc.cameras = { main: { shake() {} } }; sc.time.delayedCall = (ms, fn) => { calls.delayed.push([ms, fn]); return {}; }; return sc; };
+  let t = 1e9; st.now = () => t;
+  // сбор: 4 маны один раз; второй тап по занятому узлу — бесплатно
+  const herb = new GatherObject(mkSc(), CONTENT_INTERACTIVES.find(c => c.id === 'herb_g2'));
+  vitals.setMana(st, 50);
+  herb.interact(null); herb.interact(null); runDelayed();
+  ok(Math.abs(vitals.mana(st) - 46) < 1e-9 && spent.length === 1, 'сбор: −4 маны ровно один раз, повторный тап по занятому узлу бесплатен');
+  herb.interact(null);
+  ok(Math.abs(vitals.mana(st) - 46) < 1e-9, 'собранный узел: ничего не списано');
+  // нехватка маны: ничего не выдаётся и не списывается
+  const herb2 = new GatherObject(mkSc(), CONTENT_INTERACTIVES.find(c => c.id === 'herb_g3'));
+  vitals.setMana(st, 3); const m0 = st.item('moon_herb');
+  herb2.interact(null); runDelayed();
+  ok(vitals.mana(st) === 3 && st.item('moon_herb') === m0 && shorts.at(-1) === 4 && !herb2.busy, 'не хватает маны: предмет не выдан, мана не списана, есть объяснение');
+  // Телекинез: средний камень 12, неверный дар бесплатно, слишком тяжёлое бесплатно
+  sv.abilities.unlock('telekinesis', 1);
+  const rock = new TelekinesisObject(mkSc(), INTERACTIVES.find(c => c.id === 'glade_rock'));
+  vitals.setMana(st, 50);
+  rock.interact('fire');
+  ok(vitals.mana(st) === 50, 'неверный дар (Огонь на камень): мана не списана');
+  ok(rock.manaCost() === 12, 'цена видна заранее: «Сдвинуть · 12 маны»');
+  rock.interact('telekinesis');
+  ok(vitals.mana(st) === 38 && rock.isDone(), 'сдвиг среднего камня: −12 маны');
+  const boulder = new TelekinesisObject(mkSc(), INTERACTIVES.find(c => c.id === 'heavy_boulder'));
+  boulder.interact('telekinesis');
+  ok(vitals.mana(st) === 38 && boulder.manaCost() === 0, 'слишком тяжёлая глыба (Телекинез I): бесплатно, цена не показывается');
+  const flame = new TelekinesisObject(mkSc(), INTERACTIVES.find(c => c.id === 'moon_plant'));
+  ok(flame.manaCost() === 4, 'притянуть растение — 4 маны');
+  // Огонь: 16, пока дар не открыт — бесплатно
+  const bramble = new FireObject(mkSc(), CONTENT_INTERACTIVES.find(c => c.id === 'bramble_t1'));
+  bramble.interact('fire');
+  ok(vitals.mana(st) === 38, 'Огонь не открыт: бесплатно');
+  sv.abilities.unlock('fire', 1);
+  bramble.interact('fire'); bramble.interact('fire'); runDelayed();
+  ok(vitals.mana(st) === 22, 'Огонь по зарослям: −16 маны один раз (повторное нажатие не платит)');
+  // разные способы ввода — одна цена: контекстная кнопка (act(null)) и кнопка дара (act('telekinesis'))
+  const sc2 = mkSc();
+  const isys = new InteractionSystem(sc2, bus);
+  const r1 = new TelekinesisObject(sc2, { ...INTERACTIVES.find(c => c.id === 'altar_stone'), id: 'test_rock_1' });
+  const r2 = new TelekinesisObject(sc2, { ...INTERACTIVES.find(c => c.id === 'altar_stone'), id: 'test_rock_2' });
+  vitals.setMana(st, 100);
+  isys.focus = r1; isys.act(null); const a1 = 100 - vitals.mana(st);
+  isys.focus = r2; isys.act('telekinesis'); const a2 = 100 - a1 - vitals.mana(st);
+  ok(a1 === 12 && a2 === 12, `кнопка действия и кнопка дара платят одинаково (${a1} / ${a2})`);
+}
+
+// --- v0.9: враг после поражения не нападает сам, «Сразиться снова» запускает ровно один бой
+{
+  const { EnemyTrigger, encKey } = await import('../src/objects/EnemyTrigger.js');
+  const { ENEMY_SPAWNS } = await import('../src/config/world.layout.js');
+  const st = sv.state;
+  const cfg = ENEMY_SPAWNS.find(e => e.id === 'scavenger_01');
+  let started = 0, dialogs = [];
+  const sc = mkScene();
+  Object.assign(sc, { inTransition: false, canAct: () => true, startCombat: () => { started++; sc.inTransition = true; }, dialog: (o) => dialogs.push(o) });
+  const e = new EnemyTrigger(sc, cfg);
+  const near = { x: cfg.x, y: cfg.y };
+  ok(e.update(0.1, near), 'новый враг: близость запускает бой (как раньше)');
+  st.setObject(encKey(cfg.id), { state: 'lost', x: cfg.x, y: cfg.y + 40 });
+  let auto = false; for (let i = 0; i < 600; i++) auto = auto || e.update(0.1, near);
+  ok(!auto, 'после поражения: стоя рядом 60 с, бой сам не начинается');
+  const e2 = new EnemyTrigger(sc, cfg);   // «перезагрузка»: состояние из сохранения
+  ok(e2.awaitingRetry && !e2.update(0.1, near) && e2.label === 'Сразиться снова', 'после перезагрузки правило сохраняется, кнопка «Сразиться снова»');
+  const vitals = await import('../src/state/vitals.js');
+  vitals.setHp(st, vitals.maxHp(st));
+  e2.interact(); e2.interact();
+  ok(started === 1, 'нажатие запускает ровно один бой (повторное — нет)');
+  sc.inTransition = false; started = 0;
+  vitals.setHp(st, 10);
+  e2.interact();
+  ok(started === 0 && dialogs.length === 1 && /10 \//.test(dialogs[0].text), 'HP ниже 40%: сначала предупреждение с текущим HP');
+  dialogs[0].buttons.find(b => b.label === 'Всё равно сразиться').onClick();
+  ok(started === 1, '«Всё равно сразиться» начинает бой');
+  delete st.data.worldObjects[encKey(cfg.id)];
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты объектов пройдены');

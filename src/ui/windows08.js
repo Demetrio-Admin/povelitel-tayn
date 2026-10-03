@@ -374,6 +374,7 @@ export const windows08 = {
         const sec = (text, color = COLORS.textGold) => { const t = label(this, c, x, cy, text, { fontSize: UI.type.body, fontStyle: 'bold', color }); cy += t.height + 6; };
         const row = (text, style = {}) => { const t = label(this, c, x, cy, text, { fontSize: UI.type.small, wordWrap: { width: w }, ...style }); cy += t.height + 3; };
         row(`Уровень героини: ${d.heroLevel}   ·   опыт ${d.heroXP}${next ? ` / ${next}` : ''}`, { fontSize: UI.type.body });
+        { const v = vitals.view(state); row(`Здоровье ${v.hp} / ${v.maxHp}   ·   мана ${v.mana} / ${v.maxMana}`, { fontSize: UI.type.body, color: COLORS.textGold }); }
         cy += 4;
         sec('Дары');
         for (const id of ABILITY_ORDER) {

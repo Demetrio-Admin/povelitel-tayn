@@ -273,6 +273,9 @@ export class UIScene extends Phaser.Scene {
     setOrb(this.ctxBg, this, info.color, UI.orb.context, false);
     this.ctxGlow.setTint(info.color);
     this.ctxLabel.setText(info.label);
+    // v0.9: подпись с ценой («Сдвинуть · 12 маны») не выходит за правый край экрана
+    const half = this.ctxLabel.width / 2, room = W - 10 - this.ctx.x;
+    this.ctxLabel.setX(Math.min(0, room - half));
     this.ctx.setScale(0.6);
     this.tweens.add({ targets: this.ctx, scale: 1, duration: 160, ease: 'Back.easeOut' });
     const t = services.tutorial;

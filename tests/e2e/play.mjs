@@ -11,6 +11,7 @@ p.on('response', r => { if (r.status() >= 400) errs.push('HTTP ' + r.status() + 
 await p.goto((process.env.GAME_URL || 'http://localhost:4173/') + '?reset&skipmenu', { waitUntil: 'load' });
 await new Promise(r => setTimeout(r, 4500));
 await p.addScriptTag({ content: fs.readFileSync(new URL('./bot.js', import.meta.url), 'utf8') });
+if (process.env.BOT_LOSE) await p.evaluate((l) => { window.__botLose = l.split(','); }, process.env.BOT_LOSE);
 const shots = null;
 const log = await p.evaluate(() => window.__bot());
 console.log(log.join('\n'));

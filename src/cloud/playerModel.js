@@ -246,6 +246,7 @@ export function fillDefaults(raw) {
       abilities: { ...def.abilities, ...(s.abilities || {}) },
       inventory: { ...def.inventory, ...(s.inventory || {}) },
       pos: s.pos || def.pos, safe: s.safe || def.safe,
+      hp: s.hp ?? null, mana: s.mana ?? null,   // нет поля (старая схема) — «полный запас»; числовой 0 сохраняется
     },
     meta: meta || {},
     action: action || null,

@@ -89,7 +89,7 @@ export const windows09 = {
       return;
     }
     this.openModal({
-      title: 'Лечение у Мирры', color: 0x7be28a, text: `${head}\n\nМирра зашепчет рану — здоровье восстановится полностью.`,
+      title: 'Лечение у Мирры', color: 0x7be28a, vertical: true, text: `${head}\n\nМирра зашепчет рану — здоровье восстановится полностью.`,
       buttons: [{ label: `Восстановить за ${price} ${coinWord(price)}`, primary: true, onClick: () => this.doHeal() }, { label: 'Отмена', cancel: true }],
     });
   },

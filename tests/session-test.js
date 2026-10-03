@@ -253,6 +253,42 @@ console.log('\nТокены, пароль, новая игра');
   ok(lost && y.session.status === 'signed_out' && !y.storage.getItem(TOKENS_KEY), 'вход отозван — возврат на стартовый экран, без зависаний');
 }
 
+console.log('\nv0.9. Общие HP/мана на сервере, лечение и стартовый набор');
+{
+  const d = device(srv);
+  await d.session.playAsGuest('witch');
+  const st = d.state;
+  ok(st.data.mana === null && st.data.hp === null, 'новый персонаж: HP и мана «полные» (null)');
+  st.data.mana = 12.5; st.data.hp = 0.0; st.save(); await d.session.flush();
+  const other = device(srv, d.storage); await other.session.restore();
+  ok(other.state.data.mana === 12.5 && other.state.data.hp === 0, 'мана и числовой 0 HP пережили сохранение и загрузку на другом устройстве');
+  st.data.mana = 999; st.save(); await d.session.flush();
+  ok(st.data.mana === 100, 'сервер не принимает ману больше максимума уровня');
+  // лечение: монет нет — ничего не меняется
+  st.data.hp = 40; st.save(); await d.session.flush();
+  const poor = await d.session.runAction({ op: 'heal' });
+  ok(!poor.ok && poor.reason === 'coins' && st.data.hp === 40 && st.item('coins') === 0, 'лечение без монет: отказ, HP и монеты прежние');
+  st.addItem('coins', 20); st.save();
+  const healed = await d.session.runAction({ op: 'heal' });
+  ok(healed.ok && healed.price === 8 && st.data.hp === 120 && st.item('coins') === 12, 'лечение: −8 монет и полное HP одной операцией сервера');
+  // ответ потерялся: повтор того же id не лечит и не списывает второй раз
+  st.data.hp = 100; st.save(); await d.session.flush();
+  srv.loseNextResponse = true;
+  const lostReply = await d.session.runAction({ op: 'heal', id: 'heal-retry-0001' });
+  const again = device(srv, d.storage); await again.session.restore();
+  ok(lostReply.ok && again.state.item('coins') === 10 && again.state.data.hp === 120, 'потерянный ответ: повтор с тем же id — одно списание (2 монеты)');
+  // стартовый набор: один раз, даже с двух устройств
+  const a = await d.session.runAction({ op: 'starter_kit' });
+  const b = await again.session.runAction({ op: 'starter_kit' });
+  const fresh = device(srv, d.storage); await fresh.session.restore();
+  ok(a.ok && !b.ok && b.reason === 'already' && fresh.state.item('elixir_life') === 1 && fresh.state.item('elixir_mana') === 1 && fresh.state.hasEvent('mirra_starter_kit'), 'стартовый набор выдан ровно один раз (два устройства)');
+  // нет связи: ничего не меняется
+  srv.offline = true;
+  const off = await fresh.session.runAction({ op: 'heal' });
+  srv.offline = false;
+  ok(!off.ok && off.reason === 'network', 'без связи лечение не выполняется и ничего не списывает');
+}
+
 console.log('\n13–14. Старой «облачной» механики больше нет');
 {
   const FORBIDDEN = ['Какое сохранение оставить', 'В облаке', 'На этом устройстве', 'Взять из облака', 'Оставить с устройства', 'Отправить в облако', 'Есть изменения, скоро отправим', 'showConflict', 'resolveConflict', 'pendingConflict'];

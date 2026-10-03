@@ -17,6 +17,7 @@ import { windows08 } from '../ui/windows08.js';
 import { hud082 } from '../ui/hud082.js';
 import { windows09 } from '../ui/windows09.js';
 import * as vitals from '../state/vitals.js';
+import { addNoticeClose } from '../ui/noticeClose.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -122,7 +123,7 @@ export class UIScene extends Phaser.Scene {
 
   /** Подсказка «если застряли» — под колонкой Журнал/Меню, на всю ширину. */
   layoutHint() {
-    const h = this.hintText?.height + 24 || 0;
+    const h = Math.max(72, (this.hintText?.height || 0) + 24);
     if (this.hintPlate?.visible) this.hintPlate.setPosition(W / 2, this.fieldTop() + h / 2);
     this.questBottom = this.fieldTop() + (this.hintPlate?.visible ? h + 12 : 0);   // где начинаются тосты
   }
@@ -333,11 +334,10 @@ export class UIScene extends Phaser.Scene {
     this.updateDialogue(delta);
 
     // тосты
-    const baseY = (this.questBottom || this.fieldTop()) + 30;
-    let toastY = baseY;
+    let toastTop = this.questBottom || this.fieldTop();
     this.toasts.forEach(t => {
-      const targetY = this.mode === 'combat' ? 440 + t.toastHeight / 2 : toastY;
-      t.y += (targetY - t.y) * 0.25; toastY += t.toastHeight + 12;
+      const targetY = (this.mode === 'combat' ? 440 : toastTop) + t.toastHeight / 2;
+      t.y += (targetY - t.y) * 0.25; toastTop += t.toastHeight + 12;
     });
   }
 
@@ -347,15 +347,17 @@ export class UIScene extends Phaser.Scene {
     const now = this.time.now;
     if (this.lastToast && this.lastToast.text === text && now - this.lastToast.t < 1500) return;
     this.lastToast = { text, t: now };
-    const label = this.add.text(0, 0, text, { fontFamily: FONT, fontSize: UI.type.body, color: hex(color), align: 'center', wordWrap: { width: 600 }, shadow: SH }).setOrigin(0.5);
+    const label = this.add.text(-30, 0, text, { fontFamily: FONT, fontSize: UI.type.body, color: hex(color), align: 'center', wordWrap: { width: 536 }, shadow: SH }).setOrigin(0.5);
     if (this.mode === 'combat') {
       this.toasts.forEach(t => t.destroy());
       this.toasts = []; // one readable notification below the warning, never over the potion lane
     }
-    const y = this.mode === 'combat' ? 440 + (label.height + 24) / 2 : (this.questBottom || this.fieldTop()) + 30 + this.toasts.reduce((sum, t) => sum + t.toastHeight + 12, 0);
-    const bg = drawPlate(this.add.graphics(), Math.min(660, label.width + 48), label.height + 24, { accent: color, fill: 0x120d0b, alpha: 0.9 });
+    const height = Math.max(72, label.height + 24), width = Math.min(660, label.width + 112);
+    const y = this.mode === 'combat' ? 440 + height / 2 : (this.questBottom || this.fieldTop()) + height / 2 + this.toasts.reduce((sum, t) => sum + t.toastHeight + 12, 0);
+    const bg = drawPlate(this.add.graphics(), width, height, { accent: color, fill: 0x120d0b, alpha: 0.9 });
     const c = this.add.container(W / 2, y, [bg, label]).setDepth(9000).setAlpha(0);
-    c.toastHeight = label.height + 24;
+    c.toastHeight = height;
+    addNoticeClose(this, c, () => this.dropToast(c), { x: width / 2 - 36 });
     this.toasts.push(c);
     if (this.toasts.length > 4) this.dropToast(this.toasts[0]);
     this.tweens.add({ targets: c, alpha: 1, duration: 160 });
@@ -365,6 +367,7 @@ export class UIScene extends Phaser.Scene {
   dropToast(c) {
     if (!this.toasts.includes(c)) return;
     this.toasts = this.toasts.filter(t => t !== c);
+    this.tweens.killTweensOf(c);
     this.tweens.add({ targets: c, alpha: 0, duration: 250, onComplete: () => c.destroy() });
   }
 
@@ -575,19 +578,24 @@ export class UIScene extends Phaser.Scene {
     this.tutArrow.fillStyle(COLORS.telekinesis).fillTriangle(-22, -26, 22, -26, 0, 8).lineStyle(3, 0x000000, 0.6).strokeTriangle(-22, -26, 22, -26, 0, 8);
     this.tutHand = this.add.image(0, 0, 'icon_hand').setScale(1.4).setAlpha(0.9);
     this.tut.add([this.tutBg, this.tutText, this.tutArrow, this.tutHand]);
+    this.tutClose = addNoticeClose(this, this.tut, () => {
+      if (this.tutHint) services.tutorial.complete(this.tutHint.id);
+    });
     this.tutHint = null;
   }
 
   onTutorial(h) {
     this.tweens.killTweensOf(this.tutHand);
+    this.tweens.killTweensOf(this.tut);
     if (!h) {
       this.tutHint = null;
-      this.tweens.add({ targets: this.tut, alpha: 0, duration: 200, onComplete: () => { if (!this.tutHint) this.tut.setVisible(false); } });
+      this.tut.setVisible(false);
       return;
     }
     this.tutHint = h;
     this.tutText.setText(h.text);
-    drawPlate(this.tutBg, Math.min(640, this.tutText.width + 56), this.tutText.height + 30, { accent: COLORS.telekinesis, fill: 0x0e1a1c, alpha: 0.94 });
+    const width = Math.min(640, this.tutText.width + 120);
+    drawPlate(this.tutBg, width, Math.max(72, this.tutText.height + 30), { accent: COLORS.telekinesis, fill: 0x0e1a1c, alpha: 0.94 });
     const combat = this.mode === 'combat';
     let bubbleY = 880, ax = null, ay = 0;
     this.tutHand.setVisible(false);
@@ -601,7 +609,8 @@ export class UIScene extends Phaser.Scene {
       const b = this.buttons[h.target];
       bubbleY = combat ? 890 : 880; ax = b.x; ay = BTN_Y - BTN_R - 22;
     }
-    this.tutBg.setPosition(300, bubbleY); this.tutText.setY(bubbleY);
+    this.tutBg.setPosition(300, bubbleY); this.tutText.setPosition(268, bubbleY);
+    this.tutClose.setPosition(300 + width / 2 - 36, bubbleY);
     this.tutArrow.setVisible(ax !== null);
     if (ax !== null) { this.tutArrow.setPosition(ax, ay); this.tutArrowBase = ay; }
     this.tut.setVisible(true).setAlpha(0);

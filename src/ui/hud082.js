@@ -8,6 +8,7 @@ import { MENU_ITEMS, STUB_TEXT } from '../config/menu.config.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { xpProgress } from '../state/heroProgress.js';
+import * as vitals from '../state/vitals.js';
 import { ABILITY_ORDER } from '../systems/AbilitySystem.js';
 import { ROMAN } from '../objects/InteractiveObject.js';
 import { ensureTexture, addOrb, addMedallion, drawPlate, UIBar } from './widgets.js';
@@ -260,7 +261,7 @@ export const hud082 = {
     if (this.modal) return;
     const s = services.state, d = s.data, hs = s.heroStats();
     const xp = xpProgress(s);
-    const hud = this.registry.get('hudProvider')?.() || { hp: hs.maxHp, maxHp: hs.maxHp, mana: hs.maxMana, maxMana: hs.maxMana };
+    const hud = vitals.view(s);   // v0.9: те же общие запасы, что в HUD и бою
     const ses = services.session;
     const content = {
       build: (c, x, y, w) => {

@@ -23,8 +23,10 @@ export async function setupStage({ createCanvas, loadImage, root }) {
 }
 
 /** Свежий мир игры; progress: 'new' | 'mid'. */
+let currentServices = null;
 export async function freshWorld(progress = 'mid') {
   const { services } = await import('../../src/services.js');
+  currentServices = services;
   const { GameState } = await import('../../src/state/GameState.js');
   const { QuestFlags } = await import('../../src/state/QuestFlags.js');
   const { bus } = await import('../../src/state/EventBus.js');
@@ -37,6 +39,7 @@ export async function freshWorld(progress = 'mid') {
   const { Alchemy } = await import('../../src/systems/Alchemy.js');
   const { DialogueSystem } = await import('../../src/systems/DialogueSystem.js');
   const { GuidanceSystem } = await import('../../src/systems/GuidanceSystem.js');
+  const { PlayerActions } = await import('../../src/systems/PlayerActions.js');
   const state = new GameState(memStorage());
   const quests = new QuestFlags(state, bus);
   services.state = state; services.quests = quests; services.session = null; services.offline = false;
@@ -48,6 +51,7 @@ export async function freshWorld(progress = 'mid') {
   services.alchemy = new Alchemy(state, bus);
   services.dialogue = new DialogueSystem({ state, log: services.log, bus, goalText: () => quests.objectiveText() });
   services.guidance = new GuidanceSystem({ state, quests, log: services.log, bus });
+  services.actions = new PlayerActions({ state, getSession: () => services.session });
   services.input.move.x = services.input.move.y = 0;
   services.modalOpen = false; services.mode = 'exploration';
   if (progress !== 'new') {
@@ -63,5 +67,8 @@ export async function freshWorld(progress = 'mid') {
 
 export function mkHud(ui, { hp = 99, mana = 55 } = {}) {
   ui.registry.set('hudProvider', () => ({ hp, maxHp: 138, mana, maxMana: 100 }));
+  // v0.9: HUD читает общие запасы героини из состояния (state/vitals.js), а не провайдер сцены
+  const st = currentServices?.state;
+  if (st) { st.data.hp = hp; st.data.mana = mana; }
   ui.registry.set('abilityProvider', (id) => ({ state: id === 'seal' ? 'locked' : id === 'fire' ? 'cooldown' : 'ready', cdFrac: 0.4, cdLeft: 2.3, suggested: id === 'telekinesis' }));
 }

@@ -1,5 +1,5 @@
 import { COLORS, DEPTH } from '../config/game.config.js';
-import { EXPLORATION_MAGIC } from '../config/balance.abilities.js';
+import { EXPLORATION_MAGIC, WORLD_MANA_COST } from '../config/balance.abilities.js';
 import { EV } from '../config/events.js';
 import { LUNAR_QUEST } from '../config/balance.progression.js';
 import { MSG } from '../state/EventBus.js';
@@ -40,6 +40,11 @@ export class TelekinesisObject extends InteractiveObject {
   get label() { return this.cfg.mode === 'pull' ? 'Притянуть' : 'Сдвинуть'; }
   isDone() { return this.saved.state === 'moved' || this.saved.state === 'collected'; }
 
+  manaCost() {
+    if (!this.abilities.isUnlocked('telekinesis') || !this.abilities.canMoveWeight(this.weight_class)) return 0;
+    return this.cfg.mode === 'pull' ? WORLD_MANA_COST.pull : (WORLD_MANA_COST.push[this.weight_class] ?? WORLD_MANA_COST.push.light);
+  }
+
   placeAt(x, y) {
     this.sprite.setPosition(x, y);
     this.baseY = y;
@@ -76,6 +81,7 @@ export class TelekinesisObject extends InteractiveObject {
       this.scene.tweens.add({ targets: this.sprite, x: this.sprite.x + 4, duration: 50, yoyo: true, repeat: 3 });
       return;
     }
+    if (!this.payMana()) return;
     this.busy = true;
     this.scene.player.castAt(this.x, this.baseY, 'telekinesis');
     this.scene.castFx(this.x, this.sprite.y - this.sprite.displayHeight / 2, COLORS.telekinesis);

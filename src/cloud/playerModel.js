@@ -6,11 +6,14 @@
 //   • числа-счётчики (предметы, опыт дара, время игры) меняются дельтами: +3 монеты, а не «монет = 17»;
 //   • уровень, опыт героя и уровни даров только растут (greatest);
 //   • события, пути, побеждённые враги, подсказки только добавляются (объединение множеств);
-//   • позиция, точка возрождения, состояние предметов мира и исследование — «последний записал»;
+//   • позиция, точка возрождения, состояние предметов мира, исследование, HP и мана — «последний записал»
+//     (HP и мана — в пределах максимума текущего уровня, v0.9);
 //   • история боёв дописывается.
 // applyPatch ниже — точное зеркало SQL-функции sync_player (supabase/schema.sql); соответствие проверяет tools/sql/diff-test.mjs.
+// applyAction — зеркало player_action (v0.9): платное лечение и стартовый набор зелий — атомарные операции сервера,
+// а не дельты patch (иначе при нехватке монет сервер обрезал бы списание до нуля, а HP всё равно стало бы полным).
 import { createDefaultState } from '../state/GameState.js';
-import { HERO_LEVELS } from '../config/balance.hero.js';
+import { HERO_LEVELS, HEALING } from '../config/balance.hero.js';
 
 export const ABILITY_IDS = ['telekinesis', 'fire', 'seal'];
 export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal'];
@@ -51,6 +54,10 @@ export function levelForXp(xp) {
   return lvl;
 }
 
+const levelRow = (lvl) => HERO_LEVELS.find(r => r.level === lvl) || HERO_LEVELS[HERO_LEVELS.length - 1];
+/** Максимум HP и маны уровня (как game_hero_levels.max_hp / max_mana на сервере). */
+export const maxVitals = (lvl) => ({ hp: levelRow(lvl).maxHp, mana: levelRow(lvl).maxMana });
+
 /** Снимок игрока по умолчанию (новый персонаж). */
 export function emptySnapshot() {
   return toSnapshot(createDefaultState());
@@ -73,6 +80,7 @@ export function toSnapshot(d) {
     pos: { x: d.player?.x ?? 0, y: d.player?.y ?? 0 },
     safe: { x: d.safePoint?.x ?? 0, y: d.safePoint?.y ?? 0 },
     hp: d.hp ?? null,
+    mana: d.mana ?? null,
     play: d.stats?.playTimeMs || 0,
     combats: (d.stats?.combats || []).map(c => ({ ...c })),
     tutorial: uniq(d.tutorial || []),
@@ -99,6 +107,7 @@ export function fromSnapshot(s, base = createDefaultState()) {
   d.player = { x: s.pos.x, y: s.pos.y };
   d.safePoint = { x: s.safe.x, y: s.safe.y };
   d.hp = s.hp ?? null;
+  d.mana = s.mana ?? null;
   d.stats = { playTimeMs: s.play || 0, combats: (s.combats || []).map(c => ({ ...c })) };
   d.tutorial = [...(s.tutorial || [])];
   return d;
@@ -132,15 +141,16 @@ export function diffSnapshots(base, cur) {
   if (!eq(base.research, cur.research)) p.research = { value: cur.research };
   if (!eq(base.pos, cur.pos)) p.pos = cur.pos;
   if (!eq(base.safe, cur.safe)) p.safe = cur.safe;
-  if (base.hp !== cur.hp) p.hp = { value: cur.hp };
+  if ((base.hp ?? null) !== (cur.hp ?? null)) p.hp = { value: cur.hp ?? null };
+  if ((base.mana ?? null) !== (cur.mana ?? null)) p.mana = { value: cur.mana ?? null };
   if (cur.play > base.play) p.play = cur.play - base.play;
   if (cur.combats.length > base.combats.length) p.combats = cur.combats.slice(base.combats.length);
   return p;
 }
 
-/** Только «мелочь» (позиция, время, здоровье): такие изменения можно отправлять реже. */
+/** Только «мелочь» (позиция, время, восстановление HP/маны): такие изменения можно отправлять реже. */
 export function isMinorPatch(p) {
-  return Object.keys(p).every(k => k === 'pos' || k === 'play' || k === 'hp');
+  return Object.keys(p).every(k => k === 'pos' || k === 'play' || k === 'hp' || k === 'mana');
 }
 
 const union = (list, add, max) => {
@@ -181,16 +191,54 @@ export function applyPatch(snap, patch = {}) {
   if (isObj(patch.research) && 'value' in patch.research) s.research = isObj(patch.research.value) ? patch.research.value : null;
   if (isObj(patch.pos) && num(patch.pos.x) && num(patch.pos.y)) s.pos = { x: patch.pos.x, y: patch.pos.y };
   if (isObj(patch.safe) && num(patch.safe.x) && num(patch.safe.y)) s.safe = { x: patch.safe.x, y: patch.safe.y };
-  if (isObj(patch.hp) && 'value' in patch.hp) s.hp = num(patch.hp.value) ? patch.hp.value : null;
+  // HP и мана: последний записал, но в пределах 0…максимум текущего уровня (null — «полный запас»)
+  const mx = maxVitals(s.level);
+  if (isObj(patch.hp) && 'value' in patch.hp) s.hp = num(patch.hp.value) ? clamp(patch.hp.value, 0, mx.hp) : null;
+  if (isObj(patch.mana) && 'value' in patch.mana) s.mana = num(patch.mana.value) ? clamp(patch.mana.value, 0, mx.mana) : null;
   if (num(patch.play)) s.play += clamp(int(patch.play), 0, LIMITS.maxPlayMsPerSync);
   if (Array.isArray(patch.combats)) s.combats = [...s.combats, ...patch.combats.filter(isObj)].slice(-LIMITS.maxCombats);
   return s;
 }
 
+export const STARTER_KIT = { event: 'mirra_starter_kit', items: { elixir_life: 1, elixir_mana: 1 } };
+
+/** Цена лечения у Мирры по снимку: ceil(недостающее HP / 10); null — полное HP. */
+export function healPriceOf(s) {
+  const max = maxVitals(s.level).hp;
+  const cur = num(s.hp) ? clamp(s.hp, 0, max) : max;
+  return Math.ceil((max - cur) / HEALING.hpPerCoin - 1e-9);
+}
+
+/**
+ * Атомарные действия сервера (зеркало player_action в supabase/schema.sql). Возвращает { snapshot, result }.
+ *   { op: 'heal' }        — полное HP за монеты; при нехватке ничего не меняется
+ *   { op: 'starter_kit' } — один раз: событие mirra_starter_kit + настой жизни и лунный эликсир
+ */
+export function applyAction(snap, action = {}) {
+  const s = JSON.parse(JSON.stringify(snap));
+  const op = isObj(action) ? action.op : null;
+  if (op === 'heal') {
+    const price = healPriceOf(s);
+    if (price <= 0) return { snapshot: s, result: { ok: false, reason: 'full', price: 0 } };
+    const coins = s.inventory.coins || 0;
+    if (coins < price) return { snapshot: s, result: { ok: false, reason: 'coins', price } };
+    s.inventory.coins = coins - price;
+    s.hp = maxVitals(s.level).hp;
+    return { snapshot: s, result: { ok: true, price } };
+  }
+  if (op === 'starter_kit') {
+    if (s.quests.includes(STARTER_KIT.event)) return { snapshot: s, result: { ok: false, reason: 'already' } };
+    s.quests = [...s.quests, STARTER_KIT.event];
+    for (const [k, v] of Object.entries(STARTER_KIT.items)) s.inventory[k] = (s.inventory[k] || 0) + v;
+    return { snapshot: s, result: { ok: true } };
+  }
+  return { snapshot: s, result: { ok: false, reason: 'unknown' } };
+}
+
 /** Ответ сервера → снимок с недостающими полями по умолчанию (новый персонаж: позиция null, пустые дары и т.д.). */
 export function fillDefaults(raw) {
   const def = emptySnapshot();
-  const { meta, ...s } = raw;
+  const { meta, action, ...s } = raw;
   return {
     snapshot: {
       ...def, ...s,
@@ -198,7 +246,9 @@ export function fillDefaults(raw) {
       abilities: { ...def.abilities, ...(s.abilities || {}) },
       inventory: { ...def.inventory, ...(s.inventory || {}) },
       pos: s.pos || def.pos, safe: s.safe || def.safe,
+      hp: s.hp ?? null, mana: s.mana ?? null,   // нет поля (старая схема) — «полный запас»; числовой 0 сохраняется
     },
     meta: meta || {},
+    action: action || null,
   };
 }

@@ -5,6 +5,7 @@ import { ABILITIES } from '../config/balance.abilities.js';
 import { EV } from '../config/events.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
+import * as vitals from '../state/vitals.js';
 
 export const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V'];
 
@@ -102,6 +103,21 @@ export class InteractiveObject {
   }
 
   /** Если игрок нажал не тот дар — подсказка. */
+  /** v0.9: цена действия в мане (0 — бесплатно или действие сейчас невозможно). Показывается в кнопке до нажатия. */
+  manaCost() { return 0; }
+
+  /**
+   * v0.9: оплата маной — ровно один раз, после всех проверок (дар, вес, занятость) и до анимации успеха.
+   * false — маны не хватает: ничего не списано, сцена объясняет, как восстановить.
+   * Любой способ ввода (кнопка действия, тап, кнопка дара, клавиатура) приходит сюда через interact().
+   */
+  payMana(cost = this.manaCost()) {
+    if (!(cost > 0)) return true;
+    if (!vitals.spendMana(this.state, cost)) { this.scene.onManaShort?.(cost, this); return false; }
+    this.scene.onManaSpent?.(cost, this);
+    return true;
+  }
+
   rejectWrongAbility(abilityId) {
     if (!abilityId || !this.ability || abilityId === this.ability) return false;
     this.scene.toast(`Здесь нужен дар: ${ABILITIES[this.ability].name}`);

@@ -118,6 +118,7 @@ const firstFight = w => { w.abilities.unlock('telekinesis', 1); };
 const guardianFight = w => {
   w.abilities.unlock('telekinesis', 2); w.abilities.unlock('fire', 1);
   w.state.addHeroXP(275);
+  w.state.data.hp = null; w.state.data.mana = null;   // v0.9: к Стражу игрок подходит восстановившимся (запасы общие)
 };
 {
   const r = simulate('forest_scavenger', firstFight);
@@ -158,6 +159,7 @@ console.log('\n[3] Механики боя');
   cm.useAbility('telekinesis');
   ok(!cm.enemy.isPreparing && cm.stats.interrupts === 1, 'Телекинез прерывает рывок');
 
+  w.state.data.mana = null; w.state.data.hp = null;   // v0.9: прошлый бой в этом мире потратил ману — для проверки брони начинаем с полной
   const g = new CombatManager({ enemyType: 'forest_guardian', state: w.state, abilities: w.abilities });
   const before = g.enemy.hp; g.useAbility('telekinesis');
   ok(before - g.enemy.hp === 11, `броня Стража −45% (20 → ${before - g.enemy.hp})`);
@@ -484,7 +486,7 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
   // --- Мирра подсказывает вернуться к корням после Огня
   {
     const { state, quests, abilities, dlg } = mk();
-    abilities.unlock('fire', 1); quests.complete(EV.UNLOCK_FIRE_1);
+    quests.complete(EV.UNLOCK_TELEKINESIS_1); abilities.unlock('fire', 1); quests.complete(EV.UNLOCK_FIRE_1);
     ok(dlg.pick('mirra').id === 'mirra_roots', 'после Огня Мирра направляет к чёрным корням');
     quests.complete(EV.FIRE_GATE_OPEN);
     ok(dlg.pick('mirra').id !== 'mirra_roots', 'после сожжённых корней подсказка про корни исчезает');
@@ -523,6 +525,184 @@ console.log('\n[v0.8.2] Опыт до следующего уровня');
   ok(x.level === 5 && x.remaining === 0 && !/NaN|null|6/.test(x.caption), 'после максимума нет шестого уровня, NaN и отрицательных чисел');
   state.data.heroLevel = 2; state.data.heroXP = 10; x = xpProgress(state);   // повреждённое сохранение: опыт меньше порога
   ok(x.progress === 0 && x.remaining === 140, 'опыт ниже порога уровня не даёт отрицательную полосу');
+}
+
+console.log('\n[v0.9] Общие HP и мана, зелья, обучение боя, облачная модель');
+{
+  const vitals = await import('../src/state/vitals.js');
+  const { drinkOutside } = await import('../src/systems/Consumables.js');
+  const { CombatTutorial, CT_SKIPPED } = await import('../src/systems/CombatTutorial.js');
+  const PM = await import('../src/cloud/playerModel.js');
+  const { PlayerActions } = await import('../src/systems/PlayerActions.js');
+  const { VITALS, HERO_RECOVERY } = await import('../src/config/balance.hero.js');
+  const { WORLD_MANA_COST } = await import('../src/config/balance.abilities.js');
+
+  // --- запасы: null = полный, пределы, без NaN
+  {
+    const { state } = makeWorld({ t: 0 });
+    ok(vitals.hp(state) === 120 && vitals.mana(state) === 100, 'новый персонаж: полные HP и мана (null = полный)');
+    ok(vitals.spendMana(state, 8) && vitals.mana(state) === 92, 'списание маны');
+    ok(!vitals.spendMana(state, 1000) && vitals.mana(state) === 92, 'нехватка маны: ничего не списано');
+    vitals.setHp(state, -5); ok(vitals.hp(state) === 0, 'HP не уходит ниже 0');
+    vitals.setHp(state, 9999); ok(vitals.hp(state) === 120, 'HP не больше максимума');
+    vitals.setMana(state, NaN); ok(vitals.mana(state) === 0 && !Number.isNaN(state.data.mana), 'NaN → 0, не NaN');
+    state.data.mana = 0; ok(vitals.mana(state) === 0, 'числовой 0 не путается с «нет значения»');
+  }
+  // --- восстановление: время, предел, дом быстрее, огромный dt обрезается
+  {
+    const { state } = makeWorld({ t: 0 });
+    vitals.setHp(state, 50); vitals.setMana(state, 10);
+    for (let i = 0; i < 100; i++) vitals.regen(state, 0.1);           // 10 с в лесу
+    ok(Math.abs(vitals.hp(state) - 60) < 1e-6 && Math.abs(vitals.mana(state) - 15) < 1e-6, `10 с в лесу: +${VITALS.hpRegenPerSec * 10} HP, +${VITALS.manaRegenWorld * 10} маны`);
+    for (let i = 0; i < 100; i++) vitals.regen(state, 0.1, { inHouse: true });
+    ok(Math.abs(vitals.mana(state) - 35) < 1e-6, 'в доме Мирры мана восстанавливается быстрее (2/с)');
+    const m0 = vitals.mana(state); vitals.regen(state, 3600);
+    ok(vitals.mana(state) - m0 <= VITALS.manaRegenWorld * VITALS.maxTickSec + 1e-9, 'огромный delta (скрытая вкладка) не даёт случайного прироста');
+    for (let i = 0; i < 4000; i++) vitals.regen(state, 0.25);
+    ok(vitals.hp(state) === 120 && vitals.mana(state) === 100, 'восстановление ограничено максимумом');
+    state.data.mana = 0.37; ok(vitals.view(state).mana === 0 && state.data.mana === 0.37, 'дробная мана хранится точно, округляется только отображение');
+  }
+  // --- новый уровень не восстанавливает скрыто; победа — полный HP после наград, мана — остаток; поражение — 20%
+  {
+    const { state } = makeWorld({ t: 0 });
+    vitals.setMana(state, 30); vitals.setHp(state, 70);
+    state.addHeroXP(60);
+    ok(state.data.heroLevel === 2 && vitals.mana(state) === 30 && vitals.hp(state) === 70, 'новый уровень не даёт скрытого восстановления');
+    const fresh = makeWorld({ t: 0 }).state;
+    fresh.addHeroXP(60);
+    ok(vitals.hp(fresh) === 120 && vitals.maxHp(fresh) === 126, 'полный (null) запас при повышении фиксируется числом — без бесплатного прироста');
+    state.applyReward({ heroXP: 100 });
+    vitals.afterVictory(state, 12.5);
+    ok(vitals.hp(state) === vitals.maxHp(state) && vitals.maxHp(state) === 132 && vitals.mana(state) === 12.5, 'победа: HP = новый максимум после наград, мана — фактический остаток');
+    vitals.afterDefeat(state, 3);
+    ok(vitals.hp(state) === Math.ceil(132 * HERO_RECOVERY.defeatHpFraction) && vitals.mana(state) === 3, 'поражение: 20% HP, мана сохраняет остаток');
+  }
+  // --- бой берёт текущие запасы и пишет их обратно; HP в бою не восстанавливается
+  {
+    const w = makeWorld({ t: 0 }); w.abilities.unlock('telekinesis', 1);
+    vitals.setHp(w.state, 60); vitals.setMana(w.state, 20);
+    const cm = new CombatManager({ enemyType: 'forest_scavenger', state: w.state, abilities: w.abilities });
+    ok(cm.hero.hp === 60 && cm.hero.mana === 20, 'вход в бой — с текущими HP и маной из мира');
+    cm.useAbility('telekinesis');
+    ok(Math.abs(vitals.mana(w.state) - 6) < 1e-9, 'мана, потраченная в бою, сразу в общем состоянии');
+    cm.enemy.strongCd = 999; cm.enemy.normalCd = 999;
+    const hp0 = cm.hero.hp; for (let i = 0; i < 300; i++) cm.tick(1 / 30, { holdEnemy: true });
+    ok(cm.hero.hp === hp0 && vitals.hp(w.state) === hp0, 'в бою HP сам не восстанавливается');
+    ok(Math.abs(cm.hero.mana - 46) < 0.01, 'мана в бою восстанавливается одним механизмом (4/с)');
+    ok(cm.cooldowns.telekinesis === 0 && cm.time === 0, 'holdEnemy: враг и время боя стоят, перезарядка дара идёт');
+  }
+  // --- зелья вне боя
+  {
+    const { state } = makeWorld({ t: 0 });
+    ok(drinkOutside(state, 'elixir_life').reason === 'none', 'нет зелья — ничего не происходит');
+    state.addItem('elixir_life', 2); state.addItem('elixir_mana', 1); state.addItem('resin_flask', 1);
+    ok(drinkOutside(state, 'elixir_life').reason === 'full' && state.item('elixir_life') === 2, 'полное HP: настой не тратится');
+    vitals.setHp(state, 100);
+    const r = drinkOutside(state, 'elixir_life');
+    ok(r.ok && r.amount === 20 && vitals.hp(state) === 120 && state.item('elixir_life') === 1, 'частично полный запас: восстановлено только недостающее (+20), списан 1 настой');
+    vitals.setMana(state, 10);
+    const m = drinkOutside(state, 'elixir_mana');
+    ok(m.ok && vitals.mana(state) === 70 && state.item('elixir_mana') === 0, 'лунный эликсир из сумки: +60% маны');
+    ok(drinkOutside(state, 'resin_flask').reason === 'combat' && state.item('resin_flask') === 1, 'смоляная склянка вне боя не применяется');
+    const w = makeWorld({ t: 0 }); w.abilities.unlock('telekinesis', 1);
+    w.state.addItem('elixir_life', 6); vitals.setHp(w.state, 10);
+    drinkOutside(w.state, 'elixir_life'); vitals.setHp(w.state, 10);
+    const cm = new CombatManager({ enemyType: 'forest_scavenger', state: w.state, abilities: w.abilities });
+    let n = 0; while (cm.usePotion('elixir_life').ok && n < 10) { n++; cm.hero.hp = 10; }
+    ok(n === 4, 'лимит 4 расходника за бой; зелье, выпитое вне боя, его не уменьшает');
+  }
+  // --- лечение у Мирры и стартовый набор (JS-зеркало player_action)
+  {
+    const s0 = { ...PM.emptySnapshot(), hp: 40, inventory: { coins: 7 } };
+    ok(PM.healPriceOf(s0) === 8, 'цена лечения: не хватает 80 HP → 8 монет');
+    const poor = PM.applyAction(s0, { op: 'heal' });
+    ok(!poor.result.ok && poor.result.reason === 'coins' && poor.snapshot.hp === 40 && poor.snapshot.inventory.coins === 7, 'монет не хватает: ничего не списано, HP прежнее');
+    const rich = PM.applyAction({ ...s0, inventory: { coins: 20 } }, { op: 'heal' });
+    ok(rich.result.ok && rich.snapshot.hp === 120 && rich.snapshot.inventory.coins === 12, 'лечение: −8 монет, HP полное');
+    ok(PM.applyAction({ ...s0, hp: null }, { op: 'heal' }).result.reason === 'full', 'полное HP: лечить нечего, цена 0');
+    ok(PM.healPriceOf({ ...s0, hp: 119.5 }) === 1, 'дробное недостающее HP округляется вверх');
+    const k1 = PM.applyAction(PM.emptySnapshot(), { op: 'starter_kit' });
+    const k2 = PM.applyAction(k1.snapshot, { op: 'starter_kit' });
+    ok(k1.result.ok && k1.snapshot.inventory.elixir_life === 1 && k1.snapshot.inventory.elixir_mana === 1 && k1.snapshot.quests.includes('mirra_starter_kit'), 'стартовый набор: событие + настой + эликсир одной операцией');
+    ok(!k2.result.ok && k2.snapshot.inventory.elixir_life === 1, 'повторный набор не выдаётся');
+    // локальный режим (без сервера): двойное нажатие не лечит дважды
+    const { state } = makeWorld({ t: 0 });
+    vitals.setHp(state, 40); state.addItem('coins', 20);
+    const acts = new PlayerActions({ state });
+    const [a, b] = await Promise.all([acts.heal(), acts.heal()]);
+    ok(a.ok && b.reason === 'busy' && state.item('coins') === 12 && vitals.hp(state) === 120, 'двойное нажатие «Восстановить»: одно списание');
+    const again = await acts.heal();
+    ok(!again.ok && again.reason === 'full' && state.item('coins') === 12, 'повтор при полном HP ничего не списывает');
+  }
+  // --- облачная модель: мана в снимке, diff, пределы по уровню
+  {
+    const { state } = makeWorld({ t: 0 });
+    vitals.setMana(state, 33.5); vitals.setHp(state, 0);
+    const snap = PM.toSnapshot(state.data);
+    ok(snap.mana === 33.5 && snap.hp === 0, 'снимок хранит ману и числовой 0');
+    const back = PM.fromSnapshot(snap);
+    ok(back.mana === 33.5 && back.hp === 0, 'снимок → состояние: мана и 0 HP сохраняются');
+    const base = PM.emptySnapshot();
+    const p = PM.diffSnapshots(base, snap);
+    ok(p.mana?.value === 33.5 && p.hp?.value === 0 && PM.isMinorPatch({ mana: p.mana, hp: p.hp }), 'diff: мана и HP — «мелкие» изменения');
+    const s1 = PM.applyPatch(base, { hp: { value: 999 }, mana: { value: 500 } });
+    ok(s1.hp === 120 && s1.mana === 100, 'сервер обрезает HP/ману до максимума уровня');
+    const s2 = PM.applyPatch(base, { mana: { value: null } });
+    ok(s2.mana === null, 'null остаётся «полным запасом»');
+    const old = PM.fillDefaults({ ...PM.emptySnapshot(), mana: undefined, meta: {} }).snapshot;
+    ok(old.mana === null && vitals.mana({ data: PM.fromSnapshot(old), heroStats: () => ({ maxHp: 120, maxMana: 100 }) }) === 100, 'старое сохранение без маны → полный запас');
+  }
+  // --- обучение первого боя
+  {
+    const mk = () => {
+      const w = makeWorld({ t: 0 }); w.abilities.unlock('telekinesis', 1);
+      const cm = new CombatManager({ enemyType: 'forest_scavenger', state: w.state, abilities: w.abilities });
+      const settings = { hints: true, get(k) { return this[k]; } };
+      return { ...w, cm, settings, tut: new CombatTutorial({ state: w.state, settings, spawnId: 'scavenger_01', cm }) };
+    };
+    const run = (x, sec, hold = true) => { for (let i = 0; i < sec * 30; i++) { x.cm.tick(1 / 30, { holdEnemy: hold ? x.tut.holdEnemy() : false }); x.tut.tick(1 / 30); x.tut.onEvents(x.cm.drainEvents()); } };
+    const x = mk();
+    ok(x.tut.step === 'intro' && x.tut.holdEnemy(), 'шаг 1: вступление, враг стоит');
+    const hp0 = x.cm.hero.hp; run(x, 20);
+    ok(x.cm.hero.hp === hp0 && x.cm.enemy.hp === x.cm.enemy.maxHp, 'пока игрок читает, урона нет ни героине, ни врагу');
+    x.tut.confirmIntro();
+    ok(x.tut.step === 'select', 'шаг 2: выбрать предмет');
+    x.tut.beforeAbility('telekinesis', 'ready'); x.cm.useAbility('telekinesis'); x.tut.onEvents(x.cm.drainEvents());
+    ok(x.tut.step === 'select' && x.tut.feedback, 'Телекинез без выбранного камня не продвигает шаг, есть пояснение');
+    x.cm.cooldowns.telekinesis = 0;
+    x.cm.selectObject('rock_a'); x.tut.onEvents(x.cm.drainEvents());
+    ok(x.tut.step === 'throw', 'выбран камень → шаг 3: бросок');
+    x.cm.useAbility('telekinesis'); x.tut.onEvents(x.cm.drainEvents());
+    ok(x.tut.step === 'interrupt' && !x.tut.holdEnemy(), 'бросок → шаг 4: бой идёт до опасной атаки');
+    x.cm.cooldowns.telekinesis = 5; x.cm.hero.mana = 0;   // дар недоступен в момент предупреждения
+    let guard = 0; while (!x.cm.enemy.isPreparing && guard++ < 900) run(x, 1 / 30 * 1, true);
+    ok(x.cm.enemy.isPreparing && x.tut.holdEnemy(), 'опасная атака удерживается, пока игрок не прервёт');
+    const prep = x.cm.enemy.prepLeft; run(x, 10);
+    ok(x.cm.enemy.prepLeft === prep && x.cm.abilityState('telekinesis').state === 'ready', 'перезарядка и мана идут во время остановки — Телекинез снова готов (нет зависания)');
+    x.tut.beforeAbility('fire', 'locked');
+    ok(x.tut.step === 'interrupt', 'неверный дар не завершает шаг');
+    x.cm.useAbility('telekinesis'); x.tut.onEvents(x.cm.drainEvents());
+    ok(x.tut.step === 'confirm' && x.tut.done('interrupt'), 'настоящее прерывание → «Атака прервана»');
+    run(x, 3, true);
+    ok(!x.tut.active && !x.tut.holdEnemy(), 'после подтверждения бой идёт обычным образом');
+
+    // поражение сохраняет пройденные шаги, повторная попытка продолжает
+    const y = mk(); y.tut.confirmIntro(); y.cm.selectObject('rock_a'); y.tut.onEvents(y.cm.drainEvents());
+    const cm2 = new CombatManager({ enemyType: 'forest_scavenger', state: y.state, abilities: y.abilities });
+    const t2 = new CombatTutorial({ state: y.state, settings: y.settings, spawnId: 'scavenger_01', cm: cm2 });
+    ok(t2.step === 'throw' && t2.reminder, 'повторная попытка: пройденные шаги сохранены, есть напоминание о выборе камня');
+    y.state.data.stats.combats.push({ enemy: 'forest_scavenger', result: 'defeat' });
+    ok(t2.active, 'проигранный бой в истории не считается освоенным обучением');
+    t2.skip();
+    ok(!t2.active && !t2.holdEnemy() && y.state.data.tutorial.includes(CT_SKIPPED) && !y.state.isEnemyDefeated('scavenger_01'), 'пропуск: бой не стоит, победа не засчитана');
+    const z = mk(); z.settings.hints = false;
+    ok(!z.tut.active && !z.tut.holdEnemy(), 'подсказки выключены — обучение не останавливает бой');
+    const v = mk(); v.state.markEnemyDefeated('scavenger_01');
+    ok(!v.tut.active, 'победившему раньше обучение не навязывается');
+    const u = mk(); const t3 = new CombatTutorial({ state: u.state, settings: u.settings, spawnId: 'lunar_guard', cm: u.cm });
+    ok(!t3.active, 'другие бои без обучения');
+  }
+  ok(WORLD_MANA_COST.gather === 4 && WORLD_MANA_COST.push.heavy === 20 && WORLD_MANA_COST.fire === 16, 'цены магии в мире — из конфига');
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Все тесты пройдены');

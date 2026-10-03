@@ -1,6 +1,7 @@
 import { COLORS, DEPTH } from '../config/game.config.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
+import { WORLD_MANA_COST } from '../config/balance.abilities.js';
 import { InteractiveObject } from './InteractiveObject.js';
 
 /**
@@ -25,6 +26,7 @@ export class FireObject extends InteractiveObject {
   get markerColor() { return this.abilities.isUnlocked('fire') ? COLORS.fire : 0x7a6a62; }
   get label() { return this.cfg.persistent ? 'Зажечь' : 'Поджечь'; }
   isDone() { return this.fireState !== 'normal'; }
+  manaCost() { return this.abilities.isUnlocked('fire') ? WORLD_MANA_COST.fire : 0; }
 
   lockedText() { return this.cfg.lockedText || 'Здесь нужен Огонь.'; }
 
@@ -43,6 +45,8 @@ export class FireObject extends InteractiveObject {
       services.audio.play('locked');
       return;
     }
+    if (this.busy || this.fireState !== 'normal') return;
+    if (!this.payMana()) return;
     this.scene.player.castAt(this.x, this.baseY, 'fire');
     this.scene.castFx(this.x, this.baseY - 30, COLORS.fire);
     this.ignite();

@@ -3,6 +3,7 @@
 import { DIALOGUES } from '../config/dialogues.js';
 import { NPCS } from '../config/npcs.js';
 import { MSG } from '../state/EventBus.js';
+import * as vitals from '../state/vitals.js';
 
 export class DialogueSystem {
   /**
@@ -28,6 +29,7 @@ export class DialogueSystem {
       item: (id) => s.item(id),
       quest: (id) => log.status(id),
       defeated: (id) => s.isEnemyDefeated(id),
+      hpMissing: vitals.hp(s) < vitals.maxHp(s) - 1e-9,   // v0.9: Мирра предлагает лечение
     };
   }
 
@@ -82,6 +84,7 @@ export class DialogueSystem {
   node() { return this.cur ? this.cur.variant.nodes[this.cur.nodeId] : null; }
 
   fmt(text) {
+    if (text && typeof text === 'object' && 'hero' in text) text = `Вы: «${text.hero}»`;   // v0.9: реплика героини
     return String(text)
       .replace(/\{n:([A-Za-z0-9_]+)\}/g, (m, id) => String(this.state.item(id)))
       .replace(/\{goal\}/g, () => this.goalText() || 'идти вперёд.');
@@ -153,6 +156,8 @@ export class DialogueSystem {
       else if (e.alchemy) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_ALCHEMY));
       else if (e.journal) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_JOURNAL));
       else if (e.upgrade) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_UPGRADE, e.upgrade));
+      else if (e.heal) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_HEAL));
+      else if (e.kit) this.pendingAfter.push(() => this.bus?.emit(MSG.STARTER_KIT));
     }
   }
 }

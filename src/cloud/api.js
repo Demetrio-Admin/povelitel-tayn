@@ -123,6 +123,8 @@ export class SupabaseApi {
   getPlayer(token) { return this.rpc('get_player', {}, token); }
   resetPlayer(token, hero) { return this.rpc('reset_player', { hero }, token); }
   syncPlayer(token, patch, { keepalive = false } = {}) { return this.rpc('sync_player', { patch }, token, { keepalive }); }
+  /** v0.9: атомарное действие сервера (лечение за монеты, стартовый набор). */
+  playerAction(token, action) { return this.rpc('player_action', { action }, token); }
 
   // ---------------------------------------------------------------- регистрация ника (Edge Function)
   claimNickname(token, nickname, password) {

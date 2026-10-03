@@ -57,4 +57,9 @@ export const MSG = {
   GUIDE_HINT: 'guide:hint',           // (text | null) — мягкая подсказка под панелью цели
   GUIDE_POINTER: 'guide:pointer',     // ({ x, y, angle, dist } | null) — стрелка к цели на краю экрана
   SIDE_QUEST: 'quest:side',           // (questId, 'start' | 'ready' | 'done')
+  // v0.9
+  MANA_SPENT: 'vitals:mana-spent',    // (cost) — действие в мире оплачено маной
+  HUD_HIGHLIGHT: 'ui:hud-highlight',  // ('hp' | 'mana') — коротко подсветить индикатор
+  OPEN_HEAL: 'ui:heal',               // () — окно лечения у Мирры (после закрытия диалога)
+  STARTER_KIT: 'story:starter-kit',   // () — Мирра выдаёт стартовые зелья (после закрытия диалога)
 };

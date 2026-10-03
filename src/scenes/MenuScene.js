@@ -59,7 +59,7 @@ export class MenuScene extends Phaser.Scene {
       next('Новая игра', !hasSave, () => (hasSave ? this.confirmNew() : this.newGame()));
       next('Настройки', false, () => this.openSettings());
     }
-    this.add.text(W / 2, H - 40, 'v0.8.2 · компактный HUD и меню', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5);
+    this.add.text(W / 2, H - 40, 'v0.9.0 · завязка, мана и зелья', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5);
 
     const kb = this.input.keyboard;
     const enter = () => { if (this.overlay) return; if (session && !session.ready) this.newGame(); else this.begin(); };

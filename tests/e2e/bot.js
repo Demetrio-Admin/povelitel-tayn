@@ -11,14 +11,35 @@ window.__bot = async function () {
   S.bus.on('world:event', (k) => L('  EVENT:', k));
   S.bus.on('ui:final', () => L('  FINAL_SCREEN'));
 
+  // v0.9: запасы героини и обучение
+  const V = () => ({ hp: S.state.data.hp ?? 999, mana: S.state.data.mana ?? 999 });
+  const vit = () => { const st = S.state, hs = st.heroStats(); return { hp: st.data.hp ?? hs.maxHp, maxHp: hs.maxHp, mana: st.data.mana ?? hs.maxMana, maxMana: hs.maxMana }; };
+  const tutLog = new Set();
+  // BOT_LOSE=scavenger_01,forest_guardian_01 — первую попытку против этих врагов бот намеренно проигрывает (проверка поражения)
+  const LOSE = new Set(window.__botLose || []);
+  const lostOnce = new Set();
+
   async function fight() {
     const c = cb();
-    L('  COMBAT start:', c.enemyType);
+    L('  COMBAT start:', c.enemyType, `hp=${Math.round(c.cm.hero.hp)}/${c.cm.hero.maxHp} mana=${Math.round(c.cm.hero.mana)}`);
     const t0 = performance.now();
     while (G.scene.isActive('CombatScene') && !c.ended) {
       await sleep(120);
       if (!c.canAct()) continue;
       const cm = c.cm, e = cm.enemy;
+      if (LOSE.has(c.spawnId) && !lostOnce.has(c.spawnId)) {   // проиграть: только «Понятно»/пропуск обучения, без магии
+        if (c.tut?.step) { L('    TUTORIAL skip (lose run)'); c.tut.skip(); }
+        continue;
+      }
+      const step = c.tut?.step;
+      if (step && !tutLog.has(step)) { tutLog.add(step); L('    TUTORIAL step:', step, '—', c.tut.view()?.text || ''); }
+      if (step === 'intro') { await sleep(600); c.tut.confirmIntro(); continue; }
+      if (step === 'select') { const r = cm.fieldObjects.find(o => o.available && o.def.throwable && o.def.weight !== 'heavy'); if (r) { c.tut.beforeSelect(r.id); cm.selectObject(r.id); c.processEvents(); } continue; }
+      if (step === 'throw' && cm.abilityState('telekinesis').state === 'ready') { c.onAbility('telekinesis'); continue; }
+      if (step === 'throw') continue;
+      // зелья по ситуации (как сделал бы игрок)
+      if (cm.hero.hp < cm.hero.maxHp * 0.35 && S.state.item('elixir_life') > 0) { c.onPotion('elixir_life'); L('    potion: life'); continue; }
+      if (cm.hero.mana < 14 && S.state.item('elixir_mana') > 0 && e.hp > 60) { c.onPotion('elixir_mana'); L('    potion: mana'); continue; }
       const tk = cm.abilityState('telekinesis').state === 'ready';
       const fire = cm.abilityState('fire').state === 'ready';
       const fo = id => cm.fieldObjects.find(o => o.available && o.def && (o.id === id));
@@ -41,14 +62,22 @@ window.__bot = async function () {
         c.onAbility('telekinesis');
       }
     }
+    if (LOSE.has(c.spawnId)) lostOnce.add(c.spawnId);
     const last = S.state.data.stats.combats.at(-1);
-    L('  COMBAT end:', JSON.stringify(last));
+    L('  COMBAT end:', JSON.stringify({ result: last?.result, timeSec: last?.timeSec, interrupts: last?.interrupts }), `after: hp=${Math.round(vit().hp)}/${vit().maxHp} mana=${Math.round(vit().mana)}`);
   }
 
   async function settle(maxMs = 90000) {
     const t0 = performance.now();
     while (performance.now() - t0 < maxMs) {
       const u = ui();
+      if (u.dlg) {   // диалог: дочитать и выбрать последний ответ (у вступления — «Пойду к книге.»)
+        u.finishTyping();
+        const v = S.dialogue.view();
+        if (v?.choices?.length) { L('  dialogue:', v.npc.id, '→', v.choices.at(-1).label); u.dialogueChoose(v.choices.at(-1).index); }
+        else u.dialogueTap();
+        await sleep(300); continue;
+      }
       if (S.modalOpen && u.modal) {
         const title = u.modal.container.list[2]?.text;
         L('  modal:', title, '→', (u.modal.buttons.find(b => b.primary) || u.modal.buttons[0]).label);
@@ -65,10 +94,20 @@ window.__bot = async function () {
   const obj = id => ex().objects.find(o => o.id === id);
   function tp(x, y) { ex().player.setPosition(x, y); ex().player.stop(); }
 
+  /** Мана для действия: эликсир, если есть и маны совсем мало; иначе ждём восстановления (ходим к цели — тоже время). */
+  async function needMana(cost, why) {
+    if (!(cost > 0) || vit().mana + 1e-9 >= cost) return;
+    if (S.state.item('elixir_mana') > 0 && vit().mana < cost) { await settle(); ui().drinkFromBag?.('elixir_mana'); L(`  mana: drank elixir for ${why} → ${Math.round(vit().mana)}`); }
+    const t0 = performance.now();
+    while (vit().mana + 1e-9 < cost && performance.now() - t0 < 240000) await sleep(500);
+    L(`  mana: waited ${Math.round((performance.now() - t0) / 1000)}s for ${why} (${cost}) → ${Math.round(vit().mana)}`);
+  }
+
   async function act(id, ability = null, note = '') {
     await settle();
     const o = obj(id);
     if (!o) { L('!! no object', id); return; }
+    if (o.isAvailable() && !note.includes('expect')) await needMana(o.manaCost?.() || 0, id);
     L(`> ${id} ${ability || 'context'} ${note}`, `avail=${o.isAvailable()} done=${o.isDone?.()}`);
     tp(o.x, o.y + Math.min(o.radius * 0.5, 50));
     await sleep(350);
@@ -79,14 +118,69 @@ window.__bot = async function () {
     if (ability) ex().onAbility(ability); else ex().onContext();
     await sleep(1200);
     await settle();
-    L(`  after: removed=${!!o.removed} done=${o.isDone?.()} avail=${o.isAvailable()}`);
+    L(`  after: removed=${!!o.removed} done=${o.isDone?.()} avail=${o.isAvailable()} mana=${Math.round(vit().mana)}`);
+  }
+
+  /** Разговор с NPC и выбор ответа по тексту (лечение у Мирры). */
+  async function talk(npcId, answer) {
+    await settle();
+    const o = obj('npc_' + npcId);
+    tp(o.x, o.y + 40); await sleep(300);
+    ex().interaction.setFocus(o); await sleep(100); ex().onContext(); await sleep(300);
+    const u = ui();
+    for (let i = 0; i < 12 && u.dlg; i++) {
+      u.finishTyping();
+      const v = S.dialogue.view();
+      const ch = v?.choices?.find(c => c.label === answer);
+      if (ch) { L(`  talk ${npcId}: «${answer}»`); u.dialogueChoose(ch.index); break; }
+      if (v?.choices?.length) { u.dialogueChoose(v.choices.at(-1).index); } else u.dialogueTap();
+      await sleep(250);
+    }
+    await sleep(400);
+  }
+
+  async function healAtMirra() {
+    const coins0 = S.state.item('coins'), hp0 = Math.round(vit().hp);
+    await talk('mirra', 'Восстановить здоровье');
+    const u = ui();
+    L('  heal window:', (u.modal?.opts?.text || '').replace(/\n/g, ' | '));
+    const b = u.modal?.buttons?.find(x => /^Восстановить за/.test(x.label));
+    if (b) { u.closeModal(b); await sleep(800); }
+    else if (u.modal) u.closeModal(null);
+    L(`  heal at Mirra: hp ${hp0} → ${Math.round(vit().hp)}, coins ${coins0} → ${S.state.item('coins')}`);
+  }
+
+  function afterDefeatCheck(id) {
+    const t = ex().enemies.find(e => e.id === id), p = ex().player;
+    const enc = S.state.getObject('enc:' + id);
+    L(`  after defeat: hp=${Math.round(vit().hp)}/${vit().maxHp} mana=${Math.round(vit().mana)} pos=(${Math.round(p.x)},${Math.round(p.y)}) enc=(${enc?.x},${enc?.y}) dist-to-enemy=${Math.round(Math.hypot(p.x - t.cfg.x, p.y - t.cfg.y))} retry=${t.awaitingRetry} safePoint=(${S.state.data.safePoint.x},${S.state.data.safePoint.y})`);
+  }
+
+  async function standNear(id, sec) {
+    const t = ex().enemies.find(e => e.id === id);
+    const t0 = performance.now(); let started = false;
+    while (performance.now() - t0 < sec * 1000) { await sleep(500); if (G.scene.isActive('CombatScene')) { started = true; break; } }
+    L(`  stood near ${id} for ${Math.round((performance.now() - t0) / 1000)}s: auto-combat=${started}, retry button=${ex().interaction.focusInfo()?.label || '-'}`);
   }
 
   async function enemy(id) {
     await settle();
     const t = ex().enemies.find(e => e.id === id);
-    L(`> enemy ${id} visible=${t.sprite?.visible} cleared=${t.cleared}`);
-    tp(t.cfg.x, t.cfg.y + t.cfg.radius * 0.4);
+    L(`> enemy ${id} visible=${t.sprite?.visible} retry=${t.awaitingRetry}`);
+    if (t.awaitingRetry) {   // v0.9: после поражения — только «Сразиться снова»
+      const v = vit();
+      if (v.hp < v.maxHp * 0.6) {
+        if (S.state.item('elixir_life') > 0) { ui().drinkFromBag?.('elixir_life'); L('  heal: elixir from bag'); }
+        const t0 = performance.now();
+        while (vit().hp < vit().maxHp * 0.6 && performance.now() - t0 < 300000) await sleep(1000);
+        L(`  heal: waited ${Math.round((performance.now() - t0) / 1000)}s → hp=${Math.round(vit().hp)}`);
+      }
+      tp(t.cfg.x, t.cfg.y + 60); await sleep(400);
+      ex().interaction.setFocus(t); await sleep(150);
+      L('  retry:', ex().interaction.focusInfo()?.label);
+      ex().onContext();
+      await sleep(300); if (S.modalOpen) { const u = ui(); const b = u.modal?.buttons?.find(x => x.label === 'Всё равно сразиться'); if (b) u.closeModal(b); }
+    } else tp(t.cfg.x, t.cfg.y + t.cfg.radius * 0.4);
     for (let i = 0; i < 40 && !G.scene.isActive('CombatScene'); i++) await sleep(100);
     if (!G.scene.isActive('CombatScene')) { L('!! combat did not start'); return; }
     await settle(180000);
@@ -94,8 +188,8 @@ window.__bot = async function () {
   }
 
   const snap = (tag) => {
-    const d = S.state.data;
-    L(`== ${tag}: lvl=${d.heroLevel} xp=${d.heroXP} tk=${d.telekinesisLevel} fire=${d.fireLevel} items=${JSON.stringify(d.inventory || d.items)} paths=${JSON.stringify(d.openedPaths)} quest="${ui().objText?.text || ''}"`);
+    const d = S.state.data, v = vit();
+    L(`== ${tag}: lvl=${d.heroLevel} xp=${d.heroXP} hp=${Math.round(v.hp)}/${v.maxHp} mana=${Math.round(v.mana)}/${v.maxMana} tk=${d.telekinesisLevel} fire=${d.fireLevel} items=${JSON.stringify(d.inventory || d.items)} quest="${S.quests.objectiveText()}"`);
   };
 
   try {
@@ -108,7 +202,15 @@ window.__bot = async function () {
     await act('corrupted_roots', 'telekinesis', '(wrong ability)');
     await act('trail_cache');
     snap('before first fight');
-    await enemy('scavenger_01'); snap('after first fight');
+    await enemy('scavenger_01');
+    if (LOSE.has('scavenger_01')) {
+      afterDefeatCheck('scavenger_01');
+      await standNear('scavenger_01', 20);
+      snap('after first defeat');
+      // восстановление: ждём естественного восстановления HP рядом с врагом, затем «Сразиться снова»
+      await enemy('scavenger_01');
+    }
+    snap('after first fight');
     await act('lunar_altar'); snap('altar start');
     await act('heavy_boulder', 'telekinesis', '(expect too heavy)');
     await act('flame_a', 'telekinesis');
@@ -121,7 +223,9 @@ window.__bot = async function () {
     L('  resources: herb=' + S.state.item('moon_herb') + ' dust=' + S.state.item('rune_dust'));
     await act('lunar_altar', null, '(complete + research)');
     await act('lunar_altar', null, '(check research)');
-    S.abilities.update(true); await sleep(800); await settle(); snap('research forced');
+    { const t0 = performance.now(); while (!S.state.hasEvent('telekinesis_2_complete') && performance.now() - t0 < 180000) { await sleep(1000); await settle(); }
+      L(`  research: waited ${Math.round((performance.now() - t0) / 1000)}s (real timer, no debug)`); }
+    await settle(); snap('research done');
     await act('heavy_boulder', 'telekinesis');
     await act('fire_circle'); snap('fire');
     await act('ritual_torch', 'fire');
@@ -132,7 +236,14 @@ window.__bot = async function () {
     await act('west_chest');
     snap('before guardian');
     await act('ancient_gate', 'seal', '(expect refuse: guardian alive)');
-    for (let i = 0; i < 3 && !S.state.data.defeatedEnemies.includes('forest_guardian_01'); i++) { await enemy('forest_guardian_01'); snap('after guardian try ' + (i + 1)); }
+    for (let i = 0; i < 3 && !S.state.data.defeatedEnemies.includes('forest_guardian_01'); i++) {
+      await enemy('forest_guardian_01'); snap('after guardian try ' + (i + 1));
+      if (!S.state.data.defeatedEnemies.includes('forest_guardian_01')) {
+        afterDefeatCheck('forest_guardian_01');
+        // восстановление: лечение у Мирры за монеты, затем назад к Стражу
+        await healAtMirra();
+      }
+    }
     await act('ancient_gate', 'seal');
     await sleep(1500); await settle();
     snap('end');

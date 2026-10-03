@@ -10,6 +10,7 @@ import { QuestLog } from './state/QuestLog.js';
 import { Alchemy } from './systems/Alchemy.js';
 import { DialogueSystem } from './systems/DialogueSystem.js';
 import { GuidanceSystem } from './systems/GuidanceSystem.js';
+import { PlayerActions } from './systems/PlayerActions.js';
 import { resolveMap } from './world/mapData.js';
 import { PlayerSession } from './cloud/PlayerSession.js';
 import { SupabaseApi } from './cloud/api.js';
@@ -29,6 +30,7 @@ export const services = {
   alchemy: null,
   dialogue: null,
   guidance: null,
+  actions: null,   // v0.9: лечение за монеты и стартовый набор — атомарно на сервере
   // Онлайн-режим: игрок и его прогресс живут на сервере (cloud/PlayerSession.js). null — режим разработки без сервера
   // (не задан VITE_SUPABASE_URL): прогресс в localStorage этого браузера; так же работает автотест и редактор карты.
   session: null,
@@ -77,6 +79,7 @@ export function initServices() {
   services.alchemy = new Alchemy(services.state, bus);
   services.dialogue = new DialogueSystem({ state: services.state, log: services.log, bus, goalText: () => services.quests.objectiveText() });
   services.guidance = new GuidanceSystem({ state: services.state, quests: services.quests, log: services.log, bus });
+  services.actions = new PlayerActions({ state: services.state, getSession: () => services.session });
   // отправляем прогресс, когда игрок сворачивает вкладку или закрывает игру
   const flushNow = () => { if (!services.session) return; services.savePosition?.(); services.session.flush({ keepalive: true }).catch(() => {}); };
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });

@@ -12,7 +12,10 @@ import { Player } from '../objects/Player.js';
 import { InteractionSystem } from '../systems/InteractionSystem.js';
 import { TelekinesisObject } from '../objects/TelekinesisObject.js';
 import { FireObject } from '../objects/FireObject.js';
-import { EnemyTrigger } from '../objects/EnemyTrigger.js';
+import { EnemyTrigger, encKey } from '../objects/EnemyTrigger.js';
+import * as vitals from '../state/vitals.js';
+import { VITALS } from '../config/balance.hero.js';
+import { STORY } from '../config/story.js';
 import { GatherObject } from '../objects/GatherObject.js';
 import { NpcObject } from '../objects/NpcObject.js';
 import { AlchemyObject } from '../objects/AlchemyObject.js';
@@ -82,6 +85,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.objects = [];
     for (const cfg of this.interactiveCfgs) this.addObject(this.createObject(cfg));
     this.enemies = this.enemyCfgs.map(cfg => new EnemyTrigger(this, cfg));
+    this.resumeEncounters();
     this.buildContentDecor();
     this.setupGuidance();
     this.refreshAll();
@@ -118,9 +122,39 @@ export class ExplorationScene extends Phaser.Scene {
     services.savePosition = () => this.savePosition(); // перед отправкой прогресса при сворачивании вкладки
     this.stepT = 0;
     if (services.edit) { this.editor = new MapEditor(this); return; } // режим ?edit: игра не идёт, карту правят руками
-    if (!state.hasEvent('unlock_telekinesis_1')) {
-      this.time.delayedCall(700, () => this.toast('Дом ведьмы. На столе светится старая книга…'));
-    }
+    this.scheduleStory();
+  }
+
+  // ------------------------------------------------------------------ v0.9: завязка и стартовый набор
+  /** Вступление Мирры — один раз на нового персонажа (старые сохранения с прогрессом его не получают). */
+  needsPrologue() {
+    const s = services.state;
+    return !s.hasEvent(STORY.prologueEvent) && !s.hasEvent('unlock_telekinesis_1') && !s.data.stats.combats.length;
+  }
+
+  /** Стартовые зелья — после первого дара, пока героиня ещё в доме (выдаёт Мирра, сервер — одной операцией). */
+  needsStarterKit() {
+    const s = services.state;
+    return s.hasEvent('unlock_telekinesis_1') && !s.hasEvent(STORY.starterKitEvent) && !s.hasEvent('first_world_interaction');
+  }
+
+  scheduleStory() {
+    let tries = 0;
+    const tick = () => {
+      if (!this.scene.isActive() || this.editor) return;
+      const ready = services.mode === 'exploration' && !services.modalOpen && !services.dialogue.active;
+      if (ready && this.needsPrologue()) { services.dialogue.start('mirra'); return; }
+      if (++tries < 30 && this.needsPrologue()) this.time.delayedCall(400, tick);
+    };
+    this.time.delayedCall(900, tick);
+    // после чтения книги Мирра сама подзывает героиню (только в доме и только пока набор не выдан)
+    this.bus.on(MSG.MODAL_CLOSED, () => this.time.delayedCall(350, () => {
+      // один раз за сессию и не пока выдача ещё идёт на сервере (иначе разговор открылся бы повторно)
+      if (!this.kitPrompted && !services.actions?.busy && this.needsStarterKit() && this.zone?.id === VITALS.houseZone && services.mode === 'exploration' && !services.modalOpen && !services.dialogue.active) {
+        this.kitPrompted = true;
+        services.dialogue.start('mirra');
+      }
+    }), this);
   }
 
   follow() {
@@ -145,10 +179,8 @@ export class ExplorationScene extends Phaser.Scene {
 
   setProviders() {
     const { abilities, state } = services;
-    this.registry.set('hudProvider', () => {
-      const hs = state.heroStats();
-      return { hp: hs.maxHp, maxHp: hs.maxHp, mana: hs.maxMana, maxMana: hs.maxMana };
-    });
+    // v0.9: текущие (не максимальные) HP и мана — из общего состояния героини
+    this.registry.set('hudProvider', () => vitals.view(state));
     this.registry.set('abilityProvider', (id) => {
       if (!abilities.isUnlocked(id)) return { id, state: 'locked' };
       const f = this.interaction.focus;
@@ -356,6 +388,24 @@ export class ExplorationScene extends Phaser.Scene {
       .setOrigin(0.5).setDepth(DEPTH.markers + 1).setAlpha(0);
     this.tweens.add({ targets: t, alpha: 1, duration: 140 });
     this.tweens.add({ targets: t, y: y - 52, alpha: 0, delay: ms * 0.45, duration: ms * 0.55, ease: 'Quad.easeOut', onComplete: () => t.destroy() });
+  }
+
+  // ------------------------------------------------------------------ v0.9: мана в мире
+  /** Действие оплачено: «−8 маны» у объекта и короткая подсветка индикатора маны. */
+  onManaSpent(cost, obj) {
+    this.floatText(obj.x, obj.baseY - (obj.sprite?.displayHeight || 60) - 10, `−${cost} маны`, COLORS.mana, UI.type.small, 1100);
+    this.bus.emit(MSG.MANA_SPENT, cost);
+    this.bus.emit(MSG.HUD_REFRESH);
+  }
+
+  /** Не хватает маны: ничего не происходит, объясняем, как восстановить. */
+  onManaShort(cost, obj) {
+    const st = services.state, cur = Math.floor(vitals.mana(st) + 1e-9);
+    const elixir = st.item('elixir_mana') > 0;
+    this.toast(`Не хватает маны: ${cur} / ${cost}.\n${STORY.manaShortHelp(elixir)}`, COLORS.mana);
+    this.bus.emit(MSG.HUD_HIGHLIGHT, 'mana');
+    services.audio.play('locked');
+    if (obj?.sprite) this.tweens.add({ targets: obj.sprite, x: obj.sprite.x + 3, duration: 50, yoyo: true, repeat: 2 });
   }
 
   /** Облачко с мыслью героини над головой (контекстные реплики и подсказки). */
@@ -574,11 +624,16 @@ export class ExplorationScene extends Phaser.Scene {
   }
 
   // ------------------------------------------------------------------ бой
-  startCombat(trigger) {
+  startCombat(trigger, { manual = false } = {}) {
     if (this.inTransition) return;
     this.inTransition = true;
     services.mode = 'transition';
     this.player.stop();
+    this.interaction.clearFocus();
+    // v0.9: точка «перед боем» — сюда героиня вернётся после поражения (не safePoint). Сохраняется до старта боя,
+    // поэтому перезагрузка посреди боя тоже вернёт её сюда (см. resumeEncounters).
+    const at = { x: Math.round(this.player.x), y: Math.round(this.player.y) };
+    services.state.setObject(encKey(trigger.id), { state: 'fighting', x: at.x, y: at.y });
     this.savePosition();
     if (trigger.cfg.startEvent) services.quests.complete(trigger.cfg.startEvent, { spawnId: trigger.id });
     const cam = this.cameras.main;
@@ -597,13 +652,22 @@ export class ExplorationScene extends Phaser.Scene {
   onWake(sys, data = {}) {
     const { state } = services;
     this.setProviders();
+    this.player.stop();
+    services.input.joy.x = 0; services.input.joy.y = 0;
     const trig = this.enemies.find(e => e.id === data.spawnId);
+    const enc = state.getObject(encKey(data.spawnId));
     if (data.result === 'victory' && trig) {
       trig.clear(true);
+      delete state.data.worldObjects[encKey(data.spawnId)];
+      state.save();
     } else if (trig) {
-      const sp = this.zone?.safePoint || state.data.safePoint;
-      this.player.setPosition(sp.x, sp.y);
-      trig.grace = 2.5;
+      // v0.9: поражение — героиня остаётся рядом с этим врагом, на точке перед боем; повтор — только «Сразиться снова»
+      const at = enc && Number.isFinite(enc.x) ? { x: enc.x, y: enc.y } : { x: this.player.x, y: this.player.y };
+      this.player.setPosition(at.x, at.y);
+      state.setObject(encKey(trig.id), { state: 'lost', x: at.x, y: at.y });
+      state.data.player = { x: Math.round(at.x), y: Math.round(at.y) };
+      state.save();
+      this.watchRetry(trig);
     }
     this.refreshAll();
     this.cameras.main.fadeIn(400);
@@ -613,6 +677,31 @@ export class ExplorationScene extends Phaser.Scene {
     this.bus.emit(MSG.HUD_REFRESH);
     this.bus.emit(MSG.QUEST_CHANGED);
     if (data.result === 'victory' && trig?.cfg.opensPath) this.time.delayedCall(450, () => this.panTo(trig.cfg.x, trig.cfg.y - 500));
+  }
+
+  /** Враг, ждущий «Сразиться снова», становится объектом взаимодействия (кнопка действия, тап, клавиатура). */
+  watchRetry(trig) {
+    if (trig.awaitingRetry && !trig.defeated && !this.interaction.objects.includes(trig)) this.interaction.add(trig);
+  }
+
+  /**
+   * При загрузке: проигранные бои ждут ручного повтора; бой, прерванный перезагрузкой ('fighting'), считается
+   * отступлением рядом с тем же врагом — без штрафа монет и без награды; HP не меньше, чем после поражения.
+   */
+  resumeEncounters() {
+    const st = services.state;
+    for (const e of this.enemies) {
+      const enc = st.getObject(encKey(e.id));
+      if (!enc || e.defeated) continue;
+      if (enc.state === 'fighting') {
+        st.setObject(encKey(e.id), { state: 'lost' });
+        const floor = Math.max(1, Math.ceil(vitals.maxHp(st) * 0.2));
+        if (vitals.hp(st) < floor) vitals.setHp(st, floor);
+        if (Number.isFinite(enc.x)) { this.player.setPosition(enc.x, enc.y); st.data.player = { x: enc.x, y: enc.y }; }
+        st.save();
+      }
+      this.watchRetry(e);
+    }
   }
 
   // ------------------------------------------------------------------ цикл
@@ -641,6 +730,8 @@ export class ExplorationScene extends Phaser.Scene {
       return;
     }
     this.player.update(dt, services.input.move);
+    // v0.9: восстановление HP и маны вне боя (только во время активной игры; в доме Мирры мана быстрее)
+    if (vitals.regen(state, dt, { inHouse: this.zone?.id === VITALS.houseZone })) this.vitalsDirty = true;
     // шаги
     if (this.player.sprite.body.speed > 30) {
       this.stepT -= delta;

@@ -10,14 +10,14 @@ export const RESOURCES = {
   rune_dust:       { name: 'Руническая пыль',   icon: 'icon_dust',     color: 0xc9a2ff, hint: 'Остаётся от древних рун. Без неё магия не держится в зелье.' },
 };
 
-/** Расходники. effect применяется в бою (CombatManager.usePotion). */
+/** Расходники. effect применяется в бою (CombatManager.usePotion); outside: true — можно выпить из сумки вне боя (v0.9). */
 export const POTIONS = {
   elixir_life: { name: 'Настой жизни',   icon: 'icon_potion_life', color: 0xe0566a, effect: { type: 'heal', amount: 0.45 },
-    text: 'Возвращает 45% здоровья в бою.' },
+    outside: true, text: '+45% здоровья. В бою и из сумки.' },
   elixir_mana: { name: 'Лунный эликсир', icon: 'icon_potion_mana', color: 0x6ab4ff, effect: { type: 'mana', amount: 0.6 },
-    text: 'Возвращает 60% маны в бою.' },
+    outside: true, text: '+60% маны. В бою и из сумки.' },
   resin_flask: { name: 'Смоляная склянка', icon: 'icon_potion_fire', color: 0xff8a3a, effect: { type: 'damage', amount: 45, burn: { dps: 6, durationSec: 4 } },
-    text: 'Бросок во врага: 45 урона и горение.' },
+    text: 'Бросок во врага: 45 урона и горение. Только в бою.' },
 };
 
 /** Предметы для таблицы ITEMS (иконка, название). */

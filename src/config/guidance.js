@@ -67,7 +67,7 @@ export const RESOURCE_WHERE = {
  *   event — по событию мира (MSG.WORLD_EVENT), zone — при первом входе в зону, item — при первом получении предмета.
  */
 export const HERO_LINES = [
-  { id: 'e_book',    event: 'unlock_telekinesis_1',  text: 'Страницы тёплые… Предметы вокруг будто шепчут.' },
+  { id: 'e_book',    event: 'unlock_telekinesis_1',  text: 'Страницы тёплые… Я слышу лес. Предметы будто шепчут.' },
   { id: 'e_first',   event: 'first_world_interaction', text: 'Получилось! Телекинез слушается.' },
   { id: 'e_combat',  event: 'combat_intro_01',       text: 'Осторожно. Когда зверь присядет — прервать его нужно в тот же миг.' },
   { id: 'e_altar',   event: 'lunar_quest_start',     text: 'Три огонька: на ветке, под камнем и у зверя.' },
@@ -78,8 +78,8 @@ export const HERO_LINES = [
   { id: 'e_roots',   event: 'fire_gate_open',        text: 'Корни сгорели. Лес за ними старый и тёмный.' },
   { id: 'e_guard',   event: 'guardian_defeated',     text: 'Страж пал. Ворота уже недалеко.' },
   { id: 'z_B', zone: 'B', text: 'Тихая поляна. Ночные цветы светятся даже днём.' },
-  { id: 'z_C', zone: 'C', text: 'Тропа тянется на север. Где-то рычит зверь.' },
-  { id: 'z_E', zone: 'E', text: 'Лунный алтарь! Он едва светится.' },
+  { id: 'z_C', zone: 'C', text: 'Тропа тянется на север, к алтарю. Звери здесь стали злее.' },
+  { id: 'z_E', zone: 'E', text: 'Лунный алтарь… Мирра права — он почти погас.' },
   { id: 'z_H', zone: 'H', text: 'Камни тёплые… Здесь что-то спит.' },
   { id: 'z_J', zone: 'J', text: 'Старый лес. Здесь растут грибы — и пахнет смолой.' },
   { id: 'z_K', zone: 'K', text: 'Тишина давит. Страж где-то рядом.' },
@@ -88,4 +88,5 @@ export const HERO_LINES = [
   { id: 'i_tree_resin',      item: 'tree_resin',      text: 'Смола. Липкая и горючая — пригодится в склянке.' },
   { id: 'i_rune_dust',       item: 'rune_dust',       text: 'Руническая пыль. Рядом с ней магия звенит.' },
   { id: 'i_lunar_shard',     item: 'lunar_shard',     text: 'Лунный осколок. Алтарь будет рад.' },
+  { id: 'i_resin_flask',     item: 'resin_flask',     text: 'Смоляная склянка. В бою её можно бросить во врага — и сберечь ману.' },
 ];

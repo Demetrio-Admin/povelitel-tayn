@@ -2,6 +2,8 @@ import { DEPTH } from '../config/game.config.js';
 import { RESOURCES } from '../config/resources.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
+import { WORLD_MANA_COST } from '../config/balance.abilities.js';
+import * as vitals from '../state/vitals.js';
 import { InteractiveObject, itemName } from './InteractiveObject.js';
 
 /**
@@ -27,6 +29,8 @@ export class GatherObject extends InteractiveObject {
   get markerIcon() { return 'icon_gather'; }
   get markerColor() { return this.res.color; }
   get label() { return 'Собрать'; }
+  // v0.9: магическое извлечение сохраняет силу ингредиента — стоит маны
+  manaCost() { return WORLD_MANA_COST.gather; }
   get title() { return this.res.name; }
   get markerDistance() { return 360; }
 
@@ -64,6 +68,8 @@ export class GatherObject extends InteractiveObject {
   interact(abilityId) {
     if (!this.isAvailable()) return;
     if (this.rejectWrongAbility(abilityId)) return;
+    if (!this.payMana()) return;
+    this.paid = this.manaCost();
     this.busy = true;
     const sc = this.scene;
     sc.player.castAt(this.x, this.baseY, 'gather');   // героиня наклоняется к ресурсу
@@ -76,7 +82,8 @@ export class GatherObject extends InteractiveObject {
   }
 
   collect() {
-    if (this.removed) return;
+    if (this.removed) { if (this.paid) vitals.restoreMana(this.state, this.paid); this.paid = 0; return; }   // сбор отменён — мана возвращается
+    this.paid = 0;
     const sc = this.scene;
     this.state.addItem(this.cfg.res, this.amount);
     this.persist({ state: 'picked', t: this.state.now() });

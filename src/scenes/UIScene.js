@@ -15,6 +15,8 @@ import { addPanel, addDivider, addOrb, setOrb, addScreenVignette, addButton, dra
 import { addScrollViewport } from '../ui/scrollViewport.js';
 import { windows08 } from '../ui/windows08.js';
 import { hud082 } from '../ui/hud082.js';
+import { windows09 } from '../ui/windows09.js';
+import * as vitals from '../state/vitals.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -29,7 +31,7 @@ const fmtTime = (ms) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s
 /**
  * UIScene — всегда поверх игровых сцен. Верхний HUD (портрет, уровень, опыт, ресурсы, HP/мана), колонка «Журнал / Меню»,
  * плавающие кнопки даров, кнопка действия, джойстик, тосты и модальные окна (диалоги, изучение, сумка, меню, профиль).
- * Данные берёт из GameState и из provider-функций активной сцены (registry: hudProvider, abilityProvider).
+ * Данные берёт из GameState (HP и мана — общие запасы героини, state/vitals.js) и abilityProvider активной сцены.
  */
 export class UIScene extends Phaser.Scene {
   constructor() { super('UIScene'); }
@@ -53,6 +55,7 @@ export class UIScene extends Phaser.Scene {
     this.buildSideColumn();
     this.buildTutorial();
     this.buildV08Hud();
+    this.buildV09();
 
     this.controls = new InputController(this, bus, services.input, {
       isModal: () => !!this.modal,
@@ -270,6 +273,9 @@ export class UIScene extends Phaser.Scene {
     setOrb(this.ctxBg, this, info.color, UI.orb.context, false);
     this.ctxGlow.setTint(info.color);
     this.ctxLabel.setText(info.label);
+    // v0.9: подпись с ценой («Сдвинуть · 12 маны») не выходит за правый край экрана
+    const half = this.ctxLabel.width / 2, room = W - 10 - this.ctx.x;
+    this.ctxLabel.setX(Math.min(0, room - half));
     this.ctx.setScale(0.6);
     this.tweens.add({ targets: this.ctx, scale: 1, duration: 160, ease: 'Back.easeOut' });
     const t = services.tutorial;
@@ -288,9 +294,10 @@ export class UIScene extends Phaser.Scene {
     this.controls.update();
     if (this.modal) { services.input.move.x = 0; services.input.move.y = 0; }
 
-    // HP / мана из активной сцены
-    const hud = this.registry.get('hudProvider')?.();
-    if (hud) {
+    // v0.9: HP / мана — общие запасы героини (мир и бой пишут в одно состояние), не зависят от последней сцены
+    const hud = vitals.view(services.state);
+    this.updateV09(delta / 1000);
+    {
       this.hpBar.setFraction(hud.hp / hud.maxHp);
       this.manaBar.setFraction(hud.mana / hud.maxMana);
       this.hudTimer -= delta;
@@ -646,4 +653,4 @@ export class UIScene extends Phaser.Scene {
   }
 }
 
-Object.assign(UIScene.prototype, windows08, hud082);
+Object.assign(UIScene.prototype, windows08, hud082, windows09);

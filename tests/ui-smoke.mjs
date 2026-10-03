@@ -302,8 +302,8 @@ await mute(async () => {
       'старт без входа: «Ведьма | Колдун», «Начать игру», «Войти», «Дары и характеристики одинаковые»');
     ok(m1.picker.image.texture.key === 'hero_down' && labels(m1).includes('Ученица лесной ведьмы'), 'по умолчанию — ведьма: рисунок и роль');
     m1.picker.toggles.find(t => t.heroId === 'warlock').hit.emit('pointerdown'); m1.picker.toggles.find(t => t.heroId === 'warlock').hit.emit('pointerup');
-    ok(m1.hero === 'warlock' && m1.picker.image.texture.key === 'warlock_down' && labels(m1).includes('✓ Колдун') && labels(m1).includes('Ученик лесной ведьмы') && labels(m1).includes('Временный\nрисунок'),
-      'нажатие «Колдун»: сразу меняются рисунок, имя и роль; временная графика помечена');
+    ok(m1.hero === 'warlock' && m1.picker.image.texture.key === 'warlock_down' && labels(m1).includes('✓ Колдун') && labels(m1).includes('Ученик лесной ведьмы') && !labels(m1).some(t => /Временный\s+рисунок/.test(t)),
+      'нажатие «Колдун»: сразу меняются рисунок, имя и роль; пометки временной графики нет');
     ok(!ses.signedIn && !srv.calls.length, 'переключение предпросмотра не создаёт профиль и не обращается к серверу');
     m1.startNew();
     const choice = labels(m1);

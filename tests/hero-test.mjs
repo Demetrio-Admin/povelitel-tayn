@@ -44,6 +44,7 @@ console.log('\nОпределения героев');
   }
   if (TEMPORARY_ART.length) console.log(`  ⚠ ВРЕМЕННАЯ графика (не для релиза): ${TEMPORARY_ART.join(', ')} — см. config/assets.manifest.js`);
   ok(TEMPORARY_ART.every(k => ASSET_FILES[k]), 'временная графика отмечена в manifest (TEMPORARY_ART) и загружается');
+  ok(Object.values(m.textures).every(k => !TEMPORARY_ART.includes(k)), 'колдун использует финальные рисунки');
 }
 
 console.log('\nТексты: resolver');

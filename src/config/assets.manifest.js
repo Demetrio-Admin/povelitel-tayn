@@ -10,7 +10,7 @@
 export const ASSET_FILES = {
   // герой (Hero & Sprite Spec v0.1 §18 — минимальный набор)
   hero_down: 'assets/sprites/hero_down.png', hero_up: 'assets/sprites/hero_up.png', hero_side: 'assets/sprites/hero_side.png', hero_shadow: null,
-  // v0.9.2: колдун — те же три ракурса, тот же холст 166×240 (config/heroes.js). ВРЕМЕННАЯ графика — см. TEMPORARY_ART
+  // Колдун: финальные акварельные ракурсы, тот же холст 166×240 и масштаб, что у ведьмы.
   warlock_down: 'assets/sprites/warlock_down.png', warlock_up: 'assets/sprites/warlock_up.png', warlock_side: 'assets/sprites/warlock_side.png',
   // деревья
   tree_autumn_01: 'assets/sprites/tree_autumn_01.png', tree_autumn_02: 'assets/sprites/tree_autumn_02.png', tree_dark_01: 'assets/sprites/tree_dark_01.png', tree_dark_02: 'assets/sprites/tree_dark_02.png', dead_tree_01: 'assets/sprites/dead_tree_01.png', birch_01: 'assets/sprites/birch_01.png',
@@ -67,12 +67,5 @@ export const DISPLAY_SIZE = {
 
 };
 
-/**
- * v0.9.2 — ВРЕМЕННАЯ графика: рисунки-заглушки, по которым нельзя выпускать релиз.
- * warlock_* сделаны из рисунков ведьмы (tools/art/warlock_placeholder.py: короткие каштановые волосы, брюки) только для
- * проверки выбора героя, сцен, медальона и анимаций. Пока ключ здесь, стартовый экран показывает метку «Временный рисунок»,
- * а тесты печатают предупреждение. Финальные ракурсы: заменить PNG (166×240, RGBA, тот же масштаб и линия ног)
- * и убрать ключи из списка.
- */
-export const TEMPORARY_ART = ['warlock_down', 'warlock_up', 'warlock_side'];
-
+/** Рисунки-заглушки, не готовые к релизу. Оба героя используют финальные PNG. */
+export const TEMPORARY_ART = [];

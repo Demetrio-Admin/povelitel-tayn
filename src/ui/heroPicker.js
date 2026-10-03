@@ -4,7 +4,6 @@
 // interactive: false — без переключателя (у игрока с сохранением в предпросмотре его герой).
 import { VIEW, COLORS } from '../config/game.config.js';
 import { HEROES, heroById, HERO_SHARED_TEXT, HERO_SAME_NOTE } from '../config/heroes.js';
-import { TEMPORARY_ART } from '../config/assets.manifest.js';
 import { UI } from '../config/ui.config.js';
 import { addButton } from './widgets.js';
 
@@ -18,9 +17,6 @@ export const PICKER = {
   previewBottom: 700, previewH: 360,
   nameY: 744, titleY: 790, textY: 826, noteGap: 14,
 };
-
-/** Временная графика героя (её нельзя выпускать в релиз — config/assets.manifest.js TEMPORARY_ART). */
-export const isTemporaryArt = (hero) => Object.values(hero.textures).some(k => TEMPORARY_ART.includes(k));
 
 /**
  * @param scene Phaser.Scene
@@ -47,9 +43,6 @@ export function buildHeroPicker(scene, { heroId, interactive = true, onChange = 
     breath = scene.tweens.add({ targets: img, scaleY: { from: b, to: b * 1.018 }, duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   };
   fitImg();
-  // временная графика (TEMPORARY_ART) отмечена прямо на экране — её нельзя принять за финальный рисунок
-  const temp = add(scene.add.text(W / 2 + 128, py - P.previewH * 0.42, 'Временный\nрисунок', { fontFamily: FONT, fontSize: `${UI.type.small}px`, color: '#ffb07a', align: 'left', stroke: '#000', strokeThickness: 4, lineSpacing: 0 }).setOrigin(0, 0.5));
-
   const name = add(scene.add.text(W / 2, P.nameY + top, '', { fontFamily: FONT, fontSize: `${UI.type.title}px`, fontStyle: 'bold', color: '#f6e3a1', stroke: '#1a0f08', strokeThickness: 6, shadow: SH }).setOrigin(0.5));
   const title = add(scene.add.text(W / 2, P.titleY + top, '', { fontFamily: FONT, fontSize: `${UI.type.body}px`, color: COLORS.textGold, stroke: '#000', strokeThickness: 4, shadow: SH }).setOrigin(0.5));
   const text = add(scene.add.text(W / 2, P.textY + top, HERO_SHARED_TEXT, { fontFamily: FONT, fontSize: `${UI.type.body}px`, color: COLORS.text, align: 'center', wordWrap: { width: 620 }, lineSpacing: 2, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5, 0));
@@ -78,7 +71,6 @@ export function buildHeroPicker(scene, { heroId, interactive = true, onChange = 
     if (img.texture.key !== h.textures.down) { img.setTexture(h.textures.down); fitImg(); }
     name.setText(h.name);
     title.setText(h.title);
-    temp.setVisible(isTemporaryArt(h));
     if (frame) {
       frame.clear();
       for (const b of toggles) {

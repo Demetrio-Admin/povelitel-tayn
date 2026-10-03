@@ -149,7 +149,7 @@ try {
     // обучение первого боя: реальные касания «Понятно», камня и Телекинеза; прерывание опасной атаки
     await ui(() => { const s = window.__witch, g = window.__game; s.settings.set('hints', true); s.tutorial.hide(); g.scene.getScene('UIScene').toasts.forEach(t => t.destroy()); g.scene.getScene('UIScene').toasts = [];
       const ex = g.scene.getScene('ExplorationScene'); const t = ex.enemies.find(e => e.id === 'scavenger_01'); ex.player.setPosition(t.cfg.x, t.cfg.y + 200); ex.startCombat(t); });
-    await page.waitForFunction(() => window.__game.scene.getScene('CombatScene')?.started && window.__game.scene.getScene('CombatScene').coach?.visible, null, { timeout: 120000 });
+    await page.waitForFunction(() => { const g = window.__game, c = g.scene.getScene('CombatScene'); return g.scene.isActive('CombatScene') && c.spawnId === 'scavenger_01' && c.started && c.coach?.visible; }, null, { timeout: 120000 });
     await ui(() => window.__witch.tutorial.hide());
     await shot('v09-tut-intro');
     const coachBtn = async (label) => ui(label => { const c = window.__game.scene.getScene('CombatScene'); const b = c.coachButtons.find(x => x.text.text === label); const r = b.hit.getBounds(); return { x: r.centerX, y: r.centerY }; }, label);
@@ -169,8 +169,9 @@ try {
     await tap(tkb.x, tkb.y);
     await page.waitForFunction(() => window.__game.scene.getScene('CombatScene').tut.step === 'confirm', null, { timeout: 30000 });
     await shot('v09-tut-confirm');
-    // подсказка зелья при низком HP
-    await page.waitForFunction(() => !window.__game.scene.getScene('CombatScene').tut.active, null, { timeout: 30000 });
+    // подсказка зелья при низком HP (бой на паузе, чтобы медленный эмулятор не закончил его сам)
+    await ui(() => { window.__game.scene.getScene('CombatScene').cm.tick = () => {}; });
+    await page.waitForFunction(() => !window.__game.scene.getScene('CombatScene').tut.active, null, { timeout: 120000 });
     await ui(() => { const s = window.__witch; s.state.addItem('elixir_life', 1); const c = window.__game.scene.getScene('CombatScene'); c.cm.tick = () => {};   // бой на паузе для снимка
       c.cm.hero.hp = 40; c.cm.hitHero(4); c.processEvents(); c.refreshPotions(); c.hintQueue = c.hintQueue.filter(h => h.key === 'lowHp'); });
     await page.waitForFunction(() => window.__game.scene.getScene('CombatScene').coachKey === 'hint:lowHp', null, { timeout: 30000 });
@@ -185,7 +186,7 @@ try {
     // поражение: героиня остаётся рядом с врагом; повтор — только «Сразиться снова»
     await ui(() => { const g = window.__game; const ex = g.scene.getScene('ExplorationScene'); const s = window.__witch; s.state.markEvent('lunar_quest_start');
       const t = ex.enemies.find(e => e.id === 'lunar_guard'); ex.player.setPosition(t.cfg.x, t.cfg.y + 150); window.__preFight = { x: t.cfg.x, y: t.cfg.y + 150 }; ex.startCombat(t); });
-    await page.waitForFunction(() => window.__game.scene.getScene('CombatScene')?.started, null, { timeout: 120000 });
+    await page.waitForFunction(() => { const g = window.__game, c = g.scene.getScene('CombatScene'); return g.scene.isActive('CombatScene') && c.spawnId === 'lunar_guard' && c.started && !c.ended; }, null, { timeout: 120000 });
     await ui(() => { const c = window.__game.scene.getScene('CombatScene'); c.cm.hero.hp = 3; c.cm.hitHero(10); c.processEvents(); });
     await page.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Поражение', null, { timeout: 30000 });
     await shot('v09-defeat');
@@ -195,7 +196,7 @@ try {
     await page.waitForTimeout(1500);
     const afterDefeat = await ui(() => { const ex = window.__game.scene.getScene('ExplorationScene'), s = window.__witch.state; return { x: ex.player.x, y: ex.player.y, pre: window.__preFight, hp: s.data.hp, max: s.heroStats().maxHp, sp: s.data.safePoint, focus: ex.interaction.focus?.label, combat: window.__game.scene.isActive('CombatScene') }; });
     assert.ok(Math.hypot(afterDefeat.x - afterDefeat.pre.x, afterDefeat.y - afterDefeat.pre.y) < 2, 'stays at the pre-combat spot near the enemy');
-    assert.equal(afterDefeat.hp, Math.ceil(afterDefeat.max * 0.2));
+    assert.ok(afterDefeat.hp >= Math.ceil(afterDefeat.max * 0.2) && afterDefeat.hp < Math.ceil(afterDefeat.max * 0.2) + 6, '20% HP after defeat (+ a few seconds of regen): ' + afterDefeat.hp);
     assert.equal(afterDefeat.combat, false);
     assert.equal(afterDefeat.focus, 'Сразиться снова');
     await shot('v09-retry-near');
@@ -265,12 +266,12 @@ try {
       const p = await ui(id=>{const u=window.__game.scene.getScene('UIScene');const r=u.modal.items.find(i=>i.item.id===id).orb.getBounds();return {x:r.centerX,y:r.centerY};}, id);
       await tap(p.x, p.y); await page.waitForTimeout(250); };
     for (const id of ['city','bank','rating','chat','forum']) {
-      const before = await ui(()=>JSON.stringify({...window.__witch.state.data,stats:{...window.__witch.state.data.stats,playTimeMs:0}}));
+      const before = await ui(()=>JSON.stringify({...window.__witch.state.data,hp:0,mana:0,stats:{...window.__witch.state.data.stats,playTimeMs:0}}))   /* v0.9: HP/мана сами восстанавливаются со временем */;
       await menuItem(id);
       assert.equal(await ui(()=>window.__game.scene.getScene('UIScene').modal?.opts?.stub), id);
       if (id === 'city') await shot('stub-city');
       await close();
-      assert.equal(await ui(()=>JSON.stringify({...window.__witch.state.data,stats:{...window.__witch.state.data.stats,playTimeMs:0}})), before, id + ' stub changes nothing');
+      assert.equal(await ui(()=>JSON.stringify({...window.__witch.state.data,hp:0,mana:0,stats:{...window.__witch.state.data.stats,playTimeMs:0}}))   /* v0.9: HP/мана сами восстанавливаются со временем */, before, id + ' stub changes nothing');
       assert.equal(await ui(()=>window.__witch.modalOpen), false);
     }
     await menuItem('settings');
@@ -347,10 +348,10 @@ try {
       const g=window.__game,s=window.__witch;g.scene.sleep('ExplorationScene');g.scene.start('CombatScene',{spawnId:'forest_guardian_01',enemyType:'forest_guardian'});
       s.tutorial.hide();g.scene.getScene('UIScene').onTutorial(null);
     });
-    await page.waitForFunction(()=>window.__game.scene.getScene('CombatScene').cm);
+    await page.waitForFunction(()=>{const g=window.__game,c=g.scene.getScene('CombatScene');return g.scene.isActive('CombatScene')&&c.spawnId==='forest_guardian_01'&&!!c.cm&&c.cm.def===c.def&&!c.ended;},null,{timeout:120000});
     await page.evaluate(()=>{
       const c=window.__game.scene.getScene('CombatScene');c.started=true;c.cm.tick=()=>{};
-      c.cm.enemy.prepLeft=1.5;c.cm.hero.hp=40;c.warnTitle.setText('⚠ Тяжёлый удар!');c.warnHint.setText('Выберите тяжёлый камень и нажмите Телекинез');c.updateHud();
+      c.cm.enemy.prepLeft=1.5;c.cm.hero.hp=40;c.cm.commit();c.warnTitle.setText('⚠ Тяжёлый удар!');c.warnHint.setText('Выберите тяжёлый камень и нажмите Телекинез');c.updateHud();
     });
     await shot('combat');
     // Combat: HP from the battle, Menu in the Journal slot, settings reachable, no exit/reset.

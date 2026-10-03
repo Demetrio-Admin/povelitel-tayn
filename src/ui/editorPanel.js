@@ -62,7 +62,9 @@ export function buildEditorPanel(actions) {
           <button data-a="magnet">Магнит стыков</button>
           <button data-a="road_new">＋ Тропа</button><button data-a="stone_new">＋ Каменная</button><button data-a="pond_new">＋ Водоём</button>
           <button data-a="road_joined">＋ Тропа без швов</button><button data-a="stone_joined">＋ Каменная без швов</button>
+          <button data-a="road_borderless">＋ Вставка без краёв</button><button data-a="stone_borderless">＋ Каменная вставка без краёв</button>
           <button data-a="seamless">Стыки: со швом</button>
+          <button data-a="borderless">Края: с каймой</button>
           <button data-a="shape_del" class="me-danger">🗑 Убрать всю линию</button>
         </div>
       </div>

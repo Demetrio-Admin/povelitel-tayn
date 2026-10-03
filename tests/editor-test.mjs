@@ -185,6 +185,33 @@ console.log('\nРедактор: дороги и река');
   ok(ed.countEdits() > 3, 'счётчик правок считает дороги');
 }
 
+console.log('\nРедактор: вставки без краёв');
+{
+  const { scene, ed } = mkEditor();
+  ed.setMode('terrain');
+  ed.newRoad('dirt', true, true);
+  const id = ed.tsel.id;
+  const road = () => ed.roads.find(r => r.id === id);
+  ok(road().borderless && road().seamless, 'вставка без краёв одновременно соединяется без швов');
+  ok(scene.terrain.roads.find(r => r.id === id).borderless, 'рисование получает режим без каймы');
+  ed.toggleBorderless();
+  ok(!road().borderless && road().seamless, 'кайму можно вернуть, сохранив бесшовные стыки');
+  ed.doUndo();
+  ok(road().borderless, 'отмена возвращает вставку без каймы');
+  ed.doRedo();
+  ok(!road().borderless, 'повтор возвращает кайму');
+  ed.toggleBorderless();
+  ed.toggleSeamless();
+  ok(!road().seamless && !road().borderless, 'режим со швом возвращает и внешнюю кайму');
+  ed.toggleBorderless();
+  const saved = draft();
+  const file = exportEditsFile(ed.buildEdits());
+  const exported = JSON.parse(file.slice(file.indexOf('export const EDITS = ') + 21, file.lastIndexOf(';')));
+  ok(exported.roads[id].borderless && exported.roads[id].seamless, 'экспорт сохраняет вставку без краёв');
+  const restored = mkEditor(saved).ed.roads.find(r => r.id === id);
+  ok(restored.borderless && restored.seamless, 'вставка без краёв сохраняется после перезагрузки черновика');
+}
+
 console.log('\nРедактор: стены');
 {
   const { scene, ed } = mkEditor();

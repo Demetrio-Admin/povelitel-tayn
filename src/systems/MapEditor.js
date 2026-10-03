@@ -77,6 +77,7 @@ export class MapEditor {
       magnet: () => { this.magnetOn = !this.magnetOn; this.refreshPanel(); },
       road_new: () => this.newRoad('dirt'), stone_new: () => this.newRoad('stone'), pond_new: () => this.newPond(), shape_del: () => this.delShape(),
       road_joined: () => this.newRoad('dirt', true), stone_joined: () => this.newRoad('stone', true), seamless: () => this.toggleSeamless(),
+      road_borderless: () => this.newRoad('dirt', true, true), stone_borderless: () => this.newRoad('stone', true, true), borderless: () => this.toggleBorderless(),
       wall_add: (kind) => this.newWall(kind), wall_dup: () => this.dupWall(), wall_del: () => this.delWall(),
       w_plus: () => this.sizeWall('w', 1), w_minus: () => this.sizeWall('w', -1), h_plus: () => this.sizeWall('h', 1), h_minus: () => this.sizeWall('h', -1),
     });
@@ -438,7 +439,7 @@ export class MapEditor {
   infoTerrain() {
     const sh = this.selShape;
     if (!sh) return 'Дороги и река. Тяните белые кружки — точки линий. Коснитесь линии — выбрать её. Пустое место — двигать карту.';
-    const kind = KIND_NAMES[sh.type === 'river' ? 'river' : sh.type === 'blob' ? 'blob' : sh.kind] + (sh.kind ? (sh.seamless ? ' · без швов' : ' · со швом') : '');
+    const kind = KIND_NAMES[sh.type === 'river' ? 'river' : sh.type === 'blob' ? 'blob' : sh.kind] + (sh.kind ? (sh.borderless ? ' · вставка без краёв' : sh.seamless ? ' · без швов' : ' · со швом') : '');
     if (!sh.pts) return `Водоём «${sh.id}» (${kind})\nцентр ${sh.cx}, ${sh.cy}  размер ${sh.rx}×${sh.ry}`;
     const size = sh.type === 'river' ? `ширина ${sh.base * 2}–${(sh.base + sh.extra) * 2}` : `ширина ${sh.w}`;
     const pt = this.tsel.i != null ? `\nточка ${this.tsel.i + 1} из ${sh.pts.length}: ${sh.pts[this.tsel.i][0]}, ${sh.pts[this.tsel.i][1]}` : `\nточек ${sh.pts.length}; выбран отрезок ${(this.tsel.seg ?? 0) + 1}`;
@@ -478,6 +479,8 @@ export class MapEditor {
     p.setEnabled('join', hasPt && this.tsel.kind === 'road');
     p.setEnabled('seamless', !!sh && this.tsel?.kind === 'road');
     p.setToggle('seamless', !!sh?.seamless, sh?.seamless ? 'Стыки: без швов' : 'Стыки: со швом');
+    p.setEnabled('borderless', !!sh && this.tsel?.kind === 'road');
+    p.setToggle('borderless', !!sh?.borderless, sh?.borderless ? 'Края: без каймы' : 'Края: с каймой');
     for (const n of ['wall_dup', 'wall_del', 'w_plus', 'w_minus', 'h_plus', 'h_minus']) p.setEnabled(n, !!c);
   }
 
@@ -749,19 +752,26 @@ export class MapEditor {
   toggleSeamless() {
     const sh = this.selShape;
     if (!sh || this.tsel?.kind !== 'road') return;
-    this.mutate(() => { sh.seamless = !sh.seamless; });
-    this.say(sh.seamless ? 'Дорога объединяется без швов с бесшовными дорогами того же материала.' : 'Вернули дорогу со швом.');
+    this.mutate(() => { sh.seamless = !sh.seamless; if (!sh.seamless) sh.borderless = false; });
+    this.say(sh.seamless ? 'Дорога объединяется без швов с дорогами того же материала, включая обычные.' : 'Вернули дорогу со швом.');
   }
 
-  newRoad(kind, seamless = false) {
+  toggleBorderless() {
+    const sh = this.selShape;
+    if (!sh || this.tsel?.kind !== 'road') return;
+    this.mutate(() => { sh.borderless = !sh.borderless; if (sh.borderless) sh.seamless = true; });
+    this.say(sh.borderless ? 'Вставка без каймы с обеих сторон. Примкните её концами к дорогам того же материала.' : 'Вернули внешнюю кайму дороги.');
+  }
+
+  newRoad(kind, seamless = false, borderless = false) {
     const v = this.cam.worldView, cx = Math.round(snapValue(v.centerX, this.snap)), cy = Math.round(snapValue(v.centerY, this.snap));
     this.mutate(() => {
       const id = nextId(new Set(this.roads.map(r => r.id)), 'rd');
-      const r = { id, kind, ...(seamless ? { seamless: true } : {}), w: kind === 'stone' ? 120 : 100, n: TE.nextNoise(this.roads, this.waters), pts: [[cx - 140, cy], [cx, cy - 24], [cx + 140, cy]] };
+      const r = { id, kind, ...(seamless || borderless ? { seamless: true } : {}), ...(borderless ? { borderless: true } : {}), w: kind === 'stone' ? 120 : 100, n: TE.nextNoise(this.roads, this.waters), pts: [[cx - 140, cy], [cx, cy - 24], [cx + 140, cy]] };
       this.roads.push(r);
       this.tsel = { kind: 'road', id, i: 1, seg: null };
     });
-    this.say('Новая дорога в центре экрана. Растяните её точками и примкните концами к другим дорогам.');
+    this.say(borderless ? 'Новая вставка без каймы с обеих сторон. Растяните её между другими дорогами.' : 'Новая дорога в центре экрана. Растяните её точками и примкните концами к другим дорогам.');
   }
 
   newPond() {

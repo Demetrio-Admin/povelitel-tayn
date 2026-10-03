@@ -99,6 +99,7 @@ function paintWater(ctx, w, c, img, index) {
 }
 
 function paintRoadBase(ctx, r) {
+  if (r.borderless) return;
   ctx.save();
   ctx.lineJoin = 'round';
   pathPoly(ctx, r.poly);
@@ -112,28 +113,23 @@ function paintRoadBase(ctx, r) {
   ctx.restore();
 }
 
-function paintRoadFill(ctx, r, img, index) {
+function paintRoadFill(ctx, r, img) {
   ctx.save();
   ctx.lineJoin = 'round';
   pathPoly(ctx, r.poly);
   ctx.fillStyle = pattern(ctx, img, r.kind === 'stone' ? '#5d6068' : '#7b5a3a'); ctx.fill();
-  if (r.seamless) { ctx.restore(); return; }
-  ctx.clip();
-  const stone = r.kind === 'stone';
-  ctx.strokeStyle = stone ? 'rgba(24,38,20,0.5)' : 'rgba(44,28,12,0.42)'; ctx.lineWidth = 22; ctx.stroke();
-  ctx.strokeStyle = stone ? 'rgba(14,22,12,0.5)' : 'rgba(30,18,8,0.4)'; ctx.lineWidth = 8; ctx.stroke();
   ctx.restore();
-  fringe(ctx, r.poly, 3000 + index * 31, stone ? 'stone' : 'dirt');
 }
 
-/** Clip away neighbours before painting edges: only the boundary of the road network remains.
+/** Clip away same-material neighbours whenever either side requests a seamless join.
  * Separate even-odd clips also work for three-way overlaps, unlike a single even-odd union.
  * Fills share world-space texture coordinates, including across chunk boundaries.
  */
-function paintJoinedRoadEdge(ctx, r, roads, chunk, index) {
+function paintRoadEdge(ctx, r, roads, chunk, index) {
+  if (r.borderless) return;
   ctx.save();
   for (const other of roads) {
-    if (other === r || !other.seamless || other.kind !== r.kind) continue;
+    if (other === r || !(r.seamless || other.seamless) || other.kind !== r.kind) continue;
     if (other.bounds.x > r.bounds.x1 + MARGIN || other.bounds.x1 < r.bounds.x - MARGIN ||
         other.bounds.y > r.bounds.y1 + MARGIN || other.bounds.y1 < r.bounds.y - MARGIN) continue;
     pathPoly(ctx, other.poly);
@@ -163,9 +159,12 @@ export function paintTerrainChunk(ctx, chunk, terrain, imgs = {}) {
   terrain.waters.forEach((w, i) => { if (touches(w.bounds, chunk)) paintWater(ctx, w, chunk, imgs.water, w.n ?? i); });
   const roads = terrain.roads.map((r, i) => [r, r.n ?? i]).filter(([r]) => touches(r.bounds, chunk));
   roads.forEach(([r]) => paintRoadBase(ctx, r));
-  roads.forEach(([r, i]) => paintRoadFill(ctx, r, r.kind === 'stone' ? imgs.stone : imgs.dirt, i));
   const joined = roads.map(([r]) => r);
-  roads.forEach(([r, i]) => { if (r.seamless) paintJoinedRoadEdge(ctx, r, joined, chunk, i); });
+  roads.forEach(([r, i]) => {
+    paintRoadFill(ctx, r, r.kind === 'stone' ? imgs.stone : imgs.dirt);
+    if (!r.seamless) paintRoadEdge(ctx, r, joined, chunk, i);
+  });
+  roads.forEach(([r, i]) => { if (r.seamless) paintRoadEdge(ctx, r, joined, chunk, i); });
   ctx.restore();
 }
 

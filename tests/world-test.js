@@ -3,7 +3,7 @@ import { WORLD, COLLIDERS, INTERACTIVES, ENEMY_SPAWNS } from '../src/config/worl
 import { ROADS, WATERS } from '../src/config/world.terrain.js';
 import { PROPS } from '../src/config/world.props.js';
 import { ASSET_FILES } from '../src/config/assets.manifest.js';
-import { buildTerrain, distToRoad, onWater } from '../src/world/terrain.js';
+import { buildRoad, buildTerrain, distToRoad, onWater } from '../src/world/terrain.js';
 import { PROP_DEFS } from '../src/world/propDefs.js';
 import { collectSolids, propSolid } from '../src/world/solids.js';
 import { buildWalkGrid, floodFrom, reachableNear } from '../src/world/walk.js';
@@ -45,6 +45,19 @@ console.log('\nМир: форма дорог и воды');
   ok(inside, 'центры прямоугольников воды лежат внутри воды');
   const sq = polygonToRects([[0, 0], [64, 0], [64, 32], [0, 32]], 16);
   ok(sq.length === 1 && sq[0].w === 64 && sq[0].h === 32, 'polygonToRects склеивает прямоугольник в один блок');
+}
+
+console.log('\nМир: бесшовные стыки дорог');
+{
+  const defs = [
+    { id: 'left', kind: 'dirt', w: 90, pts: [[40, 100], [230, 100]] },
+    { id: 'right', kind: 'dirt', w: 90, pts: [[230, 100], [440, 100]] },
+  ];
+  const joined = defs.map((r, i) => buildRoad({ ...r, seamless: true }, i));
+  const legacy = defs.map((r, i) => buildRoad(r, i));
+  ok([80, 100, 120].every(y => joined.some(r => pointInPolygon(230, y, r.poly))), 'встречные бесшовные концы образуют дорогу полной ширины без зазора');
+  ok(joined[0].bounds.x < 40 && joined[1].bounds.x1 > 440, 'бесшовные концы перекрывают место присоединения');
+  ok(!legacy.some(r => pointInPolygon(230, 120, r.poly)), 'обычные дороги сохраняют прежние суженные концы');
 }
 
 console.log('\nМир: таблица коллизий');

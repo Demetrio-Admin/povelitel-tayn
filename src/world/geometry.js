@@ -79,11 +79,12 @@ export function resample(pts, step) {
  * Лента вдоль оси: left(s, len) и right(s, len) — расстояния до левого и правого края.
  * Края получают скруглённые концы (taper — длина сужения в пикселях).
  */
-export function ribbon(center, left, right, { step = 12, taper = 40 } = {}) {
+export function ribbon(center, left, right, { step = 12, taper = 40, roundCaps = false } = {}) {
   const r = resample(center, step);
   const n = r.pts.length;
   const L = [], R = [];
   const cap = (s) => {
+    if (roundCaps) return 1;
     const a = Math.min(s, r.length - s);
     if (a >= taper) return 1;
     const t = Math.max(0, a / taper);
@@ -101,7 +102,19 @@ export function ribbon(center, left, right, { step = 12, taper = 40 } = {}) {
     L.push([r.pts[i][0] + nx * lw, r.pts[i][1] + ny * lw]);
     R.push([r.pts[i][0] - nx * rw, r.pts[i][1] - ny * rw]);
   }
-  return [...L, ...R.reverse()];
+  if (!roundCaps) return [...L, ...R.reverse()];
+  // Full-width rounded ends overlap the adjoining road instead of pinching to a point.
+  const arc = (a, b) => {
+    const cx = (a[0] + b[0]) / 2, cy = (a[1] + b[1]) / 2;
+    const radius = Math.hypot(a[0] - b[0], a[1] - b[1]) / 2;
+    const start = Math.atan2(a[1] - cy, a[0] - cx);
+    const count = Math.max(8, Math.ceil(Math.PI * radius / step));
+    return Array.from({ length: count - 1 }, (_, i) => {
+      const angle = start - Math.PI * (i + 1) / count;
+      return [cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)];
+    });
+  };
+  return [...L, ...arc(L[n - 1], R[n - 1]), ...R.slice().reverse(), ...arc(R[0], L[0])];
 }
 
 /** Неровное пятно (пруд, поляна): эллипс с периодическими искажениями — шов не виден. */

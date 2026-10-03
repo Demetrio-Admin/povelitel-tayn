@@ -193,7 +193,11 @@ export class BookObject extends InteractiveObject {
 export class ChestObject extends InteractiveObject {
   constructor(scene, cfg) {
     super(scene, cfg);
-    if (this.isDone()) this.sprite.setTexture('chest_01_open');
+    if (this.isDone()) {
+      this.sprite.setTexture('chest_01_open');
+      applyDisplaySize(this.sprite, 'chest_01_open');
+      this.baseScale = { x: this.sprite.scaleX, y: this.sprite.scaleY };
+    }
   }
   get label() { return 'Открыть'; }
   isDone() { return this.saved.state === 'opened'; }

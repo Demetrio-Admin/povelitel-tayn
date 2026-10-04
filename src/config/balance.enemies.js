@@ -59,8 +59,8 @@ export const ENEMIES = {
     defense: 0.2,
     weaknesses: { fire: 0.5 },
     onFireHit: { disableDefenseSec: 6 },
-    rewards: { heroXP: 60, schoolXP: { fire: 30 }, items: { tree_resin: 1 }, coins: 15 },
-    repeatRewards: { heroXP: 20, schoolXP: { fire: 3 }, items: { tree_resin: 1 }, coins: 6 },
+    rewards: { heroXP: 60, schoolXP: { fire: 30 }, items: { tree_resin: 1, crimson_ember: 1 }, coins: 15 },
+    repeatRewards: { heroXP: 20, schoolXP: { fire: 3 }, items: { tree_resin: 1, crimson_ember: 1 }, coins: 6 },
     arena: 'glade',
   },
 

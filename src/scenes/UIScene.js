@@ -20,6 +20,7 @@ import { addScrollViewport } from '../ui/scrollViewport.js';
 import { windows08 } from '../ui/windows08.js';
 import { hud082 } from '../ui/hud082.js';
 import { windows09 } from '../ui/windows09.js';
+import { windows11 } from '../ui/windows11.js';
 import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from '../ui/noticeClose.js';
 
@@ -80,6 +81,8 @@ export class UIScene extends Phaser.Scene {
     bus.on(MSG.UI_MODE, this.setMode, this);
     bus.on(MSG.OPEN_UPGRADE, this.openUpgrade, this);
     bus.on(MSG.OPEN_BAG, this.openBag, this);
+    bus.on(MSG.OPEN_GIFTS, this.openGifts, this);
+    this.input.keyboard?.on('keydown-G', () => { if (!this.modal && this.mode === 'exploration') this.openGifts(); });
     bus.on(MSG.REWARD, this.onReward, this);
     bus.on(MSG.RESEARCH_DONE, this.onResearchDone, this);
     bus.on(MSG.FINAL_SCREEN, this.openFinal, this);
@@ -395,9 +398,9 @@ export class UIScene extends Phaser.Scene {
 
   onResearchDone(id, up) {
     this.openModal({
-      title: `${up.title} изучен!`, color: COLORS.telekinesis,
-      text: `${up.description}\n\nТеперь можно сдвинуть тяжёлую глыбу за алтарём.`,
-      buttons: [{ label: 'Отлично', primary: true }],
+      title: `${up.title} изучен!`, color: COLORS[ABILITIES[up.ability].color] ?? COLORS.telekinesis,
+      text: `${up.description}${up.doneText ? `\n\n${up.doneText}` : ''}`,
+      buttons: [{ label: 'Отлично', primary: true }, { label: 'Дары', onClick: () => this.bus.emit(MSG.OPEN_GIFTS) }],
     });
   }
 
@@ -699,4 +702,4 @@ export class UIScene extends Phaser.Scene {
   }
 }
 
-Object.assign(UIScene.prototype, windows08, hud082, windows09);
+Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11);

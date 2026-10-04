@@ -30,7 +30,7 @@ export function createTelemetry({ session, bus, state, heroId, win = window, doc
   bus.on(MSG.WORLD_EVENT, (key) => { tm.track('ev', { k: String(key), lvl: lvl() }); });
   bus.on(MSG.ZONE_CHANGED, (z) => { const id = z?.id || z?.name || ''; tm.setContext({ zone: id }); tm.track('zone', { z: id, lvl: lvl() }); });
   bus.on(MSG.CRAFTED, (c) => { tm.track('craft', { r: c?.recipeId }); });
-  bus.on(MSG.RESEARCH_DONE, () => { tm.track('research_done', { lvl: lvl() }); });
+  bus.on(MSG.RESEARCH_DONE, (id) => { tm.track('research_done', { lvl: lvl(), up: String(id || '') }); });
   bus.on(MSG.FINAL_SCREEN, (f) => { tm.track('final', { outcome: f?.outcome }); });
   bus.on(MSG.REWARD, (r) => { if (r?.levelUps?.length) tm.track('levelup', { lvl: lvl() }); });
   bus.on(MSG.UI_MODE, (m) => { tm.setContext({ mode: String(m || '') }); });

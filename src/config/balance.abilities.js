@@ -38,6 +38,13 @@ export const ABILITIES = {
         burn: { dps: 4, durationSec: 4 },   // повторный Огонь обновляет длительность
         interruptsNormalCast: false,
       },
+      // v0.11.0: +25% урона (18 → 22), горение сильнее и дольше (16 → 30 урона за поджог). Мана и перезарядка прежние.
+      2: {
+        label: 'Огонь II',
+        damage: 22, manaCost: 24, cooldownSec: 8, castSec: 0.3,
+        burn: { dps: 5, durationSec: 6 },
+        interruptsNormalCast: false,
+      },
     },
   },
   // v0.10.1: «Печать» стала Астралом. Внутренний id остаётся 'seal' (сохранения, сервер, события unlock_seal_1 и т.п.),
@@ -53,6 +60,13 @@ export const ABILITIES = {
         damage: 25, manaCost: 20, cooldownSec: 10, castSec: 0.3,
         ignoresDefense: true,          // броня и кора не гасят удар
         interruptsStrongCast: false,   // прерывать сильные атаки может только Телекинез
+      },
+      // v0.11.0: Астрал II — сильнее удар (25 → 35, +40%), чуть дороже по мане. Свойства прежние.
+      2: {
+        label: 'Астрал II',
+        damage: 35, manaCost: 22, cooldownSec: 10, castSec: 0.3,
+        ignoresDefense: true,
+        interruptsStrongCast: false,
       },
     },
   },

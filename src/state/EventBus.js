@@ -36,6 +36,7 @@ export const MSG = {
   UI_MODE: 'ui:mode',              // ('exploration' | 'combat' | 'modal')
   OPEN_UPGRADE: 'ui:upgrade',
   OPEN_BAG: 'ui:bag',
+  OPEN_GIFTS: 'ui:gifts',
   REWARD: 'ui:reward',             // ({ title, granted, levelUps })
   RESEARCH_DONE: 'research:done',
   MODAL_OPEN: 'ui:modal-open',

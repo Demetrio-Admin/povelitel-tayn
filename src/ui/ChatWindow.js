@@ -228,7 +228,15 @@ export class ChatWindow {
       this.resizeComposer?.();
       if (followLatest) this.feed.scrollTop = this.feed.scrollHeight;
     };
-    window.addEventListener("resize", this.viewport);
+    this.windowResize = () => {
+      // Phaser's orientation handler can refresh with the previous parent size.
+      // Read the new bounds first so FIT and centering update in this same event.
+      this.scale?.getParentBounds();
+      this.scale?.refresh();
+      this.viewport();
+    };
+    window.addEventListener("resize", this.windowResize);
+    window.addEventListener("orientationchange", this.windowResize);
     this.scale?.on("resize", this.viewport);
     if (window.ResizeObserver && this.canvas) {
       this.resizeObserver = new ResizeObserver(this.viewport);
@@ -335,7 +343,8 @@ export class ChatWindow {
     this.generation++;
     this.off?.();
     this.service.setOpen(false);
-    window.removeEventListener("resize", this.viewport);
+    window.removeEventListener("resize", this.windowResize);
+    window.removeEventListener("orientationchange", this.windowResize);
     this.scale?.off("resize", this.viewport);
     this.resizeObserver?.disconnect();
     window.visualViewport?.removeEventListener("resize", this.viewport);

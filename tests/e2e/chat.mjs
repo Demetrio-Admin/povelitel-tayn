@@ -470,6 +470,11 @@ async function compactChecks() {
   check(await m.locator('.game-chat').evaluate(n=>Math.abs(n.getBoundingClientRect().height-420)<1 && n.getBoundingClientRect().top===35), 'visual-viewport-only keyboards also keep a full usable chat');
   await m.evaluate(()=>{delete visualViewport.height;delete visualViewport.offsetTop;visualViewport.dispatchEvent(new Event('resize'));});
   await matchesGameFrame(m,'visual viewport restoration restores normal dimensions');
+  await m.setViewportSize({width:736,height:400});
+  await matchesGameFrame(m,'mobile orientation changes resize Phaser and chat together');
+  check(await m.locator('.game-chat').evaluate(n=>n.scrollWidth<=n.clientWidth), 'landscape chat has no sideways overflow');
+  await m.setViewportSize({width:390,height:844});
+  await matchesGameFrame(m,'returning to portrait restores the mobile game frame');
   await m.setViewportSize({width:320,height:640});
   await matchesGameFrame(m,'320px mobile chat fits after changing width');
   check(await m.locator('.game-chat').evaluate(n=>n.scrollWidth<=n.clientWidth), 'no sideways overflow at 320px');

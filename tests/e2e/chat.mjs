@@ -215,7 +215,12 @@ async function device(name, width = 390, height = 844) {
     .first()
     .waitFor({ timeout: 20000 });
   console.log(name, "messages ready");
-  const click = (name) => p.getByRole("button", { name, exact: true }).click();
+  const click = async (name) => {
+    const target = p.getByRole("button", { name, exact: true });
+    if (!await target.isVisible() && await p.getByRole("button", { name: "Инструменты команды", exact: true }).count())
+      await p.getByRole("button", { name: "Инструменты команды", exact: true }).click();
+    await target.click();
+  };
   return {
     p,
     ctx,
@@ -227,7 +232,7 @@ async function device(name, width = 390, height = 844) {
     refresh: () => p.evaluate(() => window.__witch.chat.refresh()),
   };
 }
-async function matchesGameFrame(p, label) {
+async function matchesGameFrame(p, label, keyboard = false) {
   // Wait for Phaser's resize tick, not just an intermediate rectangle from the old size.
   await p.waitForFunction(() => {
     const parent = document.querySelector("#game").getBoundingClientRect();
@@ -238,19 +243,19 @@ async function matchesGameFrame(p, label) {
       && Math.abs(g.left - (innerWidth - width) / 2) < 1
       && Math.abs(g.top - (innerHeight - height) / 2) < 1;
   }, null, { polling: 100, timeout: 30000 });
-  await p.waitForFunction(() => {
+  await p.waitForFunction((keyboard) => {
     const root = document.querySelector(".game-chat");
     const canvas = document.querySelector("#game canvas");
     if (!root || !canvas) return false;
     const r = root.getBoundingClientRect(), g = canvas.getBoundingClientRect();
     const v = visualViewport;
     const left = Math.max(g.left, v?.offsetLeft || 0);
-    const top = Math.max(g.top, v?.offsetTop || 0);
+    const top = keyboard ? v?.offsetTop || 0 : Math.max(g.top, v?.offsetTop || 0);
     const right = Math.min(g.right, (v?.offsetLeft || 0) + (v?.width || innerWidth));
-    const bottom = Math.min(g.bottom, (v?.offsetTop || 0) + (v?.height || innerHeight));
+    const bottom = keyboard ? (v?.offsetTop || 0) + (v?.height || innerHeight) : Math.min(g.bottom, (v?.offsetTop || 0) + (v?.height || innerHeight));
     return [r.left - left, r.top - top, r.right - right, r.bottom - bottom]
       .every((d) => Math.abs(d) < 1);
-  }, null, { polling: 100 });
+  }, keyboard, { polling: 100 });
   check(true, label);
 }
 async function frameChecks(admin) {
@@ -258,13 +263,13 @@ async function frameChecks(admin) {
   await admin.click("Закрыть чат");
   await admin.p.setViewportSize({ width: 1919, height: 894 });
   await admin.p.evaluate(() => window.__game.scale.refresh());
-  await admin.p.screenshot({ path: path.join(out, "1919-game.png") });
+  await admin.p.screenshot({ path: path.join(out, "1919-game.png"), timeout: 60000 });
   await admin.p.evaluate(() => window.__game.scene.getScene("UIScene").openChat());
   await admin.p.locator(".chat-message").first().waitFor();
   await matchesGameFrame(admin.p, "1919×894 desktop chat matches the user's game frame");
   check((await admin.p.locator(".game-chat").boundingBox()).width < 510,
     "wide desktop does not expand chat into the side bars");
-  await admin.p.screenshot({ path: path.join(out, "1919-chat.png") });
+  await admin.p.screenshot({ path: path.join(out, "1919-chat.png"), timeout: 60000 });
   for (const [w, h] of [
     [390, 844],
     [320, 640],
@@ -283,7 +288,7 @@ async function frameChecks(admin) {
       ),
       `no horizontal overflow inside game frame at ${w}×${h}`,
     );
-    await d.p.screenshot({ path: path.join(out, `${w}-chat.png`) });
+    await d.p.screenshot({ path: path.join(out, `${w}-chat.png`), timeout: 60000 });
   }
   await admin.p.setViewportSize({ width: 390, height: 844 });
   await matchesGameFrame(admin.p, "portrait frame restored without reopening chat");
@@ -295,7 +300,8 @@ async function frameChecks(admin) {
     visualViewport.dispatchEvent(new Event("resize"));
     visualViewport.dispatchEvent(new Event("scroll"));
   });
-  await matchesGameFrame(admin.p, "keyboard clips chat to the visible part of the game");
+  const mobileKeyboard = await admin.p.evaluate(() => navigator.maxTouchPoints > 0 || matchMedia('(pointer: coarse)').matches);
+  await matchesGameFrame(admin.p, "keyboard keeps composer in the visible viewport", mobileKeyboard);
   check(await admin.p.evaluate(() => {
     const root = document.querySelector(".game-chat").getBoundingClientRect();
     return [document.querySelector('.game-chat textarea[aria-label="Сообщение"]'),
@@ -307,7 +313,7 @@ async function frameChecks(admin) {
       });
   }),
     "composer and send remain visible with keyboard");
-  await admin.p.screenshot({ path: path.join(out, "390-keyboard.png") });
+  await admin.p.screenshot({ path: path.join(out, "390-keyboard.png"), timeout: 60000 });
   await admin.p.evaluate(() => {
     delete visualViewport.height;
     delete visualViewport.offsetTop;
@@ -360,6 +366,7 @@ async function roleChecks() {
     await p.locator(".chat-message").first().waitFor();
   }
   await switchTo("support");
+  await d.click("Инструменты команды");
   check(await p.getByRole("button", { name: "Жалобы", exact: true }).count() === 1 && !await p.getByRole("button", { name: "Роли по ID", exact: true }).count(), "support receives moderator tools without administrator role assignment");
   await d.click("Поддержка"); await d.click("Взять в работу"); await p.getByLabel("Шаблон ответа").waitFor();
   const template = (await rpc("support", "templates")).find((t) => t.title === "Проверка соединения");
@@ -384,6 +391,101 @@ async function roleChecks() {
   check(errors.length === 0, `no browser application errors (${errors.join("; ")})`);
   console.log(`\n${checks} role-policy browser checks passed. Screenshots: ${out}`);
 }
+async function compactChecks() {
+  const desktop = await device("admin", 1919, 894), p = desktop.p;
+  await matchesGameFrame(p, "compact desktop chat still fills the game canvas");
+  const layout = await p.evaluate(() => {
+    const root = document.querySelector('.game-chat').getBoundingClientRect(),
+      feed = document.querySelector('.chat-scroll').getBoundingClientRect(),
+      compose = document.querySelector('.chat-compose').getBoundingClientRect();
+    const messages = [...document.querySelectorAll('.chat-message')];
+    return { feedRatio: feed.height / root.height, bottom: compose.bottom - root.bottom,
+      fontSize: parseFloat(getComputedStyle(document.querySelector('.chat-body')).fontSize),
+      visibleMessages: messages.filter(n => { const r=n.getBoundingClientRect(); return r.top>=feed.top && r.bottom<=feed.bottom; }).length };
+  });
+  check(layout.feedRatio > .7 && layout.visibleMessages === 7, "all seven sample messages fit; most space belongs to conversation");
+  check(layout.fontSize === 14 && Math.abs(layout.bottom)<1, "smaller readable text and composer at the bottom");
+  check(!await p.getByRole('button',{name:'Жалобы',exact:true}).count(), "staff actions are hidden initially");
+  await desktop.shot('compact-desktop');
+  await desktop.click('Инструменты команды');
+  check(await p.getByRole('button',{name:'Жалобы',exact:true}).isVisible(), "staff actions open on request");
+  await desktop.shot('compact-tools');
+  await p.keyboard.press('Escape');
+  check(await p.locator('.game-chat').count()===1 && !await p.getByRole('button',{name:'Жалобы',exact:true}).count(), "Escape dismisses tools and keeps chat open");
+  const ta=p.getByLabel('Сообщение',{exact:true});
+  await ta.fill('Привет, !');
+  await ta.evaluate(n=>n.setSelectionRange(8,8));
+  await desktop.click('Смайлики');
+  await desktop.shot('compact-emoji');
+  await desktop.click('Добавить смайлик: Улыбка');
+  check(await ta.inputValue()==='Привет, 😀!' && await ta.evaluate(n=>n.selectionStart)===10, "emoji inserts at cursor and restores the caret");
+  await ta.fill('я'.repeat(499));
+  await desktop.click('Смайлики'); await desktop.click('Добавить смайлик: Сердце');
+  check(await ta.inputValue()==='я'.repeat(499) && await p.locator('.chat-error').isVisible(), "emoji cannot exceed the server's character limit");
+  await p.keyboard.press('Escape');
+  await ta.fill('я'.repeat(500)); await ta.evaluate(n=>n.setSelectionRange(498,500));
+  await desktop.click('Смайлики'); await desktop.click('Добавить смайлик: Сердце');
+  check(await ta.inputValue()==='я'.repeat(498)+'❤️', "emoji replaces selected text at the 500-character boundary");
+  await desktop.click('Помощь'); await desktop.click('Общий');
+  check(await p.getByLabel('Сообщение',{exact:true}).inputValue()==='я'.repeat(498)+'❤️', "emoji draft survives channel changes");
+  await p.getByLabel('Сообщение',{exact:true}).fill('Привет всем! ✨');
+  await desktop.click('Отправить сообщение');
+  await p.getByText('Привет всем! ✨',{exact:true}).waitFor();
+  check((await db.query("select count(*)::int n from game_chat.messages where body=$1",['Привет всем! ✨'])).rows[0].n===1, "emoji message is saved by the real server RPC");
+  await desktop.ctx.close();
+
+  await rpc('owner','sanction',{ref:profiles.admin.ref,kind:'warn',minutes:10080,reason:'Проверка компактного предупреждения'});
+  const mobile=await device('admin',390,844), m=mobile.p, editor=m.getByLabel('Сообщение',{exact:true});
+  await matchesGameFrame(m,'mobile chat fits the game before keyboard opens');
+  check(await m.locator('.chat-ban-details').count()===1 && await m.locator('.chat-ban-details').evaluate(n=>!n.open), 'warning details stay collapsed');
+  await mobile.shot('compact-mobile');
+  await editor.fill('Черновик на телефоне');
+  const original=(await m.locator('.game-chat').boundingBox()).width;
+  // Yandex/Android can shrink BOTH viewports, causing Phaser FIT to become narrow.
+  await m.setViewportSize({width:390,height:420});
+  await m.waitForFunction(()=>document.querySelector('canvas').getBoundingClientRect().width<300);
+  await m.waitForFunction(()=>Math.abs(document.querySelector('.game-chat').getBoundingClientRect().height-420)<1);
+  check(Math.abs((await m.locator('.game-chat').boundingBox()).width-original)<1, "layout-resizing keyboard preserves the original chat width");
+  check(await m.evaluate(()=>{const feed=document.querySelector('.chat-scroll');return feed.querySelector('.chat-message:last-child').getBoundingClientRect().bottom<=feed.getBoundingClientRect().bottom+1;}), "latest message stays in view when keyboard opens");
+  check(await m.evaluate(()=>{const h=document.querySelector('.chat-head h1');return h.getBoundingClientRect().height<parseFloat(getComputedStyle(h).fontSize)*1.5;}), "chat title stays on one line with keyboard");
+  check(await m.evaluate(()=>{
+    const root=document.querySelector('.game-chat').getBoundingClientRect();
+    return ['textarea[aria-label="Сообщение"]','button[aria-label="Отправить сообщение"]'].every(s=>{
+      const r=document.querySelector(s).getBoundingClientRect();return r.left>=root.left && r.right<=root.right && r.top>=root.top && r.bottom<=root.bottom;
+    });
+  }), "mobile editor and send stay completely visible");
+  await mobile.shot('compact-layout-keyboard');
+  await m.getByRole('button',{name:'Смайлики',exact:true}).tap();
+  await m.getByRole('button',{name:'Добавить смайлик: Волшебство',exact:true}).tap();
+  check(await editor.inputValue()==='Черновик на телефоне✨' && await editor.evaluate(n=>document.activeElement===n), "touch emoji keeps the mobile input focused");
+  await m.setViewportSize({width:390,height:844});
+  await matchesGameFrame(m,'keyboard dismissal restores the game frame');
+  check(await editor.inputValue()==='Черновик на телефоне✨','draft survives keyboard dismissal');
+  await editor.focus();
+  await m.evaluate(()=>{
+    Object.defineProperty(visualViewport,'height',{configurable:true,value:420});
+    Object.defineProperty(visualViewport,'offsetTop',{configurable:true,value:35});
+    visualViewport.dispatchEvent(new Event('resize'));visualViewport.dispatchEvent(new Event('scroll'));
+  });
+  check(await m.locator('.game-chat').evaluate(n=>Math.abs(n.getBoundingClientRect().height-420)<1 && n.getBoundingClientRect().top===35), 'visual-viewport-only keyboards also keep a full usable chat');
+  await m.evaluate(()=>{delete visualViewport.height;delete visualViewport.offsetTop;visualViewport.dispatchEvent(new Event('resize'));});
+  await matchesGameFrame(m,'visual viewport restoration restores normal dimensions');
+  await m.setViewportSize({width:736,height:400});
+  await matchesGameFrame(m,'mobile orientation changes resize Phaser and chat together');
+  check(await m.locator('.game-chat').evaluate(n=>n.scrollWidth<=n.clientWidth), 'landscape chat has no sideways overflow');
+  await m.setViewportSize({width:390,height:844});
+  await matchesGameFrame(m,'returning to portrait restores the mobile game frame');
+  await m.setViewportSize({width:320,height:640});
+  await matchesGameFrame(m,'320px mobile chat fits after changing width');
+  check(await m.locator('.game-chat').evaluate(n=>n.scrollWidth<=n.clientWidth), 'no sideways overflow at 320px');
+  await mobile.shot('compact-small-mobile');
+  await mobile.ctx.close();
+  const player=await device('alice',390,844);
+  check(!await player.p.getByRole('button',{name:'Инструменты команды',exact:true}).count(), 'ordinary players never receive staff menus');
+  check(errors.length===0,`no application errors (${errors.join('; ')})`);
+  fs.writeFileSync(path.join(out,'compact-results.json'),JSON.stringify({checks,errors,layout,environment:'Playwright + Phaser + production SQL/PGlite; Android keyboard viewports simulated'},null,2));
+  console.log(`\n${checks} compact chat browser checks passed. Screenshots: ${out}`);
+}
 try {
   if (process.env.CHAT_LEGACY_ONLY) {
     const d = await device("support", 390, 844);
@@ -396,13 +498,15 @@ try {
     await d.click("Отправить ответ"); await d.p.getByText("Ошибка игры · Ждём игрока", { exact: true }).waitFor();
     check((await rpc("support", "ticket", { ticket })).replies.length === 2, "existing support works during the server upgrade");
     await db.exec(fs.readFileSync("supabase/migrations/20261004_chat_roles_v2.sql", "utf8"));
-    await d.refresh(); await d.p.getByRole("button", { name: "Жалобы", exact: true }).waitFor();
+    await d.refresh(); await d.p.getByRole("button", { name: "Инструменты команды", exact: true }).waitFor();
+    await d.click("Инструменты команды"); await d.p.getByRole("button", { name: "Жалобы", exact: true }).waitFor();
     check(true, "server migration activates inherited permissions without browser reload");
     await d.click("Поддержка"); await d.p.getByRole("button", { name: "Шаблоны", exact: true }).waitFor();
     check(true, "new support tools activate as soon as the server advertises the new policy");
     check(errors.length === 0, "legacy server has no application errors");
     console.log(`\n${checks} legacy compatibility checks passed`);
   }
+  else if (process.env.CHAT_COMPACT_ONLY) await compactChecks();
   else if (process.env.CHAT_ROLES_ONLY) await roleChecks();
   else if (process.env.CHAT_FRAME_ONLY) {
     const admin = await device("admin", 1919, 894);

@@ -1,3 +1,4 @@
+import { VERSION } from '../config/version.js';
 import Phaser from 'phaser';
 import { VIEW, COLORS } from '../config/game.config.js';
 import { services, resetProgress, reloadToMenu, heroIdNow } from '../services.js';
@@ -88,7 +89,7 @@ export class MenuScene extends Phaser.Scene {
       if (this.newGameMode) this.pair('Назад', () => this.scene.restart({}), 'Настройки', () => this.openSettings());
       else this.button(SECOND_Y, 'Настройки', false, () => this.openSettings());
     }
-    this.add.text(W / 2, H - 34, session ? 'v0.10.1 · Глава I «Лес, который забыл нас»' : 'Режим разработки: прогресс в этом браузере · v0.10.1', { fontFamily: FONT, fontSize: `${UI.type.small}px`, color: COLORS.textDim, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5);
+    this.add.text(W / 2, H - 34, session ? `v${VERSION} · Глава I «Лес, который забыл нас»` : `Режим разработки: прогресс в этом браузере · v${VERSION}`, { fontFamily: FONT, fontSize: `${UI.type.small}px`, color: COLORS.textDim, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5);
 
     const kb = this.input.keyboard;
     const enter = () => { if (this.overlay || this.choice || this.htmlDlg) return; if (isNew) this.startNew(); else this.begin(); };

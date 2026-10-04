@@ -18,6 +18,7 @@ import { ChatService } from './cloud/ChatService.js';
 import { SupabaseApi } from './cloud/api.js';
 import { CLOUD } from './config/cloud.config.js';
 import { showLoading, showOffline, showNotice } from './ui/accountUI.js';
+import { createTelemetry } from './telemetry/hooks.js';
 
 export const services = {
   bus,
@@ -37,6 +38,7 @@ export const services = {
   // (не задан VITE_SUPABASE_URL): прогресс в localStorage этого браузера; так же работает автотест и редактор карты.
   session: null,
   chat: null,
+  telemetry: null, // v0.10.2: события живого теста (только онлайн); services.telemetry?.track(имя, данные)
   offline: false,  // нет связи с сервером: игра стоит, пока висит окно «Нет соединения»
   savePosition: null, // ExplorationScene: записать позицию героя в состояние (перед отправкой на сервер)
   hadSave: false,
@@ -88,6 +90,7 @@ export function initServices() {
   services.dialogue = new DialogueSystem({ state: services.state, log: services.log, bus, goalText: () => services.quests.objectiveText() });
   services.guidance = new GuidanceSystem({ state: services.state, quests: services.quests, log: services.log, bus });
   services.actions = new PlayerActions({ state: services.state, getSession: () => services.session, bus });
+  if (services.session) services.telemetry = createTelemetry({ session: services.session, bus, state: services.state, heroId: heroIdNow, storage });
   // отправляем прогресс, когда игрок сворачивает вкладку или закрывает игру
   const flushNow = () => { if (!services.session) return; services.savePosition?.(); services.session.flush({ keepalive: true }).catch(() => {}); };
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });

@@ -50,6 +50,7 @@ export class CombatScene extends Phaser.Scene {
     services.mode = 'combat';
     bus.emit(MSG.UI_MODE, 'combat');
 
+    { const v = vitals.view(state); services.telemetry?.track('combat_start', { enemy: this.enemyType, spawn: this.spawnId, lvl: state.data.heroLevel, hp: v.hp, mana: v.mana, tries: state.data.stats.combats.filter(c => c.spawnId === this.spawnId).length + 1 }); }
     this.buildArena();
     this.buildEnemy();
     this.buildHero();
@@ -602,6 +603,7 @@ export class CombatScene extends Phaser.Scene {
     const secs = Math.round(time * 10) / 10;
     state.data.stats.combats.push({ enemy: this.enemyType, spawnId: this.spawnId, result, timeSec: secs, interrupts: this.cm.stats.interrupts, uses: this.cm.stats.abilityUses });
     console.info(`[combat] ${this.enemyType} ${result} in ${secs}s`, this.cm.stats);
+    { const v = vitals.view(state); services.telemetry?.track('combat_end', { enemy: this.enemyType, spawn: this.spawnId, result, sec: secs, hp: v.hp, mana: v.mana, intr: this.cm.stats.interrupts, lvl: state.data.heroLevel }); }
     this.coach?.setVisible(false);
 
     if (result === 'victory') {

@@ -16,8 +16,9 @@ export const ITEMS = {
   ...Object.fromEntries(Object.entries(STORY_ITEMS).map(([id, it]) => [id, { name: it.name, icon: it.icon }])),
 };
 
-// Прототипные таймеры — секунды. Live-значения храним рядом для справки.
-export const TIMER_MODE = 'prototype'; // 'prototype' | 'live'
+// Таймеры изучения — секунды. С v0.10.2 игра идёт в режиме 'live': первая ступень занимает 5 минут
+// (30 минут были слишком долго для первого этапа). 'prototype' — быстрый режим для разработки и автотестов.
+export const TIMER_MODE = 'live'; // 'prototype' | 'live'
 
 export const UPGRADES = {
   telekinesis_2: {
@@ -28,7 +29,7 @@ export const UPGRADES = {
     // v0.8: к осколкам добавились травы и пыль. Осколки награда за алтарь догоняет сама (topUp),
     // а травы и пыль игрок собирает сам — они растут заново (world.resources.js), так что застрять нельзя.
     cost: { schoolXP: 150, items: { lunar_shard: 5, moon_herb: 2, rune_dust: 1 }, noTopUp: ['moon_herb', 'rune_dust'] },
-    timerSec: { prototype: 60, live: 30 * 60 },
+    timerSec: { prototype: 60, live: 5 * 60 },
     startEvent: 'telekinesis_2_start',
     completeEvent: 'telekinesis_2_complete',
   },

@@ -422,6 +422,12 @@ export class PlayerSession {
     return res || { ok: false, reason: 'server', error: { rpc: 'player_action', code: 'no_result', status: 200 } };
   }
 
+  /** Телеметрия живого теста: пачка событий. Ошибки наружу не влияют на игру (статус связи не меняется). */
+  sendTelemetry(sessionId, events, { keepalive = false } = {}) {
+    if (!this.auth || this.status === 'signed_out') return Promise.reject(new Error('no_session'));
+    return this._authed(t => this.api.telemetryLog(t, sessionId, events, { keepalive }));
+  }
+
   _goOffline() {
     this._setSaving('offline');
     this._setStatus('offline');

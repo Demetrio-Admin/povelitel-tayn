@@ -604,11 +604,10 @@ console.log('\n[v0.9] Общие HP и мана, зелья, обучение б
     t += 3_600_000; vitals.regenWall(state, t);
     ok(vitals.hp(state) === 120 && vitals.mana(state) === 100, 'час в скрытой вкладке = полное восстановление (как у сервера), без превышения максимума');
     state.data.mana = 0.37; ok(vitals.view(state).mana === 0 && state.data.mana === 0.37, 'дробная мана хранится точно, округляется только отображение');
-    // потраченная мана копится для отчёта серверу
+    // v0.13.0: локальное списание (бой, инструменты баланса) счётчика для сервера больше не ведёт
     const w = makeWorld({ t: 0 }).state;
     vitals.spendMana(w, 8); vitals.spendMana(w, 4.5);
-    ok(w.data.manaSpent === 12.5, 'spendMana копит потраченное (mana_spent)');
-    vitals.refundMana(w, 8); ok(w.data.manaSpent === 4.5 && vitals.mana(w) === 95.5, 'возврат маны уменьшает и счётчик');
+    ok(vitals.mana(w) === 87.5 && !('manaSpent' in w.data), 'spendMana списывает локально, счётчика mana_spent больше нет');
   }
   // --- новый уровень не восстанавливает скрыто; победа — полный HP после наград, мана — остаток; поражение — 20%
   {
@@ -651,7 +650,7 @@ console.log('\n[v0.9] Общие HP и мана, зелья, обучение б
     ok(r.ok && r.amount === 20 && vitals.hp(state) === 120 && state.item('elixir_life') === 1, 'частично полный запас: восстановлено только недостающее (+20), списан 1 настой');
     vitals.setMana(state, 10);
     const m = await acts.drink('elixir_mana');
-    ok(m.ok && vitals.mana(state) === 70 && state.item('elixir_mana') === 0, 'лунный эликсир из сумки: +60% маны');
+    ok(m.ok && Math.abs(vitals.mana(state) - 70) < 0.5 && state.item('elixir_mana') === 0, 'лунный эликсир из сумки: +60% маны');
     ok((await acts.drink('resin_flask')).reason === 'unknown' && state.item('resin_flask') === 1, 'смоляная склянка вне боя не применяется');
     const w = makeWorld({ t: 0 }); w.abilities.unlock('telekinesis', 1);
     w.state.addItem('elixir_life', 6); vitals.setHp(w.state, 10);
@@ -694,12 +693,11 @@ console.log('\n[v0.9] Общие HP и мана, зелья, обучение б
     const base = PM.emptySnapshot();
     const p = PM.diffSnapshots(base, snap);
     ok(!('mana' in p) && !('hp' in p), 'v0.12.0: diff не содержит HP и ману — их записывает только сервер');
-    ok(PM.isMinorPatch({ mana_spent: 5, pos: { x: 1, y: 1 }, play: 5 }) && !PM.isMinorPatch({ inv: { coins: 1 }, mana_spent: 1 }), 'mana_spent — «мелкое» изменение');
+    ok(PM.isMinorPatch({ pos: { x: 1, y: 1 }, play: 5 }) && !PM.isMinorPatch({ inv: { coins: 1 }, pos: { x: 1, y: 1 } }), 'позиция и время игры — «мелкое» изменение');
     const s1 = PM.applyPatch(base, { hp: { value: 5 }, mana: { value: 5 } });
     ok(s1.hp === base.hp && s1.mana === base.mana, 'клиент не может записать HP и ману');
     const s2 = PM.applyPatch(base, { mana_spent: 30 });
-    ok(s2.mana === 70, 'mana_spent вычитается из маны (null = полный запас)');
-    ok(PM.applyPatch(base, { mana_spent: 99999 }).mana === 0 && PM.applyPatch(base, { mana_spent: -50 }).mana === 100, 'mana_spent ограничен: не ниже 0 маны, отрицательное не лечит');
+    ok(s2.mana === base.mana, 'v0.13.0: mana_spent игнорируется — ману тратит только сервер (операции world, use)');
     const old = PM.fillDefaults({ ...PM.emptySnapshot(), mana: undefined, meta: {} }).snapshot;
     ok(old.mana === null && vitals.mana({ data: PM.fromSnapshot(old), heroStats: () => ({ maxHp: 120, maxMana: 100 }) }) === 100, 'старое сохранение без маны → полный запас');
   }

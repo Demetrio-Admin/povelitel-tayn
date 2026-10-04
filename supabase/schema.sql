@@ -408,6 +408,8 @@ begin
   if jsonb_typeof(patch -> 'objects') = 'object' then
     for k, v in select * from jsonb_each(patch -> 'objects') loop
       continue when not _valid_id(k);
+      -- v0.13.0: сбор, находки и запасы (kind gather/loot/stash в _game_rules().world) записывает только сервер
+      continue when coalesce(_game_rules() -> 'world' -> k ->> 'kind', 'cast') <> 'cast';
       if jsonb_typeof(v) = 'null' then
         delete from player_world where user_id = uid and kind = 'object' and key = k;
       elsif jsonb_typeof(v) = 'object' then
@@ -431,11 +433,8 @@ begin
   if jsonb_typeof(patch -> 'safe') = 'object' and _num(patch -> 'safe' -> 'x') is not null and _num(patch -> 'safe' -> 'y') is not null then
     pr.safe_x := _num(patch -> 'safe' -> 'x'); pr.safe_y := _num(patch -> 'safe' -> 'y');
   end if;
-  -- v0.12.0: HP и ману клиент больше не записывает (поля hp и mana в patch игнорируются). Мана тратится дельтой mana_spent
-  -- (не ниже нуля); восстанавливает сервер по времени, лечат операции player_action (heal, drink, combat_end).
-  -- Пока идёт бой, траты мира не принимаются.
-  n := _num(patch -> 'mana_spent');
-  if n is not null and pr.combat_since is null then pr.mana := greatest(0, pr.mana - _clamp(n, 0, 1000)); end if;
+  -- v0.12.0: HP и ману клиент не записывает (поля hp и mana в patch игнорируются). v0.13.0: устаревшее mana_spent тоже игнорируется —
+  -- ману тратят только операции player_action (world, use); восстанавливает сервер по времени, лечат heal, drink, combat_end.
 
   -- время игры: дельта (за раз не больше 10 минут)
   n := _num(patch -> 'play'); if n is not null then pr.play_ms := pr.play_ms + _clamp(trunc(n), 0, gain_play); end if;
@@ -465,7 +464,7 @@ end $$;
 -- ---------------------------------------------------------------- v0.10.0: правила крафта и сюжетных предметов
 -- Генерируется из src/config/recipes.js и src/config/storyItems.js (serverRules): node tools/sql/gen-rules.mjs. Руками не править.
 -- @rules:begin
-create or replace function public._game_rules() returns jsonb language sql immutable as $r$ select '{"recipes":{"elixir_life":{"result":"elixir_life","amount":1,"needs":{"moon_herb":2,"forest_mushroom":1},"requires":[],"crafted":null,"blockedBy":[]},"elixir_mana":{"result":"elixir_mana","amount":1,"needs":{"moon_herb":1,"rune_dust":1},"requires":[],"crafted":null,"blockedBy":[]},"resin_flask":{"result":"resin_flask","amount":1,"needs":{"tree_resin":2,"rune_dust":1},"requires":[],"crafted":null,"blockedBy":[]},"lunar_wick":{"result":"lunar_wick","amount":1,"needs":{"moon_herb":1,"tree_resin":1,"rune_dust":1,"lunar_flame":3},"requires":["lunar_quest_start"],"crafted":"lunar_wick_crafted","blockedBy":["lunar_wick_crafted","lunar_quest_complete"]},"revealing_compound":{"result":"revealing_compound","amount":1,"needs":{"moon_herb":1,"forest_mushroom":1,"rune_dust":1},"requires":["lunar_quest_complete"],"crafted":"revealing_compound_crafted","blockedBy":["revealing_compound_crafted","gate_marks_revealed"]},"restoration_bundle":{"result":"restoration_bundle","amount":1,"needs":{"moon_herb":2,"tree_resin":2,"rune_dust":2,"lunar_shard":1,"rare_core":1},"requires":["lunar_quest_complete"],"crafted":"restoration_bundle_crafted","blockedBy":["restoration_bundle_crafted","chapter_1_complete"]}},"uses":{"lunar_wick":{"requires":["lunar_quest_start"],"blockedBy":["lunar_quest_complete"],"events":["lunar_quest_complete"],"reward":{"heroXP":50,"schoolXP":{"telekinesis":40},"items":{"lunar_shard":3},"topUp":{"school":{"telekinesis":150},"items":{"lunar_shard":5}}}},"revealing_compound":{"requires":["guardian_defeated"],"blockedBy":["gate_marks_revealed"],"events":["gate_marks_revealed"],"reward":{"heroXP":30}},"restoration_bundle":{"requires":["chapter_trial_defeated","unlock_seal_1"],"blockedBy":["chapter_1_complete"],"mana":20,"events":["chapter_1_complete"],"reward":{"heroXP":100,"coins":30,"schoolXP":{"seal":40}}}},"firstCraft":{"event":"first_craft_complete","reward":{"heroXP":15}},"migration":{"event":"mig_v10","guardian":"forest_guardian_01","item":"rare_core","notIf":["restoration_bundle_crafted","chapter_1_complete"]},"vitals":{"hpRegenPerSec":1,"manaRegenWorld":0.5,"manaRegenHouse":2,"house":{"x":640,"y":4880,"w":520,"h":420},"defeatHpFraction":0.2,"staleCombatSec":900},"potions":{"elixir_life":{"kind":"heal","amount":0.45},"elixir_mana":{"kind":"mana","amount":0.6}}}'::jsonb $r$;
+create or replace function public._game_rules() returns jsonb language sql immutable as $r$ select '{"recipes":{"elixir_life":{"result":"elixir_life","amount":1,"needs":{"moon_herb":2,"forest_mushroom":1},"requires":[],"crafted":null,"blockedBy":[]},"elixir_mana":{"result":"elixir_mana","amount":1,"needs":{"moon_herb":1,"rune_dust":1},"requires":[],"crafted":null,"blockedBy":[]},"resin_flask":{"result":"resin_flask","amount":1,"needs":{"tree_resin":2,"rune_dust":1},"requires":[],"crafted":null,"blockedBy":[]},"lunar_wick":{"result":"lunar_wick","amount":1,"needs":{"moon_herb":1,"tree_resin":1,"rune_dust":1,"lunar_flame":3},"requires":["lunar_quest_start"],"crafted":"lunar_wick_crafted","blockedBy":["lunar_wick_crafted","lunar_quest_complete"]},"revealing_compound":{"result":"revealing_compound","amount":1,"needs":{"moon_herb":1,"forest_mushroom":1,"rune_dust":1},"requires":["lunar_quest_complete"],"crafted":"revealing_compound_crafted","blockedBy":["revealing_compound_crafted","gate_marks_revealed"]},"restoration_bundle":{"result":"restoration_bundle","amount":1,"needs":{"moon_herb":2,"tree_resin":2,"rune_dust":2,"lunar_shard":1,"rare_core":1},"requires":["lunar_quest_complete"],"crafted":"restoration_bundle_crafted","blockedBy":["restoration_bundle_crafted","chapter_1_complete"]}},"uses":{"lunar_wick":{"requires":["lunar_quest_start"],"blockedBy":["lunar_quest_complete"],"events":["lunar_quest_complete"],"reward":{"heroXP":50,"schoolXP":{"telekinesis":40},"items":{"lunar_shard":3},"topUp":{"school":{"telekinesis":150},"items":{"lunar_shard":5}}}},"revealing_compound":{"requires":["guardian_defeated"],"blockedBy":["gate_marks_revealed"],"events":["gate_marks_revealed"],"reward":{"heroXP":30}},"restoration_bundle":{"requires":["chapter_trial_defeated","unlock_seal_1"],"blockedBy":["chapter_1_complete"],"mana":20,"events":["chapter_1_complete"],"reward":{"heroXP":100,"coins":30,"schoolXP":{"seal":40}}}},"firstCraft":{"event":"first_craft_complete","reward":{"heroXP":15}},"migration":{"event":"mig_v10","guardian":"forest_guardian_01","item":"rare_core","notIf":["restoration_bundle_crafted","chapter_1_complete"]},"vitals":{"hpRegenPerSec":1,"manaRegenWorld":0.5,"manaRegenHouse":2,"house":{"x":640,"y":4880,"w":520,"h":420},"defeatHpFraction":0.2,"staleCombatSec":900},"potions":{"elixir_life":{"kind":"heal","amount":0.45},"elixir_mana":{"kind":"mana","amount":0.6}},"world":{"glade_rock":{"kind":"cast","mana":12,"ability":"telekinesis","minLevel":1,"blockedBy":[],"requires":[],"requiresEnemy":[]},"glade_rock_reward":{"kind":"loot","mark":"collected","reward":{"coins":20},"parent":{"id":"glade_rock","state":"moved"}},"moon_plant":{"kind":"loot","mark":"collected","reward":{"items":{"moon_herb":1}},"mana":4,"ability":"telekinesis","minLevel":1,"requires":[],"requiresEnemy":[]},"glade_cache":{"kind":"loot","mark":"opened","reward":{"items":{"coins":15,"tree_resin":1}},"requires":[],"requiresEnemy":[]},"corrupted_roots":{"kind":"cast","mana":16,"ability":"fire","minLevel":1,"blockedBy":[],"requires":[],"requiresEnemy":[]},"trail_cache":{"kind":"loot","mark":"opened","reward":{"items":{"coins":20,"forest_mushroom":1}},"requires":[],"requiresEnemy":[]},"flame_a":{"kind":"loot","mark":"collected","reward":{"items":{"lunar_flame":1}},"mana":4,"ability":"telekinesis","minLevel":1,"requires":["lunar_quest_start"],"requiresEnemy":[]},"altar_stone":{"kind":"cast","mana":12,"ability":"telekinesis","minLevel":1,"blockedBy":[],"requires":[],"requiresEnemy":[]},"altar_stone_reward":{"kind":"loot","mark":"collected","reward":{"items":{"lunar_flame":1}},"parent":{"id":"altar_stone","state":"moved"}},"flame_c":{"kind":"loot","mark":"collected","reward":{"items":{"lunar_flame":1}},"requires":["lunar_quest_start"],"requiresEnemy":["lunar_guard"]},"heavy_boulder":{"kind":"cast","mana":20,"ability":"telekinesis","minLevel":2,"blockedBy":[],"requires":[],"requiresEnemy":[]},"ritual_torch":{"kind":"cast","mana":16,"ability":"fire","minLevel":1,"blockedBy":[],"requires":[],"requiresEnemy":[]},"dry_bush":{"kind":"cast","mana":16,"ability":"fire","minLevel":1,"blockedBy":[],"requires":[],"requiresEnemy":[]},"dry_bush_reward":{"kind":"loot","mark":"collected","reward":{"items":{"crimson_ember":1}},"parent":{"id":"dry_bush","state":"destroyed"}},"moonstone":{"kind":"loot","mark":"collected","reward":{"items":{"moonstone":1}},"requires":[],"requiresEnemy":[]},"west_chest":{"kind":"loot","mark":"opened","reward":{"items":{"coins":40,"lunar_shard":2,"rune_dust":1},"heroXP":15},"requires":[],"requiresEnemy":[]},"ancient_gate":{"kind":"cast","mana":20,"ability":"seal","minLevel":1,"blockedBy":["ancient_gate_open"],"requires":["guardian_defeated","gate_marks_revealed","unlock_seal_1","seal_training_complete"],"requiresEnemy":[]},"house_trunk":{"kind":"loot","mark":"looted","reward":{"items":{"forest_mushroom":1,"tree_resin":1}},"requires":[],"requiresEnemy":[]},"herb_g1":{"kind":"gather","item":"moon_herb","amount":1,"respawnSec":150,"mana":4,"requires":[],"requiresEnemy":[]},"herb_g2":{"kind":"gather","item":"moon_herb","amount":1,"respawnSec":150,"mana":4,"requires":[],"requiresEnemy":[]},"herb_g3":{"kind":"gather","item":"moon_herb","amount":1,"respawnSec":150,"mana":4,"requires":[],"requiresEnemy":[]},"herb_t1":{"kind":"gather","item":"moon_herb","amount":1,"respawnSec":150,"mana":4,"requires":[],"requiresEnemy":[]},"resin_t1":{"kind":"gather","item":"tree_resin","amount":1,"respawnSec":200,"mana":4,"requires":[],"requiresEnemy":[]},"mush_t1":{"kind":"gather","item":"forest_mushroom","amount":1,"respawnSec":200,"mana":4,"requires":[],"requiresEnemy":[]},"bramble_t1":{"kind":"cast","mana":16,"ability":"fire","minLevel":1,"blockedBy":[],"requires":[],"requiresEnemy":[]},"bramble_t1_reward":{"kind":"loot","mark":"collected","reward":{"items":{"tree_resin":2}},"parent":{"id":"bramble_t1","state":"destroyed"}},"rune_sigil":{"kind":"gather","item":"rune_dust","amount":1,"respawnSec":240,"mana":4,"requires":[],"requiresEnemy":[]},"rune_slab":{"kind":"cast","mana":8,"ability":"telekinesis","minLevel":1,"blockedBy":[],"requires":[],"requiresEnemy":[]},"rune_slab_reward":{"kind":"loot","mark":"collected","reward":{"items":{"rune_dust":2}},"parent":{"id":"rune_slab","state":"moved"}},"herb_a1":{"kind":"gather","item":"moon_herb","amount":1,"respawnSec":150,"mana":4,"requires":[],"requiresEnemy":[]},"resin_a1":{"kind":"gather","item":"tree_resin","amount":1,"respawnSec":200,"mana":4,"requires":[],"requiresEnemy":[]},"crystal_a1":{"kind":"gather","item":"lunar_shard","amount":1,"respawnSec":420,"mana":4,"requires":[],"requiresEnemy":[]},"mush_a1":{"kind":"gather","item":"forest_mushroom","amount":1,"respawnSec":200,"mana":4,"requires":[],"requiresEnemy":[]},"mush_j1":{"kind":"gather","item":"forest_mushroom","amount":1,"respawnSec":200,"mana":4,"requires":[],"requiresEnemy":[]},"resin_j1":{"kind":"gather","item":"tree_resin","amount":1,"respawnSec":200,"mana":4,"requires":[],"requiresEnemy":[]},"hollow_cache":{"kind":"loot","mark":"opened","reward":{"items":{"forest_mushroom":2,"rune_dust":1},"coins":10},"requires":[],"requiresEnemy":[]},"guard_cache":{"kind":"loot","mark":"opened","reward":{"items":{"rune_dust":1}},"requires":[],"requiresEnemy":["lunar_guard"]},"dust_stash":{"kind":"stash","guard":"rootling_02","items":{"rune_dust":2},"requires":[],"requiresEnemy":[]},"approach_cache":{"kind":"loot","mark":"opened","reward":{"items":{"rune_dust":2}},"requires":[],"requiresEnemy":["rootling_05"]},"seal_sigil":{"kind":"cast","mana":20,"ability":"seal","minLevel":1,"blockedBy":["seal_training_complete"],"requires":["gate_marks_revealed"],"requiresEnemy":[]}}}'::jsonb $r$;
 -- @rules:end
 
 -- ---------------------------------------------------------------- v0.9 / v0.10.0: атомарные действия игрока
@@ -537,6 +536,7 @@ declare
   pr player_progress%rowtype;
   op text; aid text; mx_hp numeric; mx_mana numeric; cur numeric; price numeric; coins numeric; res jsonb;
   rules jsonb; r jsonb; u jsonb; m jsonb; k text; v jsonb; missing jsonb; first boolean; prev jsonb; core boolean;
+  wid text; od jsonb; now_ms numeric; lft numeric; wins numeric; claimed numeric; locked boolean;
 begin
   if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
   perform public._require_game_access();
@@ -594,6 +594,56 @@ begin
         price := round(mx_mana * (u ->> 'amount')::numeric);
         pr.mana := least(mx_mana, cur + price);
         res := jsonb_build_object('ok', true, 'kind', 'mana', 'amount', pr.mana - cur);
+      end if;
+    end if;
+  elsif op = 'world' then
+    -- v0.13.0: сбор узла, находка, запас или магия в мире (правила _game_rules().world; зеркало worldAct в playerModel.js).
+    -- Порядок проверок: неизвестный объект → бой → закрыто → уже сделано / ещё не выросло → мана.
+    wid := case when jsonb_typeof(action -> 'obj') = 'string' then action ->> 'obj' end;
+    r := case when wid is not null then rules -> 'world' -> wid end;
+    now_ms := (extract(epoch from pr.vitals_at) * 1000)::bigint;
+    if r is null then res := jsonb_build_object('ok', false, 'reason', 'unknown');
+    elsif pr.combat_since is not null then res := jsonb_build_object('ok', false, 'reason', 'combat');
+    else
+      locked := exists (select 1 from jsonb_array_elements_text(r -> 'requires') e where not _has_event(uid, e))
+        or exists (select 1 from jsonb_array_elements_text(r -> 'requiresEnemy') e where not exists (select 1 from player_world where user_id = uid and kind = 'enemy' and key = e))
+        or (r ? 'parent' and coalesce((select data ->> 'state' from player_world where user_id = uid and kind = 'object' and key = r #>> '{parent,id}'), '') <> r #>> '{parent,state}')
+        or (r ? 'ability' and not exists (select 1 from player_abilities where user_id = uid and ability_id = r ->> 'ability' and unlocked and level >= coalesce((r ->> 'minLevel')::int, 1)));
+      select data into od from player_world where user_id = uid and kind = 'object' and key = wid;
+      if locked then res := jsonb_build_object('ok', false, 'reason', 'locked');
+      elsif exists (select 1 from jsonb_array_elements_text(coalesce(r -> 'blockedBy', '[]'::jsonb)) e where _has_event(uid, e)) then res := jsonb_build_object('ok', false, 'reason', 'done');
+      elsif r ->> 'kind' = 'loot' and od ->> 'state' = r ->> 'mark' then res := jsonb_build_object('ok', false, 'reason', 'done');
+      elsif r ->> 'kind' = 'gather' and od ->> 'state' = 'picked'
+        and (coalesce(_num(od -> 't'), 0) + (r ->> 'respawnSec')::numeric * 1000 - now_ms) > 0 then
+        lft := ceil((coalesce(_num(od -> 't'), 0) + (r ->> 'respawnSec')::numeric * 1000 - now_ms) / 1000);
+        res := jsonb_build_object('ok', false, 'reason', 'wait', 'left', lft);
+      else
+        if r ->> 'kind' = 'stash' then
+          select data into u from player_world where user_id = uid and kind = 'object' and key = 'rep:' || (r ->> 'guard');
+          wins := coalesce(_num(u -> 'wins'), case when exists (select 1 from player_world where user_id = uid and kind = 'enemy' and key = r ->> 'guard') then 1 else 0 end);
+          claimed := coalesce(_num(od -> 'claimed'), 0);
+        end if;
+        if r ->> 'kind' = 'stash' and wins <= 0 then res := jsonb_build_object('ok', false, 'reason', 'locked');
+        elsif r ->> 'kind' = 'stash' and wins <= claimed then res := jsonb_build_object('ok', false, 'reason', 'done');
+        elsif r ? 'mana' and _clamp(coalesce(pr.mana::numeric, mx_mana), 0, mx_mana) < (r ->> 'mana')::numeric then
+          res := jsonb_build_object('ok', false, 'reason', 'mana', 'mana', (r ->> 'mana')::numeric);
+        else
+          if r ? 'mana' then pr.mana := _clamp(coalesce(pr.mana::numeric, mx_mana), 0, mx_mana) - (r ->> 'mana')::numeric; end if;
+          if r ->> 'kind' = 'gather' then
+            perform _inv_add(uid, r ->> 'item', (r ->> 'amount')::numeric);
+            insert into player_world (user_id, kind, key, data) values (uid, 'object', wid, jsonb_build_object('state', 'picked', 't', now_ms))
+              on conflict (user_id, kind, key) do update set data = excluded.data;
+          elsif r ->> 'kind' = 'loot' then
+            pr := _grant(uid, pr, r -> 'reward');
+            insert into player_world (user_id, kind, key, data) values (uid, 'object', wid, jsonb_build_object('state', r ->> 'mark'))
+              on conflict (user_id, kind, key) do update set data = excluded.data;
+          elsif r ->> 'kind' = 'stash' then
+            pr := _grant(uid, pr, jsonb_build_object('items', r -> 'items'));
+            insert into player_world (user_id, kind, key, data) values (uid, 'object', wid, coalesce(od, '{}'::jsonb) || jsonb_build_object('claimed', wins))
+              on conflict (user_id, kind, key) do update set data = excluded.data;
+          end if;
+          res := jsonb_build_object('ok', true, 'kind', r ->> 'kind', 'id', wid, 'mana', coalesce((r ->> 'mana')::numeric, 0));
+        end if;
       end if;
     end if;
   elsif op = 'combat_start' then

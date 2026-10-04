@@ -108,15 +108,43 @@ export class InteractiveObject {
   manaCost() { return 0; }
 
   /**
-   * v0.9: оплата маной — ровно один раз, после всех проверок (дар, вес, занятость) и до анимации успеха.
-   * false — маны не хватает: ничего не списано, сцена объясняет, как восстановить.
+   * v0.13.0: действие в мире выполняет сервер (операция world): он проверяет условия и дар, списывает ману, выдаёт награду и
+   * записывает состояние объекта. Вызывается один раз, после всех проверок на устройстве (дар, вес, занятость) и до анимации успеха.
+   * Возвращает ответ сервера при успехе; null — не вышло: игроку уже объяснили причину (нехватка маны, ещё не выросло, нет связи),
+   * ничего не потрачено. Пока идёт запрос, объект занят — повторное нажатие игнорируется.
    * Любой способ ввода (кнопка действия, тап, кнопка дара, клавиатура) приходит сюда через interact().
    */
-  payMana(cost = this.manaCost()) {
-    if (!(cost > 0)) return true;
-    if (!vitals.spendMana(this.state, cost)) { this.scene.onManaShort?.(cost, this); return false; }
-    this.scene.onManaSpent?.(cost, this);
-    return true;
+  async serverAct() {
+    const cost = this.manaCost();
+    if (cost > 0 && !vitals.canAfford(this.state, cost)) { this.scene.onManaShort?.(cost, this); return null; }
+    if (services.actions.busy) return null;
+    this.busy = true;
+    let r;
+    try { r = await services.actions.world(this.id); } finally { this.busy = false; }
+    if (this.removed) return r.ok ? r : null;
+    this.saved = { ...(services.state.getObject(this.id) || {}) };   // состояние объекта после ответа сервера
+    if (!r.ok) { this.explainFail(r); return null; }
+    if (r.mana > 0) this.scene.onManaSpent?.(r.mana, this);
+    return r;
+  }
+
+  /** Что выдал сервер (outcome ответа) — тосты опыта и предметов, окно нового уровня. */
+  announce(r, title = null) {
+    const o = r?.outcome || {};
+    services.bus.emit(MSG.REWARD, { title, granted: { heroXP: o.heroXP || 0, schoolXP: {}, items: o.items || {} }, levelUps: o.levelUps || [] });
+    services.bus.emit(MSG.HUD_REFRESH);
+  }
+
+  /** Почему сервер отказал: игроку — понятный текст, объекту — актуальный вид. */
+  explainFail(r) {
+    if (r.reason === 'mana') { this.scene.onManaShort?.(r.mana || this.manaCost(), this); return; }
+    if (r.reason === 'busy') return;
+    if (r.reason === 'combat') { this.scene.toast('Сейчас не до этого — идёт бой.'); return; }
+    if (r.reason === 'wait') { this.scene.toast(`Ещё не выросло. Вернитесь через ${r.left > 60 ? `${Math.ceil(r.left / 60)} мин` : `${r.left} с`}.`); this.refresh(); return; }
+    if (r.reason === 'done') { this.refresh(); return; }
+    const t = useFailText(r, '');
+    if (t) this.scene.toast(t, COLORS.danger);
+    services.audio.play('locked');
   }
 
   rejectWrongAbility(abilityId) {
@@ -208,17 +236,19 @@ export class ChestObject extends InteractiveObject {
     this.twinkle = (this.twinkle ?? 1 + Math.random() * 2) - dt;
     if (this.twinkle <= 0) { this.twinkle = 2.2 + Math.random() * 2; this.scene.twinkle?.(this.x + (Math.random() - 0.5) * 36, this.sprite.y - 20 - Math.random() * 20, COLORS.gold); }
   }
-  interact() {
+  /** v0.13.0: что внутри, решает и выдаёт сервер (операция world); сундук открывается, когда он ответил. */
+  async interact() {
+    const r = await this.serverAct();
+    if (!r || this.removed || !this.sprite.active) return;
     this.sprite.setTexture('chest_01_open');
     applyDisplaySize(this.sprite, 'chest_01_open');
     this.baseScale = { x: this.sprite.scaleX, y: this.sprite.scaleY };
-    this.persist({ state: 'opened' });
     services.audio.play('chest');
     this.react(COLORS.gold, 1.22);
     this.scene.burst(this.x, this.sprite.y - 20, COLORS.gold, 24);
     this.scene.sparkleShower?.(this.x, this.sprite.y - 30, COLORS.gold);
     this.scene.addFlash?.(this.x, this.sprite.y - 24, COLORS.gold);
-    this.grantReward(this.cfg.reward, 'Сундук');
+    this.announce(r, 'Сундук');
   }
 }
 
@@ -235,12 +265,15 @@ export class PickupObject extends InteractiveObject {
   get label() { return 'Подобрать'; }
   get markerY() { return this.baseY - 70; }
   isDone() { return this.saved.state === 'collected'; }
-  interact() {
+  /** Автоподбор не долбит сервер каждый кадр, если запрос не удался (нет связи): повтор через несколько секунд. */
+  canAuto() { return this.isAvailable() && this.state.now() >= (this.retryAt || 0); }
+  refresh() { super.refresh(); if (!this.removed && this.isDone()) this.remove(false); }
+  async interact() {
     if (!this.isAvailable()) return;
-    this.persist({ state: 'collected' });
+    const r = await this.serverAct();   // v0.13.0: предмет выдаёт сервер (операция world)
+    if (!r) { this.retryAt = this.state.now() + 4000; return; }
+    if (this.removed) return;
     services.audio.play('pickup');
-    this.state.addItem(this.cfg.item, this.cfg.amount || 1);
-    this.state.save();
     let text = `+${this.cfg.amount || 1} ${itemName(this.cfg.item)}`;
     if (this.cfg.item === 'lunar_flame' && !this.state.hasEvent(EV.LUNAR_QUEST_COMPLETE)) {
       text += ` (${Math.min(LUNAR_QUEST.flamesRequired, this.state.flamesCollected())}/${LUNAR_QUEST.flamesRequired})`;

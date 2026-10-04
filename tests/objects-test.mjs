@@ -42,6 +42,8 @@ function mkScene() {
   };
   return sc;
 }
+// v0.13.0: действия в мире идут через сервер (здесь — режим без сервера, то же правило на JS): ждём ответ, потом анимация
+const settle = () => new Promise(r => setTimeout(r, 5));
 const runDelayed = () => { const l = calls.delayed.splice(0); l.forEach(([, fn]) => fn()); };
 
 console.log('Объекты мира v0.8');
@@ -73,9 +75,9 @@ const CLS = { gather: GatherObject, npc: NpcObject, alchemy: AlchemyObject, insp
   let gathered = null; bus.on(MSG.GATHERED, (e) => { gathered = e; });
   const before = sv.state.item('moon_herb');
   ok(g.isAvailable(), 'трава доступна для сбора');
-  g.interact(null);
+  await g.interact(null);
   ok(g.busy && calls.cast === 1, 'сбор: героиня наклоняется (поза gather), объект занят');
-  ok(sv.state.item('moon_herb') === before, 'ресурс приходит после анимации, а не мгновенно');
+  ok(sv.state.item('moon_herb') === before + 1 && sv.state.getObject('herb_g1')?.state === 'picked' && !gathered, 'v0.13.0: ресурс выдан и состояние записано сервером до анимации, показ — позже');
   runDelayed();
   ok(sv.state.item('moon_herb') === before + 1 && gathered?.item === 'moon_herb', 'сбор: +1 лунная трава, событие GATHERED');
   ok(calls.burst >= 2 && calls.float === 1, 'сбор: искры и всплывающая иконка');
@@ -92,9 +94,9 @@ const CLS = { gather: GatherObject, npc: NpcObject, alchemy: AlchemyObject, insp
   const cfg = CONTENT_INTERACTIVES.find(c => c.id === 'house_trunk');
   const o = new InspectObject(sc, cfg);
   const m0 = sv.state.item('forest_mushroom');
-  o.interact(); runDelayed();
+  o.interact(); await settle(); runDelayed();
   ok(sv.state.item('forest_mushroom') === m0 + 1 && sv.state.item('tree_resin') >= 1, 'сундук в доме: первый осмотр даёт гриб и смолу');
-  o.interact(); runDelayed();
+  o.interact(); await settle(); runDelayed();
   ok(sv.state.item('forest_mushroom') === m0 + 1, 'сундук в доме: награда только один раз');
   const bed = new InspectObject(sc, CONTENT_INTERACTIVES.find(c => c.id === 'house_bed'));
   calls.say = []; bed.interact(); bed.interact(); bed.interact();
@@ -132,47 +134,50 @@ const CLS = { gather: GatherObject, npc: NpcObject, alchemy: AlchemyObject, insp
   const mkSc = () => { const sc = mkScene(); sc.onManaShort = (c) => shorts.push(c); sc.onManaSpent = (c) => spent.push(c); sc.castFx = () => {}; sc.toast = () => {}; sc.panTo = () => {}; sc.spawnPickup = () => null;
     sc.tweens.chain = (c) => { c.onComplete?.(); return {}; }; sc.cameras = { main: { shake() {} } }; sc.time.delayedCall = (ms, fn) => { calls.delayed.push([ms, fn]); return {}; }; return sc; };
   let t = 1e9; st.now = () => t;
+  const setM = (v) => { vitals.setMana(st, v); st.data.vitalsClock = t; };   // без восстановления по времени между шагами
   // сбор: 4 маны один раз; второй тап по занятому узлу — бесплатно
   const herb = new GatherObject(mkSc(), CONTENT_INTERACTIVES.find(c => c.id === 'herb_g2'));
-  vitals.setMana(st, 50);
-  herb.interact(null); herb.interact(null); runDelayed();
+  setM(50);
+  herb.interact(null); herb.interact(null); await settle(); runDelayed();
   ok(Math.abs(vitals.mana(st) - 46) < 1e-9 && spent.length === 1, 'сбор: −4 маны ровно один раз, повторный тап по занятому узлу бесплатен');
-  herb.interact(null);
+  herb.interact(null); await settle();
   ok(Math.abs(vitals.mana(st) - 46) < 1e-9, 'собранный узел: ничего не списано');
   // нехватка маны: ничего не выдаётся и не списывается
   const herb2 = new GatherObject(mkSc(), CONTENT_INTERACTIVES.find(c => c.id === 'herb_g3'));
-  vitals.setMana(st, 3); const m0 = st.item('moon_herb');
-  herb2.interact(null); runDelayed();
+  setM(3); const m0 = st.item('moon_herb');
+  herb2.interact(null); await settle(); runDelayed();
   ok(vitals.mana(st) === 3 && st.item('moon_herb') === m0 && shorts.at(-1) === 4 && !herb2.busy, 'не хватает маны: предмет не выдан, мана не списана, есть объяснение');
   // Телекинез: средний камень 12, неверный дар бесплатно, слишком тяжёлое бесплатно
   sv.abilities.unlock('telekinesis', 1);
   const rock = new TelekinesisObject(mkSc(), INTERACTIVES.find(c => c.id === 'glade_rock'));
-  vitals.setMana(st, 50);
-  rock.interact('fire');
+  setM(50);
+  rock.interact('fire'); await settle();
   ok(vitals.mana(st) === 50, 'неверный дар (Огонь на камень): мана не списана');
   ok(rock.manaCost() === 12, 'цена видна заранее: «Сдвинуть · 12 маны»');
-  rock.interact('telekinesis');
-  ok(vitals.mana(st) === 38 && rock.isDone(), 'сдвиг среднего камня: −12 маны');
+  await rock.interact('telekinesis');
+  ok(vitals.mana(st) === 38 && rock.isDone(), 'сдвиг среднего камня: −12 маны (списал сервер)');
   const boulder = new TelekinesisObject(mkSc(), INTERACTIVES.find(c => c.id === 'heavy_boulder'));
-  boulder.interact('telekinesis');
+  boulder.interact('telekinesis'); await settle();
   ok(vitals.mana(st) === 38 && boulder.manaCost() === 0, 'слишком тяжёлая глыба (Телекинез I): бесплатно, цена не показывается');
   const flame = new TelekinesisObject(mkSc(), INTERACTIVES.find(c => c.id === 'moon_plant'));
   ok(flame.manaCost() === 4, 'притянуть растение — 4 маны');
   // Огонь: 16, пока дар не открыт — бесплатно
   const bramble = new FireObject(mkSc(), CONTENT_INTERACTIVES.find(c => c.id === 'bramble_t1'));
-  bramble.interact('fire');
+  bramble.interact('fire'); await settle();
   ok(vitals.mana(st) === 38, 'Огонь не открыт: бесплатно');
   sv.abilities.unlock('fire', 1);
-  bramble.interact('fire'); bramble.interact('fire'); runDelayed();
+  bramble.interact('fire'); bramble.interact('fire'); await settle(); runDelayed();
   ok(vitals.mana(st) === 22, 'Огонь по зарослям: −16 маны один раз (повторное нажатие не платит)');
   // разные способы ввода — одна цена: контекстная кнопка (act(null)) и кнопка дара (act('telekinesis'))
   const sc2 = mkSc();
   const isys = new InteractionSystem(sc2, bus);
-  const r1 = new TelekinesisObject(sc2, { ...INTERACTIVES.find(c => c.id === 'altar_stone'), id: 'test_rock_1' });
-  const r2 = new TelekinesisObject(sc2, { ...INTERACTIVES.find(c => c.id === 'altar_stone'), id: 'test_rock_2' });
-  vitals.setMana(st, 100);
-  isys.focus = r1; isys.act(null); const a1 = 100 - vitals.mana(st);
-  isys.focus = r2; isys.act('telekinesis'); const a2 = 100 - a1 - vitals.mana(st);
+  const stoneCfg = INTERACTIVES.find(c => c.id === 'altar_stone');
+  const r1 = new TelekinesisObject(sc2, stoneCfg);
+  setM(100);
+  isys.focus = r1; isys.act(null); await settle(); const a1 = 100 - vitals.mana(st);
+  delete st.data.worldObjects.altar_stone;   // тот же камень «заново» (его сдвиг — состояние устройства)
+  const r2 = new TelekinesisObject(sc2, stoneCfg);
+  isys.focus = r2; isys.act('telekinesis'); await settle(); const a2 = 100 - a1 - vitals.mana(st);
   ok(a1 === 12 && a2 === 12, `кнопка действия и кнопка дара платят одинаково (${a1} / ${a2})`);
 }
 
@@ -220,6 +225,7 @@ console.log('\nПервая глава v0.10.0: алтарь, ворота, Ас
   const mk = () => Object.assign(mkScene(), { toast: (t) => toasts.push(t), dialog: (o) => dialogs.push(o), castFx() {}, panTo() {}, refreshAll() {}, onManaShort: (c) => toasts.push(`мана ${c}`), enemies: [] });
   sv.actions.bus = bus;
   let t = 1_000_000; st.now = () => t;
+  const setM = (v) => { vitals.setMana(st, v); st.data.vitalsClock = t; };
 
   // --- алтарь: фитиль, а не сырые огоньки
   st.markEvent('lunar_quest_start');
@@ -247,23 +253,23 @@ console.log('\nПервая глава v0.10.0: алтарь, ворота, Ас
   ok(gate.stage === 'train', 'Астрал без обучения ворота не открывает');
   st.markEvent('seal_training_complete');
   ok(gate.stage === 'seal' && gate.ability === 'seal' && gate.manaCost() === 20, 'после обучения: ворота ждут Астрал (20 маны)');
-  vitals.setMana(st, 100);
-  gate.interact('fire');
+  setM(100);
+  gate.interact('fire'); await settle();
   ok(!gate.opened && vitals.mana(st) === 100 && /Астрал/.test(toasts.at(-1)), 'Огонь по воротам: отказ, мана не списана');
-  vitals.setMana(st, 10);
-  gate.interact('seal');
+  setM(10);
+  gate.interact('seal'); await settle();
   ok(!gate.opened && vitals.mana(st) === 10, 'не хватает маны: ворота закрыты, ничего не списано');
-  vitals.setMana(st, 100);
-  gate.interact('seal'); runDelayed();
+  setM(100);
+  gate.interact('seal'); await settle(); runDelayed();
   ok(gate.opened && st.hasEvent('ancient_gate_open') && vitals.mana(st) === 80 && !gate.blocker && st.isPathOpen('node_glade'), 'Астрал открыл ворота: 20 маны, проход свободен');
 
   // --- учебный знак
   st.data.completedEvents = st.data.completedEvents.filter(e => e !== 'seal_training_complete');
   const sig = new SealSigilObject(mk(), cfgOf('seal_sigil'));
-  vitals.setMana(st, 5); sig.interact('seal');
+  setM(5); sig.interact('seal'); await settle();
   ok(!st.hasEvent('seal_training_complete') && vitals.mana(st) === 5, 'учебный знак: без маны ничего не происходит');
-  vitals.setMana(st, 100); const sx = st.data.schoolXP.seal || 0;
-  sig.interact('seal'); runDelayed();
+  setM(100); const sx = st.data.schoolXP.seal || 0;
+  sig.interact('seal'); await settle(); runDelayed();
   ok(st.hasEvent('seal_training_complete') && vitals.mana(st) === 80 && st.data.schoolXP.seal === sx + 6 && dialogs.at(-1)?.title === 'Камень ожил', 'учебный знак: 20 маны, +6 опыта Печати, видимое изменение');
 
   // --- возобновляемый Корневик и запас пыли
@@ -276,7 +282,7 @@ console.log('\nПервая глава v0.10.0: алтарь, ворота, Ас
   st.markEnemyDefeated('rootling_02'); recordRepeatWin(st, 'rootling_02'); guard.clear(false);
   ok(guard.defeated && enemyDownNow(st, rcfg) && stash.ready(), 'победа: Корневик ушёл, запас открыт');
   const d0 = st.item('rune_dust');
-  stash.interact(); stash.interact();
+  stash.interact(); stash.interact(); await settle();
   ok(st.item('rune_dust') === d0 + 2 && !stash.ready(), 'запас: +2 пыли один раз за цикл (повтор ничего не даёт)');
   const stash2 = new DustStashObject(sc, cfgOf('dust_stash'));
   ok(!stash2.ready(), 'после «перезагрузки» запас того же цикла не выдаётся снова');
@@ -295,11 +301,11 @@ console.log('\nПервая глава v0.10.0: алтарь, ворота, Ас
   ok(node.stage === 'guarded', 'узел стережёт испытание');
   st.markEvent('chapter_trial_defeated');
   ok(node.stage === 'bundle', 'после испытания без связки — объяснение рецепта');
-  st.addItem('restoration_bundle', 1); vitals.setMana(st, 10);
+  st.addItem('restoration_bundle', 1); setM(10);
   const coins0 = st.item('coins');
   await node.repair();
   ok(!st.hasEvent('chapter_1_complete') && st.item('restoration_bundle') === 1 && vitals.mana(st) === 10 && st.item('coins') === coins0, 'мало маны: ремонт не прошёл, связка и мана на месте');
-  vitals.setMana(st, 100);
+  setM(100);
   let fin = null; const offF = bus.on(MSG.FINAL_SCREEN, (x) => { fin = x; });
   await node.repair();
   ok(st.hasEvent('chapter_1_complete') && st.item('restoration_bundle') === 0 && Math.abs(vitals.mana(st) - 80) < 0.5 && st.item('coins') === coins0 + 30 && fin, 'ремонт: связка и 20 маны списаны, +30 монет, финал главы');

@@ -37,7 +37,7 @@ export class FireObject extends InteractiveObject {
     }
   }
 
-  interact(abilityId) {
+  async interact(abilityId) {
     if (this.rejectWrongAbility(abilityId)) return;
     if (!this.abilities.isUnlocked('fire')) {
       if (this.cfg.lockedEvent) this.quests.complete(this.cfg.lockedEvent);
@@ -46,7 +46,8 @@ export class FireObject extends InteractiveObject {
       return;
     }
     if (this.busy || this.fireState !== 'normal') return;
-    if (!this.payMana()) return;
+    const r = await this.serverAct();   // v0.13.0: ману списывает сервер (операция world)
+    if (!r || this.removed || !this.sprite.active || this.fireState !== 'normal') return;
     this.scene.player.castAt(this.x, this.baseY, 'fire');
     this.scene.castFx(this.x, this.baseY - 30, COLORS.fire);
     this.ignite();

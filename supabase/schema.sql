@@ -65,6 +65,10 @@ alter table public.player_progress
   add column if not exists recent_syncs jsonb not null default '[]';  -- id последних сохранений: повтор после обрыва связи не начислит дважды
 -- v0.9: текущая мана (null — «полный запас», как у hp; старые персонажи получают максимум при первой загрузке клиентом)
 alter table public.player_progress add column if not exists mana double precision;
+-- v0.12.0: HP и мана восстанавливаются по времени сервера (в том числе офлайн). vitals_at — момент, на который верны hp и mana;
+-- combat_since — начало боя, о завершении которого сервер ещё не знает (пока бой идёт, восстановления нет).
+alter table public.player_progress add column if not exists vitals_at timestamptz;
+alter table public.player_progress add column if not exists combat_since timestamptz;
 alter table public.player_progress
   alter column pos_x type double precision, alter column pos_y type double precision,
   alter column safe_x type double precision, alter column safe_y type double precision, alter column hp type double precision;
@@ -149,6 +153,47 @@ create or replace function public._valid_id(s text) returns boolean language sql
   select s ~ '^[A-Za-z0-9_.:-]{1,64}$'
 $$;
 
+-- ---------------------------------------------------------------- v0.12.0: восстановление HP и маны по времени сервера
+-- Чистая функция над строкой игрока: возвращает её с hp и mana, доведёнными до «сейчас». В базу не пишет (пишут вызывающие).
+--  • скорость и дом Мирры берутся из _game_rules() -> 'vitals' (то же, что читает JS-зеркало playerModel.advanceVitals);
+--  • дом определяется по сохранённой позиции игрока (pos_x/pos_y): офлайн мана восстанавливается так, как он оставил героя;
+--  • пока идёт бой (combat_since), восстановления нет; бой старше staleCombatSec считается отступлением (HP не ниже доли максимума);
+--  • «полные» hp/mana (null) фиксируются числом — повышение уровня не лечит «втихую».
+create or replace function public._advance(pr player_progress) returns player_progress
+language plpgsql stable set search_path = public as $$
+declare
+  v jsonb := _game_rules() -> 'vitals';
+  mx_hp numeric; mx_mana numeric; h numeric; m numeric;
+  t0 timestamptz := date_trunc('milliseconds', now());
+  from_t timestamptz; stale_at timestamptz; el numeric; mana_rate numeric; in_house boolean; fl numeric;
+begin
+  select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels where level = pr.hero_level;
+  if mx_hp is null then select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels order by level desc limit 1; end if;
+  h := _clamp(coalesce(pr.hp::numeric, mx_hp), 0, mx_hp);
+  m := _clamp(coalesce(pr.mana::numeric, mx_mana), 0, mx_mana);
+  from_t := coalesce(pr.vitals_at, t0);
+  if pr.combat_since is not null then
+    stale_at := pr.combat_since + make_interval(secs => (v ->> 'staleCombatSec')::double precision);
+    if t0 < stale_at then
+      from_t := t0;                                    -- бой идёт: время не засчитывается
+    else
+      fl := greatest(1, ceil(mx_hp * (v ->> 'defeatHpFraction')::numeric - 1e-9));
+      h := greatest(h, fl);                            -- о конце боя сервер так и не узнал: это отступление
+      from_t := greatest(from_t, stale_at);
+      pr.combat_since := null;
+    end if;
+  end if;
+  el := greatest(0, extract(epoch from (t0 - from_t))::numeric);
+  -- позиции ещё нет — персонаж стоит на старте, а старт в доме Мирры
+  in_house := pr.pos_x is null or pr.pos_y is null or (pr.pos_x between (v #>> '{house,x}')::numeric and (v #>> '{house,x}')::numeric + (v #>> '{house,w}')::numeric
+    and pr.pos_y between (v #>> '{house,y}')::numeric and (v #>> '{house,y}')::numeric + (v #>> '{house,h}')::numeric);
+  mana_rate := case when in_house then (v ->> 'manaRegenHouse')::numeric else (v ->> 'manaRegenWorld')::numeric end;
+  pr.hp := least(mx_hp, h + el * (v ->> 'hpRegenPerSec')::numeric);
+  pr.mana := least(mx_mana, m + el * mana_rate);
+  pr.vitals_at := t0;
+  return pr;
+end $$;
+
 -- Полное состояние игрока одним jsonb. Те же поля, что в src/cloud/playerModel.js (toSnapshot) + блок meta.
 create or replace function public._snapshot(uid uuid) returns jsonb
 language plpgsql security definer set search_path = public as $$
@@ -157,6 +202,7 @@ begin
   select * into pr from player_progress where user_id = uid;
   select * into pf from profiles where id = uid;
   if pr.user_id is null then return null; end if;
+  pr := _advance(pr);   -- hp и mana на «сейчас» (читающий запрос ничего не записывает)
   return jsonb_build_object(
     'level', pr.hero_level, 'xp', pr.hero_xp, 'school', pr.school_xp,
     'abilities', coalesce((select jsonb_object_agg(ability_id, jsonb_build_object('level', level, 'unlocked', unlocked)) from player_abilities where user_id = uid), '{}'::jsonb),
@@ -169,6 +215,8 @@ begin
     'pos',  case when pr.pos_x  is null then null else jsonb_build_object('x', pr.pos_x,  'y', pr.pos_y)  end,
     'safe', case when pr.safe_x is null then null else jsonb_build_object('x', pr.safe_x, 'y', pr.safe_y) end,
     'hp', pr.hp, 'mana', pr.mana, 'play', pr.play_ms, 'combats', pr.combats, 'tutorial', pr.tutorial,
+    'vitalsAt', (extract(epoch from pr.vitals_at) * 1000)::bigint,
+    'combatSince', case when pr.combat_since is null then null else (extract(epoch from pr.combat_since) * 1000)::bigint end,
     'meta', jsonb_build_object('playerId', to_jsonb(pf)->>'player_id', 'hero', pf.hero_id, 'nickname', pf.nickname, 'registered', pf.nickname is not null,
                                'rev', pr.rev, 'createdAt', pf.created_at, 'registeredAt', pf.registered_at, 'lastSeenAt', pf.last_seen_at)
   );
@@ -255,7 +303,7 @@ begin
   insert into player_progress (user_id) values (uid)
     on conflict (user_id) do update set rev = player_progress.rev + 1, hero_level = 1, hero_xp = 0,
       school_xp = '{"telekinesis":0,"fire":0,"seal":0}', research = null, pos_x = null, pos_y = null, safe_x = null, safe_y = null,
-      hp = null, mana = null, play_ms = 0, combats = '[]', tutorial = '[]', updated_at = now();
+      hp = null, mana = null, vitals_at = date_trunc('milliseconds', now()), combat_since = null, play_ms = 0, combats = '[]', tutorial = '[]', updated_at = now();
   return _snapshot(uid);
 end $$;
 
@@ -291,6 +339,7 @@ begin
     pr.recent_syncs := (select coalesce(jsonb_agg(e order by i), '[]'::jsonb) from (
       select e, i from jsonb_array_elements(pr.recent_syncs || to_jsonb(patch ->> 'id')) with ordinality as t(e, i) order by i desc limit 20) z);
   end if;
+  pr := _advance(pr);   -- v0.12.0: сначала восстановление до «сейчас», затем изменения клиента
 
   -- опыт героя только растёт (не больше gain_xp за раз), уровень сервер считает сам по таблице порогов
   n := _num(patch -> 'xp');
@@ -382,15 +431,11 @@ begin
   if jsonb_typeof(patch -> 'safe') = 'object' and _num(patch -> 'safe' -> 'x') is not null and _num(patch -> 'safe' -> 'y') is not null then
     pr.safe_x := _num(patch -> 'safe' -> 'x'); pr.safe_y := _num(patch -> 'safe' -> 'y');
   end if;
-  -- HP и мана: последний записал, в пределах 0…максимум текущего уровня (v0.9)
-  select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels where level = pr.hero_level;
-  if mx_hp is null then select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels order by level desc limit 1; end if;
-  if jsonb_typeof(patch -> 'hp') = 'object' and (patch -> 'hp') ? 'value' then
-    n := _num(patch -> 'hp' -> 'value'); pr.hp := case when n is null then null else _clamp(n, 0, mx_hp) end;   -- null — «полный запас»
-  end if;
-  if jsonb_typeof(patch -> 'mana') = 'object' and (patch -> 'mana') ? 'value' then
-    n := _num(patch -> 'mana' -> 'value'); pr.mana := case when n is null then null else _clamp(n, 0, mx_mana) end;
-  end if;
+  -- v0.12.0: HP и ману клиент больше не записывает (поля hp и mana в patch игнорируются). Мана тратится дельтой mana_spent
+  -- (не ниже нуля); восстанавливает сервер по времени, лечат операции player_action (heal, drink, combat_end).
+  -- Пока идёт бой, траты мира не принимаются.
+  n := _num(patch -> 'mana_spent');
+  if n is not null and pr.combat_since is null then pr.mana := greatest(0, pr.mana - _clamp(n, 0, 1000)); end if;
 
   -- время игры: дельта (за раз не больше 10 минут)
   n := _num(patch -> 'play'); if n is not null then pr.play_ms := pr.play_ms + _clamp(trunc(n), 0, gain_play); end if;
@@ -409,7 +454,8 @@ begin
   end if;
 
   update player_progress set hero_level = pr.hero_level, hero_xp = pr.hero_xp, school_xp = pr.school_xp, research = pr.research,
-    pos_x = pr.pos_x, pos_y = pr.pos_y, safe_x = pr.safe_x, safe_y = pr.safe_y, hp = pr.hp, mana = pr.mana, play_ms = pr.play_ms,
+    pos_x = pr.pos_x, pos_y = pr.pos_y, safe_x = pr.safe_x, safe_y = pr.safe_y, hp = pr.hp, mana = pr.mana,
+    vitals_at = pr.vitals_at, combat_since = pr.combat_since, play_ms = pr.play_ms,
     combats = pr.combats, tutorial = pr.tutorial, recent_syncs = pr.recent_syncs, rev = pr.rev + 1, updated_at = now()
     where user_id = uid;
   update profiles set last_seen_at = now() where id = uid;
@@ -419,7 +465,7 @@ end $$;
 -- ---------------------------------------------------------------- v0.10.0: правила крафта и сюжетных предметов
 -- Генерируется из src/config/recipes.js и src/config/storyItems.js (serverRules): node tools/sql/gen-rules.mjs. Руками не править.
 -- @rules:begin
-create or replace function public._game_rules() returns jsonb language sql immutable as $r$ select '{"recipes":{"elixir_life":{"result":"elixir_life","amount":1,"needs":{"moon_herb":2,"forest_mushroom":1},"requires":[],"crafted":null,"blockedBy":[]},"elixir_mana":{"result":"elixir_mana","amount":1,"needs":{"moon_herb":1,"rune_dust":1},"requires":[],"crafted":null,"blockedBy":[]},"resin_flask":{"result":"resin_flask","amount":1,"needs":{"tree_resin":2,"rune_dust":1},"requires":[],"crafted":null,"blockedBy":[]},"lunar_wick":{"result":"lunar_wick","amount":1,"needs":{"moon_herb":1,"tree_resin":1,"rune_dust":1,"lunar_flame":3},"requires":["lunar_quest_start"],"crafted":"lunar_wick_crafted","blockedBy":["lunar_wick_crafted","lunar_quest_complete"]},"revealing_compound":{"result":"revealing_compound","amount":1,"needs":{"moon_herb":1,"forest_mushroom":1,"rune_dust":1},"requires":["lunar_quest_complete"],"crafted":"revealing_compound_crafted","blockedBy":["revealing_compound_crafted","gate_marks_revealed"]},"restoration_bundle":{"result":"restoration_bundle","amount":1,"needs":{"moon_herb":2,"tree_resin":2,"rune_dust":2,"lunar_shard":1,"rare_core":1},"requires":["lunar_quest_complete"],"crafted":"restoration_bundle_crafted","blockedBy":["restoration_bundle_crafted","chapter_1_complete"]}},"uses":{"lunar_wick":{"requires":["lunar_quest_start"],"blockedBy":["lunar_quest_complete"],"events":["lunar_quest_complete"],"reward":{"heroXP":50,"schoolXP":{"telekinesis":40},"items":{"lunar_shard":3},"topUp":{"school":{"telekinesis":150},"items":{"lunar_shard":5}}}},"revealing_compound":{"requires":["guardian_defeated"],"blockedBy":["gate_marks_revealed"],"events":["gate_marks_revealed"],"reward":{"heroXP":30}},"restoration_bundle":{"requires":["chapter_trial_defeated","unlock_seal_1"],"blockedBy":["chapter_1_complete"],"mana":20,"events":["chapter_1_complete"],"reward":{"heroXP":100,"coins":30,"schoolXP":{"seal":40}}}},"firstCraft":{"event":"first_craft_complete","reward":{"heroXP":15}},"migration":{"event":"mig_v10","guardian":"forest_guardian_01","item":"rare_core","notIf":["restoration_bundle_crafted","chapter_1_complete"]}}'::jsonb $r$;
+create or replace function public._game_rules() returns jsonb language sql immutable as $r$ select '{"recipes":{"elixir_life":{"result":"elixir_life","amount":1,"needs":{"moon_herb":2,"forest_mushroom":1},"requires":[],"crafted":null,"blockedBy":[]},"elixir_mana":{"result":"elixir_mana","amount":1,"needs":{"moon_herb":1,"rune_dust":1},"requires":[],"crafted":null,"blockedBy":[]},"resin_flask":{"result":"resin_flask","amount":1,"needs":{"tree_resin":2,"rune_dust":1},"requires":[],"crafted":null,"blockedBy":[]},"lunar_wick":{"result":"lunar_wick","amount":1,"needs":{"moon_herb":1,"tree_resin":1,"rune_dust":1,"lunar_flame":3},"requires":["lunar_quest_start"],"crafted":"lunar_wick_crafted","blockedBy":["lunar_wick_crafted","lunar_quest_complete"]},"revealing_compound":{"result":"revealing_compound","amount":1,"needs":{"moon_herb":1,"forest_mushroom":1,"rune_dust":1},"requires":["lunar_quest_complete"],"crafted":"revealing_compound_crafted","blockedBy":["revealing_compound_crafted","gate_marks_revealed"]},"restoration_bundle":{"result":"restoration_bundle","amount":1,"needs":{"moon_herb":2,"tree_resin":2,"rune_dust":2,"lunar_shard":1,"rare_core":1},"requires":["lunar_quest_complete"],"crafted":"restoration_bundle_crafted","blockedBy":["restoration_bundle_crafted","chapter_1_complete"]}},"uses":{"lunar_wick":{"requires":["lunar_quest_start"],"blockedBy":["lunar_quest_complete"],"events":["lunar_quest_complete"],"reward":{"heroXP":50,"schoolXP":{"telekinesis":40},"items":{"lunar_shard":3},"topUp":{"school":{"telekinesis":150},"items":{"lunar_shard":5}}}},"revealing_compound":{"requires":["guardian_defeated"],"blockedBy":["gate_marks_revealed"],"events":["gate_marks_revealed"],"reward":{"heroXP":30}},"restoration_bundle":{"requires":["chapter_trial_defeated","unlock_seal_1"],"blockedBy":["chapter_1_complete"],"mana":20,"events":["chapter_1_complete"],"reward":{"heroXP":100,"coins":30,"schoolXP":{"seal":40}}}},"firstCraft":{"event":"first_craft_complete","reward":{"heroXP":15}},"migration":{"event":"mig_v10","guardian":"forest_guardian_01","item":"rare_core","notIf":["restoration_bundle_crafted","chapter_1_complete"]},"vitals":{"hpRegenPerSec":1,"manaRegenWorld":0.5,"manaRegenHouse":2,"house":{"x":640,"y":4880,"w":520,"h":420},"defeatHpFraction":0.2,"staleCombatSec":900},"potions":{"elixir_life":{"kind":"heal","amount":0.45},"elixir_mana":{"kind":"mana","amount":0.6}}}'::jsonb $r$;
 -- @rules:end
 
 -- ---------------------------------------------------------------- v0.9 / v0.10.0: атомарные действия игрока
@@ -508,6 +554,7 @@ begin
     pr.recent_syncs := (select coalesce(jsonb_agg(e order by i), '[]'::jsonb) from (
       select e, i from jsonb_array_elements(pr.recent_syncs || to_jsonb(aid)) with ordinality as t(e, i) order by i desc limit 20) z);
   end if;
+  pr := _advance(pr);   -- v0.12.0: восстановление HP и маны до «сейчас», затем действие
   select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels where level = pr.hero_level;
   if mx_hp is null then select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels order by level desc limit 1; end if;
   rules := _game_rules();
@@ -516,12 +563,58 @@ begin
     price := ceil((mx_hp - cur) / 10.0 - 1e-9);
     select quantity into coins from player_inventory where user_id = uid and item_id = 'coins';
     coins := coalesce(coins, 0);
-    if price <= 0 then res := jsonb_build_object('ok', false, 'reason', 'full', 'price', 0);
+    if pr.combat_since is not null then res := jsonb_build_object('ok', false, 'reason', 'combat', 'price', 0);
+    elsif price <= 0 then res := jsonb_build_object('ok', false, 'reason', 'full', 'price', 0);
     elsif coins < price then res := jsonb_build_object('ok', false, 'reason', 'coins', 'price', price);
     else
       update player_inventory set quantity = quantity - price where user_id = uid and item_id = 'coins';
       pr.hp := mx_hp;
       res := jsonb_build_object('ok', true, 'price', price);
+    end if;
+  elsif op = 'drink' then
+    -- зелье из сумки вне боя: настой жизни / лунный эликсир возвращают долю максимума; при полном запасе не тратятся
+    u := case when jsonb_typeof(action -> 'item') = 'string' then rules -> 'potions' -> (action ->> 'item') end;
+    if u is null then res := jsonb_build_object('ok', false, 'reason', 'unknown');
+    elsif pr.combat_since is not null then res := jsonb_build_object('ok', false, 'reason', 'combat');
+    elsif _inv(uid, action ->> 'item') < 1 then res := jsonb_build_object('ok', false, 'reason', 'none');
+    elsif u ->> 'kind' = 'heal' then
+      cur := _clamp(coalesce(pr.hp::numeric, mx_hp), 0, mx_hp);
+      if cur >= mx_hp then res := jsonb_build_object('ok', false, 'reason', 'full', 'kind', 'heal');
+      else
+        perform _inv_add(uid, action ->> 'item', -1);
+        price := round(mx_hp * (u ->> 'amount')::numeric);
+        pr.hp := least(mx_hp, cur + price);
+        res := jsonb_build_object('ok', true, 'kind', 'heal', 'amount', pr.hp - cur);
+      end if;
+    else
+      cur := _clamp(coalesce(pr.mana::numeric, mx_mana), 0, mx_mana);
+      if cur >= mx_mana then res := jsonb_build_object('ok', false, 'reason', 'full', 'kind', 'mana');
+      else
+        perform _inv_add(uid, action ->> 'item', -1);
+        price := round(mx_mana * (u ->> 'amount')::numeric);
+        pr.mana := least(mx_mana, cur + price);
+        res := jsonb_build_object('ok', true, 'kind', 'mana', 'amount', pr.mana - cur);
+      end if;
+    end if;
+  elsif op = 'combat_start' then
+    -- с этого момента восстановление стоит, а лечение и зелья из сумки закрыты; повтор не сдвигает начало
+    if pr.combat_since is null then pr.combat_since := pr.vitals_at; end if;
+    res := jsonb_build_object('ok', true);
+  elsif op = 'combat_end' then
+    -- итог боя: победа — полное HP, поражение — 20% максимума, отступление (перезагрузка посреди боя) — не ниже этой доли.
+    -- Остаток маны сообщает клиент (до серверного боя, этап 3); в пределах максимума.
+    if pr.combat_since is null then res := jsonb_build_object('ok', false, 'reason', 'no_combat');
+    elsif coalesce(action ->> 'outcome', '') not in ('victory', 'defeat', 'retreat') then res := jsonb_build_object('ok', false, 'reason', 'bad_outcome');
+    else
+      cur := _clamp(coalesce(pr.hp::numeric, mx_hp), 0, mx_hp);
+      price := greatest(1, ceil(mx_hp * (rules -> 'vitals' ->> 'defeatHpFraction')::numeric - 1e-9));
+      if action ->> 'outcome' = 'victory' then pr.hp := mx_hp;
+      elsif action ->> 'outcome' = 'defeat' then pr.hp := price;
+      else pr.hp := greatest(cur, price);
+      end if;
+      if action ->> 'outcome' <> 'retreat' and _num(action -> 'mana') is not null then pr.mana := _clamp(_num(action -> 'mana'), 0, mx_mana); end if;
+      pr.combat_since := null;
+      res := jsonb_build_object('ok', true, 'outcome', action ->> 'outcome');
     end if;
   elsif op = 'starter_kit' then
     if exists (select 1 from player_quests where user_id = uid and quest_id = 'mirra_starter_kit') then
@@ -588,6 +681,7 @@ begin
       order by i desc limit 20) z);
   end if;
   update player_progress set hp = pr.hp, mana = pr.mana, hero_xp = pr.hero_xp, hero_level = pr.hero_level, school_xp = pr.school_xp,
+    vitals_at = pr.vitals_at, combat_since = pr.combat_since,
     recent_syncs = pr.recent_syncs, recent_actions = pr.recent_actions, rev = pr.rev + 1, updated_at = now() where user_id = uid;
   return _snapshot(uid) || jsonb_build_object('action', res);
 end $$;
@@ -598,7 +692,7 @@ end $$;
 revoke all on function public._num(jsonb), public._clamp(numeric, numeric, numeric), public._valid_id(text), public._snapshot(uuid) from public, anon, authenticated;
 -- v0.10.0: служебные функции действий — только изнутри player_action
 revoke all on function public._game_rules(), public._has_event(uuid, text), public._inv(uuid, text), public._inv_add(uuid, text, numeric),
-  public._add_event(uuid, text), public._grant(uuid, player_progress, jsonb) from public, anon, authenticated;
+  public._add_event(uuid, text), public._grant(uuid, player_progress, jsonb), public._advance(player_progress) from public, anon, authenticated;
 revoke all on function public.create_player(text), public.get_player(), public.reset_player(text), public.sync_player(jsonb), public.player_action(jsonb) from public, anon;
 grant execute on function public.create_player(text), public.get_player(), public.reset_player(text), public.sync_player(jsonb), public.player_action(jsonb) to authenticated;
 revoke all on function public.nickname_available(text) from public;

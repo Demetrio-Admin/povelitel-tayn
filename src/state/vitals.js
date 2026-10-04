@@ -1,6 +1,8 @@
 // v0.9 — общие HP и мана героини: одни и те же запасы в мире, в бою, в HUD, профиле и сумке. Без Phaser.
 // Хранятся в GameState.data.hp / data.mana (дробные; округляется только отображение).
 // null — «полный запас» (старые сохранения и новый персонаж): при первом изменении становится числом.
+// v0.12.0: настоящие HP и мана хранит сервер и восстанавливает по своему времени (в том числе офлайн). Здесь — зеркало для экрана:
+// между ответами сервера значения идут по тем же скоростям от настенных часов (data.vitalsClock), а ответ сервера их поправляет.
 import { VITALS, HERO_RECOVERY, HEALING } from '../config/balance.hero.js';
 
 const finite = (v) => typeof v === 'number' && Number.isFinite(v);
@@ -29,12 +31,24 @@ export function normalize(state) {
 
 export const canAfford = (state, cost) => mana(state) + EPS >= cost;
 
-/** Списать ману. false — не хватает (ничего не меняется). */
+/**
+ * Списать ману. false — не хватает (ничего не меняется). Списанное копится в data.manaSpent: PlayerSession отправляет
+ * серверу прирост (mana_spent), а сервер вычитает его из своей маны.
+ */
 export function spendMana(state, cost) {
   if (!(cost > 0)) return true;
   if (!canAfford(state, cost)) return false;
-  setMana(state, Math.max(0, mana(state) - cost));
+  const before = mana(state);
+  setMana(state, Math.max(0, before - cost));
+  state.data.manaSpent = (state.data.manaSpent || 0) + (before - mana(state));
   return true;
+}
+
+/** Вернуть ману, списанную через spendMana (сбор отменён): уменьшает и счётчик потраченного. */
+export function refundMana(state, amount) {
+  const back = restoreMana(state, amount);
+  state.data.manaSpent = Math.max(0, (state.data.manaSpent || 0) - back);
+  return back;
 }
 
 /** Восстановить; возвращает фактически добавленное (0, если запас полный). */
@@ -42,11 +56,16 @@ export function restoreHp(state, amount) { const before = hp(state); setHp(state
 export function restoreMana(state, amount) { const before = mana(state); setMana(state, before + Math.max(0, amount)); return mana(state) - before; }
 
 /**
- * Пассивное восстановление вне боя: dt — секунды активной игры (без окон и боя). Огромный dt (скрытая вкладка)
- * обрезается до VITALS.maxTickSec. inHouse — дом Мирры (мана быстрее). Возвращает true, если что-то изменилось.
+ * Пассивное восстановление по настенным часам: HP и мана растут с теми же скоростями, что считает сервер, пока герой
+ * вне боя — окна, диалоги и скрытая вкладка не мешают. nowMs — Date.now(); inHouse — дом Мирры (мана быстрее).
+ * Во время боя (data.combatSince) время не засчитывается. Возвращает true, если что-то изменилось.
  */
-export function regen(state, dt, { inHouse = false } = {}) {
-  const t = clamp(finite(dt) ? dt : 0, 0, VITALS.maxTickSec);
+export function regenWall(state, nowMs, { inHouse = false } = {}) {
+  const d = state.data;
+  const from = finite(d.vitalsClock) ? d.vitalsClock : nowMs;
+  d.vitalsClock = nowMs;
+  if (d.combatSince != null) return false;
+  const t = Math.max(0, (nowMs - from) / 1000);
   if (t <= 0) return false;
   const h0 = hp(state), m0 = mana(state);
   const hMax = maxHp(state), mMax = maxMana(state);

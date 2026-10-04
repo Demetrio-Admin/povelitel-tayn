@@ -9,7 +9,7 @@
 const randomUUID = () => globalThis.crypto.randomUUID();
 let spawnSync = null;
 if (typeof process !== 'undefined' && process.versions?.node) ({ spawnSync } = await import('child_process'));
-import { applyPatch, applyAction, emptySnapshot, levelForXp } from '../../src/cloud/playerModel.js';
+import { applyPatch, applyAction, advanceVitals, emptySnapshot, levelForXp } from '../../src/cloud/playerModel.js';
 import { handle as accountFunction } from '../../supabase/functions/account/index.ts';
 
 const ANON = 'anon-key', SERVICE = 'service-key';
@@ -171,8 +171,37 @@ export class FakeSupabase {
   snapshot(uid) {
     const pl = this.players.get(uid);
     if (!pl) return null;
-    return { ...JSON.parse(JSON.stringify(pl.snap)), meta: { hero: pl.hero, nickname: pl.nickname, registered: pl.nickname !== null, rev: pl.rev,
+    const snap = advanceVitals(JSON.parse(JSON.stringify(pl.snap)), this.clock);   // v0.12.0: читающий запрос видит запасы «на сейчас»
+    return { ...snap, meta: { hero: pl.hero, nickname: pl.nickname, registered: pl.nickname !== null, rev: pl.rev,
       createdAt: new Date(pl.createdAt).toISOString(), registeredAt: pl.registeredAt ? new Date(pl.registeredAt).toISOString() : null, lastSeenAt: new Date(this.clock).toISOString() } };
+  }
+
+  /** Тесты: выставить настоящие HP и ману игрока на сервере «прямо сейчас» (оба бэкенда). */
+  setVitals(uid, { hp = null, mana = null } = {}) {
+    if (this.backend === 'pg') {
+      pg(`update public.player_progress set hp = ${hp === null ? 'null' : hp}, mana = ${mana === null ? 'null' : mana}, vitals_at = date_trunc('milliseconds', now()) where user_id = '${uid}';`);
+    } else {
+      const pl = this.players.get(uid); pl.snap.hp = hp; pl.snap.mana = mana; pl.snap.vitalsAt = this.clock;
+    }
+  }
+
+  /** Тесты: «прошло sec секунд» для восстановления на сервере — записи сдвигаются в прошлое (в pg настоящее время не перематывается). */
+  timeTravel(uid, sec) {
+    if (this.backend === 'pg') {
+      pg(`update public.player_progress set vitals_at = vitals_at - ${sec} * interval '1 second', combat_since = combat_since - ${sec} * interval '1 second' where user_id = '${uid}';`);
+    } else {
+      const pl = this.players.get(uid);
+      pl.snap.vitalsAt -= sec * 1000; if (pl.snap.combatSince != null) pl.snap.combatSince -= sec * 1000;
+    }
+  }
+
+  /** Тесты: что сервер хранит про HP и бой (без пересчёта по времени). */
+  rawVitals(uid) {
+    if (this.backend === 'pg') {
+      const [hp, mana, cs] = pg(`select coalesce(hp::text,''), coalesce(mana::text,''), coalesce(combat_since::text,'') from public.player_progress where user_id = '${uid}';`).trim().split('|');
+      return { hp: hp === '' ? null : Number(hp), mana: mana === '' ? null : Number(mana), combat: cs !== '' };
+    }
+    const pl = this.players.get(uid); return { hp: pl.snap.hp, mana: pl.snap.mana, combat: pl.snap.combatSince != null };
   }
 
   rpcModel(fn, a, role, uid) {
@@ -187,7 +216,7 @@ export class FakeSupabase {
         if (!authed()) return err(403, '28000', 'not_authenticated');
         if (!/^[a-z0-9_]{1,32}$/.test(String(a.hero || ''))) return err(400, '22023', 'invalid_hero');
         if (!this.players.has(uid)) {
-          const snap = emptySnapshot();
+          const snap = { ...emptySnapshot(), vitalsAt: this.clock };
           this.players.set(uid, { snap: { ...snap, pos: null, safe: null }, hero: a.hero, nickname: null, norm: null, createdAt: this.clock, registeredAt: null, rev: 0, recent: [] });
         }
         return this.reply(200, this.snapshot(uid));
@@ -198,7 +227,7 @@ export class FakeSupabase {
       case 'reset_player': {
         if (!authed()) return err(403, '28000', 'not_authenticated');
         const pl = this.players.get(uid);
-        const snap = emptySnapshot();
+        const snap = { ...emptySnapshot(), vitalsAt: this.clock };
         this.players.set(uid, { ...(pl || { nickname: null, norm: null, createdAt: this.clock, registeredAt: null, recent: [] }), snap: { ...snap, pos: null, safe: null }, hero: a.hero, rev: (pl?.rev || 0) + 1 });
         return this.reply(200, this.snapshot(uid));
       }
@@ -211,7 +240,7 @@ export class FakeSupabase {
         if (typeof patch.id === 'string' && pl.recent.includes(patch.id)) return this.reply(200, this.snapshot(uid));
         if (typeof patch.id === 'string' && patch.id.length >= 8 && patch.id.length <= 64) pl.recent = [...pl.recent, patch.id].slice(-20);
         const base = { ...pl.snap, pos: pl.snap.pos || { x: 0, y: 0 }, safe: pl.snap.safe || { x: 0, y: 0 } };
-        const next = applyPatch(base, patch);
+        const next = applyPatch(base, patch, this.clock);
         pl.snap = { ...next, pos: patch.pos && Number.isFinite(patch.pos.x) && Number.isFinite(patch.pos.y) ? next.pos : pl.snap.pos,
           safe: patch.safe && Number.isFinite(patch.safe.x) && Number.isFinite(patch.safe.y) ? next.safe : pl.snap.safe };
         pl.snap.level = Math.max(pl.snap.level, levelForXp(pl.snap.xp));
@@ -230,7 +259,7 @@ export class FakeSupabase {
         }
         if (typeof act.id === 'string' && act.id.length >= 8 && act.id.length <= 64) pl.recent = [...pl.recent, act.id].slice(-20);
         const base = { ...pl.snap, pos: pl.snap.pos || { x: 0, y: 0 }, safe: pl.snap.safe || { x: 0, y: 0 } };
-        const { snapshot: next, result } = applyAction(base, act);
+        const { snapshot: next, result } = applyAction(base, act, this.clock);
         pl.snap = { ...next, pos: pl.snap.pos, safe: pl.snap.safe };
         pl.rev++;
         if (typeof act.id === 'string' && act.id.length >= 8 && act.id.length <= 64) pl.recentActions = [...(pl.recentActions || []), { id: act.id, result }].slice(-20);

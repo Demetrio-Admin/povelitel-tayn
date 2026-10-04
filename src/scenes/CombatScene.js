@@ -611,6 +611,7 @@ export class CombatScene extends Phaser.Scene {
     console.info(`[combat] ${this.enemyType} ${result} in ${secs}s`, this.cm.stats);
     { const v = vitals.view(state); services.telemetry?.track('combat_end', { enemy: this.enemyType, spawn: this.spawnId, result, sec: secs, hp: v.hp, mana: v.mana, intr: this.cm.stats.interrupts, lvl: state.data.heroLevel }); }
     this.coach?.setVisible(false);
+    this.settled = this.settleServer(result === 'victory' ? 'victory' : 'defeat', this.cm.hero.mana);   // сервер узнаёт итог боя и возобновляет восстановление
 
     if (result === 'victory') {
       this.tweens.add({ targets: this.enemySprite, alpha: 0, scaleY: 0.2, duration: 600 });
@@ -637,7 +638,7 @@ export class CombatScene extends Phaser.Scene {
       for (const lv of r.levelUps) lines.push('', `★ Новый уровень ${lv.level}! ${lv.note || ''}`);
       this.time.delayedCall(700, () => this.bus.emit(MSG.DIALOG, {
         title: 'Победа!', color: COLORS.gold, text: lines.join('\n'),
-        buttons: [{ label: 'Продолжить', primary: true, onClick: () => this.exit('victory') }],
+        buttons: [{ label: 'Продолжить', primary: true, onClick: async () => { await this.settled; this.exit('victory'); } }],
       }));
     } else {
       const lost = Math.min(state.item('coins'), HERO_RECOVERY.coinsLostOnDefeat);
@@ -652,9 +653,26 @@ export class CombatScene extends Phaser.Scene {
       this.time.delayedCall(700, () => this.bus.emit(MSG.DIALOG, {
         title: 'Поражение', color: COLORS.danger,
         text: `${STORY.defeat}\n\nЗдоровье: ${v.hp} / ${v.maxHp}   ·   мана: ${v.mana} / ${v.maxMana}${lost ? `\nПотеряно монет: ${lost}.` : ''}\n\n${STORY.retryHint}\nСовет: следите за красным предупреждением и держите Телекинез готовым для прерывания.${this.def.phases ? ' Кристалл снимает броню, Огонь выжигает кору, а в третьей фазе тень пробивает только Астрал; сильный удар прерывает Телекинез.' : this.def.armor ? ' Сначала разбейте кристалл, чтобы снять броню.' : ''}`,
-        buttons: [{ label: 'Вернуться', primary: true, onClick: () => this.exit('defeat') }],
+        buttons: [{ label: 'Вернуться', primary: true, onClick: async () => { await this.settled; this.exit('defeat'); } }],
       }));
     }
+  }
+
+  /**
+   * v0.12.0: сообщить серверу итог боя (combat_end). Нет связи — повторяем, пока не получится: кнопка «Продолжить» ждёт.
+   * Остальные отказы (сервер не знает о бое и т. п.) не мешают вернуться в мир.
+   */
+  async settleServer(outcome, mana) {
+    const wait = (ms) => new Promise(r => setTimeout(r, ms));
+    for (let i = 0; i < 60; i++) {
+      if (!services.actions) return { ok: true };
+      const r = await services.actions.combatEnd(outcome, mana);
+      if (r.reason === 'busy') { await wait(250); continue; }
+      if (r.reason === 'network') { await wait(1500); continue; }
+      if (!r.ok && r.reason !== 'no_combat' && r.reason !== 'session') console.error('[combat] сервер не принял итог боя', r);
+      return r;
+    }
+    return { ok: false, reason: 'network' };
   }
 
   exit(result) {

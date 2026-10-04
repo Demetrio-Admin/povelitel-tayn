@@ -105,11 +105,11 @@ try {
     await page.waitForFunction(() => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === 'herb_g1', null, { timeout: 120000 });
     assert.match(await ui(() => window.__game.scene.getScene('UIScene').ctxLabel.text), /4 маны/);
     await shot('v09-gather-cost');
-    const mana0 = await ui(() => window.__witch.state.data.mana ?? 100);
+    const mana0 = await ui(() => window.__witch.state.data.manaSpent || 0);   // v0.12.0: мана восстанавливается по часам, поэтому считаем счётчик потраченного
     const ctxp = await ui(() => { const u = window.__game.scene.getScene('UIScene'); const r = u.ctxBg.getBounds(); return { x: r.centerX, y: r.centerY }; });
     await tap(ctxp.x, ctxp.y);
     await page.waitForFunction(() => window.__witch.state.item('moon_herb') >= 1, null, { timeout: 120000 });
-    assert.ok(Math.abs((await ui(() => window.__witch.state.data.mana)) - (mana0 - 4)) < 1, 'gather spent 4 mana once');
+    assert.equal((await ui(() => window.__witch.state.data.manaSpent || 0)) - mana0, 4, 'gather spent 4 mana once');
     await shot('v09-gather-spent');
     // нехватка маны: ничего не выдаётся
     await ui(() => { const ex = window.__game.scene.getScene('ExplorationScene'); window.__witch.state.data.mana = 2; window.__game.scene.getScene('UIScene').toasts.forEach(t => t.destroy()); window.__game.scene.getScene('UIScene').toasts = []; const h = ex.objects.find(o => o.id === 'herb_g2'); ex.player.setPosition(h.x, h.y + 40); ex.player.stop(); });
@@ -141,14 +141,14 @@ try {
     await healVia();
     await shot('v09-heal-poor');
     await close();
-    assert.equal(await ui(() => window.__witch.state.data.hp), 50);
+    { const hp = await ui(() => window.__witch.state.data.hp); assert.ok(hp >= 50 && hp < 100, 'без монет лечение не прошло, HP только восстанавливается по времени: ' + hp); }
     await ui(() => { window.__witch.state.data.inventory.coins = 30; });
     await healVia();
     await shot('v09-heal-ok');
     const healLabel = await ui(() => window.__game.scene.getScene('UIScene').modal.buttons.find(b => /^Восстановить за/.test(b.label)).label);
     await tapText(healLabel);
     await page.waitForFunction(() => window.__witch.state.data.hp === window.__witch.state.heroStats().maxHp, null, { timeout: 120000 });
-    assert.equal(await ui(() => window.__witch.state.item('coins')), 30 - Math.ceil(70 / 10));
+    { const paid = 30 - await ui(() => window.__witch.state.item('coins')), shown = Number(healLabel.match(/за (\d+)/)[1]); assert.ok(paid >= shown - 3 && paid <= shown, `списано ${paid}, в окне было ${shown}: за секунды до нажатия HP успело подрасти`); }   // цена зависит от того, сколько HP успело восстановиться по времени
     await shot('v09-heal-done');
     // обучение первого боя: реальные касания «Понятно», камня и Телекинеза; прерывание опасной атаки
     await ui(() => { const s = window.__witch, g = window.__game; s.settings.set('hints', true); s.tutorial.hide(); g.scene.getScene('UIScene').toasts.forEach(t => t.destroy()); g.scene.getScene('UIScene').toasts = [];
@@ -200,7 +200,7 @@ try {
     await page.waitForTimeout(1500);
     const afterDefeat = await ui(() => { const ex = window.__game.scene.getScene('ExplorationScene'), s = window.__witch.state; return { x: ex.player.x, y: ex.player.y, pre: window.__preFight, hp: s.data.hp, max: s.heroStats().maxHp, sp: s.data.safePoint, focus: ex.interaction.focus?.label, combat: window.__game.scene.isActive('CombatScene') }; });
     assert.ok(Math.hypot(afterDefeat.x - afterDefeat.pre.x, afterDefeat.y - afterDefeat.pre.y) < 2, 'stays at the pre-combat spot near the enemy');
-    assert.ok(afterDefeat.hp >= Math.ceil(afterDefeat.max * 0.2) && afterDefeat.hp < Math.ceil(afterDefeat.max * 0.2) + 6, '20% HP after defeat (+ a few seconds of regen): ' + afterDefeat.hp);
+    assert.ok(afterDefeat.hp >= Math.ceil(afterDefeat.max * 0.2) && afterDefeat.hp < afterDefeat.max * 0.5, '20% HP after defeat (+ восстановление по часам, пока шли диалоги): ' + afterDefeat.hp);
     assert.equal(afterDefeat.combat, false);
     assert.equal(afterDefeat.focus, 'Сразиться снова');
     await shot('v09-retry-near');
@@ -269,13 +269,13 @@ try {
     const menuItem = async id => { await tap(menuBtn.x, menuBtn.y); await menuOpen();
       const p = await ui(id=>{const u=window.__game.scene.getScene('UIScene');const r=u.modal.items.find(i=>i.item.id===id).orb.getBounds();return {x:r.centerX,y:r.centerY};}, id);
       await tap(p.x, p.y); await page.waitForTimeout(250); };
-    for (const id of ['city','bank','rating','chat','forum']) {
-      const before = await ui(()=>JSON.stringify({...window.__witch.state.data,hp:0,mana:0,stats:{...window.__witch.state.data.stats,playTimeMs:0},tutorial:window.__witch.state.data.tutorial.filter(t=>!t.startsWith('hero:'))}))   /* v0.9: HP/мана восстанавливаются сами; v0.9.2: отложенные реплики героя о новых предметах не зависят от заглушки */;
+    for (const id of ['city','bank','rating','forum']) {
+      const before = await ui(()=>JSON.stringify({...window.__witch.state.data,hp:0,mana:0,vitalsClock:0,player:0,stats:{...window.__witch.state.data.stats,playTimeMs:0},tutorial:window.__witch.state.data.tutorial.filter(t=>!t.startsWith('hero:'))}))   /* v0.9: HP/мана восстанавливаются сами; v0.9.2: отложенные реплики героя о новых предметах не зависят от заглушки */;
       await menuItem(id);
       assert.equal(await ui(()=>window.__game.scene.getScene('UIScene').modal?.opts?.stub), id);
       if (id === 'city') await shot('stub-city');
       await close();
-      assert.equal(await ui(()=>JSON.stringify({...window.__witch.state.data,hp:0,mana:0,stats:{...window.__witch.state.data.stats,playTimeMs:0},tutorial:window.__witch.state.data.tutorial.filter(t=>!t.startsWith('hero:'))}))   /* v0.9: HP/мана восстанавливаются сами; v0.9.2: отложенные реплики героя о новых предметах не зависят от заглушки */, before, id + ' stub changes nothing');
+      assert.equal(await ui(()=>JSON.stringify({...window.__witch.state.data,hp:0,mana:0,vitalsClock:0,player:0,stats:{...window.__witch.state.data.stats,playTimeMs:0},tutorial:window.__witch.state.data.tutorial.filter(t=>!t.startsWith('hero:'))}))   /* v0.9: HP/мана восстанавливаются сами; v0.9.2: отложенные реплики героя о новых предметах не зависят от заглушки */, before, id + ' stub changes nothing');
       assert.equal(await ui(()=>window.__witch.modalOpen), false);
     }
     await menuItem('settings');

@@ -88,9 +88,11 @@ await ev(async () => {
   await S.session.playAsGuest('witch');
   const st = S.state;
   st.markEvent('prologue_seen'); st.markEvent('unlock_telekinesis_1'); st.unlockAbility('telekinesis', 1);
-  st.addItem('coins', 50); st.data.hp = 45; st.data.mana = 20; st.save();
+  st.addItem('coins', 50); st.save();
   await S.session.flush();
 });
+// v0.12.0: HP и ману задаёт сервер — выставляем их на сервере (не полные), мир их восстанавливает
+srv.setVitals(await ev(() => window.__witch.session.userId), { hp: 45, mana: 20 });
 await p.goto(new URL('?skipmenu', BASE).href);
 await inGame();
 await watch();
@@ -111,7 +113,7 @@ ok(count(act, 'player_action') === 1 && act.find(n => n.rpc === 'player_action')
 ok(/"op":"starter_kit"/.test(act.find(n => n.rpc === 'player_action')?.body || ''), 'тело запроса: { action: { op: "starter_kit", id } }');
 ok(k.life === 1 && k.mana === 1 && k.ev, 'в сумке 1 Настой жизни и 1 Лунный эликсир, событие mirra_starter_kit');
 ok(!k.toasts.some(t => /Нет связи|Ошибка сервера/.test(t)), `нет ложного «Нет связи» (сообщения: ${k.toasts.join(' | ') || '—'})`);
-ok(frozen(k.frames), `пока действие выполнялось (${k.nFrames} кадров), время игры, HP и мана не росли (мир стоял)`);
+ok(frozen(k.frames, [0]), `пока действие выполнялось (${k.nFrames} кадров), время игры не шло (мир стоял)`);
 
 console.log('\nПерезагрузка и повторный разговор');
 await p.goto(new URL('?skipmenu', BASE).href);
@@ -124,7 +126,8 @@ k = await ev(() => { const s = window.__witch.state; return { life: s.item('elix
 ok(k.life === 1 && k.mana === 1 && !(await netNow()).slice(from).some(n => n.rpc === 'player_action' && /starter_kit/.test(n.body || '')), 'повторный разговор не выдаёт второй набор');
 
 console.log('\nЛечение у Мирры');
-await ev(() => { const s = window.__witch.state; s.data.hp = 40; s.save(); });
+srv.setVitals(await ev(() => window.__witch.session.userId), { hp: 40, mana: 20 });
+await ev(() => window.__witch.session.flush({ force: true }));
 await sleep(1500);
 const h0 = await ev(() => ({ coins: window.__witch.state.item('coins'), hp: window.__witch.state.data.hp }));
 from = (await netNow()).length;
@@ -143,7 +146,7 @@ ok(count(act, 'player_action') === 1 && act.find(n => n.rpc === 'player_action')
 ok(count(act, 'sync_player') <= 1, `перед лечением не больше одного sync_player (${count(act, 'sync_player')})`);
 ok(h1.hp === h1.max && price > 0 && new RegExp(`${price} монет`).test(win), `HP ${h1.max}/${h1.max}, списано ${price} монет — как в окне подтверждения`);
 ok(!h1.toasts.some(t => /Нет связи|Ошибка сервера/.test(t)) && h1.toasts.some(t => /Здоровье восстановлено/.test(t)), `сообщение: ${h1.toasts.join(' | ')}`);
-ok(frozen(h1.frames, [0, 2]), `пока шло лечение (${h1.nFrames} кадров), мир стоял`);
+ok(frozen(h1.frames, [0]), `пока шло лечение (${h1.nFrames} кадров), мир стоял`);
 
 // 2) после перезагрузки — то же на сервере
 await p.goto(new URL('?skipmenu', BASE).href);

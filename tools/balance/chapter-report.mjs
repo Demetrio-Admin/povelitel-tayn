@@ -64,14 +64,15 @@ function run(scenario) {
   const ev = (k) => quests.complete(k);
   const pay = (cost, what) => {
     manaWorld += cost;
-    if (vitals.mana(state) < cost) { const need = cost - vitals.mana(state); clock.t += need / 0.5 * 1000; vitals.setMana(state, cost); L(`    ждём ману ${Math.ceil(need / 0.5)} с для «${what}»`); }
+    if (vitals.mana(state) < cost) { const need = cost - vitals.mana(state); clock.t += need / 0.5 * 1000; state.data.vitalsClock = clock.t; vitals.setMana(state, cost); L(`    ждём ману ${Math.ceil(need / 0.5)} с для «${what}»`); }
     vitals.spendMana(state, cost);
   };
   // восстановление за плановое время этапа (по секунде, как в игре: мана +0,5/с в лесу, +2/с дома; HP +1/с)
-  const rest = (sec, house = false) => { for (let i = 0; i < sec; i++) { clock.t += 1000; vitals.regen(state, 1, { inHouse: house }); } minutes += sec / 60; };
+  state.data.vitalsClock = clock.t;
+  const rest = (sec, house = false) => { for (let i = 0; i < sec; i++) { clock.t += 1000; vitals.regenWall(state, clock.t, { inHouse: house }); } minutes += sec / 60; };
   let waited = 0;
   /** Перед боем игрок ждёт, пока мана восстановится хотя бы до доли frac (время ожидания — в отчёт). */
-  const ready = (frac) => { let s = 0; while (vitals.mana(state) < vitals.maxMana(state) * frac && s < 400) { clock.t += 1000; vitals.regen(state, 1); s++; } waited += s; if (s) L(`    ждём ману перед боем ${s} с`); };
+  const ready = (frac) => { let s = 0; while (vitals.mana(state) < vitals.maxMana(state) * frac && s < 400) { clock.t += 1000; vitals.regenWall(state, clock.t); s++; } waited += s; if (s) L(`    ждём ману перед боем ${s} с`); };
   const gather = (id, n = 1) => { const c = INTERACTIVES.find(o => o.id === id); for (let i = 0; i < n; i++) { pay(WORLD_MANA_COST.gather, id); add({ [c.res]: c.amount || 1 }); } };
   const chest = (id) => { const c = INTERACTIVES.find(o => o.id === id); state.applyReward(c.reward); track(); };
   const sq = (id) => { log.accept(id); const r = log.turnIn(id); if (!r) L(`    !! ${id} не сдано`); track(); };

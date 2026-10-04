@@ -3,6 +3,9 @@
 // функция _game_rules) и в JS-зеркале (cloud/playerModel.js applyAction); совпадение проверяет tools/sql/diff-test.mjs.
 // Награда: { heroXP, coins, schoolXP:{школа:N}, items:{id:N}, topUp:{ school:{школа:минимум}, items:{id:минимум} } }.
 import { RECIPES } from './recipes.js';
+import { VITALS, HERO_RECOVERY } from './balance.hero.js';
+import { POTIONS } from './resources.js';
+import { ZONES } from './world.layout.js';
 
 /** Сюжетные предметы: название, иконка, где применить (интерфейс). Предметы инвентаря как обычные, но не зелья. */
 export const STORY_ITEMS = {
@@ -50,5 +53,15 @@ export function serverRules() {
   const recipes = Object.fromEntries(Object.entries(RECIPES).map(([id, r]) => [id, {
     result: r.result, amount: r.amount, needs: r.needs, requires: r.requires || [], crafted: r.crafted || null, blockedBy: r.blockedBy || [],
   }]));
-  return { recipes, uses: STORY_USES, firstCraft: FIRST_CRAFT, migration: MIGRATION_V10 };
+  // v0.12.0: восстановление HP и маны считает сервер по времени (см. README «v0.12.0»)
+  const house = ZONES.find(z => z.id === VITALS.houseZone);
+  const vitals = {
+    hpRegenPerSec: VITALS.hpRegenPerSec, manaRegenWorld: VITALS.manaRegenWorld, manaRegenHouse: VITALS.manaRegenHouse,
+    house: { x: house.x, y: house.y, w: house.w, h: house.h },
+    defeatHpFraction: HERO_RECOVERY.defeatHpFraction, staleCombatSec: VITALS.staleCombatSec,
+  };
+  // зелья, которые пьются вне боя (op 'drink'): сколько долей максимума возвращают
+  const potions = Object.fromEntries(Object.entries(POTIONS).filter(([, p]) => p.outside && (p.effect.type === 'heal' || p.effect.type === 'mana'))
+    .map(([id, p]) => [id, { kind: p.effect.type, amount: p.effect.amount }]));
+  return { recipes, uses: STORY_USES, firstCraft: FIRST_CRAFT, migration: MIGRATION_V10, vitals, potions };
 }

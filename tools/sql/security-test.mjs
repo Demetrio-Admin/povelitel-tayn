@@ -87,12 +87,32 @@ ok(q(`select public.nickname_available('${NORM2}');`, 'anon').out === 't', 'rele
 
 console.log('\nБаза: v0.9 — мана и атомарные действия');
 ok(denied(q(`select public.player_action('{"op":"heal"}'::jsonb);`, 'anon')), 'без входа player_action недоступна');
+const near = (a, b) => Math.abs(a - b) < 1;
 const hb = JSON.parse(q(`select public.sync_player('{"hp":{"value":10},"mana":{"value":-5}}'::jsonb);`, B).out);
-ok(hb.hp === 10 && hb.mana === 0, 'мана ниже нуля обрезается до 0');
+ok(near(hb.hp, 120) && near(hb.mana, 100), 'v0.12.0: клиент не записывает HP и ману (поля hp и mana в patch игнорируются)');
+const sp = (n) => JSON.parse(q(`select public.sync_player('{"mana_spent":${n}}'::jsonb);`, B).out);
+ok(near(sp(30).mana, 70), 'mana_spent вычитается из маны');
+ok(near(sp(-50).mana, 70), 'отрицательный mana_spent не восстанавливает ману');
+ok(sp(99999).mana === 0 || near(sp(0).mana, 0), 'огромный mana_spent обрезается: мана не уходит ниже 0');
 const ha = JSON.parse(q(`select public.player_action('{"op":"heal","id":"sec-heal-00001"}'::jsonb);`, A).out);
 const hb2 = JSON.parse(q(`select public.get_player();`, B).out);
-ok(hb2.hp === 10, 'действие одного игрока не меняет чужого персонажа');
-ok(ha.action && ha.action.ok === false, 'лечение без монет/необходимости отклонено без изменений');
+ok(near(hb2.hp, 120) && hb2.mana < 5, 'действие одного игрока не меняет чужого персонажа');
+ok(ha.action && ha.action.ok === true && ha.action.price >= 1, 'лечение A: цена по недостающему HP (новый уровень поднял максимум, но не вылечил)');
+const hbh = JSON.parse(q(`select public.player_action('{"op":"heal","id":"sec-heal-00003"}'::jsonb);`, B).out);
+ok(hbh.action.ok === false && hbh.action.reason === 'full', 'лечение при полном HP отклонено без изменений');
+const ce = JSON.parse(q(`select public.player_action('{"op":"combat_end","outcome":"victory","mana":100,"id":"sec-cend-00001"}'::jsonb);`, B).out);
+ok(ce.action.ok === false && ce.action.reason === 'no_combat' && hb2.mana < 5 && ce.mana < 5, 'конец боя без начала ничего не даёт (полную ману бесплатно не получить)');
+const cs = JSON.parse(q(`select public.player_action('{"op":"combat_start","id":"sec-cstart-0001"}'::jsonb);`, A).out);
+const hc = JSON.parse(q(`select public.player_action('{"op":"heal","id":"sec-heal-00002"}'::jsonb);`, A).out);
+ok(cs.action.ok && cs.combatSince && hc.action.reason === 'combat', 'в бою лечение у Мирры закрыто');
+const dc = JSON.parse(q(`select public.player_action('{"op":"drink","item":"elixir_life","id":"sec-drink-0001"}'::jsonb);`, A).out);
+ok(dc.action.reason === 'combat', 'в бою зелья из сумки закрыты');
+const bo = JSON.parse(q(`select public.player_action('{"op":"combat_end","outcome":"win","id":"sec-cend-00002"}'::jsonb);`, A).out);
+ok(bo.action.reason === 'bad_outcome' && bo.combatSince, 'неизвестный исход боя отклонён, бой не закрыт');
+const ca = JSON.parse(q(`select public.player_action('{"op":"combat_end","outcome":"retreat","id":"sec-cend-00003"}'::jsonb);`, A).out);
+ok(ca.action.ok && ca.combatSince === null, 'отступление закрывает бой');
+const ph = q(`select public.player_action('{"op":"drink","item":"resin_flask","id":"sec-drink-0002"}'::jsonb);`, A).out;
+ok(JSON.parse(ph).action.reason === 'unknown', 'боевое зелье вне боя не пьётся');
 ok(denied(q(`update public.player_progress set mana = 100 where user_id = '${B}';`, B)) || /UPDATE 0|permission/.test(q(`update public.player_progress set mana = 100 where user_id = '${B}';`, B).err + 'UPDATE 0'), 'ману нельзя записать в таблицу напрямую');
 
 console.log('\nБаза: новая игра');

@@ -206,5 +206,106 @@ const CLS = { gather: GatherObject, npc: NpcObject, alchemy: AlchemyObject, insp
   delete st.data.worldObjects[encKey(cfg.id)];
 }
 
+
+console.log('\nПервая глава v0.10.0: алтарь, ворота, Печать, запас пыли, узел, возобновляемые враги');
+{
+  const st = sv.state;
+  const vitals = await import('../src/state/vitals.js');
+  const { AltarObject } = await import('../src/objects/InteractiveObject.js');
+  const { GateObject, SealSigilObject, DustStashObject, ForestNodeObject } = await import('../src/objects/ChapterObjects.js');
+  const { EnemyTrigger, enemyDownNow, recordRepeatWin, repKey } = await import('../src/objects/EnemyTrigger.js');
+  const { INTERACTIVES, ENEMY_SPAWNS } = await import('../src/config/world.layout.js');
+  const cfgOf = (id) => INTERACTIVES.find(c => c.id === id);
+  const toasts = [], dialogs = [];
+  const mk = () => Object.assign(mkScene(), { toast: (t) => toasts.push(t), dialog: (o) => dialogs.push(o), castFx() {}, panTo() {}, refreshAll() {}, onManaShort: (c) => toasts.push(`мана ${c}`), enemies: [] });
+  sv.actions.bus = bus;
+  let t = 1_000_000; st.now = () => t;
+
+  // --- алтарь: фитиль, а не сырые огоньки
+  st.markEvent('lunar_quest_start');
+  Object.assign(st.data.inventory, { lunar_flame: 3, moon_herb: 1, tree_resin: 1, rune_dust: 1 });
+  const altar = new AltarObject(mk(), cfgOf('lunar_altar'));
+  altar.interact();
+  ok(!st.hasEvent('lunar_quest_complete') && st.item('lunar_flame') === 3 && /фитиль/i.test(toasts.at(-1)), 'алтарь: сырые огоньки не принимает — подсказка сварить фитиль');
+  const c1 = await sv.actions.craft('lunar_wick');
+  ok(c1.ok && st.item('lunar_wick') === 1 && st.item('lunar_flame') === 0 && altar.label === 'Вставить фитиль', 'фитиль сварен: огоньки ушли в него, у алтаря кнопка «Вставить фитиль»');
+  const xp0 = st.data.heroXP;
+  await altar.insertWick();
+  ok(st.hasEvent('lunar_quest_complete') && st.item('lunar_wick') === 0 && st.data.heroXP === xp0 + 50 && dialogs.at(-1)?.title === 'Алтарь пробудился', 'фитиль вставлен: алтарь горит, +50 опыта, фитиль списан');
+
+  // --- ворота: состав проявляет знаки, Печать (20 маны) открывает
+  st.markEvent('guardian_defeated');
+  const gate = new GateObject(mk(), cfgOf('ancient_gate'));
+  ok(gate.stage === 'marks' && gate.blocker, 'ворота после Стража: этап «знаки», проход закрыт');
+  gate.interact(null);
+  ok(!st.hasEvent('gate_marks_revealed') && /Проявляющий состав/.test(toasts.at(-1)), 'без состава — подсказка, ничего не меняется');
+  st.addItem('revealing_compound', 1);
+  ok(gate.label === 'Проявить знаки', 'состав в сумке → кнопка «Проявить знаки»');
+  await gate.reveal();
+  ok(st.hasEvent('gate_marks_revealed') && st.item('revealing_compound') === 0 && gate.stage === 'tell' && !gate.opened, 'знаки проявлены: состав списан, ворота всё ещё закрыты');
+  st.markEvent('unlock_seal_1'); sv.abilities.unlock('seal', 1);
+  ok(gate.stage === 'train', 'Печать без обучения ворота не открывает');
+  st.markEvent('seal_training_complete');
+  ok(gate.stage === 'seal' && gate.ability === 'seal' && gate.manaCost() === 20, 'после обучения: ворота ждут Печать (20 маны)');
+  vitals.setMana(st, 100);
+  gate.interact('fire');
+  ok(!gate.opened && vitals.mana(st) === 100 && /Печать/.test(toasts.at(-1)), 'Огонь по воротам: отказ, мана не списана');
+  vitals.setMana(st, 10);
+  gate.interact('seal');
+  ok(!gate.opened && vitals.mana(st) === 10, 'не хватает маны: ворота закрыты, ничего не списано');
+  vitals.setMana(st, 100);
+  gate.interact('seal'); runDelayed();
+  ok(gate.opened && st.hasEvent('ancient_gate_open') && vitals.mana(st) === 80 && !gate.blocker && st.isPathOpen('node_glade'), 'Печать открыла ворота: 20 маны, проход свободен');
+
+  // --- учебный знак
+  st.data.completedEvents = st.data.completedEvents.filter(e => e !== 'seal_training_complete');
+  const sig = new SealSigilObject(mk(), cfgOf('seal_sigil'));
+  vitals.setMana(st, 5); sig.interact('seal');
+  ok(!st.hasEvent('seal_training_complete') && vitals.mana(st) === 5, 'учебный знак: без маны ничего не происходит');
+  vitals.setMana(st, 100); const sx = st.data.schoolXP.seal || 0;
+  sig.interact('seal'); runDelayed();
+  ok(st.hasEvent('seal_training_complete') && vitals.mana(st) === 80 && st.data.schoolXP.seal === sx + 6 && dialogs.at(-1)?.title === 'Знак ожил', 'учебный знак: 20 маны, +6 опыта Печати, видимое изменение');
+
+  // --- возобновляемый Корневик и запас пыли
+  const rcfg = ENEMY_SPAWNS.find(e => e.id === 'rootling_02');
+  ok(rcfg.repeatSec === 600 && ENEMY_SPAWNS.filter(e => e.enemy === 'rootling').length === 5 && ENEMY_SPAWNS.filter(e => e.repeatSec).length === 3, 'пять Корневиков, три возобновляемых (600 с)');
+  const sc = mk();
+  const guard = new EnemyTrigger(sc, rcfg); sc.enemies = [guard];
+  const stash = new DustStashObject(sc, cfgOf('dust_stash'));
+  ok(!stash.ready(), 'запас недоступен, пока Корневик стоит');
+  st.markEnemyDefeated('rootling_02'); recordRepeatWin(st, 'rootling_02'); guard.clear(false);
+  ok(guard.defeated && enemyDownNow(st, rcfg) && stash.ready(), 'победа: Корневик ушёл, запас открыт');
+  const d0 = st.item('rune_dust');
+  stash.interact(); stash.interact();
+  ok(st.item('rune_dust') === d0 + 2 && !stash.ready(), 'запас: +2 пыли один раз за цикл (повтор ничего не даёт)');
+  const stash2 = new DustStashObject(sc, cfgOf('dust_stash'));
+  ok(!stash2.ready(), 'после «перезагрузки» запас того же цикла не выдаётся снова');
+  t += 599_000; guard.update(0.1, { x: 0, y: 0 });
+  ok(guard.defeated, 'через 599 с Корневика ещё нет');
+  t += 2_000; guard.update(0.1, { x: rcfg.x, y: rcfg.y });
+  ok(!guard.defeated && guard.mustLeave && !guard.update(0.1, { x: rcfg.x, y: rcfg.y }), 'через 600 с Корневик вернулся, но рядом стоящую героиню в бой сразу не втягивает');
+  ok(!guard.update(0.1, { x: rcfg.x + 2000, y: rcfg.y }) && guard.update(0.1, { x: rcfg.x, y: rcfg.y }), 'отошла и вернулась — бой начинается');
+  t += 5 * 3600_000;
+  ok(!stash.ready(), 'часы оффлайн: запас без новой победы не копится');
+  recordRepeatWin(st, 'rootling_02'); guard.clear(false);
+  ok(st.getObject(repKey('rootling_02')).wins === 2 && stash.ready(), 'второй победный цикл — ещё одна выдача');
+
+  // --- узел: связка + Печать одной операцией
+  const node = new ForestNodeObject(mk(), cfgOf('forest_node'));
+  ok(node.stage === 'guarded', 'узел стережёт испытание');
+  st.markEvent('chapter_trial_defeated');
+  ok(node.stage === 'bundle', 'после испытания без связки — объяснение рецепта');
+  st.addItem('restoration_bundle', 1); vitals.setMana(st, 10);
+  const coins0 = st.item('coins');
+  await node.repair();
+  ok(!st.hasEvent('chapter_1_complete') && st.item('restoration_bundle') === 1 && vitals.mana(st) === 10 && st.item('coins') === coins0, 'мало маны: ремонт не прошёл, связка и мана на месте');
+  vitals.setMana(st, 100);
+  let fin = null; const offF = bus.on(MSG.FINAL_SCREEN, (x) => { fin = x; });
+  await node.repair();
+  ok(st.hasEvent('chapter_1_complete') && st.item('restoration_bundle') === 0 && vitals.mana(st) === 80 && st.item('coins') === coins0 + 30 && fin, 'ремонт: связка и 20 маны списаны, +30 монет, финал главы');
+  ok(!node.isAvailable(), 'восстановленный узел повторно не ремонтируется');
+  offF?.();
+}
+
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты объектов пройдены');
 process.exit(failures ? 1 : 0);

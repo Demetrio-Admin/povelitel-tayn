@@ -9,12 +9,19 @@ export const HERO_BASE = {
 // xp — суммарный опыт, нужный для достижения уровня.
 // [ПРОТОТИП] Пороги XP в документах не заданы — подобраны так, чтобы по маршруту
 // игрок получал ур. 2 после первого боя и ур. 3 к моменту Телекинеза II.
+// v0.10.0: уровни 6–10 (стартовый баланс v0.1, первая глава); реген маны в бою — 3/с (было 4) на всех уровнях.
+// Тот же набор (level, xp, maxHp, maxMana) — в SQL game_hero_levels (supabase/schema.sql); совпадение проверяет diff-test.
 export const HERO_LEVELS = [
-  { level: 1, xp: 0,   maxHp: 120, maxMana: 100, manaRegen: 4, damageMult: 1.00, note: 'Телекинез I' },
-  { level: 2, xp: 60,  maxHp: 126, maxMana: 110, manaRegen: 4, damageMult: 1.05, note: '+10 маны, +5% урона' },
-  { level: 3, xp: 150, maxHp: 132, maxMana: 110, manaRegen: 4, damageMult: 1.05, note: 'Доступ к Телекинезу II' },
-  { level: 4, xp: 270, maxHp: 138, maxMana: 115, manaRegen: 4, damageMult: 1.08, note: 'Пассивный талант (не в прототипе)' },
-  { level: 5, xp: 430, maxHp: 144, maxMana: 120, manaRegen: 4, damageMult: 1.10, note: 'Развитие Огня' },
+  { level: 1,  xp: 0,    maxHp: 120, maxMana: 100, manaRegen: 3, damageMult: 1.00, note: 'Телекинез I' },
+  { level: 2,  xp: 60,   maxHp: 126, maxMana: 110, manaRegen: 3, damageMult: 1.05, note: '+10 маны, +5% урона' },
+  { level: 3,  xp: 150,  maxHp: 132, maxMana: 110, manaRegen: 3, damageMult: 1.05, note: 'Доступ к Телекинезу II' },
+  { level: 4,  xp: 270,  maxHp: 138, maxMana: 115, manaRegen: 3, damageMult: 1.08, note: 'Телекинез II, путь к Огню' },
+  { level: 5,  xp: 430,  maxHp: 144, maxMana: 120, manaRegen: 3, damageMult: 1.10, note: 'Старый лес' },
+  { level: 6,  xp: 650,  maxHp: 152, maxMana: 125, manaRegen: 3, damageMult: 1.12, note: 'Печать и испытание' },
+  { level: 7,  xp: 940,  maxHp: 160, maxMana: 135, manaRegen: 3, damageMult: 1.15, note: 'Завершение главы' },
+  { level: 8,  xp: 1300, maxHp: 170, maxMana: 140, manaRegen: 3, damageMult: 1.18, note: 'Дополнительный выход' },
+  { level: 9,  xp: 1750, maxHp: 180, maxMana: 145, manaRegen: 3, damageMult: 1.21, note: 'Продолжение' },
+  { level: 10, xp: 2350, maxHp: 190, maxMana: 155, manaRegen: 3, damageMult: 1.25, note: 'Продолжение' },
 ];
 
 export const HERO_RECOVERY = {

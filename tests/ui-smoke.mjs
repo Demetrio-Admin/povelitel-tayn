@@ -130,16 +130,18 @@ await mute(async () => {
     const { services: sv } = await import('../src/services.js');
     const { MSG } = await import('../src/state/EventBus.js');
     const cases = [
-      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'seal_required_01'], 'Сварить зелье', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
-      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'seal_required_01'], 'Открыть журнал', MSG.OPEN_JOURNAL, 'Журнал'],
+      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'chapter_1_complete'], 'Сварить зелье', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
+      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'chapter_1_complete'], 'Открыть журнал', MSG.OPEN_JOURNAL, 'Журнал'],
       ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'mirra_starter_kit', 'first_world_interaction'], 'Покажи котёл', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
-      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'seal_required_01'], 'Восстановить здоровье', MSG.OPEN_HEAL, 'Лечение у Мирры'],
-      ['selena', ['lunar_quest_start', 'sq_dust_done'], 'Открыть алтарь', MSG.OPEN_UPGRADE, 'Изучение: Телекинез II'],
+      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'chapter_1_complete'], 'Восстановить здоровье', MSG.OPEN_HEAL, 'Лечение у Мирры'],
+      // v0.10.0: новые переходы диалог → котёл (фитиль у Мирры, связка после Печати)
+      ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'mirra_starter_kit', 'first_world_interaction', 'mirra_taught_alchemy', 'lunar_quest_start', 'lunar_quest_complete', 'unlock_seal_1'], 'Сварить связку', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
+      ['selena', ['lunar_quest_start', 'sq_dust_done', 'dlg:selena_wick'], 'Открыть алтарь', MSG.OPEN_UPGRADE, 'Изучение: Телекинез II'],
     ];
     sv.bus.offContext(ui);
     for (const [npc, events, answer, event, title] of cases) {
       await freshWorld('new');
-      events.forEach(k => sv.state.markEvent(k));
+      events.forEach(k => (k.startsWith('dlg:') ? sv.dialogue.markSeen(k.slice(4)) : sv.state.markEvent(k)));   // dlg: — разговор уже слышали
       sv.state.data.hp = 40; sv.state.addItem('coins', 20);   // v0.9: есть что лечить и чем платить
       const dialogUI = new UIScene(); dialogUI.create(); mkHud(dialogUI);
       let emissions = 0, closedFirst = false;
@@ -167,7 +169,7 @@ await mute(async () => {
     }
     await freshWorld('new');
     const cancelled = new UIScene(); cancelled.create(); mkHud(cancelled);
-    ['prologue_seen', 'unlock_telekinesis_1', 'seal_required_01'].forEach(k => sv.state.markEvent(k)); sv.dialogue.start('mirra');
+    ['prologue_seen', 'unlock_telekinesis_1', 'chapter_1_complete'].forEach(k => sv.state.markEvent(k)); sv.dialogue.start('mirra');
     cancelled.closeDialogue(true);
     ok(!sv.dialogue.active && !cancelled.modal && !sv.modalOpen, 'диалог: отмена без ответа не открывает другое окно');
     sv.bus.offContext(cancelled);
@@ -185,7 +187,7 @@ await mute(async () => {
     sv.state.data.heroLevel = 4; sv.state.data.heroXP = 370; h.refreshHud();
     ok(h.levelText.text === 'Ур. 4' && h.xpCaption.text === 'До 5 ур.: 60 опыта' && Math.abs(h.xpBar.frac - 0.625) < 1e-6, 'HUD: ур. 4, 370 опыта → полоса 62,5%, «До 5 ур.: 60 опыта»');
     const ups = sv.state.addHeroXP(80); h.onReward({ granted: { heroXP: 80 }, levelUps: ups });
-    ok(h.levelText.text === 'Ур. 5' && h.xpCaption.text === 'Максимальный уровень' && h.xpBar.frac === 1, 'HUD: после нового уровня 5 — «Максимальный уровень», без шестого уровня');
+    ok(h.levelText.text === 'Ур. 5' && h.xpCaption.text === 'До 6 ур.: 200 опыта', 'HUD: после нового уровня 5 — дальше «До 6 ур.» (v0.10.0: уровни до 10)');
     ok(!/NaN|null|undefined|-/.test(h.xpCaption.text), 'HUD: подпись опыта без NaN/null/отрицательных');
     // HP и мана — из активной сцены (бой/исследование), не из максимума героя
     h.update(20000, 200);
@@ -254,7 +256,7 @@ await mute(async () => {
     const before = snap();
     h.portraitHit.emit('pointerdown');
     const pt = texts(h.modal.container).join(' | ');
-    ok(h.modal?.opts?.profile && pt.includes('Уровень 5') && pt.includes('41 / 144') && pt.includes('Лунные осколки') && pt.includes('Максимальный уровень'), 'портрет → профиль героя с реальными данными');
+    ok(h.modal?.opts?.profile && pt.includes('Уровень 5') && pt.includes('41 / 144') && pt.includes('Лунные осколки') && pt.includes('До 6 ур.'), 'портрет → профиль героя с реальными данными');
     h.closeModal(null);
     ok(!h.modal && !sv.modalOpen && snap() === before, 'профиль героя закрывается и не меняет сохранение');
 

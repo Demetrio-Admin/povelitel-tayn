@@ -63,12 +63,43 @@ export const CONTENT_INTERACTIVES = [
   { id: 'resin_j1', kind: 'gather', res: 'tree_resin', amount: 1, respawnSec: 200, x: 430, y: 3760, texture: 'resin_log_01', collide: { w: 56, h: 18 }, radius: 100 },
   { id: 'hollow_cache', kind: 'chest', x: 170, y: 3500, texture: 'chest_01', collide: { w: 50, h: 24 },
     reward: { items: { forest_mushroom: 2, rune_dust: 1 }, coins: 10 } },
+
+  // ================================================================== v0.10.0 — первая глава
+  // +5 рунической пыли (ТЗ §7): тайник охранника огонька (+1, один раз), охраняемый запас старого леса (+2 за каждый
+  // победный цикл Корневика rootling_02, раз в 600 с), тайник на подходе к Стражу (+2, один раз, его стережёт rootling_05).
+  { id: 'guard_cache', kind: 'chest', x: 1400, y: 2690, texture: 'chest_01', collide: { w: 50, h: 24 },
+    requiresEnemyDefeated: 'lunar_guard', reward: { items: { rune_dust: 1 } } },
+  { id: 'dust_stash', kind: 'stash', guard: 'rootling_02', x: 175, y: 3255, texture: 'dust_stash_01', emptyTexture: 'dust_stash_empty',
+    collide: { w: 60, h: 20 }, radius: 105, items: { rune_dust: 2 }, hint: 'Запас рунической пыли' },
+  { id: 'approach_cache', kind: 'chest', x: 530, y: 1890, texture: 'chest_01', collide: { w: 50, h: 24 },
+    requiresEnemyDefeated: 'rootling_05', reward: { items: { rune_dust: 2 } } },
+  // Печать I: учебный знак у алтаря (появляется, когда знаки на воротах проявлены) и узел защиты за воротами
+  { id: 'seal_sigil', kind: 'seal_sigil', x: 1110, y: 2140, texture: 'seal_sigil_dim', litTexture: 'seal_sigil_lit', radius: 115,
+    requiresEvent: 'gate_marks_revealed', doneEvent: 'seal_training_complete', hint: 'Учебный знак Печати' },
+  { id: 'forest_node', kind: 'forest_node', x: 1480, y: 300, texture: 'forest_node_broken', restoredTexture: 'forest_node_restored',
+    collide: { w: 230, h: 46 }, radius: 175, requiresEvent: 'ancient_gate_open', hint: 'Повреждённый узел' },
+];
+
+// v0.10.0: поляна узла за Древними воротами. Твёрдые кусты и камни генератора внутри прямоугольника убираются
+// (цветы остаются) — см. world/mapData.js resolveMap. Старые координаты карты не сдвигаются.
+export const CLEARINGS = [
+  { id: 'node_glade', x: 700, y: 125, w: 960, h: 210 },
 ];
 
 // Угроза для охотника: появляется, когда Горан попросил о помощи (sq_hunter_start).
 export const CONTENT_ENEMIES = [
   { id: 'scavenger_02', enemy: 'young_scavenger', x: 1460, y: 3580, radius: 120, startEvent: 'hunter_threat_01',
     requiresEvent: 'sq_hunter_start' },
+  // v0.10.0: пять Корневиков старого леса — пять разных мест (история первой победы у каждого своя).
+  // repeatSec — место возобновляемое: охрана возвращается через 600 с с уменьшенной наградой (ENEMIES.rootling.repeatRewards).
+  { id: 'rootling_01', enemy: 'rootling', x: 490, y: 3660, radius: 130, repeatSec: 600 },
+  { id: 'rootling_02', enemy: 'rootling', x: 300, y: 3250, radius: 130, repeatSec: 600 },   // охраняет запас пыли
+  { id: 'rootling_03', enemy: 'rootling', x: 500, y: 2740, radius: 130, repeatSec: 600 },
+  { id: 'rootling_04', enemy: 'rootling', x: 330, y: 2380, radius: 130 },
+  { id: 'rootling_05', enemy: 'rootling', x: 390, y: 1940, radius: 130 },                   // охраняет тайник на подходе к Стражу
+  // испытание за воротами: Страж узла (три фазы, ENEMIES.node_guardian)
+  { id: 'node_trial', enemy: 'node_guardian', x: 1220, y: 270, radius: 170, collide: { w: 170, h: 150 }, scale: 1.5,
+    requiresEvent: 'ancient_gate_open', defeatEvent: 'chapter_trial_defeated' },
 ];
 
 // Награды сундуков и тайников, добавленные в v0.8 к существующим (ресурсы из «тайников»).

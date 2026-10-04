@@ -8,6 +8,7 @@
 //   → H Круг Огня → (возврат) I Корни у поляны → J Новая часть леса → K Страж → L Ворота
 
 import { CONTENT_INTERACTIVES, CONTENT_ENEMIES, CACHE_RESOURCE_REWARDS } from './world.content.js';
+export { CLEARINGS } from './world.content.js';
 
 export const WORLD = {
   width: 1800,
@@ -40,6 +41,7 @@ export const KEEP_CLEAR = [
   { x: 1120, y: 1860, w: 260, h: 200 },  // проход под глыбу
   { x: 250,  y: 1260, w: 300, h: 240 },  // проход Стража
   { x: 820,  y: 330,  w: 160, h: 220 },  // ворота
+  { x: 700,  y: 125,  w: 960, h: 210 },  // v0.10.0: поляна узла за воротами (то же, что CLEARINGS в world.content.js)
 ];
 
 // Коллизии (Blueprint §6): крупные деревья, здания, вода, камни, стены руин.
@@ -94,6 +96,10 @@ export const COLLIDERS = [
   // L — древние ворота
   { kind: 'ruin',  x: 640,  y: 330,  w: 120, h: 110 },
   { kind: 'ruin',  x: 1040, y: 330,  w: 120, h: 110 },
+  // v0.10.0: древняя стена по обе стороны ворот — за ворота можно попасть только через них (Печать открывает проход).
+  // Новые стены — в конце списка: базовые c0… сохраняют свои номера для правок редактора.
+  { kind: 'ruin',  x: 100,  y: 330,  w: 540, h: 110 },
+  { kind: 'ruin',  x: 1160, y: 330,  w: 540, h: 110 },
 ];
 
 // ИСТОЧНИК для генератора карты (tools/world/bake.mjs). Игра читает готовый список из world.props.js,
@@ -167,8 +173,9 @@ const BASE_INTERACTIVES = [
   { id: 'moonstone', kind: 'pickup', x: 220, y: 3450, item: 'moonstone', amount: 1, texture: 'icon_shard' },
   { id: 'west_chest', kind: 'chest', x: 600, y: 2960, texture: 'chest_01', reward: { items: { coins: 40, lunar_shard: 2 }, heroXP: 15 }, collide: { w: 50, h: 24 } },
   // L
-  { id: 'ancient_gate', kind: 'seal', x: 900, y: 440, texture: 'ancient_gate_01', collide: { w: 280, h: 60 }, radius: 190,
-    lockedEvent: 'seal_required_01', completeEvent: 'prototype_complete', requiresEvent: 'guardian_defeated' },
+  // v0.10.0: ворота — настоящая преграда; состав проявляет знаки, Печать (20 маны) открывает проход к узлу
+  { id: 'ancient_gate', kind: 'gate', x: 900, y: 440, texture: 'ancient_gate_01', collide: { w: 280, h: 60 }, radius: 190,
+    requiresEvent: 'guardian_defeated', openEvent: 'ancient_gate_open', opensPath: 'node_glade', panOnOpen: { x: 1200, y: 260 } },
 ];
 
 // v0.8: к существующим сундукам добавлены ресурсы (тайники), остальное наполнение — в world.content.js

@@ -11,10 +11,11 @@ export const ENEMIES = {
     name: 'Лесной Падальщик',
     texture: 'enemy_scavenger',
     tier: 'normal',
-    hp: 190,
-    normalAttack: { damage: 10, intervalSec: 3 },
+    // v0.10.0: первая встреча мягче (обучение до Огня) — 160 HP вместо 190, обычный удар 8 вместо 10, первый рывок через 6 с вместо 5
+    hp: 160,
+    normalAttack: { damage: 8, intervalSec: 3 },
     strongAttack: {
-      name: 'Рывок', damage: 24, prepSec: 2, cooldownSec: 9, firstDelaySec: 5,
+      name: 'Рывок', damage: 24, prepSec: 2, cooldownSec: 9, firstDelaySec: 6,
       interruptBy: ['telekinesis', 'seal'],
       hint: 'Прервите Телекинезом!',
     },
@@ -45,8 +46,8 @@ export const ENEMIES = {
     arena: 'glade_small',
   },
 
-  // Враг со слабостью из Combat Math §7. В маршрут прототипа не поставлен,
-  // но механика поддержана CombatManager (defense + отключение брони Огнём).
+  // Враг со слабостью из Combat Math §7. v0.10.0: пять Корневиков в старом лесу (world.layout.js, rootling_01…05).
+  // Защита 20%, Огонь +50% и снимает защиту на 6 с. Первая победа на месте — rewards; повторная (возобновляемые места) — repeatRewards.
   rootling: {
     name: 'Корневик',
     texture: 'enemy_rootling',
@@ -58,7 +59,8 @@ export const ENEMIES = {
     defense: 0.2,
     weaknesses: { fire: 0.5 },
     onFireHit: { disableDefenseSec: 6 },
-    rewards: { heroXP: 60, schoolXP: { fire: 30 }, items: {}, coins: 15 },
+    rewards: { heroXP: 60, schoolXP: { fire: 30 }, items: { tree_resin: 1 }, coins: 15 },
+    repeatRewards: { heroXP: 20, schoolXP: { fire: 3 }, items: { tree_resin: 1 }, coins: 6 },
     arena: 'glade',
   },
 
@@ -87,6 +89,37 @@ export const ENEMIES = {
     rewards: { heroXP: 150, schoolXP: { telekinesis: 60, fire: 60 }, items: { rare_core: 1, lunar_shard: 3 }, coins: 60 },
     arena: 'guardian',
   },
+
+  // v0.10.0 — финальное испытание первой главы за Древними воротами. 900 HP (не старый босс на 1050), три фазы.
+  // Параметры фаз — здесь, логика — objects/Enemy.js (phaseFor/applyPhase/checkPhase). Фаза i действует, пока HP > above.
+  // Общие: обычная атака 12 / 4,5 с; сильная подготовка 2,5 с, КД 10 с, первая через 6 с; после прерывания — 7 с.
+  node_guardian: {
+    name: 'Страж узла',
+    texture: 'enemy_guardian',
+    tint: 0xbfe9dc,
+    tier: 'strong',
+    hp: 900,
+    normalAttack: { damage: 12, intervalSec: 4.5 },
+    strongAttack: {
+      name: 'Удар узла', damage: 30, prepSec: 2.5, cooldownSec: 10, firstDelaySec: 6,
+      interruptBy: ['telekinesis_heavy', 'seal'],
+      hint: 'Бросьте тяжёлый камень или Печать!',
+    },
+    staggerSec: 1.2,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    phases: [
+      { above: 600, set: { armor: { value: 0.45, source: 'crystal', disabledSec: 8 }, defense: 0, weaknesses: null, onFireHit: null },
+        message: 'Кристаллическая броня! Разбейте кристалл Телекинезом.' },
+      { above: 300, set: { armor: null, defense: 0.2, weaknesses: { fire: 0.5 }, onFireHit: { disableDefenseSec: 6 } },
+        message: 'Броня осыпалась — под ней защитная кора. Огонь сожжёт её!', tint: 0xe0b48a },
+      { above: 0, set: { armor: null, defense: 0, weaknesses: null, onFireHit: null },
+        strongAttack: { damage: 36, interruptBy: ['seal'], hint: 'Прервите Печатью!' },
+        message: 'Узел рвёт связь! Сильный удар теперь прерывает только Печать.', tint: 0xd2a8ff },
+    ],
+    rewards: { heroXP: 220, schoolXP: { telekinesis: 30, fire: 30, seal: 40 }, coins: 80 },
+    arena: 'node',
+  },
 };
 
 // Объекты боевого поля.
@@ -109,6 +142,14 @@ export const ARENAS = {
     ground: 0x26352a,
     objects: [
       { id: 'rock_a', type: 'light_rock', x: 220, y: 720 },
+    ],
+  },
+  node: {
+    ground: 0x1d2724,
+    objects: [
+      { id: 'crystal_a', type: 'crystal', x: 590, y: 640 },
+      { id: 'heavy_a', type: 'heavy_rock', x: 150, y: 760 },
+      { id: 'rock_a', type: 'light_rock', x: 420, y: 800 },
     ],
   },
   guardian: {

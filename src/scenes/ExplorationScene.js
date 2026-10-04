@@ -28,14 +28,18 @@ import { HIGHLIGHT } from '../config/guidance.js';
 import { UI } from '../config/ui.config.js';
 import { drawPlate } from '../ui/widgets.js';
 import {
-  applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject, SealObject,
+  applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject,
 } from '../objects/InteractiveObject.js';
+import { GateObject, SealSigilObject, DustStashObject, ForestNodeObject } from '../objects/ChapterObjects.js';
 
 const OBJECT_CLASSES = {
   book: BookObject,
   telekinesis: TelekinesisObject,
   fire: FireObject,
-  seal: SealObject,
+  gate: GateObject,
+  seal_sigil: SealSigilObject,
+  stash: DustStashObject,
+  forest_node: ForestNodeObject,
   altar: AltarObject,
   fire_circle: FireCircleObject,
   chest: ChestObject,
@@ -47,6 +51,8 @@ const OBJECT_CLASSES = {
 };
 
 const EXTRA_BOTTOM = 500; // декоративная полоса леса ниже дома, чтобы героиня была на ~62% экрана
+// v0.10.0: полоса леса выше северного края — поляна узла за воротами (y 110–330) не прячется под HUD
+const EXTRA_TOP = 340;
 
 // детерминированный ГПСЧ — карта выглядит одинаково при каждом запуске
 function rng(seed) {
@@ -80,7 +86,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.buildProps();
 
     this.interaction = new InteractionSystem(this, bus);
-    const p = state.data.player;
+    const p = this.fixStartPosition(state.data.player);
     this.player = new Player(this, p.x, p.y);
     this.physics.add.collider(this.player.sprite, this.solids);
 
@@ -94,7 +100,7 @@ export class ExplorationScene extends Phaser.Scene {
 
     // камера: героиня немного ниже центра (Blueprint §7)
     const cam = this.cameras.main;
-    cam.setBounds(0, 0, WORLD.width, WORLD.height + EXTRA_BOTTOM);
+    cam.setBounds(0, -EXTRA_TOP, WORLD.width, WORLD.height + EXTRA_BOTTOM + EXTRA_TOP);
     this.followOffsetY = (CAMERA.heroScreenY - 0.5) * VIEW.height + PLAYER.displayHeight * 0.4;
     this.follow();
     cam.fadeIn(500);
@@ -113,6 +119,7 @@ export class ExplorationScene extends Phaser.Scene {
     bus.on(MSG.QUEST_CHANGED, () => this.objects.forEach(o => { if (o instanceof NpcObject) o.updateBadge(); }), this);
     bus.on(MSG.CRAFTED, ({ result }) => this.objects.find(o => o instanceof AlchemyObject)?.celebrate(POTIONS[result]?.color), this);
     bus.on(MSG.HERO_SAY, (t, ms) => this.heroSay(t, ms), this);
+    bus.on(MSG.UNLOCK_SEAL, this.unlockSeal, this);
     bus.on(MSG.SIDE_QUEST, (id, what) => { this.refreshAll(); if (what === 'ready') services.audio.play('quest_update'); }, this);
     this.events.on('wake', this.onWake, this);
     this.events.once('shutdown', () => bus.offContext(this));
@@ -125,6 +132,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.stepT = 0;
     if (services.edit) { this.editor = new MapEditor(this); return; } // режим ?edit: игра не идёт, карту правят руками
     this.scheduleStory();
+    this.migrateV10();
   }
 
   // ------------------------------------------------------------------ v0.9: завязка и стартовый набор
@@ -138,6 +146,57 @@ export class ExplorationScene extends Phaser.Scene {
   needsStarterKit() {
     const s = services.state;
     return s.hasEvent('unlock_telekinesis_1') && !s.hasEvent(STORY.starterKitEvent) && !s.hasEvent('first_world_interaction');
+  }
+
+  /**
+   * v0.10.0: разовая миграция старого сохранения (атомарно, флаг mig_v10): ядро Стража тем, кто победил его до главы,
+   * если ядра нет и связку не делали. Новому персонажу просто ставится флаг. Перезагрузка и повтор ничего не выдают.
+   */
+  migrateV10() {
+    if (this.editor || services.state.hasEvent('mig_v10')) return;
+    const tryRun = async () => {
+      if (!this.scene.isActive() || services.state.hasEvent('mig_v10')) return;
+      if (services.actions.busy || services.mode !== 'exploration') { this.time.delayedCall(1500, tryRun); return; }
+      const r = await services.actions.migrateV10();
+      if (r.ok && r.core) this.toast('Мирра сохранила ядро Стража — оно в сумке: из него можно сделать восстановительную связку.', COLORS.gold);
+    };
+    this.time.delayedCall(1200, tryRun);
+  }
+
+  /**
+   * v0.10.0: стена у Древних ворот появилась в главе. Старое сохранение могло оставить героиню внутри новой стены или
+   * за воротами, которые ещё не открыты Печатью, — тогда ставим её рядом, перед воротами (не к дому).
+   */
+  fixStartPosition(p) {
+    const st = services.state;
+    if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y) || services.edit) return p;
+    const inWall = p.y >= 330 && p.y <= 440 && ((p.x >= 100 && p.x <= 640) || (p.x >= 1160 && p.x <= 1700) || (p.x > 640 && p.x < 1160 && !st.hasEvent('ancient_gate_open')));
+    const behind = p.y < 330 && !st.hasEvent('ancient_gate_open');
+    if (!inWall && !behind) return p;
+    const fixed = { x: 900, y: 540 };
+    st.data.player = fixed;
+    console.info('[v0.10] позиция из старого сохранения в новой стене / за закрытыми воротами → перед воротами', p, fixed);
+    return fixed;
+  }
+
+  /**
+   * v0.10.0: Селена открывает Печать I — сюжетно, без уровня, платы и таймера: дар, событие unlock_seal_1 и разовые +60 опыта.
+   * Повторный вызов ничего не выдаёт (событие уже есть).
+   */
+  unlockSeal() {
+    const { state, abilities, quests } = services;
+    if (state.hasEvent('unlock_seal_1')) return;
+    abilities.unlock('seal', 1);
+    quests.complete('unlock_seal_1');
+    this.burst(this.player.x, this.player.y - 60, COLORS.seal, 34);
+    this.toast('Получен дар: Печать I', COLORS.seal);
+    this.dialog({
+      title: 'Печать I', color: COLORS.seal,
+      text: 'Новый дар связывает разорванное. Печать стоит 20 маны.\n\n'
+        + 'В мире она восстанавливает знаки и запоры связи. В бою — на миг сковывает врага, ослабляет его удары и прерывает сильную подготовку, которую не берут ни камень, ни огонь.\n\n'
+        + 'Опробуйте её спокойно — на учебном знаке рядом с алтарём (кнопка Печати или действие).',
+      buttons: [{ label: 'К знаку', primary: true }],
+    });
   }
 
   scheduleStory() {
@@ -197,6 +256,18 @@ export class ExplorationScene extends Phaser.Scene {
     for (const g of GROUND) this.add.tileSprite(g.x, g.y, g.w, g.h, g.tex).setOrigin(0).setDepth(DEPTH.path);
     // тёмная подстилка под лесом ниже границы мира (деревья — в world.props.js)
     this.add.rectangle(0, WORLD.height, WORLD.width, EXTRA_BOTTOM, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
+    // v0.10.0: тёмный лес над северной границей (только картинка, за край мира пройти нельзя)
+    this.add.rectangle(0, -EXTRA_TOP, WORLD.width, EXTRA_TOP, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
+    const r = rng(9001), keys = ['tree_dark_01', 'tree_dark_02', 'tree_autumn_01', 'tree_autumn_02'];
+    for (let y = -EXTRA_TOP + 90; y <= 0; y += 85) {
+      for (let x = -20; x < WORLD.width + 40; x += 70 + r() * 30) {
+        const k = keys[Math.floor(r() * keys.length)];
+        const im = this.add.image(x + (r() - 0.5) * 20, y + (r() - 0.5) * 20, k).setOrigin(0.5, 1);
+        applyDisplaySize(im, k);
+        if (r() < 0.5) im.setFlipX(true);
+        im.setDepth(DEPTH.mainBase + im.y);
+      }
+    }
   }
 
   /** Дороги и вода: кривые формы рисуются кусками 512×512 и кладутся поверх травы. */

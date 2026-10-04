@@ -5,7 +5,10 @@
 export class Enemy {
   constructor(id, def) {
     this.id = id;
-    this.def = def;
+    this.baseDef = def;
+    this.def = def;           // v0.10.0: действующие параметры (у врага с фазами — параметры текущей фазы)
+    this.phase = 0;
+    this.phaseEvents = [];
     this.name = def.name;
     this.maxHp = def.hp;
     this.hp = def.hp;
@@ -18,7 +21,39 @@ export class Enemy {
     this.armorDisabledLeft = 0;
     this.vulnerable = { left: 0, bonus: 0 };
     this.weakened = { left: 0, reduction: 0 };
+    if (def.phases) this.applyPhase(this.phaseFor(this.hp));
   }
+
+  // ---------- v0.10.0: фазы (Страж узла) ----------
+  // def.phases = [{ above: HP, set: {armor, defense, weaknesses, onFireHit}, strongAttack: {...}, message, tint }, …]
+  // Фаза i действует, пока HP > above (последняя — до конца). Фаза только растёт; один удар может пересечь
+  // несколько порогов — тогда сразу включается последняя, а защита прежних фаз снимается.
+  phaseFor(hp) {
+    const ph = this.baseDef.phases;
+    for (let i = 0; i < ph.length; i++) if (hp > ph[i].above) return i;
+    return ph.length - 1;
+  }
+
+  applyPhase(i) {
+    const b = this.baseDef, p = b.phases[i];
+    this.def = { ...b, ...(p.set || {}), strongAttack: b.strongAttack ? { ...b.strongAttack, ...(p.strongAttack || {}) } : null };
+    this.phase = i;
+    this.armorDisabledLeft = 0;
+    this.defenseDisabledLeft = 0;
+    this.vulnerable = { left: 0, bonus: 0 };
+  }
+
+  checkPhase() {
+    if (!this.baseDef.phases || !this.alive) return;
+    const i = this.phaseFor(this.hp);
+    if (i <= this.phase) return;
+    const from = this.phase;
+    this.applyPhase(i);
+    const p = this.baseDef.phases[i];
+    this.phaseEvents.push({ type: 'phase', phase: i + 1, from: from + 1, message: p.message, tint: p.tint ?? null });
+  }
+
+  drainPhaseEvents() { const q = this.phaseEvents; this.phaseEvents = []; return q; }
 
   get alive() { return this.hp > 0; }
   get isPreparing() { return this.prepLeft > 0; }
@@ -43,6 +78,7 @@ export class Enemy {
     if (!this.alive) return 0;
     const dmg = Math.max(1, Math.round(base * heroMult * this.incomingMultiplier(school)));
     this.hp = Math.max(0, this.hp - dmg);
+    this.checkPhase();
     return dmg;
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "witch-rpg-prototype",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,6 +15,7 @@
     "test:mobile": "node tests/e2e/mobile-ui.mjs",
     "test:reload": "node tests/e2e/reload-mid-combat.mjs",
     "test:actions": "node tests/e2e/server-actions.mjs",
+    "balance:chapter": "node tools/balance/chapter-report.mjs",
     "test:heroes": "node tests/e2e/hero-online.mjs"
   },
   "dependencies": {

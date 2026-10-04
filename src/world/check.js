@@ -4,9 +4,9 @@ import { WORLD } from '../config/world.layout.js';
 import { buildWalkGrid, floodFrom, reachableNear } from './walk.js';
 import { collectSolids } from './solids.js';
 
-export const GATE_IDS = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01'];
+export const GATE_IDS = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial'];
 // Что должно оставаться недостижимым, пока проходы закрыты: за ними — следующие зоны маршрута.
-export const BEHIND_GATES = ['moonstone', 'west_chest', 'forest_guardian_01', 'fire_circle', 'dry_bush', 'ancient_gate'];
+export const BEHIND_GATES = ['moonstone', 'west_chest', 'forest_guardian_01', 'fire_circle', 'dry_bush', 'ancient_gate', 'node_trial', 'forest_node'];
 
 export function checkWalkability({ colliders, props, interactives, enemies, terrain, start = WORLD.playerStart }) {
   const all = [...interactives, ...enemies];

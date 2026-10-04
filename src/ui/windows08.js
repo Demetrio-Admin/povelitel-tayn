@@ -8,6 +8,9 @@ import { ENEMIES } from '../config/balance.enemies.js';
 import { ITEMS } from '../config/balance.progression.js';
 import { RESOURCES, POTIONS, RESOURCE_ORDER, POTION_ORDER } from '../config/resources.js';
 import { RECIPES } from '../config/recipes.js';
+import { STORY_ITEMS, STORY_ITEM_ORDER } from '../config/storyItems.js';
+import { RESOURCE_WHERE } from '../config/guidance.js';
+import { actionFailText } from './windows09.js';
 import { SIDE_QUESTS } from '../config/quests.js';
 import { addScrollViewport } from './scrollViewport.js';
 import { UI } from '../config/ui.config.js';
@@ -118,7 +121,22 @@ export const windows08 = {
         row(objective.full, { style: { fontSize: UI.type.body } });
         const why = STEP_WHY[objective.stepId];
         if (why) row('Зачем: ' + why, { style: { color: hex(0x9fe9ff), fontSize: UI.type.small }, gap: 4 });
-        if (hints[0]) row('Подсказка: ' + hints[0], { style: { color: COLORS.textDim, fontSize: UI.type.small }, gap: 8 });
+        // v0.10.0: что нужно для шага — состав сюжетного рецепта и где взять недостающее, или предмет для применения
+        const step = quests.currentStep();
+        if (step.craft) {
+          const r = RECIPES[step.craft];
+          row(`Нужно для «${STORY_ITEMS[r.result]?.name || r.result}» (котёл Мирры):`, { style: { fontSize: UI.type.small, color: COLORS.textGold }, gap: 2 });
+          for (const [item, need] of Object.entries(r.needs)) {
+            const have = services.state.item(item), okk = have >= need;
+            row(`${okk ? '☑' : '☐'} ${ITEMS[item]?.name || item} ${Math.min(have, need)}/${need}${okk ? '' : ' — ' + (RESOURCE_WHERE[item] || 'в лесу')}`,
+              { indent: 14, style: { fontSize: UI.type.small, color: okk ? '#9be8a0' : COLORS.text }, gap: 1 });
+          }
+          cy += 6;
+        } else if (step.use) {
+          const have = services.state.item(step.use) > 0;
+          row(`${have ? '☑' : '☐'} ${STORY_ITEMS[step.use].name} в сумке${have ? '' : ' — сварите в котле Мирры'}`, { style: { fontSize: UI.type.small, color: have ? '#9be8a0' : COLORS.text }, gap: 6 });
+        }
+        if (hints[0] && !(step.craft && hints[0].startsWith('Для рецепта'))) row('Подсказка: ' + hints[0], { style: { color: COLORS.textDim, fontSize: UI.type.small }, gap: 8 });
         cy += 6;
         const act = log.active();
         sec('Побочные задания', hex(0x9fe9ff));
@@ -179,30 +197,51 @@ export const windows08 = {
           label(this, c, cx, cy + 68, `${state.item(id)}`, { fontSize: UI.type.body, fontStyle: 'bold' }).setOrigin(0.5, 0);
         });
         cy += 118;
+        // v0.10.0: два раздела — зелья и предметы для главного задания; неизвестный рецепт показывает, откуда придёт знание
+        let section = null;
         for (const r of alchemy.recipes()) {
-          const p = POTIONS[r.result], chk = alchemy.check(r.id);
+          if (r.kind !== section) {
+            section = r.kind;
+            const t = label(this, c, x, cy + 4, section === 'story' ? 'Для главного задания' : 'Зелья', { fontSize: UI.type.heading, fontStyle: 'bold', color: COLORS.textGold });
+            cy = t.y + t.height + 14;
+          }
+          const story = r.kind === 'story';
+          const p = story ? STORY_ITEMS[r.result] : POTIONS[r.result];
+          const st = alchemy.status(r.id), chk = st.chk;
+          const canCraft = st.state === 'ready';
           const name = label(this, c, x + 104, cy + 18, p.name, { fontSize: UI.type.heading, fontStyle: 'bold', color: hex(p.color), wordWrap: { width: w - 128 } });
-          const desc = label(this, c, x + 104, name.y + name.height + 8, p.text, { fontSize: UI.type.small, color: COLORS.textDim, wordWrap: { width: w - 128 }, lineSpacing: 3 });
-          const ingY = Math.max(cy + 126, desc.y + desc.height + 34);
-          const ch = ingY - cy + 142;
-          const g = this.add.graphics().setPosition(x + w / 2, cy + ch / 2);
-          drawPlate(g, w, ch, { accent: chk.ok ? p.color : 0x6a5a48, fill: 0x20160f, alpha: 0.9, radius: 12 });
-          // Insert the background behind the labels already measured.
-          c.add(g); c.sendToBack(g);
+          const descText = story ? (st.state === 'locked' ? r.learn : p.purpose) : p.text;
+          const desc = label(this, c, x + 104, name.y + name.height + 8, descText, { fontSize: UI.type.small, color: COLORS.textDim, wordWrap: { width: w - 128 }, lineSpacing: 3 });
+          let ingY = Math.max(cy + 126, desc.y + desc.height + 34);
+          const top = cy;
           c.add(fit(this.add.image(x + 50, cy + 62, p.icon), UI.icon.potion));
-          const ingredientStep = w / chk.needs.length;
-          chk.needs.forEach((n, i) => {
-            const ix = x + 30 + i * ingredientStep;
-            c.add(fit(this.add.image(ix + 24, ingY, ITEMS[n.id].icon), UI.icon.ingredient));
-            label(this, c, ix + 58, ingY, `${n.have}/${n.need}`, { fontSize: UI.type.small, fontStyle: 'bold', color: n.ok ? '#9be8a0' : '#ff8a7a' }).setOrigin(0, 0.5);
-          });
-          label(this, c, x + 20, cy + ch - 66, `В сумке: ${state.item(r.result)}`, { fontSize: UI.type.small, color: COLORS.textDim }).setOrigin(0, 0.5);
-          const b = addButton(this, x + w - 132, cy + ch - 62, 224, UI.touch.button, 'Сварить', {
-            primary: chk.ok, accent: chk.ok ? p.color : null, fontSize: UI.type.body,
-            onPress: () => { if (this.modal?.scroll?.canTap()) this.craftRecipe(r.id); },
-          });
-          if (!chk.ok) b.text.setAlpha(0.65);
-          c.add(b.parts); cy += ch + 18;
+          if (st.state !== 'locked') {
+            // ингредиенты по три в ряд: у связки их пять — шрифт не уменьшаем, переносим строку
+            const perRow = 3, ingredientStep = w / perRow;
+            chk.needs.forEach((n, i) => {
+              const ix = x + 20 + (i % perRow) * ingredientStep, iy = ingY + Math.floor(i / perRow) * 62;
+              c.add(fit(this.add.image(ix + 24, iy, ITEMS[n.id]?.icon || 'icon_shard'), UI.icon.ingredient));
+              label(this, c, ix + 58, iy, `${n.have}/${n.need}`, { fontSize: UI.type.small, fontStyle: 'bold', color: n.ok ? '#9be8a0' : '#ff8a7a' }).setOrigin(0, 0.5);
+            });
+            ingY += (Math.ceil(chk.needs.length / perRow) - 1) * 62;
+          } else ingY = desc.y + desc.height - 20;
+          const ch = ingY - top + (st.state === 'locked' ? 40 : 142);
+          const g = this.add.graphics().setPosition(x + w / 2, top + ch / 2);
+          drawPlate(g, w, ch, { accent: canCraft ? p.color : 0x6a5a48, fill: 0x20160f, alpha: 0.9, radius: 12 });
+          c.add(g); c.sendToBack(g);   // фон позади уже размещённых подписей
+          if (st.state !== 'locked') {
+            const note = st.state === 'have' ? 'Готово — в сумке' : st.state === 'used' ? 'Задача выполнена' : `В сумке: ${state.item(r.result)}`;
+            label(this, c, x + 20, top + ch - 66, note, { fontSize: UI.type.small, color: st.state === 'have' ? '#9be8a0' : COLORS.textDim }).setOrigin(0, 0.5);
+            if (st.state === 'ready' || st.state === 'missing') {
+              const b = addButton(this, x + w - 132, top + ch - 62, 224, UI.touch.button, 'Сварить', {
+                primary: canCraft, accent: canCraft ? p.color : null, fontSize: UI.type.body,
+                onPress: () => { if (this.modal?.scroll?.canTap()) this.craftRecipe(r.id); },
+              });
+              if (!canCraft) b.text.setAlpha(0.65);
+              c.add(b.parts);
+            }
+          }
+          cy = top + ch + 18;
         }
         return cy - y - 10;
       },
@@ -213,16 +252,30 @@ export const windows08 = {
     });
   },
 
-  craftRecipe(id) {
-    const res = services.alchemy.craft(id);
-    const p = POTIONS[RECIPES[id].result];
+  /** v0.10.0: изготовление — атомарная операция (сервер / JS-зеркало); при нехватке ничего не тратится. */
+  async craftRecipe(id) {
+    if (services.actions.busy) return;
+    const r = RECIPES[id];
+    const p = r.kind === 'story' ? STORY_ITEMS[r.result] : POTIONS[r.result];
+    const miss = services.alchemy.missing(id);
+    if (miss.length) {   // заранее, без запроса: понятная нехватка
+      services.audio.play('locked');
+      this.toast('Не хватает: ' + miss.map(m => `${m.name} ${m.have}/${m.need}`).join(', '), COLORS.danger);
+      return;
+    }
+    const res = await services.actions.craft(id);
     if (!res.ok) {
       services.audio.play('locked');
-      this.toast('Не хватает: ' + res.missing.map(m => `${m.name} ${m.have}/${m.need}`).join(', '), COLORS.danger);
+      const why = { locked: 'Этот рецепт ещё неизвестен.', done: 'Этот предмет уже изготовлен.', missing: 'Не хватает ингредиентов — ничего не потрачено.' }[res.reason];
+      this.toast(why || actionFailText(res, 'ничего не потрачено'), COLORS.danger);
+      this.reopenModal();
       return;
     }
     services.audio.play('brew');
     this.toast(`Сварено: ${p.name}`, p.color);
+    if (res.firstCraft) this.toast('Первое зелье своими руками: +15 опыта', COLORS.gold);
+    for (const lv of res.outcome?.levelUps || []) this.toast(`★ Новый уровень ${lv.level}!`, COLORS.gold);
+    services.bus.emit(MSG.CRAFTED, { recipeId: id, result: r.result, amount: r.amount });
     this.reopenModal();
   },
 
@@ -433,8 +486,29 @@ export const windows08 = {
           }
           cy = Math.max(role.y + role.height, top + 96) + 16;
         }
+        // v0.10.0: сюжетные предметы — отдельной группой карточек: иконка, количество, назначение и место применения
+        const story = [...STORY_ITEM_ORDER, 'lunar_flame', 'rare_core'].filter(id => state.item(id) > 0);
+        if (story.length) {
+          cy += 4;
+          sec('Сюжетные предметы', hex(0x9fe9ff));
+          for (const id of story) {
+            const si = STORY_ITEMS[id], have = state.item(id), top = cy;
+            const icon = si?.icon || ITEMS[id]?.icon;
+            const slot = this.add.graphics().setPosition(x + w / 2, cy + 50);
+            c.add(slot);
+            c.add(fit(this.add.image(x + 40, cy + 44, icon), UI.icon.resource));
+            const nm = label(this, c, x + 88, cy + 6, `${ITEMS[id]?.name || id} · ${have}`, { fontSize: UI.type.body, fontStyle: 'bold', color: hex(si?.color || 0x9fe9ff), wordWrap: { width: w - 96 } });
+            const purpose = si?.purpose || (id === 'lunar_flame' ? 'Свет алтаря. Три огонька идут в Лунный фитиль (котёл Мирры).' : 'Сердце Лесного Стража. Нужно для Восстановительной связки.');
+            const pt = label(this, c, x + 88, nm.y + nm.height + 4, purpose, { fontSize: UI.type.small, color: COLORS.text, wordWrap: { width: w - 96 }, lineSpacing: 2 });
+            const h = Math.max(pt.y + pt.height - top, 92) + 10;
+            drawPlate(slot, w, h, { accent: si?.color || 0x9fe9ff, fill: 0x18141f, alpha: 0.8, radius: 10 });
+            slot.setPosition(x + w / 2, top + h / 2 - 4);
+            c.sendToBack(slot);
+            cy = top + h + 10;
+          }
+        }
         cy += 8;
-        const other = Object.entries(d.inventory).filter(([k, v]) => v > 0 && !RESOURCES[k] && !POTIONS[k]);
+        const other = Object.entries(d.inventory).filter(([k, v]) => v > 0 && !RESOURCES[k] && !POTIONS[k] && !STORY_ITEMS[k] && k !== 'lunar_flame' && k !== 'rare_core' && k !== 'coins');
         if (other.length) { cy += 4; row(other.map(([k, v]) => `${ITEMS[k]?.name || k}: ${v}`).join('   ·   '), { fontSize: UI.type.small }); }
         if (d.stats.combats.length) {
           cy += 4;

@@ -1,0 +1,144 @@
+.witch-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  color: #f3e5c8;
+  font-family: 'PT Sans', sans-serif;
+}
+
+.witch-loading__panel {
+  position: relative;
+  width: min(100vw, calc(100vh * 9 / 16));
+  height: min(100vh, calc(100vw * 16 / 9));
+  overflow: hidden;
+  container-type: size;
+  text-align: center;
+  background:
+    radial-gradient(ellipse at 55% 40%, #483044 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 105%, #302d38 0%, transparent 60%),
+    linear-gradient(160deg, #1b1825, #221824 55%, #17151f);
+}
+
+.witch-loading__panel::after {
+  content: '';
+  position: absolute;
+  inset: 3%;
+  border: 1px solid #c2a97824;
+  border-radius: 48% 48% 3px 3px / 10% 10% 3px 3px;
+  pointer-events: none;
+}
+
+.witch-loading__brand {
+  position: absolute;
+  top: 16%;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  color: #d8bf90;
+  font: 700 clamp(12px, 4.6cqw, 25px) 'Philosopher', Georgia, serif;
+  letter-spacing: .06em;
+}
+
+.witch-loading__orbit {
+  position: absolute;
+  top: 27%;
+  left: 18%;
+  width: 64%;
+  aspect-ratio: 1;
+  border: 1px solid #d2bb9029;
+  border-radius: 50%;
+}
+
+.witch-loading__moon {
+  position: absolute;
+  top: 27%;
+  left: 69%;
+  width: 10%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #e4d7b6;
+  box-shadow: 0 0 0 7px #dfcfa50c, 0 0 0 18px #dfcfa507;
+}
+.witch-loading__moon::after {
+  content: '';
+  position: absolute;
+  inset: -6% -18% 20% 28%;
+  border-radius: 50%;
+  background: #342333;
+}
+
+.witch-loading__flight {
+  position: absolute;
+  top: 33%;
+  left: 6%;
+  width: 88%;
+  animation: witch-flight 4.8s ease-in-out infinite;
+}
+.witch-loading__witch { display: block; width: 100%; height: auto; }
+.witch-loading__sparks { position: absolute; inset: 0; }
+.witch-loading__sparks i {
+  position: absolute;
+  left: 20%;
+  top: 78%;
+  width: 6px;
+  height: 6px;
+  background: #edce88;
+  box-shadow: 0 0 5px #edce8880;
+  border-radius: 1px;
+  opacity: 0;
+  animation: witch-spark 2.8s ease-out infinite;
+}
+.witch-loading__sparks i:nth-child(2) { left: 22%; top: 71%; animation-delay: -.45s; }
+.witch-loading__sparks i:nth-child(3) { left: 16%; top: 81%; animation-delay: -.95s; width: 3px; height: 3px; }
+.witch-loading__sparks i:nth-child(4) { left: 24%; top: 75%; animation-delay: -1.4s; background: #b8ddd6; }
+.witch-loading__sparks i:nth-child(5) { left: 18%; top: 74%; animation-delay: -1.9s; width: 3px; height: 3px; }
+.witch-loading__sparks i:nth-child(6) { left: 23%; top: 79%; animation-delay: -2.35s; background: #b8ddd6; }
+
+.witch-loading__sky { position: absolute; inset: 0; }
+.witch-loading__sky i {
+  position: absolute;
+  top: 25%; left: 23%;
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: #e7d1a0;
+  opacity: .55;
+}
+.witch-loading__sky i:nth-child(2) { top: 31%; left: 12%; width: 2px; height: 2px; }
+.witch-loading__sky i:nth-child(3) { top: 23%; left: 57%; }
+.witch-loading__sky i:nth-child(4) { top: 38%; left: 88%; width: 2px; height: 2px; }
+.witch-loading__sky i:nth-child(5) { top: 54%; left: 83%; }
+.witch-loading__sky i:nth-child(6) { top: 57%; left: 17%; width: 2px; height: 2px; }
+.witch-loading__sky i:nth-child(7) { top: 30%; left: 42%; width: 2px; height: 2px; }
+.witch-loading__sky i:nth-child(8) { top: 59%; left: 65%; }
+
+.witch-loading__copy { position: absolute; top: 64%; width: 100%; padding: 0 8%; box-sizing: border-box; font-size: clamp(8px, 2.6cqw, 14px); line-height: 1.2; }
+.witch-loading__ornament { color: #d6b881; font-size: clamp(8px, 3cqw, 15px); }
+.witch-loading__copy h1 {
+  margin: min(12px, 2.4cqw) 0 min(8px, 1.6cqw);
+  font: 700 clamp(13px, 5.1cqw, 28px) / 1.2 'Philosopher', Georgia, serif;
+}
+.witch-loading__copy p { margin: 0; color: #b9acb4; font-size: clamp(8px, 2.6cqw, 14px); line-height: 1.4; }
+.witch-loading__progress { position: absolute; top: 81%; left: 17%; width: 66%; }
+.witch-loading__status { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 10px; font-size: clamp(8px, 2.6cqw, 14px); color: #dac69f; text-align: left; }
+.witch-loading__percent { font-variant-numeric: tabular-nums; }
+.witch-loading__track { height: 4px; border-radius: 4px; overflow: hidden; background: #d6bb8626; }
+.witch-loading__fill { width: 100%; height: 100%; background: linear-gradient(90deg, #987347, #ebd29b); transform: scaleX(0); transform-origin: left; }
+
+/* Only transform/opacity animate; no full-screen animated blur, video or timers. */
+@keyframes witch-flight {
+  0%, 100% { transform: translateY(5px) rotate(-1.5deg); }
+  50% { transform: translateY(-7px) rotate(1deg); }
+}
+@keyframes witch-spark {
+  0% { opacity: 0; transform: translate(0, 0) rotate(45deg) scale(.4); }
+  15% { opacity: .8; }
+  100% { opacity: 0; transform: translate(-48px, 12px) rotate(120deg) scale(.2); }
+}
+.witch-loading--paused *, .witch-loading--paused *::after { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .witch-loading__flight, .witch-loading__sparks i { animation: none; }
+  .witch-loading__sparks i { opacity: .5; transform: rotate(45deg); }
+}

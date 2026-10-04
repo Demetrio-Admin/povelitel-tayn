@@ -6,6 +6,7 @@ import '@fontsource/philosopher/cyrillic-700.css';
 import '@fontsource/philosopher/latin-700.css';
 import './ui/chat.css';
 import './ui/page.css';
+import './ui/loadingScreen.css';
 import '@fontsource/philosopher/cyrillic-400.css';
 import '@fontsource/philosopher/latin-400.css';
 import Phaser from 'phaser';
@@ -17,6 +18,7 @@ import { CombatScene } from './scenes/CombatScene.js';
 import { UIScene } from './scenes/UIScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { loadUIFont } from './ui/fonts.js';
+import { showLoadingScreen } from './ui/loadingScreen.js';
 
 const debug = new URLSearchParams(window.location.search).has('debug');
 
@@ -41,4 +43,5 @@ const config = {
 };
 
 // Шрифт интерфейса грузится до старта игры (макс. 2 с), иначе Canvas нарисует текст запасным шрифтом навсегда.
+showLoadingScreen();
 loadUIFont().then(() => { window.__game = new Phaser.Game(config); });

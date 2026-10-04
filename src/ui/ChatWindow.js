@@ -20,6 +20,8 @@ import {
   Flag,
   Ban,
   NotebookPen,
+  Smile,
+  ChevronDown,
 } from "lucide";
 import {
   roleOf,
@@ -56,6 +58,17 @@ const STATUSES = {
   solved: "Решено",
   closed: "Закрыто",
 };
+const EMOJI = [
+  ["😀", "Улыбка"], ["😊", "Радость"], ["😄", "Смех"], ["😂", "До слёз"],
+  ["😉", "Подмигивание"], ["🥰", "Нежность"], ["😍", "Восхищение"], ["😎", "Круто"],
+  ["🤔", "Раздумье"], ["😅", "Неловкость"], ["🥺", "Пожалуйста"], ["😢", "Грусть"],
+  ["😮", "Удивление"], ["😴", "Сон"], ["🙃", "Вверх тормашками"], ["😇", "Ангел"],
+  ["👍", "Нравится"], ["👎", "Не нравится"], ["👋", "Привет"], ["👏", "Аплодисменты"],
+  ["🙏", "Спасибо"], ["🤝", "Договорились"], ["❤️", "Сердце"], ["💜", "Фиолетовое сердце"],
+  ["✨", "Волшебство"], ["🌙", "Луна"], ["🔮", "Предсказание"], ["🧙", "Маг"],
+  ["🐈", "Кот"], ["🍄", "Гриб"], ["🔥", "Огонь"], ["🌿", "Трава"],
+];
+let panelId = 0;
 const time = (s) =>
   new Date(s).toLocaleString("ru-RU", {
     day: "2-digit",
@@ -125,13 +138,15 @@ function avatar(p) {
   a.append(i);
   return a;
 }
-function roleBadge(role) {
+function roleBadge(role, compact = false) {
   const [label, symbol] = ROLES[role] || ROLES.player;
-  return append(
-    el("span", `chat-role role-${role}`),
+  const badge = append(
+    el("span", `chat-role role-${role}${compact ? " chat-role--compact" : ""}`),
     icon(symbol),
-    el("span", "", label),
+    el("span", "", compact ? ({ admin: "Админ", support: "Поддержка" }[role] || label) : label),
   );
+  badge.title = label;
+  return badge;
 }
 const empty = (s) => el("p", "chat-empty", s);
 
@@ -153,6 +168,9 @@ export class ChatWindow {
     this.generation = 0;
     this.busy = false;
     this.refreshing = false;
+    this.popover = null;
+    this.keyboardFrame = null;
+    this.touchDevice = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
     this.previousFocus = document.activeElement;
     this.root = el("section", "game-chat");
     this.root.setAttribute("role", "dialog");
@@ -164,15 +182,23 @@ export class ChatWindow {
       e.stopPropagation();
       if (e.key === "Escape") {
         e.preventDefault();
-        this.back();
+        if (this.popover) this.dismissPopover(true);
+        else this.back();
       }
       if (e.key === "Tab") this.trapFocus(e);
     });
     this.root.addEventListener("keyup", (e) => e.stopPropagation());
+    this.root.addEventListener("pointerdown", (e) => {
+      this.captureKeyboardFrame(e.target);
+      if (this.popover && !this.popover.panel.contains(e.target) && !this.popover.trigger.contains(e.target))
+        this.dismissPopover();
+    });
+    this.root.addEventListener("focusin", (e) => this.captureKeyboardFrame(e.target));
     this.canvas = document.querySelector("#game canvas");
     this.scale = window.__game?.scale;
     this.viewport = () => {
       if (this.closed) return;
+      const followLatest = this.feed?.isConnected && this.feed.scrollHeight - this.feed.scrollTop - this.feed.clientHeight < 60;
       const v = window.visualViewport;
       const visible = {
         left: v?.offsetLeft || 0,
@@ -181,18 +207,26 @@ export class ChatWindow {
         height: v?.height || window.innerHeight,
       };
       const rect = this.canvas?.getBoundingClientRect();
-      const game = rect?.width && rect?.height ? rect : visible;
+      if (this.keyboardFrame && Math.abs(window.innerWidth - this.keyboardFrame.layoutWidth) > 2)
+        this.keyboardFrame = null;
+      const keyboard = this.keyboardFrame && visible.height < this.keyboardFrame.visibleHeight - 100;
+      // Android/Yandex may resize the layout viewport as well as visualViewport.
+      // Keep the pre-keyboard width, even if Phaser FIT shrinks its canvas below it.
+      const game = keyboard ? this.keyboardFrame.rect : rect?.width && rect?.height ? rect : visible;
       // FIT leaves bars around the canvas. The keyboard can also cover part of it.
       const left = Math.max(game.left, visible.left);
-      const top = Math.max(game.top, visible.top);
+      const top = keyboard ? visible.top : Math.max(game.top, visible.top);
       const right = Math.min(game.left + game.width, visible.left + visible.width);
-      const bottom = Math.min(game.top + game.height, visible.top + visible.height);
+      const bottom = keyboard ? visible.top + visible.height : Math.min(game.top + game.height, visible.top + visible.height);
+      this.root.classList.toggle("chat-keyboard", !!keyboard);
       Object.assign(this.root.style, {
         left: `${left}px`,
         top: `${top}px`,
         width: `${Math.max(0, right - left)}px`,
         height: `${Math.max(0, bottom - top)}px`,
       });
+      this.resizeComposer?.();
+      if (followLatest) this.feed.scrollTop = this.feed.scrollHeight;
     };
     window.addEventListener("resize", this.viewport);
     this.scale?.on("resize", this.viewport);
@@ -229,6 +263,51 @@ export class ChatWindow {
     this.load(true);
     this.root.focus();
   }
+  captureKeyboardFrame(target) {
+    if (!this.touchDevice || !target.matches?.("textarea,input:not([type=checkbox])")) return;
+    const visibleHeight = window.visualViewport?.height || window.innerHeight;
+    if (this.keyboardFrame && Math.abs(window.innerWidth - this.keyboardFrame.layoutWidth) <= 2
+      && visibleHeight < this.keyboardFrame.visibleHeight - 100) return;
+    const rect = this.canvas?.getBoundingClientRect();
+    if (rect?.width && rect?.height) this.keyboardFrame = {
+      rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+      layoutWidth: window.innerWidth, visibleHeight,
+    };
+  }
+  dismissPopover(restoreFocus = false) {
+    if (!this.popover) return;
+    const { panel, trigger } = this.popover;
+    panel.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+    this.popover = null;
+    if (restoreFocus) trigger.focus({ preventScroll: true });
+  }
+  togglePopover(panel, trigger) {
+    const open = this.popover?.panel === panel;
+    this.dismissPopover();
+    if (open) return;
+    panel.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+    this.popover = { panel, trigger };
+  }
+  staffTools(head) {
+    const menu = el("nav", "chat-tools chat-popover");
+    menu.setAttribute("aria-label", "Инструменты команды");
+    menu.hidden = true;
+    menu.id = `chat-tools-${++panelId}`;
+    if (isModerator(this.me)) append(menu,
+      button("Жалобы", () => this.go({ view: "reports" }), { symbol: Shield }),
+      button("Журнал", () => this.go({ view: "audit" }), { symbol: NotebookPen }));
+    if (isAdmin(this.me)) menu.append(button("Роли по ID", () => this.go({ view: "roles" }), { symbol: Crown }));
+    if (policyReady(this.me) && isDeveloper(this.me))
+      menu.append(button("Игрок по ID", () => this.go({ view: "player" }), { symbol: UserRound }));
+    if (isDeveloper(this.me)) menu.append(button("Задачи", () => this.go({ view: "tasks" }), { symbol: CodeXml }));
+    if (!menu.children.length) return;
+    const trigger = iconButton("Инструменты команды", Shield, () => this.togglePopover(menu, trigger));
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.setAttribute("aria-controls", menu.id);
+    append(head, trigger, menu);
+  }
   trapFocus(e) {
     const all = [
       ...this.root.querySelectorAll(
@@ -252,6 +331,7 @@ export class ChatWindow {
   close() {
     if (this.closed) return;
     this.closed = true;
+    this.dismissPopover();
     this.generation++;
     this.off?.();
     this.service.setOpen(false);
@@ -297,13 +377,15 @@ export class ChatWindow {
       this.service.data?.rooms.find((r) => r.kind === "general")
     );
   }
-  shell(title = "Чат", note = "Повелитель Тайн · Шепчущий лес") {
+  shell(title = "Чат", note = "") {
+    this.dismissPopover();
+    this.resizeComposer = null;
     this.root.replaceChildren();
     const head = el("header", "chat-head"),
       brand = append(
         el("div", "chat-brand"),
         el("h1", "", title),
-        el("div", "sub", note),
+        note ? el("div", "sub", note) : null,
       );
     if (this.stack.length)
       head.append(iconButton("Назад", ArrowLeft, () => this.back()));
@@ -314,8 +396,9 @@ export class ChatWindow {
         this.go({ view: "profile", ref: this.me?.ref }),
       ),
       iconButton("Поддержка", Headphones, () => this.go({ view: "tickets" })),
-      iconButton("Закрыть чат", X, () => this.close()),
     );
+    this.staffTools(head);
+    head.append(iconButton("Закрыть чат", X, () => this.close()));
     this.root.append(head);
     this.statusLine = el("div", "chat-banner");
     this.statusLine.setAttribute("aria-live", "polite");
@@ -324,12 +407,17 @@ export class ChatWindow {
     if (isAdmin(this.me) && !policyReady(this.me)) { this.statusLine.hidden = false; this.statusLine.textContent = "Новые функции ролей ещё не включены."; }
     if (this.bans.length) {
       this.statusLine.hidden = false;
-      this.statusLine.textContent = this.bans
+      const details = el("details", "chat-ban-details"),
+        summary = el("summary");
+      append(summary, el("span", "", this.bans.some((b) => b.kind !== "warn") ? "Ограничения аккаунта" : "Предупреждение"), icon(ChevronDown));
+      const description = this.bans
         .map(
           (b) =>
             `${b.kind === "game" ? "Доступ к игре ограничен" : b.kind === "mute" ? "Ограничение чата" : "Предупреждение"}: ${b.reason}${b.until ? ` · до ${time(b.until)}` : " · бессрочно"}`,
         )
         .join(" / ");
+      append(details, summary, el("div", "", description));
+      this.statusLine.append(details);
     }
     this.view = el("main", "chat-view");
     this.root.append(this.view);
@@ -515,9 +603,6 @@ export class ChatWindow {
     const room = this.room();
     this.shell(
       room.kind === "dm" ? room.title : "Чат",
-      room.kind === "dm"
-        ? "Личная переписка"
-        : "Повелитель Тайн · Шепчущий лес",
     );
     const tabs = el("nav", "chat-tabs");
     tabs.setAttribute("aria-label", "Каналы");
@@ -548,30 +633,6 @@ export class ChatWindow {
     dms.setAttribute("aria-selected", String(room.kind === "dm"));
     tabs.append(dms);
     this.view.append(tabs);
-    const toolbar = el("div", "chat-toolbar");
-    if (isModerator(this.me))
-      append(
-        toolbar,
-        button("Жалобы", () => this.go({ view: "reports" }), {
-          symbol: Shield,
-        }),
-        button("Журнал", () => this.go({ view: "audit" }), {
-          symbol: NotebookPen,
-        }),
-      );
-    if (isAdmin(this.me))
-      toolbar.append(
-        button("Роли по ID", () => this.go({ view: "roles" }), {
-          symbol: Crown,
-        }),
-      );
-    if (policyReady(this.me) && isDeveloper(this.me))
-      toolbar.append(button("Игрок по ID", () => this.go({ view: "player" }), { symbol: UserRound }));
-    if (isDeveloper(this.me))
-      toolbar.append(
-        button("Задачи", () => this.go({ view: "tasks" }), { symbol: CodeXml }),
-      );
-    if (toolbar.children.length) this.view.append(toolbar);
     this.pin = el("div", "chat-pin");
     if (this.pinned)
       append(
@@ -609,20 +670,32 @@ export class ChatWindow {
       );
       return;
     }
-    this.compose = el("div", "chat-compose");
+    this.compose = el("div", "chat-compose chat-compose--room");
     this.replyBar = el("div", "chat-reply");
     this.replyBar.hidden = true;
     this.compose.append(this.replyBar);
     const key = "room:" + room.id,
       ta = el("textarea");
-    ta.rows = 2;
+    ta.rows = 1;
     ta.placeholder = "Написать сообщение…";
     ta.setAttribute("aria-label", "Сообщение");
+    ta.enterKeyHint = "send";
     ta.value = this.service.draft(key);
     const count = el("div", "chat-counter");
     const update = () => {
       this.service.draft(key, ta.value);
-      count.textContent = `${textLength(ta.value)} / 500 · Enter — отправить, Shift+Enter — строка`;
+      const length = textLength(ta.value);
+      count.textContent = `${length} / 500`;
+      count.hidden = length < 400;
+      count.classList.toggle("chat-counter--limit", length > 500);
+      this.resizeComposer?.();
+    };
+    this.resizeComposer = () => {
+      if (!ta.isConnected) return;
+      const followLatest = this.feed?.isConnected && this.feed.scrollHeight - this.feed.scrollTop - this.feed.clientHeight < 60;
+      ta.style.height = "auto";
+      ta.style.height = `${Math.max(40, Math.min(ta.scrollHeight, 96, this.root.clientHeight * .25))}px`;
+      if (followLatest) this.feed.scrollTop = this.feed.scrollHeight;
     };
     ta.oninput = update;
     update();
@@ -644,6 +717,7 @@ export class ChatWindow {
         }
         if (this.closed || generation !== this.generation) return;
         this.reply = null;
+        this.dismissPopover();
         this.replyBar.hidden = true;
         update();
         await this.liveRoomReload();
@@ -654,17 +728,21 @@ export class ChatWindow {
         send();
       }
     });
+    const sendButton = iconButton("Отправить сообщение", Send, send);
+    sendButton.addEventListener("pointerdown", (e) => { if (document.activeElement === ta) e.preventDefault(); });
     append(
       this.compose,
       append(
         el("div", "chat-compose-row"),
+        this.emojiPicker(ta, update, 500),
         ta,
-        iconButton("Отправить сообщение", Send, send),
+        sendButton,
       ),
       count,
       this.error,
     );
     this.view.append(this.compose);
+    this.resizeComposer();
     if (this.route.reply) {
       this.reply = this.route.reply;
       delete this.route.reply;
@@ -677,6 +755,41 @@ export class ChatWindow {
         }),
       );
     }
+  }
+  emojiPicker(ta, update, limit) {
+    const wrap = el("div", "chat-emoji"), panel = el("div", "chat-emoji-panel chat-popover");
+    panel.id = `chat-emoji-${++panelId}`;
+    panel.hidden = true;
+    panel.setAttribute("role", "group");
+    panel.setAttribute("aria-label", "Выбор смайлика");
+    const trigger = iconButton("Смайлики", Smile, () => this.togglePopover(panel, trigger));
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.setAttribute("aria-controls", panel.id);
+    // Keep the cursor and Android keyboard when touching the picker.
+    const keepFocus = (e) => { if (document.activeElement === ta) e.preventDefault(); };
+    trigger.addEventListener("pointerdown", keepFocus);
+    panel.addEventListener("pointerdown", keepFocus);
+    append(panel, append(el("div", "chat-emoji-head"), el("strong", "", "Смайлики"),
+      iconButton("Закрыть смайлики", X, () => this.dismissPopover(true))));
+    const grid = el("div", "chat-emoji-grid");
+    for (const [emoji, label] of EMOJI) {
+      const b = button(emoji, () => {
+        const start = ta.selectionStart ?? ta.value.length, end = ta.selectionEnd ?? start;
+        const value = ta.value.slice(0, start) + emoji + ta.value.slice(end);
+        if (textLength(value) > limit) { this.error.textContent = `Сообщение может содержать до ${limit} символов.`; return; }
+        this.error.textContent = "";
+        ta.value = value;
+        update();
+        this.dismissPopover();
+        ta.focus({ preventScroll: true });
+        ta.setSelectionRange(start + emoji.length, start + emoji.length);
+      }, { cls: "chat-emoji-option" });
+      b.setAttribute("aria-label", `Добавить смайлик: ${label}`);
+      b.title = label;
+      grid.append(b);
+    }
+    append(panel, grid);
+    return append(wrap, trigger, panel);
   }
   async liveRoomReload() {
     const room = this.route.room,
@@ -709,7 +822,7 @@ export class ChatWindow {
           this.messages = [...d.messages, ...this.messages].slice(0, 150);
           this.renderFeed();
         }),
-      { symbol: RefreshCw },
+      { symbol: RefreshCw, cls: "chat-button chat-older" },
     );
     this.feed.append(older);
     if (!this.messages.length)
@@ -739,11 +852,16 @@ export class ChatWindow {
       by,
       name,
       el("span", "sub", `Ур. ${p.level}`),
-      role !== "player" ? roleBadge(role) : null,
+      role !== "player" ? roleBadge(role, true) : null,
       p.playerId
         ? el("span", "sub", `ID ${p.playerId}`)
         : null,
     );
+    name.title = p.nickname;
+    const stamp = el("time", "chat-time", new Date(m.createdAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }));
+    stamp.dateTime = m.createdAt;
+    stamp.title = `${time(m.createdAt)}${m.editedAt ? " · изменено" : ""}`;
+    by.append(stamp);
     content.append(by);
     if (m.reply)
       content.append(
@@ -756,21 +874,15 @@ export class ChatWindow {
         m.deleted ? "chat-deleted" : `chat-body role-${role}`,
         m.deleted ? "Сообщение удалено" : m.body,
       ),
-      el(
-        "div",
-        "chat-time",
-        `${time(m.createdAt)}${m.editedAt ? " · изменено" : ""}`,
-      ),
     );
+    const more = actions ? iconButton("Действия с сообщением", MoreHorizontal, () =>
+      this.go({ view: "message", message: m, room: this.route.room })) : null;
+    more?.classList.add("chat-more");
     append(
       article,
       avatar(p),
       content,
-      actions
-        ? iconButton("Действия с сообщением", MoreHorizontal, () =>
-            this.go({ view: "message", message: m, room: this.route.room }),
-          )
-        : null,
+      more,
     );
     return article;
   }

@@ -223,9 +223,15 @@ await mute(async () => {
     // Esc закрывает
     h.openMenu(); h.pressModalButton(false); ok(!h.modal && !sv.modalOpen, 'Esc закрывает меню');
 
-    // пять заглушек: окно с текстом, без изменений в игре
+    // Четыре заглушки; чат открывает отдельный DOM-интерфейс (проверяется в e2e/chat.mjs).
     const snap = () => JSON.stringify({ inv: sv.state.data.inventory, ev: sv.state.data.completedEvents, lvl: sv.state.data.heroLevel, mode: sv.mode });
-    for (const id of ['city', 'bank', 'rating', 'chat', 'forum']) {
+    const originalChat = h.openChat;
+    let chatOpened = false;
+    h.openChat = () => { chatOpened = true; };
+    h.openMenu(); h.modal.items.find(x => x.item.id === 'chat').hit.emit('pointerdown');
+    ok(chatOpened && !h.modal && !sv.modalOpen, 'пункт Чат закрывает меню и вызывает настоящий интерфейс');
+    h.openChat = originalChat;
+    for (const id of ['city', 'bank', 'rating', 'forum']) {
       const before = snap();
       h.openMenu();
       const it = h.modal.items.find(x => x.item.id === id);

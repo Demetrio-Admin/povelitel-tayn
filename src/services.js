@@ -14,6 +14,7 @@ import { PlayerActions } from './systems/PlayerActions.js';
 import { setHeroSource, T, currentHero } from './state/hero.js';
 import { resolveMap } from './world/mapData.js';
 import { PlayerSession } from './cloud/PlayerSession.js';
+import { ChatService } from './cloud/ChatService.js';
 import { SupabaseApi } from './cloud/api.js';
 import { CLOUD } from './config/cloud.config.js';
 import { showLoading, showOffline, showNotice } from './ui/accountUI.js';
@@ -35,6 +36,7 @@ export const services = {
   // Онлайн-режим: игрок и его прогресс живут на сервере (cloud/PlayerSession.js). null — режим разработки без сервера
   // (не задан VITE_SUPABASE_URL): прогресс в localStorage этого браузера; так же работает автотест и редактор карты.
   session: null,
+  chat: null,
   offline: false,  // нет связи с сервером: игра стоит, пока висит окно «Нет соединения»
   savePosition: null, // ExplorationScene: записать позицию героя в состояние (перед отправкой на сервер)
   hadSave: false,
@@ -66,6 +68,7 @@ export function initServices() {
   services.state = new GameState(online || services.edit ? null : storage);
   if (online) {
     services.session = new PlayerSession({ api, state: services.state, storage, saveDelayMs: CLOUD.saveDelayMs, minorDelayMs: CLOUD.minorDelayMs });
+    services.chat = new ChatService(services.session);
     installSessionUI(services.session);
   } else {
     // ?reset — новая игра; ?reset&hero=warlock — новая игра колдуном (автотесты)
@@ -108,6 +111,11 @@ export function installSessionUI(session) {
     if (reason === 'session-lost') {
       showNotice({ title: 'Сессия завершилась', text: 'Войдите снова, чтобы продолжить игру.', button: 'На стартовый экран', onClose: () => reloadToMenu() });
     }
+    if (reason === 'game-banned') {
+      services.offline = true;
+      if (window.__game?.scene.isActive('ExplorationScene') || window.__game?.scene.isActive('CombatScene')) reloadToMenu();
+    }
+    if (reason === 'ban-lifted') reloadToMenu();
   });
 }
 

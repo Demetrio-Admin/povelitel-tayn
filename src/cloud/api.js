@@ -13,6 +13,23 @@ export class CloudError extends Error {
 
 // Тексты для игрока. Технические ответы сервера сюда не попадают.
 const RU = {
+  game_banned: 'Доступ к игре ограничен. Вы можете обратиться в поддержку.',
+  chat_forbidden: 'У вас нет прав на это действие.',
+  chat_protected: 'Этот сотрудник защищён от изменения вашим набором прав.',
+  chat_conflict: 'Данные уже изменились. Обновите экран и повторите действие.',
+  chat_request_conflict: 'Эта отправка уже использована. Обновите экран.',
+  chat_rate_limited: 'Слишком часто. Подождите немного и попробуйте снова.',
+  chat_invalid_text: 'Проверьте длину текста, переносы строк и упоминания.',
+  chat_invalid_id: 'Введите числовой ID игрока.',
+  chat_invalid_request: 'Проверьте заполненные поля.',
+  chat_not_found: 'Запись не найдена. Обновите экран.',
+  chat_muted: 'Вам временно ограничили отправку сообщений. Поддержка доступна.',
+  chat_register: 'Создайте аккаунт с никнеймом, чтобы писать в чат.',
+  chat_ignored: 'Личная переписка с этим игроком недоступна.',
+  chat_ticket_exists: 'У вас уже есть открытое обращение этой категории.',
+  chat_take_ticket: 'Сначала возьмите обращение в работу. Возможно, оно уже назначено другому сотруднику.',
+  chat_appeal_issuer: 'Обжалование вашей санкции должен завершить другой сотрудник.',
+  chat_unavailable: 'Чат ещё не подключён на сервере. Попробуйте позже.',
   network: 'Не удалось связаться с сервером. Попробуйте ещё раз.',
   timeout: 'Не удалось связаться с сервером. Попробуйте ещё раз.',
   invalid_credentials: 'Неверный никнейм или пароль.',
@@ -33,6 +50,9 @@ export const isAuthError = (e) => e instanceof CloudError && e.code === 'unautho
 export function mapError(status, body) {
   const msg = String(body?.msg || body?.message || body?.error_description || body?.error || '').toLowerCase();
   const code = String(body?.error_code || body?.code || '').toLowerCase();
+  if (msg === 'game_banned') return 'game_banned';
+  if (msg.startsWith('chat_') && Object.hasOwn(RU, msg)) return msg;
+  if (code === 'pgrst202' || code === '42883') return 'chat_unavailable';
   if (status === 429 || code.includes('rate_limit') || code === 'over_request_rate_limit') return 'rate_limited';
   if (code === 'invalid_credentials' || code === 'invalid_grant' || msg.includes('invalid login credentials')) return 'invalid_credentials';
   if (code === 'nickname_taken' || code === '23505') return 'nickname_taken';

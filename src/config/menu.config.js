@@ -5,7 +5,7 @@ export const MENU_ITEMS = [
   { id: 'city', label: 'Город', icon: 'icon_city', stub: true, note: 'Здесь появятся магазины и другие городские возможности.' },
   { id: 'bank', label: 'Банк', icon: 'icon_bank', stub: true },
   { id: 'rating', label: 'Рейтинг', icon: 'icon_rating', stub: true },
-  { id: 'chat', label: 'Чат', icon: 'icon_chat', stub: true },
+  { id: 'chat', label: 'Чат', icon: 'icon_chat' },
   { id: 'forum', label: 'Форум', icon: 'icon_forum', stub: true },
   { id: 'settings', label: 'Настройки', icon: 'icon_settings' },
 ];

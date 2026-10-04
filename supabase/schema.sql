@@ -169,7 +169,7 @@ begin
     'pos',  case when pr.pos_x  is null then null else jsonb_build_object('x', pr.pos_x,  'y', pr.pos_y)  end,
     'safe', case when pr.safe_x is null then null else jsonb_build_object('x', pr.safe_x, 'y', pr.safe_y) end,
     'hp', pr.hp, 'mana', pr.mana, 'play', pr.play_ms, 'combats', pr.combats, 'tutorial', pr.tutorial,
-    'meta', jsonb_build_object('hero', pf.hero_id, 'nickname', pf.nickname, 'registered', pf.nickname is not null,
+    'meta', jsonb_build_object('playerId', to_jsonb(pf)->>'player_id', 'hero', pf.hero_id, 'nickname', pf.nickname, 'registered', pf.nickname is not null,
                                'rev', pr.rev, 'createdAt', pf.created_at, 'registeredAt', pf.registered_at, 'lastSeenAt', pf.last_seen_at)
   );
 end $$;
@@ -180,6 +180,17 @@ language sql security definer stable set search_path = public as $$
   select norm ~ '^[a-zа-яё0-9_]{3,20}$' and not exists (select 1 from public.profiles where nickname_normalized = norm);
 $$;
 
+create or replace function public._require_game_access() returns void language plpgsql security definer set search_path='' as $$
+declare denied boolean;
+begin
+  perform pg_advisory_xact_lock(hashtextextended('chat-user:'||auth.uid()::text,0));
+  if to_regclass('game_chat.sanctions') is not null then
+    execute 'select exists(select 1 from game_chat.sanctions where user_id=$1 and kind=''game'' and revoked_at is null and (expires_at is null or expires_at>now()))' into denied using auth.uid();
+    if denied then raise exception 'game_banned' using errcode='P0001'; end if;
+  end if;
+end $$;
+revoke all on function public._require_game_access() from public,anon,authenticated;
+
 -- ---------------------------------------------------------------- создание и загрузка игрока
 -- Вызывается один раз после появления пользователя (гость — анонимный пользователь Supabase). Повторный вызов ничего не портит.
 create or replace function public.create_player(hero text) returns jsonb
@@ -187,6 +198,7 @@ language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid();
 begin
   if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  perform public._require_game_access();
   if hero is null or hero !~ '^[a-z0-9_]{1,32}$' then raise exception 'invalid_hero' using errcode = '22023'; end if;
   insert into profiles (id, hero_id) values (uid, hero) on conflict (id) do update set hero_id = coalesce(profiles.hero_id, excluded.hero_id);
   insert into player_progress (user_id) values (uid) on conflict (user_id) do nothing;
@@ -199,6 +211,7 @@ language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid();
 begin
   if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  perform public._require_game_access();
   update profiles set last_seen_at = now() where id = uid;
   return _snapshot(uid);
 end $$;
@@ -209,6 +222,7 @@ language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid();
 begin
   if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  perform public._require_game_access();
   if hero is null or hero !~ '^[a-z0-9_]{1,32}$' then raise exception 'invalid_hero' using errcode = '22023'; end if;
   perform 1 from player_progress where user_id = uid for update;
   delete from player_inventory where user_id = uid;
@@ -243,6 +257,7 @@ declare
   gain_play   constant numeric := 600000;     -- 10 минут
 begin
   if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  perform public._require_game_access();
   if patch is null or jsonb_typeof(patch) <> 'object' then raise exception 'bad_patch' using errcode = '22023'; end if;
   select * into pr from player_progress where user_id = uid for update;
   if not found then raise exception 'no_player' using errcode = 'P0002'; end if;
@@ -456,6 +471,7 @@ declare
   rules jsonb; r jsonb; u jsonb; m jsonb; k text; v jsonb; missing jsonb; first boolean; prev jsonb; core boolean;
 begin
   if uid is null then raise exception 'not_authenticated' using errcode = '28000'; end if;
+  perform public._require_game_access();
   if action is null or jsonb_typeof(action) <> 'object' then raise exception 'bad_action' using errcode = '22023'; end if;
   select * into pr from player_progress where user_id = uid for update;
   if not found then raise exception 'no_player' using errcode = 'P0002'; end if;

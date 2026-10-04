@@ -73,22 +73,38 @@ export class PlayerSession {
   async _fresh(force = false) {
     if (!this.auth) throw new CloudError('unauthorized', errorText('unauthorized'), 401);
     if (!force && this.auth.expires_at - this.now() > 60000) return this.auth;
-    try {
-      this._setAuth(await this.api.refresh(this.auth.refresh_token));
-    } catch (e) {
-      if (!isNetworkError(e)) this._lostSession();
-      throw e;
-    }
-    return this.auth;
+    const current = this.auth;
+    if (this.refreshAuth?.auth === current) return this.refreshAuth.promise;
+    const task = { auth: current };
+    task.promise = (async () => {
+      try {
+        const updated = await this.api.refresh(current.refresh_token);
+        if (this.auth !== current) throw new CloudError('session_changed', 'Аккаунт изменился. Повторите действие.');
+        this._setAuth(updated);
+        return updated;
+      } catch (e) {
+        if (!isNetworkError(e) && this.auth === current) this._lostSession();
+        throw e;
+      } finally { if (this.refreshAuth === task) this.refreshAuth = null; }
+    })();
+    this.refreshAuth = task;
+    return task.promise;
   }
 
   /** Вызов с токеном; при 401 — одно обновление токена и повтор. */
   async _authed(fn) {
     let a = await this._fresh();
-    try { return await fn(a.access_token); } catch (e) {
+    const run = async (auth) => {
+      if (this.userId !== auth.user.id) throw new CloudError('session_changed', 'Аккаунт изменился. Повторите действие.');
+      const result = await fn(auth.access_token);
+      if (this.userId !== auth.user.id) throw new CloudError('session_changed', 'Аккаунт изменился. Повторите действие.');
+      return result;
+    };
+    try { return await run(a); } catch (e) {
       if (!isAuthError(e)) throw e;
-      a = await this._fresh(true);
-      return fn(a.access_token);
+      if (this.auth?.user.id !== a.user.id) throw new CloudError('session_changed', 'Аккаунт изменился. Повторите действие.');
+      a = await this._fresh(this.auth?.access_token === a.access_token);
+      return run(a);
     }
   }
 
@@ -116,7 +132,13 @@ export class PlayerSession {
   }
 
   async _loadPlayer(hero) {
-    let raw = await this._authed(t => this.api.getPlayer(t));
+    let raw;
+    try { raw = await this._authed(t => this.api.getPlayer(t)); }
+    catch (e) {
+      if (e.code !== 'game_banned') throw e;
+      this.setGameBan(await this._authed(t => this.api.rpc('chat_request', { op: 'bootstrap' }, t)));
+      return;
+    }
     if (!raw) raw = await this._authed(t => this.api.createPlayer(t, hero || DEFAULT_HERO)); // вход есть, персонажа нет
     this._applyServer(raw);
     this.inflight = null;
@@ -124,6 +146,17 @@ export class PlayerSession {
     this._setSaving('saved');
     this._setStatus('ready');
   }
+
+  setGameBan(data) {
+    const first = this.status !== 'banned';
+    this._stopTimers(); this.inflight = null;
+    this.meta = { ...this.meta, nickname: data.me.nickname, registered: data.me.registered, hero: data.me.hero, playerId: data.me.playerId };
+    this.banInfo = data.sanctions;
+    this._setStatus('banned');
+    if (first) this.emit('game-banned');
+  }
+
+  async reloadAfterBan() { await this._loadPlayer(); this.emit('ban-lifted'); }
 
   /**
    * Запуск игры: если на устройстве есть вход (гостя или игрока), продолжаем того же персонажа.

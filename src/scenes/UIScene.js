@@ -8,6 +8,8 @@ import { MSG } from '../state/EventBus.js';
 import { CHAPTER_1_FINAL } from '../config/events.js';
 import { services, resetProgress, reloadToMenu } from '../services.js';
 import { showProfile } from '../ui/accountUI.js';
+import { showChat } from '../ui/ChatWindow.js';
+import { ChatService } from '../cloud/ChatService.js';
 import { InputController } from '../systems/InputController.js';
 import { ABILITY_ORDER } from '../systems/AbilitySystem.js';
 import { itemName, ROMAN } from '../objects/InteractiveObject.js';
@@ -45,6 +47,7 @@ export class UIScene extends Phaser.Scene {
     this.mode = 'exploration';
     this.modal = null;
     this.modalQueue = [];
+    this.shuttingDown = false;
     this.toasts = [];
     this.touch = null;
     this.hudTimer = 0;
@@ -86,7 +89,8 @@ export class UIScene extends Phaser.Scene {
     bus.on(MSG.CONTEXT_ACTION, () => { const t = services.tutorial; t.complete('interact'); if (this.focusInfo?.ability === 'telekinesis') t.complete('telekinesis'); }, this);
     bus.on(MSG.ABILITY_USE, (id) => { if (this.mode === 'exploration' && (id === 'telekinesis' || id === 'fire')) services.tutorial.complete(id); }, this);
     const offAcc = services.session?.onChange((r) => { if (r === 'saving' || r === 'profile' || r === 'registered') this.refreshHud(); });
-    this.events.once('shutdown', () => { bus.offContext(this); offAcc?.(); });
+    const offChat = services.chat?.onChange(() => { if (this.menuBtn?.text) this.menuBtn.text.setText(services.chat.unread ? `Меню · ${services.chat.unread}` : 'Меню'); });
+    this.events.once('shutdown', () => { this.shuttingDown = true; this.chatWindow?.close(); bus.offContext(this); offAcc?.(); offChat?.(); });
 
     this.refreshQuest();
     this.refreshHud();
@@ -218,6 +222,7 @@ export class UIScene extends Phaser.Scene {
   // ================================================================== обновление
   setMode(mode) {
     this.mode = mode;
+    if (mode === 'combat') this.chatWindow?.close();
     if (mode === 'combat') {
       this.toasts.forEach(t => t.destroy());
       this.toasts = []; // exploration notifications must not follow the player into battle
@@ -460,6 +465,7 @@ export class UIScene extends Phaser.Scene {
 
   pressModalButton(primary) {
     if (!this.modal) return;
+    if (this.modal.chat) { if (!primary) this.chatWindow?.back(); return; }
     if (this.modal.menu) { this.closeMenu(); return; }
     if (this.modal.dialogue) { if (primary) this.modal.onPrimary(); else this.modal.onCancel(); return; }
     const bs = this.modal.buttons;
@@ -469,6 +475,7 @@ export class UIScene extends Phaser.Scene {
 
   closeModal(button) {
     if (!this.modal) return;
+    if (this.modal.chat) { this.chatWindow?.close(); return; }
     if (this.modal.menu) { this.closeMenu(); return; }
     if (this.modal.dialogue) { this.closeDialogue(true); return; }
     const { container, tempKeys, scroll } = this.modal;
@@ -538,6 +545,25 @@ export class UIScene extends Phaser.Scene {
       onLogout: () => reloadToMenu(),     // выход — на стартовый экран
       onSwitched: () => reloadToMenu(),   // вошли в другой аккаунт — мир перезагружается с его прогрессом
       onRegistered: () => this.refreshHud(),
+    });
+  }
+
+  openChat() {
+    if (this.modal || this.mode === 'combat') return;
+    const chat = services.chat || (services.chat = new ChatService(services.session));
+    this.modal = { chat: true };
+    services.modalOpen = true; this.resetJoystick(); this.controls?.scene.input.keyboard.resetKeys();
+    const keyboard = this.input.keyboard, enabled = keyboard.enabled;
+    keyboard.enabled = false;
+    this.bus.emit(MSG.MODAL_OPEN);
+    this.chatWindow = showChat(chat, {
+      onClose: () => {
+        this.chatWindow = null; this.modal = null; services.modalOpen = false;
+        keyboard.resetKeys(); keyboard.enabled = enabled;
+        this.bus.emit(MSG.MODAL_CLOSED);
+        if (!this.shuttingDown && this.mode === 'exploration' && this.modalQueue.length) this.openModal(this.modalQueue.shift());
+      },
+      onLogout: () => reloadToMenu(),
     });
   }
 

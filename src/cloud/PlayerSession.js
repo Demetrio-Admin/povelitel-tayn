@@ -405,6 +405,21 @@ export class PlayerSession {
    *   'session' — нет входа (сессия завершилась); иначе — ответ сервера (coins, full, already, …).
    */
   async runAction(action) {
+    const act = { ...action, id: action.id || randomId() };
+    return this._act('player_action', act, (t) => this.api.playerAction(t, act));
+  }
+
+  /**
+   * v0.14.0: отправить серверу запись боя (Edge Function combat). Сервер проигрывает её, решает исход и записывает итог;
+   * ответ — снимок игрока и action = { ok, outcome, verdict } либо { ok: false, reason } (bad_log, too_fast, no_combat, …).
+   * Причины отказа транспорта те же, что у runAction; 'server' с error.status 404 — функция ещё не развёрнута.
+   */
+  async submitCombat(log) {
+    return this._act('combat', null, (t) => this.api.combat(t, log));
+  }
+
+  /** Общий путь действий с ответом-снимком: сначала отправляем накопленные изменения, потом действие, потом принимаем ответ сервера. */
+  async _act(rpc, act, call) {
     if (this.status === 'offline') return { ok: false, reason: 'network' };
     if (!this.base || !this.auth || this.status !== 'ready') return { ok: false, reason: 'session' };
     if (!(await this.flush())) {
@@ -412,20 +427,19 @@ export class PlayerSession {
       if (this.status === 'signed_out') return { ok: false, reason: 'session' };
       return { ok: false, reason: 'server', error: this.lastFlushError || { rpc: 'sync_player', code: this.lastError?.code || 'unknown', status: this.lastError?.status || 0 } };
     }
-    const act = { ...action, id: action.id || randomId() };
     const sent = toSnapshot(this.state.data);
     let raw = null;
     for (let attempt = 0; attempt < 2 && !raw; attempt++) {
-      try { raw = await this._authed(t => this.api.playerAction(t, act)); } catch (e) {
+      try { raw = await this._authed(call); } catch (e) {
         this.lastError = e;
         if (!isNetworkError(e)) {
           if (this.status === 'signed_out') return { ok: false, reason: 'session' };
-          return { ok: false, reason: 'server', error: { rpc: 'player_action', code: e?.code || 'unknown', status: e?.status || 0, detail: e?.detail || '' } };
+          return { ok: false, reason: 'server', error: { rpc, code: e?.code || 'unknown', status: e?.status || 0, detail: e?.detail || '' } };
         }
         if (attempt === 1) { this._goOffline(); return { ok: false, reason: 'network' }; }
       }
     }
-    if (!raw) return { ok: false, reason: 'server', error: { rpc: 'player_action', code: 'empty_response', status: 200 } };
+    if (!raw) return { ok: false, reason: 'server', error: { rpc, code: 'empty_response', status: 200 } };
     // пока ждали, игра могла что-то изменить (HP и ману задаёт сервер)
     const later = diffSnapshots(sent, toSnapshot(this.state.data));
     const { snapshot, meta, action: res } = fillDefaults(raw);
@@ -435,10 +449,10 @@ export class PlayerSession {
     if (Object.keys(later).length) this.onStateSaved();
     if (res?.duplicate) return res;      // v0.10: сервер вернул сохранённый результат первой попытки
     if (res?.reason === 'duplicate') {   // ответ на первую попытку потерялся (действие до v0.10): итог видно по состоянию
-      const ok = act.op === 'heal' ? snapshot.hp === maxVitals(snapshot.level).hp : snapshot.quests.includes(STARTER_KIT.event);
-      return ok ? { ok } : { ok, reason: 'server', error: { rpc: 'player_action', code: 'duplicate_unconfirmed', status: 200 } };
+      const ok = act?.op === 'heal' ? snapshot.hp === maxVitals(snapshot.level).hp : snapshot.quests.includes(STARTER_KIT.event);
+      return ok ? { ok } : { ok, reason: 'server', error: { rpc, code: 'duplicate_unconfirmed', status: 200 } };
     }
-    return res || { ok: false, reason: 'server', error: { rpc: 'player_action', code: 'no_result', status: 200 } };
+    return res || { ok: false, reason: 'server', error: { rpc, code: 'no_result', status: 200 } };
   }
 
   /** Телеметрия живого теста: пачка событий. Ошибки наружу не влияют на игру (статус связи не меняется). */

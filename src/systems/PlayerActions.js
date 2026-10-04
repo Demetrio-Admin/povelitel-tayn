@@ -5,10 +5,13 @@
 // Причины отказа: 'busy' (уже выполняется), 'network' (нет связи), 'server' (ошибка сервера, error = { rpc, code, status }),
 // 'session' (вход завершён), 'error' (непредвиденный сбой клиента — пишется в консоль), либо ответ сервера (coins, full, already).
 // v0.13.0: действия в мире ({ op: 'world', obj }) — сбор, находки, запасы, магия: мана, награда и возрождение считает сервер.
+// v0.14.0: бой проверяет сервер. combatStart(spawn, enemy) — сервер запоминает состояние героя; combatSubmit(log) — запись боя
+// проигрывается на сервере (Edge Function combat), исход, награда и потери приходят в ответе. Без сервера — тот же путь на JS.
 // v0.10.0: крафт ({ op: 'craft', recipe }), сюжетные предметы ({ op: 'use', item }) и миграция ({ op: 'migrate_v10' }).
 // После успеха к результату добавляется outcome — что реально изменилось (опыт, новые уровни, предметы, новые события),
 // а для новых событий шлётся обычный WORLD_EVENT: мир, журнал и наведение обновляются так же, как после QuestFlags.complete.
-import { applyAction, toSnapshot, fromSnapshot } from '../cloud/playerModel.js';
+import { applyAction, combatApply, toSnapshot, fromSnapshot } from '../cloud/playerModel.js';
+import { verifyCombat } from '../cloud/combatVerify.js';
 import { HERO_LEVELS } from '../config/balance.hero.js';
 import { MSG } from '../state/EventBus.js';
 
@@ -38,17 +41,26 @@ export class PlayerActions {
   get busy() { return !!this.pending; }
 
   async run(action) {
+    return this.exec(action.op, async (ses) => {
+      if (ses) return ses.runAction(action);
+      const { snapshot, result } = applyAction(toSnapshot(this.state.data), action, this.state.now());
+      if (result.ok) { this.state.setData(fromSnapshot(snapshot, this.state.data)); this.state.save(); }
+      return result;
+    }, action.op);
+  }
+
+  /**
+   * Общая обвязка действий: одно действие за раз, снимок «до» для сообщения об изменениях, события мира для новых событий.
+   * meta — { spawnId } и т. п. попадает в payload WORLD_EVENT.
+   */
+  async exec(op, body, tag = op, extra = {}) {
     if (this.pending) return { ok: false, reason: 'busy' };
     const before = JSON.parse(JSON.stringify(this.state.data));
     this.pending = (async () => {
       try {
-        const ses = this.getSession();
-        if (ses) return await ses.runAction(action);
-        const { snapshot, result } = applyAction(toSnapshot(this.state.data), action, this.state.now());
-        if (result.ok) { this.state.setData(fromSnapshot(snapshot, this.state.data)); this.state.save(); }
-        return result;
+        return await body(this.getSession());
       } catch (e) {
-        console.error('[PlayerActions] непредвиденный сбой действия', action?.op, e);
+        console.error('[PlayerActions] непредвиденный сбой действия', op, e);
         return { ok: false, reason: 'error', error: { rpc: 'client', code: e?.name || 'Error', status: 0, detail: String(e?.message || e).slice(0, 80) } };
       }
     })();
@@ -56,11 +68,32 @@ export class PlayerActions {
     try { res = await this.pending; } finally { this.pending = null; }
     if (res?.ok) {
       res = { ...res, outcome: PlayerActions.outcome(before, this.state.data) };
-      for (const ev of res.outcome.events) this.bus?.emit(MSG.WORLD_EVENT, ev, { action: action.op }, { levelUps: res.outcome.levelUps, granted: null });
+      for (const ev of res.outcome.events) this.bus?.emit(MSG.WORLD_EVENT, ev, { action: tag, ...extra }, { levelUps: res.outcome.levelUps, granted: null });
       this.bus?.emit(MSG.QUEST_CHANGED);
       this.bus?.emit(MSG.HUD_REFRESH);
     }
     return res;
+  }
+
+  /** v0.14.0: бой начался — сервер запоминает состояние героя; в ответе его HP и мана на старт боя (они же в state.data). */
+  combatStart(spawn, enemy) { return this.run({ op: 'combat_start', spawn, enemy }); }
+
+  /**
+   * v0.14.0: запись боя на проверку. Успех: { ok, outcome: 'victory'|'defeat'|'retreat', verdict, outcome (изменения: опыт, уровни, предметы, события) }.
+   * Отказ сервера: { ok: false, reason: 'bad_log' | 'too_fast' | 'no_combat' | … }. Сеть/занято/сессия — как у run().
+   */
+  async combatSubmit(log, spawnId = null) {
+    const r = await this.exec('combat', async (ses) => {
+      if (ses) return ses.submitCombat(log);
+      const now = this.state.now();
+      const snap = toSnapshot(this.state.data);
+      const v = verifyCombat(snap, log, now);
+      if (!v.ok) return { ok: false, reason: v.reason };
+      const { snapshot, result } = combatApply(snap, v.verdict, now);
+      if (result.ok) { this.state.setData(fromSnapshot(snapshot, this.state.data)); this.state.save(); return { ...result, verdict: v.verdict }; }
+      return result;
+    }, 'combat', { spawnId });
+    return r;
   }
 
   craft(recipe) { return this.run({ op: 'craft', recipe }); }
@@ -70,8 +103,7 @@ export class PlayerActions {
   heal() { return this.run({ op: 'heal' }); }
   /** v0.12.0: зелье из сумки вне боя (настой жизни, лунный эликсир). */
   drink(item) { return this.run({ op: 'drink', item }); }
-  /** v0.12.0: бой начался / закончился (outcome: victory | defeat | retreat; mana — остаток маны). Сервер замораживает и возобновляет восстановление. */
-  combatStart() { return this.run({ op: 'combat_start' }); }
+  /** v0.12.0: бой закончился. С v0.14.0 сервер принимает так только отступление (outcome 'retreat'); победа и поражение — combatSubmit. */
   combatEnd(outcome, mana) { return this.run({ op: 'combat_end', outcome, mana }); }
   /** v0.13.0: сбор узла, находка, запас или магия в мире — решает и записывает сервер (правила: config/storyItems.js worldRules). */
   world(obj) { return this.run({ op: 'world', obj }); }

@@ -118,11 +118,13 @@ const hbh = JSON.parse(q(`select public.player_action('{"op":"heal","id":"sec-he
 ok(hbh.action.ok === false && hbh.action.reason === 'full', 'лечение при полном HP отклонено без изменений');
 const ce = JSON.parse(q(`select public.player_action('{"op":"combat_end","outcome":"victory","mana":100,"id":"sec-cend-00001"}'::jsonb);`, B).out);
 ok(ce.action.ok === false && ce.action.reason === 'no_combat' && hb2.mana < 5 && ce.mana < 5, 'конец боя без начала ничего не даёт (полную ману бесплатно не получить)');
-const cs = JSON.parse(q(`select public.player_action('{"op":"combat_start","id":"sec-cstart-0001"}'::jsonb);`, A).out);
+const cs = JSON.parse(q(`select public.player_action('{"op":"combat_start","spawn":"scavenger_01","enemy":"forest_scavenger","id":"sec-cstart-0001"}'::jsonb);`, A).out);
 const hc = JSON.parse(q(`select public.player_action('{"op":"heal","id":"sec-heal-00002"}'::jsonb);`, A).out);
 ok(cs.action.ok && cs.combatSince && hc.action.reason === 'combat', 'в бою лечение у Мирры закрыто');
 const dc = JSON.parse(q(`select public.player_action('{"op":"drink","item":"elixir_life","id":"sec-drink-0001"}'::jsonb);`, A).out);
 ok(dc.action.reason === 'combat', 'в бою зелья из сумки закрыты');
+const vf = JSON.parse(q(`select public.player_action('{"op":"combat_end","outcome":"victory","mana":100,"id":"sec-cend-00009"}'::jsonb);`, A).out);
+ok(vf.action.reason === 'verify' && vf.combatSince && vf.combatCtx?.spawn === 'scavenger_01', 'победу без проверки записи сервер не принимает (verify): бой идёт, запомненное состояние на месте');
 const bo = JSON.parse(q(`select public.player_action('{"op":"combat_end","outcome":"win","id":"sec-cend-00002"}'::jsonb);`, A).out);
 ok(bo.action.reason === 'bad_outcome' && bo.combatSince, 'неизвестный исход боя отклонён, бой не закрыт');
 const ca = JSON.parse(q(`select public.player_action('{"op":"combat_end","outcome":"retreat","id":"sec-cend-00003"}'::jsonb);`, A).out);

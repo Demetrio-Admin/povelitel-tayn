@@ -6,6 +6,7 @@ import { buildTerrain } from '../world/terrain.js';
 import { paintTerrainChunk, terrainChunks } from '../world/terrainPaint.js';
 import { applyPos } from '../world/mapData.js';
 import { propSolid, baseSolid } from '../world/solids.js';
+import { buildNav, findPath } from '../world/nav.js';
 import { MapEditor } from '../systems/MapEditor.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
@@ -683,18 +684,50 @@ export class ExplorationScene extends Phaser.Scene {
     this.interaction.act(id);
   }
 
+  /** Сетки для поиска пути по живым препятствиям (блокираторы объектов появляются и исчезают). Пересборка — только при изменениях. */
+  navGrids() {
+    const solids = [];
+    let sig = 0;
+    for (const z of this.solids.getChildren()) {
+      const b = z.body; if (!b) continue;
+      solids.push({ x: b.x, y: b.y, w: b.width, h: b.height });
+      sig = (sig * 31 + Math.round(b.x * 3 + b.y * 7 + b.width * 11 + b.height * 13)) | 0;
+    }
+    sig = sig + ':' + solids.length;
+    if (this.navCache?.sig !== sig) {
+      const dims = { width: WORLD.width, height: WORLD.height, solids };
+      this.navCache = { sig, grids: [buildNav(dims), buildNav({ ...dims, pad: 0 })] }; // с запасом; без запаса — для узких проходов
+    }
+    return this.navCache.grids;
+  }
+
+  /** Маршрут героини к точке в обход препятствий; null — маршрут построить не удалось (идём по прямой, как раньше). */
+  planPath(x, y) {
+    try { return findPath(this.navGrids(), { x: this.player.x, y: this.player.y }, { x, y }); } catch (e) { console.warn('[nav]', e); return null; }
+  }
+
   onTap({ x, y }) {
     if (!this.canAct()) return;
     const wp = this.cameras.main.getWorldPoint(x, y);
     const obj = this.interaction.pick(wp.x, wp.y);
-    const mark = this.add.image(wp.x, wp.y, 'fx_ring').setDisplaySize(50, 22).setTint(obj ? obj.markerColor : 0xffffff).setAlpha(0.8).setDepth(DEPTH.path + 2);
+    const goal = obj ? { x: obj.x, y: obj.y } : { x: wp.x, y: wp.y };
+    const route = this.planPath(goal.x, goal.y);
+    // куда на самом деле дойдём: закрытая цель → ближайшая достижимая точка (метка ставится туда)
+    const end = route?.end || goal;
+    const blocked = !!route && !route.complete && Math.hypot(end.x - goal.x, end.y - goal.y) > (obj ? obj.radius : 100);
+    const markAt = obj || !route ? { x: wp.x, y: wp.y } : end;
+    const mark = this.add.image(markAt.x, markAt.y, 'fx_ring').setDisplaySize(50, 22).setTint(blocked ? 0xff7a6b : obj ? obj.markerColor : 0xffffff).setAlpha(0.8).setDepth(DEPTH.path + 2);
     this.tweens.add({ targets: mark, alpha: 0, scale: mark.scale * 1.6, duration: 450, onComplete: () => mark.destroy() });
     if (obj) {
-      const near = Math.hypot(obj.x - this.player.x, obj.y - this.player.y) <= obj.radius;
       const go = () => { if (obj.isAvailable() && this.canAct()) { this.interaction.setFocus(obj); this.interaction.act(null); } };
-      if (near) go(); else this.player.walkTo(obj.x, obj.y, go, obj.radius * 0.8);
+      const dist = () => Math.hypot(obj.x - this.player.x, obj.y - this.player.y);
+      if (dist() <= obj.radius) { go(); return; }
+      // путь кончился у самого объекта (его стена не пускает ближе) — это тоже «пришли», если в зоне взаимодействия
+      const onFail = () => { if (dist() <= obj.radius && this.canAct()) go(); else if (blocked) this.toast('Сюда не пройти'); };
+      this.player.walkTo(obj.x, obj.y, go, obj.radius * 0.8, { path: route?.points, onFail });
     } else {
-      this.player.walkTo(wp.x, wp.y);
+      this.player.walkTo(wp.x, wp.y, null, undefined, { path: route?.points });
+      if (blocked) this.toast('Сюда не пройти');
     }
   }
 

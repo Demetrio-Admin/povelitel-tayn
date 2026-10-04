@@ -25,10 +25,11 @@ export const PLAYER = {
 };
 
 export const CONTROLS = {
-  joystickRadius: 70,
-  joystickDeadzone: 12,
-  tapMaxMs: 260,
-  tapMaxMove: 16,
+  joystickRadius: 90,       // v0.10.3: был 70 — полный ход слишком близко к центру, джойстик казался «чувствительным»
+  joystickDeadzone: 14,
+  joystickCurve: 1.35,      // >1: у центра шаги медленнее, у края — полная скорость (плавнее подходить к цели)
+  tapMaxMs: 400,            // v0.10.3: был 260 — неспешный клик мышью не засчитывался
+  tapMaxMove: 20,
   tapPickRadius: 80,      // большой радиус попадания по объекту — без требований к точности
 };
 

@@ -6,6 +6,11 @@ import { currentHero } from '../state/hero.js';
 // Player — герой (ведьма или колдун) в exploration. Pivot — низ по центру, hitbox — у ступней (Hero Spec §13).
 // 4 направления: down / up / side (лево = зеркало side). v0.9.2: текстуры — из определения выбранного героя
 // (config/heroes.js); размер на экране, hitbox, тень и скорость общие (PLAYER), поэтому силуэт рисунка на игру не влияет.
+// Движение: разгон/остановка, достижение точек маршрута, застревание (v0.10.3)
+const ACCEL = 14, DECEL = 18;     // 1/с: чем больше, тем резче
+const WAYPOINT_REACH = 10;        // px: точка маршрута «пройдена»
+const STUCK_STOP = 0.5;           // с: столько стоим без движения у стены — отменяем путь
+
 export class Player {
   constructor(scene, x, y) {
     this.scene = scene;
@@ -31,9 +36,12 @@ export class Player {
 
     this.facing = 'down';
     this.walkT = 0;
-    this.moveTarget = null;   // tap-to-move { x, y, onArrive, radius }
+    this.moveTarget = null;   // tap-to-move { x, y, onArrive, onFail, radius, path: [{x, y}], idx }
     this.stuckTime = 0;
     this.casting = 0;
+    this.vel = { x: 0, y: 0 };   // v0.10.3: скорость плавно набирается и гасится, а не прыгает
+    this.actual = 0;             // фактическая скорость (доля от PLAYER.speed): упёрлись в стену — шаги не идут
+    this.prev = { x, y };
   }
 
   get x() { return this.sprite.x; }
@@ -45,14 +53,18 @@ export class Player {
     this.moveTarget = null;
   }
 
-  /** Идти к точке. onArrive вызывается, когда до точки меньше radius. */
-  walkTo(x, y, onArrive = null, radius = PLAYER.arriveDistance) {
-    this.moveTarget = { x, y, onArrive, radius };
+  /**
+   * Идти к точке (x, y). path — точки маршрута в обход препятствий (world/nav.js); без него — по прямой.
+   * onArrive вызывается, когда до цели меньше radius; onFail — путь кончился, а до цели не дошли (закрыто стеной).
+   */
+  walkTo(x, y, onArrive = null, radius = PLAYER.arriveDistance, { path = null, onFail = null } = {}) {
+    this.moveTarget = { x, y, onArrive, onFail, radius, path: path && path.length ? path : [{ x, y }], idx: 0 };
     this.stuckTime = 0;
   }
 
   stop() {
     this.sprite.setVelocity(0, 0);
+    this.vel.x = this.vel.y = 0;
     this.moveTarget = null;
     this.updateVisual(0, 0, Math.min(this.scene.game.loop.delta, 50) / 1000);
   }
@@ -82,27 +94,50 @@ export class Player {
       vx = input.x * k; vy = input.y * k;
     } else if (this.moveTarget) {
       const t = this.moveTarget;
-      const dx = t.x - this.x, dy = t.y - this.y;
-      const d = Math.hypot(dx, dy);
-      if (d <= t.radius) {
+      const gd = Math.hypot(t.x - this.x, t.y - this.y);
+      if (t.onArrive && gd <= t.radius) {
         this.moveTarget = null;
-        if (t.onArrive) t.onArrive();
+        t.onArrive();
       } else {
-        vx = dx / d; vy = dy / d;
-        // если упёрлись в препятствие — прекращаем идти
-        const moved = this.sprite.body.speed;
-        this.stuckTime = moved < PLAYER.speed * 0.2 ? this.stuckTime + dt : 0;
-        if (this.stuckTime > 0.6) this.moveTarget = null;
+        // промежуточные точки маршрута проходим, не останавливаясь
+        while (t.idx < t.path.length - 1 && Math.hypot(t.path[t.idx].x - this.x, t.path[t.idx].y - this.y) <= WAYPOINT_REACH) t.idx++;
+        const wp = t.path[t.idx], last = t.idx === t.path.length - 1;
+        const dx = wp.x - this.x, dy = wp.y - this.y, d = Math.hypot(dx, dy);
+        if (last && d <= (t.onArrive ? WAYPOINT_REACH : t.radius)) {
+          // дошли до конца маршрута; до цели далеко (она за стеной) — не тычемся, а останавливаемся
+          this.moveTarget = null;
+          if (t.onArrive) t.onFail?.();
+        } else {
+          vx = dx / d; vy = dy / d;
+          // упёрлись в препятствие и не двигаемся — прекращаем идти
+          this.stuckTime = this.actual < 0.2 ? this.stuckTime + dt : 0;
+          if (this.stuckTime > STUCK_STOP) { this.moveTarget = null; t.onFail?.(); vx = vy = 0; }
+        }
       }
     }
-    this.sprite.setVelocity(vx * PLAYER.speed, vy * PLAYER.speed);
+    // плавный разгон и остановка (около 0,08 с): движение не дёргается от каждого касания
+    const tx = vx * PLAYER.speed, ty = vy * PLAYER.speed;
+    const rate = Math.min(1, dt * ((tx || ty) ? ACCEL : DECEL));
+    this.vel.x += (tx - this.vel.x) * rate;
+    this.vel.y += (ty - this.vel.y) * rate;
+    if (!tx && !ty && Math.hypot(this.vel.x, this.vel.y) < 8) this.vel.x = this.vel.y = 0;
+    this.sprite.setVelocity(this.vel.x, this.vel.y);
+    // фактическая скорость по смещению: стена гасит шаги и анимацию ходьбы
+    const moved = dt > 0 ? Math.hypot(this.x - this.prev.x, this.y - this.prev.y) / dt / PLAYER.speed : 0;
+    this.prev.x = this.x; this.prev.y = this.y;
+    this.actual += (Math.min(1.2, moved) - this.actual) * Math.min(1, dt * 14);
     this.casting = Math.max(0, this.casting - dt);
-    this.updateVisual(vx, vy, dt);
+    const cmd = Math.hypot(this.vel.x, this.vel.y) / PLAYER.speed;
+    const vis = Math.min(cmd, this.actual * 1.15);
+    const k = cmd > 0.001 ? vis / cmd : 0;
+    this.updateVisual(this.vel.x / PLAYER.speed * k, this.vel.y / PLAYER.speed * k, dt, { x: vx, y: vy });
   }
 
-  updateVisual(vx, vy, dt) {
+  /** (vx, vy) — доля скорости для анимации ходьбы; intent — куда игрок хочет идти (поворот к стене, пока она держит). */
+  updateVisual(vx, vy, dt, intent = null) {
     const speed = Math.hypot(vx, vy);
-    if (speed > 0.05 && this.casting <= 0) this.face(vx, vy);
+    const want = intent && Math.hypot(intent.x, intent.y) > 0.05 ? intent : (speed > 0.05 ? { x: vx, y: vy } : null);
+    if (want && this.casting <= 0) this.face(want.x, want.y);
     const pose = this.anim.update(dt, { speed: Math.min(1, speed), dir: this.dir, face: this.facing });
     const H = PLAYER.displayHeight, v = this.view;
     v.setPosition(this.sprite.x + pose.dx * H, this.sprite.y + pose.dy * H);

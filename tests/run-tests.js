@@ -44,8 +44,6 @@ function bot(cm, policy) {
   if (cm.hero.mana < 20 && cm.state.item('elixir_mana') > 0) cm.usePotion('elixir_mana');
   if (policy === 'spam') { if (ready('fire')) cm.useAbility('fire'); if (ready('telekinesis')) cm.useAbility('telekinesis'); return; }
   // smart
-  const sealCan = e.isPreparing && e.def.strongAttack.interruptBy.includes('seal') && ready('seal') && policy !== 'noseal';
-  if (sealCan && (!e.def.strongAttack.interruptBy.some(t => t.startsWith('telekinesis')) || !ready('telekinesis') || !heavy)) { cm.useAbility('seal'); return; }
   if (e.isPreparing) {
     const needsHeavy = !e.def.strongAttack.interruptBy.includes('telekinesis');
     if (ready('telekinesis') && (!needsHeavy || heavy)) {
@@ -56,9 +54,9 @@ function bot(cm, policy) {
   }
   // держим Телекинез под прерывание, если сильная атака скоро
   const strongSoon = e.def.strongAttack && e.strongCd < 2.5 && !e.isPreparing;
-  // v0.10.0: в третьей фазе Стража узла ману держим под Печать (прерывание только ею)
-  const sealOnly = e.def.strongAttack && !e.def.strongAttack.interruptBy.some(t => t.startsWith('telekinesis')) && policy !== 'noseal';
-  if (sealOnly && cm.hero.mana < 20 + 24 && e.strongCd < 4) return;
+  // v0.10.1: Астрал ('seal') — урон сквозь броню и кору; атаки не прерывает. Бьём им, пока хватает маны и под прерывание
+  // остаётся запас Телекинеза.
+  if (policy !== 'noseal' && ready('seal') && cm.hero.mana >= 20 + 14 && !strongSoon) { cm.useAbility('seal'); return; }
   if (crystal && e.armorActive && ready('telekinesis') && !strongSoon) { cm.selectedId = crystal.id; cm.useAbility('telekinesis'); return; }
   if (ready('fire')) { cm.useAbility('fire'); return; }
   if (ready('telekinesis') && !strongSoon) {
@@ -765,14 +763,14 @@ console.log('\n[v0.10] Страж узла: фазы, прерывания, бо
     e.onFireHit();
     ok(!e.defenseActive && e.defenseDisabledLeft === 6, 'фаза 2: Огонь снимает защиту на 6 с');
     e.hp = 301; e.burn = { left: 4, dps: 4, tick: 0.01 }; e.update(0.02); cm.flushPhases();
-    ok(e.phase === 2 && e.hp <= 300 && !e.defenseActive && !e.def.weaknesses && e.defenseDisabledLeft === 0, 'фаза 3 включается и от горения; защита и слабость прошлой фазы сняты');
-    ok(e.def.strongAttack.damage === 36 && e.def.strongAttack.interruptBy.join() === 'seal', 'фаза 3: сильный удар 36, прерывает только Печать');
+    ok(e.phase === 2 && e.hp <= 300 && e.def.defense === 0.4 && e.defenseActive && e.def.weaknesses.seal === 0.5 && !e.def.weaknesses.fire && e.defenseDisabledLeft === 0, 'фаза 3 включается и от горения; слабость Огня снята, тень: защита 40 %, Астрал +50 %');
+    ok(e.def.strongAttack.damage === 36 && e.def.strongAttack.interruptBy.join() === 'telekinesis', 'фаза 3: сильный удар 36, прерывает Телекинез (Астрал не прерывает никогда)');
   }
   { // один удар через два порога
     const { cm } = mk(); const e = cm.enemy;
     e.hp = 610; e.armorDisabledLeft = 5; e.takeDamage(400, 'telekinesis'); cm.flushPhases();
     const ph = cm.drainEvents().filter(x => x.type === 'phase');
-    ok(e.phase === 2 && !e.hasArmor && !e.defenseActive && e.armorDisabledLeft === 0 && ph.length === 1 && ph[0].phase === 3, 'удар через 600 и 300 сразу → фаза 3 без остатков брони и защиты');
+    ok(e.phase === 2 && !e.hasArmor && e.def.defense === 0.4 && e.armorDisabledLeft === 0 && ph.length === 1 && ph[0].phase === 3, 'удар через 600 и 300 сразу → фаза 3 без остатков брони (только тень)');
   }
   { // прерывания по фазам
     const { cm } = mk(); const e = cm.enemy;
@@ -783,13 +781,29 @@ console.log('\n[v0.10] Страж узла: фазы, прерывания, бо
     e.staggerLeft = 0; e.strongCd = 0; e.update(0.01);
     cm.cooldowns.telekinesis = 0; cm.hero.mana = 100;
     cm.fieldObjects.forEach(o => { if (!o.gone) { o.available = true; } });
-    cm.selectObject('heavy_a'); cm.useAbility('telekinesis');
-    ok(e.isPreparing, 'фаза 3: тяжёлый ТК не отменяет подготовку');
     cm.useAbility('fire');
     ok(e.isPreparing, 'фаза 3: Огонь не отменяет подготовку');
+    cm.cooldowns.seal = 0; cm.hero.mana = 100;
     cm.useAbility('seal');
-    ok(!e.isPreparing && cm.stats.interrupts >= 2, 'фаза 3: Печать прерывает');
-    ok(ABILITIES_SEAL_COST() === 20, 'Печать в бою стоит 20 маны');
+    ok(e.isPreparing && cm.stats.interrupts === 1, 'фаза 3: Астрал подготовку НЕ прерывает');
+    cm.cooldowns.telekinesis = 0; cm.hero.mana = 100;
+    cm.useAbility('telekinesis');
+    ok(!e.isPreparing && cm.stats.interrupts === 2, 'фаза 3: Телекинез прерывает');
+    ok(ABILITIES_SEAL_COST() === 20, 'Астрал в бою стоит 20 маны');
+  }
+  { // Астрал: урон сквозь броню и кору, прерывать не умеет нигде
+    const { cm } = mk(); const e = cm.enemy;
+    ok(e.armorActive && e.incomingMultiplier('seal') === 1 && e.incomingMultiplier('telekinesis') === 0.55, 'фаза 1: броня 45 % режет Телекинез, Астрал её игнорирует');
+    e.hp = 500; e.checkPhase(); cm.flushPhases(); cm.drainEvents();
+    ok(e.defenseActive && e.incomingMultiplier('seal') === 1 && e.incomingMultiplier('auto') === 0.8, 'фаза 2: кора 20 % режет обычный удар, Астрал её игнорирует');
+    e.hp = 250; e.checkPhase(); cm.flushPhases(); cm.drainEvents();
+    ok(e.incomingMultiplier('seal') === 1.5 && e.incomingMultiplier('fire') === 0.6, 'фаза 3 (тень): Астрал ×1,5, прочие удары вязнут (×0,6)');
+    cm.hero.mana = 100; const before = e.hp;
+    cm.useAbility('seal');
+    ok(before - e.hp === Math.round(25 * cm.hero.damageMult * 1.5), 'Астрал в тени: 25 × множитель героя × 1,5');
+    for (const type of ['forest_scavenger', 'young_scavenger', 'forest_guardian', 'node_guardian'])
+      ok(!JSON.stringify(ENEMIES[type].strongAttack.interruptBy).includes('seal') && !JSON.stringify(ENEMIES[type].phases || []).includes("'seal'") || type === 'node_guardian' && ENEMIES[type].phases.every(p => !(p.strongAttack?.interruptBy || []).includes('seal')),
+        `${type}: Астрал не входит в список прерываний`);
   }
   { // ТК I не прерывает тяжёлым в фазе 1
     const { cm } = mk(1); const e = cm.enemy;
@@ -805,8 +819,8 @@ console.log('\n[v0.10] Страж узла: фазы, прерывания, бо
   console.log('    Страж узла (подготовленный, мгновенная реакция бота):', r);
   ok(r.result === 'victory' && r.time >= 55 && r.time <= 130, `испытание проходимо за 55–130 с (факт ${r.time} с)`);
   const ns = simulate('node_guardian', prepared, 'noseal');
-  console.log('    Страж узла без Печати:', ns);
-  ok(ns.result === 'defeat' || ns.heroHp < r.heroHp, 'без Печати третья фаза заметно опаснее');
+  console.log('    Страж узла без Астрала:', ns);
+  ok(ns.result === 'defeat' || ns.time > r.time, 'без Астрала тень (фаза 3) заметно дольше');
 }
 
 console.log('\n[v0.10] Старые сохранения: цель главы с достигнутого места');

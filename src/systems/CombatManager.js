@@ -197,11 +197,10 @@ export class CombatManager {
     if (s.interruptsNormalCast) this.handleInterrupt(['fire']);
   }
 
+  // v0.10.1: Астрал — чистый урон сквозь броню и кору; атаки врага не прерывает (это только Телекинез)
   castSeal(s) {
-    this.handleInterrupt(['seal']);
-    this.enemy.bind(s.bindSec);
-    this.enemy.weaken(s.weaken.damageReduction, s.weaken.durationSec);
-    this.emit({ type: 'status', status: 'bound', sec: s.bindSec });
+    const dmg = this.enemy.takeDamage(s.damage, 'seal', this.hero.damageMult);
+    this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'seal' });
   }
 
   handleInterrupt(tags) {

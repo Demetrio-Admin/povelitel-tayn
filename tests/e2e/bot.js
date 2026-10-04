@@ -55,11 +55,7 @@ window.__bot = async function () {
       const fo = id => cm.fieldObjects.find(o => o.available && o.def && (o.id === id));
       const sa = e.def.strongAttack;   // v0.10.0: у Стража узла параметры зависят от фазы
       const heavyCast = e.isPreparing && sa && !(sa.interruptBy || []).includes('telekinesis');
-      const sealOnly = sa && !(sa.interruptBy || []).some(t => t.startsWith('telekinesis'));
-      const seal = cm.abilityState('seal').state === 'ready';
-      if (e.isPreparing && seal && (sa.interruptBy || []).includes('seal') && (sealOnly || !tk)) { c.onAbility('seal'); L('    interrupt: seal @', ((performance.now() - t0) / 1000).toFixed(1)); continue; }
-      if (e.isPreparing && sealOnly) continue;   // ТК и Огонь эту подготовку не отменят — ждём Печать
-      if (sealOnly && e.strongCd < 4 && cm.hero.mana < 44) continue;   // держим ману под Печать
+      const seal = cm.abilityState('seal').state === 'ready';   // v0.10.1: Астрал бьёт сквозь броню, атаки не прерывает
       if (e.isPreparing && tk) {
         const heavy = cm.fieldObjects.find(o => o.available && o.def.weight === 'heavy');
         if (heavy && cm.selectedId !== heavy.id) cm.selectObject(heavy.id);
@@ -70,6 +66,7 @@ window.__bot = async function () {
         const cr = cm.fieldObjects.find(o => o.available && o.def.breaksArmor);
         if (cr) { if (cm.selectedId !== cr.id) cm.selectObject(cr.id); c.onAbility('telekinesis'); continue; }
       }
+      if (seal && cm.hero.mana >= 34 && !strongSoon && S.state.hasEvent('unlock_seal_1')) { c.onAbility('seal'); continue; }
       if (fire) { c.onAbility('fire'); continue; }
       // TK оставляем под прерывание, если враг умеет кастовать
       if (tk && !strongSoon && (!sa || cm.hero.mana > 40)) {

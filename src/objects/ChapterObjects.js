@@ -1,8 +1,8 @@
 // v0.10.0 — объекты первой главы «Лес, который забыл нас»:
-//   GateObject      — Древние ворота: проявить знаки (Проявляющий состав), открыть Печатью (20 маны)
-//   SealSigilObject — учебный знак у алтаря: спокойное первое применение Печати (20 маны)
+//   GateObject      — Древние ворота: проявить знаки (Состав ясного взгляда), открыть Астралом (20 маны)
+//   SealSigilObject — учебный камень у алтаря: спокойное первое применение Астрала (20 маны)
 //   DustStashObject — охраняемый запас пыли: +2 за каждый победный цикл своего Корневика
-//   ForestNodeObject— повреждённый узел за воротами: связка + Печать (одна операция сервера, 20 маны)
+//   ForestNodeObject— сердце рощи за воротами: Целебный сбор + Астрал (одна операция сервера, 20 маны)
 // Применение сюжетных предметов идёт через services.actions.use(item) — атомарно (сервер или JS-зеркало).
 import { COLORS } from '../config/game.config.js';
 import { WORLD_MANA_COST } from '../config/balance.abilities.js';
@@ -16,7 +16,7 @@ import { InteractiveObject, applyDisplaySize, itemName } from './InteractiveObje
 
 const SEAL = COLORS.seal;
 
-/** Текст награды из outcome операции: «+30 опыта, +40 опыта Печати, +30 монет». */
+/** Текст награды из outcome операции: «+30 опыта, +40 опыта Астрала, +30 монет». */
 export function outcomeText(out) {
   if (!out) return '';
   const parts = [];
@@ -70,7 +70,7 @@ export class GateObject extends InteractiveObject {
   get markerColor() { return SEAL; }
   get label() {
     const st = this.stage;
-    if (st === 'seal') return 'Открыть Печатью';
+    if (st === 'seal') return 'Открыть Астралом';
     if (st === 'marks' && this.hasCompound) return 'Проявить знаки';
     return 'Древние ворота';
   }
@@ -84,7 +84,7 @@ export class GateObject extends InteractiveObject {
     const st = this.stage;
     const toast = (t) => this.scene.toast(t, SEAL);
     if (abilityId && abilityId !== 'seal' && st !== 'sleep') {
-      toast('Ворота держит древняя связь — ни Телекинез, ни Огонь её не разорвут. Нужна Печать.');
+      toast('Эти ворота держит древняя сила. Ни Телекинез, ни Огонь её не сдвинут. Нужен Астрал.');
       services.audio.play('locked');
       return;
     }
@@ -92,16 +92,16 @@ export class GateObject extends InteractiveObject {
       case 'sleep': toast('Древние ворота молчат. Путь к ним стережёт Лесной Страж.'); return;
       case 'marks':
         if (this.hasCompound) { this.reveal(); return; }
-        toast('На створках — стёртый, повреждённый знак. Селена говорила: его проявит Проявляющий состав из котла Мирры.');
+        toast('На створках — стёртый, повреждённый знак. Селена говорила: его покажет Состав ясного взгляда из котла Мирры.');
         return;
       case 'tell':
         this.scene.dialog({
           title: 'Проявленный знак', color: SEAL,
-          text: 'На камне светится знак защитной связи — и он разорван, будто из узла за воротами вытянули силу.\n\nСелена у алтаря должна знать, что это значит.',
+          text: 'На камне светится знак защиты рощи — его кто-то стёр нарочно. Похоже, из сердца рощи за воротами выпили силу.\n\nСелена у алтаря должна знать, что это значит.',
           buttons: [{ label: fm('Пойду к Селене', 'Пойду к Селене'), primary: true }],
         });
         return;
-      case 'train': toast('Печать ещё непривычна рукам. Сначала спокойно опробуйте её на учебном знаке у алтаря.'); return;
+      case 'train': toast('Астрал ещё непривычен. Сначала спокойно опробуйте его на учебном камне у алтаря.'); return;
       case 'seal': this.openWithSeal(); return;
       default: break;
     }
@@ -115,7 +115,7 @@ export class GateObject extends InteractiveObject {
     this.showMark(true);
     this.scene.dialog({
       title: 'Знаки проявились', color: SEAL,
-      text: 'Состав впитался в камень, и на створках проступил знак защитной связи — разорванный.\n\nТак вот почему лес ошибается. Ворота сами не откроются.'
+      text: 'Состав впитался в камень, и на створках проступил знак защиты рощи — стёртый нарочно.\n\nТак вот почему лес путает друзей и врагов. Ворота сами не откроются.'
         + (outcomeText(r.outcome) ? `\n\nНаграда: ${outcomeText(r.outcome)}.` : '') + '\n\nРасскажите об этом Селене у алтаря.',
       buttons: [{ label: 'К Селене', primary: true }],
     });
@@ -136,13 +136,13 @@ export class GateObject extends InteractiveObject {
       sc.burst(this.x, this.baseY - 150, SEAL, 40);
       sc.sparkleShower?.(this.x, this.baseY - 160, SEAL);
       this.showOpen(true);
-      sc.toast('Печать связала разорванный знак — Древние ворота открылись', SEAL);
+      sc.toast('Астрал разбудил знак — Древние ворота открылись', SEAL);
       services.bus.emit(MSG.QUEST_CHANGED);
       if (this.cfg.panOnOpen) sc.panTo(this.cfg.panOnOpen.x, this.cfg.panOnOpen.y);
     });
   }
 
-  /** Знак на створках: печать на камне (тусклая до открытия). */
+  /** Знак на створках: астральная метка на камне (тусклая до открытия). */
   showMark(animate) {
     if (this.markView || !this.sprite.active) return;
     this.markView = this.scene.add.image(this.x, this.baseY - 175, 'icon_seal').setDisplaySize(70, 70)
@@ -170,7 +170,7 @@ export class SealSigilObject extends InteractiveObject {
   }
   get markerIcon() { return 'icon_seal'; }
   get markerColor() { return SEAL; }
-  get label() { return 'Печать'; }
+  get label() { return 'Астрал'; }
   isDone() { return this.state.hasEvent(this.cfg.doneEvent); }
   manaCost() { return this.abilities.isUnlocked('seal') && !this.isDone() ? WORLD_MANA_COST.seal : 0; }
 
@@ -178,7 +178,7 @@ export class SealSigilObject extends InteractiveObject {
     if (!this.isAvailable()) return;
     if (this.rejectWrongAbility(abilityId)) return;
     if (!this.abilities.isUnlocked('seal')) {
-      this.scene.toast('Погасший знак связи. Селена знает, как вернуть ему свет.', SEAL);
+      this.scene.toast('Угасший камень. Селена знает, как вернуть ему свет.', SEAL);
       return;
     }
     if (!this.payMana()) return;
@@ -193,9 +193,9 @@ export class SealSigilObject extends InteractiveObject {
       this.quests.complete(this.cfg.doneEvent);
       services.audio.play('quest_update');
       sc.dialog({
-        title: 'Знак ожил', color: SEAL,
-        text: 'Трещины затянулись, и знак засиял ровным лиловым светом. Печать не ломает и не жжёт — она связывает то, что разорвано.\n\n'
-          + 'В бою она на миг сковывает противника, ослабляет его удары и прерывает сильную подготовку, которую не берут ни камень, ни огонь.\n\n'
+        title: 'Камень ожил', color: SEAL,
+        text: 'Трещины затянулись, и камень засиял ровным холодным светом. Астрал не ломает и не жжёт — он видит скрытое и будит спящее.\n\n'
+          + 'В бою он бьёт силой, которой не помеха ни броня, ни кора. Атаки врага Астрал не останавливает — их прерывает Телекинез.\n\n'
           + 'Теперь — к Древним воротам.',
         buttons: [{ label: 'К воротам', primary: true }],
       });
@@ -287,21 +287,21 @@ export class ForestNodeObject extends InteractiveObject {
   }
   get markerIcon() { return this.stage === 'repair' ? 'icon_bundle' : 'icon_inspect'; }
   get markerColor() { return 0x7be2c8; }
-  get label() { return this.stage === 'repair' ? 'Восстановить узел' : 'Узел защиты'; }
+  get label() { return this.stage === 'repair' ? 'Оживить сердце рощи' : 'Сердце рощи'; }
   manaCost() { return this.stage === 'repair' ? WORLD_MANA_COST.seal : 0; }
   isDone() { return this.restored; }
   get markerY() { return this.baseY - 150; }
 
   interact(abilityId) {
     if (!this.isAvailable()) return;
-    if (abilityId && abilityId !== 'seal') { this.scene.toast('Узлу не помогут ни Телекинез, ни Огонь: нужны связка и Печать.', SEAL); return; }
+    if (abilityId && abilityId !== 'seal') { this.scene.toast('Сердцу рощи не помогут ни Телекинез, ни Огонь: нужны Целебный сбор и Астрал.', SEAL); return; }
     switch (this.stage) {
-      case 'guarded': this.scene.toast('Узел охраняет Страж узла.', COLORS.danger); return;
+      case 'guarded': this.scene.toast('Сердце рощи охраняет Хранитель.', COLORS.danger); return;
       case 'bundle':
         this.scene.dialog({
-          title: 'Повреждённый узел', color: 0x7be2c8,
-          text: 'Кристалл узла треснул, из трещин тянется лиловый след — силу вытянули намеренно.\n\n'
-            + 'Чтобы залатать разрыв, нужна Восстановительная связка (котёл Мирры: 2 травы, 2 смолы, 2 пыли, осколок и ядро Стража) и Печать — 20 маны.',
+          title: 'Сердце рощи', color: 0x7be2c8,
+          text: 'Кристалл сердца потрескался, из трещин тянутся тёмные нити — силу выпили нарочно.\n\n'
+            + 'Чтобы исцелить сердце, нужны Целебный сбор (котёл Мирры: 2 травы, 2 смолы, 2 пыли, осколок и ядро Стража) и Астрал — 20 маны.',
           buttons: [{ label: fm('Поняла', 'Понял'), primary: true }, { label: 'Открыть журнал', onClick: () => services.bus.emit(MSG.OPEN_JOURNAL) }],
         });
         return;
@@ -313,7 +313,7 @@ export class ForestNodeObject extends InteractiveObject {
   async repair() {
     const sc = this.scene;
     sc.player.castAt(this.x, this.baseY, 'telekinesis');
-    // связка и 20 маны списываются одной операцией вместе с итогом главы: нехватка — ничего не меняется
+    // Целебный сбор и 20 маны списываются одной операцией вместе с итогом главы: нехватка — ничего не меняется
     const r = await useStoryItem(this, 'restoration_bundle');
     if (!r.ok) return;
     sc.castFx(this.x, this.baseY - 80, SEAL);

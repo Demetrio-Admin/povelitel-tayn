@@ -17,7 +17,7 @@ export const HERO_LEVELS = [
   { level: 3,  xp: 150,  maxHp: 132, maxMana: 110, manaRegen: 3, damageMult: 1.05, note: 'Доступ к Телекинезу II' },
   { level: 4,  xp: 270,  maxHp: 138, maxMana: 115, manaRegen: 3, damageMult: 1.08, note: 'Телекинез II, путь к Огню' },
   { level: 5,  xp: 430,  maxHp: 144, maxMana: 120, manaRegen: 3, damageMult: 1.10, note: 'Старый лес' },
-  { level: 6,  xp: 650,  maxHp: 152, maxMana: 125, manaRegen: 3, damageMult: 1.12, note: 'Печать и испытание' },
+  { level: 6,  xp: 650,  maxHp: 152, maxMana: 125, manaRegen: 3, damageMult: 1.12, note: 'Астрал и испытание' },
   { level: 7,  xp: 940,  maxHp: 160, maxMana: 135, manaRegen: 3, damageMult: 1.15, note: 'Завершение главы' },
   { level: 8,  xp: 1300, maxHp: 170, maxMana: 140, manaRegen: 3, damageMult: 1.18, note: 'Дополнительный выход' },
   { level: 9,  xp: 1750, maxHp: 180, maxMana: 145, manaRegen: 3, damageMult: 1.21, note: 'Продолжение' },

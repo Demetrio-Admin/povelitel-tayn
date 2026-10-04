@@ -4,7 +4,7 @@
 // interruptBy — чем можно прервать сильную атаку:
 //   'telekinesis'        — любое применение Телекинеза
 //   'telekinesis_heavy'  — только бросок тяжёлого объекта поля
-//   'seal'               — Печать
+//   (v0.10.1: Астрал, внутренний id 'seal', атаки не прерывает — только урон сквозь броню и кору)
 
 export const ENEMIES = {
   forest_scavenger: {
@@ -16,7 +16,7 @@ export const ENEMIES = {
     normalAttack: { damage: 8, intervalSec: 3 },
     strongAttack: {
       name: 'Рывок', damage: 24, prepSec: 2, cooldownSec: 9, firstDelaySec: 6,
-      interruptBy: ['telekinesis', 'seal'],
+      interruptBy: ['telekinesis'],
       hint: 'Прервите Телекинезом!',
     },
     staggerSec: 1.0,
@@ -36,7 +36,7 @@ export const ENEMIES = {
     normalAttack: { damage: 8, intervalSec: 3 },
     strongAttack: {
       name: 'Рывок', damage: 18, prepSec: 2, cooldownSec: 10, firstDelaySec: 4,
-      interruptBy: ['telekinesis', 'seal'],
+      interruptBy: ['telekinesis'],
       hint: 'Прервите Телекинезом!',
     },
     staggerSec: 1.0,
@@ -79,7 +79,7 @@ export const ENEMIES = {
     normalAttack: { damage: 14, intervalSec: 4.5 }, // [АДАПТАЦИЯ] интервал в Combat Math не задан; 3 с делали бой непроходимым при HP героя 138
     strongAttack: {
       name: 'Тяжёлый удар', damage: 32, prepSec: 2.5, cooldownSec: 10, firstDelaySec: 6,
-      interruptBy: ['telekinesis_heavy', 'seal'],
+      interruptBy: ['telekinesis_heavy'],
       hint: 'Бросьте тяжёлый камень!',
     },
     staggerSec: 1.2,
@@ -94,28 +94,29 @@ export const ENEMIES = {
   // Параметры фаз — здесь, логика — objects/Enemy.js (phaseFor/applyPhase/checkPhase). Фаза i действует, пока HP > above.
   // Общие: обычная атака 12 / 4,5 с; сильная подготовка 2,5 с, КД 10 с, первая через 6 с; после прерывания — 7 с.
   node_guardian: {
-    name: 'Страж узла',
+    name: 'Хранитель сердца',
     texture: 'enemy_guardian',
     tint: 0xbfe9dc,
     tier: 'strong',
     hp: 900,
     normalAttack: { damage: 12, intervalSec: 4.5 },
     strongAttack: {
-      name: 'Удар узла', damage: 30, prepSec: 2.5, cooldownSec: 10, firstDelaySec: 6,
-      interruptBy: ['telekinesis_heavy', 'seal'],
-      hint: 'Бросьте тяжёлый камень или Печать!',
+      name: 'Удар Хранителя', damage: 30, prepSec: 2.5, cooldownSec: 10, firstDelaySec: 6,
+      interruptBy: ['telekinesis_heavy'],
+      hint: 'Бросьте тяжёлый камень!',
     },
     staggerSec: 1.2,
     interruptedCooldownSec: 7,
     defense: 0,
     phases: [
       { above: 600, set: { armor: { value: 0.45, source: 'crystal', disabledSec: 8 }, defense: 0, weaknesses: null, onFireHit: null },
-        message: 'Кристаллическая броня! Разбейте кристалл Телекинезом.' },
+        message: 'Кристальная броня! Разбейте кристалл Телекинезом.' },
       { above: 300, set: { armor: null, defense: 0.2, weaknesses: { fire: 0.5 }, onFireHit: { disableDefenseSec: 6 } },
-        message: 'Броня осыпалась — под ней защитная кора. Огонь сожжёт её!', tint: 0xe0b48a },
-      { above: 0, set: { armor: null, defense: 0, weaknesses: null, onFireHit: null },
-        strongAttack: { damage: 36, interruptBy: ['seal'], hint: 'Прервите Печатью!' },
-        message: 'Узел рвёт связь! Сильный удар теперь прерывает только Печать.', tint: 0xd2a8ff },
+        message: 'Броня осыпалась, но кора крепка. Огонь выжжет её, а Астрал пробьёт насквозь!', tint: 0xe0b48a },
+      // v0.10.1: «тень вместо плоти» — обычные удары вязнут (защита 40%), Астрал игнорирует её и бьёт на 50% сильнее
+      { above: 0, set: { armor: null, defense: 0.4, weaknesses: { seal: 0.5 }, onFireHit: null },
+        strongAttack: { damage: 36, interruptBy: ['telekinesis'], hint: 'Прервите Телекинезом!' },
+        message: 'Тень вместо плоти! Обычные удары вязнут — пробивает только Астрал. Сильный удар прерывает Телекинез.', tint: 0xd2a8ff },
     ],
     rewards: { heroXP: 220, schoolXP: { telekinesis: 30, fire: 30, seal: 40 }, coins: 80 },
     arena: 'node',

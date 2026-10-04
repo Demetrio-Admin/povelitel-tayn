@@ -103,7 +103,7 @@ console.log('\nМир: проходимость');
   {
     const g1 = buildWalkGrid({ width: W, height: H, solids: solidsFor(['corrupted_roots', 'heavy_boulder', 'forest_guardian_01']) });
     const s1 = floodFrom(g1, WORLD.playerStart.x, WORLD.playerStart.y);
-    ok(near(g1, s1, 'ancient_gate') && !near(g1, s1, 'forest_node') && !near(g1, s1, 'node_trial'), 'ворота закрыты Печатью: поляна узла не достижима в обход ворот');
+    ok(near(g1, s1, 'ancient_gate') && !near(g1, s1, 'forest_node') && !near(g1, s1, 'node_trial'), 'ворота закрыты до Астрала: поляна узла не достижима в обход ворот');
     // зона, где испытание начинается само (эллипс триггера), считается непроходимой: обойти его к узлу нельзя
     const t = objById.node_trial, rx = t.radius * 0.7, ry = t.radius * 0.55 * 0.7;
     const zone = { x: t.x - rx, y: t.y - ry, w: rx * 2, h: ry * 2, src: 'trigger' };

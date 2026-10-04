@@ -21,12 +21,12 @@ export const RECIPES = {
   revealing_compound: { kind: 'story', result: 'revealing_compound', amount: 1,
     needs: { moon_herb: 1, forest_mushroom: 1, rune_dust: 1 },
     requires: ['lunar_quest_complete'], crafted: 'revealing_compound_crafted', blockedBy: ['revealing_compound_crafted', 'gate_marks_revealed'],
-    note: 'Проявляет стёртые знаки древней магии.',
+    note: 'Показывает стёртые нарочно знаки древней магии.',
     learn: 'Рецепт станет известен, когда алтарь снова засветится.' },
   restoration_bundle: { kind: 'story', result: 'restoration_bundle', amount: 1,
     needs: { moon_herb: 2, tree_resin: 2, rune_dust: 2, lunar_shard: 1, rare_core: 1 },
     requires: ['lunar_quest_complete'], crafted: 'restoration_bundle_crafted', blockedBy: ['restoration_bundle_crafted', 'chapter_1_complete'],
-    note: 'Ядро Стража, стянутое смолой и пылью, — заплатка для разорванного узла.',
+    note: 'Ядро Стража, стянутое смолой и пылью, — лекарство для сердца рощи.',
     learn: 'Рецепт станет известен, когда алтарь снова засветится.' },
 };
 

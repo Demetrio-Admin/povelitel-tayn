@@ -66,8 +66,10 @@ export class Enemy {
   /** Множитель входящего урона для школы ('auto' | 'telekinesis' | 'fire' | 'seal'). */
   incomingMultiplier(school) {
     let m = 1;
-    if (this.defenseActive) m *= 1 - this.def.defense;
-    if (this.armorActive) m *= 1 - this.def.armor.value;
+    // v0.10.1: Астрал ('seal') игнорирует броню и защитную кору
+    const pierce = school === 'seal';
+    if (!pierce && this.defenseActive) m *= 1 - this.def.defense;
+    if (!pierce && this.armorActive) m *= 1 - this.def.armor.value;
     const weak = this.def.weaknesses?.[school];
     if (weak) m *= 1 + weak;
     if (this.vulnerable.left > 0) m *= 1 + this.vulnerable.bonus;

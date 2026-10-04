@@ -207,7 +207,7 @@ const CLS = { gather: GatherObject, npc: NpcObject, alchemy: AlchemyObject, insp
 }
 
 
-console.log('\nПервая глава v0.10.0: алтарь, ворота, Печать, запас пыли, узел, возобновляемые враги');
+console.log('\nПервая глава v0.10.0: алтарь, ворота, Астрал, запас пыли, сердце рощи, возобновляемые враги');
 {
   const st = sv.state;
   const vitals = await import('../src/state/vitals.js');
@@ -238,24 +238,24 @@ console.log('\nПервая глава v0.10.0: алтарь, ворота, Пе
   const gate = new GateObject(mk(), cfgOf('ancient_gate'));
   ok(gate.stage === 'marks' && gate.blocker, 'ворота после Стража: этап «знаки», проход закрыт');
   gate.interact(null);
-  ok(!st.hasEvent('gate_marks_revealed') && /Проявляющий состав/.test(toasts.at(-1)), 'без состава — подсказка, ничего не меняется');
+  ok(!st.hasEvent('gate_marks_revealed') && /Состав ясного взгляда/.test(toasts.at(-1)), 'без состава — подсказка, ничего не меняется');
   st.addItem('revealing_compound', 1);
   ok(gate.label === 'Проявить знаки', 'состав в сумке → кнопка «Проявить знаки»');
   await gate.reveal();
   ok(st.hasEvent('gate_marks_revealed') && st.item('revealing_compound') === 0 && gate.stage === 'tell' && !gate.opened, 'знаки проявлены: состав списан, ворота всё ещё закрыты');
   st.markEvent('unlock_seal_1'); sv.abilities.unlock('seal', 1);
-  ok(gate.stage === 'train', 'Печать без обучения ворота не открывает');
+  ok(gate.stage === 'train', 'Астрал без обучения ворота не открывает');
   st.markEvent('seal_training_complete');
-  ok(gate.stage === 'seal' && gate.ability === 'seal' && gate.manaCost() === 20, 'после обучения: ворота ждут Печать (20 маны)');
+  ok(gate.stage === 'seal' && gate.ability === 'seal' && gate.manaCost() === 20, 'после обучения: ворота ждут Астрал (20 маны)');
   vitals.setMana(st, 100);
   gate.interact('fire');
-  ok(!gate.opened && vitals.mana(st) === 100 && /Печать/.test(toasts.at(-1)), 'Огонь по воротам: отказ, мана не списана');
+  ok(!gate.opened && vitals.mana(st) === 100 && /Астрал/.test(toasts.at(-1)), 'Огонь по воротам: отказ, мана не списана');
   vitals.setMana(st, 10);
   gate.interact('seal');
   ok(!gate.opened && vitals.mana(st) === 10, 'не хватает маны: ворота закрыты, ничего не списано');
   vitals.setMana(st, 100);
   gate.interact('seal'); runDelayed();
-  ok(gate.opened && st.hasEvent('ancient_gate_open') && vitals.mana(st) === 80 && !gate.blocker && st.isPathOpen('node_glade'), 'Печать открыла ворота: 20 маны, проход свободен');
+  ok(gate.opened && st.hasEvent('ancient_gate_open') && vitals.mana(st) === 80 && !gate.blocker && st.isPathOpen('node_glade'), 'Астрал открыл ворота: 20 маны, проход свободен');
 
   // --- учебный знак
   st.data.completedEvents = st.data.completedEvents.filter(e => e !== 'seal_training_complete');
@@ -264,7 +264,7 @@ console.log('\nПервая глава v0.10.0: алтарь, ворота, Пе
   ok(!st.hasEvent('seal_training_complete') && vitals.mana(st) === 5, 'учебный знак: без маны ничего не происходит');
   vitals.setMana(st, 100); const sx = st.data.schoolXP.seal || 0;
   sig.interact('seal'); runDelayed();
-  ok(st.hasEvent('seal_training_complete') && vitals.mana(st) === 80 && st.data.schoolXP.seal === sx + 6 && dialogs.at(-1)?.title === 'Знак ожил', 'учебный знак: 20 маны, +6 опыта Печати, видимое изменение');
+  ok(st.hasEvent('seal_training_complete') && vitals.mana(st) === 80 && st.data.schoolXP.seal === sx + 6 && dialogs.at(-1)?.title === 'Камень ожил', 'учебный знак: 20 маны, +6 опыта Печати, видимое изменение');
 
   // --- возобновляемый Корневик и запас пыли
   const rcfg = ENEMY_SPAWNS.find(e => e.id === 'rootling_02');

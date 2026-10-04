@@ -8,16 +8,16 @@ import { RECIPES } from './recipes.js';
 export const STORY_ITEMS = {
   lunar_wick: { name: 'Лунный фитиль', icon: 'icon_wick', color: 0x9fe9ff,
     purpose: 'Вернёт свет Лунному алтарю. Применить у алтаря.' },
-  revealing_compound: { name: 'Проявляющий состав', icon: 'icon_compound', color: 0xc9a2ff,
-    purpose: 'Проявит повреждённые знаки на Древних воротах. Применить у ворот после победы над Стражем.' },
-  restoration_bundle: { name: 'Восстановительная связка', icon: 'icon_bundle', color: 0x7be28a,
-    purpose: 'Залатает повреждённый узел за воротами вместе с Печатью (20 маны).' },
+  revealing_compound: { name: 'Состав ясного взгляда', icon: 'icon_compound', color: 0xc9a2ff,
+    purpose: 'Покажет стёртый знак на Древних воротах. Применить у ворот после победы над Стражем.' },
+  restoration_bundle: { name: 'Целебный сбор', icon: 'icon_bundle', color: 0x7be28a,
+    purpose: 'Вылечит сердце рощи за воротами вместе с Астралом (20 маны).' },
 };
 export const STORY_ITEM_ORDER = ['lunar_wick', 'revealing_compound', 'restoration_bundle'];
 
 /**
  * Применение сюжетного предмета ({ op: 'use', item }): requires — нужные события, blockedBy — уже сделано,
- * mana — цена (один каст Печати при ремонте), events — что отмечается, reward — разовая награда.
+ * mana — цена (один каст Астрала у сердца рощи), events — что отмечается, reward — разовая награда.
  */
 export const STORY_USES = {
   lunar_wick: {

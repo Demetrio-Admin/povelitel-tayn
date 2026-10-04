@@ -73,11 +73,11 @@ export const CONTENT_INTERACTIVES = [
     collide: { w: 60, h: 20 }, radius: 105, items: { rune_dust: 2 }, hint: 'Запас рунической пыли' },
   { id: 'approach_cache', kind: 'chest', x: 530, y: 1890, texture: 'chest_01', collide: { w: 50, h: 24 },
     requiresEnemyDefeated: 'rootling_05', reward: { items: { rune_dust: 2 } } },
-  // Печать I: учебный знак у алтаря (появляется, когда знаки на воротах проявлены) и узел защиты за воротами
+  // Астрал I: учебный камень у алтаря (появляется, когда знаки на воротах проявлены) и сердце рощи за воротами
   { id: 'seal_sigil', kind: 'seal_sigil', x: 1110, y: 2140, texture: 'seal_sigil_dim', litTexture: 'seal_sigil_lit', radius: 115,
-    requiresEvent: 'gate_marks_revealed', doneEvent: 'seal_training_complete', hint: 'Учебный знак Печати' },
+    requiresEvent: 'gate_marks_revealed', doneEvent: 'seal_training_complete', hint: 'Учебный камень Астрала' },
   { id: 'forest_node', kind: 'forest_node', x: 1480, y: 300, texture: 'forest_node_broken', restoredTexture: 'forest_node_restored',
-    collide: { w: 230, h: 46 }, radius: 175, requiresEvent: 'ancient_gate_open', hint: 'Повреждённый узел' },
+    collide: { w: 230, h: 46 }, radius: 175, requiresEvent: 'ancient_gate_open', hint: 'Сердце рощи' },
 ];
 
 // v0.10.0: поляна узла за Древними воротами. Твёрдые кусты и камни генератора внутри прямоугольника убираются

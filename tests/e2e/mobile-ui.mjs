@@ -406,7 +406,7 @@ try {
     await page.evaluate(()=>{const c=window.__game.scene.getScene('CombatScene');c.cm.enemy.hp=590;c.cm.enemy.checkPhase();c.cm.flushPhases();c.processEvents();c.updateHud();});
     await page.waitForTimeout(400);await shot('v10-trial-phase2');
     await page.evaluate(()=>{const c=window.__game.scene.getScene('CombatScene');c.cm.enemy.hp=280;c.cm.enemy.checkPhase();c.cm.flushPhases();c.processEvents();
-      c.cm.enemy.prepLeft=1.5;c.warnTitle.setText('⚠ Удар узла!');c.warnHint.setText('Прервите Печатью!');c.warn.setVisible(true);c.updateHud();});
+      c.cm.enemy.prepLeft=1.5;c.warnTitle.setText('⚠ Удар Хранителя!');c.warnHint.setText('Прервите Телекинезом!');c.warn.setVisible(true);c.updateHud();});
     await page.waitForTimeout(400);await shot('v10-trial-phase3');
     await page.evaluate(()=>{const g=window.__game;g.scene.stop('CombatScene');g.scene.stop('UIScene');g.scene.stop('ExplorationScene');g.scene.start('MenuScene');});
     await page.waitForFunction(()=>window.__game.scene.isActive('MenuScene'));

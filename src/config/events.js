@@ -36,7 +36,7 @@ export const EV = {
 };
 
 // Финальная запись главы (журнал, HUD, финальное окно)
-export const CHAPTER_1_FINAL = 'Защита этого участка восстановлена. След вмешательства ведёт в город';
+export const CHAPTER_1_FINAL = 'Защита рощи восстановлена. След беды ведёт в город';
 
 // Шаги маршрута. Текущая цель = первый невыполненный шаг.
 // done(state) — чистая функция от GameState, без ссылок на сцены.
@@ -59,16 +59,16 @@ export const QUEST_STEPS = [
   { id: 'heavy',    text: 'Сдвиньте тяжёлую глыбу за алтарём',            done: s => has(s, EV.HEAVY_PATH_OPEN) },
   { id: 'fire',     text: 'Исследуйте древний круг Огня',                done: s => has(s, EV.UNLOCK_FIRE_1) },
   { id: 'roots',    text: 'Вернитесь к чёрным корням у дома и сожгите их',  done: s => has(s, EV.FIRE_GATE_OPEN) },
-  { id: 'compound', text: 'Сварите Проявляющий состав — он нужен у Древних ворот', craft: 'revealing_compound',
+  { id: 'compound', text: 'Сварите Состав ясного взгляда — он нужен у Древних ворот', craft: 'revealing_compound',
     done: s => has(s, EV.REVEALING_COMPOUND_CRAFTED) || has(s, EV.GATE_MARKS_REVEALED) },
   { id: 'guardian', text: 'Пройдите старый лес и одолейте Стража ворот',done: s => has(s, EV.GUARDIAN_DEFEATED) },
-  { id: 'reveal',   text: 'Примените Проявляющий состав к Древним воротам', use: 'revealing_compound', done: s => has(s, EV.GATE_MARKS_REVEALED) },
-  { id: 'seal',     text: 'Расскажите Селене о знаке на воротах',         done: s => has(s, EV.UNLOCK_SEAL_1) },
-  { id: 'training', text: 'Опробуйте Печать на учебном знаке у алтаря',   done: s => has(s, EV.SEAL_TRAINING_COMPLETE) },
-  { id: 'gate',     text: 'Откройте Древние ворота Печатью',             done: s => has(s, EV.ANCIENT_GATE_OPEN) },
-  { id: 'bundle',   text: 'Сварите Восстановительную связку у котла Мирры', craft: 'restoration_bundle',
+  { id: 'reveal',   text: 'Примените Состав ясного взгляда у Древних ворот', use: 'revealing_compound', done: s => has(s, EV.GATE_MARKS_REVEALED) },
+  { id: 'seal',     text: 'Расскажите Селене, что вы увидели на воротах',         done: s => has(s, EV.UNLOCK_SEAL_1) },
+  { id: 'training', text: 'Опробуйте Астрал на учебном камне у алтаря',   done: s => has(s, EV.SEAL_TRAINING_COMPLETE) },
+  { id: 'gate',     text: 'Откройте Древние ворота Астралом',             done: s => has(s, EV.ANCIENT_GATE_OPEN) },
+  { id: 'bundle',   text: 'Сварите Целебный сбор у котла Мирры', craft: 'restoration_bundle',
     done: s => has(s, EV.RESTORATION_BUNDLE_CRAFTED) || has(s, EV.CHAPTER_1_COMPLETE) },
-  { id: 'trial',    text: 'Одолейте Стража узла за воротами',             done: s => has(s, EV.CHAPTER_TRIAL_DEFEATED) },
-  { id: 'repair',   text: 'Восстановите узел: связка и Печать',  use: 'restoration_bundle', done: s => has(s, EV.CHAPTER_1_COMPLETE) },
+  { id: 'trial',    text: 'Одолейте Хранителя сердца за воротами',             done: s => has(s, EV.CHAPTER_TRIAL_DEFEATED) },
+  { id: 'repair',   text: 'Оживите сердце рощи: Целебный сбор и Астрал',  use: 'restoration_bundle', done: s => has(s, EV.CHAPTER_1_COMPLETE) },
   { id: 'end',      text: CHAPTER_1_FINAL, done: () => false },
 ];

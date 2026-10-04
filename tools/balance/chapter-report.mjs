@@ -33,16 +33,14 @@ function bot(cm) {
   if (cm.hero.hp < cm.hero.maxHp * 0.4 && cm.state.item('elixir_life') > 0) cm.usePotion('elixir_life');
   if (cm.hero.mana < 20 && cm.state.item('elixir_mana') > 0) cm.usePotion('elixir_mana');
   if (cm.state.item('resin_flask') > 0 && e.hp > 120 && !e.isPreparing && (cm.stats.potions || 0) < 3) cm.usePotion('resin_flask');
-  const sealOnly = sa && !sa.interruptBy.some(t => t.startsWith('telekinesis'));
   if (e.isPreparing) {
-    if (sa.interruptBy.includes('seal') && ready('seal') && (sealOnly || !ready('telekinesis') || (!heavy && !sa.interruptBy.includes('telekinesis')))) { cm.useAbility('seal'); return; }
-    if (sealOnly) return;
     const needsHeavy = !sa.interruptBy.includes('telekinesis');
     if (ready('telekinesis') && (!needsHeavy || heavy)) { cm.selectedId = needsHeavy ? heavy.id : (light?.id ?? null); cm.useAbility('telekinesis'); return; }
   }
-  if (sealOnly && e.strongCd < 4 && cm.hero.mana < 44) return;
   const strongSoon = sa && e.strongCd < 2.5 && !e.isPreparing;
   if (crystal && e.armorActive && ready('telekinesis') && !strongSoon) { cm.selectedId = crystal.id; cm.useAbility('telekinesis'); return; }
+  // v0.10.1: Астрал — урон сквозь броню и кору; атаки не прерывает, под прерывание остаётся запас маны
+  if (ready('seal') && cm.hero.mana >= 34 && !strongSoon) { cm.useAbility('seal'); return; }
   if (ready('fire')) { cm.useAbility('fire'); return; }
   if (ready('telekinesis') && !strongSoon) { cm.selectedId = (heavy && !(sa && !sa.interruptBy.includes('telekinesis'))) ? heavy.id : (light?.id ?? null); cm.useAbility('telekinesis'); }
 }
@@ -217,6 +215,6 @@ console.log(row('Отрицательные промежуточные оста�
 console.log(row('Мана мира (валовой расход)', r => `${r.manaWorld}`));
 console.log(row('Ожидание маны перед боями (сверх плана)', r => `${Math.round(r.waited / 60 * 10) / 10} мин`));
 console.log(row('Сильный Страж', r => strong(r, 'forest_guardian_01')));
-console.log(row('Страж узла', r => strong(r, 'node_trial')));
+console.log(row('Хранитель сердца', r => strong(r, 'node_trial')));
 console.log(row('Сюжетные события', r => ['lunar_quest_complete', 'gate_marks_revealed', 'unlock_seal_1', 'ancient_gate_open', 'chapter_trial_defeated', 'chapter_1_complete'].every(e => r.events.includes(e)) ? 'все 6' : 'НЕ ВСЕ'));
 if (LOG) for (const r of Object.values(res)) { console.log(`\n### ${r.scenario}`); console.log(r.log.join('\n')); }

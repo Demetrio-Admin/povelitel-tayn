@@ -158,7 +158,7 @@ export class ExplorationScene extends Phaser.Scene {
       if (!this.scene.isActive() || services.state.hasEvent('mig_v10')) return;
       if (services.actions.busy || services.mode !== 'exploration') { this.time.delayedCall(1500, tryRun); return; }
       const r = await services.actions.migrateV10();
-      if (r.ok && r.core) this.toast('Мирра сохранила ядро Стража — оно в сумке: из него можно сделать восстановительную связку.', COLORS.gold);
+      if (r.ok && r.core) this.toast('Мирра сохранила ядро Стража — оно в сумке: из него можно сделать Целебный сбор.', COLORS.gold);
     };
     this.time.delayedCall(1200, tryRun);
   }
@@ -180,7 +180,7 @@ export class ExplorationScene extends Phaser.Scene {
   }
 
   /**
-   * v0.10.0: Селена открывает Печать I — сюжетно, без уровня, платы и таймера: дар, событие unlock_seal_1 и разовые +60 опыта.
+   * v0.10.0: Селена открывает Астрал I (внутренний id 'seal') — сюжетно, без уровня, платы и таймера: дар, событие unlock_seal_1 и разовые +60 опыта.
    * Повторный вызов ничего не выдаёт (событие уже есть).
    */
   unlockSeal() {
@@ -189,13 +189,13 @@ export class ExplorationScene extends Phaser.Scene {
     abilities.unlock('seal', 1);
     quests.complete('unlock_seal_1');
     this.burst(this.player.x, this.player.y - 60, COLORS.seal, 34);
-    this.toast('Получен дар: Печать I', COLORS.seal);
+    this.toast('Получен дар: Астрал I', COLORS.seal);
     this.dialog({
-      title: 'Печать I', color: COLORS.seal,
-      text: 'Новый дар связывает разорванное. Печать стоит 20 маны.\n\n'
-        + 'В мире она восстанавливает знаки и запоры связи. В бою — на миг сковывает врага, ослабляет его удары и прерывает сильную подготовку, которую не берут ни камень, ни огонь.\n\n'
-        + 'Опробуйте её спокойно — на учебном знаке рядом с алтарём (кнопка Печати или действие).',
-      buttons: [{ label: 'К знаку', primary: true }],
+      title: 'Астрал I', color: COLORS.seal,
+      text: 'Новый дар видит скрытое и будит спящее. Астрал стоит 20 маны.\n\n'
+        + 'В мире он открывает древние знаки и ворота и оживляет сердце рощи. В бою бьёт силой, которой не помеха ни броня, ни кора, — но атаки врага не останавливает: это умеет только Телекинез.\n\n'
+        + 'Опробуйте его спокойно — на учебном камне рядом с алтарём (кнопка Астрала или действие).',
+      buttons: [{ label: 'К камню', primary: true }],
     });
   }
 
@@ -676,7 +676,7 @@ export class ExplorationScene extends Phaser.Scene {
     const f = this.interaction.focus;
     if (id === 'seal' && !abilities.isUnlocked('seal')) {
       if (f && f.ability === 'seal') { f.interact('seal'); return; }
-      this.toast('Печать ещё не открыта. Её след ведёт к Древним воротам.', COLORS.seal);
+      this.toast('Астрал ещё не открыт. Его след ведёт к Древним воротам.', COLORS.seal);
       return;
     }
     if (!abilities.isUnlocked(id)) { this.toast('Этот дар ещё не изучен'); return; }

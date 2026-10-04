@@ -90,7 +90,7 @@ export class CombatScene extends Phaser.Scene {
       this.started = true;
       if (this.tut.active) { const r = this.tut.reminder; if (r) this.tut.feedback = { text: r, left: 3 }; }
       else if (first) this.toast('Враг атакует сам. Прерывайте сильные атаки Телекинезом!', COLORS.telekinesis);
-      else if (this.def.phases) this.toast('Три фазы: кристалл — Телекинез, кора — Огонь, разрыв связи — Печать.', COLORS.seal);
+      else if (this.def.phases) this.toast('Три фазы: кристалл — Телекинез, кора — Огонь и Астрал, тень — Астрал.', COLORS.seal);
       else if (this.def.armor) this.toast('Броня Стража держится на кристалле. Выберите его и разбейте Телекинезом.', COLORS.telekinesis);
       if (state.item('resin_flask') > 0) this.queueHint(COMBAT_HINTS.flask, 'flask');
     });
@@ -643,7 +643,7 @@ export class CombatScene extends Phaser.Scene {
       services.audio.vibrate(200);
       this.time.delayedCall(700, () => this.bus.emit(MSG.DIALOG, {
         title: 'Поражение', color: COLORS.danger,
-        text: `${STORY.defeat}\n\nЗдоровье: ${v.hp} / ${v.maxHp}   ·   мана: ${v.mana} / ${v.maxMana}${lost ? `\nПотеряно монет: ${lost}.` : ''}\n\n${STORY.retryHint}\nСовет: следите за красным предупреждением и держите Телекинез готовым для прерывания.${this.def.phases ? ' Кристалл снимает броню, Огонь — кору, а в третьей фазе сильный удар прерывает только Печать.' : this.def.armor ? ' Сначала разбейте кристалл, чтобы снять броню.' : ''}`,
+        text: `${STORY.defeat}\n\nЗдоровье: ${v.hp} / ${v.maxHp}   ·   мана: ${v.mana} / ${v.maxMana}${lost ? `\nПотеряно монет: ${lost}.` : ''}\n\n${STORY.retryHint}\nСовет: следите за красным предупреждением и держите Телекинез готовым для прерывания.${this.def.phases ? ' Кристалл снимает броню, Огонь выжигает кору, а в третьей фазе тень пробивает только Астрал; сильный удар прерывает Телекинез.' : this.def.armor ? ' Сначала разбейте кристалл, чтобы снять броню.' : ''}`,
         buttons: [{ label: 'Вернуться', primary: true, onClick: () => this.exit('defeat') }],
       }));
     }

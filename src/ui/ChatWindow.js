@@ -26,6 +26,10 @@ import {
   isAdmin,
   isModerator,
   isSupport,
+  isOwner,
+  isDeveloper,
+  canManage,
+  policyReady,
   textLength,
 } from "../cloud/ChatService.js";
 
@@ -315,6 +319,7 @@ export class ChatWindow {
     this.statusLine.setAttribute("aria-live", "polite");
     this.statusLine.hidden = true;
     this.root.append(this.statusLine);
+    if (isAdmin(this.me) && !policyReady(this.me)) { this.statusLine.hidden = false; this.statusLine.textContent = "Новые функции ролей ещё не включены."; }
     if (this.bans.length) {
       this.statusLine.hidden = false;
       this.statusLine.textContent = this.bans
@@ -368,6 +373,8 @@ export class ChatWindow {
           this.renderProfile(p),
         );
       else if (r.view === "roles") this.renderRoles();
+      else if (r.view === "player") this.renderPlayer();
+      else if (r.view === "templates") await paint("templates", {}, (t) => this.renderTemplates(t));
       else if (r.view === "tickets")
         await paint("tickets", { filter: r.filter || "all" }, (t) =>
           this.renderTickets(t),
@@ -556,7 +563,9 @@ export class ChatWindow {
           symbol: Crown,
         }),
       );
-    if (this.me?.roles.includes("developer"))
+    if (policyReady(this.me) && isDeveloper(this.me))
+      toolbar.append(button("Игрок по ID", () => this.go({ view: "player" }), { symbol: UserRound }));
+    if (isDeveloper(this.me))
       toolbar.append(
         button("Задачи", () => this.go({ view: "tasks" }), { symbol: CodeXml }),
       );
@@ -585,8 +594,7 @@ export class ChatWindow {
     if (
       this.bans.some((b) => b.kind === "mute") ||
       (room.kind === "news" &&
-        !isAdmin(this.me) &&
-        !this.me.roles.includes("developer"))
+        !isDeveloper(this.me))
     ) {
       this.view.append(
         el(
@@ -730,7 +738,7 @@ export class ChatWindow {
       name,
       el("span", "sub", `Ур. ${p.level}`),
       role !== "player" ? roleBadge(role) : null,
-      p.playerId && isAdmin(this.me)
+      p.playerId
         ? el("span", "sub", `ID ${p.playerId}`)
         : null,
     );
@@ -824,7 +832,7 @@ export class ChatWindow {
     const a = el("div", "chat-actions");
     const room = this.room(),
       canModerate = isModerator(this.me) && room?.kind !== "dm",
-      staff = (m.author?.roles || []).length > 0;
+      manageable = m.own || canManage(this.me, m.author);
     if (!m.deleted)
       append(
         a,
@@ -849,7 +857,7 @@ export class ChatWindow {
           { symbol: Flag },
         ),
       );
-    if (m.own && !m.deleted && Date.now() - Date.parse(m.createdAt) < 180000)
+    if (isModerator(this.me) && m.own && !m.deleted && Date.now() - Date.parse(m.createdAt) < 180000)
       a.append(
         button(
           "Изменить",
@@ -870,8 +878,7 @@ export class ChatWindow {
       );
     if (
       !m.deleted &&
-      ((m.own && Date.now() - Date.parse(m.createdAt) < 600000) ||
-        (canModerate && (!staff || isAdmin(this.me))))
+      (canModerate && manageable)
     )
       a.append(
         button(
@@ -917,8 +924,8 @@ export class ChatWindow {
       );
     append(s, a, this.error);
   }
-  textAction(title, label, run, { value = "", max = 300 } = {}) {
-    this.go({ view: "form", title, label, value, max, run });
+  textAction(title, label, run, { value = "", max = 300, after } = {}) {
+    this.go({ view: "form", title, label, value, max, run, after });
   }
   confirm(title, description, run, after) {
     this.go({ view: "confirm", title, description, run, after });
@@ -953,7 +960,8 @@ export class ChatWindow {
             () => r.run(ta.value),
             () => {
               this.service.draft(key, "");
-              this.returnToRoom();
+              if (r.after) r.after();
+              else this.returnToRoom();
             },
           );
         },
@@ -1036,7 +1044,7 @@ export class ChatWindow {
           { symbol: Ban, disabled: p.roles.length > 0 },
         ),
       );
-    if (!p.self && isModerator(this.me))
+    if (!p.self && isModerator(this.me) && canManage(this.me, p))
       a.append(
         button(
           "Ограничения",
@@ -1070,6 +1078,7 @@ export class ChatWindow {
             )
           : null,
       );
+    if (policyReady(this.me) && isDeveloper(this.me) && canManage(this.me, p)) a.append(button("Управление игроком", () => this.go({ view: "player", playerId: p.playerId }), { symbol: UserRound }));
     if (isAdmin(this.me))
       a.append(
         button("Роли по ID", () => this.go({ view: "roles" }), {
@@ -1084,16 +1093,15 @@ export class ChatWindow {
     const kinds = {
         warn: "Предупреждение",
         mute: "Запрет писать в чат",
-        ...(isAdmin(this.me) ? { game: "Блокировка игры" } : {}),
+        ...(isSupport(this.me) ? { game: "Блокировка игры" } : {}),
       },
       kind = select(kinds, "mute");
     const durations = {
         10: "10 минут",
         60: "1 час",
         1440: "24 часа",
-        ...(isAdmin(this.me)
-          ? { 10080: "7 дней", 43200: "30 дней", 0: "Бессрочно" }
-          : {}),
+        ...(policyReady(this.me) || isAdmin(this.me) ? {10080: "7 дней", 43200: "30 дней"} : {}),
+        ...(isSupport(this.me) ? { 0: "Бессрочно" } : {}),
       },
       duration = select(durations, "60"),
       why = el("textarea");
@@ -1137,7 +1145,7 @@ export class ChatWindow {
           el("div", "chat-card"),
           el("p", "", `${kinds[ban.kind] || ban.kind}: ${ban.reason}`),
           el("p", "sub", ban.until ? `До ${time(ban.until)}` : "Бессрочно"),
-          button("Снять ограничение", () =>
+          ban.canRevoke ? button("Снять ограничение", () =>
             this.textAction("Снять ограничение", "Причина", (reason) =>
               this.service.request("revoke_sanction", {
                 ref: p.ref,
@@ -1145,103 +1153,95 @@ export class ChatWindow {
                 reason,
               }),
             ),
-          ),
+          ) : null,
         ),
       );
   }
   renderRoles() {
-    if (!isAdmin(this.me)) {
-      this.shell("Нет доступа");
-      return;
-    }
-    this.shell("Роли по ID", "Постоянный номер игрока");
-    const s = this.scroll(),
-      id = input("Например, 1024");
-    id.inputMode = "numeric";
-    id.setAttribute("aria-label", "ID игрока");
-    const card = el("div");
+    if (!isAdmin(this.me)) { this.shell("Нет доступа"); return; }
+    this.shell("Роли по ID", "У каждого игрока одна роль");
+    const s = this.scroll(), id = input("Например, 1024"), card = el("div");
+    id.inputMode = "numeric"; id.setAttribute("aria-label", "ID игрока");
     let found = null;
-    let chosen = new Set();
-    id.oninput = () => {
-      found = null;
-      chosen.clear();
+    id.oninput = () => { found = null; card.replaceChildren(); };
+    const find = () => this.act(async () => {
+      if (!/^[1-9]\d{0,18}$/.test(id.value)) throw Error("Введите числовой ID игрока.");
+      const requested = id.value, p = await this.service.request("roles_lookup", { playerId: requested });
+      if (id.value !== requested || !card.isConnected) return;
+      found = p; card.replaceChildren();
+      append(card, el("h2", `role-${roleOf(p)}`, p.nickname), el("p", "sub", `ID ${p.playerId} · уровень ${p.level}`), el("p", "", `Сейчас: ${ROLES[roleOf(p)][0]}`));
+      if (!canManage(this.me, p) || (!policyReady(this.me) && isAdmin(p))) { card.append(empty("Этот аккаунт защищён от изменения вашей ролью.")); return; }
+      const values = Object.fromEntries(["player", "moderator", "support", "developer", ...(policyReady(this.me) && isOwner(this.me) ? ["admin"] : [])].map((r) => [r, ROLES[r][0]]));
+      const chosen = select(values, roleOf(p)), why = el("textarea");
+      chosen.setAttribute("aria-label", "Роль игрока"); why.setAttribute("aria-label", "Причина изменения ролей");
+      append(card, field("Новая роль", chosen), field("Причина изменения", why), button("Проверить назначение", () => {
+        if (!found || found.playerId !== id.value || !why.value.trim()) { this.error.textContent = "Найдите игрока и укажите причину."; return; }
+        const roles = chosen.value === "player" ? [] : [chosen.value];
+        this.confirm("Изменить роль?", `${p.nickname} · ID ${p.playerId}\nБыло: ${ROLES[roleOf(p)][0]}\nСтанет: ${values[chosen.value]}\nПричина: ${why.value}`,
+          () => this.service.request("roles_set", { playerId: p.playerId, revision: p.revision, roles, reason: why.value }),
+          () => { this.stack.pop(); this.replace({ view: "roles" }); });
+      }, { cls: "chat-button primary", symbol: Check }));
+    });
+    append(s, field("ID игрока", id), button("Найти игрока", find, { symbol: UserRound }), this.error, card);
+    id.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); find(); } };
+  }
+  renderPlayer() {
+    if (!policyReady(this.me) || !isDeveloper(this.me)) { this.shell("Нет доступа"); return; }
+    this.shell("Управление игроком", "Ресурсы и никнейм · по числовому ID");
+    const s = this.scroll(), id = input("ID игрока", this.route.playerId || ""), card = el("div");
+    id.inputMode = "numeric"; id.setAttribute("aria-label", "ID игрока");
+    id.oninput = () => card.replaceChildren();
+    const find = () => this.act(async () => {
+      if (!/^[1-9]\d{0,18}$/.test(id.value)) throw Error("Введите числовой ID игрока.");
+      const requested = id.value, p = await this.service.request("player_lookup", { playerId: requested });
+      if (id.value !== requested || !card.isConnected) return;
       card.replaceChildren();
-    };
-    const find = () =>
-      this.act(async () => {
-        if (!/^[1-9]\d{0,18}$/.test(id.value))
-          throw Error("Введите числовой ID игрока.");
-        const requested = id.value;
-        const p = await this.service.request("roles_lookup", {
-          playerId: requested,
-        });
-        if (id.value !== requested) return;
-        found = p;
-        chosen = new Set(p.roles);
-        card.replaceChildren();
-        append(
-          card,
-          el("h2", "", p.nickname),
-          el("p", "sub", `ID ${p.playerId} · уровень ${p.level}`),
-          el(
-            "p",
-            "",
-            `Сейчас: ${p.roles.map((r) => ROLES[r][0]).join(", ") || "Игрок"}`,
-          ),
-        );
-        ["moderator", "developer", "support"].forEach((role) => {
-          const c = input("", "", "checkbox");
-          c.checked = chosen.has(role);
-          c.onchange = () =>
-            c.checked ? chosen.add(role) : chosen.delete(role);
-          card.append(append(el("label", "chat-check"), c, roleBadge(role)));
-        });
-        const why = el("textarea");
-        why.setAttribute("aria-label", "Причина изменения ролей");
-        append(
-          card,
-          field("Причина изменения", why),
-          button(
-            "Проверить назначение",
-            () => {
-              if (!found || found.playerId !== id.value || !why.value.trim()) {
-                this.error.textContent = "Найдите игрока и укажите причину.";
-                return;
-              }
-              const roles = [...chosen];
-              this.confirm(
-                "Изменить роли?",
-                `${p.nickname} · ID ${p.playerId}\nБыло: ${p.roles.map((r) => ROLES[r][0]).join(", ") || "Игрок"}\nСтанет: ${roles.map((r) => ROLES[r]?.[0] || r).join(", ") || "Игрок"}\nПричина: ${why.value}`,
-                () =>
-                  this.service.request("roles_set", {
-                    playerId: p.playerId,
-                    revision: p.revision,
-                    roles,
-                    reason: why.value,
-                  }),
-                () => {
-                  this.stack.pop();
-                  this.replace({ view: "roles" });
-                },
-              );
-            },
-            { cls: "chat-button primary", symbol: Check },
-          ),
-        );
-      });
-    append(
-      s,
-      field("ID игрока", id),
-      button("Найти игрока", find, { symbol: UserRound }),
-      this.error,
-      card,
-    );
-    id.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        find();
+      append(card, el("h2", `role-${roleOf(p)}`, p.nickname), el("p", "sub", `ID ${p.playerId} · уровень ${p.level} · ${ROLES[roleOf(p)][0]}`));
+      if (!canManage(this.me, p)) { card.append(empty("Аккаунт защищён от изменения вашей ролью.")); return; }
+      const item = select(p.catalog), direction = select({ give: "Выдать", take: "Забрать" }), amount = input("Количество", "1", "number"), why = el("textarea"), current = el("p", "sub");
+      amount.min = "1"; amount.max = "999999999"; amount.step = "1";
+      item.setAttribute("aria-label", "Ресурс"); direction.setAttribute("aria-label", "Действие с ресурсом"); amount.setAttribute("aria-label", "Количество ресурса"); why.setAttribute("aria-label", "Причина изменения игрока");
+      const updateCurrent = () => current.textContent = `У игрока: ${p.inventory[item.value] || 0}`;
+      item.onchange = updateCurrent; updateCurrent();
+      const done = () => { this.stack.pop(); this.replace({ view: "player", playerId: p.playerId }); };
+      append(card, field("Предмет или ресурс", item), current, field("Действие", direction), field("Количество", amount), field("Причина для журнала", why), button("Проверить ресурсы", () => {
+        const delta = Number(amount.value) * (direction.value === "take" ? -1 : 1), before = p.inventory[item.value] || 0;
+        if (!Number.isInteger(delta) || delta === 0 || Math.abs(delta) > 999999999 || before + delta < 0 || before + delta > 1000000000 || !why.value.trim()) { this.error.textContent = "Проверьте количество и укажите причину."; return; }
+        this.confirm("Изменить ресурсы?", `${p.nickname} · ID ${p.playerId}\n${p.catalog[item.value]}: ${before} → ${before + delta}\nПричина: ${why.value}`,
+          () => this.service.request("resources", { playerId: p.playerId, revision: p.inventoryRevision, item: item.value, delta, reason: why.value }), done);
+      }, { symbol: Check, cls: "chat-button primary" }));
+      if (p.registered) {
+        const nickname = input("Новый никнейм", p.nickname); nickname.setAttribute("aria-label", "Новый никнейм");
+        append(card, field("Новый никнейм", nickname), el("p", "sub", "После переименования вход в игре только по новому нику. Пароль сохраняется."), button("Проверить никнейм", () => {
+          if (!nickname.value.trim() || !why.value.trim()) { this.error.textContent = "Введите никнейм и причину."; return; }
+          this.confirm("Изменить никнейм?", `ID ${p.playerId}\n${p.nickname} → ${nickname.value.trim()}\nПричина: ${why.value}`,
+            () => this.service.request("rename", { playerId: p.playerId, revision: p.staffRevision, nickname: nickname.value.trim(), reason: why.value }), done);
+        }, { symbol: Pencil }));
       }
     });
+    append(s, field("ID игрока", id), button("Найти игрока", find, { symbol: UserRound }), this.error, card);
+    if (id.value) setTimeout(() => { if (card.isConnected) find(); }, 0);
+  }
+  renderTemplates(templates) {
+    this.shell("Шаблоны ответов", "Общие для сотрудников поддержки");
+    const s = this.scroll();
+    s.append(button("Добавить шаблон", () => this.go({ view: "form", title: "Новый шаблон", custom: (c) => this.renderTemplateForm(c) }), { symbol: Plus }));
+    templates.forEach((t) => {
+      const card = append(el("div", "chat-card"), el("h3", "", t.title), el("p", "chat-body", t.body));
+      append(card, button("Изменить", () => this.go({ view: "form", title: "Изменить шаблон", custom: (c) => this.renderTemplateForm(c, t) }), { symbol: Pencil }),
+        button("Убрать шаблон", () => this.confirm("Убрать шаблон?", t.title, () => this.service.request("template_archive", { template: t.id, revision: t.revision }), () => this.back()), { symbol: Trash2 }));
+      s.append(card);
+    });
+    s.append(this.error);
+  }
+  renderTemplateForm(s, t = {}) {
+    const title = input("Название", t.title || ""), body = el("textarea"); body.value = t.body || "";
+    title.maxLength = 80; body.maxLength = 2000;
+    title.setAttribute("aria-label", "Название шаблона"); body.setAttribute("aria-label", "Текст шаблона");
+    append(s, field("Название", title), field("Ответ игроку", body), this.error, button("Сохранить шаблон", () => this.act(async () => {
+      if (!title.value.trim() || !body.value.trim()) throw Error("Заполните название и текст.");
+      await this.service.request("template_save", { ...(t.id ? { template: t.id, revision: t.revision } : {}), title: title.value, body: body.value });
+    }, { after: () => this.back() }), { symbol: Check, cls: "chat-button primary" }));
   }
   renderTickets(tickets) {
     this.shell(
@@ -1253,6 +1253,7 @@ export class ChatWindow {
         {
           all: "Все",
           new: "Новые",
+          ...(policyReady(this.me) && isAdmin(this.me) ? { escalated: "Переданы администрации" } : {}),
           mine: "Мои",
           work: "В работе",
           waiting: "Ждём игрока",
@@ -1271,6 +1272,7 @@ export class ChatWindow {
         symbol: Plus,
       }),
     );
+    if (policyReady(this.me) && isSupport(this.me)) toolbar.append(button("Шаблоны", () => this.go({ view: "templates" }), { symbol: NotebookPen }));
     this.view.append(toolbar);
     const s = this.scroll();
     if (!tickets.length) s.append(empty("Здесь пока нет обращений."));
@@ -1286,12 +1288,12 @@ export class ChatWindow {
         el(
           "p",
           "sub",
-          `${CATEGORIES[t.category]} · ${t.author.nickname}${t.author.playerId && isAdmin(this.me) ? ` · ID ${t.author.playerId}` : ""} · ${time(t.updatedAt)}`,
+          `${CATEGORIES[t.category]} · ${t.author.nickname}${t.author.playerId ? ` · ID ${t.author.playerId}` : ""} · ${time(t.updatedAt)}`,
         ),
         el(
           "p",
           "sub",
-          t.assignee ? `В работе у ${t.assignee.nickname}` : "Свободно",
+          t.assignee ? `В работе у ${t.assignee.nickname}` : (t.escalated ? "Ожидает администратора" : "Свободно"),
         ),
       );
       const own = t.author.ref === this.me.ref,
@@ -1303,7 +1305,7 @@ export class ChatWindow {
             symbol: MessageCircle,
           }),
         );
-      else if (!t.assignee && t.status !== "closed")
+      else if (!t.assignee && t.status !== "closed" && isSupport(this.me) && (!t.escalated || isAdmin(this.me)))
         a.append(
           button(
             "Взять в работу",
@@ -1552,20 +1554,19 @@ export class ChatWindow {
         ),
       );
       compose.append(tabs);
-      if (mode === "public")
-        append(
-          compose,
-          button("Шаблон: шаги", () => {
-            ta.value =
-              "Опишите, пожалуйста, шаги, после которых появляется проблема. Что ожидали увидеть и что произошло?";
-            ta.oninput();
-          }),
-          button("Шаблон: устройство", () => {
-            ta.value =
-              "Подскажите, пожалуйста, модель устройства, браузер и версию игры.";
-            ta.oninput();
-          }),
-        );
+      if (mode === "public") {
+        const choices = el("div", "chat-row"); compose.append(choices);
+        (policyReady(this.me) ? this.service.request("templates") : Promise.resolve([
+          {id:"steps",title:"Шаги воспроизведения",body:"Опишите, пожалуйста, шаги, после которых появляется проблема. Что ожидали увидеть и что произошло?"},
+          {id:"device",title:"Устройство",body:"Подскажите, пожалуйста, модель устройства, браузер и версию игры."}
+        ])).then((templates) => {
+          if (!choices.isConnected) return;
+          const pick = select({ "": "Выбрать шаблон", ...Object.fromEntries(templates.map((t) => [t.id, t.title])) });
+          pick.setAttribute("aria-label", "Шаблон ответа");
+          pick.onchange = () => { const t = templates.find((t) => t.id === pick.value); if (t) { ta.value = t.body; ta.oninput(); } };
+          append(choices, pick, policyReady(this.me) ? button("Шаблоны", () => this.go({ view: "templates" }), { symbol: NotebookPen }) : null);
+        }).catch((e) => { if (choices.isConnected) choices.append(el("p", "sub", e.message)); });
+      }
     }
     const send = (op) =>
       this.act(
@@ -1610,6 +1611,9 @@ export class ChatWindow {
           { symbol: CodeXml },
         ),
       );
+    if (policyReady(this.me) && !t.own && !isAdmin(this.me)) compose.append(button("Передать администратору", () =>
+      this.textAction("Передать администратору", "Причина передачи · внутренняя заметка", (body) => this.service.request("ticket_escalate", { ticket: t.id, revision: t.revision, body }),
+        { max: 2000, after: () => { this.stack = this.stack.filter((r) => r.view === "room"); this.replace({ view: "tickets" }); } }), { symbol: Crown }));
     if (mode === "note") compose.classList.add("chat-note");
     this.view.append(compose);
     s.scrollTop = s.scrollHeight;
@@ -1619,7 +1623,7 @@ export class ChatWindow {
       const roster = await this.service.request("roster"),
         values = Object.fromEntries(
           roster
-            .filter((p) => p.roles.includes("developer"))
+            .filter((p) => isDeveloper(p))
             .map((p) => [p.ref, p.nickname]),
         );
       if (!Object.keys(values).length) {
@@ -1748,6 +1752,7 @@ export class ChatWindow {
           ),
           el("p", "sub", `${e.action} · ${time(e.createdAt)}`),
           e.reason ? el("p", "chat-body", e.reason) : null,
+          e.detail?.before !== undefined ? el("p", "sub", `${e.detail.item ? e.detail.item + ": " : ""}${Array.isArray(e.detail.before) ? e.detail.before.join(", ") || "Игрок" : e.detail.before} → ${Array.isArray(e.detail.after) ? e.detail.after.join(", ") || "Игрок" : e.detail.after}`) : null,
         ),
       ),
     );

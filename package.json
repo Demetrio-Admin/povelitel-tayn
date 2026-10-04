@@ -11,7 +11,7 @@
     "ui:shots": "node --import ./tools/ui/register.mjs tools/ui/render-scenes.mjs",
     "e2e": "node tests/e2e/play.mjs",
     "test:db": "node tools/sql/security-test.mjs && node tools/sql/diff-test.mjs && node tools/sql/migration-test.mjs && BACKEND=pg node tests/session-test.js",
-    "test:chat": "node tests/chat-service-test.mjs && node tests/chat-db-test.mjs",
+    "test:chat": "node tests/chat-service-test.mjs && node tests/chat-db-test.mjs && node tests/chat-roles-test.mjs",
     "test:chat:browser": "node tests/e2e/chat.mjs",
     "test:browser": "python3 tools/ui/dom/dom-test.py",
     "test:mobile": "node tests/e2e/mobile-ui.mjs",

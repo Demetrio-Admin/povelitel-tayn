@@ -245,7 +245,9 @@ export class PlayerSession {
     if (!validateNickname(nickname).ok) throw new CloudError('invalid_credentials', errorText('invalid_credentials'));
     this._setStatus(this.status === 'ready' ? 'ready' : 'loading');
     try {
-      const auth = await this.api.signInWithEmail(await loginEmail(norm, this.api.loginDomain), password);
+      const loginNorm = this.api.nicknameLogin ? await this.api.nicknameLogin(norm) : norm;
+      if (!loginNorm) throw new CloudError('invalid_credentials', errorText('invalid_credentials'));
+      const auth = await this.api.signInWithEmail(await loginEmail(loginNorm, this.api.loginDomain), password);
       // вход в другой аккаунт с этого устройства: предыдущий вход закрываем
       if (this.auth && this.auth.user.id !== auth.user.id) { await this._signOutQuietly(); }
       this._stopTimers();
@@ -314,21 +316,21 @@ export class PlayerSession {
    * хотя сервер отвечал 200. Теперь изменения, сделанные во время запроса, кладутся поверх ответа сервера и уходят
    * обычным автосохранением (таймер), а flush сообщает только о том, что требовалось на момент вызова.
    */
-  async flush({ keepalive = false } = {}) {
+  async flush({ keepalive = false, force = false } = {}) {
     if (!this.base || !this.auth) return false;
     if (this.busy) {
       // уже идёт отправка; её снимок мог быть сделан до последних изменений — тогда отправляем ещё раз
       const target = toSnapshot(this.state.data);
       const ok = await this.busy.catch(() => false);
       if (!ok) return false;
-      if (!this.base || isEmpty(diffSnapshots(this.base, target))) return true;
+      if (!this.base || (!force && isEmpty(diffSnapshots(this.base, target)))) return true;
     }
     if (this.timer) { this.clearTimer(this.timer); this.timer = null; }
-    this.busy = this._flushLoop(keepalive);
+    this.busy = this._flushLoop(keepalive, force);
     try { return await this.busy; } finally { this.busy = null; }
   }
 
-  async _flushLoop(keepalive) {
+  async _flushLoop(keepalive, force = false) {
     this.lastFlushError = null;
     // не больше двух запросов: (1) повтор отправки, ответ на которую потерялся (тот же id), (2) текущее состояние
     for (let pass = 0; pass < 2; pass++) {
@@ -336,9 +338,10 @@ export class PlayerSession {
       if (!resend) {
         const sent = toSnapshot(this.state.data);
         const patch = diffSnapshots(this.base, sent);
-        if (isEmpty(patch)) { this._setSaving('saved'); return true; }
+        if (isEmpty(patch) && !force) { this._setSaving('saved'); return true; }
         this.inflight = { id: randomId(), patch, sent };
       }
+      force = false;
       const { id, patch, sent } = this.inflight;
       this._setSaving('saving');
       let raw;

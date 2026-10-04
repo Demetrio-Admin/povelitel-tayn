@@ -12,15 +12,22 @@ const READS = new Set([
   "audit",
   "tasks",
   "ignored",
+  "player_lookup",
+  "templates",
 ]);
 export const roleOf = (p) =>
-  ["owner", "admin", "moderator", "developer", "support"].find((r) =>
+  ["owner", "admin", "developer", "support", "moderator"].find((r) =>
     p?.roles?.includes(r),
   ) || "player";
 export const isAdmin = (p) =>
   p?.roles?.some((r) => r === "admin" || r === "owner");
-export const isModerator = (p) => isAdmin(p) || p?.roles?.includes("moderator");
-export const isSupport = (p) => isAdmin(p) || p?.roles?.includes("support");
+export const rankOf = (p) => ["player", "moderator", "support", "developer", "admin", "owner"].indexOf(roleOf(p));
+export const isOwner = (p) => roleOf(p) === "owner";
+export const policyReady = (p) => p?.policyVersion === 2;
+export const isDeveloper = (p) => rankOf(p) >= 3;
+export const isModerator = (p) => policyReady(p) ? rankOf(p) >= 1 : isAdmin(p) || p?.roles?.includes("moderator");
+export const isSupport = (p) => policyReady(p) ? rankOf(p) >= 2 : isAdmin(p) || p?.roles?.includes("support");
+export const canManage = (actor, target) => actor?.ref !== target?.ref && rankOf(actor) > rankOf(target) && !isOwner(target);
 export const textLength = (s) => Array.from(s.normalize("NFC")).length;
 
 /** One token lifecycle, memory-only drafts, idempotent retry, permission refresh on every poll. */
@@ -121,13 +128,18 @@ export class ChatService {
     if (epoch !== this.epoch) return;
     const changed =
       this.data?.me?.revision !== undefined &&
-      this.data.me.revision !== data.me.revision;
+      (this.data.me.revision !== data.me.revision ||
+        this.data.me.policyVersion !== data.me.policyVersion);
+    const staffChanged = this.data?.me?.staffRevision !== undefined &&
+      this.data.me.staffRevision !== data.me.staffRevision;
     this.data = data;
     this.error = null;
     if (data.sanctions.some((b) => b.kind === "game"))
       this.session.setGameBan?.(data);
     else if (this.session.status === "banned")
       await this.session.reloadAfterBan?.();
+    else if (staffChanged)
+      await this.session.flush?.({ force: true });
     this.emit(changed ? "permissions" : "refresh");
     return data;
   }

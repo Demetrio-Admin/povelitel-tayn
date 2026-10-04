@@ -139,6 +139,10 @@ export class SupabaseApi {
   // ---------------------------------------------------------------- игрок (RPC)
   rpc(name, args, token, opts = {}) { return this._req(`/rest/v1/rpc/${name}`, { method: 'POST', token, body: args || {}, ...opts }); }
 
+  async nicknameLogin(norm) {
+    try { return await this.rpc('nickname_login', { norm }); }
+    catch (e) { if (e.code === 'chat_unavailable') return norm; throw e; }
+  }
   nicknameAvailable(norm) { return this.rpc('nickname_available', { norm }); }
   createPlayer(token, hero) { return this.rpc('create_player', { hero }, token); }
   getPlayer(token) { return this.rpc('get_player', {}, token); }

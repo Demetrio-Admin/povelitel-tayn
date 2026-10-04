@@ -70,7 +70,7 @@ q(`select public.claim_nickname('${A}', '${NICK}', '${NORM}');`, 'service');
 const a2 = JSON.parse(q(`select public.get_player();`, A).out);
 ok(a2.meta.nickname === NICK && !!a2.meta.registeredAt && a2.meta.registered && a2.inventory.coins === 45 && a2.level === 3, 'после регистрации тот же персонаж: ник Дмитрий, уровень 3, монеты на месте');
 ok(q(`select public.nickname_available('${NORM}');`, 'anon').out === 'f', 'ник занят');
-ok(/unique|duplicate/.test(q(`select public.claim_nickname('${B}', '${NICK.toUpperCase()}', '${NORM}');`, 'service').err), 'второй «ДМИТРИЙ» (другой регистр) отклонён уникальным индексом');
+ok(/unique|duplicate|nickname_taken/.test(q(`select public.claim_nickname('${B}', '${NICK.toUpperCase()}', '${NORM}');`, 'service').err), 'второй «ДМИТРИЙ» (другой регистр) отклонён уникальным индексом');
 ok(/already_registered/.test(q(`select public.claim_nickname('${A}', 'Другой', 'другой');`, 'service').err), 'зарегистрированный игрок не меняет ник через claim');
 ok(/invalid_nickname/.test(q(`select public.claim_nickname('${B}', 'a b', 'a b');`, 'service').err), 'ник с пробелом отклонён');
 ok(/invalid_nickname/.test(q(`select public.claim_nickname('${B}', 'Ab', 'ab');`, 'service').err), 'ник короче 3 символов отклонён');

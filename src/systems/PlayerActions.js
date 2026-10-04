@@ -43,7 +43,7 @@ export class PlayerActions {
       try {
         const ses = this.getSession();
         if (ses) return await ses.runAction(action);
-        const { snapshot, result } = applyAction(toSnapshot(this.state.data), action);
+        const { snapshot, result } = applyAction(toSnapshot(this.state.data), action, Date.now());
         if (result.ok) { this.state.setData(fromSnapshot(snapshot, this.state.data)); this.state.save(); }
         return result;
       } catch (e) {
@@ -67,5 +67,10 @@ export class PlayerActions {
   migrateV10() { return this.run({ op: 'migrate_v10' }); }
 
   heal() { return this.run({ op: 'heal' }); }
+  /** v0.12.0: зелье из сумки вне боя (настой жизни, лунный эликсир). */
+  drink(item) { return this.run({ op: 'drink', item }); }
+  /** v0.12.0: бой начался / закончился (outcome: victory | defeat | retreat; mana — остаток маны). Сервер замораживает и возобновляет восстановление. */
+  combatStart() { return this.run({ op: 'combat_start' }); }
+  combatEnd(outcome, mana) { return this.run({ op: 'combat_end', outcome, mana }); }
   starterKit() { return this.run({ op: 'starter_kit' }); }
 }

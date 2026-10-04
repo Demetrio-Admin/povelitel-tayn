@@ -39,12 +39,12 @@ ok(r1.status === 0 && r2.status === 0, 'новая схема применяет
 const after = JSON.parse(run(`select public.get_player();`, uid));
 ok(after.level === before.level && after.xp === 160 && after.inventory.coins === 30 && after.inventory.elixir_life === 2, 'уровень, опыт, монеты и предметы сохранены');
 ok(after.quests.includes('unlock_telekinesis_1') && after.tutorial.includes('move') && after.objects.glade_rock?.state === 'moved', 'события, подсказки и мир сохранены');
-ok(after.hp === 55.5 && after.mana === null, 'HP сохранено, мана отсутствовала → null («полный запас», клиент запишет число при первом расходе)');
-const s3 = JSON.parse(run(`select public.sync_player('{"mana":{"value":0}}'::jsonb);`, uid));
-ok(s3.mana === 0, 'после миграции мана сохраняется, включая 0');
+ok(Math.abs(after.hp - 55.5) < 1 && after.mana === 110 && after.combatSince === null, 'v0.12.0: HP сохранено (55,5), мана отсутствовала → полный запас уровня (110); восстановление считается с момента миграции');
+const s3 = JSON.parse(run(`select public.sync_player('{"mana_spent":110}'::jsonb);`, uid));
+ok(s3.mana < 1, 'после миграции мана тратится через mana_spent (до 0)');
 file('supabase/schema.sql');
 const s4 = JSON.parse(run(`select public.get_player();`, uid));
-ok(s4.mana === 0 && s4.hp === 55.5, 'повторный запуск схемы не сбрасывает запасы');
+ok(s4.mana < 10 && s4.hp > 55 && s4.hp < 80, 'повторный запуск схемы не сбрасывает запасы');
 const heal = JSON.parse(run(`select public.player_action('{"op":"heal","id":"migration-heal-1"}'::jsonb);`, uid));
 ok(heal.action.ok && heal.hp === 132 && heal.inventory.coins === 22, 'player_action после миграции: лечение 77 HP за 8 монет (уровень 3)');
 admin(`drop database if exists ${DB}`);

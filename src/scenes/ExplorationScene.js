@@ -733,7 +733,7 @@ export class ExplorationScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------ бой
   startCombat(trigger, { manual = false } = {}) {
-    if (this.inTransition) return;
+    if (this.inTransition || this.time.now < (this.combatBlockedUntil || 0)) return;
     this.inTransition = true;
     services.mode = 'transition';
     this.player.stop();
@@ -741,6 +741,7 @@ export class ExplorationScene extends Phaser.Scene {
     // v0.9: точка «перед боем» — сюда героиня вернётся после поражения (не safePoint). Сохраняется до старта боя,
     // поэтому перезагрузка посреди боя тоже вернёт её сюда (см. resumeEncounters).
     const at = { x: Math.round(this.player.x), y: Math.round(this.player.y) };
+    const prevEnc = services.state.getObject(encKey(trigger.id));
     services.state.setObject(encKey(trigger.id), { state: 'fighting', x: at.x, y: at.y });
     this.savePosition();
     if (trigger.cfg.startEvent) services.quests.complete(trigger.cfg.startEvent, { spawnId: trigger.id });
@@ -749,12 +750,28 @@ export class ExplorationScene extends Phaser.Scene {
     cam.shake(250, 0.006);
     services.audio.play('combat_start');
     services.audio.vibrate(60);
+    // v0.12.0: сервер должен узнать о бое до его начала (восстановление HP и маны встаёт); идёт параллельно затемнению
+    const started = services.actions ? services.actions.combatStart() : Promise.resolve({ ok: true });
     cam.fadeOut(450, 0, 0, 0);
-    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, async () => {
+      const r = await started;
+      if (!r.ok) { this.cancelCombat(trigger, prevEnc, r); return; }
       this.scene.sleep();
       this.scene.run('CombatScene', { spawnId: trigger.id, enemyType: trigger.cfg.enemy });
       this.scene.bringToTop('UIScene');
     });
+  }
+
+  /** Сервер не принял начало боя (нет связи, занят): бой не начинается, враг остаётся как был. */
+  cancelCombat(trigger, prevEnc, r) {
+    const st = services.state;
+    if (prevEnc) st.setObject(encKey(trigger.id), prevEnc); else delete st.data.worldObjects[encKey(trigger.id)];
+    st.save();
+    this.combatBlockedUntil = this.time.now + 2500;
+    this.cameras.main.fadeIn(300);
+    this.inTransition = false;
+    services.mode = 'exploration';
+    if (r.reason !== 'busy') this.toast(r.reason === 'network' ? 'Нет связи с сервером — бой не начался.' : 'Не удалось начать бой. Попробуйте ещё раз.', COLORS.danger);
   }
 
   onWake(sys, data = {}) {
@@ -798,10 +815,12 @@ export class ExplorationScene extends Phaser.Scene {
    */
   resumeEncounters() {
     const st = services.state;
+    let interrupted = false;
     for (const e of this.enemies) {
       const enc = st.getObject(encKey(e.id));
       if (!enc || e.defeated) continue;
       if (enc.state === 'fighting') {
+        interrupted = true;
         st.setObject(encKey(e.id), { state: 'lost' });
         const floor = Math.max(1, Math.ceil(vitals.maxHp(st) * 0.2));
         if (vitals.hp(st) < floor) vitals.setHp(st, floor);
@@ -810,6 +829,8 @@ export class ExplorationScene extends Phaser.Scene {
       }
       this.watchRetry(e);
     }
+    // v0.12.0: сервер мог остаться в «бою» (вкладку закрыли до итога) — сообщаем об отступлении, восстановление продолжится
+    if (interrupted || st.data.combatSince != null) services.actions?.combatEnd('retreat')?.catch(() => {});
   }
 
   // ------------------------------------------------------------------ цикл
@@ -832,8 +853,8 @@ export class ExplorationScene extends Phaser.Scene {
     const dt = Math.min(delta, 50) / 1000;
     const { state } = services;
     const active = this.canAct();
-    // время игры и восстановление HP/маны вне боя (в доме Мирры мана быстрее); во время действия сервера — ничего
-    if (advanceWorld(state, delta, { frozen: serverActionBusy(services), active, inHouse: this.zone?.id === VITALS.houseZone })) this.vitalsDirty = true;
+    // время игры и восстановление HP/маны по часам (в доме Мирры мана быстрее); во время действия сервера время игры стоит
+    if (advanceWorld(state, delta, { frozen: serverActionBusy(services), inHouse: this.zone?.id === VITALS.houseZone })) this.vitalsDirty = true;
     if (!active) {
       if (services.mode !== 'combat') this.player.stop();
       this.placeSpeech();

@@ -1,6 +1,6 @@
 // v0.9 — HUD-подсветка запасов, зелья из сумки, лечение у Мирры за монеты, стартовый набор зелий.
 // Методы подмешиваются в UIScene (как windows08/hud082), `this` — UIScene. Логика — в state/vitals.js,
-// systems/Consumables.js и systems/PlayerActions.js; здесь только окна и обратная связь.
+// systems/PlayerActions.js (зелья и лечение выполняет сервер); здесь только окна и обратная связь.
 import { fm } from '../state/hero.js';
 import { COLORS } from '../config/game.config.js';
 import { POTIONS } from '../config/resources.js';
@@ -8,7 +8,6 @@ import { STORY } from '../config/story.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import * as vitals from '../state/vitals.js';
-import { drinkOutside } from '../systems/Consumables.js';
 
 export const windows09 = {
   buildV09() {
@@ -53,13 +52,15 @@ export const windows09 = {
   },
 
   // ================================================================== зелья из сумки
-  drinkFromBag(id) {
-    const r = drinkOutside(services.state, id);
+  async drinkFromBag(id) {
     const p = POTIONS[id];
+    if (!p?.outside) { services.audio.play('locked'); this.toast('Это зелье применяется только в бою.'); return; }
+    if (services.actions.busy) return;
+    const r = await services.actions.drink(id);   // v0.12.0: проверку и расход делает сервер
     if (!r.ok) {
       services.audio.play('locked');
-      const msg = { full: r.kind === 'heal' ? 'Здоровье уже полное — настой не потрачен.' : 'Мана уже полная — эликсир не потрачен.', none: 'Такого зелья нет в сумке.', combat: 'Это зелье применяется только в бою.' }[r.reason];
-      if (msg) this.toast(msg);
+      const msg = { full: r.kind === 'heal' ? 'Здоровье уже полное — настой не потрачен.' : 'Мана уже полная — эликсир не потрачен.', none: 'Такого зелья нет в сумке.', combat: 'Во время боя зелья из сумки не работают.', unknown: 'Это зелье применяется только в бою.' }[r.reason];
+      this.toast(msg || actionFailText(r, 'зелье не выпито', 'Зелье осталось в сумке.'), msg ? undefined : COLORS.danger);
       return;
     }
     services.audio.play('potion');

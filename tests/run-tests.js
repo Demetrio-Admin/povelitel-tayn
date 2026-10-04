@@ -572,7 +572,6 @@ console.log('\n[v0.8.2] Опыт до следующего уровня');
 console.log('\n[v0.9] Общие HP и мана, зелья, обучение боя, облачная модель');
 {
   const vitals = await import('../src/state/vitals.js');
-  const { drinkOutside } = await import('../src/systems/Consumables.js');
   const { CombatTutorial, CT_SKIPPED } = await import('../src/systems/CombatTutorial.js');
   const PM = await import('../src/cloud/playerModel.js');
   const { PlayerActions } = await import('../src/systems/PlayerActions.js');
@@ -590,19 +589,26 @@ console.log('\n[v0.9] Общие HP и мана, зелья, обучение б
     vitals.setMana(state, NaN); ok(vitals.mana(state) === 0 && !Number.isNaN(state.data.mana), 'NaN → 0, не NaN');
     state.data.mana = 0; ok(vitals.mana(state) === 0, 'числовой 0 не путается с «нет значения»');
   }
-  // --- восстановление: время, предел, дом быстрее, огромный dt обрезается
+  // --- восстановление по настенным часам: время, предел, дом быстрее, скрытая вкладка, бой стоит
   {
     const { state } = makeWorld({ t: 0 });
     vitals.setHp(state, 50); vitals.setMana(state, 10);
-    for (let i = 0; i < 100; i++) vitals.regen(state, 0.1);           // 10 с в лесу
+    let t = 1_000_000; vitals.regenWall(state, t);                       // часы запущены
+    t += 10_000; vitals.regenWall(state, t);                             // 10 с в лесу
     ok(Math.abs(vitals.hp(state) - 60) < 1e-6 && Math.abs(vitals.mana(state) - 15) < 1e-6, `10 с в лесу: +${VITALS.hpRegenPerSec * 10} HP, +${VITALS.manaRegenWorld * 10} маны`);
-    for (let i = 0; i < 100; i++) vitals.regen(state, 0.1, { inHouse: true });
+    t += 10_000; vitals.regenWall(state, t, { inHouse: true });
     ok(Math.abs(vitals.mana(state) - 35) < 1e-6, 'в доме Мирры мана восстанавливается быстрее (2/с)');
-    const m0 = vitals.mana(state); vitals.regen(state, 3600);
-    ok(vitals.mana(state) - m0 <= VITALS.manaRegenWorld * VITALS.maxTickSec + 1e-9, 'огромный delta (скрытая вкладка) не даёт случайного прироста');
-    for (let i = 0; i < 4000; i++) vitals.regen(state, 0.25);
-    ok(vitals.hp(state) === 120 && vitals.mana(state) === 100, 'восстановление ограничено максимумом');
+    state.data.combatSince = t; const hBefore = vitals.hp(state);
+    t += 60_000; ok(!vitals.regenWall(state, t) && vitals.hp(state) === hBefore, 'пока идёт бой, время не засчитывается');
+    state.data.combatSince = null;
+    t += 3_600_000; vitals.regenWall(state, t);
+    ok(vitals.hp(state) === 120 && vitals.mana(state) === 100, 'час в скрытой вкладке = полное восстановление (как у сервера), без превышения максимума');
     state.data.mana = 0.37; ok(vitals.view(state).mana === 0 && state.data.mana === 0.37, 'дробная мана хранится точно, округляется только отображение');
+    // потраченная мана копится для отчёта серверу
+    const w = makeWorld({ t: 0 }).state;
+    vitals.spendMana(w, 8); vitals.spendMana(w, 4.5);
+    ok(w.data.manaSpent === 12.5, 'spendMana копит потраченное (mana_spent)');
+    vitals.refundMana(w, 8); ok(w.data.manaSpent === 4.5 && vitals.mana(w) === 95.5, 'возврат маны уменьшает и счётчик');
   }
   // --- новый уровень не восстанавливает скрыто; победа — полный HP после наград, мана — остаток; поражение — 20%
   {
@@ -633,22 +639,23 @@ console.log('\n[v0.9] Общие HP и мана, зелья, обучение б
     ok(Math.abs(cm.hero.mana - 36) < 0.01, 'мана в бою восстанавливается одним механизмом (3/с, v0.10.0)');
     ok(cm.cooldowns.telekinesis === 0 && cm.time === 0, 'holdEnemy: враг и время боя стоят, перезарядка дара идёт');
   }
-  // --- зелья вне боя
+  // --- зелья вне боя (v0.12.0: действие drink; здесь локальный режим того же правила)
   {
     const { state } = makeWorld({ t: 0 });
-    ok(drinkOutside(state, 'elixir_life').reason === 'none', 'нет зелья — ничего не происходит');
+    const acts = new PlayerActions({ state });
+    ok((await acts.drink('elixir_life')).reason === 'none', 'нет зелья — ничего не происходит');
     state.addItem('elixir_life', 2); state.addItem('elixir_mana', 1); state.addItem('resin_flask', 1);
-    ok(drinkOutside(state, 'elixir_life').reason === 'full' && state.item('elixir_life') === 2, 'полное HP: настой не тратится');
+    ok((await acts.drink('elixir_life')).reason === 'full' && state.item('elixir_life') === 2, 'полное HP: настой не тратится');
     vitals.setHp(state, 100);
-    const r = drinkOutside(state, 'elixir_life');
+    const r = await acts.drink('elixir_life');
     ok(r.ok && r.amount === 20 && vitals.hp(state) === 120 && state.item('elixir_life') === 1, 'частично полный запас: восстановлено только недостающее (+20), списан 1 настой');
     vitals.setMana(state, 10);
-    const m = drinkOutside(state, 'elixir_mana');
+    const m = await acts.drink('elixir_mana');
     ok(m.ok && vitals.mana(state) === 70 && state.item('elixir_mana') === 0, 'лунный эликсир из сумки: +60% маны');
-    ok(drinkOutside(state, 'resin_flask').reason === 'combat' && state.item('resin_flask') === 1, 'смоляная склянка вне боя не применяется');
+    ok((await acts.drink('resin_flask')).reason === 'unknown' && state.item('resin_flask') === 1, 'смоляная склянка вне боя не применяется');
     const w = makeWorld({ t: 0 }); w.abilities.unlock('telekinesis', 1);
     w.state.addItem('elixir_life', 6); vitals.setHp(w.state, 10);
-    drinkOutside(w.state, 'elixir_life'); vitals.setHp(w.state, 10);
+    await new PlayerActions({ state: w.state }).drink('elixir_life'); vitals.setHp(w.state, 10);
     const cm = new CombatManager({ enemyType: 'forest_scavenger', state: w.state, abilities: w.abilities });
     let n = 0; while (cm.usePotion('elixir_life').ok && n < 10) { n++; cm.hero.hp = 10; }
     ok(n === 4, 'лимит 4 расходника за бой; зелье, выпитое вне боя, его не уменьшает');
@@ -686,11 +693,13 @@ console.log('\n[v0.9] Общие HP и мана, зелья, обучение б
     ok(back.mana === 33.5 && back.hp === 0, 'снимок → состояние: мана и 0 HP сохраняются');
     const base = PM.emptySnapshot();
     const p = PM.diffSnapshots(base, snap);
-    ok(p.mana?.value === 33.5 && p.hp?.value === 0 && PM.isMinorPatch({ mana: p.mana, hp: p.hp }), 'diff: мана и HP — «мелкие» изменения');
-    const s1 = PM.applyPatch(base, { hp: { value: 999 }, mana: { value: 500 } });
-    ok(s1.hp === 120 && s1.mana === 100, 'сервер обрезает HP/ману до максимума уровня');
-    const s2 = PM.applyPatch(base, { mana: { value: null } });
-    ok(s2.mana === null, 'null остаётся «полным запасом»');
+    ok(!('mana' in p) && !('hp' in p), 'v0.12.0: diff не содержит HP и ману — их записывает только сервер');
+    ok(PM.isMinorPatch({ mana_spent: 5, pos: { x: 1, y: 1 }, play: 5 }) && !PM.isMinorPatch({ inv: { coins: 1 }, mana_spent: 1 }), 'mana_spent — «мелкое» изменение');
+    const s1 = PM.applyPatch(base, { hp: { value: 5 }, mana: { value: 5 } });
+    ok(s1.hp === base.hp && s1.mana === base.mana, 'клиент не может записать HP и ману');
+    const s2 = PM.applyPatch(base, { mana_spent: 30 });
+    ok(s2.mana === 70, 'mana_spent вычитается из маны (null = полный запас)');
+    ok(PM.applyPatch(base, { mana_spent: 99999 }).mana === 0 && PM.applyPatch(base, { mana_spent: -50 }).mana === 100, 'mana_spent ограничен: не ниже 0 маны, отрицательное не лечит');
     const old = PM.fillDefaults({ ...PM.emptySnapshot(), mana: undefined, meta: {} }).snapshot;
     ok(old.mana === null && vitals.mana({ data: PM.fromSnapshot(old), heroStats: () => ({ maxHp: 120, maxMana: 100 }) }) === 100, 'старое сохранение без маны → полный запас');
   }

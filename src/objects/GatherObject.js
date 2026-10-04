@@ -82,7 +82,7 @@ export class GatherObject extends InteractiveObject {
   }
 
   collect() {
-    if (this.removed) { if (this.paid) vitals.restoreMana(this.state, this.paid); this.paid = 0; return; }   // сбор отменён — мана возвращается
+    if (this.removed) { if (this.paid) vitals.refundMana(this.state, this.paid); this.paid = 0; return; }   // сбор отменён — мана возвращается
     this.paid = 0;
     const sc = this.scene;
     this.state.addItem(this.cfg.res, this.amount);

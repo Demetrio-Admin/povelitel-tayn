@@ -35,6 +35,9 @@ export function createDefaultState(heroId = DEFAULT_HERO_ID) {
     safePoint: { ...WORLD.defaultSafePoint },
     hp: null,   // null = полное (старые сохранения и новый персонаж); дальше — число 0…max (v0.9: общее для мира и боя)
     mana: null, // v0.9: текущая мана, та же семантика
+    manaSpent: 0,      // v0.12.0: сколько маны потрачено за сеанс (прирост отправляется серверу как mana_spent)
+    vitalsClock: null, // v0.12.0: мс, на которые верны hp и mana (настенные часы клиента)
+    combatSince: null, // v0.12.0: сервер знает, что бой идёт (HP и мана стоят)
     stats: { playTimeMs: 0, combats: [] },
     tutorial: [], // id показанных подсказок (TutorialSystem)
   };

@@ -14,6 +14,7 @@ import { FakeSupabase, pg } from './helpers/fake-supabase.mjs';
 import { heroById } from '../src/config/heroes.js';
 import { PlayerActions } from '../src/systems/PlayerActions.js';
 import { advanceWorld, serverActionBusy } from '../src/systems/WorldClock.js';
+import * as vitalsMod from '../src/state/vitals.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BACKEND = process.env.BACKEND || 'model';
@@ -38,6 +39,10 @@ function device(srv, storage = memStorage()) {
   const fire = async () => { const live = timers.filter(t => t.live); live.forEach(t => { t.live = false; }); for (const t of live) await t.f(); };
   return { state, api, session, storage, timers, fire };
 }
+/** v0.12.0: HP и ману задаёт сервер. Выставляем их там «прямо сейчас» и подтягиваем на устройство (пустое сохранение с force). */
+async function setVitals(dev, v) { srv.setVitals(dev.session.userId, v); await dev.session.flush({ force: true }); }
+const near = (a, b, eps = 1.5) => Math.abs(a - b) <= eps;   // настоящий Postgres считает по реальному времени: за тест набегают доли секунды
+
 /** Немного игры: награда, событие, предмет — как это делает игра (методы GameState + save()). */
 function play(st, { xp = 70, coins = 15, event = 'combat_intro_01' } = {}) {
   st.applyReward({ heroXP: xp, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 1 }, coins });
@@ -261,21 +266,27 @@ console.log('\nv0.9. Общие HP/мана на сервере, лечение 
   const d = device(srv);
   await d.session.playAsGuest('witch');
   const st = d.state;
-  ok(st.data.mana === null && st.data.hp === null, 'новый персонаж: HP и мана «полные» (null)');
-  st.data.mana = 12.5; st.data.hp = 0.0; st.save(); await d.session.flush();
+  ok(st.data.mana === 100 && st.data.hp === 120, 'новый персонаж: HP и мана полные (сервер хранит числа)');
+  await setVitals(d, { hp: 0, mana: 12.5 });
   const other = device(srv, d.storage); await other.session.restore();
-  ok(other.state.data.mana === 12.5 && other.state.data.hp === 0, 'мана и числовой 0 HP пережили сохранение и загрузку на другом устройстве');
-  st.data.mana = 999; st.save(); await d.session.flush();
-  ok(st.data.mana === 100, 'сервер не принимает ману больше максимума уровня');
+  ok(near(other.state.data.mana, 12.5) && near(other.state.data.hp, 0), 'мана и числовой 0 HP на сервере видны на другом устройстве');
+  st.data.mana = 999; st.data.hp = 999; st.save(); await d.session.flush({ force: true });
+  ok(near(st.data.mana, 12.5) && near(st.data.hp, 0), 'клиент не может записать ни ману, ни HP: сервер вернул свои числа');
+  // потраченная мана уходит дельтой mana_spent
+  await setVitals(d, { hp: 40, mana: 50 });
+  ok(vitalsMod.spendMana(st, 8) && st.data.manaSpent === 8, 'мана списана на устройстве (счётчик потраченного = 8)');
+  await d.session.flush();
+  ok(near(srv.rawVitals(d.session.userId).mana, 42) && near(st.data.mana, 42), 'сервер вычел потраченную ману (mana_spent) и вернул остаток');
+  await d.session.flush({ force: true });
+  ok(near(srv.rawVitals(d.session.userId).mana, 42), 'повторная отправка не списывает ману второй раз');
   // лечение: монет нет — ничего не меняется
-  st.data.hp = 40; st.save(); await d.session.flush();
   const poor = await d.session.runAction({ op: 'heal' });
-  ok(!poor.ok && poor.reason === 'coins' && st.data.hp === 40 && st.item('coins') === 0, 'лечение без монет: отказ, HP и монеты прежние');
+  ok(!poor.ok && poor.reason === 'coins' && near(st.data.hp, 40) && st.item('coins') === 0, 'лечение без монет: отказ, HP и монеты прежние');
   st.addItem('coins', 20); st.save();
   const healed = await d.session.runAction({ op: 'heal' });
   ok(healed.ok && healed.price === 8 && st.data.hp === 120 && st.item('coins') === 12, 'лечение: −8 монет и полное HP одной операцией сервера');
   // ответ потерялся: повтор того же id не лечит и не списывает второй раз
-  st.data.hp = 100; st.save(); await d.session.flush();
+  await setVitals(d, { hp: 100, mana: 50 });
   srv.loseNextResponse = true;
   const lostReply = await d.session.runAction({ op: 'heal', id: 'heal-retry-0001' });
   const again = device(srv, d.storage); await again.session.restore();
@@ -301,10 +312,11 @@ console.log('\nv0.9.1. Действие сервера, пока мир «жив
     let last = null;
     const id = setInterval(() => {
       const busy = actions ? serverActionBusy({ actions }) : false;
-      const before = JSON.stringify([st.data.stats.playTimeMs, st.data.hp, st.data.mana]);
-      advanceWorld(st, 16, { frozen: freeze && busy, active: !(freeze && busy), inHouse: true });
+      const before = st.data.stats.playTimeMs;
+      srv.advance(16);   // часы идут: клиент и (модельный) сервер восстанавливают HP и ману по одному времени
+      advanceWorld(st, 16, { frozen: freeze && busy, inHouse: true, nowMs: srv.now() });
       w.frames++;
-      const after = JSON.stringify([st.data.stats.playTimeMs, st.data.hp, st.data.mana]);
+      const after = st.data.stats.playTimeMs;
       if (busy && before !== after) w.changedWhileBusy++;
       last = after;
     }, 4);
@@ -316,8 +328,9 @@ console.log('\nv0.9.1. Действие сервера, пока мир «жив
   await d.session.playAsGuest('witch');
   const st = d.state;
   const actions = new PlayerActions({ state: st, getSession: () => d.session });
-  st.markEvent('unlock_telekinesis_1'); st.addItem('coins', 40); st.data.hp = 50; st.data.mana = 10; st.save();
+  st.markEvent('unlock_telekinesis_1'); st.addItem('coins', 40); st.save();
   await d.session.flush();
+  await setVitals(d, { hp: 50, mana: 10 });
 
   // 1) медленный сервер (500 мс) + мир идёт: стартовый набор
   srv.delayMs = 500;
@@ -328,7 +341,7 @@ console.log('\nv0.9.1. Действие сервера, пока мир «жив
   const kit = await actions.starterKit();
   ok(kit.ok, `стартовый набор выдан при медленном сервере и живом мире (ответ: ${JSON.stringify(kit)})`);
   ok(rpcCalls(from, 'sync_player') <= 1 && rpcCalls(from, 'player_action') === 1, `перед действием не больше одного sync_player, затем ровно один player_action (sync: ${rpcCalls(from, 'sync_player')}, action: ${rpcCalls(from, 'player_action')})`);
-  ok(world.changedWhileBusy === 0, 'пока действие выполняется, время игры, HP и мана не меняются (мир стоит)');
+  ok(world.changedWhileBusy === 0, 'пока действие выполняется, время игры не идёт (мир стоит)');
   ok(st.item('elixir_life') === 1 && st.item('elixir_mana') === 1 && st.hasEvent('mirra_starter_kit'), 'в сумке 1 Настой жизни и 1 Лунный эликсир, событие отмечено');
   await new Promise(r => setTimeout(r, 40));
   ok(st.data.stats.playTimeMs > 0 && world.frames > 10, 'после действия мир снова идёт');
@@ -339,7 +352,7 @@ console.log('\nv0.9.1. Действие сервера, пока мир «жив
   ok(!kit2.ok && kit2.reason === 'already' && st.item('elixir_life') === 1, 'повторно набор не выдаётся (reason: already, не network)');
 
   // 3) лечение при медленном сервере: player_action один раз, полное HP, списаны монеты по цене сервера
-  st.data.hp = 37; st.save();
+  await setVitals(d, { hp: 37, mana: 10 });
   const coins0 = st.item('coins');
   from = srv.calls.length;
   const heal = await actions.heal();
@@ -347,7 +360,7 @@ console.log('\nv0.9.1. Действие сервера, пока мир «жив
   ok(rpcCalls(from, 'player_action') === 1 && rpcCalls(from, 'sync_player') <= 1, 'лечение: один sync_player перед действием и один player_action');
 
   // 4) двойное нажатие: второе — «занято», сервер получает одно действие, одно списание
-  st.data.hp = 60; st.save();
+  await setVitals(d, { hp: 60, mana: 10 });
   const coins1 = st.item('coins');
   from = srv.calls.length;
   const [h1, h2] = await Promise.all([actions.heal(), actions.heal()]);
@@ -361,7 +374,7 @@ console.log('\nv0.9.1. Действие сервера, пока мир «жив
 
   // 6) даже если что-то меняет состояние во время запроса (мир не заморожен), flush — барьер, а не «догонялки»:
   //    до v0.9.1 это давало 5 sync_player подряд и ложное reason:'network' без вызова player_action
-  st.data.hp = 80; st.save();
+  await setVitals(d, { hp: 80, mana: 10 });
   const live = runWorld(st, null, { freeze: false });
   await new Promise(r => setTimeout(r, 30));
   from = srv.calls.length;
@@ -384,16 +397,16 @@ console.log('\nv0.9.1. Действие сервера, пока мир «жив
   // 8) ошибки различаются: сервер 5xx/4xx — 'server', без связи — 'network'
   const origRoute = srv.route;
   srv.route = async function (m, u, h, b) { return u.pathname.endsWith('/player_action') ? this.reply(500, { code: 'XX000', message: 'boom' }) : origRoute.call(this, m, u, h, b); };
-  re.state.data.hp = 70; re.state.save();
+  re.state.addItem('coins', 1); re.state.save();
   const e500 = await re.session.runAction({ op: 'heal' });
   srv.route = async function (m, u, h, b) { return u.pathname.endsWith('/sync_player') ? this.reply(400, { code: '22023', message: 'bad_patch' }) : origRoute.call(this, m, u, h, b); };
-  re.state.data.hp = 71; re.state.save();
+  re.state.addItem('coins', 1); re.state.save();
   const e400 = await re.session.runAction({ op: 'heal' });
   srv.route = origRoute;
   ok(e500.reason === 'server' && e500.error?.rpc === 'player_action' && e500.error?.status === 500 && re.session.status === 'ready', `ошибка сервера в player_action — reason 'server' с деталями, не «Нет связи» (${JSON.stringify(e500)})`);
   ok(e400.reason === 'server' && e400.error?.rpc === 'sync_player' && e400.error?.status === 400, `сервер отверг sync_player — reason 'server', не network (${JSON.stringify(e400)})`);
   srv.offline = true;
-  re.state.data.hp = 72; re.state.save();
+  re.state.addItem('coins', 1); re.state.save();
   const eNet = await re.session.runAction({ op: 'heal' });
   srv.offline = false;
   ok(!eNet.ok && eNet.reason === 'network', 'настоящая потеря связи — reason network');
@@ -485,17 +498,107 @@ console.log('\nv0.10.0. Крафт и сюжетные предметы — од
   ok(u1.ok && !u2.ok && u2.reason === 'done' && re.state.hasEvent('lunar_quest_complete') && re.state.item('lunar_wick') === 0 && re.state.data.heroXP === before + 50
     && re.state.data.schoolXP.telekinesis >= 150 && re.state.item('lunar_shard') >= 5, 'фитиль у алтаря: свет, +50 опыта и гарантия цены ТК II — один раз');
   // ремонт: без маны ничего не меняется
-  re.state.markEvent('chapter_trial_defeated'); re.state.markEvent('unlock_seal_1'); re.state.addItem('restoration_bundle', 1); re.state.data.mana = 5; re.state.save(); await re.session.flush();
+  re.state.markEvent('chapter_trial_defeated'); re.state.markEvent('unlock_seal_1'); re.state.addItem('restoration_bundle', 1); re.state.save(); await re.session.flush();
+  await setVitals(re, { hp: null, mana: 5 });
   const m1 = await re.session.runAction({ op: 'use', item: 'restoration_bundle' });
   ok(!m1.ok && m1.reason === 'mana' && re.state.item('restoration_bundle') === 1 && !re.state.hasEvent('chapter_1_complete'), 'ремонт без 20 маны: связка и узел не тронуты');
-  re.state.data.mana = 50; re.state.save(); await re.session.flush();
+  await setVitals(re, { hp: null, mana: 50 });
   const m2 = await re.session.runAction({ op: 'use', item: 'restoration_bundle' });
-  ok(m2.ok && re.state.hasEvent('chapter_1_complete') && re.state.item('restoration_bundle') === 0 && Math.abs(re.state.data.mana - 30) < 1e-9, 'ремонт: связка и ровно 20 маны одной операцией, узел восстановлен');
+  ok(m2.ok && re.state.hasEvent('chapter_1_complete') && re.state.item('restoration_bundle') === 0 && near(re.state.data.mana, 30), 'ремонт: связка и ровно 20 маны одной операцией, узел восстановлен');
   // миграция: ядро Стража — только если его нет и связку не делали; повтор ничего не даёт
   const g = device(srv); await g.session.playAsGuest('witch');
   g.state.markEnemyDefeated('forest_guardian_01'); g.state.save(); await g.session.flush();
   const g1 = await g.session.runAction({ op: 'migrate_v10' }), g2 = await g.session.runAction({ op: 'migrate_v10' });
   ok(g1.ok && g1.core === 1 && !g2.ok && g2.reason === 'already' && g.state.item('rare_core') === 1, 'миграция старого сейва: одно ядро Стража, повтор не выдаёт второе');
+}
+
+console.log('\nv0.12.0. HP и мана на сервере: восстановление по времени сервера (в том числе офлайн), бой, зелья');
+{
+  const d = device(srv);
+  await d.session.playAsGuest('witch');
+  const st = d.state, uid = d.session.userId;
+  const acts = new PlayerActions({ state: st, getSession: () => d.session });
+  const reload = async () => { const x = device(srv, d.storage); await x.session.restore(); return x; };
+  const HOUSE = { x: 700, y: 5000 }, FOREST = { x: 2000, y: 2000 };
+
+  // 1) офлайн: игрок ушёл, прошла минута — HP 1/с, мана 0,5/с в мире
+  st.data.player = { ...FOREST }; st.save(); await d.session.flush();
+  await setVitals(d, { hp: 10, mana: 0 });
+  srv.timeTravel(uid, 60);
+  let x = await reload();
+  ok(near(x.state.data.hp, 70) && near(x.state.data.mana, 30), `минута офлайн в лесу: +60 HP, +30 маны (HP ${x.state.data.hp.toFixed(1)}, мана ${x.state.data.mana.toFixed(1)})`);
+  // 2) дом Мирры: мана 2/с, HP 1/с
+  st.data.player = { ...HOUSE }; st.save(); await d.session.flush();
+  await setVitals(d, { hp: 10, mana: 0 });
+  srv.timeTravel(uid, 30);
+  x = await reload();
+  ok(near(x.state.data.mana, 60) && near(x.state.data.hp, 40), 'полминуты офлайн в доме Мирры: мана +60 (2/с), HP +30');
+  // 3) предел: сутки офлайн = полный запас, не больше максимума
+  srv.timeTravel(uid, 86400);
+  x = await reload();
+  ok(x.state.data.hp === 120 && x.state.data.mana === 100, 'сутки офлайн: ровно максимум, без превышения');
+
+  // 4) бой: восстановление стоит, лечение и зелья закрыты, потраченная мана не считается
+  st.data.player = { ...FOREST }; st.addItem('coins', 50); st.addItem('elixir_life', 2); st.save(); await d.session.flush();
+  await setVitals(d, { hp: 50, mana: 40 });
+  const cs = await acts.combatStart();
+  ok(cs.ok && st.data.combatSince != null && srv.rawVitals(uid).combat, 'combat_start: сервер знает о бое');
+  srv.timeTravel(uid, 120);
+  await d.session.flush({ force: true });
+  ok(near(st.data.hp, 50) && near(st.data.mana, 40), 'во время боя время не засчитывается (две минуты — ни HP, ни маны)');
+  const h = await acts.heal(), dr = await acts.drink('elixir_life');
+  ok(!h.ok && h.reason === 'combat' && !dr.ok && dr.reason === 'combat' && st.item('elixir_life') === 2 && st.item('coins') >= 50, 'в бою лечение у Мирры и зелья из сумки отказывают, ничего не списано');
+  vitalsMod.spendMana(st, 5); await d.session.flush();
+  ok(near(srv.rawVitals(uid).mana, 40), 'мана, потраченная в бою, mana_spent не меняет (итог сообщает конец боя)');
+  // 5) конец боя: победа — полное HP, мана — остаток; повтор не работает
+  const win = await acts.combatEnd('victory', 33.5);
+  ok(win.ok && st.data.hp === 120 && near(st.data.mana, 33.5) && st.data.combatSince == null && !srv.rawVitals(uid).combat, 'победа: HP полное, мана — остаток, восстановление снова идёт');
+  const dup = await acts.combatEnd('victory', 100);
+  ok(!dup.ok && dup.reason === 'no_combat' && near(st.data.mana, 33.5), 'повторный конец боя ничего не даёт (боя нет)');
+  await acts.combatStart(); const lose = await acts.combatEnd('defeat', 7);
+  ok(lose.ok && st.data.hp === 24 && near(st.data.mana, 7), 'поражение: 20% максимума HP (24 из 120), мана — остаток');
+  await acts.combatStart();
+  const bad = await acts.run({ op: 'combat_end', outcome: 'cheat', mana: 100 });
+  ok(!bad.ok && bad.reason === 'bad_outcome' && srv.rawVitals(uid).combat, 'неизвестный исход боя отклонён');
+  const ret = await acts.combatEnd('retreat');
+  ok(ret.ok && st.data.hp >= 24 && st.data.hp < 40, 'отступление: HP не ниже доли поражения, лишнего не даёт');
+  // 6) бой, о конце которого сервер не узнал: через 15 минут — отступление, дальше время идёт
+  await setVitals(d, { hp: 5, mana: 10 });
+  await acts.combatStart();
+  srv.timeTravel(uid, 14 * 60);
+  await d.session.flush({ force: true });
+  ok(near(st.data.hp, 5, 2) && st.data.combatSince != null, '14 минут боя без вестей: сервер ещё ждёт итога');
+  srv.timeTravel(uid, 3 * 60);
+  await d.session.flush({ force: true });
+  ok(st.data.combatSince == null && st.data.hp >= 24 && st.data.hp < 24 + 125, 'через 15 минут бой считается отступлением: HP не ниже 24, затем обычное восстановление (+2 минуты)');
+
+  // 7) зелья вне боя: расход и результат решает сервер
+  st.addItem('elixir_mana', 1); st.save();
+  await setVitals(d, { hp: 100, mana: 100 });
+  const full = await acts.drink('elixir_mana');
+  ok(!full.ok && full.reason === 'full' && st.item('elixir_life') === 2, 'полный запас: зелье не тратится');
+  const dh = await acts.drink('elixir_life');
+  ok(dh.ok && dh.kind === 'heal' && near(dh.amount, 20, 1) && st.item('elixir_life') === 1 && near(st.data.hp, 120), 'настой жизни: добавлено только недостающее, списан один');
+  ok((await acts.drink('resin_flask')).reason === 'unknown' && (await acts.drink('nonsense')).reason === 'unknown', 'боевая склянка и выдуманный предмет вне боя не работают');
+  await setVitals(d, { hp: 120, mana: 10 });
+  const dm = await acts.drink('elixir_mana');
+  ok(dm.ok && near(dm.amount, 60, 1) && near(st.data.mana, 70), 'лунный эликсир: +60% маны');
+
+  // 8) мана, потраченная после отчёта, не пропадает при ответе сервера
+  await setVitals(d, { hp: 120, mana: 80 });
+  vitalsMod.spendMana(st, 10);
+  const pendingBefore = st.data.mana;
+  await d.session.flush({ force: true });
+  ok(near(st.data.mana, 70) && near(pendingBefore, 70) && near(srv.rawVitals(uid).mana, 70), 'потраченная мана учтена один раз: на устройстве и на сервере 70');
+  // 9) новый уровень не лечит
+  await setVitals(d, { hp: 50, mana: 50 });
+  st.applyReward({ heroXP: 100 }); st.save(); await d.session.flush();
+  ok(st.data.heroLevel >= 2 && near(st.data.hp, 50) && near(st.data.mana, 50), 'повышение уровня не восстанавливает HP и ману втихую');
+  // 10) нет связи: бой не начинается
+  srv.offline = true;
+  const off = await acts.combatStart();
+  srv.offline = false; await d.session.retryNow();
+  ok(!off.ok && off.reason === 'network' && st.data.combatSince == null, 'без связи бой не начинается (сервер не узнал о нём)');
 }
 
 console.log('\n13–14. Старой «облачной» механики больше нет');

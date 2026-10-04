@@ -13,6 +13,7 @@ export async function startFakeHttp({ backend = 'model', port = 8174, delayMs = 
     if (req.method === 'OPTIONS') { res.writeHead(204, CORS); res.end(); return; }
     const chunks = []; for await (const c of req) chunks.push(c);
     const body = chunks.length ? Buffer.concat(chunks).toString() : undefined;
+    srv.clock = Math.max(srv.clock, Date.now());   // v0.12.0: по HTTP время сервера идёт как настоящее (HP и мана восстанавливаются по нему)
     try {
       const r = await srv.fetch(srv.url + req.url, { method: req.method, headers: req.headers, body });
       const text = await r.text();

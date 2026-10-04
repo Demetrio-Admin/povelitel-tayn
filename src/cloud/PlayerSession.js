@@ -11,7 +11,7 @@
 //  • Нет связи — игра блокируется окном «Нет соединения», изменения ждут в памяти, параллельного локального сейва нет.
 import { CloudError, errorText, isNetworkError, isAuthError } from './api.js';
 import { validateNickname, checkPasswordPair, normalizeNickname, loginEmail } from './nickname.js';
-import { toSnapshot, fromSnapshot, diffSnapshots, applyPatch, fillDefaults, isMinorPatch, maxVitals, STARTER_KIT } from './playerModel.js';
+import { toSnapshot, fromSnapshot, diffSnapshots, applyPatch, fillDefaults, isMinorPatch, inHouse, maxVitals, STARTER_KIT } from './playerModel.js';
 
 export const TOKENS_KEY = 'witch_rpg_auth_v2';
 export const DEFAULT_HERO = 'witch';
@@ -40,7 +40,8 @@ export class PlayerSession {
     this.saving = 'saved';     // saved | saving | offline
     this.meta = {};            // ник, герой, даты (из ответа сервера)
     this.base = null;          // последний снимок с сервера
-    this.inflight = null;      // { id, patch, sent } — отправка, ответ на которую ещё не пришёл (или потерялся)
+    this.inflight = null;      // { id, patch, sent, spentTo } — отправка, ответ на которую ещё не пришёл (или потерялся)
+    this.spentAcked = 0;       // v0.12.0: сколько из data.manaSpent сервер уже учёл (mana_spent)
     this.timer = null; this.timerMinor = false;
     this.retryTimer = null; this.retryN = 0;
     this.busy = null;          // текущий flush()
@@ -128,6 +129,8 @@ export class PlayerSession {
     this.base = snapshot;
     this.meta = meta;
     this.state.setData(fromSnapshot(snapshot, this.state.data));
+    this.state.data.manaSpent = 0; this.spentAcked = 0;
+    this.state.data.vitalsClock = this.now();
     this.emit('profile');
   }
 
@@ -290,12 +293,45 @@ export class PlayerSession {
     this._setSaving('saved');
   }
 
+  // ---------------------------------------------------------------- v0.12.0: HP и мана на сервере
+  /** Мана, потраченная после последнего учтённого сервером отчёта. */
+  _pendingSpent() { return Math.max(0, (this.state.data.manaSpent || 0) - this.spentAcked); }
+
+  /** Что отправить серверу: изменения снимка + потраченная мана (mana_spent). HP и ману клиент не записывает. */
+  _patchFor(snap) {
+    const patch = diffSnapshots(this.base, snap);
+    const spent = Math.round(this._pendingSpent() * 1000) / 1000;
+    if (spent > 0) patch.mana_spent = spent;
+    return patch;
+  }
+
+  /**
+   * Принять ответ сервера. later — изменения игры за время запроса, кладутся поверх. HP и ману берём у сервера, но:
+   *  • ещё не отправленная мана (потрачена после отчёта) вычитается;
+   *  • идёт бой — его HP и ману ведёт боевая сцена, ответ сервера их не трогает.
+   */
+  _adopt(snapshot, later = null) {
+    const before = this.state.data;
+    const keep = before.combatSince != null && snapshot.combatSince != null ? { hp: before.hp, mana: before.mana } : null;
+    this.state.setData(fromSnapshot(!isEmpty(later) ? applyPatch(snapshot, later) : snapshot, before));
+    const d = this.state.data;
+    d.vitalsClock = this.now();
+    if (keep) { d.hp = keep.hp; d.mana = keep.mana; return; }
+    const unsent = this._pendingSpent();
+    if (unsent > 0 && d.combatSince == null) {
+      const cur = Number.isFinite(d.mana) ? d.mana : maxVitals(d.heroLevel).mana;
+      d.mana = Math.max(0, cur - unsent);
+    }
+  }
+
   // ---------------------------------------------------------------- автосохранение
   onStateSaved() {
     if (this.status !== 'ready' || !this.base) return;
-    const patch = diffSnapshots(this.base, toSnapshot(this.state.data));
+    const patch = this._patchFor(toSnapshot(this.state.data));
     if (isEmpty(patch)) return;
-    const minor = isMinorPatch(patch);
+    // позиция решает, с какой скоростью сервер восстанавливает ману (дом Мирры): вход и выход из дома отправляем сразу
+    const houseChanged = !!patch.pos && inHouse(patch.pos) !== inHouse(this.base.pos);
+    const minor = isMinorPatch(patch) && !houseChanged;
     // важное (награда, предмет, событие) — почти сразу; позиция и время игры — пореже
     if (this.timer && (!this.timerMinor || minor)) return;
     if (this.timer) this.clearTimer(this.timer);
@@ -304,7 +340,7 @@ export class PlayerSession {
   }
 
   /** Есть ли изменения, которых ещё нет на сервере. */
-  get dirty() { return !!this.inflight || (!!this.base && !isEmpty(diffSnapshots(this.base, toSnapshot(this.state.data)))); }
+  get dirty() { return !!this.inflight || (!!this.base && !isEmpty(this._patchFor(toSnapshot(this.state.data)))); }
 
   /**
    * Отправляет изменения на сервер. true — на сервере всё, что было изменено ДО вызова flush().
@@ -323,7 +359,7 @@ export class PlayerSession {
       const target = toSnapshot(this.state.data);
       const ok = await this.busy.catch(() => false);
       if (!ok) return false;
-      if (!this.base || (!force && isEmpty(diffSnapshots(this.base, target)))) return true;
+      if (!this.base || (!force && isEmpty(this._patchFor(target)))) return true;
     }
     if (this.timer) { this.clearTimer(this.timer); this.timer = null; }
     this.busy = this._flushLoop(keepalive, force);
@@ -337,9 +373,9 @@ export class PlayerSession {
       const resend = !!this.inflight;
       if (!resend) {
         const sent = toSnapshot(this.state.data);
-        const patch = diffSnapshots(this.base, sent);
+        const patch = this._patchFor(sent);
         if (isEmpty(patch) && !force) { this._setSaving('saved'); return true; }
-        this.inflight = { id: randomId(), patch, sent };
+        this.inflight = { id: randomId(), patch, sent, spentTo: this.spentAcked + (patch.mana_spent || 0) };
       }
       force = false;
       const { id, patch, sent } = this.inflight;
@@ -362,13 +398,14 @@ export class PlayerSession {
       const { snapshot, meta } = fillDefaults(raw);
       this.base = snapshot;
       this.meta = { ...this.meta, ...meta };
+      this.spentAcked = Math.max(this.spentAcked, this.inflight.spentTo);
       this.inflight = null;
-      this.state.setData(fromSnapshot(applyPatch(snapshot, later), this.state.data));
+      this._adopt(snapshot, later);
       this._backOnline();
       // отправленный снимок сделан уже внутри этого вызова — всё, что было до flush(), на сервере
       if (!resend || isEmpty(later)) {
         this._setSaving('saved');
-        if (!isEmpty(later)) this.onStateSaved();   // свежие изменения — обычным автосохранением
+        if (!isEmpty(later) || this._pendingSpent() > 0) this.onStateSaved();   // свежие изменения — обычным автосохранением
         return true;
       }
     }
@@ -406,14 +443,13 @@ export class PlayerSession {
       }
     }
     if (!raw) return { ok: false, reason: 'server', error: { rpc: 'player_action', code: 'empty_response', status: 200 } };
-    // пока ждали, игра могла что-то изменить (не HP и не ману — их задаёт действие)
+    // пока ждали, игра могла что-то изменить (HP и ману задаёт сервер)
     const later = diffSnapshots(sent, toSnapshot(this.state.data));
-    delete later.hp; delete later.mana;
     const { snapshot, meta, action: res } = fillDefaults(raw);
     this.base = snapshot;
     this.meta = { ...this.meta, ...meta };
-    this.state.setData(fromSnapshot(applyPatch(snapshot, later), this.state.data));
-    if (Object.keys(later).length) this.onStateSaved();
+    this._adopt(snapshot, later);
+    if (Object.keys(later).length || this._pendingSpent() > 0) this.onStateSaved();
     if (res?.duplicate) return res;      // v0.10: сервер вернул сохранённый результат первой попытки
     if (res?.reason === 'duplicate') {   // ответ на первую попытку потерялся (действие до v0.10): итог видно по состоянию
       const ok = act.op === 'heal' ? snapshot.hp === maxVitals(snapshot.level).hp : snapshot.quests.includes(STARTER_KIT.event);

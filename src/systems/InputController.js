@@ -45,6 +45,10 @@ export class InputController {
   }
 
   update() {
+    if (this.handlers.isModal?.()) {
+      this.input.kb.x = this.input.kb.y = this.input.move.x = this.input.move.y = 0;
+      return;
+    }
     const k = this.keys;
     let x = 0, y = 0;
     if (k.left.isDown || k.left2.isDown) x -= 1;

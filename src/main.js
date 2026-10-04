@@ -1,3 +1,12 @@
+import '@fontsource/pt-sans/cyrillic-400.css';
+import '@fontsource/pt-sans/cyrillic-700.css';
+import '@fontsource/pt-sans/latin-400.css';
+import '@fontsource/pt-sans/latin-700.css';
+import '@fontsource/philosopher/cyrillic-700.css';
+import '@fontsource/philosopher/latin-700.css';
+import './ui/chat.css';
+import '@fontsource/philosopher/cyrillic-400.css';
+import '@fontsource/philosopher/latin-400.css';
 import Phaser from 'phaser';
 import { VIEW } from './config/game.config.js';
 import { BootScene } from './scenes/BootScene.js';

@@ -268,6 +268,7 @@ export function showProfile(session, { onLogout, onSwitched, onClose, onRegister
       card.append(
         el('h2', { text: 'Профиль' }),
         el('div', { class: 'acc-big', text: session.nickname }), lvl, status,
+        ...(session.meta.playerId ? [el('div', { class: 'acc-kv' }, el('span', { text: 'ID игрока' }), el('b', { text: session.meta.playerId }))] : []),
         el('div', { class: 'acc-kv' }, el('span', { text: 'В игре с' }), el('b', { text: fmtDate(session.meta.registeredAt || session.meta.createdAt) })),
         el('div', { class: 'acc-kv' }, el('span', { text: 'Время в игре' }), el('b', { text: fmtPlay(session.state.data.stats?.playTimeMs) })),
         el('div', { class: 'acc-row' },

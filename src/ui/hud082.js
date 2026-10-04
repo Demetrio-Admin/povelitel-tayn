@@ -250,7 +250,7 @@ export const hud082 = {
 
   onMenuItem(item) {
     if (!this.modal?.menu) return;
-    this.closeMenu(() => (item.stub ? this.openStub(item) : this.openSettings()));
+    this.closeMenu(() => item.id === 'chat' ? this.openChat() : (item.stub ? this.openStub(item) : this.openSettings()));
   },
 
   /** Раздел в разработке: понятный ответ на нажатие, без каких-либо изменений в игре. */
@@ -289,7 +289,7 @@ export const hud082 = {
         c.add(cap);
         cy = Math.max(cy + 132, barY + 30 + cap.height + 14);
         if (ses?.registered && ses.nickname) {
-          const nick = this.add.text(x, cy, `Ник: ${ses.nickname}`, { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, shadow: SH, wordWrap: { width: w, useAdvancedWrap: true } });
+          const nick = this.add.text(x, cy, `Ник: ${ses.nickname}${ses.meta.playerId ? ` · ID ${ses.meta.playerId}` : ''}`, { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, shadow: SH, wordWrap: { width: w, useAdvancedWrap: true } });
           c.add(nick); cy += nick.height + 12;
         } else if (ses) {
           const g2 = this.add.text(x, cy, 'Гость — прогресс хранится на этом устройстве', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, wordWrap: { width: w } });

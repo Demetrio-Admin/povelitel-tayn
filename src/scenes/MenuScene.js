@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { VIEW, COLORS } from '../config/game.config.js';
 import { services, resetProgress, reloadToMenu, heroIdNow } from '../services.js';
 import { showLogin, showProfile, showRegister, showLoading, showNotice } from '../ui/accountUI.js';
+import { showChat } from '../ui/ChatWindow.js';
 import { errorText, CloudError } from '../cloud/api.js';
 import { startGame } from './PreloadScene.js';
 import { buildSettingsPanel } from '../ui/SettingsPanel.js';
@@ -52,7 +53,7 @@ export class MenuScene extends Phaser.Scene {
 
     const { state } = services;
     const localSave = !session && state.hasSave() && state.data.completedEvents.length > 0;
-    this.mode = session?.ready ? 'continue-online'
+    this.mode = session?.status === 'banned' ? 'restricted' : session?.ready ? 'continue-online'
       : session ? 'new-online'
         : (localSave && !this.newGameMode) ? 'continue-local' : 'new-local';
     const isNew = this.mode.startsWith('new');
@@ -64,7 +65,12 @@ export class MenuScene extends Phaser.Scene {
       onChange: () => { services.audio.unlock(); services.audio.play('ui_click'); },
     });
 
-    if (this.mode === 'continue-online') {
+    if (this.mode === 'restricted') {
+      this.line('Доступ к игре ограничен', COLORS.textGold, 250);
+      this.line('Поддержка и обжалование доступны', COLORS.textDim, 292, UI.type.small);
+      this.primary = this.button(PRIMARY_Y, 'Открыть поддержку', true, () => this.openRestrictedChat(), PRIMARY_H);
+      this.accountButton = this.pair('Профиль', () => this.openRestrictedChat(), 'Выйти', async () => { await session.logout(); reloadToMenu(); });
+    } else if (this.mode === 'continue-online') {
       this.line(session.registered ? `${session.nickname} · уровень ${session.level}` : `Гость · уровень ${session.level}`, COLORS.textGold, 250);
       this.line(session.registered ? 'Прогресс хранится на сервере' : 'Прогресс гостя хранится на сервере', COLORS.textDim, 292, UI.type.small);
       this.primary = this.button(PRIMARY_Y, 'Продолжить', true, () => this.begin(), PRIMARY_H);
@@ -176,6 +182,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   begin() {
+    if (services.session?.status === 'banned') { this.openRestrictedChat(); return; }
     if (this.starting) return;
     if (services.session && !services.session.ready) return; // онлайн: без загруженного персонажа игру не начинаем
     this.starting = true;
@@ -183,6 +190,18 @@ export class MenuScene extends Phaser.Scene {
     services.audio.play('modal_open');
     this.cameras.main.fadeOut(350, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => startGame(this));
+  }
+
+  openRestrictedChat() {
+    if (this.overlay) return;
+    const keyboard = this.input.keyboard, enabled = keyboard.enabled;
+    keyboard.resetKeys(); keyboard.enabled = false;
+    this.overlay = { destroy: () => this.restrictedChat?.close() };
+    this.restrictedChat = showChat(services.chat, {
+      onClose: () => { this.restrictedChat = null; this.overlay = null; keyboard.resetKeys(); keyboard.enabled = enabled; },
+      onLogout: () => reloadToMenu(),
+    });
+    this.events.once('shutdown', () => this.restrictedChat?.close());
   }
 
   /** «Начать игру» нового игрока: онлайн — «Как продолжить?», без сервера — новое сохранение с выбранным героем. */

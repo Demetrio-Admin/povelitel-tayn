@@ -5,6 +5,7 @@ import '@fontsource/pt-sans/latin-700.css';
 import '@fontsource/philosopher/cyrillic-700.css';
 import '@fontsource/philosopher/latin-700.css';
 import './ui/chat.css';
+import './ui/page.css';
 import '@fontsource/philosopher/cyrillic-400.css';
 import '@fontsource/philosopher/latin-400.css';
 import Phaser from 'phaser';
@@ -23,7 +24,7 @@ const config = {
   type: Phaser.AUTO,
   parent: 'game',
   backgroundColor: VIEW.background,
-  // Portrait 9:16. FIT сохраняет пропорции на любом экране (на ПК — полосы по бокам).
+  // Portrait 9:16. FIT сохраняет пропорции; на ПК вокруг игры виден фон страницы.
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

@@ -1,0 +1,15 @@
+/* A quiet painted surround for screens wider than the portrait game. */
+@media (min-width: 768px) and (min-aspect-ratio: 9/16) {
+  body {
+    background-image:
+      linear-gradient(rgba(15, 20, 17, 0.24), rgba(15, 20, 17, 0.4)),
+      url('../assets/backgrounds/dusk-forest.webp');
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  #game canvas {
+    box-shadow: 0 0 44px 18px rgba(10, 15, 12, 0.56);
+  }
+}

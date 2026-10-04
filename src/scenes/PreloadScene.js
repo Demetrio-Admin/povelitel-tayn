@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { ASSET_FILES, DISPLAY_SIZE } from '../config/assets.manifest.js';
 import { COLORS } from '../config/game.config.js';
 import { services } from '../services.js';
+import { showLoadingScreen, setLoadingProgress, hideLoadingScreen } from '../ui/loadingScreen.js';
 
 // PreloadScene — загружает реальные PNG из манифеста (если указаны) и генерирует
 // graybox-заглушки для всех остальных ключей. Логика игры не знает, откуда взялась текстура.
@@ -9,9 +10,13 @@ export class PreloadScene extends Phaser.Scene {
   constructor() { super('PreloadScene'); }
 
   preload() {
-    const { width, height } = this.scale;
-    const txt = this.add.text(width / 2, height / 2, 'Загрузка…', { fontFamily: 'Georgia, serif', fontSize: '32px', color: COLORS.text }).setOrigin(0.5);
-    this.load.on('progress', p => txt.setText(`Загрузка… ${Math.round(p * 100)}%`));
+    showLoadingScreen('Собираем магию…');
+    setLoadingProgress(0);
+    this.load.on('progress', setLoadingProgress);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.load.off('progress', setLoadingProgress);
+      hideLoadingScreen();
+    });
     for (const [key, path] of Object.entries(ASSET_FILES)) if (path) this.load.image(key, path);
   }
 
@@ -33,6 +38,7 @@ export class PreloadScene extends Phaser.Scene {
       g.generateTexture(key, w, h);
       g.destroy();
     }
+    hideLoadingScreen();
     // ?skipmenu — сразу в игру (автотесты, быстрая проверка); онлайн — только если персонаж уже загружен с сервера
     if (services.skipMenu && (!services.session || services.session.ready)) startGame(this);
     else this.scene.start('MenuScene');

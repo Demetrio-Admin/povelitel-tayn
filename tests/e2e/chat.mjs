@@ -27,6 +27,7 @@ await db.exec(fs.readFileSync("supabase/schema.sql", "utf8"));
 await db.exec(
   fs.readFileSync("supabase/migrations/20261004_game_chat.sql", "utf8"),
 );
+if (!process.env.CHAT_LEGACY_ONLY) await db.exec(fs.readFileSync("supabase/migrations/20261004_chat_roles_v2.sql", "utf8"));
 async function queryAs(name, sql, params = []) {
   return db.transaction(async (tx) => {
     await tx.exec("set local role authenticated");
@@ -42,7 +43,7 @@ const rpc = (n, op, args = {}, request = randomUUID()) =>
     JSON.stringify(args),
     request,
   ]).then((r) => r.rows[0].j);
-for (const n of ["admin", "mod", "dev", "support", "alice", "bob", "guest"]) {
+for (const n of ["owner", "admin", "mod", "dev", "support", "alice", "bob", "guest"]) {
   ids[n] = randomUUID();
   tokens["token-" + n] = n;
   await db.query("insert into auth.users(id) values($1)", [ids[n]]);
@@ -55,6 +56,7 @@ for (const n of ["admin", "mod", "dev", "support", "alice", "bob", "guest"]) {
   );
 }
 for (const [n, r] of Object.entries({
+  owner: "owner",
   admin: "admin",
   mod: "moderator",
   dev: "developer",
@@ -70,6 +72,7 @@ const general = (await rpc("alice", "bootstrap")).rooms.find(
   (r) => r.kind === "general",
 ).id;
 for (const [n, text] of Object.entries({
+  owner: "Рады видеть вас в игре!",
   admin: "Добро пожаловать в Шепчущий лес!",
   mod: "Берегите друг друга и соблюдайте правила.",
   dev: "Исправления главы I уже в работе.",
@@ -315,8 +318,93 @@ async function frameChecks(admin) {
   check((await admin.p.getByLabel("Сообщение", { exact: true }).inputValue())
     === "Черновик при открытой клавиатуре", "keyboard changes keep the draft");
 }
+async function roleChecks() {
+  const d = await device("owner", 1919, 894), p = d.p;
+  await matchesGameFrame(p, "role tools remain inside the game canvas");
+  const colors = await p.locator(".chat-message").evaluateAll((nodes) => nodes.filter((n) => n.querySelector(".chat-role")).map((n) => {
+    const color = (s) => getComputedStyle(n.querySelector(s)).color;
+    return [color(".chat-name"), color(".chat-role"), color(".chat-body")];
+  }));
+  check(colors.length === 5 && colors.every((c) => new Set(c).size === 1 && c[0] !== "rgb(0, 0, 0)"), "all staff message, nickname and badge colors agree");
+  check(new Set(colors.map((c) => c[0])).size === 5, "owner has a distinct readable turquoise color");
+  await d.click("Роли по ID");
+  await p.getByLabel("ID игрока", { exact: true }).fill(profiles.bob.playerId);
+  await d.click("Найти игрока");
+  await p.getByLabel("Роль игрока").selectOption("admin");
+  check(await p.getByLabel("Роль игрока").locator("option").count() === 5 && !await p.locator('.chat-check input').count(), "owner chooses exactly one role, including administrator");
+  await p.getByLabel("Причина изменения ролей").fill("Назначение администратора");
+  await d.click("Проверить назначение"); await p.getByText(/Станет: Администратор/).waitFor();
+  await d.click("Подтвердить"); await p.getByLabel("ID игрока", { exact: true }).waitFor();
+  check((await rpc("bob", "bootstrap")).me.roles.join() === "admin", "owner appoints an administrator through the real UI");
+  await d.click("Назад"); await d.click("Игрок по ID");
+  await p.getByLabel("ID игрока", { exact: true }).fill(profiles.alice.playerId); await d.click("Найти игрока");
+  await p.getByLabel("Ресурс", { exact: true }).selectOption("coins"); await p.getByLabel("Количество ресурса").fill("100");
+  await p.getByLabel("Причина изменения игрока").fill("Компенсация за ошибку");
+  await d.click("Проверить ресурсы"); await p.getByText(/Монеты: 0 → 100/).waitFor();
+  await matchesGameFrame(p, "resource review fits the same game frame"); await d.shot("resource-review");
+  await d.click("Подтвердить"); await p.getByText("У игрока: 100", { exact: true }).waitFor();
+  check((await rpc("owner", "player_lookup", { playerId: profiles.alice.playerId })).inventory.coins === 100, "resource grant UI applies the reviewed value");
+  await p.getByLabel("Новый никнейм").fill("Alina"); await p.getByLabel("Причина изменения игрока").fill("Исправление ника");
+  await d.click("Проверить никнейм"); await d.click("Подтвердить");
+  await p.getByRole("heading", { name: "Alina", exact: true }).waitFor();
+  check((await rpc("alice", "bootstrap")).me.nickname === "Alina", "nickname change UI updates the real profile");
+  await d.click("Назад"); await d.click("Поддержка"); await d.click("Шаблоны"); await d.click("Добавить шаблон");
+  await p.getByLabel("Название шаблона").fill("Проверка соединения"); await p.getByLabel("Текст шаблона").fill("Проверьте соединение и попробуйте снова.");
+  await d.click("Сохранить шаблон"); await p.getByRole("heading", { name: "Проверка соединения", exact: true }).waitFor();
+  check((await rpc("support", "templates")).some((t) => t.title === "Проверка соединения"), "created template is shared with support staff");
+  const ticket = (await rpc("alice", "ticket_create", { category: "bug", subject: "Ошибка двери", body: "Не могу открыть дверь" })).ticket;
+  async function switchTo(name) {
+    await p.evaluate(({ uid, name }) => localStorage.setItem("witch_rpg_auth_v2", JSON.stringify({ access_token: "token-"+name, refresh_token: "refresh-"+name, expires_at: Date.now()+3600000, user: { id: uid } })), { uid: ids[name], name });
+    await p.reload(); await p.waitForFunction(() => window.__game?.scene.isActive("UIScene"), null, { timeout: 120000, polling: 100 });
+    await p.evaluate(() => { const u=window.__game.scene.getScene("UIScene"); window.__witch.tutorial.hide(); if(u.modal?.dialogue)u.closeDialogue(true);else if(u.modal)u.closeModal(); u.openChat(); });
+    await p.locator(".chat-message").first().waitFor();
+  }
+  await switchTo("support");
+  check(await p.getByRole("button", { name: "Жалобы", exact: true }).count() === 1 && !await p.getByRole("button", { name: "Роли по ID", exact: true }).count(), "support receives moderator tools without administrator role assignment");
+  await d.click("Поддержка"); await d.click("Взять в работу"); await p.getByLabel("Шаблон ответа").waitFor();
+  const template = (await rpc("support", "templates")).find((t) => t.title === "Проверка соединения");
+  await p.getByLabel("Шаблон ответа").selectOption(template.id);
+  check(await p.getByLabel("Ответ в поддержку", { exact: true }).inputValue() === template.body, "server template inserts an editable reply without sending it");
+  await d.click("Передать администратору"); await p.getByLabel("Причина передачи · внутренняя заметка").fill("Нужна проверка администратора");
+  await d.click("Продолжить"); await d.click("Подтвердить"); await p.getByRole("heading", { name: "Поддержка", exact: true }).waitFor();
+  await p.getByText("Ожидает администратора", { exact: true }).waitFor();
+  check(!await p.getByRole("button", { name: "Взять в работу", exact: true }).count(), "support cannot reclaim an escalated ticket");
+  await d.shot("admin-escalation");
+  await switchTo("admin"); await d.click("Поддержка"); await p.getByLabel("Фильтр обращений").selectOption("escalated");
+  await d.click("Взять в работу"); await p.getByRole("heading", { name: "Ошибка двери", exact: true }).waitFor();
+  check((await rpc("admin", "ticket", { ticket })).assignee.ref === profiles.admin.ref, "administrator takes the escalation and receives its thread");
+  await switchTo("alice");
+  check(await p.locator(".chat-message").filter({ hasText: /ID \d/ }).count() === 7, "ordinary player sees numeric IDs in all messages");
+  const own = p.locator(".chat-message").filter({ hasText: "Как найти лунный осколок" });
+  await own.getByRole("button", { name: "Действия с сообщением", exact: true }).click();
+  check(!await p.getByRole("button", { name: "Изменить", exact: true }).count() && !await p.getByRole("button", { name: "Удалить", exact: true }).count(), "ordinary player's own message has no edit or delete actions");
+  await d.click("Назад"); await d.click("Поддержка"); await d.click("Открыть");
+  check(!await p.getByText("Нужна проверка администратора", { exact: true }).count(), "escalation's internal reason remains invisible to the player");
+  await d.shot("player-ticket");
+  check(errors.length === 0, `no browser application errors (${errors.join("; ")})`);
+  console.log(`\n${checks} role-policy browser checks passed. Screenshots: ${out}`);
+}
 try {
-  if (process.env.CHAT_FRAME_ONLY) {
+  if (process.env.CHAT_LEGACY_ONLY) {
+    const d = await device("support", 390, 844);
+    check(!await d.p.getByRole("button", { name: "Жалобы", exact: true }).count(), "legacy server does not advertise inherited moderation prematurely");
+    const ticket = (await rpc("alice", "ticket_create", { category: "bug", subject: "Старый сервер", body: "Проверка совместимости" })).ticket;
+    await d.click("Поддержка"); await d.click("Взять в работу");
+    await d.p.getByLabel("Шаблон ответа").selectOption("device");
+    check((await d.p.getByLabel("Ответ в поддержку", { exact: true }).inputValue()).includes("модель устройства"), "legacy support retains reply templates without a new server RPC");
+    check(!await d.p.getByRole("button", { name: "Передать администратору", exact: true }).count() && !await d.p.getByRole("button", { name: "Шаблоны", exact: true }).count(), "new mutations stay hidden until the role migration is installed");
+    await d.click("Отправить ответ"); await d.p.getByText("Ошибка игры · Ждём игрока", { exact: true }).waitFor();
+    check((await rpc("support", "ticket", { ticket })).replies.length === 2, "existing support works during the server upgrade");
+    await db.exec(fs.readFileSync("supabase/migrations/20261004_chat_roles_v2.sql", "utf8"));
+    await d.refresh(); await d.p.getByRole("button", { name: "Жалобы", exact: true }).waitFor();
+    check(true, "server migration activates inherited permissions without browser reload");
+    await d.click("Поддержка"); await d.p.getByRole("button", { name: "Шаблоны", exact: true }).waitFor();
+    check(true, "new support tools activate as soon as the server advertises the new policy");
+    check(errors.length === 0, "legacy server has no application errors");
+    console.log(`\n${checks} legacy compatibility checks passed`);
+  }
+  else if (process.env.CHAT_ROLES_ONLY) await roleChecks();
+  else if (process.env.CHAT_FRAME_ONLY) {
     const admin = await device("admin", 1919, 894);
     await matchesGameFrame(admin.p, "wide-screen chat initially matches game canvas");
     await admin.click("Мой профиль");
@@ -366,22 +454,22 @@ try {
       }),
   );
   check(
-    colors.length === 4 &&
+    colors.length === 5 &&
       colors.every((c) => new Set(c).size === 1 && !c.includes("rgb(0, 0, 0)")),
     "nickname, role label and body use identical readable role colors",
   );
   check(
-    !(await alice.p
+    (await alice.p
       .locator(".chat-message")
       .filter({ hasText: /ID \d/ })
-      .count()),
-    "other numeric IDs absent for player",
+      .count()) === 7,
+    "numeric IDs visible to players",
   );
   check(
     (await admin.p
       .locator(".chat-message")
       .filter({ hasText: /ID \d/ })
-      .count()) === 6,
+      .count()) === 7,
     "administrator receives player IDs",
   );
   await alice.p
@@ -450,11 +538,7 @@ try {
     .fill(profiles.bob.playerId);
   await admin.click("Найти игрока");
   await admin.p.getByLabel("Причина изменения ролей").fill("Помощь игрокам");
-  await admin.p
-    .locator(".chat-check")
-    .filter({ hasText: "Техподдержка" })
-    .locator("input")
-    .check();
+  await admin.p.getByLabel("Роль игрока").selectOption("support");
   await admin.click("Проверить назначение");
   await admin.p.getByText(/Станет: Техподдержка/).waitFor();
   await matchesGameFrame(admin.p, "role confirmation stays inside the game frame");

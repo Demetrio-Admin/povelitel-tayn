@@ -4,6 +4,7 @@
   --gold: #dcc082;
   --mod: #b8dfc9;
   --admin: #f0cf83;
+  --owner: #99e6d3;
   --dev: #d7c4f1;
   --support: #b8dbea;
   position: fixed;
@@ -281,7 +282,9 @@
 .game-chat .role-player {
   color: var(--paper);
 }
-.game-chat .role-owner,
+.game-chat .role-owner {
+  color: var(--owner);
+}
 .game-chat .role-admin {
   color: var(--admin);
 }

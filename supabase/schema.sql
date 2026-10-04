@@ -174,10 +174,32 @@ begin
   );
 end $$;
 
+alter table public.profiles add column if not exists login_nickname text;
+update public.profiles set login_nickname=nickname_normalized where login_nickname is null and nickname_normalized is not null;
+create unique index if not exists profiles_login_nickname_key on public.profiles(login_nickname) where login_nickname is not null;
+
 -- ---------------------------------------------------------------- «ник свободен?» (подсказка в форме; настоящая защита — индекс)
-create or replace function public.nickname_available(norm text) returns boolean
-language sql security definer stable set search_path = public as $$
-  select norm ~ '^[a-zа-яё0-9_]{3,20}$' and not exists (select 1 from public.profiles where nickname_normalized = norm);
+create or replace function public.nickname_login(norm text) returns text language sql stable security definer set search_path='' as $$
+ select login_nickname from public.profiles where nickname_normalized=norm
+$$;
+revoke all on function public.nickname_login(text) from public;
+grant execute on function public.nickname_login(text) to anon,authenticated;
+create or replace function public.nickname_available(norm text) returns boolean language sql stable security definer set search_path='' as $$
+ select norm ~ '^[a-zа-яё0-9_]{3,20}$' and not exists(select 1 from public.profiles where nickname_normalized=norm or login_nickname=norm)
+$$;
+create or replace function public.claim_nickname(uid uuid,nick text,norm text) returns void language plpgsql security definer set search_path='' as $$
+declare cur text;
+begin
+ perform pg_advisory_xact_lock(hashtextextended('game-nickname',0));
+ if nick !~ '^[A-Za-zА-Яа-яЁё0-9_]{3,20}$' or norm<>lower(nick) or (nick ~ '[A-Za-z]' and nick ~ '[А-Яа-яЁё]') or nick !~ '[A-Za-zА-Яа-яЁё]' then raise exception 'invalid_nickname' using errcode='22023'; end if;
+ select nickname into cur from public.profiles where id=uid for update;
+ if not found then raise exception 'no_player' using errcode='P0002'; end if;
+ if cur is not null then raise exception 'already_registered' using errcode='P0001'; end if;
+ if exists(select 1 from public.profiles where id<>uid and (nickname_normalized=norm or login_nickname=norm)) then raise exception 'nickname_taken' using errcode='23505'; end if;
+ update public.profiles set nickname=nick,nickname_normalized=norm,login_nickname=norm,registered_at=now() where id=uid;
+end $$;
+create or replace function public.release_nickname(uid uuid) returns void language sql security definer set search_path='' as $$
+ update public.profiles set nickname=null,nickname_normalized=null,login_nickname=null,registered_at=null where id=uid
 $$;
 
 create or replace function public._require_game_access() returns void language plpgsql security definer set search_path='' as $$
@@ -572,21 +594,6 @@ end $$;
 
 -- ---------------------------------------------------------------- превращение гостя в игрока с ником
 -- Эти две функции вызывает только Edge Function account (ключ service_role); из браузера они недоступны.
-create or replace function public.claim_nickname(uid uuid, nick text, norm text) returns void
-language plpgsql security definer set search_path = public as $$
-declare cur text;
-begin
-  if nick !~ '^[A-Za-zА-Яа-яЁё0-9_]{3,20}$' or norm !~ '^[a-zа-яё0-9_]{3,20}$' then raise exception 'invalid_nickname' using errcode = '22023'; end if;
-  select nickname into cur from profiles where id = uid for update;
-  if not found then raise exception 'no_player' using errcode = 'P0002'; end if;
-  if cur is not null then raise exception 'already_registered' using errcode = 'P0001'; end if;
-  update profiles set nickname = nick, nickname_normalized = norm, registered_at = now() where id = uid;   -- unique_violation, если ник занят
-end $$;
-create or replace function public.release_nickname(uid uuid) returns void
-language sql security definer set search_path = public as $$
-  update profiles set nickname = null, nickname_normalized = null, registered_at = null where id = uid;
-$$;
-
 -- ---------------------------------------------------------------- права на функции
 revoke all on function public._num(jsonb), public._clamp(numeric, numeric, numeric), public._valid_id(text), public._snapshot(uuid) from public, anon, authenticated;
 -- v0.10.0: служебные функции действий — только изнутри player_action

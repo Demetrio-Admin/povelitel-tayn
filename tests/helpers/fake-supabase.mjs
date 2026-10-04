@@ -179,6 +179,8 @@ export class FakeSupabase {
     const err = (status, code, message) => this.reply(status, { code, message });
     const authed = () => role === 'authenticated' && uid;
     switch (fn) {
+      case 'nickname_login':
+        return this.reply(200, [...this.players.values()].find(x => x.norm === a.norm)?.norm ?? null);
       case 'nickname_available':
         return this.reply(200, /^[a-zа-яё0-9_]{3,20}$/.test(String(a.norm)) && ![...this.players.values()].some(x => x.norm === a.norm));
       case 'create_player': {
@@ -258,7 +260,7 @@ export class FakeSupabase {
   // ---------------------------------------------------------------- RPC на настоящем Postgres
   rpcPg(fn, a, role, uid) {
     const SIG = {
-      nickname_available: ['norm'], create_player: ['hero'], get_player: [], reset_player: ['hero'], sync_player: ['patch'], player_action: ['action'],
+      nickname_login: ['norm'], nickname_available: ['norm'], create_player: ['hero'], get_player: [], reset_player: ['hero'], sync_player: ['patch'], player_action: ['action'],
       claim_nickname: ['uid', 'nick', 'norm'], release_nickname: ['uid'],
     };
     if (!SIG[fn]) return this.reply(404, { code: 'PGRST202', message: 'function not found' });

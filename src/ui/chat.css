@@ -7,7 +7,11 @@
   --dev: #d7c4f1;
   --support: #b8dbea;
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  outline: none;
+  container: game-chat / size;
   z-index: 20000;
   display: flex;
   flex-direction: column;
@@ -263,7 +267,12 @@
   border: 1px solid #ffffff20;
   border-radius: 5px;
   background: #14100dc9;
-  white-space: nowrap;
+  max-width: 100%;
+  white-space: normal;
+}
+.game-chat .chat-role > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .game-chat .chat-role svg {
   width: 13px;
@@ -440,7 +449,7 @@
   padding: 30px 18px;
   color: var(--dim);
 }
-@media (min-width: 800px) {
+@container game-chat (min-width: 800px) {
   .game-chat .chat-head {
     padding: 16px 28px;
   }
@@ -476,7 +485,7 @@
     max-width: 700px;
   }
 }
-@media (max-height: 500px) {
+@container game-chat (max-height: 500px) {
   .game-chat .chat-head {
     padding-top: 5px;
     padding-bottom: 5px;
@@ -495,5 +504,25 @@
   .game-chat .chat-toolbar {
     padding-top: 4px;
     padding-bottom: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .game-chat .chat-toolbar .chat-button {
+    flex: none;
+  }
+}
+@container game-chat (max-width: 300px) {
+  .game-chat .chat-brand .sub {
+    display: none;
+  }
+  .game-chat .chat-head {
+    padding-left: 10px;
+    padding-right: 10px;
+    gap: 6px;
+  }
+  .game-chat .chat-scroll {
+    padding-left: 12px;
+    padding-right: 12px;
   }
 }

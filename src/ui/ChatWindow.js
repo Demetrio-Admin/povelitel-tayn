@@ -33,6 +33,8 @@ import {
   textLength,
 } from "../cloud/ChatService.js";
 
+import { ITEMS } from "../config/balance.progression.js";
+
 const ROLES = {
   owner: ["Владелец", Crown],
   admin: ["Администратор", Crown],
@@ -1198,7 +1200,8 @@ export class ChatWindow {
       card.replaceChildren();
       append(card, el("h2", `role-${roleOf(p)}`, p.nickname), el("p", "sub", `ID ${p.playerId} · уровень ${p.level} · ${ROLES[roleOf(p)][0]}`));
       if (!canManage(this.me, p)) { card.append(empty("Аккаунт защищён от изменения вашей ролью.")); return; }
-      const item = select(p.catalog), direction = select({ give: "Выдать", take: "Забрать" }), amount = input("Количество", "1", "number"), why = el("textarea"), current = el("p", "sub");
+      const labels = Object.fromEntries(Object.entries(p.catalog).map(([id, name]) => [id, ITEMS[id]?.name || name]));
+      const item = select(labels), direction = select({ give: "Выдать", take: "Забрать" }), amount = input("Количество", "1", "number"), why = el("textarea"), current = el("p", "sub");
       amount.min = "1"; amount.max = "999999999"; amount.step = "1";
       item.setAttribute("aria-label", "Ресурс"); direction.setAttribute("aria-label", "Действие с ресурсом"); amount.setAttribute("aria-label", "Количество ресурса"); why.setAttribute("aria-label", "Причина изменения игрока");
       const updateCurrent = () => current.textContent = `У игрока: ${p.inventory[item.value] || 0}`;
@@ -1207,7 +1210,7 @@ export class ChatWindow {
       append(card, field("Предмет или ресурс", item), current, field("Действие", direction), field("Количество", amount), field("Причина для журнала", why), button("Проверить ресурсы", () => {
         const delta = Number(amount.value) * (direction.value === "take" ? -1 : 1), before = p.inventory[item.value] || 0;
         if (!Number.isInteger(delta) || delta === 0 || Math.abs(delta) > 999999999 || before + delta < 0 || before + delta > 1000000000 || !why.value.trim()) { this.error.textContent = "Проверьте количество и укажите причину."; return; }
-        this.confirm("Изменить ресурсы?", `${p.nickname} · ID ${p.playerId}\n${p.catalog[item.value]}: ${before} → ${before + delta}\nПричина: ${why.value}`,
+        this.confirm("Изменить ресурсы?", `${p.nickname} · ID ${p.playerId}\n${labels[item.value]}: ${before} → ${before + delta}\nПричина: ${why.value}`,
           () => this.service.request("resources", { playerId: p.playerId, revision: p.inventoryRevision, item: item.value, delta, reason: why.value }), done);
       }, { symbol: Check, cls: "chat-button primary" }));
       if (p.registered) {

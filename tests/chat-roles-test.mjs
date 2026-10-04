@@ -75,7 +75,7 @@ try {
   for (const n of ["player", "moderator", "support"]) await deny(n, "player_lookup", { playerId: me.alice.playerId });
   await as("alice", () => sql("select public.sync_player('{\"inv\":{\"coins\":31}}')"));
   const p = await call("developer", "player_lookup", { playerId: me.alice.playerId });
-  check(Object.keys(p.catalog).sort().join() === Object.keys(ITEMS).sort().join(), "server resource catalog matches the game");
+  check(Object.keys(p.catalog).sort().join() === Object.keys(ITEMS).sort().join() && Object.entries(ITEMS).every(([id, item]) => p.catalog[id] === item.name), "server resource IDs and names match the game");
   const args = { playerId: p.playerId, revision: p.inventoryRevision, item: "coins", delta: 100, reason: "Compensation" }, request = randomUUID();
   const given = await call("developer", "resources", args, request);
   check(given.inventory.coins === 131 && (await call("developer", "resources", args, request)).inventory.coins === 131, "resource grants persist exactly once on retry");

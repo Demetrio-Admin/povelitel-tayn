@@ -34,6 +34,13 @@ ok(a1.inventory.coins === 50 && a1.level === 3 && a1.quests.includes('intro'), '
 const stale = JSON.parse(q(`select public.sync_player('{"xp":10,"inv":{"coins":-5}}');`, A).out);
 ok(stale.level === 3 && stale.xp === 160 && stale.inventory.coins === 45, 'устаревшее устройство не откатывает уровень и опыт; монеты — дельтой');
 
+// v0.11.1: ветка дара хранится объектом мира player_build — отдельной колонки нет
+const bld = JSON.parse(q(`select public.sync_player('{"objects":{"player_build":{"branches":{"telekinesis":"lord"}}}}');`, A).out);
+ok(bld.objects.player_build?.branches?.telekinesis === 'lord', 'ветка дара сохраняется как объект мира player_build и читается обратно');
+const bld2 = JSON.parse(q(`select public.sync_player('{"objects":{"player_build":{"branches":{"telekinesis":"breaker"}}}}');`, A).out);
+ok(bld2.objects.player_build.branches.telekinesis === 'breaker', 'смена ветки перезаписывает объект («последний записал»)');
+ok(!JSON.parse(q(`select public.get_player();`, B).out).objects.player_build, 'у другого игрока ветки нет');
+
 console.log('\nБаза: подделки клиента');
 {
   const C = randomUUID();

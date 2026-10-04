@@ -45,6 +45,24 @@ export const UPGRADES = {
     timerSec: { prototype: 90, live: 15 * 60 },
     doneText: 'Пламя бьёт сильнее, а горение держится дольше.',
   },
+  // v0.11.1 — ступень III Телекинеза: две ветки, выбирается одна (после изучения вторая закрывается).
+  // Цена общая. Осколки и пыль добываются в мире заново; уровень 7 игрок получает к концу главы I.
+  telekinesis_3_lord: {
+    ability: 'telekinesis', toLevel: 3, branch: 'lord', title: 'Телекинез III · Повелитель',
+    description: 'Два броска подряд. Ветка «Повелитель»: удачное прерывание возвращает половину маны и ускоряет перезарядку.',
+    requires: { heroLevel: 7, abilityLevel: 2 },
+    cost: { schoolXP: 250, items: { lunar_shard: 8, rune_dust: 3 } },
+    timerSec: { prototype: 90, live: 60 * 60 },
+    doneText: 'Два броска подряд. Каждое удачное прерывание возвращает ману и ускоряет перезарядку.',
+  },
+  telekinesis_3_breaker: {
+    ability: 'telekinesis', toLevel: 3, branch: 'breaker', title: 'Телекинез III · Разрушитель',
+    description: 'Два броска подряд. Ветка «Разрушитель»: броски камней бьют на 30% сильнее, но стоят на 4 маны больше.',
+    requires: { heroLevel: 7, abilityLevel: 2 },
+    cost: { schoolXP: 250, items: { lunar_shard: 8, rune_dust: 3 } },
+    timerSec: { prototype: 90, live: 60 * 60 },
+    doneText: 'Два броска подряд, и каждый камень бьёт заметно сильнее.',
+  },
   seal_2: {
     ability: 'seal', toLevel: 2, title: 'Астрал II',
     description: '+40% урона: Астрал бьёт ещё сильнее и всё так же пробивает защиту.',
@@ -54,6 +72,9 @@ export const UPGRADES = {
     doneText: 'Астрал разит сильнее — тень Хранителя больше не защита.',
   },
 };
+
+// Смена ветки: мгновенно, вне боя, за монеты (позже — и за сапфиры). Не продаёт силу, а даёт свободу пробовать.
+export const BRANCH_RESPEC = { coins: 150 };
 
 // Награды за события мира. topUpFor — гарантировать ресурсы на улучшение
 // (Blueprint, зона E: «игрок получает достаточно ресурсов для Телекинеза II»).

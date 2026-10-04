@@ -379,6 +379,12 @@ export class CombatScene extends Phaser.Scene {
             this.toast(ev.hint || 'Эту атаку так не прервать', COLORS.danger);
           }
           break;
+        case 'chain':   // v0.11.1: Телекинез III — второй бросок без перезарядки
+          this.floatText(ENEMY_POS.x - 120, ENEMY_POS.y + 40, 'ЕЩЁ БРОСОК!', COLORS.telekinesis, 28);
+          break;
+        case 'refund':  // ветка «Повелитель»: удачное прерывание вернуло ману и ускорило перезарядку
+          this.floatText(ENEMY_POS.x + 120, ENEMY_POS.y + 40, `+${ev.mana} маны · −${ev.cooldownSec} с`, COLORS.mana, 26);
+          break;
         case 'potion': this.onPotionEvent(ev); break;
         case 'objectUsed': this.animateObject(ev); break;
         case 'objectRespawn': {

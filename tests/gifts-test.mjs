@@ -4,9 +4,10 @@ import { QuestFlags } from '../src/state/QuestFlags.js';
 import { EventBus } from '../src/state/EventBus.js';
 import { AbilitySystem } from '../src/systems/AbilitySystem.js';
 import { CombatManager } from '../src/systems/CombatManager.js';
-import { UPGRADES, TIMER_MODE } from '../src/config/balance.progression.js';
+import { UPGRADES, TIMER_MODE, BRANCH_RESPEC } from '../src/config/balance.progression.js';
 import { ENEMIES } from '../src/config/balance.enemies.js';
 import { ABILITIES } from '../src/config/balance.abilities.js';
+import { toSnapshot, fromSnapshot, diffSnapshots, applyPatch, emptySnapshot } from '../src/cloud/playerModel.js';
 import { giftCards, statLines, nextStep, upgradesOf } from '../src/systems/gifts.js';
 
 let failures = 0;
@@ -101,13 +102,93 @@ console.log('\n[v0.11] Модель экрана «Дары»');
   ok(fire.next.need.some(n => n.item === 'crimson_ember' && n.need === 6 && !n.ok), 'в требованиях — шесть углей с текущим числом');
   ok(fire.next.after.some(l => l.includes('22')), 'показано, каким станет дар');
   const tk = cards.find(c => c.id === 'telekinesis');
-  ok(tk.next === null && tk.maxed, 'Телекинез II: выше ступеней нет, пишется «высшая из доступных»');
+  ok(tk.choices.length === 2 && tk.choices.every(c => c.toLevel === 3) && !tk.maxed, 'Телекинез II: впереди ступень III с двумя ветками на выбор');
+  const fire2 = (() => { const w2 = ready(world()); w2.abilities.unlock('seal', 2); return giftCards(w2.state).find(c => c.id === 'seal'); })();
+  ok(fire2.choices.length === 0 && fire2.maxed, 'Астрал II: выше ступеней нет, пишется «высшая из доступных»');
   w.state.addSchoolXP('fire', 180); w.state.addItem('crimson_ember', 6);
   ok(nextStep(w.state, 'fire').canStart, 'готовность видна в модели');
   w.abilities.startResearch('fire_2');
   ok(nextStep(w.state, 'seal').status === 'busy', 'Астрал показывает «занято», пока идёт Огонь');
   ok(statLines('fire', 2).join(' ').includes('30'), 'в строках числа горения: всего 30');
   ok(statLines('telekinesis', 2).some(l => l.includes('35%')), 'Телекинез II: +35% бросками');
+}
+
+console.log('\n[v0.11.1] Телекинез III: две ветки, выбор одной');
+{
+  const w = ready(world());
+  w.state.addSchoolXP('telekinesis', 250); w.state.addItem('lunar_shard', 8); w.state.addItem('rune_dust', 3);
+  ok(w.state.upgradeStatus('telekinesis_3_lord').ok && w.state.upgradeStatus('telekinesis_3_breaker').ok, 'обе ветки доступны при уровне 7 и полной цене');
+  ok(w.abilities.stats('telekinesis').doubleCast === undefined, 'до ступени III двойного броска нет');
+  ok(w.abilities.startResearch('telekinesis_3_breaker'), 'выбрана ветка «Разрушитель»');
+  ok(w.state.upgradeStatus('telekinesis_3_lord').reason === 'busy', 'пока идёт изучение, вторая ветка недоступна');
+  w.clock.t += UPGRADES.telekinesis_3_breaker.timerSec[TIMER_MODE] * 1000 + 1; w.abilities.update();
+  ok(w.state.abilityLevel('telekinesis') === 3 && w.state.branchOf('telekinesis') === 'breaker', 'по таймеру — ступень III и ветка записана');
+  ok(w.state.upgradeStatus('telekinesis_3_lord').reason === 'done', 'вторая ветка закрылась (ступень уже есть)');
+  const s = w.abilities.stats('telekinesis');
+  ok(Math.abs(s.throwDamageBonus - 0.65) < 1e-9 && s.manaCost === 18 && s.damage === 20 && s.doubleCast.windowSec === 2.5, 'Разрушитель: бонус бросков +65%, мана 18, два броска подряд');
+  const card = giftCards(w.state).find(c => c.id === 'telekinesis');
+  ok(card.branch.id === 'breaker' && card.respec.length === 1 && card.respec[0].id === 'lord', 'карточка показывает ветку и возможность сменить на «Повелителя»');
+  ok(!card.respec[0].canPay && w.state.respecBranch('telekinesis', 'lord').reason === 'coins', 'без монет сменить ветку нельзя');
+  w.state.addItem('coins', BRANCH_RESPEC.coins + 10);
+  const r = w.state.respecBranch('telekinesis', 'lord');
+  ok(r.ok && w.state.item('coins') === 10 && w.state.branchOf('telekinesis') === 'lord', `смена ветки списывает ${BRANCH_RESPEC.coins} монет`);
+  ok(w.abilities.stats('telekinesis').damage === 18 && w.abilities.stats('telekinesis').interruptRefund.manaPct === 0.5, 'Повелитель: урон −10%, возврат маны при прерывании');
+  ok(w.state.respecBranch('telekinesis', 'lord').reason === 'same', 'выбрать ту же ветку нельзя');
+  ok(w.state.respecBranch('fire', 'lord').reason === 'unavailable', 'чужой дар или несуществующая ветка — отказ');
+  // сохранение: ветка живёт в состоянии мира и переживает «перезагрузку»
+  const saved = JSON.parse(JSON.stringify(w.state.data));
+  const w2 = world(); w2.state.data = saved;
+  ok(w2.state.branchOf('telekinesis') === 'lord', 'ветка читается из сохранённого состояния');
+  const lowLevel = world(); lowLevel.state.setBranch('telekinesis', 'lord'); lowLevel.abilities.unlock('telekinesis', 2);
+  ok(lowLevel.state.branchOf('telekinesis') === null, 'ветка не действует, пока ступень III не достигнута');
+}
+
+console.log('\n[v0.11.1] Сервер: ветка переживает сохранение без изменений схемы');
+{
+  const w = ready(world()); w.abilities.unlock('telekinesis', 3); w.state.setBranch('telekinesis', 'lord');
+  const base = emptySnapshot();
+  const patch = diffSnapshots(base, toSnapshot(w.state.data));
+  ok(patch.objects?.player_build?.branches?.telekinesis === 'lord', 'ветка уходит на сервер как объект мира player_build');
+  const server = applyPatch(base, patch);
+  const back = new GameState(mem(), () => 0); back.data = fromSnapshot(server);
+  ok(back.branchOf('telekinesis') === 'lord', 'после загрузки с сервера ветка на месте');
+}
+
+console.log('\n[v0.11.1] Бой: два броска подряд и ветки');
+{
+  const mk = (branch, enemy = 'forest_scavenger') => {
+    const w = ready(world());
+    w.abilities.unlock('telekinesis', 3); if (branch) w.state.setBranch('telekinesis', branch);
+    const cm = new CombatManager({ enemyType: enemy, state: w.state, abilities: w.abilities });
+    cm.hero.mana = cm.hero.maxMana;
+    return cm;
+  };
+  const cm = mk(null);
+  ok(cm.useAbility('telekinesis').ok, 'первый бросок');
+  ok(cm.abilityState('telekinesis').state === 'ready', 'сразу после первого броска Телекинез снова готов (окно второго)');
+  ok(cm.useAbility('telekinesis').ok, 'второй бросок без перезарядки');
+  ok(cm.abilityState('telekinesis').state === 'cooldown', 'после второго — обычная перезарядка');
+  const cm2 = mk(null);
+  cm2.useAbility('telekinesis');
+  for (let i = 0; i < 80; i++) cm2.tick(1 / 30);   // ~2,7 с — окно закрылось, второго броска не было
+  ok(cm2.abilityState('telekinesis').state === 'cooldown' && cm2.cooldowns.telekinesis <= 5 - 2.4, `окно прошло: перезарядка идёт с учётом ожидания (осталось ${cm2.cooldowns.telekinesis.toFixed(1)} с)`);
+  for (let i = 0; i < 90; i++) cm2.tick(1 / 30);
+  ok(cm2.abilityState('telekinesis').state === 'ready', 'без второго броска полный цикл всё равно 5 секунд, а не дольше');
+  // Повелитель: удачное прерывание возвращает ману
+  const lord = mk('lord', 'forest_scavenger');
+  const e = lord.enemy;
+  let guard = 0;
+  while (!e.isPreparing && guard++ < 600) lord.tick(1 / 30);
+  ok(e.isPreparing, 'враг готовит сильную атаку');
+  const manaBefore = lord.hero.mana;
+  lord.useAbility('telekinesis');
+  const gained = lord.hero.mana - (manaBefore - lord.abilities.stats('telekinesis').manaCost);
+  ok(lord.stats.interrupts === 1 && gained >= 6, `Повелитель: прерывание вернуло ману (+${Math.round(gained)})`);
+  ok(lord.drainEvents().some(ev => ev.type === 'refund'), 'в бою приходит событие refund для сцены');
+  // Разрушитель: бросок камня бьёт сильнее, чем у Повелителя
+  const dmgOf = (branch) => { const c = mk(branch, 'rootling'); c.enemy.def.defense = 0; const obj = c.fieldObjects.find(o => o.def.throwable && c.canLift(o)); c.selectObject(obj.id); const hp = c.enemy.hp; c.useAbility('telekinesis'); return hp - c.enemy.hp; };
+  const dB = dmgOf('breaker'), dL = dmgOf('lord');
+  ok(dB > dL * 1.3, `бросок Разрушителя сильнее (Разрушитель ${dB}, Повелитель ${dL})`);
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты даров пройдены');

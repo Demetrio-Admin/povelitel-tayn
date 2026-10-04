@@ -49,7 +49,7 @@ export const windows11 = {
           c.add(plate); c.sendToBack(plate);
           const px = x + 14;
           let iy = top + 12;
-          const title = text(px, iy, `${g.name} ${g.open ? ROMAN[g.level] : '— не открыт'}`, { fontSize: UI.type.heading, fontStyle: 'bold', color: g.open ? hex(color) : COLORS.textDim });
+          const title = text(px, iy, `${g.name} ${g.open ? ROMAN[g.level] : '— не открыт'}${g.branch ? ` · ${g.branch.name}` : ''}`, { fontSize: UI.type.heading, fontStyle: 'bold', color: g.open ? hex(color) : COLORS.textDim });
           if (g.open) text(x + w - 14, iy + 4, `опыт дара ${g.xp}`, { color: COLORS.textDim, wordWrap: { width: 220 } }).setOrigin(1, 0);
           iy += title.height + 6;
           if (!g.open) {
@@ -57,38 +57,65 @@ export const windows11 = {
             iy += t.height + 4;
           } else {
             for (const line of g.now) { const t = text(px, iy, line); iy += t.height + 2; }
+            if (g.branch) {
+              iy += 4;
+              const bt = text(px, iy, `Ветка: ${g.branch.name}`, { fontSize: UI.type.body, fontStyle: 'bold', color: hex(0x9fe9ff) });
+              iy += bt.height + 2;
+              const bd = text(px, iy, g.branch.text, { color: COLORS.text }); iy += bd.height + 2;
+              const bc = text(px, iy, `Цена ветки: ${g.branch.tradeoff}`, { color: hex(0xe0a07a) }); iy += bc.height + 4;
+              for (const o of g.respec) {
+                const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `Сменить на «${o.name}» — ${o.price} монет`, {
+                  primary: false, accent: o.canPay ? color : null, fontSize: UI.type.small,
+                  onPress: () => { if (this.modal?.scroll?.canTap()) this.confirmRespec(g.id, o); },
+                });
+                if (!o.canPay) b.text.setAlpha(0.6);
+                c.add(b.parts);
+                iy += UI.touch.button + 10;
+              }
+            }
             iy += 8;
-            if (g.next) {
-              const n = g.next;
-              const h = text(px, iy, `Дальше: ${n.title}`, { fontSize: UI.type.body, fontStyle: 'bold', color: COLORS.textGold });
-              iy += h.height + 2;
-              const d = text(px, iy, n.description, { color: COLORS.textDim });
-              iy += d.height + 6;
+            const many = g.choices.length > 1;
+            if (many) {
+              const h = text(px, iy, `Дальше: ${g.name} ${ROMAN[g.choices[0].toLevel]} — выберите одну ветку`, { fontSize: UI.type.body, fontStyle: 'bold', color: COLORS.textGold });
+              iy += h.height + 4;
+              const note = text(px, iy, 'Вторая ветка закроется. Позже её можно сменить за монеты.', { color: COLORS.textDim });
+              iy += note.height + 8;
+            }
+            for (const n of g.choices) {
+              if (many) {
+                const bn = text(px, iy, n.branchName, { fontSize: UI.type.body, fontStyle: 'bold', color: hex(0x9fe9ff) });
+                iy += bn.height + 2;
+                const bd = text(px, iy, n.branchText, { color: COLORS.text }); iy += bd.height + 2;
+                const bc = text(px, iy, `Цена ветки: ${n.branchTradeoff}`, { color: hex(0xe0a07a) }); iy += bc.height + 4;
+              } else {
+                const h = text(px, iy, `Дальше: ${n.title}`, { fontSize: UI.type.body, fontStyle: 'bold', color: COLORS.textGold });
+                iy += h.height + 2;
+                const d = text(px, iy, n.description, { color: COLORS.textDim });
+                iy += d.height + 6;
+              }
               for (const line of n.after) { const t = text(px, iy, `→ ${line}`, { color: hex(0x9be8a0) }); iy += t.height + 2; }
               iy += 6;
-              if (n.status === 'done') { /* ступень уже есть — до сюда не дойдём, оставлено для надёжности */ }
-              else {
-                for (const r of (n.status === 'in_progress' ? [] : n.need)) {   // плата уже списана — «✗ 0/6» только сбивает
-                  const t = text(px + 6, iy, `${r.ok ? '✓' : '✗'} ${r.label}: ${Math.min(r.have, r.need)}/${r.need}`, { color: r.ok ? '#9be8a0' : COLORS.text });
-                  iy += t.height + 1;
-                }
-                const tt = text(px + 6, iy + 2, `Время изучения: ${fmtSec(n.seconds)}`, { color: COLORS.textDim });
-                iy += tt.height + 10;
-                const note = STATUS_NOTE[n.status];
-                if (note) { const t = text(px, iy, note, { color: hex(0x9fe9ff) }); iy += t.height + 8; }
-                else {
-                  const can = n.canStart;
-                  const label = can ? 'Изучить' : n.status === 'event' ? 'Сначала пробудите алтарь' : 'Не хватает';
-                  const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, label, {
-                    primary: can, accent: can ? color : null, fontSize: UI.type.body,
-                    onPress: () => { if (this.modal?.scroll?.canTap()) this.startGiftResearch(n.id); },
-                  });
-                  if (!can) b.text.setAlpha(0.6);
-                  c.add(b.parts);
-                  iy += UI.touch.button + 12;
-                }
+              for (const r of (n.status === 'in_progress' ? [] : n.need)) {   // плата уже списана — «✗ 0/6» только сбивает
+                const t = text(px + 6, iy, `${r.ok ? '✓' : '✗'} ${r.label}: ${Math.min(r.have, r.need)}/${r.need}`, { color: r.ok ? '#9be8a0' : COLORS.text });
+                iy += t.height + 1;
               }
-            } else if (g.maxed) {
+              const tt = text(px + 6, iy + 2, `Время изучения: ${fmtSec(n.seconds)}`, { color: COLORS.textDim });
+              iy += tt.height + 10;
+              const note = STATUS_NOTE[n.status];
+              if (note) { const t = text(px, iy, note, { color: hex(0x9fe9ff) }); iy += t.height + 8; }
+              else {
+                const can = n.canStart;
+                const label = can ? (many ? `Выбрать «${n.branchName}»` : 'Изучить') : n.status === 'event' ? 'Сначала пробудите алтарь' : 'Не хватает';
+                const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, label, {
+                  primary: can, accent: can ? color : null, fontSize: UI.type.body,
+                  onPress: () => { if (this.modal?.scroll?.canTap()) this.startGiftResearch(n.id); },
+                });
+                if (!can) b.text.setAlpha(0.6);
+                c.add(b.parts);
+                iy += UI.touch.button + 12;
+              }
+            }
+            if (!g.choices.length && g.maxed) {
               const t = text(px, iy, 'Высшая ступень из доступных. Новые ступени и ветки — в следующих обновлениях.', { color: COLORS.textDim });
               iy += t.height + 4;
             }
@@ -105,6 +132,37 @@ export const windows11 = {
       title: 'Дары', color: COLORS.gold, text: '', content,
       buttons: [{ label: 'Закрыть', primary: true }, { label: 'Сумка', onClick: () => this.openBag() }],
     });
+  },
+
+  /** Подтверждение смены ветки: монеты тратятся сразу, поэтому спрашиваем. */
+  confirmRespec(abilityId, opt) {
+    if (this.mode === 'combat') return;
+    const closeAndAsk = () => {
+      this.closeModal(null);
+      this.openModal({
+        title: 'Сменить ветку?', color: COLORS.gold,
+        text: `Ветка «${opt.name}» заменит нынешнюю. Это стоит ${opt.price} монет, изучение заново не нужно.`,
+        buttons: [
+          { label: 'Сменить', primary: true, onClick: () => this.doRespec(abilityId, opt) },
+          { label: 'Отмена', onClick: () => this.openGifts() },
+        ],
+      });
+    };
+    closeAndAsk();
+  },
+
+  doRespec(abilityId, opt) {
+    const r = services.state.respecBranch(abilityId, opt.id);
+    if (!r.ok) {
+      services.audio.play('locked');
+      this.toast(r.reason === 'coins' ? `Не хватает монет: нужно ${r.need}` : 'Ветку сменить нельзя.');
+    } else {
+      services.state.save();
+      services.audio.play('unlock_magic');
+      this.toast(`Ветка «${opt.name}» выбрана`, COLORS[ABILITIES[abilityId].color]);
+      this.refreshHud();
+    }
+    this.openGifts();
   },
 
   startGiftResearch(upgradeId) {

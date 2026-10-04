@@ -1,21 +1,24 @@
 // Модель экрана «Дары»: что показать про каждый дар, не завися от Phaser (поэтому проверяется тестами без браузера).
 // Данные берутся из конфигов баланса и из GameState; окно (ui/windows11.js) только рисует.
 import { ABILITIES } from '../config/balance.abilities.js';
-import { UPGRADES, ITEMS, TIMER_MODE } from '../config/balance.progression.js';
+import { UPGRADES, ITEMS, TIMER_MODE, BRANCH_RESPEC } from '../config/balance.progression.js';
+import { statsFor } from './abilityStats.js';
 
 export const GIFT_ORDER = ['telekinesis', 'fire', 'seal'];
 const WEIGHT_RU = { light: 'лёгкие', medium: 'лёгкие и средние', heavy: 'любые, включая тяжёлые' };
 const pct = (v) => `${Math.round(v * 100)}%`;
 const num = (v) => String(Math.round(v * 10) / 10).replace('.', ',');
 
-/** Строки с числами дара на ступени level (для показа игроку). */
-export function statLines(id, level) {
-  const s = ABILITIES[id]?.levels?.[level];
+/** Строки с числами дара на ступени level (для показа игроку); branchId — выбранная ветка. */
+export function statLines(id, level, branchId = null) {
+  const s = statsFor(id, level, branchId);
   if (!s) return [];
   const out = [`Урон ${s.damage} · мана ${s.manaCost} · перезарядка ${num(s.cooldownSec)} с`];
   if (id === 'telekinesis') {
     out.push(`Поднимает: ${WEIGHT_RU[s.maxWeight] || s.maxWeight}`);
     if (s.throwDamageBonus) out.push(`Урон бросками +${pct(s.throwDamageBonus)}`);
+    if (s.doubleCast) out.push(`Два броска подряд: второй в течение ${num(s.doubleCast.windowSec)} с без перезарядки`);
+    if (s.interruptRefund) out.push(`Удачное прерывание: +${pct(s.interruptRefund.manaPct)} маны, перезарядка −${s.interruptRefund.cooldownSec} с`);
   } else if (id === 'fire') {
     out.push(`Горение: ${s.burn.dps} урона в секунду, ${num(s.burn.durationSec)} с (всего ${Math.round(s.burn.dps * s.burn.durationSec)})`);
   } else if (id === 'seal') {
@@ -32,14 +35,8 @@ export function upgradesOf(id) {
 /** Время изучения в секундах для текущего режима таймеров. */
 export const researchSeconds = (up) => up.timerSec[TIMER_MODE];
 
-/**
- * Следующая ступень дара: статус, требования (с текущими значениями), время, строки «станет». null — выше нет данных.
- * state — GameState.
- */
-export function nextStep(state, id) {
-  const lvl = state.abilityLevel(id);
-  const up = upgradesOf(id).find((u) => u.toLevel > lvl);
-  if (!up) return null;
+/** Карточка одного варианта изучения (ступень или ветка ступени). */
+function stepCard(state, id, up) {
   const st = state.upgradeStatus(up.id);
   const need = [];
   const r = up.requires || {};
@@ -47,15 +44,42 @@ export function nextStep(state, id) {
   if (r.event && !state.hasEvent(r.event)) need.push({ label: 'Пробудить Лунный алтарь', have: 0, need: 1 });
   need.push({ label: 'Опыт дара', have: state.data.schoolXP[id] || 0, need: up.cost.schoolXP });
   for (const [k, v] of Object.entries(up.cost.items || {})) need.push({ label: ITEMS[k]?.name || k, item: k, have: state.item(k), need: v });
+  const branch = up.branch ? ABILITIES[id].branches?.[up.branch] : null;
   return {
     id: up.id, title: up.title, description: up.description, toLevel: up.toLevel,
+    branch: up.branch || null, branchName: branch?.name || null, branchText: branch?.text || null, branchTradeoff: branch?.tradeoff || null,
     status: st.reason,                 // ready | missing | event | busy | in_progress | done | locked
     canStart: !!st.ok,
     need: need.map((n) => ({ ...n, ok: n.have >= n.need })),
     seconds: researchSeconds(up),
-    after: statLines(id, up.toLevel),
+    after: statLines(id, up.toLevel, up.branch || null),
   };
 }
+
+/**
+ * Варианты следующей ступени дара: одна карточка, а на ступени с ветками — по карточке на ветку (выбирается одна).
+ * Пустой список — выше ступеней нет. state — GameState.
+ */
+export function nextChoices(state, id) {
+  const lvl = state.abilityLevel(id);
+  const ups = upgradesOf(id).filter((u) => u.toLevel > lvl);
+  if (!ups.length) return [];
+  const to = ups[0].toLevel;
+  return ups.filter((u) => u.toLevel === to).map((u) => stepCard(state, id, u));
+}
+
+/** Первый вариант следующей ступени или null (для простых проверок). */
+export function nextStep(state, id) { return nextChoices(state, id)[0] || null; }
+
+/** Какие ветки можно взять вместо текущей и сколько это стоит (смена мгновенная, за монеты). */
+export function respecOptions(state, id) {
+  const cur = state.branchOf(id);
+  if (!cur) return [];
+  return Object.entries(ABILITIES[id].branches || {}).filter(([k]) => k !== cur)
+    .map(([k, b]) => ({ id: k, name: b.name, price: BRANCH_RESPEC.coins, canPay: state.item('coins') >= BRANCH_RESPEC.coins }));
+}
+
+const pickBranch = (id, b) => { const x = ABILITIES[id].branches[b]; return { name: x.name, text: x.text, tradeoff: x.tradeoff }; };
 
 /** Три карточки для окна: дар, ступень, текущие числа, следующая ступень. */
 export function giftCards(state) {
@@ -65,8 +89,11 @@ export function giftCards(state) {
     return {
       id, name: ABILITIES[id].name, level, open,
       xp: state.data.schoolXP[id] || 0,
-      now: open ? statLines(id, level) : [],
+      branch: open && state.branchOf(id) ? { id: state.branchOf(id), ...pickBranch(id, state.branchOf(id)) } : null,
+      now: open ? statLines(id, level, state.branchOf(id)) : [],
+      choices: open ? nextChoices(state, id) : [],
       next: open ? nextStep(state, id) : null,
+      respec: open ? respecOptions(state, id) : [],
       maxed: open && !upgradesOf(id).some((u) => u.toLevel > level),
     };
   });

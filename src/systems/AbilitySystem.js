@@ -3,6 +3,7 @@
 import { ABILITIES, WEIGHT_CLASSES, SCHOOL_XP_PER_USE } from '../config/balance.abilities.js';
 import { UPGRADES } from '../config/balance.progression.js';
 import { MSG } from '../state/EventBus.js';
+import { statsFor } from './abilityStats.js';
 
 export const ABILITY_ORDER = ['telekinesis', 'fire', 'seal'];
 
@@ -17,13 +18,9 @@ export class AbilitySystem {
   level(id) { return this.state.abilityLevel(id); }
   isUnlocked(id) { return this.state.isUnlocked(id); }
 
-  /** Параметры дара на текущей ступени (или null). */
+  /** Параметры дара на текущей ступени с учётом выбранной ветки (или null). */
   stats(id) {
-    const lvl = this.level(id);
-    if (!lvl) return null;
-    const levels = ABILITIES[id].levels;
-    const max = Math.max(...Object.keys(levels).map(Number));
-    return levels[Math.min(lvl, max)];
+    return statsFor(id, this.level(id), this.state.branchOf(id));
   }
 
   label(id) {

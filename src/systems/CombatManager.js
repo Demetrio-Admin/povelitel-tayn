@@ -86,7 +86,7 @@ export class CombatManager {
     if (st.state !== 'ready') return { ok: false, reason: st.state };
     const s = this.abilities.stats(id);
     this.hero.mana -= s.manaCost;
-    this.cooldowns[id] = s.cooldownSec;
+    this.cooldowns[id] = this.startCooldown(id, s);
     this.stats.abilityUses[id]++;
     this.abilities.grantUseXP(id, 'combat');
 
@@ -97,6 +97,18 @@ export class CombatManager {
     this.checkResult();
     this.commit();
     return { ok: true };
+  }
+
+  /**
+   * Перезарядка после применения. «Два броска подряд» (Телекинез III): первое применение не запускает перезарядку,
+   * а открывает окно windowSec — второе в нём запускает обычную; не успели — перезарядка стартует, когда окно закрылось.
+   */
+  startCooldown(id, s) {
+    if (!s.doubleCast) return s.cooldownSec;
+    if (this.chain && this.chain.id === id) { this.chain = null; return s.cooldownSec; }
+    this.chain = { id, left: s.doubleCast.windowSec, window: s.doubleCast.windowSec, cooldownSec: s.cooldownSec };
+    this.emit({ type: 'chain', id, sec: s.doubleCast.windowSec });
+    return 0;
   }
 
   /**
@@ -206,8 +218,24 @@ export class CombatManager {
   handleInterrupt(tags) {
     const r = this.enemy.tryInterrupt(tags);
     if (!r.attempted) return;
-    if (r.ok) { this.stats.interrupts++; this.emit({ type: 'interrupt', ok: true }); }
+    if (r.ok) {
+      this.stats.interrupts++;
+      this.emit({ type: 'interrupt', ok: true });
+      this.refundInterrupt();
+    }
     else this.emit({ type: 'interrupt', ok: false, hint: this.enemy.def.strongAttack?.hint });
+  }
+
+  /** Ветка «Повелитель»: удачное прерывание возвращает часть маны и сокращает перезарядку Телекинеза. */
+  refundInterrupt() {
+    const s = this.abilities.stats('telekinesis');
+    const r = s?.interruptRefund;
+    if (!r) return;
+    const gain = Math.round(s.manaCost * r.manaPct);
+    this.hero.mana = Math.min(this.hero.maxMana, this.hero.mana + gain);
+    this.cooldowns.telekinesis = Math.max(0, this.cooldowns.telekinesis - r.cooldownSec);
+    if (this.chain?.id === 'telekinesis') this.chain.cooldownSec = Math.max(0, this.chain.cooldownSec - r.cooldownSec);   // перезарядка, которая начнётся после окна, тоже короче
+    this.emit({ type: 'refund', mana: gain, cooldownSec: r.cooldownSec });
   }
 
   // ---------- симуляция ----------
@@ -220,6 +248,10 @@ export class CombatManager {
     const h = this.hero;
     h.mana = Math.min(h.maxMana, h.mana + h.regen * dt);
     for (const id of ABILITY_ORDER) this.cooldowns[id] = Math.max(0, this.cooldowns[id] - dt);
+    if (this.chain) {
+      this.chain.left -= dt;
+      if (this.chain.left <= 0) { this.cooldowns[this.chain.id] = Math.max(0, this.chain.cooldownSec - (this.chain.window ?? 0)); this.chain = null; }
+    }
     if (holdEnemy) {
       for (const o of this.fieldObjects) {
         if (o.available || o.gone) continue;

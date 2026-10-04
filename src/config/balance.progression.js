@@ -32,14 +32,26 @@ export const UPGRADES = {
     timerSec: { prototype: 60, live: 5 * 60 },
     startEvent: 'telekinesis_2_start',
     completeEvent: 'telekinesis_2_complete',
+    doneText: 'Теперь можно сдвинуть тяжёлую глыбу за алтарём.',
   },
-  // Следующие ступени — только данные, в маршрут прототипа не входят.
+  // v0.11.0 — вторая ступень Огня и Астрала. Лесенка таймеров: Телекинез II 5 мин → Огонь II 15 мин → Астрал II 30 мин.
+  // Начать изучение можно на экране «Дары» (кнопка в Сумке); одно изучение за раз.
   fire_2: {
-    ability: 'fire', toLevel: 2, title: 'Огонь II', locked: true,
-    description: '+25% урона, более долгое горение.',
+    ability: 'fire', toLevel: 2, title: 'Огонь II',
+    description: 'Урон выше примерно на четверть, горение сильнее и дольше.',
     requires: { heroLevel: 6, abilityLevel: 1 },
+    // шесть углей: пять Корневиков дают по одному (и при повторных встречах тоже) + один из сухого куста у Круга
     cost: { schoolXP: 180, items: { crimson_ember: 6 } },
-    timerSec: { prototype: 90, live: 45 * 60 },
+    timerSec: { prototype: 90, live: 15 * 60 },
+    doneText: 'Пламя бьёт сильнее, а горение держится дольше.',
+  },
+  seal_2: {
+    ability: 'seal', toLevel: 2, title: 'Астрал II',
+    description: '+40% урона: Астрал бьёт ещё сильнее и всё так же пробивает защиту.',
+    requires: { heroLevel: 7, abilityLevel: 1 },
+    cost: { schoolXP: 100, items: { lunar_shard: 6 } },
+    timerSec: { prototype: 90, live: 30 * 60 },
+    doneText: 'Астрал разит сильнее — тень Хранителя больше не защита.',
   },
 };
 

@@ -520,7 +520,7 @@ export const windows08 = {
     };
     this.openModal({
       title: fm('Сумка ведьмы', 'Сумка колдуна'), color: COLORS.gold, text: '', content,
-      buttons: [{ label: 'Закрыть', primary: true }, { label: 'Журнал', onClick: () => this.openJournal() }, { label: 'Меню', onClick: () => this.openMenu() }],
+      buttons: [{ label: 'Закрыть', primary: true }, { label: 'Дары', onClick: () => this.openGifts() }, { label: 'Журнал', onClick: () => this.openJournal() }, { label: 'Меню', onClick: () => this.openMenu() }],
     });
   },
 };

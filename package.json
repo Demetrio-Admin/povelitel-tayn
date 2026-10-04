@@ -1,13 +1,13 @@
 {
   "name": "witch-rpg-prototype",
-  "version": "0.10.3",
+  "version": "0.11.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host",
-    "test": "node tests/run-tests.js && node tests/world-test.js && node tests/nav-test.mjs && node --import ./tools/ui/register.mjs tests/editor-test.mjs && node tests/session-test.js && node tests/telemetry-test.mjs && node --import ./tools/ui/register.mjs tests/ui-smoke.mjs && node --import ./tools/ui/register.mjs tests/objects-test.mjs && node --import ./tools/ui/register.mjs tests/hero-test.mjs",
+    "test": "node tests/run-tests.js && node tests/world-test.js && node tests/nav-test.mjs && node --import ./tools/ui/register.mjs tests/editor-test.mjs && node tests/session-test.js && node tests/telemetry-test.mjs && node tests/gifts-test.mjs && node --import ./tools/ui/register.mjs tests/ui-smoke.mjs && node --import ./tools/ui/register.mjs tests/objects-test.mjs && node --import ./tools/ui/register.mjs tests/hero-test.mjs",
     "ui:shots": "node --import ./tools/ui/register.mjs tools/ui/render-scenes.mjs",
     "e2e": "node tests/e2e/play.mjs",
     "test:db": "node tools/sql/security-test.mjs && node tools/sql/diff-test.mjs && node tools/sql/migration-test.mjs && node tools/sql/telemetry-test.mjs && BACKEND=pg node tests/session-test.js",

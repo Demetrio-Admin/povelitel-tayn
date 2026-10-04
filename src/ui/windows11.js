@@ -1,0 +1,123 @@
+// v0.11.0 — экран «Дары»: три школы, текущая ступень с числами, следующая ступень с требованиями и кнопкой «Изучить».
+// Что показывать, решает systems/gifts.js; здесь только рисунок и ввод. Методы подмешиваются в UIScene.
+import { VIEW, COLORS } from '../config/game.config.js';
+import { UI } from '../config/ui.config.js';
+import { MSG } from '../state/EventBus.js';
+import { services } from '../services.js';
+import { giftCards } from '../systems/gifts.js';
+import { ROMAN } from '../objects/InteractiveObject.js';
+import { UPGRADES } from '../config/balance.progression.js';
+import { ABILITIES } from '../config/balance.abilities.js';
+import { addButton, drawPlate } from './widgets.js';
+
+const FONT = UI.font;
+const SH = UI.shadow;
+const hex = (c) => '#' + c.toString(16).padStart(6, '0');
+const fmtSec = (sec) => (sec >= 3600 ? `${Math.floor(sec / 3600)} ч ${Math.round((sec % 3600) / 60)} мин` : `${Math.round(sec / 60)} мин`);
+const fmtMs = (ms) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+
+const STATUS_NOTE = {
+  in_progress: 'Изучение идёт — можно играть, таймер не останавливается и во время боя.',
+  busy: 'Сейчас идёт другое изучение. Дождитесь его конца.',
+};
+
+export const windows11 = {
+  openGifts() {
+    if (this.mode === 'combat' || this.modal) return;
+    services.audio.play('journal');
+    const { state } = services;
+    const cards = giftCards(state);
+    const research = state.data.research;
+    const content = {
+      height: 0,
+      build: (c, x, y, w) => {
+        let cy = y;
+        const text = (tx, ty, str, style = {}) => {
+          const t = this.add.text(tx, ty, str, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, shadow: SH, wordWrap: { width: w - 28 }, lineSpacing: 2, ...style });
+          c.add(t);
+          return t;
+        };
+        if (research) {
+          const up = UPGRADES[research.upgradeId];
+          const t = text(x, cy, `✦ Идёт изучение «${up.title}»: осталось ${fmtMs(state.researchRemainingMs())}`, { fontSize: UI.type.body, color: hex(COLORS[ABILITIES[up.ability].color]) });
+          cy += t.height + 12;
+        }
+        for (const g of cards) {
+          const color = COLORS[ABILITIES[g.id].color];
+          const top = cy;
+          const plate = this.add.graphics();
+          c.add(plate); c.sendToBack(plate);
+          const px = x + 14;
+          let iy = top + 12;
+          const title = text(px, iy, `${g.name} ${g.open ? ROMAN[g.level] : '— не открыт'}`, { fontSize: UI.type.heading, fontStyle: 'bold', color: g.open ? hex(color) : COLORS.textDim });
+          if (g.open) text(x + w - 14, iy + 4, `опыт дара ${g.xp}`, { color: COLORS.textDim, wordWrap: { width: 220 } }).setOrigin(1, 0);
+          iy += title.height + 6;
+          if (!g.open) {
+            const t = text(px, iy, 'Дар откроется по ходу истории.', { color: COLORS.textDim });
+            iy += t.height + 4;
+          } else {
+            for (const line of g.now) { const t = text(px, iy, line); iy += t.height + 2; }
+            iy += 8;
+            if (g.next) {
+              const n = g.next;
+              const h = text(px, iy, `Дальше: ${n.title}`, { fontSize: UI.type.body, fontStyle: 'bold', color: COLORS.textGold });
+              iy += h.height + 2;
+              const d = text(px, iy, n.description, { color: COLORS.textDim });
+              iy += d.height + 6;
+              for (const line of n.after) { const t = text(px, iy, `→ ${line}`, { color: hex(0x9be8a0) }); iy += t.height + 2; }
+              iy += 6;
+              if (n.status === 'done') { /* ступень уже есть — до сюда не дойдём, оставлено для надёжности */ }
+              else {
+                for (const r of (n.status === 'in_progress' ? [] : n.need)) {   // плата уже списана — «✗ 0/6» только сбивает
+                  const t = text(px + 6, iy, `${r.ok ? '✓' : '✗'} ${r.label}: ${Math.min(r.have, r.need)}/${r.need}`, { color: r.ok ? '#9be8a0' : COLORS.text });
+                  iy += t.height + 1;
+                }
+                const tt = text(px + 6, iy + 2, `Время изучения: ${fmtSec(n.seconds)}`, { color: COLORS.textDim });
+                iy += tt.height + 10;
+                const note = STATUS_NOTE[n.status];
+                if (note) { const t = text(px, iy, note, { color: hex(0x9fe9ff) }); iy += t.height + 8; }
+                else {
+                  const can = n.canStart;
+                  const label = can ? 'Изучить' : n.status === 'event' ? 'Сначала пробудите алтарь' : 'Не хватает';
+                  const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, label, {
+                    primary: can, accent: can ? color : null, fontSize: UI.type.body,
+                    onPress: () => { if (this.modal?.scroll?.canTap()) this.startGiftResearch(n.id); },
+                  });
+                  if (!can) b.text.setAlpha(0.6);
+                  c.add(b.parts);
+                  iy += UI.touch.button + 12;
+                }
+              }
+            } else if (g.maxed) {
+              const t = text(px, iy, 'Высшая ступень из доступных. Новые ступени и ветки — в следующих обновлениях.', { color: COLORS.textDim });
+              iy += t.height + 4;
+            }
+          }
+          const h = iy - top + 12;
+          drawPlate(plate, w, h, { accent: g.open ? color : 0x6a5a48, fill: 0x18121a, alpha: 0.85, radius: 12 });
+          plate.setPosition(x + w / 2, top + h / 2);
+          cy = top + h + 14;
+        }
+        return cy - y;
+      },
+    };
+    this.openModal({
+      title: 'Дары', color: COLORS.gold, text: '', content,
+      buttons: [{ label: 'Закрыть', primary: true }, { label: 'Сумка', onClick: () => this.openBag() }],
+    });
+  },
+
+  startGiftResearch(upgradeId) {
+    const { abilities } = services;
+    const up = UPGRADES[upgradeId];
+    if (!abilities.startResearch(upgradeId)) {
+      services.audio.play('locked');
+      this.toast('Пока не хватает требований для изучения.');
+      return;
+    }
+    services.audio.play('unlock_magic');
+    this.toast(`Изучение «${up.title}» началось`, COLORS[ABILITIES[up.ability].color]);
+    this.refreshHud();
+    this.reopenModal();   // карточки перерисовываются: кнопка пропадает, сверху — таймер
+  },
+};

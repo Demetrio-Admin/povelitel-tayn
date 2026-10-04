@@ -17,6 +17,7 @@ import { PlayerActions } from '../../src/systems/PlayerActions.js';
 import { ENEMIES } from '../../src/config/balance.enemies.js';
 import { INTERACTIVES } from '../../src/config/world.layout.js';
 import { WORLD_MANA_COST } from '../../src/config/balance.abilities.js';
+import { UPGRADES, TIMER_MODE } from '../../src/config/balance.progression.js';
 import { CACHE_RESOURCE_REWARDS } from '../../src/config/world.content.js';
 import * as vitals from '../../src/state/vitals.js';
 
@@ -102,7 +103,7 @@ function run(scenario) {
   };
   const heal = () => { const miss = vitals.maxHp(state) - vitals.hp(state); const price = Math.ceil(miss / 10); if (miss > 0 && state.item('coins') >= price) { state.removeItem('coins', price); vitals.setHp(state, vitals.maxHp(state)); L(`    лечение у Мирры: ${price} монет`); } };
   const stage = (name, mins) => { L(`== ${name}`); minutes += 0; return mins; };
-  const snapshot = () => ({ xp: state.data.heroXP, lvl: state.data.heroLevel, coins: state.item('coins') });
+  const snapshot = () => ({ xp: state.data.heroXP, lvl: state.data.heroLevel, coins: state.item('coins'), school: { ...state.data.schoolXP }, ember: state.item('crimson_ember') });
   return (async () => {
     // ---------- A. Дом и поляна (5 мин)
     stage('A. Дом и поляна');
@@ -134,8 +135,10 @@ function run(scenario) {
     await craft('lunar_wick'); await use('lunar_wick');
     await craft('elixir_mana'); await craft('resin_flask');
     const okTK = state.startResearch('telekinesis_2'); if (okTK) ev('telekinesis_2_start'); L(`    ТК II запущен: ${okTK}`);
-    rest(60, true); abilities.update();
-    rest(5 * 60, true);
+    // изучение идёт параллельно отдыху в доме: общий отдых прежний (6 мин), но не меньше самого таймера изучения
+    const researchSec = UPGRADES.telekinesis_2.timerSec[TIMER_MODE];
+    rest(researchSec, true); abilities.update();
+    rest(Math.max(0, 6 * 60 - researchSec), true);
     // ---------- D. Старый лес (10 мин)
     stage('D. Старый лес');
     pay(WORLD_MANA_COST.push.heavy, 'heavy_boulder'); ev('heavy_path_open');
@@ -207,6 +210,8 @@ console.log(row('Время по плану ТЗ (не измерено)', r => 
 console.log(row('Все боевые попытки', fmtFights));
 console.log(row('XP героя в конце', r => `${r.final.xp}`));
 console.log(row('Уровень в конце', r => `${r.final.lvl}`));
+console.log(row('Опыт даров в конце (Телекинез / Огонь / Астрал)', r => `${r.final.school.telekinesis || 0} / ${r.final.school.fire || 0} / ${r.final.school.seal || 0}`));
+console.log(row('Багровых углей в конце', r => `${r.final.ember}`));
 console.log(row('Монеты в конце', r => `${r.final.coins}`));
 console.log(row('Остались Настой / Эликсир / Склянка', potionsLeft));
 console.log(row('Остались трава / грибы / смола / пыль', left));

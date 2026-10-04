@@ -2,7 +2,8 @@
 // Не зависит от Phaser: тестируется в node (tests/run-tests.js).
 
 import { HERO_LEVELS } from '../config/balance.hero.js';
-import { UPGRADES, TIMER_MODE } from '../config/balance.progression.js';
+import { UPGRADES, TIMER_MODE, BRANCH_RESPEC } from '../config/balance.progression.js';
+import { ABILITIES } from '../config/balance.abilities.js';
 import { WORLD } from '../config/world.layout.js';
 import { SAVE } from '../config/game.config.js';
 import { materialize } from './vitals.js';
@@ -238,7 +239,38 @@ export class GameState {
     if (!force && this.researchRemainingMs() > 0) return null;
     const up = UPGRADES[r.upgradeId];
     this.unlockAbility(up.ability, up.toLevel);
+    if (up.branch) this.setBranch(up.ability, up.branch);
     this.data.research = null;
     return r.upgradeId;
+  }
+
+  // ---------- билд: ветки даров (v0.11.1) ----------
+  // Хранится как объект мира 'player_build' ({ branches: { telekinesis: 'lord' } }): он уже сохраняется на сервере
+  // («последний записал»), поэтому схему базы менять не пришлось. Слоты и амулеты лягут туда же.
+  buildData() {
+    const b = this.getObject('player_build');
+    return { branches: { ...(b && typeof b.branches === 'object' && b.branches ? b.branches : {}) } };
+  }
+  /** Выбранная ветка дара или null. Ветка действует, только пока она есть в данных дара и ступень её достигла. */
+  branchOf(abilityId) {
+    const id = this.buildData().branches[abilityId];
+    const br = id && ABILITIES[abilityId]?.branches?.[id];
+    return br && this.abilityLevel(abilityId) >= (br.fromLevel || 1) ? id : null;
+  }
+  setBranch(abilityId, branchId) {
+    const b = this.buildData();
+    b.branches[abilityId] = branchId;
+    this.setObject('player_build', { branches: b.branches });
+  }
+  /** Смена ветки за монеты. Не в бою — это проверяет окно (в бою кнопки нет). */
+  respecBranch(abilityId, branchId) {
+    const br = ABILITIES[abilityId]?.branches?.[branchId];
+    const cur = this.branchOf(abilityId);
+    if (!br || !cur || this.abilityLevel(abilityId) < (br.fromLevel || 1)) return { ok: false, reason: 'unavailable' };
+    if (cur === branchId) return { ok: false, reason: 'same' };
+    if (this.item('coins') < BRANCH_RESPEC.coins) return { ok: false, reason: 'coins', need: BRANCH_RESPEC.coins };
+    this.removeItem('coins', BRANCH_RESPEC.coins);
+    this.setBranch(abilityId, branchId);
+    return { ok: true, price: BRANCH_RESPEC.coins };
   }
 }

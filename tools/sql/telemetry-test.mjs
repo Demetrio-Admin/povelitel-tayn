@@ -27,12 +27,12 @@ ok(denied(q(`select public.telemetry_log('${S}', '[]'::jsonb);`, 'anon')), 'бе
 
 const r1 = log(A, S, [{ n: 'session_start', t: 0, d: { v: '0.10.2', hero: 'witch' } }, { n: 'ev', t: 12345, d: { k: 'intro' } }, { n: 'combat_end', t: 99000, d: { result: 'defeat', sec: 41.5 } }]);
 ok(r1.out === '3' && count(A) === 3, 'пачка из трёх событий записана на вход игрока');
-ok(q(`select data ->> 'k' from public.telemetry_events where user_id = '${A}' and name = 'ev';`).out === 'intro' && q(`select t_ms from public.telemetry_events where name = 'combat_end';`).out === '99000', 'имя, время и данные сохранены');
+ok(q(`select data ->> 'k' from public.telemetry_events where user_id = '${A}' and name = 'ev';`).out === 'intro' && q(`select t_ms from public.telemetry_events where user_id = '${A}' and name = 'combat_end';`).out === '99000', 'имя, время и данные сохранены');
 
 console.log('\nБаза: отказы телеметрии');
 ok(log(A, S, [{ n: 'Bad Name', t: 1, d: {} }, { n: 'x'.repeat(41), t: 1, d: {} }, { n: 'ok', t: -5, d: {} }, { n: 'ok2', t: 'abc', d: {} }, 'junk', { n: 'ok3', t: 5, d: [1, 2] }]).out === '1', 'плохие имена, отрицательное и нечисловое время, мусор отбрасываются; массив вместо данных становится {}');
-ok(q(`select data::text from public.telemetry_events where name = 'ok3';`).out === '{}', 'данные не-объектом заменены на {}');
-ok(log(A, S, [{ n: 'big', t: 1, d: { x: 'y'.repeat(700) } }]).out === '1' && q(`select data::text from public.telemetry_events where name = 'big';`).out === '{}', 'слишком большие данные заменяются на {}');
+ok(q(`select data::text from public.telemetry_events where user_id = '${A}' and name = 'ok3';`).out === '{}', 'данные не-объектом заменены на {}');
+ok(log(A, S, [{ n: 'big', t: 1, d: { x: 'y'.repeat(700) } }]).out === '1' && q(`select data::text from public.telemetry_events where user_id = '${A}' and name = 'big';`).out === '{}', 'слишком большие данные заменяются на {}');
 ok(log(A, 'BAD SESSION', [{ n: 'a', t: 1, d: {} }]).out === '0', 'неверный id сессии — ничего не записано');
 ok(log(A, S, Array.from({ length: 101 }, () => ({ n: 'a', t: 1, d: {} }))).out === '0', 'больше 100 событий за раз — отказ без ошибки');
 ok(q(`select public.telemetry_log('${S}', '{"a":1}'::jsonb);`, A).out === '0', 'не массив — отказ без ошибки');

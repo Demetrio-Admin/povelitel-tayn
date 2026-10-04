@@ -26,6 +26,34 @@ export const ABILITIES = {
         interruptsNormalCast: true,
         canTargetBossDirectly: false,
       },
+      // v0.11.1: ступень III — «два броска подряд»: после первого броска второй доступен без перезарядки в течение windowSec
+      // (мана тратится за каждый). Дальше игрок выбирает ветку (branches), её числа накладываются поверх этой ступени.
+      3: {
+        label: 'Телекинез III',
+        damage: 20, manaCost: 14, cooldownSec: 5, castSec: 0.15,
+        maxWeight: 'heavy',
+        heavyObjectBonus: 0.5,
+        throwDamageBonus: 0.35,
+        doubleCast: { windowSec: 2.5 },
+        interruptsNormalCast: true,
+        canTargetBossDirectly: false,
+      },
+    },
+    // Ветки ступени III. Накладка на числа ступени: set — заменить, add — прибавить, mul — умножить. У каждой ветки есть цена.
+    branches: {
+      lord: {
+        name: 'Повелитель', fromLevel: 3,
+        text: 'Мастер прерываний: каждое удачное прерывание возвращает половину маны и ускоряет перезарядку на 3 с.',
+        tradeoff: 'Прямой урон ниже на 10%.',
+        mul: { damage: 0.9 },
+        set: { interruptRefund: { cooldownSec: 3, manaPct: 0.5 } },
+      },
+      breaker: {
+        name: 'Разрушитель', fromLevel: 3,
+        text: 'Броски камней бьют сильнее: урон бросками +30% (вместе со ступенью — +65%).',
+        tradeoff: 'Каждый бросок стоит на 4 маны больше.',
+        add: { throwDamageBonus: 0.3, manaCost: 4 },
+      },
     },
   },
   fire: {

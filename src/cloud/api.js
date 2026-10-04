@@ -151,6 +151,9 @@ export class SupabaseApi {
   /** v0.9: атомарное действие сервера (лечение за монеты, стартовый набор). */
   playerAction(token, action) { return this.rpc('player_action', { action }, token); }
 
+  /** v0.10.2: пачка событий телеметрии (supabase/migrations/20261005_telemetry.sql). Без миграции вернёт ошибку — игре всё равно. */
+  telemetryLog(token, session, events, { keepalive = false } = {}) { return this.rpc('telemetry_log', { session, events }, token, { keepalive }); }
+
   // ---------------------------------------------------------------- регистрация ника (Edge Function)
   claimNickname(token, nickname, password) {
     return this._req('/functions/v1/account', { method: 'POST', token, body: { action: 'register', nickname, password } });

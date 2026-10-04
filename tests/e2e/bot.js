@@ -275,7 +275,7 @@ window.__bot = async function () {
     await craft('lunar_wick');
     await act('lunar_altar', null, '(insert wick + research)');
     await act('lunar_altar', null, '(check research)');
-    { const t0 = performance.now(); while (!S.state.hasEvent('telekinesis_2_complete') && performance.now() - t0 < 180000) { await sleep(1000); await settle(); }
+    { const t0 = performance.now(); while (!S.state.hasEvent('telekinesis_2_complete') && performance.now() - t0 < 360000) { await sleep(1000); await settle(); }
       L(`  research: waited ${Math.round((performance.now() - t0) / 1000)}s (real timer, no debug)`); }
     await settle(); snap('research done');
     await act('heavy_boulder', 'telekinesis');

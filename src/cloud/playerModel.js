@@ -9,7 +9,8 @@
 //   • позиция, точка возрождения, состояние предметов мира, исследование — «последний записал»;
 //   • история боёв дописывается;
 //   • v0.12.0: HP и мана принадлежат серверу. Они восстанавливаются по времени сервера (в том числе пока игрок офлайн),
-//     клиент их не записывает: мана тратится дельтой mana_spent, остальное — атомарными действиями (drink, heal, combat_*).
+//     клиент их не записывает — только атомарные действия (drink, heal, combat_*, v0.13.0: world — сбор, находки и магия в мире).
+//   • v0.13.0: состояние объектов мира kind gather/loot/stash (rules.world) пишет только сервер; их ключи в patch.objects игнорируются.
 // applyPatch ниже — точное зеркало SQL-функции sync_player (supabase/schema.sql); соответствие проверяет tools/sql/diff-test.mjs.
 // applyAction — зеркало player_action (v0.9): платное лечение и стартовый набор зелий — атомарные операции сервера,
 // а не дельты patch (иначе при нехватке монет сервер обрезал бы списание до нуля, а HP всё равно стало бы полным).
@@ -18,6 +19,8 @@ import { HERO_LEVELS, HEALING } from '../config/balance.hero.js';
 import { serverRules } from '../config/storyItems.js';
 
 const RULES = serverRules();
+/** v0.13.0: ключи объектов мира, состояние которых пишет только сервер (сбор, находки, запасы). Магия (kind cast) остаётся за клиентом. */
+export const serverOwnedObject = (k) => typeof k === 'string' && Object.hasOwn(RULES.world, k) && RULES.world[k].kind !== 'cast';
 
 export const ABILITY_IDS = ['telekinesis', 'fire', 'seal'];
 export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal'];
@@ -154,9 +157,9 @@ export function diffSnapshots(base, cur) {
   return p;
 }
 
-/** Только «мелочь» (позиция, время игры, потраченная мана): такие изменения можно отправлять реже. */
+/** Только «мелочь» (позиция, время игры): такие изменения можно отправлять реже. */
 export function isMinorPatch(p) {
-  return Object.keys(p).every(k => k === 'pos' || k === 'play' || k === 'mana_spent');
+  return Object.keys(p).every(k => k === 'pos' || k === 'play');
 }
 
 const union = (list, add, max) => {
@@ -229,20 +232,15 @@ export function applyPatch(snap, patch = {}, nowMs = null) {
   s.enemies = union(s.enemies, patch.enemies, LIMITS.maxKeys);
   s.tutorial = union(s.tutorial, patch.tutorial, LIMITS.maxKeys);
   for (const [k, v] of Object.entries(isObj(patch.objects) ? patch.objects : {})) {
-    if (!isId(k)) continue;
+    if (!isId(k) || serverOwnedObject(k)) continue;
     if (v === null) delete s.objects[k];
     else if (isObj(v) && (k in s.objects || Object.keys(s.objects).length < LIMITS.maxObjects)) s.objects[k] = v;
   }
   if (isObj(patch.research) && 'value' in patch.research) s.research = isObj(patch.research.value) ? patch.research.value : null;
   if (isObj(patch.pos) && num(patch.pos.x) && num(patch.pos.y)) s.pos = { x: patch.pos.x, y: patch.pos.y };
   if (isObj(patch.safe) && num(patch.safe.x) && num(patch.safe.y)) s.safe = { x: patch.safe.x, y: patch.safe.y };
-  // HP и ману клиент не записывает (поля hp и mana игнорируются). Потраченная мана — дельта; во время боя её не считаем:
-  // остаток маны сообщает конец боя (combat_end)
-  if (num(patch.mana_spent) && s.combatSince == null) {
-    const mx = maxVitals(s.level);
-    const cur = num(s.mana) ? clamp(s.mana, 0, mx.mana) : mx.mana;
-    s.mana = Math.max(0, cur - clamp(patch.mana_spent, 0, 1000));
-  }
+  // HP и ману клиент не записывает: поля hp, mana (и устаревшее mana_spent, v0.12.0) игнорируются.
+  // Ману тратят операции сервера (world, use), остаток после боя сообщает combat_end.
   if (num(patch.play)) s.play += clamp(int(patch.play), 0, LIMITS.maxPlayMsPerSync);
   if (Array.isArray(patch.combats)) s.combats = [...s.combats, ...patch.combats.filter(isObj)].slice(-LIMITS.maxCombats);
   return s;
@@ -334,6 +332,57 @@ function drink(s, item) {
   return { ok: true, kind: u.kind, amount: s[key] - cur };
 }
 
+/**
+ * v0.13.0: действие в мире по правилам RULES.world (сбор, находка, запас, магия). Порядок проверок (его повторяет SQL):
+ * неизвестный объект → бой → закрыто (события, побеждённые враги, состояние «родителя», дар и его ступень) → уже сделано / ещё не выросло → мана.
+ * Время «сейчас» — vitalsAt (после advanceVitals это момент сервера).
+ */
+function worldAct(s, id) {
+  const r = typeof id === 'string' && Object.hasOwn(RULES.world, id) ? RULES.world[id] : null;
+  if (!r) return { ok: false, reason: 'unknown' };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  const now = num(s.vitalsAt) ? s.vitalsAt : 0;
+  const st = (k) => (isObj(s.objects[k]) ? s.objects[k] : null);
+  const locked = !(r.requires || []).every(ev => has(s, ev)) || !(r.requiresEnemy || []).every(e => s.enemies.includes(e))
+    || (r.parent && st(r.parent.id)?.state !== r.parent.state)
+    || (r.ability && !((s.abilities[r.ability]?.unlocked) && (s.abilities[r.ability]?.level || 0) >= (r.minLevel || 1)));
+  if (locked) return { ok: false, reason: 'locked' };
+  if ((r.blockedBy || []).some(ev => has(s, ev))) return { ok: false, reason: 'done' };
+  let wins = 0;
+  if (r.kind === 'loot' && st(id)?.state === r.mark) return { ok: false, reason: 'done' };
+  if (r.kind === 'gather') {
+    const o = st(id);
+    if (o && o.state === 'picked') {
+      const left = (num(o.t) ? o.t : 0) + r.respawnSec * 1000 - now;
+      if (left > 0) return { ok: false, reason: 'wait', left: Math.ceil(left / 1000) };
+    }
+  }
+  if (r.kind === 'stash') {
+    const rep = st(`rep:${r.guard}`);
+    wins = num(rep?.wins) ? rep.wins : (s.enemies.includes(r.guard) ? 1 : 0);
+    const claimed = num(st(id)?.claimed) ? st(id).claimed : 0;
+    if (wins <= 0) return { ok: false, reason: 'locked' };
+    if (wins <= claimed) return { ok: false, reason: 'done' };
+  }
+  if (r.mana) {
+    const mx = maxVitals(s.level);
+    const cur = num(s.mana) ? clamp(s.mana, 0, mx.mana) : mx.mana;
+    if (cur < r.mana) return { ok: false, reason: 'mana', mana: r.mana };
+    s.mana = cur - r.mana;
+  }
+  if (r.kind === 'gather') {
+    addItem(s, r.item, r.amount);
+    s.objects[id] = { state: 'picked', t: now };
+  } else if (r.kind === 'loot') {
+    grant(s, r.reward);
+    s.objects[id] = { state: r.mark };
+  } else if (r.kind === 'stash') {
+    grant(s, { items: r.items });
+    s.objects[id] = { ...(st(id) || {}), claimed: wins };
+  }
+  return { ok: true, kind: r.kind, id, mana: r.mana || 0 };
+}
+
 /** Начало боя: HP и мана замирают, лечение и зелья из сумки закрыты. Повтор начало не сдвигает. */
 function combatStart(s) {
   if (s.combatSince == null) s.combatSince = s.vitalsAt;
@@ -379,6 +428,8 @@ function migrateV10(s) {
  *   { op: 'drink', item }   — зелье из сумки вне боя (настой жизни, лунный эликсир)
  *   { op: 'combat_start' }  — бой начался: восстановление стоит
  *   { op: 'combat_end', outcome: 'victory'|'defeat'|'retreat', mana } — бой закончен
+ *   v0.13.0:
+ *   { op: 'world', obj }    — сбор узла, находка, запас или магия в мире (правила RULES.world: мана, дар, возрождение, награда)
  * nowMs — время сервера: перед любым действием HP и мана восстанавливаются до него (как player_action).
  */
 export function applyAction(snap, action = {}, nowMs = null) {
@@ -389,6 +440,7 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'use') return { snapshot: s, result: useItem(s, action.item) };
   if (op === 'migrate_v10') return { snapshot: s, result: migrateV10(s) };
   if (op === 'drink') return { snapshot: s, result: drink(s, action.item) };
+  if (op === 'world') return { snapshot: s, result: worldAct(s, action.obj) };
   if (op === 'combat_start') return { snapshot: s, result: combatStart(s) };
   if (op === 'combat_end') return { snapshot: s, result: combatEnd(s, action) };
   if (op === 'heal') {

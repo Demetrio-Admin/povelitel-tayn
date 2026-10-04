@@ -195,6 +195,15 @@ export class FakeSupabase {
     }
   }
 
+  /** v0.13.0. Тесты: «прошло sec секунд» с момента сбора — отметка времени объекта сдвигается в прошлое. */
+  ageObject(uid, id, sec) {
+    if (this.backend === 'pg') {
+      pg(`update public.player_world set data = jsonb_set(data, '{t}', to_jsonb((data->>'t')::numeric - ${sec} * 1000)) where user_id = '${uid}' and kind = 'object' and key = '${id}';`);
+    } else {
+      const pl = this.players.get(uid); pl.snap.objects[id].t -= sec * 1000;
+    }
+  }
+
   /** Тесты: что сервер хранит про HP и бой (без пересчёта по времени). */
   rawVitals(uid) {
     if (this.backend === 'pg') {

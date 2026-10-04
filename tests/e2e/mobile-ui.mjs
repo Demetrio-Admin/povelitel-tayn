@@ -105,11 +105,11 @@ try {
     await page.waitForFunction(() => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === 'herb_g1', null, { timeout: 120000 });
     assert.match(await ui(() => window.__game.scene.getScene('UIScene').ctxLabel.text), /4 маны/);
     await shot('v09-gather-cost');
-    const mana0 = await ui(() => window.__witch.state.data.manaSpent || 0);   // v0.12.0: мана восстанавливается по часам, поэтому считаем счётчик потраченного
+    await ui(() => { const st = window.__witch.state; st.data.mana = 50; st.data.vitalsClock = Date.now(); });   // v0.13.0: сбор — операция сервера (здесь её правило на устройстве); мана восстанавливается по часам
     const ctxp = await ui(() => { const u = window.__game.scene.getScene('UIScene'); const r = u.ctxBg.getBounds(); return { x: r.centerX, y: r.centerY }; });
     await tap(ctxp.x, ctxp.y);
     await page.waitForFunction(() => window.__witch.state.item('moon_herb') >= 1, null, { timeout: 120000 });
-    assert.equal((await ui(() => window.__witch.state.data.manaSpent || 0)) - mana0, 4, 'gather spent 4 mana once');
+    { const m = await ui(() => window.__witch.state.data.mana); assert.ok(m >= 45.9 && m < 49, `gather spent 4 mana once (mana ${m})`); }
     await shot('v09-gather-spent');
     // нехватка маны: ничего не выдаётся
     await ui(() => { const ex = window.__game.scene.getScene('ExplorationScene'); window.__witch.state.data.mana = 2; window.__game.scene.getScene('UIScene').toasts.forEach(t => t.destroy()); window.__game.scene.getScene('UIScene').toasts = []; const h = ex.objects.find(o => o.id === 'herb_g2'); ex.player.setPosition(h.x, h.y + 40); ex.player.stop(); });

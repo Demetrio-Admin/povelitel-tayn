@@ -3,12 +3,13 @@ import { RESOURCES } from '../config/resources.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { WORLD_MANA_COST } from '../config/balance.abilities.js';
-import * as vitals from '../state/vitals.js';
 import { InteractiveObject, itemName } from './InteractiveObject.js';
 
 /**
  * GatherObject (v0.8) — ресурс, который можно просто собрать руками: лунная трава, грибы, смола, пыль, осколки.
  * После сбора «вырастает заново» через respawnSec (состояние: worldObjects[id] = { state: 'picked', t: время сбора }).
+ * v0.13.0: сбор — операция сервера (world): он списывает ману, выдаёт ресурс и пишет время сбора по своим часам.
+ * holdUntil — запас на случай, если часы устройства и сервера расходятся: растение не «вырастает» раньше срока.
  * Из-за возобновления игрок не может застрять без ресурса, нужного для прогрессии.
  */
 export class GatherObject extends InteractiveObject {
@@ -35,6 +36,7 @@ export class GatherObject extends InteractiveObject {
   get markerDistance() { return 360; }
 
   picked() {
+    if ((this.holdUntil || 0) > this.state.now()) return true;
     const s = this.saved;
     return s.state === 'picked' && this.state.now() - (s.t || 0) < this.respawnMs;
   }
@@ -48,6 +50,12 @@ export class GatherObject extends InteractiveObject {
     this.grown = !gone;
   }
   refresh() { super.refresh(); this.applyVisual(); }
+
+  explainFail(r) {
+    if (r.reason === 'wait') this.holdUntil = this.state.now() + (r.left || 1) * 1000;   // сервер: ещё не выросло (часы устройства могут спешить)
+    super.explainFail(r);
+    if (r.reason === 'wait') this.applyVisual();
+  }
 
   /** Покадрово: следим за таймером возрождения. */
   update() {
@@ -65,11 +73,12 @@ export class GatherObject extends InteractiveObject {
     this.scene.twinkle?.(this.x, this.baseY - 20, this.res.color);
   }
 
-  interact(abilityId) {
+  async interact(abilityId) {
     if (!this.isAvailable()) return;
     if (this.rejectWrongAbility(abilityId)) return;
-    if (!this.payMana()) return;
-    this.paid = this.manaCost();
+    const r = await this.serverAct();   // сервер: условия, мана, ресурс, время возрождения
+    if (!r || this.removed || !this.sprite.active) return;
+    this.holdUntil = this.state.now() + this.respawnMs;
     this.busy = true;
     const sc = this.scene;
     sc.player.castAt(this.x, this.baseY, 'gather');   // героиня наклоняется к ресурсу
@@ -81,12 +90,10 @@ export class GatherObject extends InteractiveObject {
     sc.time.delayedCall(540, () => this.collect());
   }
 
+  /** Ресурс и мана уже у сервера; здесь — только показ. */
   collect() {
-    if (this.removed) { if (this.paid) vitals.refundMana(this.state, this.paid); this.paid = 0; return; }   // сбор отменён — мана возвращается
-    this.paid = 0;
+    if (this.removed) return;
     const sc = this.scene;
-    this.state.addItem(this.cfg.res, this.amount);
-    this.persist({ state: 'picked', t: this.state.now() });
     this.busy = false;
     this.grown = false;
     services.audio.play('gather_done');

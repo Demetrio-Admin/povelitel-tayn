@@ -272,13 +272,14 @@ console.log('\nv0.9. Общие HP/мана на сервере, лечение 
   ok(near(other.state.data.mana, 12.5) && near(other.state.data.hp, 0), 'мана и числовой 0 HP на сервере видны на другом устройстве');
   st.data.mana = 999; st.data.hp = 999; st.save(); await d.session.flush({ force: true });
   ok(near(st.data.mana, 12.5) && near(st.data.hp, 0), 'клиент не может записать ни ману, ни HP: сервер вернул свои числа');
-  // потраченная мана уходит дельтой mana_spent
+  // v0.13.0: ману в мире тратит сам сервер (сбор — операция world); устаревшее mana_spent он не принимает
   await setVitals(d, { hp: 40, mana: 50 });
-  ok(vitalsMod.spendMana(st, 8) && st.data.manaSpent === 8, 'мана списана на устройстве (счётчик потраченного = 8)');
-  await d.session.flush();
-  ok(near(srv.rawVitals(d.session.userId).mana, 42) && near(st.data.mana, 42), 'сервер вычел потраченную ману (mana_spent) и вернул остаток');
-  await d.session.flush({ force: true });
-  ok(near(srv.rawVitals(d.session.userId).mana, 42), 'повторная отправка не списывает ману второй раз');
+  st.data.manaSpent = 30; await d.session.flush({ force: true });
+  ok(near(srv.rawVitals(d.session.userId).mana, 50), 'устаревшее mana_spent сервер игнорирует: мана прежняя');
+  const g1 = await d.session.runAction({ op: 'world', obj: 'herb_g1' });
+  ok(g1.ok && near(srv.rawVitals(d.session.userId).mana, 46) && near(st.data.mana, 46) && st.item('moon_herb') === 1, 'сбор: сервер списал 4 маны и выдал траву (на устройстве и на сервере одно и то же)');
+  const g2 = await d.session.runAction({ op: 'world', obj: 'herb_g1' });
+  ok(!g2.ok && g2.reason === 'wait' && g2.left > 140 && near(srv.rawVitals(d.session.userId).mana, 46) && st.item('moon_herb') === 1, 'повторный сбор до возрождения: отказ, мана и трава прежние');
   // лечение: монет нет — ничего не меняется
   const poor = await d.session.runAction({ op: 'heal' });
   ok(!poor.ok && poor.reason === 'coins' && near(st.data.hp, 40) && st.item('coins') === 0, 'лечение без монет: отказ, HP и монеты прежние');
@@ -549,7 +550,7 @@ console.log('\nv0.12.0. HP и мана на сервере: восстановл
   const h = await acts.heal(), dr = await acts.drink('elixir_life');
   ok(!h.ok && h.reason === 'combat' && !dr.ok && dr.reason === 'combat' && st.item('elixir_life') === 2 && st.item('coins') >= 50, 'в бою лечение у Мирры и зелья из сумки отказывают, ничего не списано');
   vitalsMod.spendMana(st, 5); await d.session.flush();
-  ok(near(srv.rawVitals(uid).mana, 40), 'мана, потраченная в бою, mana_spent не меняет (итог сообщает конец боя)');
+  ok(near(srv.rawVitals(uid).mana, 40), 'мана, потраченная в бою на устройстве, сервер не меняет (итог сообщает конец боя)');
   // 5) конец боя: победа — полное HP, мана — остаток; повтор не работает
   const win = await acts.combatEnd('victory', 33.5);
   ok(win.ok && st.data.hp === 120 && near(st.data.mana, 33.5) && st.data.combatSince == null && !srv.rawVitals(uid).combat, 'победа: HP полное, мана — остаток, восстановление снова идёт');
@@ -584,12 +585,10 @@ console.log('\nv0.12.0. HP и мана на сервере: восстановл
   const dm = await acts.drink('elixir_mana');
   ok(dm.ok && near(dm.amount, 60, 1) && near(st.data.mana, 70), 'лунный эликсир: +60% маны');
 
-  // 8) мана, потраченная после отчёта, не пропадает при ответе сервера
+  // 8) действие в мире: мана списывается на сервере, а не отчётом клиента
   await setVitals(d, { hp: 120, mana: 80 });
-  vitalsMod.spendMana(st, 10);
-  const pendingBefore = st.data.mana;
-  await d.session.flush({ force: true });
-  ok(near(st.data.mana, 70) && near(pendingBefore, 70) && near(srv.rawVitals(uid).mana, 70), 'потраченная мана учтена один раз: на устройстве и на сервере 70');
+  const gw = await d.session.runAction({ op: 'world', obj: 'mush_t1' });
+  ok(gw.ok && near(st.data.mana, 76) && near(srv.rawVitals(uid).mana, 76), 'сбор в мире: на устройстве и на сервере 76 маны');
   // 9) новый уровень не лечит
   await setVitals(d, { hp: 50, mana: 50 });
   st.applyReward({ heroXP: 100 }); st.save(); await d.session.flush();
@@ -599,6 +598,89 @@ console.log('\nv0.12.0. HP и мана на сервере: восстановл
   const off = await acts.combatStart();
   srv.offline = false; await d.session.retryNow();
   ok(!off.ok && off.reason === 'network' && st.data.combatSince == null, 'без связи бой не начинается (сервер не узнал о нём)');
+}
+
+console.log('\nv0.13.0. Действия в мире — на сервере: сбор, находки, запасы, магия');
+{
+  const d = device(srv);
+  await d.session.playAsGuest('witch');
+  const st = d.state, uid = d.session.userId;
+  const W = (id, extra = {}) => d.session.runAction({ op: 'world', obj: id, ...extra });
+  const mana = () => srv.rawVitals(uid).mana;
+  await setVitals(d, { hp: null, mana: 50 });
+
+  // 1) сбор: ману списывает и ресурс выдаёт сервер; возрождение — по времени сервера
+  const a = await W('herb_g1');
+  ok(a.ok && a.kind === 'gather' && st.item('moon_herb') === 1 && near(mana(), 46) && st.getObject('herb_g1').state === 'picked', 'сбор: +1 трава, −4 маны, состояние записал сервер');
+  const b = await W('herb_g1');
+  ok(!b.ok && b.reason === 'wait' && b.left > 140 && st.item('moon_herb') === 1 && near(mana(), 46), 'повторный сбор: «ещё не выросло» (осталось ~150 с), ничего не списано');
+  srv.ageObject(uid, 'herb_g1', 140); await d.session.flush({ force: true });
+  ok((await W('herb_g1')).reason === 'wait', 'через 140 из 150 секунд — всё ещё рано');
+  srv.ageObject(uid, 'herb_g1', 15);
+  const c = await W('herb_g1');
+  ok(c.ok && st.item('moon_herb') === 2, 'через 155 секунд (по времени сервера) трава выросла: сбор прошёл');
+  // 2) состояние объектов мира клиент записать не может: ни «сбросить», ни «выдумать»
+  delete st.data.worldObjects.herb_g1; st.data.worldObjects.mush_t1 = { state: 'picked', t: 1 }; st.data.worldObjects.glade_cache = { state: 'opened' }; st.save();
+  await d.session.flush({ force: true });
+  ok(st.getObject('herb_g1')?.state === 'picked' && !st.getObject('mush_t1') && !st.getObject('glade_cache'), 'клиент не может сбросить время сбора или «открыть» сундук: сервер вернул своё состояние');
+  ok((await W('herb_g1')).reason === 'wait', 'после попытки сбросить состояние сбор всё равно ждёт возрождения');
+  // 3) мана: не хватает — отказ без побочных эффектов
+  await setVitals(d, { hp: null, mana: 3 });
+  const m = await W('mush_t1');
+  ok(!m.ok && m.reason === 'mana' && m.mana === 4 && st.item('forest_mushroom') === 0 && near(mana(), 3) && !st.getObject('mush_t1'), 'не хватает маны: ничего не выдано, не записано, не списано');
+  // 4) находки: один раз, награда по таблице (в том числе опыт)
+  const xp0 = st.data.heroXP;
+  const w1 = await W('west_chest');
+  ok(w1.ok && w1.kind === 'loot' && st.item('lunar_shard') === 2 && st.item('rune_dust') === 1 && st.data.heroXP === xp0 + 15 && st.getObject('west_chest').state === 'opened', 'сундук: награда по правилам сервера (+40 монет, 2 осколка, пыль, 15 опыта)');
+  const w2 = await W('west_chest');
+  ok(!w2.ok && w2.reason === 'done' && st.item('rune_dust') === 1 && st.data.heroXP === xp0 + 15, 'сундук второй раз пустой');
+  const other = device(srv, d.storage); await other.session.restore();
+  ok((await other.session.runAction({ op: 'world', obj: 'west_chest' })).reason === 'done', 'второе устройство тоже не откроет открытый сундук');
+  // 5) условия: побеждённый враг, событие
+  const g0 = await W('guard_cache');
+  ok(!g0.ok && g0.reason === 'locked' && st.item('rune_dust') === 1, 'сундук за врагом: пока враг жив — закрыт');
+  st.markEnemyDefeated('lunar_guard'); st.save(); await d.session.flush();
+  ok((await W('guard_cache')).ok && st.item('rune_dust') === 2, 'враг побеждён — сундук открывается');
+  ok((await W('flame_a')).reason === 'locked', 'огонёк на ветке: сначала нужно задание алтаря');
+  // 6) дар и его ступень, мана на магию
+  await setVitals(d, { hp: null, mana: 100 });
+  const h = await W('moon_plant');
+  ok(!h.ok && h.reason === 'locked' && st.item('moon_herb') === 2, 'притянуть растение без дара Телекинеза: закрыто');
+  st.unlockAbility('telekinesis', 1); st.save(); await d.session.flush();
+  const h2 = await W('moon_plant');
+  ok(h2.ok && st.item('moon_herb') === 3 && near(mana(), 96), 'Телекинез открыт: растение притянуто, −4 маны, +1 трава одной операцией');
+  ok((await W('heavy_boulder')).reason === 'locked' && near(mana(), 96), 'тяжёлая глыба при Телекинезе I: закрыто, мана на месте');
+  const rk = await W('glade_rock');
+  ok(rk.ok && rk.kind === 'cast' && near(mana(), 84) && !st.getObject('glade_rock'), 'сдвиг среднего камня: −12 маны, состояние камня остаётся за клиентом');
+  ok((await W('corrupted_roots')).reason === 'locked', 'Огонь без дара: корни не поддаются');
+  // 7) награда из-под камня: только когда камень сдвинут
+  ok((await W('glade_rock_reward')).reason === 'locked', 'монеты под камнем: пока камень на месте — закрыто');
+  st.setObject('glade_rock', { state: 'moved', x: 1300, y: 4590 }); st.save(); await d.session.flush();
+  const c0 = st.item('coins');
+  ok((await W('glade_rock_reward')).ok && st.item('coins') === c0 + 20 && (await W('glade_rock_reward')).reason === 'done', 'камень сдвинут: +20 монет один раз');
+  // 8) запас под охраной: один победный цикл — одна выдача
+  ok((await W('dust_stash')).reason === 'locked', 'запас пыли: пока охранник не побеждён — закрыт');
+  st.markEnemyDefeated('rootling_02'); st.save(); await d.session.flush();
+  const r0 = st.item('rune_dust');
+  ok((await W('dust_stash')).ok && st.item('rune_dust') === r0 + 2 && (await W('dust_stash')).reason === 'done', 'запас: +2 пыли, второй раз за тот же цикл — нет');
+  st.setObject('rep:rootling_02', { wins: 2, at: 1 }); st.save(); await d.session.flush();
+  ok((await W('dust_stash')).ok && st.item('rune_dust') === r0 + 4, 'вторая победа над охранником — ещё одна выдача');
+  // 9) выдуманные и служебные идентификаторы, бой, повтор запроса
+  ok((await W('no_such_object')).reason === 'unknown' && (await W('__proto__')).reason === 'unknown' && (await W('constructor')).reason === 'unknown' && (await W(null)).reason === 'unknown', 'выдуманные и служебные идентификаторы: unknown');
+  const acts = new PlayerActions({ state: st, getSession: () => d.session });
+  await acts.combatStart();
+  ok((await W('mush_t1')).reason === 'combat', 'в бою действия в мире закрыты');
+  await acts.combatEnd('retreat');
+  await setVitals(d, { hp: null, mana: 50 });
+  srv.loseNextResponse = true;
+  const lost = await d.session.runAction({ op: 'world', obj: 'mush_t1', id: 'world-retry-0001' }).catch(() => null);
+  const again = device(srv, d.storage); await again.session.restore();
+  ok(again.state.item('forest_mushroom') === 1 && near(srv.rawVitals(uid).mana, 46), 'потерянный ответ: узел собран один раз, мана списана один раз');
+  // 10) без связи
+  srv.offline = true;
+  const off = await W('resin_t1');
+  srv.offline = false; await d.session.retryNow();
+  ok(!off.ok && off.reason === 'network' && st.item('tree_resin') === 0, 'без связи сбор не проходит: ничего не выдано');
 }
 
 console.log('\n13–14. Старой «облачной» механики больше нет');

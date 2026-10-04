@@ -1,6 +1,6 @@
 // v0.12.0: HP и мана на сервере в настоящей игре (браузер) против фальшивого сервера по HTTP:
 //   бой сообщает серверу о начале (восстановление стоит) и об итоге (победа — полное HP); перезагрузка посреди боя — отступление;
-//   зелье из сумки пьёт сервер; мана, потраченная на сбор, доходит до сервера (mana_spent).
+//   зелье из сумки пьёт сервер; v0.13.0: сбор в мире (мана, трава, время сбора) — операция сервера.
 // Игра собирается с VITE_SUPABASE_URL=http://127.0.0.1:8174 и VITE_SUPABASE_ANON_KEY=anon-key.
 // Запуск: UI_BASE_URL=http://… [BACKEND=pg] node tests/e2e/vitals-online.mjs
 import { chromium } from 'playwright';
@@ -19,13 +19,13 @@ const p = await ctx.newPage();
 const errs = []; p.on('pageerror', e => errs.push(e.message));
 const ev = (f, a) => p.evaluate(f, a);
 const sleep = (ms) => p.waitForTimeout(ms);
-const inGame = () => p.waitForFunction(() => window.__game?.scene.isActive('ExplorationScene') && window.__game.scene.isActive('UIScene') && window.__witch?.session?.status === 'ready', null, { timeout: 120000 });
-const inCombat = () => p.waitForFunction(() => { const g = window.__game, c = g.scene.getScene('CombatScene'); return g.scene.isActive('CombatScene') && c.started; }, null, { timeout: 120000 });
+const inGame = () => p.waitForFunction(() => window.__game?.scene.isActive('ExplorationScene') && window.__game.scene.isActive('UIScene') && window.__witch?.session?.status === 'ready', null, { timeout: +(process.env.WAIT_MS || 120000) });
+const inCombat = () => p.waitForFunction(() => { const g = window.__game, c = g.scene.getScene('CombatScene'); return g.scene.isActive('CombatScene') && c.started; }, null, { timeout: +(process.env.WAIT_MS || 120000) });
 const toEnemy = () => ev(() => { const ex = window.__game.scene.getScene('ExplorationScene'); const t = ex.enemies.find(e => e.id === 'scavenger_01'); ex.player.setPosition(t.cfg.x, t.cfg.y + 30); });
 
 console.log(`\nСервер: ${srv.backend === 'pg' ? 'настоящий Postgres' : 'JS-зеркало схемы'}`);
 await p.goto(BASE);
-await p.waitForFunction(() => !!window.__witch?.session, null, { timeout: 120000 });
+await p.waitForFunction(() => !!window.__witch?.session, null, { timeout: +(process.env.WAIT_MS || 120000) });
 await ev(async () => {
   const S = window.__witch; await S.session.playAsGuest('witch');
   const st = S.state; st.markEvent('prologue_seen'); st.markEvent('unlock_telekinesis_1'); st.unlockAbility('telekinesis', 1); st.markEvent('mirra_starter_kit');
@@ -63,12 +63,21 @@ srv.setVitals(uid, { hp: 60, mana: 30 });
 await ev(() => window.__witch.session.flush({ force: true }));
 const d1 = await ev(async () => { const u = window.__game.scene.getScene('UIScene'); await u.drinkFromBag('elixir_life'); const s = window.__witch.state; return { hp: s.data.hp, life: s.item('elixir_life') }; });
 ok(near(d1.hp, 60 + 54, 4) && d1.life === 1, `настой жизни выпит на сервере: HP ${d1.hp.toFixed(1)}, остался 1`);
-// трата маны на сборе: то же, что делает vitals.spendMana (мана на устройстве и счётчик потраченного), затем обычное сохранение
-const sv3a = srv.rawVitals(uid).mana;
-await ev(() => { const st = window.__witch.state; st.data.mana -= 6; st.data.manaSpent = (st.data.manaSpent || 0) + 6; st.save(); });
-await ev(() => window.__witch.session.flush());
+// v0.13.0: настоящий сбор в мире — ману списывает и траву выдаёт сервер (операция world), состояние узла пишет он же
+srv.setVitals(uid, { hp: null, mana: 50 });
+await ev(() => window.__witch.session.flush({ force: true }));
+await ev(() => { const ex = window.__game.scene.getScene('ExplorationScene'); const h = ex.objects.find(o => o.id === 'herb_g1'); ex.player.setPosition(h.x, h.y - 30); ex.player.stop(); });
+await p.waitForFunction(() => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === 'herb_g1', null, { timeout: +(process.env.WAIT_MS || 120000) });
+const herb0 = await ev(() => window.__witch.state.item('moon_herb'));
+await ev(() => window.__game.scene.getScene('ExplorationScene').interaction.act(null));
+await p.waitForFunction((n) => window.__witch.state.item('moon_herb') > n, herb0, { timeout: +(process.env.WAIT_MS || 120000) });
 const sv3 = srv.rawVitals(uid).mana;
-ok(near(sv3a - sv3, 6, 2.5), `потраченная мана дошла до сервера (mana_spent): было ${sv3a.toFixed(1)}, стало ${sv3.toFixed(1)}`);
+const dev3 = await ev(() => ({ mana: window.__witch.state.data.mana, obj: window.__witch.state.getObject('herb_g1') }));
+ok(near(sv3, 46, 3) && near(dev3.mana, 46, 3), `сбор: сервер списал 4 маны (сервер ${sv3.toFixed(1)}, игра ${dev3.mana.toFixed(1)})`);
+ok(dev3.obj?.state === 'picked' && dev3.obj.t > 1e12, 'состояние узла и время сбора пришли от сервера');
+await sleep(400);
+const herbN = await ev(() => window.__witch.state.item('moon_herb'));
+ok(herbN === herb0 + 1, 'трава выдана ровно один раз');
 
 console.log('\nПерезагрузка посреди боя');
 srv.setVitals(uid, { hp: 90, mana: 50 });

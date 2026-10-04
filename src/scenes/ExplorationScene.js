@@ -873,7 +873,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.placeSpeech();
 
     for (const o of this.objects) {
-      if (o instanceof PickupObject && o.isAvailable() && Math.hypot(o.x - this.player.x, o.y - this.player.y) < o.autoRadius) o.interact();
+      if (o instanceof PickupObject && o.canAuto() && Math.hypot(o.x - this.player.x, o.y - this.player.y) < o.autoRadius) o.interact();
     }
     for (const e of this.enemies) {
       if (e.update(dt, this.player)) { this.startCombat(e); break; }

@@ -4,6 +4,7 @@
 // v0.9.1: пока busy, мир стоит (systems/WorldClock.js) — снимок перед действием не устаревает за время запроса.
 // Причины отказа: 'busy' (уже выполняется), 'network' (нет связи), 'server' (ошибка сервера, error = { rpc, code, status }),
 // 'session' (вход завершён), 'error' (непредвиденный сбой клиента — пишется в консоль), либо ответ сервера (coins, full, already).
+// v0.13.0: действия в мире ({ op: 'world', obj }) — сбор, находки, запасы, магия: мана, награда и возрождение считает сервер.
 // v0.10.0: крафт ({ op: 'craft', recipe }), сюжетные предметы ({ op: 'use', item }) и миграция ({ op: 'migrate_v10' }).
 // После успеха к результату добавляется outcome — что реально изменилось (опыт, новые уровни, предметы, новые события),
 // а для новых событий шлётся обычный WORLD_EVENT: мир, журнал и наведение обновляются так же, как после QuestFlags.complete.
@@ -43,7 +44,7 @@ export class PlayerActions {
       try {
         const ses = this.getSession();
         if (ses) return await ses.runAction(action);
-        const { snapshot, result } = applyAction(toSnapshot(this.state.data), action, Date.now());
+        const { snapshot, result } = applyAction(toSnapshot(this.state.data), action, this.state.now());
         if (result.ok) { this.state.setData(fromSnapshot(snapshot, this.state.data)); this.state.save(); }
         return result;
       } catch (e) {
@@ -72,5 +73,7 @@ export class PlayerActions {
   /** v0.12.0: бой начался / закончился (outcome: victory | defeat | retreat; mana — остаток маны). Сервер замораживает и возобновляет восстановление. */
   combatStart() { return this.run({ op: 'combat_start' }); }
   combatEnd(outcome, mana) { return this.run({ op: 'combat_end', outcome, mana }); }
+  /** v0.13.0: сбор узла, находка, запас или магия в мире — решает и записывает сервер (правила: config/storyItems.js worldRules). */
+  world(obj) { return this.run({ op: 'world', obj }); }
   starterKit() { return this.run({ op: 'starter_kit' }); }
 }

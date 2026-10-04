@@ -71,7 +71,7 @@ export class TelekinesisObject extends InteractiveObject {
     return `Слишком тяжело (${WEIGHT_RU[this.weight_class]}). Нужен Телекинез ${ROMAN[need] || need}.`;
   }
 
-  interact(abilityId) {
+  async interact(abilityId) {
     if (this.rejectWrongAbility(abilityId)) return;
     if (!this.abilities.isUnlocked('telekinesis')) { this.scene.toast('Нужен дар Телекинеза'); return; }
     if (!this.abilities.canMoveWeight(this.weight_class)) {
@@ -81,12 +81,14 @@ export class TelekinesisObject extends InteractiveObject {
       this.scene.tweens.add({ targets: this.sprite, x: this.sprite.x + 4, duration: 50, yoyo: true, repeat: 3 });
       return;
     }
-    if (!this.payMana()) return;
+    // v0.13.0: ману списывает сервер (операция world); у растений и огоньков (pull) он же выдаёт добычу
+    const r = await this.serverAct();
+    if (!r || this.removed || !this.sprite.active) return;
     this.busy = true;
     this.scene.player.castAt(this.x, this.baseY, 'telekinesis');
     this.scene.castFx(this.x, this.sprite.y - this.sprite.displayHeight / 2, COLORS.telekinesis);
     this.sprite.setTint(COLORS.telekinesis);
-    if (this.cfg.mode === 'pull') this.pull(); else this.push();
+    if (this.cfg.mode === 'pull') this.pull(r); else this.push();
   }
 
   push() {
@@ -115,7 +117,7 @@ export class TelekinesisObject extends InteractiveObject {
     });
   }
 
-  pull() {
+  pull(r) {
     const p = this.scene.player;
     this.scene.tweens.killTweensOf(this.sprite);
     this.scene.tweens.add({
@@ -124,9 +126,8 @@ export class TelekinesisObject extends InteractiveObject {
       onComplete: () => {
         this.busy = false;
         services.audio.play('pickup');
-        this.persist({ state: 'collected' });
         if (this.cfg.reward) {
-          this.grantReward(this.cfg.reward); // тосты наград показывает UIScene
+          this.announce(r); // награду выдал сервер (world); тосты показывает UIScene
           if (this.cfg.reward.items?.lunar_flame && !this.state.hasEvent(EV.LUNAR_QUEST_COMPLETE)) {
             this.scene.toast(`Лунные огоньки: ${Math.min(LUNAR_QUEST.flamesRequired, this.state.flamesCollected())}/${LUNAR_QUEST.flamesRequired}`, 0x9fe9ff);
           }

@@ -199,7 +199,10 @@ export class UIScene extends Phaser.Scene {
       const r = CONTROLS.joystickRadius;
       const k = d > r ? r / d : 1;
       this.joyKnob.setPosition(t.x + dx * k, t.y + dy * k);
-      if (d < CONTROLS.joystickDeadzone) { joy.x = 0; joy.y = 0; } else { joy.x = (dx * k) / r; joy.y = (dy * k) / r; }
+      if (d < CONTROLS.joystickDeadzone) { joy.x = 0; joy.y = 0; } else {
+        const m = Math.min(1, d / r), f = Math.pow(m, CONTROLS.joystickCurve) / m;   // кривая отклика: направление то же, величина мягче у центра
+        joy.x = (dx * k) / r * f; joy.y = (dy * k) / r * f;
+      }
     });
     const end = (p) => {
       const t = this.touch;

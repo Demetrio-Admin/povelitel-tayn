@@ -4,6 +4,7 @@ import { Telemetry, TELEMETRY, cleanData } from '../src/telemetry/Telemetry.js';
 import { telemetryAllowed, createTelemetry } from '../src/telemetry/hooks.js';
 import { EventBus, MSG } from '../src/state/EventBus.js';
 import { SupabaseApi } from '../src/cloud/api.js';
+import { VERSION } from '../src/config/version.js';
 
 let failures = 0;
 const ok = (c, m) => { if (c) console.log('  ✓', m); else { failures++; console.log('  ✗', m); } };
@@ -94,7 +95,7 @@ console.log('\nТелеметрия: подключение к игре');
   tm.setTimer = () => 1;
   ok(tm.buf.length === 0, 'пока игрок не загружен, сессия не стартует');
   status = 'ready'; listeners.forEach(f => f('signin'));
-  ok(tm.buf[0]?.n === 'session_start' && tm.buf[0].d.v === '0.10.2' && tm.buf[0].d.hero === 'witch' && tm.buf[0].d.w === 390 && tm.buf[0].d.touch === true, 'после входа записан session_start с версией, героем и экраном');
+  ok(tm.buf[0]?.n === 'session_start' && tm.buf[0].d.v === VERSION && tm.buf[0].d.hero === 'witch' && tm.buf[0].d.w === 390 && tm.buf[0].d.touch === true, 'после входа записан session_start с версией, героем и экраном');
   bus.emit(MSG.WORLD_EVENT, 'lunar_quest_complete', {}, {});
   bus.emit(MSG.ZONE_CHANGED, { id: 'C', name: 'Лесная тропа' });
   bus.emit(MSG.CRAFTED, { recipeId: 'lunar_wick', result: 'lunar_wick', amount: 1 });

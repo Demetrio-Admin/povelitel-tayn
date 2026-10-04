@@ -129,7 +129,7 @@ function roleBadge(role) {
 }
 const empty = (s) => el("p", "chat-empty", s);
 
-/** All routes replace the available viewport. No staff/customer data lives in localStorage. */
+/** All routes fill the game canvas. No staff/customer data lives in localStorage. */
 export class ChatWindow {
   constructor(service, { onClose, onLogout } = {}) {
     this.service = service;
@@ -163,14 +163,39 @@ export class ChatWindow {
       if (e.key === "Tab") this.trapFocus(e);
     });
     this.root.addEventListener("keyup", (e) => e.stopPropagation());
+    this.canvas = document.querySelector("#game canvas");
+    this.scale = window.__game?.scale;
     this.viewport = () => {
+      if (this.closed) return;
       const v = window.visualViewport;
-      if (v) {
-        this.root.style.top = `${v.offsetTop}px`;
-        this.root.style.height = `${v.height}px`;
-        this.root.style.bottom = "auto";
-      }
+      const visible = {
+        left: v?.offsetLeft || 0,
+        top: v?.offsetTop || 0,
+        width: v?.width || window.innerWidth,
+        height: v?.height || window.innerHeight,
+      };
+      const rect = this.canvas?.getBoundingClientRect();
+      const game = rect?.width && rect?.height ? rect : visible;
+      // FIT leaves bars around the canvas. The keyboard can also cover part of it.
+      const left = Math.max(game.left, visible.left);
+      const top = Math.max(game.top, visible.top);
+      const right = Math.min(game.left + game.width, visible.left + visible.width);
+      const bottom = Math.min(game.top + game.height, visible.top + visible.height);
+      Object.assign(this.root.style, {
+        left: `${left}px`,
+        top: `${top}px`,
+        width: `${Math.max(0, right - left)}px`,
+        height: `${Math.max(0, bottom - top)}px`,
+      });
     };
+    window.addEventListener("resize", this.viewport);
+    this.scale?.on("resize", this.viewport);
+    if (window.ResizeObserver && this.canvas) {
+      this.resizeObserver = new ResizeObserver(this.viewport);
+      this.resizeObserver.observe(this.canvas);
+      if (this.canvas.parentElement)
+        this.resizeObserver.observe(this.canvas.parentElement);
+    }
     window.visualViewport?.addEventListener("resize", this.viewport);
     window.visualViewport?.addEventListener("scroll", this.viewport);
     this.viewport();
@@ -224,6 +249,9 @@ export class ChatWindow {
     this.generation++;
     this.off?.();
     this.service.setOpen(false);
+    window.removeEventListener("resize", this.viewport);
+    this.scale?.off("resize", this.viewport);
+    this.resizeObserver?.disconnect();
     window.visualViewport?.removeEventListener("resize", this.viewport);
     window.visualViewport?.removeEventListener("scroll", this.viewport);
     this.root.remove();

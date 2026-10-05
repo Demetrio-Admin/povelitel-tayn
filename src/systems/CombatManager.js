@@ -205,6 +205,7 @@ export class CombatManager {
     this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'fire' });
     this.enemy.applyBurn(s.burn.dps, s.burn.durationSec);
     this.emit({ type: 'status', status: 'burn', sec: s.burn.durationSec });
+    if (s.puddle) { this.enemy.applyPuddle(s.puddle.dps, s.puddle.durationSec); this.emit({ type: 'status', status: 'puddle', sec: s.puddle.durationSec }); }
     for (const e of this.enemy.onFireHit()) this.emit({ type: 'status', status: e.type, sec: e.sec, bonus: e.bonus });
     if (s.interruptsNormalCast) this.handleInterrupt(['fire']);
   }
@@ -213,6 +214,13 @@ export class CombatManager {
   castSeal(s) {
     const dmg = this.enemy.takeDamage(s.damage, 'seal', this.hero.damageMult);
     this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'seal' });
+    // v0.16.0: Астрал III — вспышка. Урон выше уже нанесён сквозь защиту, вспышка помогает остальным дарам и автоатаке.
+    if (s.flash && this.enemy.alive) {
+      for (const e of this.enemy.flash(s.flash.sec, s.flash.vulnerability || 0)) {
+        if (e.type === 'vulnerable') this.emit({ type: 'status', status: 'vulnerable', sec: e.sec, bonus: e.bonus });
+        else this.emit(e);
+      }
+    }
   }
 
   handleInterrupt(tags) {
@@ -285,7 +293,7 @@ export class CombatManager {
         case 'attack': this.hitHero(a.damage, false); break;
         case 'strongHit': this.hitHero(a.damage, true, a.name); break;
         case 'strongStart': this.emit({ type: 'warning', name: a.name, prepSec: a.prepSec, hint: a.hint, needsHeavy: a.interruptBy.includes('telekinesis_heavy') && !a.interruptBy.includes('telekinesis') }); break;
-        case 'burnTick': this.emit({ type: 'damage', target: 'enemy', amount: a.damage, school: 'fire', tick: true }); break;
+        case 'burnTick': this.emit({ type: 'damage', target: 'enemy', amount: a.damage, school: 'fire', tick: true, puddle: !!a.puddle }); break;
         case 'armorBack': this.emit({ type: 'armorBack' }); break;
         default: this.emit({ type: 'status', status: a.type });
       }

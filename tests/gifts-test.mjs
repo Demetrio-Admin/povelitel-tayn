@@ -33,7 +33,7 @@ console.log('\n[v0.11] Данные ступеней');
   ok(!UPGRADES.fire_2.locked && !UPGRADES.seal_2.locked, 'обе ступени открыты для изучения');
   const t = (id) => UPGRADES[id].timerSec.live;
   ok(t('telekinesis_2') < t('fire_2') && t('fire_2') < t('seal_2'), 'лесенка времени: 5 мин → 15 мин → 30 мин');
-  ok(upgradesOf('fire').length === 1 && upgradesOf('seal')[0].id === 'seal_2', 'ступени дара находятся по школе');
+  ok(upgradesOf('fire')[0].id === 'fire_2' && upgradesOf('seal')[0].id === 'seal_2' && upgradesOf('fire').length === 3 && upgradesOf('seal').length === 3, 'ступени дара находятся по школе (II и две ветки III)');
 }
 
 console.log('\n[v0.11] Источник углей для Огня II');
@@ -103,8 +103,8 @@ console.log('\n[v0.11] Модель экрана «Дары»');
   ok(fire.next.after.some(l => l.includes('22')), 'показано, каким станет дар');
   const tk = cards.find(c => c.id === 'telekinesis');
   ok(tk.choices.length === 2 && tk.choices.every(c => c.toLevel === 3) && !tk.maxed, 'Телекинез II: впереди ступень III с двумя ветками на выбор');
-  const fire2 = (() => { const w2 = ready(world()); w2.abilities.unlock('seal', 2); return giftCards(w2.state).find(c => c.id === 'seal'); })();
-  ok(fire2.choices.length === 0 && fire2.maxed, 'Астрал II: выше ступеней нет, пишется «высшая из доступных»');
+  const fire2 = (() => { const w2 = ready(world()); w2.abilities.unlock('seal', 3); return giftCards(w2.state).find(c => c.id === 'seal'); })();
+  ok(fire2.choices.length === 0 && fire2.maxed, 'Астрал III: выше ступеней нет, пишется «высшая из доступных»');
   w.state.addSchoolXP('fire', 180); w.state.addItem('crimson_ember', 6);
   ok(nextStep(w.state, 'fire').canStart, 'готовность видна в модели');
   w.abilities.startResearch('fire_2');
@@ -189,6 +189,90 @@ console.log('\n[v0.11.1] Бой: два броска подряд и ветки'
   const dmgOf = (branch) => { const c = mk(branch, 'rootling'); c.enemy.def.defense = 0; const obj = c.fieldObjects.find(o => o.def.throwable && c.canLift(o)); c.selectObject(obj.id); const hp = c.enemy.hp; c.useAbility('telekinesis'); return hp - c.enemy.hp; };
   const dB = dmgOf('breaker'), dL = dmgOf('lord');
   ok(dB > dL * 1.3, `бросок Разрушителя сильнее (Разрушитель ${dB}, Повелитель ${dL})`);
+}
+
+console.log('\n[v0.16.0] Огонь III и Астрал III: ветки, лужа, вспышка');
+{
+  const mk = (ability, branch, enemy = 'rootling', phase = null) => {
+    const w = ready(world());
+    w.abilities.unlock('fire', 2); w.abilities.unlock('seal', 2);
+    w.abilities.unlock(ability, 3); if (branch) w.state.setBranch(ability, branch);
+    const cm = new CombatManager({ enemyType: enemy, state: w.state, abilities: w.abilities });
+    cm.hero.mana = cm.hero.maxMana; cm.hero.hp = cm.hero.maxHp;
+    return cm;
+  };
+  const f3 = ABILITIES.fire.levels[3], s3 = ABILITIES.seal.levels[3];
+  ok(f3.puddle && f3.damage === 22 && f3.manaCost > ABILITIES.fire.levels[2].manaCost, 'Огонь III: лужа смолы, чуть дороже по мане');
+  ok(s3.flash.sec === 2 && s3.ignoresDefense, 'Астрал III: вспышка 2 с, броню по-прежнему пробивает');
+  ok(Object.keys(ABILITIES.fire.branches).join() === 'arsonist,blaster' && Object.keys(ABILITIES.seal.branches).join() === 'seer,piercer', 'у Огня и Астрала по две ветки');
+  for (const id of ['fire_3_arsonist', 'fire_3_blaster', 'seal_3_seer', 'seal_3_piercer']) {
+    const u = UPGRADES[id];
+    ok(u.toLevel === 3 && u.branch && ABILITIES[u.ability].branches[u.branch] && u.requires.abilityLevel === 2 && u.timerSec.live > UPGRADES.telekinesis_3_lord.timerSec.live, `${id}: ступень III, ветка есть в дарах, таймер длиннее Телекинеза III`);
+  }
+  const total = (st) => st.damage + st.burn.dps * st.burn.durationSec + (st.puddle ? st.puddle.dps * st.puddle.durationSec : 0);
+  const cmA = mk('fire', 'arsonist'), cmB = mk('fire', 'blaster');
+  const sA = cmA.abilities.stats('fire'), sB = cmB.abilities.stats('fire');
+  ok(sA.damage < f3.damage && sA.burn.durationSec > f3.burn.durationSec && sA.puddle.durationSec > f3.puddle.durationSec, 'Поджигатель: удар слабее, горение и лужа дольше');
+  ok(sB.damage > f3.damage * 1.7 && sB.puddle === null && sB.cooldownSec > f3.cooldownSec && sB.manaCost > f3.manaCost, 'Взрывник: удар сильнее, лужи нет, дороже и дольше перезаряжается');
+  ok(total(sA) > total(sB) * 0.9 && total(sB) > total(f3) * 0.9, `итог за цикл сопоставим: Поджигатель ${total(sA).toFixed(0)}, Взрывник ${total(sB).toFixed(0)}, база ${total(f3)}`);
+  // лужа: наносит урон по секундам, не складывается и обновляется
+  const base = mk('fire', null); base.enemy.def = { ...base.enemy.def, defense: 0, weaknesses: null };
+  base.useAbility('fire');
+  ok(base.enemy.inPuddle && base.enemy.burning, 'после Огня III враг горит и стоит в луже');
+  const hp0 = base.enemy.hp; let ticks = 0;
+  for (let i = 0; i < 60 * 3; i++) { base.tick(1 / 60); }
+  const dealt = hp0 - base.enemy.hp;
+  ok(dealt >= 3 * (f3.burn.dps + f3.puddle.dps) - 12, `за 3 с горение и лужа вместе снимают ${dealt} HP`);
+  base.cooldowns.fire = 0; base.hero.mana = base.hero.maxMana; base.useAbility('fire');
+  ok(Math.abs(base.enemy.puddle.left - f3.puddle.durationSec) < 1e-9 && base.enemy.puddle.dps === f3.puddle.dps, 'повторный Огонь обновляет лужу, а не складывает её');
+  ok(mk('fire', null).enemy.puddle.left === 0 && mk('fire', 'blaster').useAbility('fire').ok && !(() => { const c = mk('fire', 'blaster'); c.useAbility('fire'); return c.enemy.inPuddle; })(), 'у Взрывника лужи нет');
+  const ev = (() => { const c = mk('fire', null); c.useAbility('fire'); return c.drainEvents(); })();
+  ok(ev.some(e => e.type === 'status' && e.status === 'puddle'), 'в бою приходит событие puddle для сцены');
+  // вспышка: броня и кора выключены, остальным дарам и автоатаке проще
+  const flashed = (branch) => { const c = mk('seal', branch, 'node_guardian'); c.enemy.hp = 650; c.enemy.checkPhase?.(); return c; };
+  const g = mk('seal', null, 'node_guardian');
+  ok(g.enemy.armorActive, 'у Хранителя в первой фазе броня включена');
+  g.useAbility('seal');
+  ok(!g.enemy.armorActive && g.enemy.armorDisabledLeft > 1.9, 'вспышка снимает броню на 2 с');
+  const evs = g.drainEvents();
+  ok(evs.some(e => e.type === 'flash' && e.sec === 2), 'в бою приходит событие flash для сцены');
+  const hpBefore = g.enemy.hp; g.enemy.takeDamage(100, 'telekinesis', 1);
+  ok(hpBefore - g.enemy.hp === 100, 'пока вспышка действует, Телекинез бьёт без вычета брони');
+  for (let i = 0; i < 60 * 2.1; i++) g.tick(1 / 60);
+  ok(g.enemy.armorActive, 'через 2 с броня возвращается');
+  const seer = mk('seal', 'seer', 'node_guardian');
+  seer.useAbility('seal');
+  ok(seer.enemy.armorDisabledLeft > 3.9 && seer.enemy.vulnerable.left > 3.9 && seer.enemy.vulnerable.bonus === 0.15, 'Видящий: вспышка 4 с и уязвимость +15%');
+  const e2 = seer.enemy; const h1 = e2.hp; e2.takeDamage(100, 'auto', 1);
+  ok(h1 - e2.hp === 115, `Видящий: уязвимость усиливает автоатаку (100 → ${h1 - e2.hp})`);
+  const pierce = mk('seal', 'piercer', 'node_guardian'), seal = pierce.abilities.stats('seal');
+  ok(seal.damage > s3.damage * 1.3 && seal.cooldownSec > s3.cooldownSec && seal.flash.sec === 1, 'Пробивающий: удар сильнее, перезарядка дольше, вспышка 1 с');
+  // враг без брони: вспышка ничего не ломает
+  const plain = mk('seal', null, 'rootling');
+  plain.enemy.def = { ...plain.enemy.def, defense: 0.2 };   // (старый тест выше обнуляет защиту общего описания Корневика)
+  plain.useAbility('seal');
+  ok(plain.enemy.armorDisabledLeft === 0 && plain.enemy.defenseDisabledLeft > 1.9, 'у врага без брони вспышка снимает только кору (защиту)');
+  plain.tick(1 / 60);
+  ok(!plain.drainEvents().some(e => e.type === 'armorBack'), 'у врага без брони нет ложного «броня вернулась»');
+}
+
+console.log('\n[v0.16.0] Экран «Дары»: новые ветки');
+{
+  const w = ready(world());
+  w.abilities.unlock('fire', 2); w.abilities.unlock('seal', 2); w.state.data.heroLevel = 8;
+  const cards = giftCards(w.state);
+  const fire = cards.find(c => c.id === 'fire'), seal = cards.find(c => c.id === 'seal');
+  ok(fire.choices.length === 2 && fire.choices.map(c => c.branch).join() === 'arsonist,blaster', 'Огонь предлагает двух Поджигателя и Взрывника');
+  ok(seal.choices.length === 2 && seal.choices.map(c => c.branch).join() === 'seer,piercer', 'Астрал предлагает Видящего и Пробивающего');
+  ok(fire.choices.every(c => c.after.some(l => l.startsWith('Горение'))) && fire.choices[0].after.some(l => l.startsWith('Лужа смолы')) && !fire.choices[1].after.some(l => l.startsWith('Лужа смолы')), 'в числах ветки Огня лужа есть у Поджигателя и нет у Взрывника');
+  ok(seal.choices[0].after.some(l => l.startsWith('Вспышка') && l.includes('уязвим')) && seal.choices[1].after.some(l => l.includes('1 с')), 'в числах ветки Астрала видна вспышка');
+  w.state.addSchoolXP('fire', 300); w.state.addItem('crimson_ember', 10);
+  ok(w.abilities.startResearch('fire_3_blaster'), 'Огонь III · Взрывник запускается');
+  ok(w.state.upgradeStatus('fire_3_arsonist').reason === 'busy', 'вторая ветка того же дара ждёт: изучение одно');
+  w.abilities.update(true);
+  ok(w.state.abilityLevel('fire') === 3 && w.state.branchOf('fire') === 'blaster', 'по таймеру — Огонь III и ветка Взрывника');
+  const after = giftCards(w.state).find(c => c.id === 'fire');
+  ok(after.respec.length === 1 && after.respec[0].id === 'arsonist' && after.maxed, 'можно сменить ветку на Поджигателя, ступеней выше нет');
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты даров пройдены');

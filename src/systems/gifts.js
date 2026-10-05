@@ -21,8 +21,10 @@ export function statLines(id, level, branchId = null) {
     if (s.interruptRefund) out.push(`Удачное прерывание: +${pct(s.interruptRefund.manaPct)} маны, перезарядка −${s.interruptRefund.cooldownSec} с`);
   } else if (id === 'fire') {
     out.push(`Горение: ${s.burn.dps} урона в секунду, ${num(s.burn.durationSec)} с (всего ${Math.round(s.burn.dps * s.burn.durationSec)})`);
+    if (s.puddle) out.push(`Лужа смолы: ${s.puddle.dps} урона в секунду, ${num(s.puddle.durationSec)} с (всего ${Math.round(s.puddle.dps * s.puddle.durationSec)})`);
   } else if (id === 'seal') {
     if (s.ignoresDefense) out.push('Пробивает броню и кору');
+    if (s.flash) out.push(`Вспышка: броня и кора выключены на ${num(s.flash.sec)} с${s.flash.vulnerability ? `, враг уязвим +${pct(s.flash.vulnerability)}` : ''}`);
   }
   return out;
 }

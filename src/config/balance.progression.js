@@ -71,6 +71,39 @@ export const UPGRADES = {
     timerSec: { prototype: 90, live: 30 * 60 },
     doneText: 'Астрал разит сильнее — тень Хранителя больше не защита.',
   },
+  // v0.16.0 — ступень III Огня и Астрала: по две ветки (выбирается одна; цена общая). Уровень героя 8 — «дополнительный выход» после главы I.
+  fire_3_arsonist: {
+    ability: 'fire', toLevel: 3, branch: 'arsonist', title: 'Огонь III · Поджигатель',
+    description: 'Лужа смолы после удара. Ветка «Поджигатель»: горение и лужа держатся дольше, но прямой удар слабее на 20%.',
+    requires: { heroLevel: 8, abilityLevel: 2 },
+    cost: { schoolXP: 300, items: { crimson_ember: 10 } },
+    timerSec: { prototype: 120, live: 90 * 60 },
+    doneText: 'Огонь оставляет горящую лужу, и пламя держится заметно дольше.',
+  },
+  fire_3_blaster: {
+    ability: 'fire', toLevel: 3, branch: 'blaster', title: 'Огонь III · Взрывник',
+    description: 'Ветка «Взрывник»: прямой удар сильнее на 80%, но без лужи, дороже и с долгой перезарядкой.',
+    requires: { heroLevel: 8, abilityLevel: 2 },
+    cost: { schoolXP: 300, items: { crimson_ember: 10 } },
+    timerSec: { prototype: 120, live: 90 * 60 },
+    doneText: 'Огонь взрывается в цель — один удар, но какой.',
+  },
+  seal_3_seer: {
+    ability: 'seal', toLevel: 3, branch: 'seer', title: 'Астрал III · Видящий',
+    description: 'Вспышка снимает броню и кору. Ветка «Видящий»: вспышка длится 4 с, и враг получает на 15% больше урона, но сам удар слабее на 15%.',
+    requires: { heroLevel: 8, abilityLevel: 2 },
+    cost: { schoolXP: 300, items: { lunar_shard: 10, rune_dust: 4 } },
+    timerSec: { prototype: 120, live: 120 * 60 },
+    doneText: 'После удара Астрала враг беззащитен и уязвим.',
+  },
+  seal_3_piercer: {
+    ability: 'seal', toLevel: 3, branch: 'piercer', title: 'Астрал III · Пробивающий',
+    description: 'Вспышка снимает броню и кору. Ветка «Пробивающий»: удар сильнее на 40%, но вспышка короче, а перезарядка длиннее.',
+    requires: { heroLevel: 8, abilityLevel: 2 },
+    cost: { schoolXP: 300, items: { lunar_shard: 10, rune_dust: 4 } },
+    timerSec: { prototype: 120, live: 120 * 60 },
+    doneText: 'Астрал бьёт так, что защита не успевает вернуться.',
+  },
 };
 
 // Смена ветки: мгновенно, вне боя, за монеты (позже — и за сапфиры). Не продаёт силу, а даёт свободу пробовать.

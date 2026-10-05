@@ -321,6 +321,8 @@ export class CombatScene extends Phaser.Scene {
     const st = [];
     if (e.hasArmor) st.push(e.armorActive ? `Броня −${Math.round(e.def.armor.value * 100)}%` : `Броня разбита ${e.armorDisabledLeft.toFixed(0)}с`);
     if (e.burning) st.push(`Горение ${e.burn.left.toFixed(0)}с`);
+    if (e.inPuddle) st.push(`Лужа смолы ${e.puddle.left.toFixed(0)}с`);
+    if (e.vulnerable.left > 0) st.push(`Уязвим +${Math.round(e.vulnerable.bonus * 100)}% ${e.vulnerable.left.toFixed(0)}с`);
     if (e.staggerLeft > 0) st.push('Оглушён');
     if (e.defenseActive) st.push(`Защита −${Math.round(e.def.defense * 100)}%`);
     this.statusText.setText(st.join('   ·   '));
@@ -419,6 +421,10 @@ export class CombatScene extends Phaser.Scene {
           this.burst(ENEMY_POS.x, ENEMY_POS.y - 120, 0xc9b5ff, 30);
           break;
         case 'armorBack': this.toast('Броня Стража восстановилась'); break;
+        case 'flash':   // v0.16.0: Астрал III — вспышка снимает броню и кору на время
+          this.floatText(ENEMY_POS.x, ENEMY_POS.y - 100, 'ВСПЫШКА!', COLORS.seal, 30);
+          this.burst(ENEMY_POS.x, ENEMY_POS.y - 120, COLORS.seal, 24);
+          break;
         case 'phase':   // v0.10.0: Страж узла сменил фазу — заметное изменение и короткое сообщение
           // сообщение — между врагом и героиней (не поверх врага и предупреждения сильного удара)
           this.showBanner(`Фаза ${ev.phase}\n${ev.message}`, ev.phase === 3 ? COLORS.seal : COLORS.fire, 2600, UI.type.combat);
@@ -430,6 +436,7 @@ export class CombatScene extends Phaser.Scene {
           break;
         case 'status':
           if (ev.status === 'vulnerable') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Уязвим!', COLORS.fire, UI.type.combat);
+          if (ev.status === 'puddle') this.floatText(ENEMY_POS.x - 80, ENEMY_POS.y + 30, 'Лужа смолы', COLORS.fire, UI.type.combat);
           if (ev.status === 'defenseOff') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Защита снята', COLORS.fire, UI.type.combat);
           break;
         case 'result': services.audio.lowHp = false; services.tutorial.hide(); this.timeScale = 1; this.endCombat(ev.result, ev.time); break;

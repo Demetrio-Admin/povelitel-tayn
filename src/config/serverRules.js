@@ -16,6 +16,7 @@ import { buildSlotRules } from './build.js';
 import { sapphireRules } from './sapphires.js';
 import { shopRules } from './shop.js';
 import { dailyRules } from './daily.js';
+import { covenRules } from './covens.js';
 
 /**
  * Награда из конфигов → формат серверной операции (_grant / grant):
@@ -254,6 +255,7 @@ export function serverRules() {
     sapphires: sapphireRules(),   // v0.17.0
     shop: shopRules(),             // v0.19.0: торговец
     daily: dailyRules(),           // v0.23.0: доска поручений
+    covens: covenRules(),          // v0.25.0: Ковены (недельная цель)
     combatPotions: Object.keys(POTIONS),   // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
   };
 }

@@ -171,4 +171,6 @@ export class PlayerActions {
   amuletUpgrade(amulet) { return this.run({ op: 'amulet_upgrade', amulet }); }
   dailyTake(offer) { return this.run({ op: 'daily_take', offer }); }   // v0.23.0: доска поручений
   dailyDone(offer) { return this.run({ op: 'daily_done', offer }); }
+  covenGive(item, qty) { return this.run({ op: 'coven_give', item, qty }); }   // v0.25.0: материалы в цель недели ковена
+  covenClaim() { return this.run({ op: 'coven_claim' }); }
 }

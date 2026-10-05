@@ -859,6 +859,9 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'shop_buy') return { snapshot: s, result: shopBuy(s, action.item, action.qty) };
   if (op === 'shop_sell') return { snapshot: s, result: shopSell(s, action.item, action.qty) };
   if (op === 'amulet_upgrade') return { snapshot: s, result: amuletUpgrade(s, action.amulet) };
+  // v0.25.0: Ковены живут в отдельных таблицах (миграция 20261007_covens.sql) — JS-зеркало о них не знает и отвечает как сервер
+  // игроку без ковена (или базе без миграции): 'no_coven'
+  if (op === 'coven_give' || op === 'coven_claim') return { snapshot: s, result: { ok: false, reason: 'no_coven' } };
   if (op === 'daily_take') return { snapshot: s, result: dailyTake(s, action.offer, num(nowMs) ? nowMs : Date.now()) };   // v0.23.0
   if (op === 'daily_done') return { snapshot: s, result: dailyDone(s, action.offer, num(nowMs) ? nowMs : Date.now()) };
   if (op === 'build_set') return { snapshot: s, result: buildSet(s, action) };

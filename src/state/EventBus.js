@@ -50,6 +50,7 @@ export const MSG = {
   TRAVEL: 'world:travel',            // v0.20.0: переход между лесом и городом ({ x, y, text })
   OPEN_SHOP: 'ui:open-shop',         // v0.20.0: лавка торговца (из диалога)
   OPEN_DAILY: 'ui:open-daily',       // v0.23.0: доска поручений
+  OPEN_COVENS: 'ui:open-covens',     // v0.25.0: окно Ковенов
   OPEN_WALLET: 'ui:open-wallet',     // v0.20.0: кошелёк / банк (из диалога и меню)   // v0.10.0: Селена открывает Печать I (после закрытия диалога)
   ZONE_CHANGED: 'world:zone',         // (zone)
   TUTORIAL: 'ui:tutorial',            // ({ id, text, target, ttl } | null)

@@ -9,6 +9,8 @@ import { CHAPTER_1_FINAL } from '../config/events.js';
 import { services, resetProgress, reloadToMenu } from '../services.js';
 import { showProfile } from '../ui/accountUI.js';
 import { showChat } from '../ui/ChatWindow.js';
+import { showCovens } from '../ui/covenUI.js';
+import { CovenService } from '../cloud/CovenService.js';
 import { ChatService } from '../cloud/ChatService.js';
 import { InputController } from '../systems/InputController.js';
 import { ABILITY_ORDER } from '../systems/AbilitySystem.js';
@@ -88,6 +90,7 @@ export class UIScene extends Phaser.Scene {
     bus.on(MSG.OPEN_SHOP, () => this.openShop('Лавка Бориса'), this);   // v0.20.0
     bus.on(MSG.OPEN_WALLET, () => this.openWallet(), this);
     bus.on(MSG.OPEN_DAILY, () => this.openDaily(), this);   // v0.23.0: доска поручений
+    bus.on(MSG.OPEN_COVENS, () => this.openCovens(), this);   // v0.25.0: Ковены
     bus.on(MSG.OPEN_GIFTS, this.openGifts, this);
     this.input.keyboard?.on('keydown-G', () => { if (!this.modal && this.mode === 'exploration') this.openGifts(); });
     bus.on(MSG.REWARD, this.onReward, this);
@@ -596,6 +599,32 @@ export class UIScene extends Phaser.Scene {
       onLogout: () => reloadToMenu(),     // выход — на стартовый экран
       onSwitched: () => reloadToMenu(),   // вошли в другой аккаунт — мир перезагружается с его прогрессом
       onRegistered: () => this.refreshHud(),
+    });
+  }
+
+  /** v0.25.0: окно Ковенов (HTML). Нужен онлайн-аккаунт; материалы и награда недели — через сервер (player_action). */
+  openCovens() {
+    if (this.modal || this.mode === 'combat') return;
+    const ses = services.session;
+    if (!ses?.signedIn) { this.toast('Ковены доступны в онлайн-аккаунте.'); return; }
+    const svc = services.covens || (services.covens = new CovenService(ses));
+    this.modal = { covens: true };
+    services.modalOpen = true; this.resetJoystick();
+    const keyboard = this.input.keyboard, enabled = keyboard.enabled;
+    keyboard.enabled = false;
+    this.bus.emit(MSG.MODAL_OPEN);
+    showCovens(svc, {
+      item: (id) => services.state.item(id),
+      give: (item, qty) => services.actions.covenGive(item, qty),
+      claim: () => services.actions.covenClaim(),
+      onChange: () => this.refreshHud?.(),
+    }, {
+      onClose: () => {
+        this.modal = null; services.modalOpen = false;
+        keyboard.resetKeys(); keyboard.enabled = enabled;
+        this.bus.emit(MSG.MODAL_CLOSED);
+        if (!this.shuttingDown && this.mode === 'exploration' && this.modalQueue.length) this.openModal(this.modalQueue.shift());
+      },
     });
   }
 

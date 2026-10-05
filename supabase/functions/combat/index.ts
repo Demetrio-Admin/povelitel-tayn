@@ -2650,6 +2650,35 @@ function dailyRules() {
   };
 }
 
+// src/config/covens.js
+var COVENS = {
+  requires: "ch2_coven_ready",
+  // знакомство с Ковенами — квест 14 «Не в одиночку»
+  maxMembers: 20,
+  goal: 400,
+  // очков ковена за неделю
+  minGiven: 20,
+  // личный вклад, чтобы забрать награду недели
+  dailyPoints: 10,
+  // за каждое выполненное поручение доски
+  maxGive: 99,
+  // очки за единицу материала
+  points: { moon_herb: 1, forest_mushroom: 1, tree_resin: 1, frost_herb: 2, rune_dust: 2, lunar_shard: 3, ice_crystal: 5 },
+  reward: { coins: 120, items: { ice_crystal: 2, frost_shard: 1 } }
+};
+function covenRules() {
+  return {
+    requires: COVENS.requires,
+    maxMembers: COVENS.maxMembers,
+    goal: COVENS.goal,
+    minGiven: COVENS.minGiven,
+    dailyPoints: COVENS.dailyPoints,
+    maxGive: COVENS.maxGive,
+    points: COVENS.points,
+    reward: COVENS.reward
+  };
+}
+
 // src/config/serverRules.js
 function grantOf(r = {}) {
   const g = {};
@@ -2913,6 +2942,8 @@ function serverRules() {
     // v0.19.0: торговец
     daily: dailyRules(),
     // v0.23.0: доска поручений
+    covens: covenRules(),
+    // v0.25.0: Ковены (недельная цель)
     combatPotions: Object.keys(POTIONS)
     // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
   };
@@ -3865,6 +3896,8 @@ var MSG = {
   // v0.20.0: лавка торговца (из диалога)
   OPEN_DAILY: "ui:open-daily",
   // v0.23.0: доска поручений
+  OPEN_COVENS: "ui:open-covens",
+  // v0.25.0: окно Ковенов
   OPEN_WALLET: "ui:open-wallet",
   // v0.20.0: кошелёк / банк (из диалога и меню)   // v0.10.0: Селена открывает Печать I (после закрытия диалога)
   ZONE_CHANGED: "world:zone",

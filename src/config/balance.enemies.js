@@ -68,6 +68,73 @@ export const ENEMIES = {
     arena: 'city',
   },
 
+  // v0.21.0 — Морозный сборщик (квест 6 «Пропавший груз», chapter-2-balance §9): магический конструкт. Защитная корка
+  // гасит 35% урона — Астрал её пробивает, Огонь растапливает на 5 с. Дальний ледяной залп замедляет перезарядки;
+  // «Ледяной таран» прерывается Телекинезом. Бой ≈30–40 с у героя 9–10 уровня.
+  frost_collector: {
+    name: 'Морозный сборщик',
+    texture: 'enemy_frost_collector',
+    tier: 'normal',
+    hp: 520,
+    normalAttack: { damage: 11, intervalSec: 2.8, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: {
+      name: 'Ледяной таран', damage: 28, prepSec: 2.0, cooldownSec: 10, firstDelaySec: 6,
+      interruptBy: ['telekinesis'],
+      hint: 'Прервите Телекинезом!',
+    },
+    staggerSec: 1.0,
+    interruptedCooldownSec: 6,
+    defense: 0.35,
+    onFireHit: { disableDefenseSec: 5 },
+    rewards: { heroXP: 70, schoolXP: { seal: 20, telekinesis: 15 }, items: { frost_herb: 1 }, coins: 25 },
+    repeatRewards: { heroXP: 28, schoolXP: { seal: 3 }, coins: 9 },
+    arena: 'city',
+  },
+
+  // Усиленный сборщик — босс склада (квест 6). Корка толще, таран тяжелее; без Астрала и Огня бой заметно дольше.
+  frost_collector_elite: {
+    name: 'Усиленный сборщик',
+    texture: 'enemy_frost_collector_elite',
+    tier: 'strong',
+    hp: 760,
+    normalAttack: { damage: 12, intervalSec: 3.0, chill: { pct: 0.35, sec: 3 } },
+    strongAttack: {
+      name: 'Ледяной таран', damage: 32, prepSec: 2.2, cooldownSec: 10, firstDelaySec: 6,
+      interruptBy: ['telekinesis'],
+      hint: 'Прервите Телекинезом!',
+    },
+    staggerSec: 1.1,
+    interruptedCooldownSec: 7,
+    defense: 0.4,
+    onFireHit: { disableDefenseSec: 5 },
+    rewards: { heroXP: 70, schoolXP: { seal: 30, telekinesis: 20, fire: 20 }, items: { ice_crystal: 1, rune_dust: 1 }, coins: 35 },
+    arena: 'city',
+  },
+
+  // v0.21.0 — Ледяной страж (квест 10 «Выбор»): первый серьёзный билд-чек главы II (55–75 с). Кристальная броня −45%
+  // (Телекинез разбивает кристалл, Астрал пробивает), Огонь бьёт на 25% сильнее; тяжёлый удар — только тяжёлым камнем,
+  // а Лёд замедляет его подготовку. Обычный удар холодит. Без Телекинеза бой проходим — просто дольше и с зельями.
+  ice_guardian: {
+    name: 'Ледяной страж',
+    texture: 'enemy_ice_guardian',
+    tier: 'strong',
+    hp: 780,
+    normalAttack: { damage: 12, intervalSec: 3.8, chill: { pct: 0.35, sec: 3 } },
+    strongAttack: {
+      name: 'Ледяной молот', damage: 32, prepSec: 2.6, cooldownSec: 11, firstDelaySec: 7,
+      interruptBy: ['telekinesis_heavy'],
+      hint: 'Бросьте тяжёлый камень!',
+    },
+    staggerSec: 1.2,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    armor: { value: 0.45, source: 'crystal', disabledSec: 8 },
+    weaknesses: { fire: 0.25 },
+    rewards: { heroXP: 140, schoolXP: { telekinesis: 40, fire: 40, seal: 40, ice: 40 }, items: { ice_crystal: 2, frost_shard: 1 }, coins: 60 },
+    repeatRewards: { heroXP: 55, schoolXP: { ice: 5 }, items: { ice_crystal: 1 }, coins: 16 },
+    arena: 'frost',
+  },
+
   // Враг со слабостью из Combat Math §7. v0.10.0: пять Корневиков в старом лесу (world.layout.js, rootling_01…05).
   // Защита 20%, Огонь +50% и снимает защиту на 6 с. Первая победа на месте — rewards; повторная (возобновляемые места) — repeatRewards.
   rootling: {
@@ -160,6 +227,15 @@ export const ARENAS = {
     objects: [
       { id: 'rock_a', type: 'light_rock', x: 190, y: 720 },
       { id: 'heavy_a', type: 'heavy_rock', x: 540, y: 710 },
+    ],
+  },
+  // v0.21.0: Замёрзший квартал — кристалл стража и тяжёлый камень
+  frost: {
+    ground: 0x26313a,
+    objects: [
+      { id: 'crystal_a', type: 'crystal', x: 590, y: 640 },
+      { id: 'heavy_a', type: 'heavy_rock', x: 150, y: 760 },
+      { id: 'rock_a', type: 'light_rock', x: 420, y: 800 },
     ],
   },
   glade: {

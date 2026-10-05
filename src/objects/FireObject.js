@@ -45,6 +45,7 @@ export class FireObject extends InteractiveObject {
       services.audio.play('locked');
       return;
     }
+    if (this.waiting()) { this.scene.toast(this.lockedText(), COLORS.fire); services.audio.play('locked'); return; }   // v0.21.0
     if (this.busy || this.fireState !== 'normal') return;
     const r = await this.serverAct();   // v0.13.0: ману списывает сервер (операция world)
     if (!r || this.removed || !this.sprite.active || this.fireState !== 'normal') return;
@@ -96,6 +97,7 @@ export class FireObject extends InteractiveObject {
     if (this.emitter) this.scene.time.delayedCall(500, () => { this.emitter.stop(); });
     this.remove(true);
     this.spawnReveal();
+    if (this.cfg.doneText) this.scene.toast(this.cfg.doneText, COLORS.fire);   // v0.21.0
     services.bus.emit(MSG.QUEST_CHANGED);
     if (this.cfg.panOnOpen) this.scene.panTo(this.cfg.panOnOpen.x, this.cfg.panOnOpen.y);
   }

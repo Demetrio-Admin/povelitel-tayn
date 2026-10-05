@@ -18,13 +18,13 @@ export const CITY_ZONES = [
   { id: 'DU', name: 'Зал Магической Дуэли', x: 2420, y: 4100, w: 440, h: 360, safePoint: { x: 2640, y: 4020 } },
   { id: 'CV', name: 'Дом Ковенов', x: 2960, y: 4100, w: 500, h: 360, safePoint: { x: 3210, y: 4020 } },
   { id: 'WH', name: 'Складской квартал', x: 2400, y: 4500, w: 1140, h: 500, safePoint: { x: 2910, y: 4050 } },
-  { id: 'FQ', name: 'Замёрзший квартал', x: 2400, y: 1900, w: 1140, h: 600, safePoint: { x: 2910, y: 3150 } },
-  { id: 'P', name: 'Центральная площадь', x: 2360, y: 1900, w: 1240, h: 3100, safePoint: { x: 2600, y: 3625 } },
+  { id: 'FQ', name: 'Замёрзший квартал', x: 2400, y: 1500, w: 1160, h: 1000, safePoint: { x: 2910, y: 3150 } },
+  { id: 'P', name: 'Центральная площадь', x: 2360, y: 1500, w: 1240, h: 3500, safePoint: { x: 2600, y: 3625 } },
 ];
 
 /** Пол: вся мостовая города и полы зданий-разрезов (поверх мостовой). */
 export const CITY_GROUND = [
-  { tex: 'stone_path_01', x: 2360, y: 1900, w: 1240, h: 3140 },
+  { tex: 'stone_path_01', x: 2360, y: 1500, w: 1240, h: 3540 },
   { tex: 'wooden_floor_01', x: 2440, y: 2560, w: 420, h: 480 },
   { tex: 'wooden_floor_01', x: 2960, y: 2560, w: 500, h: 480 },
 ];
@@ -45,21 +45,22 @@ export const CITY_COLLIDERS = [
   // ---- всё, что вне дороги и города, — лес (тёмная заливка, деревья — украшения ниже)
   { kind: 'trees', x: 1800, y: 0, w: 560, h: 3300 },
   { kind: 'trees', x: 1800, y: 3950, w: 560, h: 1450 },
-  { kind: 'trees', x: 2360, y: 0, w: 1240, h: 1860 },
+  { kind: 'trees', x: 2360, y: 0, w: 1240, h: 1460 },   // v0.21.0: город вырос на север (Замёрзший квартал)
   { kind: 'trees', x: 2360, y: 5040, w: 1240, h: 360 },
   // ---- городская стена (камень); ворота — проём в западной стене на y 3555–3700
-  { kind: 'ruin', x: 2360, y: 1860, w: 40, h: 1695 },
+  { kind: 'ruin', x: 2360, y: 1460, w: 40, h: 2095 },
   { kind: 'ruin', x: 2360, y: 3700, w: 40, h: 1340 },
-  { kind: 'ruin', x: 2400, y: 1860, w: 1200, h: 40 },
+  { kind: 'ruin', x: 2400, y: 1460, w: 1200, h: 40 },
   { kind: 'ruin', x: 2400, y: 5000, w: 1200, h: 40 },
-  { kind: 'ruin', x: 3560, y: 1900, w: 40, h: 3100 },
+  { kind: 'ruin', x: 3560, y: 1500, w: 40, h: 3500 },
   // ---- Архив и Общество Преображения (разрезы с дверью), Дуэльный зал и Дом Ковенов (пока закрыты)
   ...building(2440, 2560, 420, 480, 2600),
   ...building(2960, 2560, 500, 480, 3160),
   ...building(2420, 4100, 440, 360),
   ...building(2960, 4100, 500, 360),
-  // ---- Замёрзший квартал пока закрыт ледяной стеной между Архивом и Обществом (откроется по сюжету)
-  { kind: 'ruin', x: 2860, y: 2500, w: 100, h: 60 },
+  // ---- Замёрзший квартал: вход — улица между Архивом и Обществом (её закрывает ледяная стена frost_barrier, квест 7).
+  // v0.21.0: внутри квартал делит каменная ограда (y 1960–2000) с затопленным проломом fq_water — его замораживают Льдом (квест 9).
+  { kind: 'ruin', x: 2400, y: 1960, w: 460, h: 40 },
   { kind: 'ruin', x: 2400, y: 2500, w: 40, h: 60 },
   { kind: 'ruin', x: 2440, y: 2500, w: 420, h: 60 },
   { kind: 'ruin', x: 2960, y: 2500, w: 600, h: 60 },
@@ -77,9 +78,11 @@ export const CITY_COLLIDERS = [
   { kind: 'furniture', x: 2640, y: 4700, w: 70, h: 40, tex: 'barrel_01' },
   { kind: 'furniture', x: 3120, y: 4640, w: 100, h: 40, tex: 'crate_01' },
   { kind: 'furniture', x: 3380, y: 4800, w: 100, h: 40, tex: 'crate_01' },
+  // v0.21.0 (добавлено в конец): вторая половина ограды Замёрзшего квартала
+  { kind: 'ruin', x: 2960, y: 1960, w: 600, h: 40 },
 ];
 
-export const CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }];
+export const CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }, { x: 2360, y: 1460, w: 1240, h: 1840 }];
 
 // v0.20.0: квесты 1–5 главы II (chapter-2-quests-v0.1.md): дорога, площадь, след, Архив, Общество.
 export const CITY_INTERACTIVES = [
@@ -112,6 +115,40 @@ export const CITY_INTERACTIVES = [
     doneTitle: 'Общество Преображения', doneText: 'Под Астралом выцветшие строки проступили снова. Ледяная магия в этих краях редка — а недавно все записи о ней забрал исследователь Общества Преображения. Подпись: Северин Вейр.', doneButton: 'К Обществу' },
   // Общество Преображения
   { id: 'npc_severin', kind: 'npc', npc: 'severin', x: 3210, y: 2760, texture: 'npc_severin', collide: { w: 50, h: 24 }, radius: 140 },
+
+  // ---- v0.21.0: квест 6 «Пропавший груз» — Складской квартал (после боя со сборщиками)
+  { id: 'wh_cargo', kind: 'telekinesis', mode: 'push', weight: 'medium', x: 3250, y: 4930, texture: 'crate_01', collide: { w: 70, h: 30 },
+    target: { x: 3330, y: 4900 }, radius: 120, requiresEnemyDefeated: 'wh_elite', doneEvent: 'ch2_cargo_found', hint: 'Ящики с грузом',
+    hiddenReward: { spawnPickup: { item: 'ice_crystal', amount: 1 } } },
+  { id: 'wh_equipment', kind: 'seal_sigil', x: 2700, y: 4930, texture: 'trunk_01', litTexture: 'trunk_01', radius: 110,
+    requiresEvent: 'ch2_cargo_found', doneEvent: 'ch2_serials_read', hint: 'Оборудование с клеймом',
+    lockedText: 'Ящик с инструментами под инеем. Сначала разберитесь со сборщиками.',
+    doneTitle: 'Списанное оборудование', doneText: 'Под Астралом проступили серийные номера и клеймо Общества Преображения. Рядом — печать: «Списано». Полгода назад. Кто-то пользуется оборудованием, которого официально нет.', doneButton: 'К Иларии' },
+
+  // ---- квест 7 «Чужими руками» → квест 8: ледяная стена на улице к Замёрзшему кварталу. Видна всегда, растапливается Огнём после волны холода.
+  { id: 'frost_barrier', kind: 'fire', x: 2910, y: 2560, texture: 'ice_wall_01', collide: { w: 100, h: 60 }, radius: 130,
+    waitEvent: 'ch2_frost_wave', destroyEvent: 'ch2_quarter_open', burnSec: 1.6, hint: 'Ледяная стена',
+    lockedText: 'Улицу к северному кварталу перегородила стена льда. Город запретил туда ходить — пока.',
+    doneText: 'Лёд поплыл и осел. Путь в Замёрзший квартал открыт.' },
+
+  // ---- квест 8 «То, что нельзя сжечь» — южная часть квартала
+  { id: 'ice_construct', kind: 'fire', x: 2700, y: 2330, texture: 'ice_construct_01', collide: { w: 90, h: 30 }, radius: 130,
+    requiresEvent: 'ch2_quarter_open', destroyEvent: 'ch2_construct_unstable', burnSec: 1.4, hint: 'Ледяная конструкция',
+    doneText: 'Конструкция треснула — и холод рванулся наружу! Кто-то в синем плаще встал между вами и вспышкой.' },
+  { id: 'npc_nerys', kind: 'npc', npc: 'nerys', x: 2800, y: 2230, texture: 'npc_nerys', radius: 140, requiresEvent: 'ch2_construct_unstable' },
+  { id: 'fq_door', kind: 'seal_sigil', x: 3420, y: 2140, texture: 'frozen_door_01', litTexture: 'frozen_door_01', radius: 120,
+    requiresEnemyDefeated: 'fq_collector', doneEvent: 'ch2_rescue_door', hint: 'Обледеневшая дверь',
+    lockedText: 'За дверью кто-то стучит. Сначала — сборщик рядом.',
+    doneTitle: 'Люди за дверью', doneText: 'Астрал показал узлы, на которых держится лёд. Нэрис разбила их одним касанием — и двое жителей вышли наружу, дрожа от холода.', doneButton: 'Дальше' },
+  { id: 'fq_cellar', kind: 'telekinesis', mode: 'push', weight: 'medium', x: 2500, y: 2190, texture: 'crate_01', collide: { w: 70, h: 30 },
+    target: { x: 2470, y: 2120 }, radius: 120, requiresEnemyDefeated: 'fq_critter', doneEvent: 'ch2_rescue_cellar', hint: 'Ящики над погребом',
+    hiddenReward: { spawnPickup: { item: 'frost_herb', amount: 1 } } },
+  { id: 'fq_cauldron', kind: 'alchemy', x: 3080, y: 2160, texture: 'cauldron_01', collide: { w: 66, h: 26 }, radius: 120, requiresEvent: 'ch2_nerys_met' },
+
+  // ---- квест 9 «Холодная наука»: затопленный пролом в ограде замораживают Льдом — за ним тренировочный двор
+  { id: 'fq_water', kind: 'ice', x: 2910, y: 2010, texture: 'water_patch_01', frozenTexture: 'ice_floor_01', walkable: true, collide: { w: 100, h: 50 }, radius: 130,
+    doneEvent: 'ch2_water_frozen', hint: 'Затопленный пролом', lockedText: 'Вода из лопнувшей трубы залила пролом в ограде. Здесь пригодился бы Лёд.',
+    doneText: 'Вода схватилась льдом — можно пройти.' },
 ];
 
 /** Враги главы II, часть 1. */
@@ -120,6 +157,21 @@ export const CITY_ENEMIES = [
   { id: 'plaza_critter', enemy: 'frost_critter', x: 2780, y: 3800, radius: 130, requiresEvent: 'ch2_city_arrived', defeatEvent: 'ch2_plaza_cleared' },
   // знакомый противник на дороге (квест 1, необязательный)
   { id: 'road_scavenger', enemy: 'young_scavenger', x: 2120, y: 3640, radius: 110, requiresEvent: 'ch2_start' },
+  // v0.21.0 — квест 6: Складской квартал
+  { id: 'wh_collector_1', enemy: 'frost_collector', x: 2560, y: 4800, radius: 120, requiresEvent: 'ch2_cargo_start' },
+  { id: 'wh_collector_2', enemy: 'frost_collector', x: 3240, y: 4720, radius: 120, requiresEvent: 'ch2_cargo_start' },
+  { id: 'wh_elite', enemy: 'frost_collector_elite', x: 2930, y: 4880, radius: 130, requiresEvent: 'ch2_cargo_start', defeatEvent: 'ch2_wh_boss' },
+  // квест 7: зверь, сбежавший из закрытой лаборатории, — у дверей Общества
+  { id: 'lab_critter', enemy: 'frost_critter', x: 3210, y: 3240, radius: 120, requiresEvent: 'ch2_severin_asked', defeatEvent: 'ch2_lab_critter' },
+  // квест 8: Замёрзший квартал (появляются после знакомства с Нэрис)
+  { id: 'fq_critter', enemy: 'frost_critter', x: 2560, y: 2400, radius: 120, requiresEvent: 'ch2_nerys_met' },
+  { id: 'fq_collector', enemy: 'frost_collector', x: 3300, y: 2300, radius: 120, requiresEvent: 'ch2_nerys_met' },
+  // квест 9: тренировочный двор за проломом
+  { id: 'fq_training', enemy: 'frost_critter', x: 2910, y: 1830, radius: 110, requiresEvent: 'unlock_ice_1', defeatEvent: 'ch2_training_done' },
+  // квест 10 «Выбор»: глубина квартала
+  { id: 'fq_deep_1', enemy: 'frost_collector', x: 2600, y: 1740, radius: 120, requiresEvent: 'ch2_choice_start', defeatEvent: 'ch2_deep_1' },
+  { id: 'fq_deep_2', enemy: 'frost_collector', x: 3240, y: 1740, radius: 120, requiresEvent: 'ch2_choice_start', defeatEvent: 'ch2_deep_2' },
+  { id: 'fq_guardian', enemy: 'ice_guardian', x: 2910, y: 1690, radius: 140, requiresEvent: 'ch2_choice_start', defeatEvent: 'ch2_ice_guardian_defeated' },
 ];
 
 /** Украшения города и дороги: деревья вдоль опушки, фонари, доска объявлений, пятна инея. */
@@ -133,9 +185,16 @@ export const CITY_DECOR = [
   { id: 'ct_frost_2', k: 'frost_patch_01', x: 2980, y: 3860, floor: true },
   { id: 'ct_frost_3', k: 'frost_patch_01', x: 2620, y: 3560, floor: true },
   { id: 'ct_candles', k: 'candle_group_01', x: 2780, y: 2650 },
+  // v0.21.0: Замёрзший квартал — иней на мостовой и фонари
+  ...[[2560, 2300], [3180, 2420], [2680, 2080], [3360, 2060], [2560, 1660], [3240, 1640], [2700, 1880], [3420, 1860]].map(([x, y], i) => ({ id: `fq_frost_${i}`, k: 'frost_patch_01', x, y, floor: true })),
+  ...[[2440, 2470], [3520, 2470], [2440, 1940], [3520, 1940], [2440, 1540], [3520, 1540]].map(([x, y], i) => ({ id: `fq_lamp_${i}`, k: 'city_lamp_01', x, y })),
 ];
 
 /** v0.20.0: событие «впервые пришёл в зону» (ExplorationScene.updateZone → quests.complete; сервер проверяет условия EVENT_ACTIONS). */
 export const ZONE_EVENTS = {
   P: { event: 'ch2_city_arrived', requires: ['ch2_start'] },
 };
+
+/** v0.21.0: проходы города для проверки проходимости (закрыты, пока их не открыл сюжет) и места за ними. */
+export const CITY_GATE_IDS = ['frost_barrier', 'fq_water'];
+export const CITY_BEHIND_GATES = ['npc_nerys', 'ice_construct', 'fq_door', 'fq_training', 'fq_guardian'];

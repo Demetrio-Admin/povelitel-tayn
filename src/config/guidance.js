@@ -75,6 +75,26 @@ export const STEP_GUIDE = {
   ch2_tell:    { targets: ['npc_ilaria'], hints: ['Илария у дверей Архива.'] },
   ch2_archive: { targets: ['archive_document'], hints: ['Старый документ лежит на столе в Архиве. Нужен Астрал (20 маны).'] },
   ch2_severin: { targets: ['npc_severin'], hints: ['Общество Преображения — здание к востоку от Архива, вход с площади.'] },
+  // v0.21.0: квесты 6–10
+  ch2_cargo_talk:  { targets: ['npc_merchant'], hints: ['Лавка Бориса — на востоке площади.'] },
+  ch2_warehouse:   { targets: ['wh_collector_1', 'wh_collector_2', 'wh_elite'], hints: ['Склады — на юге города, улица между Дуэльным залом и Домом Ковенов.', 'Корку сборщика пробивает Астрал, а Огонь растапливает её на 5 секунд. Таран прерывает Телекинез.'] },
+  ch2_cargo:       { targets: ['wh_cargo', 'wh_equipment'], hints: ['Ящики с грузом сдвиньте Телекинезом (средний вес), клеймо на ящике с инструментами прочтите Астралом.'] },
+  ch2_cargo_tell:  { targets: ['npc_ilaria'], hints: ['Илария у дверей Архива.'] },
+  ch2_ask:         { targets: ['npc_severin'], hints: ['Северин — в Обществе Преображения.'] },
+  ch2_lab:         { targets: ['lab_critter'], hints: ['Зверь у дверей Общества. Огонь бьёт его сильнее, рывок прерывает Телекинез.'] },
+  ch2_wave:        { targets: ['npc_ilaria'], hints: ['Илария у дверей Архива.'] },
+  ch2_quarter:     { targets: ['frost_barrier'], hints: ['Ледяная стена — на улице между Архивом и Обществом. Растопите её Огнём (16 маны).'] },
+  ch2_construct:   { targets: ['ice_construct'], hints: ['Ледяная конструкция — прямо за стеной, слева.'] },
+  ch2_nerys:       { targets: ['npc_nerys'], hints: ['Маг Льда стоит у конструкции.'] },
+  ch2_rescue:      { targets: ['fq_door', 'fq_cellar', 'fq_collector', 'fq_critter'], hints: ['Дверь на востоке сторожит морозный сборщик, погреб на западе — инеевый зверёк.', 'Дверь — Астрал, ящики над погребом — Телекинез.'] },
+  ch2_rescue_tell: { targets: ['npc_nerys'], hints: ['Нэрис у конструкции.'] },
+  ch2_warm:        { targets: ['fq_cauldron'], hints: ['Котёл Нэрис — у стены квартала. Тёплый настой: лунная трава, морозник и гриб.'] },
+  ch2_lesson:      { targets: ['npc_nerys'], hints: ['Поговорите с Нэрис.'] },
+  ch2_water:       { targets: ['fq_water'], hints: ['Сумка → Дары: поставьте Лёд вместо одного из даров. Потом заморозьте воду в проломе (14 маны).'] },
+  ch2_training:    { targets: ['fq_training'], hints: ['Сначала Лёд — замедленный зверь дольше готовит рывок.'] },
+  ch2_trained:     { targets: ['npc_nerys'], hints: ['Нэрис ждёт у конструкции.'] },
+  ch2_choice:      { targets: ['fq_deep_1', 'fq_deep_2', 'fq_guardian'], hints: ['Броню Стража разбивает тяжёлый камень (Телекинез), Астрал бьёт сквозь неё, Огонь жжёт на 25% сильнее.', 'Лёд замедляет Ледяной молот — успеете бросить камень. Возьмите пару Настоев жизни.'] },
+  ch2_choice_tell: { targets: ['npc_nerys'], hints: ['Нэрис у конструкции в южной части квартала.'] },
   ch2_next:    { targets: [], hints: [] },
 };
 
@@ -98,6 +118,11 @@ export const HERO_LINES = [
   { id: 'e_ch2_road', event: 'ch2_start', text: 'Впервые — одна дорога, без Мирры. Указатель у восточной тропы.' },
   { id: 'z_city', zone: 'P', text: 'Город… Сколько магов! И как холодно для осени.' },
   { id: 'e_plaza', event: 'ch2_plaza_cleared', text: 'Зверь был обычным — пока его не тронул этот холод.' },
+  // v0.21.0
+  { id: 'e_serials', event: 'ch2_serials_read', text: 'Списано полгода назад… и всё ещё в деле.' },
+  { id: 'e_wave', event: 'ch2_frost_wave', text: 'Целый квартал во льду. Скорее!' },
+  { id: 'z_fq', zone: 'FQ', text: 'Здесь даже воздух звенит от холода.' },
+  { id: 'e_ice', event: 'unlock_ice_1', text: 'Холод в ладони — и он слушается.' },
 
   { id: 'e_book',    event: 'unlock_telekinesis_1',  text: 'Страницы тёплые… Я слышу лес. Предметы будто шепчут.' },
   { id: 'e_first',   event: 'first_world_interaction', text: 'Получилось! Телекинез слушается.' },

@@ -489,10 +489,61 @@ export const DIALOGUES = {
   ],
   // ================================================================== v0.20.0 — глава II, город
   ilaria: [
+    // v0.21.0 — квесты 6–7
+    {
+      id: 'ilaria_quarter', repeat: true, when: c => c.has('ch2_frost_wave'),
+      nodes: { start: {
+        lines: ['Северный квартал за ледяной стеной. Стража никого не пускает — но вас пропустят.', 'Огонь растопит стену. А дальше… будьте осторожны.'],
+        choices: [BYE],
+      } },
+    },
+    {
+      id: 'ilaria_wave_ready', when: c => c.has('ch2_lab_critter') && !c.has('ch2_frost_wave'),
+      nodes: {
+        start: {
+          lines: [
+            { hero: 'У дверей Общества был ещё один зверь. Такой же, как на площади, — только злее.' },
+            'Закрытая группа, списанное оборудование, звери у порога… Кто-то ставит опыты прямо в городе.',
+            'Северин удивился? Возможно, искренне. Но верить ему на слово я больше не…',
+          ],
+          choices: [{ label: 'Что это за гул?', next: 'wave' }],
+        },
+        wave: {
+          lines: ['Земля дрогнула. Над северными крышами поднялась белая стена — волна холода.', 'Это Замёрзший квартал! Там живут люди. Бегите — я подниму стражу.'],
+          choices: [{ label: 'Иду!', do: [{ event: 'ch2_frost_wave' }] }],
+        },
+      },
+    },
+    {
+      id: 'ilaria_lab_active', when: c => c.has('ch2_severin_asked') && !c.has('ch2_lab_critter'),
+      nodes: { start: { lines: ['Я слышала крики у Общества Преображения. Что-то вырвалось наружу — посмотрите!'], choices: [{ label: GOT_IT }] } },
+    },
+    {
+      id: 'ilaria_severin_active', when: c => c.has('ch2_cargo_reported') && !c.has('ch2_severin_asked'),
+      nodes: { start: { lines: ['Спросите Северина о списанном оборудовании. И следите за его лицом, а не за словами.'], choices: [{ label: GOT_IT }] } },
+    },
+    {
+      id: 'ilaria_cargo_ready', when: c => c.has('ch2_serials_read') && !c.has('ch2_cargo_reported'),
+      nodes: {
+        start: {
+          lines: [
+            { hero: 'Груз нашёлся на складах. А рядом — оборудование Общества. С печатью «Списано», полгода назад.' },
+            'Руническая пыль, лунные осколки, смола… Именно это и покупает Общество. Совпадение?',
+            'Списанное оборудование не работает само. Кто-то им пользуется — тайно.',
+            'Спросите Северина. Посмотрим, что он скажет.',
+          ],
+          choices: [{ label: 'Спрошу.', do: [{ event: 'ch2_cargo_reported' }] }],
+        },
+      },
+    },
+    {
+      id: 'ilaria_cargo_active', when: c => c.has('ch2_cargo_start') && !c.has('ch2_serials_read'),
+      nodes: { start: { lines: ['Склады — к югу от площади, за Дуэльным залом. Говорят, там бродят ледяные конструкты.'], choices: [{ label: GOT_IT }] } },
+    },
     {
       id: 'ilaria_after_severin', repeat: true, when: c => c.has('ch2_met_severin'),
       nodes: { start: {
-        lines: ['Северин был любезен? Он всегда любезен.', 'Я подниму записи о складах Общества. Приходите позже — мне нужно время.'],
+        lines: ['Северин был любезен? Он всегда любезен.', 'Торговец Борис с утра жалуется, что у него пропал груз. Загляните к нему — вдруг это связано.'],
         choices: [BYE],
       } },
     },
@@ -579,6 +630,28 @@ export const DIALOGUES = {
         },
       },
     },
+    // v0.21.0 — квест 7
+    {
+      id: 'severin_wary', repeat: true, when: c => c.has('ch2_severin_asked'),
+      nodes: { start: { lines: ['Я проверяю списки закрытой группы. Если кто-то из моих людей переступил черту — я узнаю первым.'], choices: [BYE] } },
+    },
+    {
+      id: 'severin_ask_ready', when: c => c.has('ch2_cargo_reported') && !c.has('ch2_severin_asked'),
+      nodes: {
+        start: {
+          lines: [
+            { hero: 'На складах — ваше оборудование. Списанное полгода назад. И им кто-то пользуется.' },
+            'Списанное?.. Покажите номера. — Северин долго молчит. — Это приборы закрытой группы.',
+            'У нас есть исследовательская группа, о которой не знают даже многие члены Общества. Я думал, её работы остановлены.',
+          ],
+          choices: [{ label: 'Кто в неё входит?', next: 'who' }],
+        },
+        who: {
+          lines: ['Этого я сказать не могу — пока не проверю сам.', 'Верьте или нет: я хочу ускорить магию, а не заморозить город.'],
+          choices: [{ label: 'Посмотрим.', do: [{ event: 'ch2_severin_asked' }] }],
+        },
+      },
+    },
     {
       id: 'severin_after', repeat: true, when: c => c.has('ch2_met_severin'),
       nodes: { start: { lines: ['Двери Общества открыты. Подумайте о моём вопросе.'], choices: [BYE] } },
@@ -596,6 +669,22 @@ export const DIALOGUES = {
         choices: [{ label: 'Посмотреть товар', do: [{ event: 'city_merchant_open' }, { shop: true }] }, { label: 'Потом.', do: [{ event: 'city_merchant_open' }] }],
       } },
     },
+    // v0.21.0 — квест 6 «Пропавший груз»
+    {
+      id: 'merchant_cargo_ready', when: c => c.has('ch2_met_severin') && !c.has('ch2_cargo_start'),
+      nodes: { start: {
+        lines: [
+          'Беда! Пропала целая партия: руническая пыль, лунные осколки, смола и металлические детали.',
+          'Обоз ночью стоял на складах — утром пусто. Сторож клянётся, что видел ледяных чудищ.',
+          'Найдёте груз — в долгу не останусь.',
+        ],
+        choices: [{ label: 'Найду.', do: [{ event: 'ch2_cargo_start' }] }, { label: 'Посмотреть товар', do: [{ event: 'ch2_cargo_start' }, { shop: true }] }],
+      } },
+    },
+    {
+      id: 'merchant_cargo_active', when: c => c.has('ch2_cargo_start') && !c.has('ch2_cargo_found'),
+      nodes: { start: { lines: ['Склады — на юге города, за Дуэльным залом. Осторожнее с чудищами!'], choices: [{ label: 'Посмотреть товар', do: [{ shop: true }] }, BYE] } },
+    },
     {
       id: 'merchant_shop', repeat: true, when: c => c.has('city_merchant_open'),
       nodes: { start: { lines: ['Что сегодня?'], choices: [{ label: 'Посмотреть товар', do: [{ shop: true }] }, BYE] } },
@@ -603,6 +692,123 @@ export const DIALOGUES = {
     {
       id: 'merchant_default', repeat: true, when: () => true,
       nodes: { start: { lines: ['Лавка скоро откроется.'], choices: [BYE] } },
+    },
+  ],
+  // ================================================================== v0.21.0 — Нэрис, маг Льда (квесты 8–10)
+  nerys: [
+    {
+      id: 'nerys_after', repeat: true, when: c => c.has('ch2_quarter_cleared'),
+      nodes: { start: {
+        lines: ['Квартал дышит. Лёд в твоих руках стал увереннее.', 'Следующий урок — Хрупкость. Скоро. Сначала мне нужно понять, кто делает этих конструктов.'],
+        choices: [{ label: 'Котёл', do: [{ alchemy: true }] }, { label: 'Дары', do: [{ gifts: true }] }, BYE],
+      } },
+    },
+    {
+      id: 'nerys_cleared_ready', when: c => c.has('ch2_ice_guardian_defeated') && c.has('ch2_deep_1') && c.has('ch2_deep_2') && !c.has('ch2_quarter_cleared'),
+      nodes: { start: {
+        lines: [
+          fm('Страж повержен? И сборщики тоже… Ты выбрала дары под противника, а не по привычке. Это и есть мастерство.', 'Страж повержен? И сборщики тоже… Ты выбрал дары под противника, а не по привычке. Это и есть мастерство.'),
+          'Страж не родился здесь: его собрали. Внутри — осколок инея, такой же, как в лесу Мирры.',
+          'Держи кристаллы. Из них варят защиту — Кристальный покров, — а из осколка однажды выйдет амулет Мороза.',
+        ],
+        choices: [{ label: 'Спасибо, Нэрис.', do: [{ event: 'ch2_quarter_cleared' }] }],
+      } },
+    },
+    {
+      id: 'nerys_choice_active', when: c => c.has('ch2_choice_start') && !c.has('ch2_quarter_cleared'),
+      nodes: { start: {
+        lines: ['В глубине квартала — два сборщика и Ледяной страж. Броню стража разбивает тяжёлый камень, Астрал бьёт сквозь неё, Огонь жжёт сильнее обычного.', 'Лёд замедлит его молот. Подумай, какие три дара взять.'],
+        choices: [{ label: 'Дары', do: [{ gifts: true }] }, { label: GOT_IT }],
+      } },
+    },
+    {
+      id: 'nerys_trained_ready', when: c => c.has('ch2_training_done') && !c.has('ch2_ice_trained'),
+      nodes: {
+        start: {
+          lines: [
+            'Неплохо. Лёд не бьёт сильнее всех — он даёт время. Замедленный враг дольше готовит удар, и ты успеваешь ответить.',
+            'Теперь у тебя четыре дара, а рук — на три. Это не наказание, а выбор: какой дар нужнее против этого врага?',
+          ],
+          choices: [{ label: 'Что дальше?', next: 'choice', do: [{ event: 'ch2_ice_trained' }] }],
+        },
+        choice: {
+          lines: [
+            'В глубине квартала холод сильнее всего. Там Ледяной страж — и он не пропустит.',
+            'Советую взять Лёд. А что убрать — решать тебе: с Телекинезом безопаснее, с Огнём быстрее, Астрал пробивает броню.',
+          ],
+          choices: [{ label: 'Выбрать дары', do: [{ event: 'ch2_choice_start' }, { gifts: true }] }],
+        },
+      },
+    },
+    {
+      id: 'nerys_training_active', when: c => c.has('ch2_water_frozen') && !c.has('ch2_training_done'),
+      nodes: { start: { lines: ['Во дворе за оградой — инеевый зверёк. Быстрый. Замедли его Льдом и только потом бей.'], choices: [{ label: GOT_IT }] } },
+    },
+    {
+      id: 'nerys_water_active', when: c => c.has('unlock_ice_1') && !c.has('ch2_water_frozen'),
+      nodes: { start: {
+        lines: ['Пролом в ограде залит водой. Заморозь её — и пройдёшь.', 'Не забудь: дар работает, только если он в одном из трёх слотов. Сумка → Дары.'],
+        choices: [{ label: 'Дары', do: [{ gifts: true }] }, { label: GOT_IT }],
+      } },
+    },
+    {
+      id: 'nerys_lesson_ready', when: c => c.has('warm_potion_crafted') && !c.has('unlock_ice_1'),
+      nodes: {
+        start: {
+          lines: [
+            'Тёплый настой вышел ровным. Значит, ты слушаешь, а не только смотришь.',
+            'Лёд — это не отсутствие Огня. Это сила, которая останавливает: воду, движение, нестабильную магию.',
+            'Дай руку. Почувствуй, как холод собирается в ладони — и не отпускай его сразу.',
+          ],
+          choices: [{ label: 'Попробую.', do: [{ gift: 'ice' }] }],
+        },
+      },
+    },
+    {
+      id: 'nerys_warm_active', when: c => c.has('ch2_rescue_done') && !c.has('warm_potion_crafted'),
+      nodes: { start: {
+        lines: ['Сначала — тёплый настой. Лунная трава, морозник и гриб; котёл рядом.', 'Кто не умеет греть, тот не поймёт холод.'],
+        choices: [{ label: 'Варить', do: [{ alchemy: true }] }, { label: GOT_IT }],
+      } },
+    },
+    {
+      id: 'nerys_rescue_ready', when: c => c.has('ch2_rescue_door') && c.has('ch2_rescue_cellar') && !c.has('ch2_rescue_done'),
+      nodes: { start: {
+        lines: [
+          'Все живы. Без тебя я бы не успела.',
+          fm('Ты ведь пришла учиться, верно? Я вижу, как ты смотришь на лёд.', 'Ты ведь пришёл учиться, верно? Я вижу, как ты смотришь на лёд.'),
+          'Сначала — тёплый настой. Вот рецепт и травы на первый раз; котёл у стены.',
+        ],
+        choices: [{ label: 'Сварю.', do: [{ event: 'ch2_rescue_done' }] }],
+      } },
+    },
+    {
+      id: 'nerys_rescue_active', when: c => c.has('ch2_nerys_met') && !c.has('ch2_rescue_done'),
+      nodes: { start: {
+        lines: ['Люди заперты: за обледеневшей дверью на востоке и в погребе на западе — над ним завал из ящиков.', 'Астрал покажет, где лёд слабее. Телекинез уберёт ящики. И не грей ничего без нужды!'],
+        choices: [{ label: GOT_IT }],
+      } },
+    },
+    {
+      id: 'nerys_meet_ready', when: c => c.has('ch2_construct_unstable') && !c.has('ch2_nerys_met'),
+      nodes: {
+        start: {
+          lines: [
+            'Стой! Не грей его больше!',
+            'Нэрис. Маг Льда. — Она сжимает кулак, и трещины на конструкции затягиваются инеем.',
+            'Лёд — это не отсутствие Огня. Если просто нагреть нестабильную магию, она не исчезнет. Она взорвётся.',
+          ],
+          choices: [{ label: fm('Я хотела помочь.', 'Я хотел помочь.'), next: 'help' }],
+        },
+        help: {
+          lines: ['Знаю. Огонь здесь уместен — на стенах и завалах. Но не на том, что собрано магией.', 'В квартале остались люди. Поможешь — потом поговорим.'],
+          choices: [{ label: 'Помогу.', do: [{ event: 'ch2_nerys_met' }] }],
+        },
+      },
+    },
+    {
+      id: 'nerys_default', repeat: true, when: () => true,
+      nodes: { start: { lines: ['Холодно? Это только начало.'], choices: [BYE] } },
     },
   ],
   banker: [

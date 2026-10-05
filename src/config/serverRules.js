@@ -59,6 +59,17 @@ export const EVENT_ACTIONS = {
   ch2_trace_found: { requires: ['ch2_trace_astral', 'ch2_trace_debris'] },
   ch2_met_severin: { requires: ['ch2_archive_read'] },
   city_merchant_open: { requires: ['ch2_city_arrived'] },
+  // v0.21.0 — квесты 6–10 (торговец, Илария, Северин, Нэрис)
+  ch2_cargo_start: { requires: ['ch2_met_severin'] },
+  ch2_cargo_reported: { requires: ['ch2_cargo_found', 'ch2_serials_read'] },
+  ch2_severin_asked: { requires: ['ch2_cargo_reported'] },
+  ch2_frost_wave: { requires: ['ch2_lab_critter'] },
+  ch2_nerys_met: { requires: ['ch2_construct_unstable'] },
+  ch2_rescue_done: { requires: ['ch2_rescue_door', 'ch2_rescue_cellar'] },
+  unlock_ice_1: { requires: ['ch2_rescue_done', 'warm_potion_crafted'], unlock: { ice: 1 } },
+  ch2_ice_trained: { requires: ['ch2_training_done'] },
+  ch2_choice_start: { requires: ['ch2_ice_trained'] },
+  ch2_quarter_cleared: { requires: ['ch2_ice_guardian_defeated', 'ch2_deep_1', 'ch2_deep_2'] },
 };
 
 /**
@@ -77,7 +88,7 @@ export const EVENT_ACTIONS = {
 export function worldRules() {
   const world = {};
   const base = (o) => ({
-    requires: o.requiresEvent ? [o.requiresEvent] : [],
+    requires: [o.requiresEvent, o.waitEvent].filter(Boolean),   // v0.21.0: waitEvent — объект виден, но поддаётся после события
     requiresEnemy: o.requiresEnemyDefeated ? [o.requiresEnemyDefeated] : [],
   });
   const itemReward = (item, amount) => (item === 'coins' ? { coins: amount } : { items: { [item]: amount } });
@@ -119,6 +130,10 @@ export function worldRules() {
         world[o.id] = { kind: 'cast', mark: o.persistent ? 'burning' : 'destroyed', mana: WORLD_MANA_COST.fire, ability: 'fire', minLevel: 1, blockedBy: [],
           school: school('fire'), ...effects(o), ...base(o) };
         pickupAfter(o, o.reveal?.spawnPickup, 'destroyed');
+        break;
+      case 'ice':   // v0.21.0: заморозить Льдом (вода → проход, механизм, нестабильный предмет)
+        world[o.id] = { kind: 'cast', mark: 'frozen', mana: WORLD_MANA_COST.ice, ability: 'ice', minLevel: o.minLevel || 1, blockedBy: [],
+          school: school('ice'), ...effects(o), ...base(o) };
         break;
       case 'gate':
         // Астрал открывает ворота только после всей цепочки: Страж побеждён, знаки проявлены, дар получен, камень опробован

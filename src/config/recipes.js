@@ -31,23 +31,23 @@ export const RECIPES = {
 };
 
 // ---- v0.19.0: глава II (docs/design/chapter-2-balance-v0.1.md §18). Рецепт становится известен по сюжету (события requires,
-// их выдают квесты главы II); до этого котёл его не показывает (chapter: 2 — скрыт, пока неизвестен).
+// их выдают квесты главы II; v0.21.0 — события квестов 6–10, Хрупкость и Стабилизирующий — в следующем обновлении); до этого котёл его не показывает (chapter: 2 — скрыт, пока неизвестен).
 Object.assign(RECIPES, {
   warm_potion: { kind: 'potion', chapter: 2, result: 'warm_potion', amount: 1, needs: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 },
-    requires: ['recipe_warm_potion'], note: 'Морозник, прогретый лунной травой, — тепло изнутри.' },
+    requires: ['ch2_nerys_met'], crafted: 'warm_potion_crafted', note: 'Морозник, прогретый лунной травой, — тепло изнутри.' },
   stabilizing_potion: { kind: 'potion', chapter: 2, result: 'stabilizing_potion', amount: 1, needs: { frost_herb: 2, rune_dust: 1, lunar_shard: 1 },
     requires: ['recipe_stabilizing_potion'], note: 'Успокаивает нестабильную магию в теле.' },
   brittle_flask: { kind: 'potion', chapter: 2, result: 'brittle_flask', amount: 1, needs: { ice_crystal: 1, tree_resin: 1, rune_dust: 1 },
     requires: ['recipe_brittle_flask'], note: 'Кристалл холода в смоле: разбивается о цель и делает её хрупкой.' },
   crystal_guard: { kind: 'potion', chapter: 2, result: 'crystal_guard', amount: 1, needs: { ice_crystal: 1, forest_mushroom: 1, tree_resin: 1 },
-    requires: ['recipe_crystal_guard'], note: 'Тонкая ледяная корка поверх кожи — на один серьёзный бой.' },
+    requires: ['ch2_quarter_cleared'], note: 'Тонкая ледяная корка поверх кожи — на один серьёзный бой.' },
   reinforced_resin: { kind: 'component', chapter: 2, result: 'reinforced_resin', amount: 1, needs: { tree_resin: 2, crimson_ember: 1, frost_herb: 1 },
-    requires: ['recipe_reinforced_resin'], note: 'Смола, закалённая углём и холодом.' },
+    requires: ['ch2_cargo_found'], note: 'Смола, закалённая углём и холодом.' },
   astral_lens: { kind: 'tool', chapter: 2, result: 'astral_lens', amount: 1, needs: { rune_dust: 2, lunar_shard: 1, ice_crystal: 1 },
-    requires: ['recipe_astral_lens'], note: 'Линза из льда и лунного осколка.' },
+    requires: ['ch2_cargo_reported'], note: 'Линза из льда и лунного осколка.' },
   amulet_frost: { kind: 'amulet', chapter: 2, result: 'amulet_frost', amount: 1,
     needs: { lunar_shard: 4, rune_dust: 4, ice_crystal: 3, frost_shard: 1, coins: 250 },
-    requires: ['recipe_amulet_frost'], blockedBy: ['amulet_frost_crafted'], crafted: 'amulet_frost_crafted',
+    requires: ['ch2_quarter_cleared'], blockedBy: ['amulet_frost_crafted'], crafted: 'amulet_frost_crafted',
     note: 'Первый амулет Льда. Нужен один: дальше его улучшают.' },
 });
 

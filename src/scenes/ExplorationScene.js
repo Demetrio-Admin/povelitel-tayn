@@ -33,10 +33,12 @@ import {
   applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject, TravelObject,
 } from '../objects/InteractiveObject.js';
 import { ZONE_EVENTS } from '../config/world.city.js';
+import { IceObject } from '../objects/IceObject.js';
 import { GateObject, SealSigilObject, DustStashObject, ForestNodeObject } from '../objects/ChapterObjects.js';
 
 const OBJECT_CLASSES = {
   travel: TravelObject,   // v0.20.0
+  ice: IceObject,         // v0.21.0
   book: BookObject,
   telekinesis: TelekinesisObject,
   fire: FireObject,
@@ -124,6 +126,7 @@ export class ExplorationScene extends Phaser.Scene {
     bus.on(MSG.CRAFTED, ({ result }) => this.objects.find(o => o instanceof AlchemyObject)?.celebrate(POTIONS[result]?.color), this);
     bus.on(MSG.HERO_SAY, (t, ms) => this.heroSay(t, ms), this);
     bus.on(MSG.UNLOCK_SEAL, this.unlockSeal, this);
+    bus.on(MSG.UNLOCK_GIFT, this.unlockGift, this);
     bus.on(MSG.TRAVEL, (t) => this.travelTo(t, t?.text), this);   // v0.20.0: «Город» в меню
     bus.on(MSG.SIDE_QUEST, (id, what) => { this.refreshAll(); if (what === 'ready') services.audio.play('quest_update'); }, this);
     this.events.on('wake', this.onWake, this);
@@ -201,6 +204,26 @@ export class ExplorationScene extends Phaser.Scene {
         + 'В мире он открывает древние знаки и ворота и оживляет сердце рощи. В бою бьёт силой, которой не помеха ни броня, ни кора, — но атаки врага не останавливает: это умеет только Телекинез.\n\n'
         + 'Опробуйте его спокойно — на учебном камне рядом с алтарём (кнопка Астрала или действие).',
       buttons: [{ label: 'К камню', primary: true }],
+    });
+  }
+
+  /**
+   * v0.21.0: Нэрис открывает Лёд I (событие unlock_ice_1; дар выдаёт сервер, операция event). Даров становится четыре, а слотов — три:
+   * окно объясняет «3 из 4» и ведёт в «Дары». Повтор ничего не выдаёт.
+   */
+  unlockGift(id) {
+    if (id !== 'ice') return;
+    const { state, abilities, quests } = services;
+    if (state.hasEvent('unlock_ice_1')) return;
+    abilities.unlock('ice', 1);
+    quests.complete('unlock_ice_1');
+    this.burst(this.player.x, this.player.y - 60, COLORS.ice, 34);
+    this.toast('Получен дар: Лёд I', COLORS.ice);
+    this.dialog({
+      title: 'Лёд I', color: COLORS.ice,
+      text: 'Лёд замораживает воду и нестабильную магию, а в бою замедляет врага: его удары и подготовка сильного удара идут медленнее.\n\n'
+        + 'Теперь даров четыре, а слотов — три. Работают только дары в слотах — и в бою, и в мире. Выберите, какой дар отложить.',
+      buttons: [{ label: 'Выбрать дары', primary: true, onClick: () => services.bus.emit(MSG.OPEN_GIFTS) }, { label: 'Позже' }],
     });
   }
 

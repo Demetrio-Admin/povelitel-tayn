@@ -20,6 +20,7 @@ const migrate = async () => {
   await db.exec(readFileSync("supabase/migrations/20261004_chat_roles_v2.sql", "utf8"));
   await db.exec(readFileSync("supabase/migrations/20261005_chat_amulet_catalog.sql", "utf8"));
   await db.exec(readFileSync("supabase/migrations/20261006_chat_catalog_ch2.sql", "utf8"));   // v0.19.0
+  await db.exec(readFileSync("supabase/migrations/20261007_covens.sql", "utf8"));             // v0.25.0: Ковены и их чат
 };
 try {
   for (const f of ["tools/sql/auth-stub.sql", "supabase/schema.sql", "supabase/migrations/20261004_game_chat.sql"]) await db.exec(readFileSync(f, "utf8"));
@@ -130,6 +131,13 @@ try {
   await deny("developer", "ticket", { ticket }, /chat_take_ticket/);
   const dm = (await call("alice", "dm_open", { ref: me.bob.ref })).room;
   for (const n of roles.slice(1)) await deny(n, "history", { room: dm });
+  // v0.25.0: чат ковена — только участникам (полная проверка ковенов — tools/sql/coven-test.mjs)
+  await sql("insert into public.player_quests(user_id,quest_id) values($1,'ch2_coven_ready') on conflict do nothing", [users.alice]);
+  const cv = await as("alice", async () => (await sql("select public.coven_request('create',$1::jsonb) j", [JSON.stringify({ name: "Ковен Алисы" })])).rows[0].j);
+  check(cv.ok && cv.coven.myRole === "leader", "coven created with its leader");
+  const croom = (await call("alice", "bootstrap")).rooms.find((r) => r.kind === "coven");
+  check(croom && croom.title === "Ковен Алисы" && !(await call("bob", "bootstrap")).rooms.some((r) => r.kind === "coven"), "coven chat room is visible only to members");
+  await deny("bob", "history", { room: croom.id });
   for (const table of ["templates", "notes", "roles", "audit"]) { await assert.rejects(() => as("player", () => sql(`select * from game_chat.${table}`)), /permission denied/); checks++; }
   await assert.rejects(() => as("player", () => sql("select game_chat.staff_player($1,$1)", [users.player])), /permission denied/); checks++;
   await db.exec(readFileSync("supabase/schema.sql", "utf8")); await migrate();

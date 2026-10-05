@@ -172,7 +172,8 @@ export class DialogueSystem {
       else if (e.seal) this.pendingAfter.push(() => this.bus?.emit(MSG.UNLOCK_SEAL));   // v0.10.0
       else if (e.shop) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_SHOP));       // v0.20.0: лавка
       else if (e.bank) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_WALLET));     // v0.20.0: банк (кошелёк)
-      else if (e.gifts) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_GIFTS));     // v0.21.0: окно «Дары» (слоты 3 из 4)
+      else if (e.gifts) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_GIFTS));
+      else if (e.covens) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_COVENS));   // v0.25.0     // v0.21.0: окно «Дары» (слоты 3 из 4)
       else if (e.gift) this.pendingAfter.push(() => this.bus?.emit(MSG.UNLOCK_GIFT, e.gift));   // v0.21.0: Нэрис учит Льду
       else if (e.finale) this.pendingAfter.push(() => this.bus?.emit(MSG.CHAPTER_FINALE, e.finale));   // v0.22.0: окно «Глава завершена»
     }

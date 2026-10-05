@@ -233,6 +233,8 @@ const SCRIPTED = [
   SET({ objects: { 'rep:fq_critter': { wins: 4, at: 1 }, 'rep:wh_collector_1': { wins: 2, at: 1 }, 'rep:rootling_01': { wins: 'x' } } }),
   ...DAILY_ORDER.map(id => A('daily_done', { offer: id })), ...DAILY_ORDER.map(id => A('daily_done', { offer: id })),
   SET({ quests: ['ch2_lab_open'] }), ...DAILY_ORDER.map(id => A('daily_take', { offer: id })),
+  // v0.25.0: ковены — у JS-модели их нет; игрок без ковена (или база без миграции) получает то же 'no_coven'
+  A('coven_give', { item: 'ice_crystal', qty: 1 }), A('coven_give', { item: 'coins', qty: 5 }), A('coven_give', {}), A('coven_claim'),
 ];
 const SCRIPT = SCRIPTED.flatMap(splitSet);
 for (let s = 0; s < SERIES + 1; s++) {

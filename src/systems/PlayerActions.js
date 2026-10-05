@@ -165,4 +165,8 @@ export class PlayerActions {
   presetUnlock() { return this.run({ op: 'preset_unlock' }); }
   bankWelcome() { return this.run({ op: 'bank_welcome' }); }
   respecSapphires(ability, branch) { return this.run({ op: 'respec', ability, branch, pay: 'sapphires' }); }
+  // v0.19.0: торговец и улучшение амулетов — решает сервер
+  shopBuy(item, qty = 1) { return this.run({ op: 'shop_buy', item, qty }); }
+  shopSell(item, qty = 1) { return this.run({ op: 'shop_sell', item, qty }); }
+  amuletUpgrade(amulet) { return this.run({ op: 'amulet_upgrade', amulet }); }
 }

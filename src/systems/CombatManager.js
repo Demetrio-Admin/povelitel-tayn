@@ -7,7 +7,7 @@ import { Enemy } from '../objects/Enemy.js';
 import { ABILITY_ORDER } from './AbilitySystem.js';
 import { POTIONS, POTION_BATTLE_LIMIT } from '../config/resources.js';
 import * as vitals from '../state/vitals.js';
-import { AMULETS } from '../config/build.js';
+import { amuletEffect } from '../config/build.js';
 
 export class CombatManager {
   /**
@@ -33,11 +33,16 @@ export class CombatManager {
     };
     // v0.16.0: амулеты. Их множители считаются один раз на начало боя: damageMult героя и входящий урон; лунный амулет — один раз за бой.
     this.amulets = state.equippedAmulets ? state.equippedAmulets() : [];
-    let dm = 1, inc = 1;
-    for (const a of this.amulets) { const e = AMULETS[a].effect; if (e.damageMult) dm *= e.damageMult; if (e.incomingMult) inc *= e.incomingMult; }
+    // v0.19.0: уровень улучшения амулета (+1…+3) усиливает его главное свойство (config/build.js amuletEffect)
+    const lv = state.buildData ? state.buildData().amuletLevels || {} : {};
+    const effs = this.amulets.map(a => amuletEffect(a, lv[a] || 0));
+    let dm = 1, inc = 1, im = 1, sb = 0;
+    for (const e of effs) { if (e.damageMult) dm *= e.damageMult; if (e.incomingMult) inc *= e.incomingMult; if (e.iceMult) im *= e.iceMult; if (e.slowBonus) sb += e.slowBonus; }
     this.hero.damageMult = Math.round(this.hero.damageMult * dm * 1000) / 1000;
     this.incomingMult = inc;
-    this.manaRescue = this.amulets.map(a => AMULETS[a].effect.manaRescue).find(Boolean) || null;
+    this.iceMult = im;
+    this.slowBonus = sb;
+    this.manaRescue = effs.map(e => e.manaRescue).find(Boolean) || null;
     this.manaRescueUsed = false;
     this.heroChill = { left: 0, pct: 0 };   // v0.18.0: холод врага — перезарядки и мана героя идут медленнее
     this.cooldowns = Object.fromEntries(ABILITY_ORDER.map(id => [id, 0]));
@@ -168,6 +173,24 @@ export class CombatManager {
       this.emit({ type: 'potion', id, kind: 'damage', amount: dmg });
       this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'fire' });
       if (e.burn) { this.enemy.applyBurn(e.burn.dps, e.burn.durationSec); this.emit({ type: 'status', status: 'burn', sec: e.burn.durationSec }); }
+    } else if (e.type === 'warm') {   // v0.19.0: Тёплый настой — холод слабее до конца боя, нынешний снимается
+      if (this.chillResist >= e.resist) return { ok: false, reason: 'full' };
+      this.chillResist = e.resist;
+      this.heroChill = { left: 0, pct: 0 };
+      this.emit({ type: 'potion', id, kind: 'warm' });
+    } else if (e.type === 'cleanse') {   // Стабилизирующий настой — снять холод и чуть подлечить
+      const gain = Math.min(h.maxHp - h.hp, Math.round(h.maxHp * e.heal));
+      if (gain <= 0 && !(this.heroChill.left > 0)) return { ok: false, reason: 'full' };
+      h.hp += gain;
+      this.heroChill = { left: 0, pct: 0 };
+      this.emit({ type: 'potion', id, kind: 'heal', amount: gain });
+    } else if (e.type === 'brittle') {   // Флакон Хрупкости
+      this.enemy.applyBrittle(e.bonus, e.sec);
+      this.emit({ type: 'potion', id, kind: 'brittle' });
+      this.emit({ type: 'status', status: 'brittle', sec: e.sec, bonus: e.bonus });
+    } else if (e.type === 'guard') {   // Кристальная защита
+      this.guard = { left: e.sec, mult: e.incoming };
+      this.emit({ type: 'potion', id, kind: 'guard', sec: e.sec });
     } else return { ok: false, reason: 'unknown' };
     this.state.removeItem(id, 1);
     this.stats.potions = (this.stats.potions || 0) + 1;
@@ -269,10 +292,14 @@ export class CombatManager {
       shattered = true;
       this.emit({ type: 'status', status: 'shatter', bonus: s.shatter.mult - 1, ice: true });
     }
-    const dmg = this.enemy.takeDamage(base, 'ice', this.hero.damageMult);
+    const dmg = this.enemy.takeDamage(base * this.iceMult, 'ice', this.hero.damageMult);   // v0.19.0: Амулет инея
     this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'ice' });
     if (!this.enemy.alive) return;
-    if (s.slow) { this.enemy.applySlow(s.slow.pct, s.slow.sec); this.emit({ type: 'status', status: 'slow', sec: s.slow.sec, pct: s.slow.pct }); }
+    if (s.slow) {
+      const pct = Math.min(0.8, Math.round((s.slow.pct + this.slowBonus) * 1000) / 1000);
+      this.enemy.applySlow(pct, s.slow.sec);
+      this.emit({ type: 'status', status: 'slow', sec: s.slow.sec, pct });
+    }
     if (s.brittle && !shattered) { this.enemy.applyBrittle(s.brittle.bonus, s.brittle.sec); this.emit({ type: 'status', status: 'brittle', sec: s.brittle.sec, bonus: s.brittle.bonus }); }
     if (s.interruptsNormalCast) this.handleInterrupt(['ice']);
   }
@@ -312,6 +339,7 @@ export class CombatManager {
     let hdt = dt;
     if (this.heroChill.left > 0) { hdt = dt * (1 - this.heroChill.pct); this.heroChill.left -= dt; if (this.heroChill.left <= 0) { this.heroChill = { left: 0, pct: 0 }; this.emit({ type: 'chillEnd' }); } }
     h.mana = Math.min(h.maxMana, h.mana + h.regen * hdt);
+    if (this.guard?.left > 0) { this.guard.left -= dt; if (this.guard.left <= 0) { this.guard = null; this.emit({ type: 'guardEnd' }); } }
     for (const id of ABILITY_ORDER) this.cooldowns[id] = Math.max(0, this.cooldowns[id] - hdt);
     if (this.chain) {
       this.chain.left -= hdt;
@@ -370,7 +398,7 @@ export class CombatManager {
   }
 
   hitHero(damage, strong, name) {
-    damage = Math.max(1, Math.round(damage * this.incomingMult));   // v0.16.0: Лесной амулет
+    damage = Math.max(1, Math.round(damage * this.incomingMult * (this.guard?.left > 0 ? this.guard.mult : 1)));   // v0.16.0: Лесной амулет; v0.19.0: Кристальная защита
     this.hero.hp = Math.max(0, this.hero.hp - damage);
     this.stats.damageTaken += damage;
     this.emit({ type: 'damage', target: 'hero', amount: damage, strong, name });

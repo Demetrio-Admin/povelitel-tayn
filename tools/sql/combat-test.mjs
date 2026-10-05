@@ -52,7 +52,7 @@ const canonJ = (o) => JSON.stringify(o, (k, x) => (x && typeof x === 'object' &&
 const js = combatCtxOf(fillDefaults(st).snapshot, 'rootling_01', 'rootling');   // из снимка после старта: HP и мана за время запроса успели подрасти
 const c = st.combatCtx;
 ok(c.spawn === 'rootling_01' && c.enemy === 'rootling' && c.level === js.level && canonJ(c.abilities) === canonJ(js.abilities), 'ctx: место, враг, уровень и дары как у JS-зеркала');
-ok(JSON.stringify(c.potions) === JSON.stringify({ elixir_life: 3, elixir_mana: 2, resin_flask: 0 }) && c.build?.branches?.telekinesis === 'lord', 'ctx: зелья и ветка дара из базы');
+ok(c.potions.elixir_life === 3 && c.potions.elixir_mana === 2 && c.potions.resin_flask === 0 && c.potions.warm_potion === 0 && Object.keys(c.potions).length === 7 && c.build?.branches?.telekinesis === 'lord', 'ctx: зелья (все семь расходников, v0.19.0) и ветка дара из базы');
 ok(close(c.hp, js.hp) && close(c.mana, js.mana) && c.hp === st.hp && c.mana === st.mana, 'ctx: HP и мана — те же числа, что увидит клиент в снимке');
 ok(canonJ(c) === canonJ(js), 'ctx: целиком совпал с JS-зеркалом combatCtxOf');
 ok(act(A, { op: 'combat_start', spawn: 'x y', enemy: 'rootling' }).action.reason === 'bad_spawn', 'combat_start с испорченным местом отклонён');

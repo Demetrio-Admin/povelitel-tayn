@@ -24,22 +24,62 @@ export const AMULET_SLOTS = 2;
  */
 export const AMULETS = {
   amulet_focus: {
-    name: 'Амулет Сосредоточения', icon: 'icon_core',
+    name: 'Амулет Сосредоточения', icon: 'icon_amulet_focus', rarity: 'common',
     text: 'Урон даров и автоатаки +12%.', tradeoff: 'Нет защиты: враг бьёт как обычно.',
     effect: { damageMult: 1.12 },
   },
   amulet_forest: {
-    name: 'Лесной амулет', icon: 'icon_ember',
+    name: 'Лесной амулет', icon: 'icon_amulet_forest', rarity: 'common',
     text: 'Получаемый урон −20%.', tradeoff: 'Урон героя −8%.',
     effect: { incomingMult: 0.8, damageMult: 0.92 },
   },
   amulet_lunar: {
-    name: 'Лунный амулет', icon: 'icon_shard',
+    name: 'Лунный амулет', icon: 'icon_amulet_lunar', rarity: 'rare',
     text: 'Один раз за бой, когда маны остаётся меньше 20%, возвращает половину запаса.', tradeoff: 'Сам по себе силу не добавляет.',
     effect: { manaRescue: { below: 0.2, gainPct: 0.5 } },
   },
+  // v0.19.0: первый амулет Льда (рецепт главы II, chapter-2-balance-v0.1.md §18)
+  amulet_frost: {
+    name: 'Амулет инея', icon: 'icon_amulet_frost', rarity: 'rare',
+    text: 'Удар Льда +10%, замедление Льдом сильнее на 5%.', tradeoff: 'Без Льда в билде почти бесполезен.',
+    effect: { iceMult: 1.1, slowBonus: 0.05 },
+  },
 };
 export const AMULET_IDS = Object.keys(AMULETS);
+
+/** v0.19.0: редкость амулета (подпись и цвет в окне). */
+export const RARITY = {
+  common: { name: 'обычный', color: 0xd9cbb0 },
+  rare: { name: 'редкий', color: 0x6fa8ff },
+  epic: { name: 'эпический', color: 0xc77dff },
+  legendary: { name: 'легендарный', color: 0xffb547 },
+};
+
+/**
+ * v0.19.0: улучшение амулета +1…+3 (chapter-2-balance-v0.1.md §23). Каждый уровень усиливает главное свойство на 25%
+ * (+3 — на 75%); цена-недостаток не меняется. Цена уровня N — AMULET_UPGRADES[N − 1]: монеты + материалы.
+ */
+export const AMULET_UPGRADES = [
+  { coins: 120, items: { tree_resin: 2, rune_dust: 1 } },
+  { coins: 220, items: { ice_crystal: 2, rune_dust: 2 } },
+  { coins: 400, items: { frost_shard: 2, lunar_shard: 3 } },
+];
+export const AMULET_LEVEL_STEP = 0.25;
+
+/** Действующие числа амулета с учётом уровня улучшения (одна функция для боя и окна). */
+export function amuletEffect(id, level = 0) {
+  const e = AMULETS[id]?.effect;
+  if (!e) return {};
+  const k = 1 + AMULET_LEVEL_STEP * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length));
+  const r = (v) => Math.round(v * 1000) / 1000;
+  const out = { ...e };
+  if (e.damageMult && e.damageMult > 1) out.damageMult = r(1 + (e.damageMult - 1) * k);
+  if (e.incomingMult) out.incomingMult = r(1 - (1 - e.incomingMult) * k);
+  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: r(Math.min(0.9, e.manaRescue.gainPct * k)) };
+  if (e.iceMult) out.iceMult = r(1 + (e.iceMult - 1) * k);
+  if (e.slowBonus) out.slowBonus = r(e.slowBonus * k);
+  return out;
+}
 
 /** Сколько слотов даров у героя этого уровня. */
 export const slotCount = (level, rules = SLOT_RULES) => rules.base + (rules.extraAtLevel != null && (level || 0) >= rules.extraAtLevel ? 1 : 0);
@@ -82,5 +122,6 @@ export function checkBuild(c, want, rules) {
 
 /** Правила для сервера и клиента из этого файла. */
 export function buildSlotRules() {
-  return { slots: { ...SLOT_RULES }, amuletSlots: AMULET_SLOTS, amulets: [...AMULET_IDS], gifts: [...GIFT_IDS] };
+  return { slots: { ...SLOT_RULES }, amuletSlots: AMULET_SLOTS, amulets: [...AMULET_IDS], gifts: [...GIFT_IDS],
+    amuletUpgrades: AMULET_UPGRADES.map((u) => ({ coins: u.coins, items: { ...u.items } })) };
 }

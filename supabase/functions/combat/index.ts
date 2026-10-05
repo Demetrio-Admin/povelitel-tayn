@@ -60,7 +60,12 @@ var RESOURCES = {
   lunar_shard: { name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A", icon: "icon_shard", color: 10480127, hint: "\u0417\u0430\u0441\u0442\u044B\u0432\u0448\u0438\u0439 \u043B\u0443\u043D\u043D\u044B\u0439 \u0441\u0432\u0435\u0442. \u041D\u0443\u0436\u0435\u043D \u0434\u043B\u044F \u0438\u0437\u0443\u0447\u0435\u043D\u0438\u044F \u0434\u0430\u0440\u043E\u0432." },
   forest_mushroom: { name: "\u041B\u0435\u0441\u043D\u044B\u0435 \u0433\u0440\u0438\u0431\u044B", icon: "icon_mushroom", color: 14251082, hint: "\u0420\u0430\u0441\u0442\u0443\u0442 \u0432 \u0442\u0435\u043D\u0438 \u0441\u0442\u0430\u0440\u043E\u0433\u043E \u043B\u0435\u0441\u0430. \u041E\u0441\u043D\u043E\u0432\u0430 \u0446\u0435\u043B\u0435\u0431\u043D\u044B\u0445 \u043D\u0430\u0441\u0442\u043E\u0435\u0432." },
   tree_resin: { name: "\u0414\u0440\u0435\u0432\u0435\u0441\u043D\u0430\u044F \u0441\u043C\u043E\u043B\u0430", icon: "icon_resin", color: 15249482, hint: "\u041B\u0438\u043F\u043A\u0430\u044F \u0438 \u0433\u043E\u0440\u044E\u0447\u0430\u044F. \u0415\u0451 \u0441\u043E\u0431\u0438\u0440\u0430\u044E\u0442 \u0441 \u043A\u043E\u0440\u044B \u0438\u043B\u0438 \u0434\u043E\u0441\u0442\u0430\u044E\u0442 \u0438\u0437 \u0441\u043E\u0436\u0436\u0451\u043D\u043D\u044B\u0445 \u0437\u0430\u0440\u043E\u0441\u043B\u0435\u0439." },
-  rune_dust: { name: "\u0420\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C", icon: "icon_dust", color: 13214463, hint: "\u041E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043E\u0442 \u0434\u0440\u0435\u0432\u043D\u0438\u0445 \u0440\u0443\u043D. \u0411\u0435\u0437 \u043D\u0435\u0451 \u043C\u0430\u0433\u0438\u044F \u043D\u0435 \u0434\u0435\u0440\u0436\u0438\u0442\u0441\u044F \u0432 \u0437\u0435\u043B\u044C\u0435." }
+  rune_dust: { name: "\u0420\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C", icon: "icon_dust", color: 13214463, hint: "\u041E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043E\u0442 \u0434\u0440\u0435\u0432\u043D\u0438\u0445 \u0440\u0443\u043D. \u0411\u0435\u0437 \u043D\u0435\u0451 \u043C\u0430\u0433\u0438\u044F \u043D\u0435 \u0434\u0435\u0440\u0436\u0438\u0442\u0441\u044F \u0432 \u0437\u0435\u043B\u044C\u0435." },
+  // v0.19.0 — глава II (docs/design/chapter-2-balance-v0.1.md §16): четыре новых ресурса, не больше
+  frost_herb: { name: "\u041C\u043E\u0440\u043E\u0437\u043D\u0438\u043A", icon: "icon_frost_herb", color: 11069144, hint: "\u0420\u0430\u0441\u0442\u0435\u043D\u0438\u0435, \u0438\u0437\u043C\u0435\u043D\u0451\u043D\u043D\u043E\u0435 \u0445\u043E\u043B\u043E\u0434\u043D\u043E\u0439 \u043C\u0430\u0433\u0438\u0435\u0439. \u0420\u0430\u0441\u0442\u0451\u0442 \u0443 \u0433\u043E\u0440\u043E\u0434\u0430, \u043D\u0443\u0436\u0435\u043D \u0434\u043B\u044F \u0442\u0451\u043F\u043B\u044B\u0445 \u0438 \u0441\u0442\u0430\u0431\u0438\u043B\u0438\u0437\u0438\u0440\u0443\u044E\u0449\u0438\u0445 \u0441\u043E\u0441\u0442\u0430\u0432\u043E\u0432." },
+  ice_crystal: { name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B", icon: "icon_ice_crystal", color: 10479359, hint: "\u041D\u0435\u043E\u0431\u044B\u0447\u043D\u044B\u0439 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B \u0445\u043E\u043B\u043E\u0434\u0430: \u0432 \u043E\u0441\u043E\u0431\u044B\u0445 \u043C\u0435\u0441\u0442\u0430\u0445 \u0433\u043E\u0440\u043E\u0434\u0430 \u0438 \u0443 \u043C\u043E\u0440\u043E\u0437\u043D\u044B\u0445 \u043F\u0440\u043E\u0442\u0438\u0432\u043D\u0438\u043A\u043E\u0432." },
+  frost_shard: { name: "\u0418\u043D\u0435\u0435\u0432\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A", icon: "icon_frost_shard", color: 8370431, hint: "\u0420\u0435\u0434\u043A\u0438\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043E\u0442 \u0441\u0438\u043B\u044C\u043D\u044B\u0445 \u043C\u043E\u0440\u043E\u0437\u043D\u044B\u0445 \u0432\u0440\u0430\u0433\u043E\u0432. \u0412 \u043B\u0430\u0432\u043A\u0430\u0445 \u043D\u0435 \u043F\u0440\u043E\u0434\u0430\u0451\u0442\u0441\u044F." },
+  cold_heart: { name: "\u0421\u0435\u0440\u0434\u0446\u0435 \u0445\u043E\u043B\u043E\u0434\u0430", icon: "icon_cold_heart", color: 6279423, hint: "\u041E\u0447\u0435\u043D\u044C \u0440\u0435\u0434\u043A\u0438\u0439 \u043A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442 \u0441\u0438\u043B\u044C\u043D\u0435\u0439\u0448\u0438\u0445 \u043F\u0440\u043E\u0442\u0438\u0432\u043D\u0438\u043A\u043E\u0432. \u041F\u0440\u0438\u0433\u043E\u0434\u0438\u0442\u0441\u044F \u0434\u043B\u044F \u0431\u0443\u0434\u0443\u0449\u0438\u0445 \u0430\u043C\u0443\u043B\u0435\u0442\u043E\u0432 \u0438 \u0441\u0442\u0443\u043F\u0435\u043D\u0435\u0439 \u041B\u044C\u0434\u0430." }
 };
 var POTIONS = {
   elixir_life: {
@@ -85,11 +90,45 @@ var POTIONS = {
     color: 16747066,
     effect: { type: "damage", amount: 45, burn: { dps: 6, durationSec: 4 } },
     text: "\u0411\u0440\u043E\u0441\u043E\u043A \u0432\u043E \u0432\u0440\u0430\u0433\u0430: 45 \u0443\u0440\u043E\u043D\u0430 \u0438 \u0433\u043E\u0440\u0435\u043D\u0438\u0435. \u0422\u043E\u043B\u044C\u043A\u043E \u0432 \u0431\u043E\u044E."
+  },
+  // v0.19.0 — глава II (chapter-2-balance-v0.1.md §18)
+  warm_potion: {
+    name: "\u0422\u0451\u043F\u043B\u044B\u0439 \u043D\u0430\u0441\u0442\u043E\u0439",
+    icon: "icon_potion_warm",
+    color: 16757610,
+    effect: { type: "warm", resist: 0.6 },
+    text: "\u0414\u043E \u043A\u043E\u043D\u0446\u0430 \u0431\u043E\u044F \u0445\u043E\u043B\u043E\u0434 \u0432\u0440\u0430\u0433\u0430 \u0441\u043B\u0430\u0431\u0435\u0435 \u043D\u0430 60%, \u0430 \u043D\u044B\u043D\u0435\u0448\u043D\u0438\u0439 \u0445\u043E\u043B\u043E\u0434 \u0441\u043D\u0438\u043C\u0430\u0435\u0442\u0441\u044F. \u0422\u043E\u043B\u044C\u043A\u043E \u0432 \u0431\u043E\u044E."
+  },
+  stabilizing_potion: {
+    name: "\u0421\u0442\u0430\u0431\u0438\u043B\u0438\u0437\u0438\u0440\u0443\u044E\u0449\u0438\u0439 \u043D\u0430\u0441\u0442\u043E\u0439",
+    icon: "icon_potion_stable",
+    color: 11069144,
+    effect: { type: "cleanse", heal: 0.15 },
+    text: "\u0421\u043D\u0438\u043C\u0430\u0435\u0442 \u0445\u043E\u043B\u043E\u0434 \u0438 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 15% \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u044F. \u041D\u0443\u0436\u0435\u043D \u0438 \u043F\u043E \u0441\u044E\u0436\u0435\u0442\u0443 \u2014 \u043F\u043E\u043C\u043E\u0447\u044C \u043F\u043E\u0441\u0442\u0440\u0430\u0434\u0430\u0432\u0448\u0438\u043C."
+  },
+  brittle_flask: {
+    name: "\u0424\u043B\u0430\u043A\u043E\u043D \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u0438",
+    icon: "icon_potion_brittle",
+    color: 10479359,
+    effect: { type: "brittle", bonus: 0.4, sec: 5 },
+    text: "\u0414\u0435\u043B\u0430\u0435\u0442 \u0432\u0440\u0430\u0433\u0430 \u0445\u0440\u0443\u043F\u043A\u0438\u043C \u043D\u0430 5 \u0441: \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439 \u0443\u0434\u0430\u0440 \u0434\u0430\u0440\u043E\u0432 +40%. \u0422\u043E\u043B\u044C\u043A\u043E \u0432 \u0431\u043E\u044E."
+  },
+  crystal_guard: {
+    name: "\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u044C\u043D\u0430\u044F \u0437\u0430\u0449\u0438\u0442\u0430",
+    icon: "icon_potion_guard",
+    color: 8370431,
+    effect: { type: "guard", incoming: 0.75, sec: 12 },
+    text: "\u0414\u0432\u0435\u043D\u0430\u0434\u0446\u0430\u0442\u044C \u0441\u0435\u043A\u0443\u043D\u0434 \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u043C\u044B\u0439 \u0443\u0440\u043E\u043D \u221225%. \u0422\u043E\u043B\u044C\u043A\u043E \u0432 \u0431\u043E\u044E."
   }
+};
+var CRAFT_ITEMS = {
+  reinforced_resin: { name: "\u0423\u0441\u0438\u043B\u0435\u043D\u043D\u0430\u044F \u0441\u043C\u043E\u043B\u0430", icon: "icon_reinforced_resin", color: 15245386, text: "\u041A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442 \u0434\u043B\u044F \u0441\u0438\u043B\u044C\u043D\u044B\u0445 \u043F\u0440\u0435\u0434\u043C\u0435\u0442\u043E\u0432 \u0438 \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F \u0430\u043C\u0443\u043B\u0435\u0442\u043E\u0432." },
+  astral_lens: { name: "\u0410\u0441\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043B\u0438\u043D\u0437\u0430", icon: "icon_astral_lens", color: 10466559, text: "\u041D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0437\u0430\u0440\u044F\u0434\u043E\u0432: \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442 \u0442\u0430\u0439\u043D\u0438\u043A\u0438 \u0438 \u0441\u043A\u0440\u044B\u0442\u044B\u0435 \u043C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u0441\u043B\u0435\u0434\u044B (\u0432 \u0433\u043E\u0440\u043E\u0434\u0435 \u0438 \u0432\u044B\u043B\u0430\u0437\u043A\u0430\u0445)." }
 };
 var RESOURCE_ITEMS = {
   ...Object.fromEntries(Object.entries(RESOURCES).map(([id, r]) => [id, { name: r.name, icon: r.icon }])),
-  ...Object.fromEntries(Object.entries(POTIONS).map(([id, r]) => [id, { name: r.name, icon: r.icon }]))
+  ...Object.fromEntries(Object.entries(POTIONS).map(([id, r]) => [id, { name: r.name, icon: r.icon }])),
+  ...Object.fromEntries(Object.entries(CRAFT_ITEMS).map(([id, r]) => [id, { name: r.name, icon: r.icon }]))
 };
 var POTION_BATTLE_LIMIT = 4;
 
@@ -151,27 +190,58 @@ var AMULET_SLOTS = 2;
 var AMULETS = {
   amulet_focus: {
     name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0421\u043E\u0441\u0440\u0435\u0434\u043E\u0442\u043E\u0447\u0435\u043D\u0438\u044F",
-    icon: "icon_core",
+    icon: "icon_amulet_focus",
+    rarity: "common",
     text: "\u0423\u0440\u043E\u043D \u0434\u0430\u0440\u043E\u0432 \u0438 \u0430\u0432\u0442\u043E\u0430\u0442\u0430\u043A\u0438 +12%.",
     tradeoff: "\u041D\u0435\u0442 \u0437\u0430\u0449\u0438\u0442\u044B: \u0432\u0440\u0430\u0433 \u0431\u044C\u0451\u0442 \u043A\u0430\u043A \u043E\u0431\u044B\u0447\u043D\u043E.",
     effect: { damageMult: 1.12 }
   },
   amulet_forest: {
     name: "\u041B\u0435\u0441\u043D\u043E\u0439 \u0430\u043C\u0443\u043B\u0435\u0442",
-    icon: "icon_ember",
+    icon: "icon_amulet_forest",
+    rarity: "common",
     text: "\u041F\u043E\u043B\u0443\u0447\u0430\u0435\u043C\u044B\u0439 \u0443\u0440\u043E\u043D \u221220%.",
     tradeoff: "\u0423\u0440\u043E\u043D \u0433\u0435\u0440\u043E\u044F \u22128%.",
     effect: { incomingMult: 0.8, damageMult: 0.92 }
   },
   amulet_lunar: {
     name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u0430\u043C\u0443\u043B\u0435\u0442",
-    icon: "icon_shard",
+    icon: "icon_amulet_lunar",
+    rarity: "rare",
     text: "\u041E\u0434\u0438\u043D \u0440\u0430\u0437 \u0437\u0430 \u0431\u043E\u0439, \u043A\u043E\u0433\u0434\u0430 \u043C\u0430\u043D\u044B \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043C\u0435\u043D\u044C\u0448\u0435 20%, \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043F\u043E\u043B\u043E\u0432\u0438\u043D\u0443 \u0437\u0430\u043F\u0430\u0441\u0430.",
     tradeoff: "\u0421\u0430\u043C \u043F\u043E \u0441\u0435\u0431\u0435 \u0441\u0438\u043B\u0443 \u043D\u0435 \u0434\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442.",
     effect: { manaRescue: { below: 0.2, gainPct: 0.5 } }
+  },
+  // v0.19.0: первый амулет Льда (рецепт главы II, chapter-2-balance-v0.1.md §18)
+  amulet_frost: {
+    name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0438\u043D\u0435\u044F",
+    icon: "icon_amulet_frost",
+    rarity: "rare",
+    text: "\u0423\u0434\u0430\u0440 \u041B\u044C\u0434\u0430 +10%, \u0437\u0430\u043C\u0435\u0434\u043B\u0435\u043D\u0438\u0435 \u041B\u044C\u0434\u043E\u043C \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u043D\u0430 5%.",
+    tradeoff: "\u0411\u0435\u0437 \u041B\u044C\u0434\u0430 \u0432 \u0431\u0438\u043B\u0434\u0435 \u043F\u043E\u0447\u0442\u0438 \u0431\u0435\u0441\u043F\u043E\u043B\u0435\u0437\u0435\u043D.",
+    effect: { iceMult: 1.1, slowBonus: 0.05 }
   }
 };
 var AMULET_IDS = Object.keys(AMULETS);
+var AMULET_UPGRADES = [
+  { coins: 120, items: { tree_resin: 2, rune_dust: 1 } },
+  { coins: 220, items: { ice_crystal: 2, rune_dust: 2 } },
+  { coins: 400, items: { frost_shard: 2, lunar_shard: 3 } }
+];
+var AMULET_LEVEL_STEP = 0.25;
+function amuletEffect(id, level = 0) {
+  const e = AMULETS[id]?.effect;
+  if (!e) return {};
+  const k = 1 + AMULET_LEVEL_STEP * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length));
+  const r = (v) => Math.round(v * 1e3) / 1e3;
+  const out = { ...e };
+  if (e.damageMult && e.damageMult > 1) out.damageMult = r(1 + (e.damageMult - 1) * k);
+  if (e.incomingMult) out.incomingMult = r(1 - (1 - e.incomingMult) * k);
+  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: r(Math.min(0.9, e.manaRescue.gainPct * k)) };
+  if (e.iceMult) out.iceMult = r(1 + (e.iceMult - 1) * k);
+  if (e.slowBonus) out.slowBonus = r(e.slowBonus * k);
+  return out;
+}
 var slotCount = (level, rules = SLOT_RULES) => rules.base + (rules.extraAtLevel != null && (level || 0) >= rules.extraAtLevel ? 1 : 0);
 var defaultSlots = (unlocked, count, gifts = GIFT_IDS) => gifts.filter((g) => unlocked.includes(g)).slice(0, count);
 var isStrArr = (a) => Array.isArray(a) && a.length <= 8 && a.every((x) => typeof x === "string");
@@ -199,7 +269,13 @@ function checkBuild(c, want, rules) {
   return { ok: true };
 }
 function buildSlotRules() {
-  return { slots: { ...SLOT_RULES }, amuletSlots: AMULET_SLOTS, amulets: [...AMULET_IDS], gifts: [...GIFT_IDS] };
+  return {
+    slots: { ...SLOT_RULES },
+    amuletSlots: AMULET_SLOTS,
+    amulets: [...AMULET_IDS],
+    gifts: [...GIFT_IDS],
+    amuletUpgrades: AMULET_UPGRADES.map((u) => ({ coins: u.coins, items: { ...u.items } }))
+  };
 }
 
 // src/config/balance.progression.js
@@ -1410,6 +1486,8 @@ var GameState = class {
       slots: ids(o.slots),
       // null — слоты не настраивались: действуют первые открытые дары
       amulets: ids(o.amulets) || [],
+      // v0.19.0: уровни улучшения амулетов { амулет: 1…3 }
+      amuletLevels: Object.fromEntries(Object.entries(o.amuletLevels && typeof o.amuletLevels === "object" ? o.amuletLevels : {}).filter(([k, v]) => AMULETS[k] && Number.isInteger(v) && v > 0).map(([k, v]) => [k, Math.min(v, AMULET_UPGRADES.length)])),
       preset: o.preset && typeof o.preset === "object" ? { slots: ids(o.preset.slots) || [], amulets: ids(o.preset.amulets) || [] } : null,
       // v0.17.0: пресеты по номерам (1 — бесплатный, 2… — открытые за сапфиры) и сколько их открыто
       presetSlots: Number.isInteger(o.presetSlots) && o.presetSlots >= 1 ? Math.min(o.presetSlots, SAPPHIRES.preset.max) : 1,
@@ -1571,7 +1649,88 @@ var RECIPES = {
     learn: "\u0420\u0435\u0446\u0435\u043F\u0442 \u0441\u0442\u0430\u043D\u0435\u0442 \u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D, \u043A\u043E\u0433\u0434\u0430 \u0430\u043B\u0442\u0430\u0440\u044C \u0441\u043D\u043E\u0432\u0430 \u0437\u0430\u0441\u0432\u0435\u0442\u0438\u0442\u0441\u044F."
   }
 };
-var RECIPE_ORDER = ["elixir_life", "elixir_mana", "resin_flask", "lunar_wick", "revealing_compound", "restoration_bundle"];
+Object.assign(RECIPES, {
+  warm_potion: {
+    kind: "potion",
+    chapter: 2,
+    result: "warm_potion",
+    amount: 1,
+    needs: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 },
+    requires: ["recipe_warm_potion"],
+    note: "\u041C\u043E\u0440\u043E\u0437\u043D\u0438\u043A, \u043F\u0440\u043E\u0433\u0440\u0435\u0442\u044B\u0439 \u043B\u0443\u043D\u043D\u043E\u0439 \u0442\u0440\u0430\u0432\u043E\u0439, \u2014 \u0442\u0435\u043F\u043B\u043E \u0438\u0437\u043D\u0443\u0442\u0440\u0438."
+  },
+  stabilizing_potion: {
+    kind: "potion",
+    chapter: 2,
+    result: "stabilizing_potion",
+    amount: 1,
+    needs: { frost_herb: 2, rune_dust: 1, lunar_shard: 1 },
+    requires: ["recipe_stabilizing_potion"],
+    note: "\u0423\u0441\u043F\u043E\u043A\u0430\u0438\u0432\u0430\u0435\u0442 \u043D\u0435\u0441\u0442\u0430\u0431\u0438\u043B\u044C\u043D\u0443\u044E \u043C\u0430\u0433\u0438\u044E \u0432 \u0442\u0435\u043B\u0435."
+  },
+  brittle_flask: {
+    kind: "potion",
+    chapter: 2,
+    result: "brittle_flask",
+    amount: 1,
+    needs: { ice_crystal: 1, tree_resin: 1, rune_dust: 1 },
+    requires: ["recipe_brittle_flask"],
+    note: "\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u043B \u0445\u043E\u043B\u043E\u0434\u0430 \u0432 \u0441\u043C\u043E\u043B\u0435: \u0440\u0430\u0437\u0431\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u043E \u0446\u0435\u043B\u044C \u0438 \u0434\u0435\u043B\u0430\u0435\u0442 \u0435\u0451 \u0445\u0440\u0443\u043F\u043A\u043E\u0439."
+  },
+  crystal_guard: {
+    kind: "potion",
+    chapter: 2,
+    result: "crystal_guard",
+    amount: 1,
+    needs: { ice_crystal: 1, forest_mushroom: 1, tree_resin: 1 },
+    requires: ["recipe_crystal_guard"],
+    note: "\u0422\u043E\u043D\u043A\u0430\u044F \u043B\u0435\u0434\u044F\u043D\u0430\u044F \u043A\u043E\u0440\u043A\u0430 \u043F\u043E\u0432\u0435\u0440\u0445 \u043A\u043E\u0436\u0438 \u2014 \u043D\u0430 \u043E\u0434\u0438\u043D \u0441\u0435\u0440\u044C\u0451\u0437\u043D\u044B\u0439 \u0431\u043E\u0439."
+  },
+  reinforced_resin: {
+    kind: "component",
+    chapter: 2,
+    result: "reinforced_resin",
+    amount: 1,
+    needs: { tree_resin: 2, crimson_ember: 1, frost_herb: 1 },
+    requires: ["recipe_reinforced_resin"],
+    note: "\u0421\u043C\u043E\u043B\u0430, \u0437\u0430\u043A\u0430\u043B\u0451\u043D\u043D\u0430\u044F \u0443\u0433\u043B\u0451\u043C \u0438 \u0445\u043E\u043B\u043E\u0434\u043E\u043C."
+  },
+  astral_lens: {
+    kind: "tool",
+    chapter: 2,
+    result: "astral_lens",
+    amount: 1,
+    needs: { rune_dust: 2, lunar_shard: 1, ice_crystal: 1 },
+    requires: ["recipe_astral_lens"],
+    note: "\u041B\u0438\u043D\u0437\u0430 \u0438\u0437 \u043B\u044C\u0434\u0430 \u0438 \u043B\u0443\u043D\u043D\u043E\u0433\u043E \u043E\u0441\u043A\u043E\u043B\u043A\u0430."
+  },
+  amulet_frost: {
+    kind: "amulet",
+    chapter: 2,
+    result: "amulet_frost",
+    amount: 1,
+    needs: { lunar_shard: 4, rune_dust: 4, ice_crystal: 3, frost_shard: 1, coins: 250 },
+    requires: ["recipe_amulet_frost"],
+    blockedBy: ["amulet_frost_crafted"],
+    crafted: "amulet_frost_crafted",
+    note: "\u041F\u0435\u0440\u0432\u044B\u0439 \u0430\u043C\u0443\u043B\u0435\u0442 \u041B\u044C\u0434\u0430. \u041D\u0443\u0436\u0435\u043D \u043E\u0434\u0438\u043D: \u0434\u0430\u043B\u044C\u0448\u0435 \u0435\u0433\u043E \u0443\u043B\u0443\u0447\u0448\u0430\u044E\u0442."
+  }
+});
+var RECIPE_ORDER = [
+  "elixir_life",
+  "elixir_mana",
+  "resin_flask",
+  "warm_potion",
+  "stabilizing_potion",
+  "brittle_flask",
+  "crystal_guard",
+  "lunar_wick",
+  "revealing_compound",
+  "restoration_bundle",
+  "reinforced_resin",
+  "astral_lens",
+  "amulet_frost"
+];
 var POTION_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "potion");
 var STORY_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "story");
 
@@ -1612,6 +1771,26 @@ var SIDE_QUESTS = {
 };
 var SIDE_QUEST_ORDER = ["sq_herbs", "sq_hunter", "sq_dust"];
 var questEvent = (id, kind) => `${id}_${kind}`;
+
+// src/config/shop.js
+var SHOP = {
+  requires: "city_merchant_open",
+  buy: {
+    moon_herb: 18,
+    forest_mushroom: 20,
+    tree_resin: 16,
+    rune_dust: 28,
+    lunar_shard: 45,
+    frost_herb: 22,
+    ice_crystal: 55
+  },
+  sellPct: 0.33,
+  maxQty: 99
+};
+var sellPrice = (id) => SHOP.buy[id] ? Math.floor(SHOP.buy[id] * SHOP.sellPct) : 0;
+function shopRules() {
+  return { requires: SHOP.requires, buy: { ...SHOP.buy }, sell: Object.fromEntries(Object.keys(SHOP.buy).map((k) => [k, sellPrice(k)])), maxQty: SHOP.maxQty };
+}
 
 // src/config/serverRules.js
 function grantOf(r = {}) {
@@ -1807,8 +1986,12 @@ function serverRules() {
     research: researchRules(),
     build: buildRules(),
     spawnStart: spawnStartRules(),
-    sapphires: sapphireRules()
+    sapphires: sapphireRules(),
     // v0.17.0
+    shop: shopRules(),
+    // v0.19.0: торговец
+    combatPotions: Object.keys(POTIONS)
+    // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
   };
 }
 
@@ -1887,7 +2070,7 @@ function fromSnapshot(s, base = createDefaultState()) {
   d.tutorial = [...s.tutorial || []];
   return d;
 }
-var COMBAT_POTIONS = ["elixir_life", "elixir_mana", "resin_flask"];
+var COMBAT_POTIONS = [...RULES.combatPotions];
 function fillDefaults(raw) {
   const def = emptySnapshot();
   const { meta, action, ...s } = raw;
@@ -2585,15 +2768,20 @@ var CombatManager = class {
       autoTimer: HERO_BASE.autoAttack.intervalSec
     };
     this.amulets = state.equippedAmulets ? state.equippedAmulets() : [];
-    let dm = 1, inc = 1;
-    for (const a of this.amulets) {
-      const e = AMULETS[a].effect;
+    const lv = state.buildData ? state.buildData().amuletLevels || {} : {};
+    const effs = this.amulets.map((a) => amuletEffect(a, lv[a] || 0));
+    let dm = 1, inc = 1, im = 1, sb = 0;
+    for (const e of effs) {
       if (e.damageMult) dm *= e.damageMult;
       if (e.incomingMult) inc *= e.incomingMult;
+      if (e.iceMult) im *= e.iceMult;
+      if (e.slowBonus) sb += e.slowBonus;
     }
     this.hero.damageMult = Math.round(this.hero.damageMult * dm * 1e3) / 1e3;
     this.incomingMult = inc;
-    this.manaRescue = this.amulets.map((a) => AMULETS[a].effect.manaRescue).find(Boolean) || null;
+    this.iceMult = im;
+    this.slowBonus = sb;
+    this.manaRescue = effs.map((e) => e.manaRescue).find(Boolean) || null;
     this.manaRescueUsed = false;
     this.heroChill = { left: 0, pct: 0 };
     this.cooldowns = Object.fromEntries(ABILITY_ORDER.map((id) => [id, 0]));
@@ -2741,6 +2929,24 @@ var CombatManager = class {
         this.enemy.applyBurn(e.burn.dps, e.burn.durationSec);
         this.emit({ type: "status", status: "burn", sec: e.burn.durationSec });
       }
+    } else if (e.type === "warm") {
+      if (this.chillResist >= e.resist) return { ok: false, reason: "full" };
+      this.chillResist = e.resist;
+      this.heroChill = { left: 0, pct: 0 };
+      this.emit({ type: "potion", id, kind: "warm" });
+    } else if (e.type === "cleanse") {
+      const gain = Math.min(h.maxHp - h.hp, Math.round(h.maxHp * e.heal));
+      if (gain <= 0 && !(this.heroChill.left > 0)) return { ok: false, reason: "full" };
+      h.hp += gain;
+      this.heroChill = { left: 0, pct: 0 };
+      this.emit({ type: "potion", id, kind: "heal", amount: gain });
+    } else if (e.type === "brittle") {
+      this.enemy.applyBrittle(e.bonus, e.sec);
+      this.emit({ type: "potion", id, kind: "brittle" });
+      this.emit({ type: "status", status: "brittle", sec: e.sec, bonus: e.bonus });
+    } else if (e.type === "guard") {
+      this.guard = { left: e.sec, mult: e.incoming };
+      this.emit({ type: "potion", id, kind: "guard", sec: e.sec });
     } else return { ok: false, reason: "unknown" };
     this.state.removeItem(id, 1);
     this.stats.potions = (this.stats.potions || 0) + 1;
@@ -2839,12 +3045,13 @@ var CombatManager = class {
       shattered = true;
       this.emit({ type: "status", status: "shatter", bonus: s.shatter.mult - 1, ice: true });
     }
-    const dmg = this.enemy.takeDamage(base, "ice", this.hero.damageMult);
+    const dmg = this.enemy.takeDamage(base * this.iceMult, "ice", this.hero.damageMult);
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "ice" });
     if (!this.enemy.alive) return;
     if (s.slow) {
-      this.enemy.applySlow(s.slow.pct, s.slow.sec);
-      this.emit({ type: "status", status: "slow", sec: s.slow.sec, pct: s.slow.pct });
+      const pct = Math.min(0.8, Math.round((s.slow.pct + this.slowBonus) * 1e3) / 1e3);
+      this.enemy.applySlow(pct, s.slow.sec);
+      this.emit({ type: "status", status: "slow", sec: s.slow.sec, pct });
     }
     if (s.brittle && !shattered) {
       this.enemy.applyBrittle(s.brittle.bonus, s.brittle.sec);
@@ -2890,6 +3097,13 @@ var CombatManager = class {
       }
     }
     h.mana = Math.min(h.maxMana, h.mana + h.regen * hdt);
+    if (this.guard?.left > 0) {
+      this.guard.left -= dt;
+      if (this.guard.left <= 0) {
+        this.guard = null;
+        this.emit({ type: "guardEnd" });
+      }
+    }
     for (const id of ABILITY_ORDER) this.cooldowns[id] = Math.max(0, this.cooldowns[id] - hdt);
     if (this.chain) {
       this.chain.left -= hdt;
@@ -2962,7 +3176,7 @@ var CombatManager = class {
     this.emit({ type: "chill", sec: c.sec, pct });
   }
   hitHero(damage, strong, name) {
-    damage = Math.max(1, Math.round(damage * this.incomingMult));
+    damage = Math.max(1, Math.round(damage * this.incomingMult * (this.guard?.left > 0 ? this.guard.mult : 1)));
     this.hero.hp = Math.max(0, this.hero.hp - damage);
     this.stats.damageTaken += damage;
     this.emit({ type: "damage", target: "hero", amount: damage, strong, name });

@@ -440,6 +440,53 @@ function presetUnlock(s) {
   return { ok: true, slots: cur + 1, price: R.presetPrice };
 }
 
+// ---------- v0.19.0: торговец и улучшение амулетов ----------
+const qtyOf = (q) => (q == null ? 1 : q);
+/** Купить у торговца (op 'shop_buy', item, qty): лавка открыта событием, цена — RULES.shop.buy. */
+function shopBuy(s, item, qty) {
+  const S = RULES.shop, n = qtyOf(qty);
+  if (!Number.isInteger(n) || n < 1 || n > S.maxQty) return { ok: false, reason: 'bad' };
+  const price = typeof item === 'string' && Object.hasOwn(S.buy, item) ? S.buy[item] : null;
+  if (price == null) return { ok: false, reason: 'unknown' };
+  if (!has(s, S.requires)) return { ok: false, reason: 'locked' };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  const cost = price * n;
+  if ((s.inventory.coins || 0) < cost) return { ok: false, reason: 'coins', need: cost };
+  addItem(s, 'coins', -cost);
+  addItem(s, item, n);
+  return { ok: true, item, qty: n, cost };
+}
+/** Продать торговцу (op 'shop_sell', item, qty): только то, что он покупает, по цене RULES.shop.sell. */
+function shopSell(s, item, qty) {
+  const S = RULES.shop, n = qtyOf(qty);
+  if (!Number.isInteger(n) || n < 1 || n > S.maxQty) return { ok: false, reason: 'bad' };
+  const price = typeof item === 'string' && Object.hasOwn(S.sell, item) ? S.sell[item] : null;
+  if (price == null) return { ok: false, reason: 'unknown' };
+  if (!has(s, S.requires)) return { ok: false, reason: 'locked' };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  if ((s.inventory[item] || 0) < n) return { ok: false, reason: 'missing' };
+  addItem(s, item, -n);
+  addItem(s, 'coins', price * n);
+  return { ok: true, item, qty: n, gain: price * n };
+}
+/** Улучшить амулет на уровень (op 'amulet_upgrade', amulet): он должен быть в сумке; цена — RULES.build.amuletUpgrades[уровень]. */
+function amuletUpgrade(s, id) {
+  const B = RULES.build;
+  if (typeof id !== 'string' || !B.amulets.includes(id)) return { ok: false, reason: 'unknown' };
+  if ((s.inventory[id] || 0) < 1) return { ok: false, reason: 'locked' };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  const o = buildObj(s);
+  const levels = isObj(o.amuletLevels) ? o.amuletLevels : {};
+  const cur = Number.isInteger(levels[id]) && levels[id] > 0 ? Math.min(levels[id], B.amuletUpgrades.length) : 0;
+  if (cur >= B.amuletUpgrades.length) return { ok: false, reason: 'max' };
+  const cost = B.amuletUpgrades[cur];
+  const need = { coins: cost.coins, ...cost.items };
+  if (!Object.entries(need).every(([k, v]) => (s.inventory[k] || 0) >= v)) return { ok: false, reason: 'missing' };
+  for (const [k, v] of Object.entries(need)) addItem(s, k, -v);
+  s.objects.player_build = { ...o, amuletLevels: { ...levels, [id]: cur + 1 } };
+  return { ok: true, amulet: id, level: cur + 1 };
+}
+
 /** Приветственные сапфиры — один раз (op 'bank_welcome'). */
 function bankWelcome(s) {
   const w = walletOf(s.wallet);
@@ -598,7 +645,7 @@ function worldAct(s, id) {
 }
 
 /** Зелья, которые можно выпить в бою (как POTIONS в config/resources.js; их набор фиксирован серверной схемой). */
-export const COMBAT_POTIONS = ['elixir_life', 'elixir_mana', 'resin_flask'];
+export const COMBAT_POTIONS = [...RULES.combatPotions];   // v0.19.0: из конфига (все расходники POTIONS)
 
 /**
  * v0.14.0: что сервер запоминает о герое в начале боя — по этому состоянию он потом проигрывает запись боя.
@@ -742,6 +789,9 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'research_speedup') return { snapshot: s, result: researchSpeedup(s, action.chunks) };
   if (op === 'preset_unlock') return { snapshot: s, result: presetUnlock(s) };
   if (op === 'bank_welcome') return { snapshot: s, result: bankWelcome(s) };
+  if (op === 'shop_buy') return { snapshot: s, result: shopBuy(s, action.item, action.qty) };
+  if (op === 'shop_sell') return { snapshot: s, result: shopSell(s, action.item, action.qty) };
+  if (op === 'amulet_upgrade') return { snapshot: s, result: amuletUpgrade(s, action.amulet) };
   if (op === 'build_set') return { snapshot: s, result: buildSet(s, action) };
   if (op === 'build_preset') return { snapshot: s, result: buildPreset(s, action.mode, action.slot) };
   if (op === 'heal') {

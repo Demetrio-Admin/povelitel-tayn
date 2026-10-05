@@ -8,7 +8,7 @@ import { WORLD } from '../config/world.layout.js';
 import { SAVE } from '../config/game.config.js';
 import { materialize } from './vitals.js';
 import { DEFAULT_HERO_ID } from '../config/heroes.js';
-import { GIFT_IDS, AMULETS, slotCount, defaultSlots, checkBuild, buildSlotRules } from '../config/build.js';
+import { GIFT_IDS, AMULETS, AMULET_UPGRADES, slotCount, defaultSlots, checkBuild, buildSlotRules } from '../config/build.js';
 import { SAPPHIRES } from '../config/sapphires.js';
 
 const SAVE_VERSION = 1;
@@ -261,6 +261,9 @@ export class GameState {
       branches: { ...(o.branches && typeof o.branches === 'object' ? o.branches : {}) },
       slots: ids(o.slots),                       // null — слоты не настраивались: действуют первые открытые дары
       amulets: ids(o.amulets) || [],
+      // v0.19.0: уровни улучшения амулетов { амулет: 1…3 }
+      amuletLevels: Object.fromEntries(Object.entries(o.amuletLevels && typeof o.amuletLevels === 'object' ? o.amuletLevels : {})
+        .filter(([k, v]) => AMULETS[k] && Number.isInteger(v) && v > 0).map(([k, v]) => [k, Math.min(v, AMULET_UPGRADES.length)])),
       preset: o.preset && typeof o.preset === 'object' ? { slots: ids(o.preset.slots) || [], amulets: ids(o.preset.amulets) || [] } : null,
       // v0.17.0: пресеты по номерам (1 — бесплатный, 2… — открытые за сапфиры) и сколько их открыто
       presetSlots: Number.isInteger(o.presetSlots) && o.presetSlots >= 1 ? Math.min(o.presetSlots, SAPPHIRES.preset.max) : 1,

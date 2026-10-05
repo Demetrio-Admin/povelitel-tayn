@@ -220,6 +220,30 @@ console.log('\nБаза: сапфиры (v0.17.0)');
   ok(act(A, { op: 'bank_welcome', id: 'sec-sapph-0009' }).action.reason === 'already', 'и приветствие после новой игры второй раз не выдаётся');
 }
 
+console.log('\nБаза: торговец и улучшение амулетов (v0.19.0)');
+{
+  const act = (uid, o) => JSON.parse(q(`select public.player_action('${JSON.stringify(o)}'::jsonb);`, uid).out);
+  const inv = (uid, k) => Number(q(`select coalesce((select quantity from public.player_inventory where user_id = '${uid}' and item_id = '${k}'), 0);`).out);
+  q(`insert into public.player_inventory (user_id, item_id, quantity) values ('${B}', 'coins', 300) on conflict (user_id, item_id) do update set quantity = 300;`);
+  ok(act(B, { op: 'shop_buy', item: 'moon_herb', qty: 2, id: 'sec-shop-00001' }).action.reason === 'locked', 'лавка закрыта, пока город не открыл её');
+  q(`insert into public.player_quests (user_id, quest_id) values ('${B}', 'city_merchant_open') on conflict do nothing;`);
+  const b1 = act(B, { op: 'shop_buy', item: 'moon_herb', qty: 2, id: 'sec-shop-00002' });
+  ok(b1.action.ok && b1.action.cost === 36 && inv(B, 'coins') === 264 && inv(B, 'moon_herb') >= 2, 'купить 2 лунные травы за 36 монет');
+  ok(act(B, { op: 'shop_buy', item: 'frost_shard', id: 'sec-shop-00003' }).action.reason === 'unknown', 'инеевый осколок не продаётся');
+  ok(act(B, { op: 'shop_buy', item: 'lunar_shard', qty: 99, id: 'sec-shop-00004' }).action.reason === 'coins' && inv(B, 'coins') === 264, 'без монет не купить, ничего не списано');
+  const s1 = act(B, { op: 'shop_sell', item: 'moon_herb', qty: 1, id: 'sec-shop-00005' });
+  ok(s1.action.ok && s1.action.gain === 5 && inv(B, 'coins') === 269, 'продажа: треть цены (18 → 5)');
+  ok(act(B, { op: 'shop_sell', item: 'moon_herb', qty: 50, id: 'sec-shop-00006' }).action.reason === 'missing', 'продать больше, чем есть, нельзя');
+  // улучшение амулета
+  ok(act(B, { op: 'amulet_upgrade', amulet: 'amulet_focus', id: 'sec-amup-00001' }).action.reason === 'locked', 'чужой (несуществующий в сумке) амулет не улучшить');
+  q(`insert into public.player_inventory (user_id, item_id, quantity) values ('${B}', 'amulet_focus', 1), ('${B}', 'tree_resin', 2), ('${B}', 'rune_dust', 1) on conflict (user_id, item_id) do update set quantity = excluded.quantity;`);
+  const u1 = act(B, { op: 'amulet_upgrade', amulet: 'amulet_focus', id: 'sec-amup-00002' });
+  ok(u1.action.ok && u1.action.level === 1 && u1.objects.player_build.amuletLevels.amulet_focus === 1 && inv(B, 'coins') === 149 && inv(B, 'tree_resin') === 0, 'улучшение до +1: 120 монет, 2 смолы, 1 пыль');
+  ok(act(B, { op: 'amulet_upgrade', amulet: 'amulet_focus', id: 'sec-amup-00003' }).action.reason === 'missing', 'на +2 материалов нет — отказ');
+  const forged = JSON.parse(q(`select public.sync_player('{"objects":{"player_build":{"amuletLevels":{"amulet_focus":3}}}}'::jsonb);`, B).out);
+  ok(forged.objects.player_build.amuletLevels.amulet_focus === 1, 'уровень амулета через sync_player не подделать');
+}
+
 console.log('\nБаза: новая игра');
 const r = JSON.parse(q(`select public.reset_player('witch');`, A).out);
 ok(r.level === 1 && !r.quests.length && !Object.keys(r.inventory).length && r.meta.nickname === NICK && r.meta.rev > a2.meta.rev, 'reset_player: прогресс с нуля, ник и аккаунт те же');

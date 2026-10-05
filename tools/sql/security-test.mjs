@@ -28,17 +28,19 @@ ok(a0.level === 1 && a0.meta.registered === false && a0.meta.nickname === null &
 const a0b = JSON.parse(q(`select public.create_player('other');`, A).out);
 ok(a0b.meta.hero === 'witch' && a0b.meta.rev === a0.meta.rev, 'повторный create_player не пересоздаёт персонажа');
 q(`select public.create_player('witch');`, B);
-q(`select public.sync_player('{"inv":{"coins":50},"xp":160,"quests":["intro"]}');`, A);
+// v0.15.0: опыт, предметы, события, дары и изучение sync_player не принимает — «прогресс» здесь выдаётся владельцем базы (мимо игры)
+const grant = (uid, coins, xp, level) => q(`insert into public.player_inventory (user_id, item_id, quantity) values ('${uid}', 'coins', ${coins}) on conflict (user_id, item_id) do update set quantity = ${coins};
+  update public.player_progress set hero_xp = ${xp}, hero_level = ${level}, hp = 100, vitals_at = date_trunc('milliseconds', now()) where user_id = '${uid}';
+  insert into public.player_quests (user_id, quest_id) values ('${uid}', 'intro') on conflict do nothing;`);
+grant(A, 50, 160, 3);
 const a1 = JSON.parse(q(`select public.get_player();`, A).out);
 ok(a1.inventory.coins === 50 && a1.level === 3 && a1.quests.includes('intro'), 'прогресс записан и читается обратно');
 const stale = JSON.parse(q(`select public.sync_player('{"xp":10,"inv":{"coins":-5}}');`, A).out);
-ok(stale.level === 3 && stale.xp === 160 && stale.inventory.coins === 45, 'устаревшее устройство не откатывает уровень и опыт; монеты — дельтой');
+ok(stale.level === 3 && stale.xp === 160 && stale.inventory.coins === 50, 'sync_player не трогает опыт и предметы: ни прибавить, ни убавить');
 
-// v0.11.1: ветка дара хранится объектом мира player_build — отдельной колонки нет
+// v0.15.0: ветка дара (объект player_build) пишется только изучением и сменой ветки на сервере
 const bld = JSON.parse(q(`select public.sync_player('{"objects":{"player_build":{"branches":{"telekinesis":"lord"}}}}');`, A).out);
-ok(bld.objects.player_build?.branches?.telekinesis === 'lord', 'ветка дара сохраняется как объект мира player_build и читается обратно');
-const bld2 = JSON.parse(q(`select public.sync_player('{"objects":{"player_build":{"branches":{"telekinesis":"breaker"}}}}');`, A).out);
-ok(bld2.objects.player_build.branches.telekinesis === 'breaker', 'смена ветки перезаписывает объект («последний записал»)');
+ok(!bld.objects.player_build, 'ветку дара sync_player не пишет: player_build закрыт');
 ok(!JSON.parse(q(`select public.get_player();`, B).out).objects.player_build, 'у другого игрока ветки нет');
 
 console.log('\nБаза: подделки клиента');
@@ -46,18 +48,30 @@ console.log('\nБаза: подделки клиента');
   const C = randomUUID();
   q(`insert into auth.users (id) values ('${C}');`); q(`select public.create_player('witch');`, C);
   const c1 = JSON.parse(q(`select public.sync_player('{"level":100,"inv":{"coins":999999999,"lunar_shard":1000},"xp":999999999,"school":{"fire":1000000},"play":999999999}');`, C).out);
-  ok(c1.inventory.coins === 500 && c1.inventory.lunar_shard === 50, 'gold = 999999999 не принимается: за раз не больше 500 монет и 50 предметов (' + c1.inventory.coins + ')');
-  ok(c1.xp === 1000 && c1.level === 7, 'опыт за раз не больше 1000; уровень сервер считает сам по порогам (' + c1.level + '), «level: 100» игнорируется');
-  ok(c1.school.fire === 500 && c1.play === 600000, 'опыт дара и время игры тоже ограничены');
-  const c2 = JSON.parse(q(`select public.sync_player('{"inv":{"coins":-200}}');`, C).out);
-  ok(c2.inventory.coins === 300, 'трата работает дельтой');
-  const c3 = JSON.parse(q(`select public.sync_player('{"inv":{"coins":-100000}}');`, C).out);
-  ok(c3.inventory.coins === 0, 'в минус уйти нельзя');
+  ok(!c1.inventory.coins && !c1.inventory.lunar_shard, 'монеты и предметы клиентом не пишутся вовсе (' + JSON.stringify(c1.inventory) + ')');
+  ok(c1.xp === 0 && c1.level === 1 && !(c1.school.fire > 0), 'опыт, уровень и опыт дара — только сервером; «level: 100» игнорируется');
+  ok(c1.play === 600000, 'время игры по-прежнему принимается с ограничением');
+  const f1 = JSON.parse(q(`select public.sync_player('{"quests":["chapter_1_complete","unlock_fire_1"],"paths":["ancient_gate_open"],"enemies":["forest_guardian"],"abilities":{"fire":{"level":3,"unlocked":true}},"research":{"upgradeId":"fire_2","startedAt":0,"durationMs":1},"objects":{"west_chest":{"state":"opened"},"glade_rock":{"state":"moved"},"rep:rootling_02":{"wins":9,"at":1},"player_build":{"branches":{"fire":"x"}}}}');`, C).out);
+  ok(!f1.quests.includes('chapter_1_complete') && !f1.quests.includes('unlock_fire_1') && !f1.paths.length && !f1.enemies.length, 'события, пути и побеждённые враги: клиентом не пишутся');
+  ok(!f1.abilities.fire?.unlocked && !f1.research, 'дары и изучение: клиентом не пишутся');
+  ok(!f1.objects.west_chest && !f1.objects.glade_rock && !f1.objects['rep:rootling_02'] && !f1.objects.player_build, 'состояние мира, репутация врагов и билд: клиентом не пишутся');
+  const f2 = JSON.parse(q(`select public.sync_player('{"pos":{"x":5,"y":6},"tutorial":["move"],"objects":{"my_note":{"state":"read"}}}');`, C).out);
+  ok(f2.pos.x === 5 && f2.tutorial.includes('move') && f2.objects.my_note?.state === 'read', 'обычное по-прежнему сохраняется: позиция, подсказки обучения, клиентские объекты');
   ok(denied(q(`select * from public.game_hero_levels;`, C)), 'таблица порогов недоступна клиенту напрямую');
-  const before = JSON.parse(q(`select public.get_player();`, C).out).inventory.coins;
-  q(`select public.sync_player('{"id":"retry-${C.slice(0, 8)}","inv":{"coins":7}}');`, C);
-  const again = JSON.parse(q(`select public.sync_player('{"id":"retry-${C.slice(0, 8)}","inv":{"coins":7}}');`, C).out);
-  ok(again.inventory.coins === before + 7, 'повтор того же сохранения (ответ потерялся) не начисляет второй раз');
+  const act = (a, id) => JSON.parse(q(`select public.player_action('${JSON.stringify({ ...a, id }).replace(/'/g, "''")}'::jsonb);`, C).out);
+  const e0 = act({ op: 'event', key: 'chapter_1_complete' }, 'sec-ev-0001');
+  ok(e0.action.reason === 'unknown', 'выдуманное событие через player_action: unknown');
+  const e1 = act({ op: 'event', key: 'unlock_fire_1' }, 'sec-ev-0002');
+  ok(e1.action.reason === 'locked' && !e1.abilities.fire?.unlocked, 'Огонь без пройденного пути: locked, дар не выдан');
+  const e2 = act({ op: 'event', key: 'unlock_telekinesis_1' }, 'sec-ev-0003');
+  ok(e2.action.ok && e2.abilities.telekinesis?.unlocked && e2.quests.includes('unlock_telekinesis_1'), 'Телекинез I выдаёт сервер вместе с событием');
+  ok(act({ op: 'event', key: 'unlock_telekinesis_1' }, 'sec-ev-0004').action.reason === 'already', 'то же событие повторно: already');
+  ok(act({ op: 'event', key: 'unlock_telekinesis_1' }, 'sec-ev-0003').action.duplicate === true, 'повтор запроса с тем же id: результат первой попытки');
+  ok(act({ op: 'quest_turn_in', quest: 'sq_herbs' }, 'sec-q-0001').action.reason === 'not_started', 'сдать непринятое задание нельзя');
+  ok(act({ op: 'quest_accept', quest: 'sq_nope' }, 'sec-q-0002').action.reason === 'unknown', 'выдуманное задание: unknown');
+  ok(act({ op: 'research_start', upgrade: 'telekinesis_2' }, 'sec-r-0001').action.reason === 'missing' || act({ op: 'research_start', upgrade: 'telekinesis_2' }, 'sec-r-0002').action.reason === 'event', 'изучение без условий и цены: отказ');
+  ok(act({ op: 'research_finish' }, 'sec-r-0003').action.reason === 'none', 'завершить нечего: none');
+  ok(act({ op: 'respec', ability: 'telekinesis', branch: 'lord' }, 'sec-b-0001').action.reason === 'unavailable', 'сменить ветку, которой нет: unavailable');
 }
 
 console.log('\nБаза: чужие данные');
@@ -75,7 +89,7 @@ ok(denied(q(`select public.claim_nickname('${A}', '${NICK}', '${NORM}');`, A)), 
 ok(q(`select public.nickname_available('${NORM}');`, 'anon').out === 't', 'ник свободен (проверка доступна до входа)');
 q(`select public.claim_nickname('${A}', '${NICK}', '${NORM}');`, 'service');
 const a2 = JSON.parse(q(`select public.get_player();`, A).out);
-ok(a2.meta.nickname === NICK && !!a2.meta.registeredAt && a2.meta.registered && a2.inventory.coins === 45 && a2.level === 3, 'после регистрации тот же персонаж: ник Дмитрий, уровень 3, монеты на месте');
+ok(a2.meta.nickname === NICK && !!a2.meta.registeredAt && a2.meta.registered && a2.inventory.coins === 50 && a2.level === 3, 'после регистрации тот же персонаж: ник Дмитрий, уровень 3, монеты на месте');
 ok(q(`select public.nickname_available('${NORM}');`, 'anon').out === 'f', 'ник занят');
 ok(/unique|duplicate|nickname_taken/.test(q(`select public.claim_nickname('${B}', '${NICK.toUpperCase()}', '${NORM}');`, 'service').err), 'второй «ДМИТРИЙ» (другой регистр) отклонён уникальным индексом');
 ok(/already_registered/.test(q(`select public.claim_nickname('${A}', 'Другой', 'другой');`, 'service').err), 'зарегистрированный игрок не меняет ник через claim');
@@ -102,7 +116,7 @@ ok(w2.action.reason === 'wait' && w2.action.left > 140 && w2.inventory.moon_herb
 const w3 = JSON.parse(q(`select public.player_action('{"op":"world","obj":"herb_g1","id":"sec-world-0001"}'::jsonb);`, B).out);
 ok(w3.action.duplicate === true && w3.inventory.moon_herb === 1 && near(w3.mana, 96), 'повтор запроса с тем же id: результат первой попытки, мана не списана второй раз');
 const forge = JSON.parse(q(`select public.sync_player('{"objects":{"herb_g1":null,"glade_cache":{"state":"opened"},"glade_rock":{"state":"moved","x":1,"y":2}}}'::jsonb);`, B).out);
-ok(forge.objects.herb_g1?.state === 'picked' && !forge.objects.glade_cache && forge.objects.glade_rock?.state === 'moved', 'sync_player: состояние сбора и сундуков не переписывается клиентом (магия мира — по-прежнему клиентская)');
+ok(forge.objects.herb_g1?.state === 'picked' && !forge.objects.glade_cache && !forge.objects.glade_rock, 'sync_player: состояние сбора, сундуков и магии мира не переписывается клиентом');
 ok(wa('herb_g1', 'sec-world-0003').action.reason === 'wait', 'сброс «времени сбора» через sync не помог: сбор всё ещё ждёт');
 ok(wa('no_such_object', 'sec-world-0004').action.reason === 'unknown' && wa('__proto__', 'sec-world-0005').action.reason === 'unknown', 'выдуманный и служебный идентификаторы: unknown');
 ok(wa('flame_a', 'sec-world-0006').action.reason === 'locked' && wa('heavy_boulder', 'sec-world-0007').action.reason === 'locked', 'без нужного события, дара и ступени: locked');

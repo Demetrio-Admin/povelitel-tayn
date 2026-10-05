@@ -29,7 +29,7 @@ async function account(hero, nickname) {
   const api = new SupabaseApi({ url: srv.url, anonKey: srv.anonKey, loginDomain: CLOUD.loginDomain, fetchFn: srv.fetch });
   const s = new PlayerSession({ api, state: st, storage: { getItem: k => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v), removeItem: k => mem.delete(k) }, setTimer: () => 0, clearTimer: () => {} });
   await s.registerNew({ hero, nickname, password: PASS, password2: PASS });
-  st.addItem('coins', hero === 'witch' ? 17 : 23); st.markEvent('prologue_seen'); st.save(); await s.flush();
+  srv.grant(s.userId, { inv: { coins: hero === 'witch' ? 17 : 23 }, quests: ['prologue_seen'] }); await s.flush({ force: true });
   return { nickname, coins: st.item('coins') };
 }
 

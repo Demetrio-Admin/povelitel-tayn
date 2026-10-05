@@ -5,6 +5,7 @@ import { DIALOGUES } from '../config/dialogues.js';
 import { NPCS } from '../config/npcs.js';
 import { MSG } from '../state/EventBus.js';
 import * as vitals from '../state/vitals.js';
+import { EVENT_ACTIONS } from '../config/serverRules.js';
 
 export class DialogueSystem {
   /**
@@ -19,6 +20,7 @@ export class DialogueSystem {
     this.bus = bus;
     this.goalText = goalText;
     this.cur = null; // { npcId, variant, nodeId, line }
+    this.mirror = null;     // v0.15.0: (action) => Promise — подтверждение на сервере (services.js); без сервера null
     this.pendingAfter = []; // эффекты, которые нужно выполнить после закрытия окна (открыть котёл, журнал…)
   }
 
@@ -156,7 +158,12 @@ export class DialogueSystem {
     for (const e of list) {
       if (e.accept) this.log.accept(e.accept);
       else if (e.turnin) this.log.turnIn(e.turnin);
-      else if (e.event) { if (this.state.markEvent(e.event)) { this.state.save(); this.bus?.emit(MSG.QUEST_CHANGED); } }
+      else if (e.event) {
+        if (this.state.markEvent(e.event)) {
+          if (EVENT_ACTIONS[e.event]) this.mirror?.({ op: 'event', key: e.event });   // v0.15.0: событие игрока подтверждает сервер
+          this.state.save(); this.bus?.emit(MSG.QUEST_CHANGED);
+        }
+      }
       else if (e.alchemy) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_ALCHEMY));
       else if (e.journal) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_JOURNAL));
       else if (e.upgrade) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_UPGRADE, e.upgrade));

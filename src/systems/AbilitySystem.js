@@ -12,6 +12,8 @@ export class AbilitySystem {
     this.state = state;
     this.quests = quests;
     this.bus = bus;
+    this.mirror = null;     // v0.15.0: (action) => Promise — подтверждение на сервере (services.js); без сервера null
+    this.holdUntil = 0;     // сервер ответил «ещё не готово» (часы устройства и сервера расходятся) — до этого момента не торопим
   }
 
   def(id) { return ABILITIES[id]; }
@@ -59,7 +61,9 @@ export class AbilitySystem {
   startResearch(upgradeId) {
     if (!this.state.startResearch(upgradeId)) return false;
     const up = UPGRADES[upgradeId];
-    if (up.startEvent) this.quests.complete(up.startEvent, { upgradeId });
+    // событие старта сервер ставит сам вместе с операцией
+    if (up.startEvent) this.quests.complete(up.startEvent, { upgradeId }, { mirror: false });
+    this.mirror?.({ op: 'research_start', upgrade: upgradeId });
     this.state.save();
     this.bus.emit(MSG.HUD_REFRESH);
     return true;
@@ -67,11 +71,16 @@ export class AbilitySystem {
 
   /** Вызывается каждый кадр из UIScene (работает и во время боя). */
   update(force = false) {
+    if (this.mirror && this.state.data.research && this.state.now() < this.holdUntil) return;
     const done = this.state.completeResearchIfReady(force);
     if (!done) return;
     const up = UPGRADES[done];
     this.state.save();
-    if (up.completeEvent) this.quests.complete(up.completeEvent, { upgradeId: done });
+    if (up.completeEvent) this.quests.complete(up.completeEvent, { upgradeId: done }, { mirror: false });
+    // v0.15.0: дар выдаёт сервер по своим часам; если он ещё не готов — локальный результат откатится, повтор не раньше срока
+    this.mirror?.({ op: 'research_finish' })?.then((r) => {
+      if (r && !r.ok && r.reason === 'wait') this.holdUntil = this.state.now() + (r.left || 1) * 1000 + 500;
+    });
     this.bus.emit(MSG.RESEARCH_DONE, done, up);
     this.bus.emit(MSG.HUD_REFRESH);
   }

@@ -143,13 +143,13 @@ console.log('\n[v0.11.1] Телекинез III: две ветки, выбор �
   ok(lowLevel.state.branchOf('telekinesis') === null, 'ветка не действует, пока ступень III не достигнута');
 }
 
-console.log('\n[v0.11.1] Сервер: ветка переживает сохранение без изменений схемы');
+console.log('\n[v0.15.0] Сервер: ветка пишется только его операциями (изучение, смена), а не сохранением');
 {
   const w = ready(world()); w.abilities.unlock('telekinesis', 3); w.state.setBranch('telekinesis', 'lord');
   const base = emptySnapshot();
   const patch = diffSnapshots(base, toSnapshot(w.state.data));
-  ok(patch.objects?.player_build?.branches?.telekinesis === 'lord', 'ветка уходит на сервер как объект мира player_build');
-  const server = applyPatch(base, patch);
+  ok(!patch.objects?.player_build, 'ветка не уходит на сервер сохранением: player_build закрыт для sync_player');
+  const server = toSnapshot(w.state.data);   // так состояние приходит с сервера
   const back = new GameState(mem(), () => 0); back.data = fromSnapshot(server);
   ok(back.branchOf('telekinesis') === 'lord', 'после загрузки с сервера ветка на месте');
 }

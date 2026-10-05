@@ -14,7 +14,7 @@ export class FireObject extends InteractiveObject {
     this.ability = 'fire';
     this.fireState = this.saved.state || 'normal';
     this.emitter = null;
-    if (this.fireState === 'destroyed') this.remove(false);
+    if (this.fireState === 'destroyed') { this.remove(false); this.spawnReveal(); }
     else if (this.fireState === 'burning') this.startFlames(cfg.persistent ? 0.6 : 1);
     if (cfg.id === 'corrupted_roots' && !this.removed) {
       // тёмная дымка над порчей
@@ -67,14 +67,19 @@ export class FireObject extends InteractiveObject {
     this.flameGlow = this.scene.addGlow(this.x, top, COLORS.fire, 0.55, this, this.cfg.persistent ? 1.3 : 2);
   }
 
+  /** Что открылось под сожжённым (корни → смола): добыча лежит, пока её не подобрали (пикап помнит сервер). */
+  spawnReveal() {
+    const r = this.cfg.reveal?.spawnPickup;
+    if (r) this.scene.spawnPickup({ id: `${this.id}_reward`, x: this.cfg.x, y: this.cfg.y, item: r.item, amount: r.amount, texture: r.texture });
+  }
+
+  // v0.15.0: опыт школы, состояние объекта, открытый проход и события записал сервер вместе с действием (операция world)
   ignite() {
     this.fireState = 'burning';
     this.busy = true;
     this.startFlames();
-    this.abilities.grantUseXP('fire', 'exploration');
     if (this.cfg.persistent) {
       this.busy = false;
-      this.persist({ state: 'burning' });
       this.scene.toast('Факел загорелся', COLORS.fire);
       return;
     }
@@ -85,17 +90,12 @@ export class FireObject extends InteractiveObject {
   destroyByFire() {
     this.fireState = 'destroyed';
     this.busy = false;
-    this.persist({ state: 'destroyed' });
     services.audio.play('roots_burn');
     this.scene.burst(this.x, this.baseY - 30, 0x3a2a22, 26);
     this.sprite.setTint(0x222222);
     if (this.emitter) this.scene.time.delayedCall(500, () => { this.emitter.stop(); });
     this.remove(true);
-    const r = this.cfg.reveal?.spawnPickup;
-    if (r) this.scene.spawnPickup({ id: `${this.id}_reward`, x: this.cfg.x, y: this.cfg.y, item: r.item, amount: r.amount, texture: r.texture });
-    if (this.cfg.opensPath) this.state.openPath(this.cfg.opensPath);
-    if (this.cfg.destroyEvent) this.quests.complete(this.cfg.destroyEvent);
-    this.state.save();
+    this.spawnReveal();
     services.bus.emit(MSG.QUEST_CHANGED);
     if (this.cfg.panOnOpen) this.scene.panTo(this.cfg.panOnOpen.x, this.cfg.panOnOpen.y);
   }

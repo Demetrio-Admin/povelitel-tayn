@@ -129,11 +129,9 @@ export class GateObject extends InteractiveObject {
     const sc = this.scene;
     sc.player.castAt(this.x, this.baseY, 'telekinesis');
     sc.castFx(this.x, this.baseY - 120, SEAL);
-    this.abilities.grantUseXP('seal', 'exploration');
+    // v0.15.0: опыт, открытый проход и событие записал сервер вместе с действием (операция world)
     sc.time.delayedCall(450, () => {
       this.busy = false;
-      if (this.cfg.opensPath) this.state.openPath(this.cfg.opensPath);
-      this.quests.complete(this.cfg.openEvent);
       services.audio.play('chest');
       sc.burst(this.x, this.baseY - 150, SEAL, 40);
       sc.sparkleShower?.(this.x, this.baseY - 160, SEAL);
@@ -189,11 +187,9 @@ export class SealSigilObject extends InteractiveObject {
     const sc = this.scene;
     sc.player.castAt(this.x, this.baseY, 'telekinesis');
     sc.castFx(this.x, this.baseY - 20, SEAL);
-    this.abilities.grantUseXP('seal', 'exploration');
     sc.time.delayedCall(450, () => {
       this.busy = false;
       this.light(true);
-      this.quests.complete(this.cfg.doneEvent);
       services.audio.play('quest_update');
       sc.dialog({
         title: 'Камень ожил', color: SEAL,

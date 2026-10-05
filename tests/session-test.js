@@ -17,6 +17,11 @@ import { advanceWorld, serverActionBusy } from '../src/systems/WorldClock.js';
 import * as vitalsMod from '../src/state/vitals.js';
 import { playBot } from './helpers/combat-bot.mjs';
 import { STEP } from '../src/systems/combatReplay.js';
+import { EventBus } from '../src/state/EventBus.js';
+import { QuestFlags } from '../src/state/QuestFlags.js';
+import { QuestLog } from '../src/state/QuestLog.js';
+import { AbilitySystem } from '../src/systems/AbilitySystem.js';
+import { DialogueSystem } from '../src/systems/DialogueSystem.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BACKEND = process.env.BACKEND || 'model';
@@ -45,14 +50,19 @@ function device(srv, storage = memStorage()) {
 async function setVitals(dev, v) { srv.setVitals(dev.session.userId, v); await dev.session.flush({ force: true }); }
 const near = (a, b, eps = 1.5) => Math.abs(a - b) <= eps;   // настоящий Postgres считает по реальному времени: за тест набегают доли секунды
 
-/** Немного игры: награда, событие, предмет — как это делает игра (методы GameState + save()). */
-function play(st, { xp = 70, coins = 15, event = 'combat_intro_01' } = {}) {
-  st.applyReward({ heroXP: xp, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 1 }, coins });
-  st.markEvent(event);
-  st.unlockAbility('telekinesis', 1);
-  st.data.player = { x: 1234, y: 4321 };
-  st.save();
+/**
+ * Немного игры: награда, событие, предмет, дар. С v0.15.0 опыт, предметы, события и дары закрыты для sync_player —
+ * их выдаёт сервер своими действиями, поэтому тест «выдаёт» их мимо игры (srv.grant) и подтягивает на устройство.
+ * Позиция — обычное сохранение клиента.
+ */
+async function play(d, { xp = 70, coins = 15, event = 'combat_intro_01' } = {}) {
+  srv.grant(d.session.userId, { xp: d.state.data.heroXP + xp, school: { telekinesis: 40 }, inv: { lunar_shard: 1, coins }, quests: [event], abilities: { telekinesis: { level: 1, unlocked: true } } });
+  d.state.data.player = { x: 1234, y: 4321 };
+  d.state.save();
+  await d.session.flush({ force: true });
 }
+/** Выдать серверу прогресс и подтянуть его на устройство. */
+async function give(d, st) { srv.grant(d.session.userId, st); await d.session.flush({ force: true }); }
 
 const srv = new FakeSupabase({ backend: BACKEND });
 console.log(`\nСервер: ${BACKEND === 'pg' ? 'настоящий Postgres (supabase/schema.sql)' : 'JS-зеркало схемы'}`);
@@ -86,8 +96,9 @@ let guestId;
   ok(keys.length === 1 && keys[0] === TOKENS_KEY && !phoneStorage._m.get(TOKENS_KEY).includes('heroLevel'), 'на устройстве хранится только токен входа, прогресса там нет');
 
   console.log('\n3. Прогресс сохраняется на сервере автоматически');
-  play(d.state);
-  ok(d.timers.some(t => t.live && t.ms === 600), 'после награды сохранение запланировано почти сразу (не вручную)');
+  await play(d);
+  d.state.data.tutorial.push('bag'); d.state.save();
+  ok(d.timers.some(t => t.live && t.ms === 600), 'после важного изменения (подсказка обучения) сохранение запланировано почти сразу (не вручную)');
   await d.fire();
   const srvSnap = await d.api.getPlayer(d.session.auth.access_token);
   ok(srvSnap.level === 2 && srvSnap.inventory.coins === 15 && srvSnap.quests.includes('combat_intro_01') && srvSnap.abilities.telekinesis.unlocked, 'на сервере: уровень 2, монеты, событие, дар');
@@ -110,7 +121,7 @@ console.log('\n4–5. Гость создаёт аккаунт — персон�
 {
   const d = device(srv, phoneStorage);
   await d.session.restore();
-  play(d.state, { xp: 100, coins: 20, event: 'lunar_quest_complete' }); // уровень 3
+  await play(d, { xp: 100, coins: 20, event: 'lunar_quest_complete' }); // уровень 3
   const e1 = await rejects(() => d.session.registerGuest({ nickname: NICK, password: PASS, password2: PASS + 'x' }));
   ok(e1?.message === 'Пароли не совпадают.', 'пароли различаются — «Пароли не совпадают.»');
   const e2 = await rejects(() => d.session.registerGuest({ nickname: NICK, password: '1234', password2: '1234' }));
@@ -194,8 +205,8 @@ console.log('\n12. После перезагрузки прогресс не о�
   const phone = device(srv, phoneStorage), pc = device(srv, pcStorage);
   await phone.session.restore(); await pc.session.restore();
   // телефон получает монеты и событие; компьютер (со старыми данными) — свою награду
-  phone.state.addItem('coins', 40); phone.state.markEvent('heavy_path_open'); phone.state.save(); await phone.session.flush();
-  pc.state.addItem('lunar_shard', 2); pc.state.markEvent('unlock_fire_1'); pc.state.save(); await pc.session.flush();
+  await give(phone, { inv: { coins: 40 }, quests: ['heavy_path_open'] });
+  await give(pc, { inv: { lunar_shard: 2 }, quests: ['unlock_fire_1'] });
   ok(pc.state.item('coins') === 75 && pc.state.hasEvent('heavy_path_open') && pc.state.item('lunar_shard') === 4, 'компьютер получил изменения телефона и не затёр их своими');
   const fresh = device(srv, phoneStorage); await fresh.session.restore();
   ok(fresh.state.item('coins') === 75 && fresh.state.hasEvent('unlock_fire_1') && fresh.state.hasEvent('heavy_path_open'), 'после перезагрузки — всё вместе, ничего не откатилось');
@@ -207,25 +218,25 @@ console.log('\nОбрыв связи');
   await d.session.restore();
   const coins = d.state.item('coins');
   srv.offline = true;
-  d.state.addItem('coins', 5); d.state.save();
+  d.state.data.player = { x: 55, y: 66 }; d.state.save();
   ok(await d.session.flush() === false && d.session.status === 'offline' && d.session.saving === 'offline', 'нет сети — статус «Нет соединения», изменения ждут');
   ok(![...phoneStorage._m.keys()].some(k => k !== TOKENS_KEY), 'никакого параллельного локального сохранения не появилось');
   srv.offline = false;
   ok(await d.session.retryNow() && d.session.status === 'ready', '«Повторить»: связь вернулась, игра продолжается');
-  ok((await d.api.getPlayer(d.session.auth.access_token)).inventory.coins === coins + 5, 'изменения, сделанные без связи, дошли до сервера');
-  // запрос дошёл, ответ потерялся — повтор не должен начислить второй раз
-  d.state.addItem('coins', 10); d.state.save();
+  ok((await d.api.getPlayer(d.session.auth.access_token)).pos.x === 55, 'изменения, сделанные без связи, дошли до сервера');
+  // запрос дошёл, ответ потерялся — повтор не должен применить его второй раз
+  d.state.data.player = { x: 77, y: 88 }; d.state.save();
   srv.loseNext = 1;
   await d.session.flush();
   ok(d.session.status === 'offline', 'ответ потерялся — снова «Нет соединения»');
   await d.session.retryNow();
-  ok((await d.api.getPlayer(d.session.auth.access_token)).inventory.coins === coins + 15 && d.state.item('coins') === coins + 15, 'повтор после потерянного ответа не начислил монеты дважды');
+  ok((await d.api.getPlayer(d.session.auth.access_token)).pos.x === 77 && d.state.data.player.x === 77 && d.state.item('coins') === coins, 'повтор после потерянного ответа: позиция на месте, прогресс не изменился');
   // при запуске сети нет
   srv.offline = true;
   const boot = device(srv, phoneStorage);
   ok(await boot.session.restore() === 'offline', 'запуск без сети — «Нет соединения», игра не стартует на устаревших данных');
   srv.offline = false;
-  ok(await boot.session.retryNow() && boot.state.item('coins') === coins + 15, 'связь появилась — персонаж загружен с сервера');
+  ok(await boot.session.retryNow() && boot.state.item('coins') === coins && boot.state.data.player.x === 77, 'связь появилась — персонаж загружен с сервера');
 }
 
 console.log('\nДоверие клиенту');
@@ -233,9 +244,23 @@ console.log('\nДоверие клиенту');
   const d = device(srv, phoneStorage);
   await d.session.restore();
   const coins = d.state.item('coins');
-  d.state.data.inventory.coins = 999999999; d.state.data.heroLevel = 99; d.state.save();
+  const xp0 = d.state.data.heroXP, lvl0 = d.state.data.heroLevel;
+  // v0.15.0: всё, что даёт силу, закрыто — подделка в браузере не доходит до сервера (sync_player её не принимает)
+  const D = d.state.data;
+  D.inventory.coins = 999999999; D.inventory.elixir_life = 50; D.heroLevel = 99; D.heroXP = 999999;
+  D.completedEvents.push('chapter_1_complete', 'fire_gate_open'); D.openedPaths.push('ancient_gate_open'); D.defeatedEnemies.push('forest_guardian');
+  D.unlockedAbilities.push('fire'); D.fireLevel = 3; D.schoolXP.fire = 5000; D.research = { upgradeId: 'telekinesis_2', startedAt: 0, durationMs: 1 };
+  D.worldObjects.west_chest = { state: 'opened' }; D.worldObjects['rep:forest_scavenger'] = { n: 99 }; D.worldObjects.player_build = { branches: { telekinesis: 'lord' } };
+  D.player = { x: 31, y: 41 };
+  d.state.save();
   await d.session.flush();
-  ok(d.state.item('coins') === coins + 500 && d.state.data.heroLevel === 3, `подделка в браузере: сервер принял не больше 500 монет за раз, уровень 99 отклонён (${d.state.item('coins')}, ур. ${d.state.data.heroLevel})`);
+  const real = await d.api.getPlayer(d.session.auth.access_token);
+  ok(real.inventory.coins === coins && !real.inventory.elixir_life && real.level === lvl0 && real.xp === xp0, `подделка монет, предметов, уровня и опыта: сервер оставил ${real.inventory.coins} монет, ур. ${real.level}`);
+  ok(!real.quests.includes('chapter_1_complete') && !real.quests.includes('fire_gate_open') && !real.paths.includes('ancient_gate_open') && !real.enemies.includes('forest_guardian'), 'подделка событий, открытых путей и побеждённых врагов отклонена');
+  ok(!real.abilities.fire?.unlocked && !(real.school?.fire > 0) && !real.research, 'подделка дара, опыта школы и изучения отклонена');
+  ok(!real.objects.west_chest && !real.objects['rep:forest_scavenger'] && !real.objects.player_build, 'подделка состояния мира, репутации врагов и билда отклонена');
+  ok(real.pos.x === 31, 'обычное (позиция) при этом сохранилось');
+  ok(d.state.item('coins') === coins && d.state.data.heroLevel === lvl0 && !d.state.hasEvent('chapter_1_complete'), 'клиент взял состояние сервера — подделка исчезла и у него');
   const e = await rejects(() => d.api.rpc('claim_nickname', { uid: d.session.userId, nick: nickLat('Hack'), norm: nickLat('hack') }, d.session.auth.access_token));
   ok(e instanceof CloudError && e.status === 403, 'служебная функция ника недоступна из браузера');
 }
@@ -245,7 +270,7 @@ console.log('\nТокены, пароль, новая игра');
   const d = device(srv, phoneStorage);
   await d.session.restore();
   srv.expireAccess();
-  d.state.addItem('coins', 1); d.state.save();
+  d.state.data.player = { x: 12, y: 13 }; d.state.save();
   ok(await d.session.flush() && d.session.status === 'ready', 'истёкший токен обновляется сам, сохранение проходит');
   await d.session.changePassword({ password: 'Новый-пароль-2', password2: 'Новый-пароль-2' });
   const x = device(srv);
@@ -259,7 +284,7 @@ console.log('\nТокены, пароль, новая игра');
   await y.session.login({ nickname: NICK, password: 'Новый-пароль-2' });
   srv.refreshT.clear(); srv.expireAccess();
   let lost = false; y.session.onChange(r => { if (r === 'session-lost') lost = true; });
-  y.state.addItem('coins', 1); y.state.save(); await y.session.flush();
+  y.state.data.player = { x: 14, y: 15 }; y.state.save(); await y.session.flush();
   ok(lost && y.session.status === 'signed_out' && !y.storage.getItem(TOKENS_KEY), 'вход отозван — возврат на стартовый экран, без зависаний');
 }
 
@@ -285,7 +310,7 @@ console.log('\nv0.9. Общие HP/мана на сервере, лечение 
   // лечение: монет нет — ничего не меняется
   const poor = await d.session.runAction({ op: 'heal' });
   ok(!poor.ok && poor.reason === 'coins' && near(st.data.hp, 40) && st.item('coins') === 0, 'лечение без монет: отказ, HP и монеты прежние');
-  st.addItem('coins', 20); st.save();
+  await give(d, { inv: { coins: 20 } });
   const healed = await d.session.runAction({ op: 'heal' });
   ok(healed.ok && healed.price === 8 && st.data.hp === 120 && st.item('coins') === 12, 'лечение: −8 монет и полное HP одной операцией сервера');
   // ответ потерялся: повтор того же id не лечит и не списывает второй раз
@@ -331,8 +356,7 @@ console.log('\nv0.9.1. Действие сервера, пока мир «жив
   await d.session.playAsGuest('witch');
   const st = d.state;
   const actions = new PlayerActions({ state: st, getSession: () => d.session });
-  st.markEvent('unlock_telekinesis_1'); st.addItem('coins', 40); st.save();
-  await d.session.flush();
+  await give(d, { quests: ['unlock_telekinesis_1'], inv: { coins: 40 } });
   await setVitals(d, { hp: 50, mana: 10 });
 
   // 1) медленный сервер (500 мс) + мир идёт: стартовый набор
@@ -400,16 +424,16 @@ console.log('\nv0.9.1. Действие сервера, пока мир «жив
   // 8) ошибки различаются: сервер 5xx/4xx — 'server', без связи — 'network'
   const origRoute = srv.route;
   srv.route = async function (m, u, h, b) { return u.pathname.endsWith('/player_action') ? this.reply(500, { code: 'XX000', message: 'boom' }) : origRoute.call(this, m, u, h, b); };
-  re.state.addItem('coins', 1); re.state.save();
+  re.state.data.player = { x: 101, y: 1 }; re.state.save();
   const e500 = await re.session.runAction({ op: 'heal' });
   srv.route = async function (m, u, h, b) { return u.pathname.endsWith('/sync_player') ? this.reply(400, { code: '22023', message: 'bad_patch' }) : origRoute.call(this, m, u, h, b); };
-  re.state.addItem('coins', 1); re.state.save();
+  re.state.data.player = { x: 102, y: 1 }; re.state.save();
   const e400 = await re.session.runAction({ op: 'heal' });
   srv.route = origRoute;
   ok(e500.reason === 'server' && e500.error?.rpc === 'player_action' && e500.error?.status === 500 && re.session.status === 'ready', `ошибка сервера в player_action — reason 'server' с деталями, не «Нет связи» (${JSON.stringify(e500)})`);
   ok(e400.reason === 'server' && e400.error?.rpc === 'sync_player' && e400.error?.status === 400, `сервер отверг sync_player — reason 'server', не network (${JSON.stringify(e400)})`);
   srv.offline = true;
-  re.state.addItem('coins', 1); re.state.save();
+  re.state.data.player = { x: 103, y: 1 }; re.state.save();
   const eNet = await re.session.runAction({ op: 'heal' });
   srv.offline = false;
   ok(!eNet.ok && eNet.reason === 'network', 'настоящая потеря связи — reason network');
@@ -424,7 +448,7 @@ console.log('\nv0.9.2. Герой (ведьма / колдун) — метада
   let from = srv.calls.length;
   await d.session.playAsGuest('warlock');
   ok(rpcBodies(from, 'create_player').some(b => b?.hero === 'warlock') && d.session.hero === 'warlock', 'гость-колдун: create_player { hero: "warlock" }, профиль — warlock');
-  play(d.state); await d.session.flush();
+  await play(d);
   ok(srv.calls.filter(c => c.path === '/rest/v1/rpc/sync_player').every(c => !('hero' in (c.body?.patch || {})) && !('heroId' in (c.body?.patch || {}))), 'герой не входит в обычные patch прогресса (sync_player)');
   const back = device(srv, d.storage); await back.session.restore();
   ok(back.session.hero === 'warlock' && back.state.item('lunar_shard') === 1, 'перезапуск: тот же колдун и его прогресс');
@@ -439,7 +463,7 @@ console.log('\nv0.9.2. Герой (ведьма / колдун) — метада
   // аккаунт ведьмы: вход с устройства, где выбран предпросмотр колдуна, загружает ведьму (выбор не передаётся при входе)
   const wv = device(srv); const nickV = nickLat('Vedma');
   await wv.session.registerNew({ hero: 'witch', nickname: nickV, password: PASS, password2: PASS });
-  play(wv.state, { coins: 7 }); await wv.session.flush();
+  await play(wv, { coins: 7 });
   const pick = device(srv);   // на этом устройстве в меню выбран колдун — это только предпросмотр, на сервер не уходит
   from = srv.calls.length;
   await pick.session.login({ nickname: nickV, password: PASS });
@@ -460,7 +484,7 @@ console.log('\nv0.9.2. Герой (ведьма / колдун) — метада
   if (BACKEND === 'pg') pg(`update public.profiles set hero_id = 'druid' where id = '${u.session.userId}'`);
   else srv.players.get(u.session.userId).hero = 'druid';
   const u2 = device(srv, u.storage); await u2.session.restore();
-  play(u2.state); await u2.session.flush();
+  await play(u2);
   const u3 = device(srv, u.storage); await u3.session.restore();
   ok(u2.session.hero === 'druid' && heroById(u2.session.hero).id === 'witch' && u3.session.hero === 'druid', 'неизвестный герой профиля: показ — ведьма, значение в профиле не переписано после сохранения');
 
@@ -478,13 +502,13 @@ console.log('\nv0.10.0. Крафт и сюжетные предметы — од
   await d.session.playAsGuest('witch');
   const st = d.state;
   const actions = new PlayerActions({ state: st, getSession: () => d.session });
-  st.addItem('moon_herb', 4); st.addItem('tree_resin', 2); st.addItem('rune_dust', 3); st.addItem('lunar_flame', 2); st.save();
+  await give(d, { inv: { moon_herb: 4, tree_resin: 2, rune_dust: 3, lunar_flame: 2 } });
   let r = await actions.craft('lunar_wick');
   ok(!r.ok && r.reason === 'locked' && st.item('moon_herb') === 4, 'фитиль до знакомства с алтарём: рецепт неизвестен, ничего не потрачено');
-  st.markEvent('lunar_quest_start'); st.save();
+  await give(d, { quests: ['lunar_quest_start'] });
   r = await actions.craft('lunar_wick');
   ok(!r.ok && r.reason === 'missing' && r.missing.join() === 'lunar_flame' && st.item('moon_herb') === 4 && st.item('lunar_flame') === 2, 'не хватает огонька: остальные ингредиенты не тратятся');
-  st.addItem('lunar_flame', 1); st.save(); await d.session.flush();
+  await give(d, { inv: { lunar_flame: 1 } });
   // ответ на первую попытку потерялся: повтор того же id возвращает сохранённый результат, второго фитиля нет
   srv.loseNext = 1;
   r = await d.session.runAction({ op: 'craft', recipe: 'lunar_wick', id: 'wick-0000-retry' });
@@ -501,7 +525,7 @@ console.log('\nv0.10.0. Крафт и сюжетные предметы — од
   ok(u1.ok && !u2.ok && u2.reason === 'done' && re.state.hasEvent('lunar_quest_complete') && re.state.item('lunar_wick') === 0 && re.state.data.heroXP === before + 50
     && re.state.data.schoolXP.telekinesis >= 150 && re.state.item('lunar_shard') >= 5, 'фитиль у алтаря: свет, +50 опыта и гарантия цены ТК II — один раз');
   // ремонт: без маны ничего не меняется
-  re.state.markEvent('chapter_trial_defeated'); re.state.markEvent('unlock_seal_1'); re.state.addItem('restoration_bundle', 1); re.state.save(); await re.session.flush();
+  await give(re, { quests: ['chapter_trial_defeated', 'unlock_seal_1'], inv: { restoration_bundle: 1 } });
   await setVitals(re, { hp: null, mana: 5 });
   const m1 = await re.session.runAction({ op: 'use', item: 'restoration_bundle' });
   ok(!m1.ok && m1.reason === 'mana' && re.state.item('restoration_bundle') === 1 && !re.state.hasEvent('chapter_1_complete'), 'ремонт без 20 маны: связка и узел не тронуты');
@@ -510,7 +534,7 @@ console.log('\nv0.10.0. Крафт и сюжетные предметы — од
   ok(m2.ok && re.state.hasEvent('chapter_1_complete') && re.state.item('restoration_bundle') === 0 && near(re.state.data.mana, 30), 'ремонт: связка и ровно 20 маны одной операцией, узел восстановлен');
   // миграция: ядро Стража — только если его нет и связку не делали; повтор ничего не даёт
   const g = device(srv); await g.session.playAsGuest('witch');
-  g.state.markEnemyDefeated('forest_guardian_01'); g.state.save(); await g.session.flush();
+  await give(g, { enemies: ['forest_guardian_01'] });
   const g1 = await g.session.runAction({ op: 'migrate_v10' }), g2 = await g.session.runAction({ op: 'migrate_v10' });
   ok(g1.ok && g1.core === 1 && !g2.ok && g2.reason === 'already' && g.state.item('rare_core') === 1, 'миграция старого сейва: одно ядро Стража, повтор не выдаёт второе');
 }
@@ -542,9 +566,9 @@ console.log('\nv0.12.0. HP и мана на сервере: восстановл
   ok(x.state.data.hp === 120 && x.state.data.mana === 100, 'сутки офлайн: ровно максимум, без превышения');
 
   // 4) бой: восстановление стоит, лечение и зелья закрыты, потраченная мана не считается
-  st.data.player = { ...FOREST }; st.addItem('coins', 50); st.addItem('elixir_life', 2); st.save(); await d.session.flush();
+  st.data.player = { ...FOREST }; st.save(); await give(d, { inv: { coins: 50, elixir_life: 2 } });
   await setVitals(d, { hp: 50, mana: 40 });
-  st.unlockAbility('telekinesis', 1); st.save(); await d.session.flush();
+  await give(d, { abilities: { telekinesis: { level: 1, unlocked: true } } });
   const cs = await acts.combatStart('scavenger_01', 'forest_scavenger');
   ok(cs.ok && st.data.combatSince != null && st.data.combatCtx?.spawn === 'scavenger_01' && srv.rawVitals(uid).combat, 'combat_start: сервер знает о бое и запомнил состояние героя');
   ok(near(cs.hp, 50) && near(cs.mana, 40) && near(st.data.combatCtx.hp, 50) && near(st.data.combatCtx.mana, 40), 'запомнены HP и мана на старт боя (они же — в ответе)');
@@ -573,7 +597,7 @@ console.log('\nv0.12.0. HP и мана на сервере: восстановл
   ok(st.data.combatSince == null && st.data.hp >= 24 && st.data.hp < 24 + 125, 'через 15 минут бой считается отступлением: HP не ниже 24, затем обычное восстановление (+2 минуты)');
 
   // 7) зелья вне боя: расход и результат решает сервер
-  st.addItem('elixir_mana', 1); st.save();
+  await give(d, { inv: { elixir_mana: 1 } });
   await setVitals(d, { hp: 100, mana: 100 });
   const full = await acts.drink('elixir_mana');
   ok(!full.ok && full.reason === 'full' && st.item('elixir_life') === 2, 'полный запас: зелье не тратится');
@@ -590,7 +614,7 @@ console.log('\nv0.12.0. HP и мана на сервере: восстановл
   ok(gw.ok && near(st.data.mana, 76) && near(srv.rawVitals(uid).mana, 76), 'сбор в мире: на устройстве и на сервере 76 маны');
   // 9) новый уровень не лечит
   await setVitals(d, { hp: 50, mana: 50 });
-  st.applyReward({ heroXP: 100 }); st.save(); await d.session.flush();
+  await give(d, { xp: st.data.heroXP + 100 });
   ok(st.data.heroLevel >= 2 && near(st.data.hp, 50) && near(st.data.mana, 50), 'повышение уровня не восстанавливает HP и ману втихую');
   // 10) нет связи: бой не начинается
   srv.offline = true;
@@ -672,31 +696,31 @@ console.log('\nv0.13.0. Действия в мире — на сервере: с
   // 5) условия: побеждённый враг, событие
   const g0 = await W('guard_cache');
   ok(!g0.ok && g0.reason === 'locked' && st.item('rune_dust') === 1, 'сундук за врагом: пока враг жив — закрыт');
-  st.markEnemyDefeated('lunar_guard'); st.save(); await d.session.flush();
+  await give(d, { enemies: ['lunar_guard'] });
   ok((await W('guard_cache')).ok && st.item('rune_dust') === 2, 'враг побеждён — сундук открывается');
   ok((await W('flame_a')).reason === 'locked', 'огонёк на ветке: сначала нужно задание алтаря');
   // 6) дар и его ступень, мана на магию
   await setVitals(d, { hp: null, mana: 100 });
   const h = await W('moon_plant');
   ok(!h.ok && h.reason === 'locked' && st.item('moon_herb') === 2, 'притянуть растение без дара Телекинеза: закрыто');
-  st.unlockAbility('telekinesis', 1); st.save(); await d.session.flush();
+  await give(d, { abilities: { telekinesis: { level: 1, unlocked: true } } });
   const h2 = await W('moon_plant');
   ok(h2.ok && st.item('moon_herb') === 3 && near(mana(), 96), 'Телекинез открыт: растение притянуто, −4 маны, +1 трава одной операцией');
   ok((await W('heavy_boulder')).reason === 'locked' && near(mana(), 96), 'тяжёлая глыба при Телекинезе I: закрыто, мана на месте');
-  const rk = await W('glade_rock');
-  ok(rk.ok && rk.kind === 'cast' && near(mana(), 84) && !st.getObject('glade_rock'), 'сдвиг среднего камня: −12 маны, состояние камня остаётся за клиентом');
-  ok((await W('corrupted_roots')).reason === 'locked', 'Огонь без дара: корни не поддаются');
-  // 7) награда из-под камня: только когда камень сдвинут
+  // награда из-под камня: только когда камень сдвинут
   ok((await W('glade_rock_reward')).reason === 'locked', 'монеты под камнем: пока камень на месте — закрыто');
-  st.setObject('glade_rock', { state: 'moved', x: 1300, y: 4590 }); st.save(); await d.session.flush();
+  const rk = await W('glade_rock');
+  ok(rk.ok && rk.kind === 'cast' && near(mana(), 84) && st.getObject('glade_rock')?.state === 'moved', 'сдвиг среднего камня: −12 маны, состояние «сдвинут» записал сервер');
+  ok((await W('corrupted_roots')).reason === 'locked', 'Огонь без дара: корни не поддаются');
+  // 7) камень сдвинут (сервером) — награда под ним выдаётся один раз
   const c0 = st.item('coins');
   ok((await W('glade_rock_reward')).ok && st.item('coins') === c0 + 20 && (await W('glade_rock_reward')).reason === 'done', 'камень сдвинут: +20 монет один раз');
   // 8) запас под охраной: один победный цикл — одна выдача
   ok((await W('dust_stash')).reason === 'locked', 'запас пыли: пока охранник не побеждён — закрыт');
-  st.markEnemyDefeated('rootling_02'); st.save(); await d.session.flush();
+  await give(d, { enemies: ['rootling_02'] });
   const r0 = st.item('rune_dust');
   ok((await W('dust_stash')).ok && st.item('rune_dust') === r0 + 2 && (await W('dust_stash')).reason === 'done', 'запас: +2 пыли, второй раз за тот же цикл — нет');
-  st.setObject('rep:rootling_02', { wins: 2, at: 1 }); st.save(); await d.session.flush();
+  await give(d, { objects: { 'rep:rootling_02': { wins: 2, at: 1 } } });
   ok((await W('dust_stash')).ok && st.item('rune_dust') === r0 + 4, 'вторая победа над охранником — ещё одна выдача');
   // 9) выдуманные и служебные идентификаторы, бой, повтор запроса
   ok((await W('no_such_object')).reason === 'unknown' && (await W('__proto__')).reason === 'unknown' && (await W('constructor')).reason === 'unknown' && (await W(null)).reason === 'unknown', 'выдуманные и служебные идентификаторы: unknown');
@@ -714,6 +738,87 @@ console.log('\nv0.13.0. Действия в мире — на сервере: с
   const off = await W('resin_t1');
   srv.offline = false; await d.session.retryNow();
   ok(!off.ok && off.reason === 'network' && st.item('tree_resin') === 0, 'без связи сбор не проходит: ничего не выдано');
+}
+
+console.log('\nv0.15.0. Прогресс закрыт для sync_player: игра показывает сразу, сервер подтверждает операциями');
+{
+  const d = device(srv); await d.session.playAsGuest('witch');
+  const st = d.state, uid = d.session.userId;
+  const bus = new EventBus();
+  const actions = new PlayerActions({ state: st, getSession: () => d.session, bus });
+  const quests = new QuestFlags(st, bus), abilities = new AbilitySystem(st, quests, bus), log = new QuestLog(st, bus);
+  const dialogue = new DialogueSystem({ state: st, log, bus });
+  quests.mirror = log.mirror = dialogue.mirror = abilities.mirror = (a) => actions.mirror(a);
+  const real = () => d.api.getPlayer(d.session.auth.access_token);
+  const settle = async () => { await actions.chain; };
+
+  // событие-дар: сразу видно у себя, на сервере — дар и событие
+  abilities.unlock('telekinesis', 1); quests.complete('unlock_telekinesis_1');
+  ok(st.isUnlocked('telekinesis') && st.hasEvent('unlock_telekinesis_1'), 'дар виден сразу, не дожидаясь сервера');
+  await settle();
+  let r = await real();
+  ok(r.quests.includes('unlock_telekinesis_1') && r.abilities.telekinesis?.unlocked && r.abilities.telekinesis.level === 1, 'сервер подтвердил: событие и Телекинез I записаны им');
+
+  // закрытое условие: Огонь без пройденного пути — сервер отказывает, у игрока всё откатывается
+  abilities.unlock('fire', 1); quests.complete('unlock_fire_1');
+  ok(st.isUnlocked('fire'), 'локально Огонь «получен» (до ответа сервера)');
+  await settle();
+  r = await real();
+  ok(!r.quests.includes('unlock_fire_1') && !r.abilities.fire?.unlocked && !st.hasEvent('unlock_fire_1') && !st.isUnlocked('fire'), 'сервер отказал (путь не открыт): Огонь у игрока снова закрыт');
+  const xpBefore = r.xp;
+  await give(d, { quests: ['heavy_path_open'] });
+  abilities.unlock('fire', 1); quests.complete('unlock_fire_1'); await settle();
+  r = await real();
+  ok(r.quests.includes('unlock_fire_1') && r.abilities.fire?.unlocked && r.xp === xpBefore + 30 && st.data.heroXP === r.xp, 'путь открыт: Огонь выдан, награда события (+30 опыта) — одна, у игрока и на сервере поровну');
+
+  // события: диалог, выдуманные ключи
+  dialogue.runEffects([{ event: 'prologue_seen' }]); await settle();
+  ok((await real()).quests.includes('prologue_seen'), 'событие из диалога подтверждено сервером');
+  const forged = await actions.event('chapter_1_complete');
+  ok(!forged.ok && forged.reason === 'unknown' && !(await real()).quests.includes('chapter_1_complete'), 'выдуманное событие: сервер не знает такого действия');
+  const again = await actions.event('prologue_seen');
+  ok(!again.ok && again.reason === 'already', 'то же событие второй раз — отказ, награда не повторяется');
+
+  // побочное задание: принять, сдать; чужое не сдать
+  await give(d, { inv: { moon_herb: 3 } });
+  ok(log.status('sq_herbs') === 'ready' || log.status('sq_herbs') === 'available', 'задание доступно на устройстве');
+  const coins0 = st.item('coins');
+  log.accept('sq_herbs'); await settle();
+  ok((await real()).quests.includes('sq_herbs_start'), 'принятое задание записал сервер');
+  log.turnIn('sq_herbs'); await settle();
+  r = await real();
+  ok(r.quests.includes('sq_herbs_done') && !r.inventory.moon_herb && r.inventory.coins === coins0 + 25 && r.inventory.elixir_life >= 1 && st.item('coins') === coins0 + 25, 'сдача: травы списаны, награда выдана один раз, у игрока и на сервере поровну');
+  const t2 = await actions.questTurnIn('sq_herbs');
+  ok(!t2.ok && t2.reason === 'already', 'повторная сдача — отказ');
+  const t3 = await actions.questTurnIn('sq_hunter');
+  ok(!t3.ok && t3.reason === 'not_started', 'сдать задание, которое не принято, нельзя');
+  const t4 = await actions.questAccept('sq_nope');
+  ok(!t4.ok && t4.reason === 'unknown', 'выдуманное задание — unknown');
+
+  // изучение: цена и условия — на сервере, время — по часам сервера
+  await give(d, { xp: 1260, school: { telekinesis: 150 }, inv: { lunar_shard: 5, moon_herb: 2, rune_dust: 1 }, quests: ['lunar_quest_complete'] });
+  abilities.startResearch('telekinesis_2');
+  ok(!!st.data.research, 'изучение началось сразу у игрока');
+  await settle();
+  r = await real();
+  ok(r.research?.upgradeId === 'telekinesis_2' && r.school.telekinesis === 0 && !r.inventory.lunar_shard && r.quests.includes('telekinesis_2_start'), 'сервер записал изучение: цена списана, старт отмечен');
+  abilities.update(true);   // «время вышло» по часам устройства
+  await settle();
+  r = await real();
+  ok(r.abilities.telekinesis.level === 1 && !!r.research && !!st.data.research && abilities.holdUntil > st.now(), 'сервер время не засчитал: дар прежний, изучение продолжается, повторять не торопимся');
+  await give(d, { research: { upgradeId: 'telekinesis_2', startedAt: 1, durationMs: 1 } });
+  abilities.holdUntil = 0;
+  abilities.update(); await settle();
+  r = await real();
+  ok(r.abilities.telekinesis.level === 2 && !r.research && r.quests.includes('telekinesis_2_complete') && st.data.telekinesisLevel === 2 && !st.data.research, 'время вышло по часам сервера: Телекинез II, событие завершения — одно');
+  const noRes = await actions.researchFinish();
+  ok(!noRes.ok && noRes.reason === 'none', 'завершать нечего — отказ');
+  const rs = await actions.researchStart('fire_2');
+  ok(!rs.ok && ['missing', 'locked', 'event'].includes(rs.reason), 'Огонь II без опыта, углей и уровня — отказ, ничего не списано');
+
+  // билд: смена ветки без ветки и за чужие деньги не проходит
+  const rsp = await actions.respec('telekinesis', 'lord');
+  ok(!rsp.ok && rsp.reason === 'unavailable', 'смена ветки, которой нет, — отказ');
 }
 
 console.log('\n13–14. Старой «облачной» механики больше нет');

@@ -87,67 +87,292 @@ var RESOURCE_ITEMS = {
 };
 var POTION_BATTLE_LIMIT = 4;
 
-// src/config/recipes.js
-var RECIPES = {
-  elixir_life: {
-    kind: "potion",
-    result: "elixir_life",
-    amount: 1,
-    needs: { moon_herb: 2, forest_mushroom: 1 },
-    note: "\u041B\u0443\u043D\u043D\u0430\u044F \u0442\u0440\u0430\u0432\u0430 \u0438 \u0433\u0440\u0438\u0431, \u0442\u043E\u043C\u043B\u0451\u043D\u044B\u0435 \u0434\u043E \u0437\u043E\u043B\u043E\u0442\u0430."
-  },
-  elixir_mana: {
-    kind: "potion",
-    result: "elixir_mana",
-    amount: 1,
-    needs: { moon_herb: 1, rune_dust: 1 },
-    note: "\u0420\u0443\u043D\u043D\u0430\u044F \u043F\u044B\u043B\u044C \u043D\u0435 \u0434\u0430\u0451\u0442 \u0441\u0432\u0435\u0442\u0443 \u0440\u0430\u0441\u0441\u0435\u044F\u0442\u044C\u0441\u044F."
-  },
-  resin_flask: {
-    kind: "potion",
-    result: "resin_flask",
-    amount: 1,
-    needs: { tree_resin: 2, rune_dust: 1 },
-    note: "\u0421\u043C\u043E\u043B\u0430 \u0433\u043E\u0440\u0438\u0442 \u0434\u043E\u043B\u0433\u043E, \u043F\u044B\u043B\u044C \u0437\u0430\u0441\u0442\u0430\u0432\u043B\u044F\u0435\u0442 \u0435\u0451 \u043B\u0438\u043F\u043D\u0443\u0442\u044C \u043A \u0446\u0435\u043B\u0438."
-  },
-  // ---- сюжетные (v0.10.0): нужны в одной копии
+// src/config/storyItems.js
+var STORY_ITEMS = {
   lunar_wick: {
-    kind: "story",
-    result: "lunar_wick",
-    amount: 1,
-    needs: { moon_herb: 1, tree_resin: 1, rune_dust: 1, lunar_flame: 3 },
-    requires: ["lunar_quest_start"],
-    crafted: "lunar_wick_crafted",
-    blockedBy: ["lunar_wick_crafted", "lunar_quest_complete"],
-    note: "\u0422\u0440\u0438 \u043E\u0433\u043E\u043D\u044C\u043A\u0430, \u0441\u0432\u0438\u0442\u044B\u0435 \u0442\u0440\u0430\u0432\u043E\u0439 \u0438 \u0441\u043C\u043E\u043B\u043E\u0439, \u2014 \u0441\u0432\u0435\u0442, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u0430\u043B\u0442\u0430\u0440\u044C \u043F\u0440\u0438\u043C\u0435\u0442.",
-    learn: "\u0420\u0435\u0446\u0435\u043F\u0442 \u043E\u0431\u044A\u044F\u0441\u043D\u0438\u0442 \u0421\u0435\u043B\u0435\u043D\u0430 \u0443 \u041B\u0443\u043D\u043D\u043E\u0433\u043E \u0430\u043B\u0442\u0430\u0440\u044F."
+    name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u0444\u0438\u0442\u0438\u043B\u044C",
+    icon: "icon_wick",
+    color: 10480127,
+    purpose: "\u0412\u0435\u0440\u043D\u0451\u0442 \u0441\u0432\u0435\u0442 \u041B\u0443\u043D\u043D\u043E\u043C\u0443 \u0430\u043B\u0442\u0430\u0440\u044E. \u041F\u0440\u0438\u043C\u0435\u043D\u0438\u0442\u044C \u0443 \u0430\u043B\u0442\u0430\u0440\u044F."
   },
   revealing_compound: {
-    kind: "story",
-    result: "revealing_compound",
-    amount: 1,
-    needs: { moon_herb: 1, forest_mushroom: 1, rune_dust: 1 },
-    requires: ["lunar_quest_complete"],
-    crafted: "revealing_compound_crafted",
-    blockedBy: ["revealing_compound_crafted", "gate_marks_revealed"],
-    note: "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442 \u0441\u0442\u0451\u0440\u0442\u044B\u0435 \u043D\u0430\u0440\u043E\u0447\u043D\u043E \u0437\u043D\u0430\u043A\u0438 \u0434\u0440\u0435\u0432\u043D\u0435\u0439 \u043C\u0430\u0433\u0438\u0438.",
-    learn: "\u0420\u0435\u0446\u0435\u043F\u0442 \u0441\u0442\u0430\u043D\u0435\u0442 \u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D, \u043A\u043E\u0433\u0434\u0430 \u0430\u043B\u0442\u0430\u0440\u044C \u0441\u043D\u043E\u0432\u0430 \u0437\u0430\u0441\u0432\u0435\u0442\u0438\u0442\u0441\u044F."
+    name: "\u0421\u043E\u0441\u0442\u0430\u0432 \u044F\u0441\u043D\u043E\u0433\u043E \u0432\u0437\u0433\u043B\u044F\u0434\u0430",
+    icon: "icon_compound",
+    color: 13214463,
+    purpose: "\u041F\u043E\u043A\u0430\u0436\u0435\u0442 \u0441\u0442\u0451\u0440\u0442\u044B\u0439 \u0437\u043D\u0430\u043A \u043D\u0430 \u0414\u0440\u0435\u0432\u043D\u0438\u0445 \u0432\u043E\u0440\u043E\u0442\u0430\u0445. \u041F\u0440\u0438\u043C\u0435\u043D\u0438\u0442\u044C \u0443 \u0432\u043E\u0440\u043E\u0442 \u043F\u043E\u0441\u043B\u0435 \u043F\u043E\u0431\u0435\u0434\u044B \u043D\u0430\u0434 \u0421\u0442\u0440\u0430\u0436\u0435\u043C."
   },
   restoration_bundle: {
-    kind: "story",
-    result: "restoration_bundle",
-    amount: 1,
-    needs: { moon_herb: 2, tree_resin: 2, rune_dust: 2, lunar_shard: 1, rare_core: 1 },
-    requires: ["lunar_quest_complete"],
-    crafted: "restoration_bundle_crafted",
-    blockedBy: ["restoration_bundle_crafted", "chapter_1_complete"],
-    note: "\u042F\u0434\u0440\u043E \u0421\u0442\u0440\u0430\u0436\u0430, \u0441\u0442\u044F\u043D\u0443\u0442\u043E\u0435 \u0441\u043C\u043E\u043B\u043E\u0439 \u0438 \u043F\u044B\u043B\u044C\u044E, \u2014 \u043B\u0435\u043A\u0430\u0440\u0441\u0442\u0432\u043E \u0434\u043B\u044F \u0441\u0435\u0440\u0434\u0446\u0430 \u0440\u043E\u0449\u0438.",
-    learn: "\u0420\u0435\u0446\u0435\u043F\u0442 \u0441\u0442\u0430\u043D\u0435\u0442 \u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D, \u043A\u043E\u0433\u0434\u0430 \u0430\u043B\u0442\u0430\u0440\u044C \u0441\u043D\u043E\u0432\u0430 \u0437\u0430\u0441\u0432\u0435\u0442\u0438\u0442\u0441\u044F."
+    name: "\u0426\u0435\u043B\u0435\u0431\u043D\u044B\u0439 \u0441\u0431\u043E\u0440",
+    icon: "icon_bundle",
+    color: 8118922,
+    purpose: "\u0412\u044B\u043B\u0435\u0447\u0438\u0442 \u0441\u0435\u0440\u0434\u0446\u0435 \u0440\u043E\u0449\u0438 \u0437\u0430 \u0432\u043E\u0440\u043E\u0442\u0430\u043C\u0438 \u0432\u043C\u0435\u0441\u0442\u0435 \u0441 \u0410\u0441\u0442\u0440\u0430\u043B\u043E\u043C (20 \u043C\u0430\u043D\u044B)."
   }
 };
-var RECIPE_ORDER = ["elixir_life", "elixir_mana", "resin_flask", "lunar_wick", "revealing_compound", "restoration_bundle"];
-var POTION_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "potion");
-var STORY_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "story");
+var STORY_USES = {
+  lunar_wick: {
+    requires: ["lunar_quest_start"],
+    blockedBy: ["lunar_quest_complete"],
+    events: ["lunar_quest_complete"],
+    // прежняя разовая награда алтаря + гарантия цены Телекинеза II по школьному опыту и осколкам (трава и пыль — сами)
+    reward: { heroXP: 50, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUp: { school: { telekinesis: 150 }, items: { lunar_shard: 5 } } }
+  },
+  revealing_compound: {
+    requires: ["guardian_defeated"],
+    blockedBy: ["gate_marks_revealed"],
+    events: ["gate_marks_revealed"],
+    reward: { heroXP: 30 }
+  },
+  restoration_bundle: {
+    requires: ["chapter_trial_defeated", "unlock_seal_1"],
+    blockedBy: ["chapter_1_complete"],
+    mana: 20,
+    events: ["chapter_1_complete"],
+    reward: { heroXP: 100, coins: 30, schoolXP: { seal: 40 } }
+  }
+};
+var FIRST_CRAFT = { event: "first_craft_complete", reward: { heroXP: 15 } };
+var MIGRATION_V10 = {
+  event: "mig_v10",
+  guardian: "forest_guardian_01",
+  item: "rare_core",
+  notIf: ["restoration_bundle_crafted", "chapter_1_complete"]
+};
+
+// src/config/balance.progression.js
+var ITEMS = {
+  coins: { name: "\u041C\u043E\u043D\u0435\u0442\u044B", icon: "icon_coin" },
+  lunar_shard: { name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A", icon: "icon_shard" },
+  lunar_flame: { name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u043E\u0433\u043E\u043D\u0451\u043A", icon: "lunar_flame_01" },
+  moon_herb: { name: "\u041B\u0443\u043D\u043D\u0430\u044F \u0442\u0440\u0430\u0432\u0430", icon: "moon_plant_01" },
+  crimson_ember: { name: "\u0411\u0430\u0433\u0440\u043E\u0432\u044B\u0439 \u0443\u0433\u043E\u043B\u044C", icon: "icon_ember" },
+  moonstone: { name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C (\u0440\u0435\u0434\u043A\u0438\u0439)", icon: "icon_shard" },
+  rare_core: { name: "\u0420\u0435\u0434\u043A\u043E\u0435 \u044F\u0434\u0440\u043E", icon: "icon_core" },
+  ...RESOURCE_ITEMS,
+  // v0.8: лесные грибы, смола, пыль и расходники (названия лунной травы и осколка берутся отсюда)
+  // v0.10.0: сюжетные предметы первой главы
+  ...Object.fromEntries(Object.entries(STORY_ITEMS).map(([id, it]) => [id, { name: it.name, icon: it.icon }]))
+};
+var TIMER_MODE = "live";
+var UPGRADES = {
+  telekinesis_2: {
+    ability: "telekinesis",
+    toLevel: 2,
+    title: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 II",
+    description: "\u0422\u044F\u0436\u0451\u043B\u044B\u0435 \u043E\u0431\u044A\u0435\u043A\u0442\u044B, +35% \u0443\u0440\u043E\u043D\u0430 \u0431\u0440\u043E\u0441\u043A\u0430\u043C\u0438, \u043D\u043E\u0432\u044B\u0435 \u043F\u0440\u043E\u0445\u043E\u0434\u044B.",
+    requires: { heroLevel: 3, abilityLevel: 1, event: "lunar_quest_complete" },
+    // v0.8: к осколкам добавились травы и пыль. Осколки награда за алтарь догоняет сама (topUp),
+    // а травы и пыль игрок собирает сам — они растут заново (world.resources.js), так что застрять нельзя.
+    cost: { schoolXP: 150, items: { lunar_shard: 5, moon_herb: 2, rune_dust: 1 }, noTopUp: ["moon_herb", "rune_dust"] },
+    timerSec: { prototype: 60, live: 5 * 60 },
+    startEvent: "telekinesis_2_start",
+    completeEvent: "telekinesis_2_complete",
+    doneText: "\u0422\u0435\u043F\u0435\u0440\u044C \u043C\u043E\u0436\u043D\u043E \u0441\u0434\u0432\u0438\u043D\u0443\u0442\u044C \u0442\u044F\u0436\u0451\u043B\u0443\u044E \u0433\u043B\u044B\u0431\u0443 \u0437\u0430 \u0430\u043B\u0442\u0430\u0440\u0451\u043C."
+  },
+  // v0.11.0 — вторая ступень Огня и Астрала. Лесенка таймеров: Телекинез II 5 мин → Огонь II 15 мин → Астрал II 30 мин.
+  // Начать изучение можно на экране «Дары» (кнопка в Сумке); одно изучение за раз.
+  fire_2: {
+    ability: "fire",
+    toLevel: 2,
+    title: "\u041E\u0433\u043E\u043D\u044C II",
+    description: "\u0423\u0440\u043E\u043D \u0432\u044B\u0448\u0435 \u043F\u0440\u0438\u043C\u0435\u0440\u043D\u043E \u043D\u0430 \u0447\u0435\u0442\u0432\u0435\u0440\u0442\u044C, \u0433\u043E\u0440\u0435\u043D\u0438\u0435 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u0438 \u0434\u043E\u043B\u044C\u0448\u0435.",
+    requires: { heroLevel: 6, abilityLevel: 1 },
+    // шесть углей: пять Корневиков дают по одному (и при повторных встречах тоже) + один из сухого куста у Круга
+    cost: { schoolXP: 180, items: { crimson_ember: 6 } },
+    timerSec: { prototype: 90, live: 15 * 60 },
+    doneText: "\u041F\u043B\u0430\u043C\u044F \u0431\u044C\u0451\u0442 \u0441\u0438\u043B\u044C\u043D\u0435\u0435, \u0430 \u0433\u043E\u0440\u0435\u043D\u0438\u0435 \u0434\u0435\u0440\u0436\u0438\u0442\u0441\u044F \u0434\u043E\u043B\u044C\u0448\u0435."
+  },
+  // v0.11.1 — ступень III Телекинеза: две ветки, выбирается одна (после изучения вторая закрывается).
+  // Цена общая. Осколки и пыль добываются в мире заново; уровень 7 игрок получает к концу главы I.
+  telekinesis_3_lord: {
+    ability: "telekinesis",
+    toLevel: 3,
+    branch: "lord",
+    title: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 III \xB7 \u041F\u043E\u0432\u0435\u043B\u0438\u0442\u0435\u043B\u044C",
+    description: "\u0414\u0432\u0430 \u0431\u0440\u043E\u0441\u043A\u0430 \u043F\u043E\u0434\u0440\u044F\u0434. \u0412\u0435\u0442\u043A\u0430 \xAB\u041F\u043E\u0432\u0435\u043B\u0438\u0442\u0435\u043B\u044C\xBB: \u0443\u0434\u0430\u0447\u043D\u043E\u0435 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u0435 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043F\u043E\u043B\u043E\u0432\u0438\u043D\u0443 \u043C\u0430\u043D\u044B \u0438 \u0443\u0441\u043A\u043E\u0440\u044F\u0435\u0442 \u043F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0443.",
+    requires: { heroLevel: 7, abilityLevel: 2 },
+    cost: { schoolXP: 250, items: { lunar_shard: 8, rune_dust: 3 } },
+    timerSec: { prototype: 90, live: 60 * 60 },
+    doneText: "\u0414\u0432\u0430 \u0431\u0440\u043E\u0441\u043A\u0430 \u043F\u043E\u0434\u0440\u044F\u0434. \u041A\u0430\u0436\u0434\u043E\u0435 \u0443\u0434\u0430\u0447\u043D\u043E\u0435 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u0435 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043C\u0430\u043D\u0443 \u0438 \u0443\u0441\u043A\u043E\u0440\u044F\u0435\u0442 \u043F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0443."
+  },
+  telekinesis_3_breaker: {
+    ability: "telekinesis",
+    toLevel: 3,
+    branch: "breaker",
+    title: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 III \xB7 \u0420\u0430\u0437\u0440\u0443\u0448\u0438\u0442\u0435\u043B\u044C",
+    description: "\u0414\u0432\u0430 \u0431\u0440\u043E\u0441\u043A\u0430 \u043F\u043E\u0434\u0440\u044F\u0434. \u0412\u0435\u0442\u043A\u0430 \xAB\u0420\u0430\u0437\u0440\u0443\u0448\u0438\u0442\u0435\u043B\u044C\xBB: \u0431\u0440\u043E\u0441\u043A\u0438 \u043A\u0430\u043C\u043D\u0435\u0439 \u0431\u044C\u044E\u0442 \u043D\u0430 30% \u0441\u0438\u043B\u044C\u043D\u0435\u0435, \u043D\u043E \u0441\u0442\u043E\u044F\u0442 \u043D\u0430 4 \u043C\u0430\u043D\u044B \u0431\u043E\u043B\u044C\u0448\u0435.",
+    requires: { heroLevel: 7, abilityLevel: 2 },
+    cost: { schoolXP: 250, items: { lunar_shard: 8, rune_dust: 3 } },
+    timerSec: { prototype: 90, live: 60 * 60 },
+    doneText: "\u0414\u0432\u0430 \u0431\u0440\u043E\u0441\u043A\u0430 \u043F\u043E\u0434\u0440\u044F\u0434, \u0438 \u043A\u0430\u0436\u0434\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C \u0431\u044C\u0451\u0442 \u0437\u0430\u043C\u0435\u0442\u043D\u043E \u0441\u0438\u043B\u044C\u043D\u0435\u0435."
+  },
+  seal_2: {
+    ability: "seal",
+    toLevel: 2,
+    title: "\u0410\u0441\u0442\u0440\u0430\u043B II",
+    description: "+40% \u0443\u0440\u043E\u043D\u0430: \u0410\u0441\u0442\u0440\u0430\u043B \u0431\u044C\u0451\u0442 \u0435\u0449\u0451 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u0438 \u0432\u0441\u0451 \u0442\u0430\u043A \u0436\u0435 \u043F\u0440\u043E\u0431\u0438\u0432\u0430\u0435\u0442 \u0437\u0430\u0449\u0438\u0442\u0443.",
+    requires: { heroLevel: 7, abilityLevel: 1 },
+    cost: { schoolXP: 100, items: { lunar_shard: 6 } },
+    timerSec: { prototype: 90, live: 30 * 60 },
+    doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u0440\u0430\u0437\u0438\u0442 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u2014 \u0442\u0435\u043D\u044C \u0425\u0440\u0430\u043D\u0438\u0442\u0435\u043B\u044F \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u0437\u0430\u0449\u0438\u0442\u0430."
+  }
+};
+var BRANCH_RESPEC = { coins: 150 };
+var EVENT_REWARDS = {
+  first_world_interaction: { heroXP: 10 },
+  lunar_quest_complete: { heroXP: 50, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUpFor: "telekinesis_2" },
+  telekinesis_2_complete: { heroXP: 30 },
+  heavy_path_open: { heroXP: 20 },
+  unlock_fire_1: { heroXP: 30 },
+  fire_gate_open: { heroXP: 20, schoolXP: { fire: 20 } },
+  // v0.10.0: Селена открывает Печать I сюжетно — без уровня, платы и таймера. Учебный знак и ворота дают только
+  // обычный школьный опыт мира (+6), отдельной награды «за обучение» нет.
+  unlock_seal_1: { heroXP: 60 }
+};
+
+// src/config/balance.abilities.js
+var WEIGHT_CLASSES = ["light", "medium", "heavy"];
+var ABILITIES = {
+  telekinesis: {
+    name: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437",
+    color: "telekinesis",
+    levels: {
+      1: {
+        label: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 I",
+        damage: 20,
+        manaCost: 14,
+        cooldownSec: 5,
+        castSec: 0.15,
+        maxWeight: "medium",
+        // в мире: light + medium; heavy — нет
+        heavyObjectBonus: 0.5,
+        // тяжёлый объект поля: +50% (20 + 10 = 30)
+        throwDamageBonus: 0,
+        interruptsNormalCast: true,
+        canTargetBossDirectly: false
+      },
+      2: {
+        label: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 II",
+        damage: 20,
+        manaCost: 14,
+        cooldownSec: 5,
+        castSec: 0.15,
+        maxWeight: "heavy",
+        // тяжёлые объекты и новые проходы
+        heavyObjectBonus: 0.5,
+        throwDamageBonus: 0.35,
+        // +35% урона бросками
+        interruptsNormalCast: true,
+        canTargetBossDirectly: false
+      },
+      // v0.11.1: ступень III — «два броска подряд»: после первого броска второй доступен без перезарядки в течение windowSec
+      // (мана тратится за каждый). Дальше игрок выбирает ветку (branches), её числа накладываются поверх этой ступени.
+      3: {
+        label: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 III",
+        damage: 20,
+        manaCost: 14,
+        cooldownSec: 5,
+        castSec: 0.15,
+        maxWeight: "heavy",
+        heavyObjectBonus: 0.5,
+        throwDamageBonus: 0.35,
+        doubleCast: { windowSec: 2.5 },
+        interruptsNormalCast: true,
+        canTargetBossDirectly: false
+      }
+    },
+    // Ветки ступени III. Накладка на числа ступени: set — заменить, add — прибавить, mul — умножить. У каждой ветки есть цена.
+    branches: {
+      lord: {
+        name: "\u041F\u043E\u0432\u0435\u043B\u0438\u0442\u0435\u043B\u044C",
+        fromLevel: 3,
+        text: "\u041C\u0430\u0441\u0442\u0435\u0440 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u0439: \u043A\u0430\u0436\u0434\u043E\u0435 \u0443\u0434\u0430\u0447\u043D\u043E\u0435 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u0435 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043F\u043E\u043B\u043E\u0432\u0438\u043D\u0443 \u043C\u0430\u043D\u044B \u0438 \u0443\u0441\u043A\u043E\u0440\u044F\u0435\u0442 \u043F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0443 \u043D\u0430 3 \u0441.",
+        tradeoff: "\u041F\u0440\u044F\u043C\u043E\u0439 \u0443\u0440\u043E\u043D \u043D\u0438\u0436\u0435 \u043D\u0430 10%.",
+        mul: { damage: 0.9 },
+        set: { interruptRefund: { cooldownSec: 3, manaPct: 0.5 } }
+      },
+      breaker: {
+        name: "\u0420\u0430\u0437\u0440\u0443\u0448\u0438\u0442\u0435\u043B\u044C",
+        fromLevel: 3,
+        text: "\u0411\u0440\u043E\u0441\u043A\u0438 \u043A\u0430\u043C\u043D\u0435\u0439 \u0431\u044C\u044E\u0442 \u0441\u0438\u043B\u044C\u043D\u0435\u0435: \u0443\u0440\u043E\u043D \u0431\u0440\u043E\u0441\u043A\u0430\u043C\u0438 +30% (\u0432\u043C\u0435\u0441\u0442\u0435 \u0441\u043E \u0441\u0442\u0443\u043F\u0435\u043D\u044C\u044E \u2014 +65%).",
+        tradeoff: "\u041A\u0430\u0436\u0434\u044B\u0439 \u0431\u0440\u043E\u0441\u043E\u043A \u0441\u0442\u043E\u0438\u0442 \u043D\u0430 4 \u043C\u0430\u043D\u044B \u0431\u043E\u043B\u044C\u0448\u0435.",
+        add: { throwDamageBonus: 0.3, manaCost: 4 }
+      }
+    }
+  },
+  fire: {
+    name: "\u041E\u0433\u043E\u043D\u044C",
+    color: "fire",
+    levels: {
+      1: {
+        label: "\u041E\u0433\u043E\u043D\u044C I",
+        damage: 18,
+        manaCost: 24,
+        cooldownSec: 8,
+        castSec: 0.3,
+        burn: { dps: 4, durationSec: 4 },
+        // повторный Огонь обновляет длительность
+        interruptsNormalCast: false
+      },
+      // v0.11.0: +25% урона (18 → 22), горение сильнее и дольше (16 → 30 урона за поджог). Мана и перезарядка прежние.
+      2: {
+        label: "\u041E\u0433\u043E\u043D\u044C II",
+        damage: 22,
+        manaCost: 24,
+        cooldownSec: 8,
+        castSec: 0.3,
+        burn: { dps: 5, durationSec: 6 },
+        interruptsNormalCast: false
+      }
+    }
+  },
+  // v0.10.1: «Печать» стала Астралом. Внутренний id остаётся 'seal' (сохранения, сервер, события unlock_seal_1 и т.п.),
+  // игроку везде показывается «Астрал». В бою Астрал не прерывает атаки (это умеет только Телекинез): он бьёт силой,
+  // которая игнорирует броню и защитную кору (Enemy.incomingMultiplier). Вне боя — открывает скрытое и пробуждает древнее.
+  seal: {
+    name: "\u0410\u0441\u0442\u0440\u0430\u043B",
+    color: "seal",
+    // v0.10.0: открывает Селена после проявления знаков на воротах (первая глава).
+    levels: {
+      1: {
+        label: "\u0410\u0441\u0442\u0440\u0430\u043B I",
+        damage: 25,
+        manaCost: 20,
+        cooldownSec: 10,
+        castSec: 0.3,
+        ignoresDefense: true,
+        // броня и кора не гасят удар
+        interruptsStrongCast: false
+        // прерывать сильные атаки может только Телекинез
+      },
+      // v0.11.0: Астрал II — сильнее удар (25 → 35, +40%), чуть дороже по мане. Свойства прежние.
+      2: {
+        label: "\u0410\u0441\u0442\u0440\u0430\u043B II",
+        damage: 35,
+        manaCost: 22,
+        cooldownSec: 10,
+        castSec: 0.3,
+        ignoresDefense: true,
+        interruptsStrongCast: false
+      }
+    }
+  }
+};
+var WORLD_MANA_COST = {
+  gather: 4,
+  // сбор узла: трава, грибы, смола, пыль, осколок
+  pull: 4,
+  // притянуть растение / небольшой предмет Телекинезом
+  push: { light: 8, medium: 12, heavy: 20 },
+  // сдвинуть камень по весу
+  fire: 16,
+  // Огонь по препятствию, корням, кусту, факелу
+  seal: 20
+  // v0.10.1: значимое применение Астрала (учебный камень, ворота, сердце рощи)
+};
+var SCHOOL_XP_PER_USE = {
+  exploration: { telekinesis: 6, fire: 6, seal: 6 },
+  combat: { telekinesis: 5, fire: 5, seal: 5 }
+};
 
 // src/config/heroes.js
 var DEFAULT_HERO_ID = "witch";
@@ -601,377 +826,6 @@ var BASE_ENEMY_SPAWNS = [
 ];
 var ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES];
 
-// src/config/balance.abilities.js
-var WEIGHT_CLASSES = ["light", "medium", "heavy"];
-var ABILITIES = {
-  telekinesis: {
-    name: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437",
-    color: "telekinesis",
-    levels: {
-      1: {
-        label: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 I",
-        damage: 20,
-        manaCost: 14,
-        cooldownSec: 5,
-        castSec: 0.15,
-        maxWeight: "medium",
-        // в мире: light + medium; heavy — нет
-        heavyObjectBonus: 0.5,
-        // тяжёлый объект поля: +50% (20 + 10 = 30)
-        throwDamageBonus: 0,
-        interruptsNormalCast: true,
-        canTargetBossDirectly: false
-      },
-      2: {
-        label: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 II",
-        damage: 20,
-        manaCost: 14,
-        cooldownSec: 5,
-        castSec: 0.15,
-        maxWeight: "heavy",
-        // тяжёлые объекты и новые проходы
-        heavyObjectBonus: 0.5,
-        throwDamageBonus: 0.35,
-        // +35% урона бросками
-        interruptsNormalCast: true,
-        canTargetBossDirectly: false
-      },
-      // v0.11.1: ступень III — «два броска подряд»: после первого броска второй доступен без перезарядки в течение windowSec
-      // (мана тратится за каждый). Дальше игрок выбирает ветку (branches), её числа накладываются поверх этой ступени.
-      3: {
-        label: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 III",
-        damage: 20,
-        manaCost: 14,
-        cooldownSec: 5,
-        castSec: 0.15,
-        maxWeight: "heavy",
-        heavyObjectBonus: 0.5,
-        throwDamageBonus: 0.35,
-        doubleCast: { windowSec: 2.5 },
-        interruptsNormalCast: true,
-        canTargetBossDirectly: false
-      }
-    },
-    // Ветки ступени III. Накладка на числа ступени: set — заменить, add — прибавить, mul — умножить. У каждой ветки есть цена.
-    branches: {
-      lord: {
-        name: "\u041F\u043E\u0432\u0435\u043B\u0438\u0442\u0435\u043B\u044C",
-        fromLevel: 3,
-        text: "\u041C\u0430\u0441\u0442\u0435\u0440 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u0439: \u043A\u0430\u0436\u0434\u043E\u0435 \u0443\u0434\u0430\u0447\u043D\u043E\u0435 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u0435 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043F\u043E\u043B\u043E\u0432\u0438\u043D\u0443 \u043C\u0430\u043D\u044B \u0438 \u0443\u0441\u043A\u043E\u0440\u044F\u0435\u0442 \u043F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0443 \u043D\u0430 3 \u0441.",
-        tradeoff: "\u041F\u0440\u044F\u043C\u043E\u0439 \u0443\u0440\u043E\u043D \u043D\u0438\u0436\u0435 \u043D\u0430 10%.",
-        mul: { damage: 0.9 },
-        set: { interruptRefund: { cooldownSec: 3, manaPct: 0.5 } }
-      },
-      breaker: {
-        name: "\u0420\u0430\u0437\u0440\u0443\u0448\u0438\u0442\u0435\u043B\u044C",
-        fromLevel: 3,
-        text: "\u0411\u0440\u043E\u0441\u043A\u0438 \u043A\u0430\u043C\u043D\u0435\u0439 \u0431\u044C\u044E\u0442 \u0441\u0438\u043B\u044C\u043D\u0435\u0435: \u0443\u0440\u043E\u043D \u0431\u0440\u043E\u0441\u043A\u0430\u043C\u0438 +30% (\u0432\u043C\u0435\u0441\u0442\u0435 \u0441\u043E \u0441\u0442\u0443\u043F\u0435\u043D\u044C\u044E \u2014 +65%).",
-        tradeoff: "\u041A\u0430\u0436\u0434\u044B\u0439 \u0431\u0440\u043E\u0441\u043E\u043A \u0441\u0442\u043E\u0438\u0442 \u043D\u0430 4 \u043C\u0430\u043D\u044B \u0431\u043E\u043B\u044C\u0448\u0435.",
-        add: { throwDamageBonus: 0.3, manaCost: 4 }
-      }
-    }
-  },
-  fire: {
-    name: "\u041E\u0433\u043E\u043D\u044C",
-    color: "fire",
-    levels: {
-      1: {
-        label: "\u041E\u0433\u043E\u043D\u044C I",
-        damage: 18,
-        manaCost: 24,
-        cooldownSec: 8,
-        castSec: 0.3,
-        burn: { dps: 4, durationSec: 4 },
-        // повторный Огонь обновляет длительность
-        interruptsNormalCast: false
-      },
-      // v0.11.0: +25% урона (18 → 22), горение сильнее и дольше (16 → 30 урона за поджог). Мана и перезарядка прежние.
-      2: {
-        label: "\u041E\u0433\u043E\u043D\u044C II",
-        damage: 22,
-        manaCost: 24,
-        cooldownSec: 8,
-        castSec: 0.3,
-        burn: { dps: 5, durationSec: 6 },
-        interruptsNormalCast: false
-      }
-    }
-  },
-  // v0.10.1: «Печать» стала Астралом. Внутренний id остаётся 'seal' (сохранения, сервер, события unlock_seal_1 и т.п.),
-  // игроку везде показывается «Астрал». В бою Астрал не прерывает атаки (это умеет только Телекинез): он бьёт силой,
-  // которая игнорирует броню и защитную кору (Enemy.incomingMultiplier). Вне боя — открывает скрытое и пробуждает древнее.
-  seal: {
-    name: "\u0410\u0441\u0442\u0440\u0430\u043B",
-    color: "seal",
-    // v0.10.0: открывает Селена после проявления знаков на воротах (первая глава).
-    levels: {
-      1: {
-        label: "\u0410\u0441\u0442\u0440\u0430\u043B I",
-        damage: 25,
-        manaCost: 20,
-        cooldownSec: 10,
-        castSec: 0.3,
-        ignoresDefense: true,
-        // броня и кора не гасят удар
-        interruptsStrongCast: false
-        // прерывать сильные атаки может только Телекинез
-      },
-      // v0.11.0: Астрал II — сильнее удар (25 → 35, +40%), чуть дороже по мане. Свойства прежние.
-      2: {
-        label: "\u0410\u0441\u0442\u0440\u0430\u043B II",
-        damage: 35,
-        manaCost: 22,
-        cooldownSec: 10,
-        castSec: 0.3,
-        ignoresDefense: true,
-        interruptsStrongCast: false
-      }
-    }
-  }
-};
-var WORLD_MANA_COST = {
-  gather: 4,
-  // сбор узла: трава, грибы, смола, пыль, осколок
-  pull: 4,
-  // притянуть растение / небольшой предмет Телекинезом
-  push: { light: 8, medium: 12, heavy: 20 },
-  // сдвинуть камень по весу
-  fire: 16,
-  // Огонь по препятствию, корням, кусту, факелу
-  seal: 20
-  // v0.10.1: значимое применение Астрала (учебный камень, ворота, сердце рощи)
-};
-var SCHOOL_XP_PER_USE = {
-  exploration: { telekinesis: 6, fire: 6, seal: 6 },
-  combat: { telekinesis: 5, fire: 5, seal: 5 }
-};
-
-// src/config/storyItems.js
-var STORY_ITEMS = {
-  lunar_wick: {
-    name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u0444\u0438\u0442\u0438\u043B\u044C",
-    icon: "icon_wick",
-    color: 10480127,
-    purpose: "\u0412\u0435\u0440\u043D\u0451\u0442 \u0441\u0432\u0435\u0442 \u041B\u0443\u043D\u043D\u043E\u043C\u0443 \u0430\u043B\u0442\u0430\u0440\u044E. \u041F\u0440\u0438\u043C\u0435\u043D\u0438\u0442\u044C \u0443 \u0430\u043B\u0442\u0430\u0440\u044F."
-  },
-  revealing_compound: {
-    name: "\u0421\u043E\u0441\u0442\u0430\u0432 \u044F\u0441\u043D\u043E\u0433\u043E \u0432\u0437\u0433\u043B\u044F\u0434\u0430",
-    icon: "icon_compound",
-    color: 13214463,
-    purpose: "\u041F\u043E\u043A\u0430\u0436\u0435\u0442 \u0441\u0442\u0451\u0440\u0442\u044B\u0439 \u0437\u043D\u0430\u043A \u043D\u0430 \u0414\u0440\u0435\u0432\u043D\u0438\u0445 \u0432\u043E\u0440\u043E\u0442\u0430\u0445. \u041F\u0440\u0438\u043C\u0435\u043D\u0438\u0442\u044C \u0443 \u0432\u043E\u0440\u043E\u0442 \u043F\u043E\u0441\u043B\u0435 \u043F\u043E\u0431\u0435\u0434\u044B \u043D\u0430\u0434 \u0421\u0442\u0440\u0430\u0436\u0435\u043C."
-  },
-  restoration_bundle: {
-    name: "\u0426\u0435\u043B\u0435\u0431\u043D\u044B\u0439 \u0441\u0431\u043E\u0440",
-    icon: "icon_bundle",
-    color: 8118922,
-    purpose: "\u0412\u044B\u043B\u0435\u0447\u0438\u0442 \u0441\u0435\u0440\u0434\u0446\u0435 \u0440\u043E\u0449\u0438 \u0437\u0430 \u0432\u043E\u0440\u043E\u0442\u0430\u043C\u0438 \u0432\u043C\u0435\u0441\u0442\u0435 \u0441 \u0410\u0441\u0442\u0440\u0430\u043B\u043E\u043C (20 \u043C\u0430\u043D\u044B)."
-  }
-};
-var STORY_USES = {
-  lunar_wick: {
-    requires: ["lunar_quest_start"],
-    blockedBy: ["lunar_quest_complete"],
-    events: ["lunar_quest_complete"],
-    // прежняя разовая награда алтаря + гарантия цены Телекинеза II по школьному опыту и осколкам (трава и пыль — сами)
-    reward: { heroXP: 50, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUp: { school: { telekinesis: 150 }, items: { lunar_shard: 5 } } }
-  },
-  revealing_compound: {
-    requires: ["guardian_defeated"],
-    blockedBy: ["gate_marks_revealed"],
-    events: ["gate_marks_revealed"],
-    reward: { heroXP: 30 }
-  },
-  restoration_bundle: {
-    requires: ["chapter_trial_defeated", "unlock_seal_1"],
-    blockedBy: ["chapter_1_complete"],
-    mana: 20,
-    events: ["chapter_1_complete"],
-    reward: { heroXP: 100, coins: 30, schoolXP: { seal: 40 } }
-  }
-};
-var FIRST_CRAFT = { event: "first_craft_complete", reward: { heroXP: 15 } };
-var MIGRATION_V10 = {
-  event: "mig_v10",
-  guardian: "forest_guardian_01",
-  item: "rare_core",
-  notIf: ["restoration_bundle_crafted", "chapter_1_complete"]
-};
-function worldRules() {
-  const world = {};
-  const base = (o) => ({
-    requires: o.requiresEvent ? [o.requiresEvent] : [],
-    requiresEnemy: o.requiresEnemyDefeated ? [o.requiresEnemyDefeated] : []
-  });
-  const itemReward = (item, amount) => item === "coins" ? { coins: amount } : { items: { [item]: amount } };
-  const tkLevel = (weight) => {
-    for (const [lvl, st] of Object.entries(ABILITIES.telekinesis.levels)) if (WEIGHT_CLASSES.indexOf(weight) <= WEIGHT_CLASSES.indexOf(st.maxWeight)) return Number(lvl);
-    return 99;
-  };
-  const pickupAfter = (o, spawn, parentState) => {
-    if (spawn) world[`${o.id}_reward`] = { kind: "loot", mark: "collected", reward: itemReward(spawn.item, spawn.amount || 1), parent: { id: o.id, state: parentState } };
-  };
-  for (const o of INTERACTIVES) {
-    switch (o.kind) {
-      case "gather":
-        world[o.id] = { kind: "gather", item: o.res, amount: o.amount || 1, respawnSec: o.respawnSec ?? 180, mana: WORLD_MANA_COST.gather, ...base(o) };
-        break;
-      case "chest":
-        world[o.id] = { kind: "loot", mark: "opened", reward: o.reward, ...base(o) };
-        break;
-      case "pickup":
-        world[o.id] = { kind: "loot", mark: "collected", reward: itemReward(o.item, o.amount || 1), ...base(o) };
-        break;
-      case "inspect":
-        if (o.first) world[o.id] = { kind: "loot", mark: "looted", reward: { items: o.first.items }, ...base(o) };
-        break;
-      case "stash":
-        world[o.id] = { kind: "stash", guard: o.guard, items: o.items, ...base(o) };
-        break;
-      case "telekinesis": {
-        const weight = o.weight || "light";
-        const mana2 = o.mode === "pull" ? WORLD_MANA_COST.pull : WORLD_MANA_COST.push[weight] ?? WORLD_MANA_COST.push.light;
-        if (o.mode === "pull") world[o.id] = { kind: "loot", mark: "collected", reward: o.reward || {}, mana: mana2, ability: "telekinesis", minLevel: tkLevel(weight), ...base(o) };
-        else world[o.id] = { kind: "cast", mana: mana2, ability: "telekinesis", minLevel: tkLevel(weight), blockedBy: [], ...base(o) };
-        pickupAfter(o, o.hiddenReward?.spawnPickup, "moved");
-        break;
-      }
-      case "fire":
-        world[o.id] = { kind: "cast", mana: WORLD_MANA_COST.fire, ability: "fire", minLevel: 1, blockedBy: [], ...base(o) };
-        pickupAfter(o, o.reveal?.spawnPickup, "destroyed");
-        break;
-      case "gate":
-        world[o.id] = {
-          kind: "cast",
-          mana: WORLD_MANA_COST.seal,
-          ability: "seal",
-          minLevel: 1,
-          blockedBy: [o.openEvent],
-          requires: ["guardian_defeated", "gate_marks_revealed", "unlock_seal_1", "seal_training_complete"],
-          requiresEnemy: []
-        };
-        break;
-      case "seal_sigil":
-        world[o.id] = { kind: "cast", mana: WORLD_MANA_COST.seal, ability: "seal", minLevel: 1, blockedBy: [o.doneEvent], ...base(o) };
-        break;
-      default:
-        break;
-    }
-  }
-  return world;
-}
-function serverRules() {
-  const recipes = Object.fromEntries(Object.entries(RECIPES).map(([id, r]) => [id, {
-    result: r.result,
-    amount: r.amount,
-    needs: r.needs,
-    requires: r.requires || [],
-    crafted: r.crafted || null,
-    blockedBy: r.blockedBy || []
-  }]));
-  const house = ZONES.find((z) => z.id === VITALS.houseZone);
-  const vitals = {
-    hpRegenPerSec: VITALS.hpRegenPerSec,
-    manaRegenWorld: VITALS.manaRegenWorld,
-    manaRegenHouse: VITALS.manaRegenHouse,
-    house: { x: house.x, y: house.y, w: house.w, h: house.h },
-    defeatHpFraction: HERO_RECOVERY.defeatHpFraction,
-    staleCombatSec: VITALS.staleCombatSec
-  };
-  const potions = Object.fromEntries(Object.entries(POTIONS).filter(([, p]) => p.outside && (p.effect.type === "heal" || p.effect.type === "mana")).map(([id, p]) => [id, { kind: p.effect.type, amount: p.effect.amount }]));
-  return { recipes, uses: STORY_USES, firstCraft: FIRST_CRAFT, migration: MIGRATION_V10, vitals, potions, world: worldRules() };
-}
-
-// src/config/balance.progression.js
-var ITEMS = {
-  coins: { name: "\u041C\u043E\u043D\u0435\u0442\u044B", icon: "icon_coin" },
-  lunar_shard: { name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A", icon: "icon_shard" },
-  lunar_flame: { name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u043E\u0433\u043E\u043D\u0451\u043A", icon: "lunar_flame_01" },
-  moon_herb: { name: "\u041B\u0443\u043D\u043D\u0430\u044F \u0442\u0440\u0430\u0432\u0430", icon: "moon_plant_01" },
-  crimson_ember: { name: "\u0411\u0430\u0433\u0440\u043E\u0432\u044B\u0439 \u0443\u0433\u043E\u043B\u044C", icon: "icon_ember" },
-  moonstone: { name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C (\u0440\u0435\u0434\u043A\u0438\u0439)", icon: "icon_shard" },
-  rare_core: { name: "\u0420\u0435\u0434\u043A\u043E\u0435 \u044F\u0434\u0440\u043E", icon: "icon_core" },
-  ...RESOURCE_ITEMS,
-  // v0.8: лесные грибы, смола, пыль и расходники (названия лунной травы и осколка берутся отсюда)
-  // v0.10.0: сюжетные предметы первой главы
-  ...Object.fromEntries(Object.entries(STORY_ITEMS).map(([id, it]) => [id, { name: it.name, icon: it.icon }]))
-};
-var TIMER_MODE = "live";
-var UPGRADES = {
-  telekinesis_2: {
-    ability: "telekinesis",
-    toLevel: 2,
-    title: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 II",
-    description: "\u0422\u044F\u0436\u0451\u043B\u044B\u0435 \u043E\u0431\u044A\u0435\u043A\u0442\u044B, +35% \u0443\u0440\u043E\u043D\u0430 \u0431\u0440\u043E\u0441\u043A\u0430\u043C\u0438, \u043D\u043E\u0432\u044B\u0435 \u043F\u0440\u043E\u0445\u043E\u0434\u044B.",
-    requires: { heroLevel: 3, abilityLevel: 1, event: "lunar_quest_complete" },
-    // v0.8: к осколкам добавились травы и пыль. Осколки награда за алтарь догоняет сама (topUp),
-    // а травы и пыль игрок собирает сам — они растут заново (world.resources.js), так что застрять нельзя.
-    cost: { schoolXP: 150, items: { lunar_shard: 5, moon_herb: 2, rune_dust: 1 }, noTopUp: ["moon_herb", "rune_dust"] },
-    timerSec: { prototype: 60, live: 5 * 60 },
-    startEvent: "telekinesis_2_start",
-    completeEvent: "telekinesis_2_complete",
-    doneText: "\u0422\u0435\u043F\u0435\u0440\u044C \u043C\u043E\u0436\u043D\u043E \u0441\u0434\u0432\u0438\u043D\u0443\u0442\u044C \u0442\u044F\u0436\u0451\u043B\u0443\u044E \u0433\u043B\u044B\u0431\u0443 \u0437\u0430 \u0430\u043B\u0442\u0430\u0440\u0451\u043C."
-  },
-  // v0.11.0 — вторая ступень Огня и Астрала. Лесенка таймеров: Телекинез II 5 мин → Огонь II 15 мин → Астрал II 30 мин.
-  // Начать изучение можно на экране «Дары» (кнопка в Сумке); одно изучение за раз.
-  fire_2: {
-    ability: "fire",
-    toLevel: 2,
-    title: "\u041E\u0433\u043E\u043D\u044C II",
-    description: "\u0423\u0440\u043E\u043D \u0432\u044B\u0448\u0435 \u043F\u0440\u0438\u043C\u0435\u0440\u043D\u043E \u043D\u0430 \u0447\u0435\u0442\u0432\u0435\u0440\u0442\u044C, \u0433\u043E\u0440\u0435\u043D\u0438\u0435 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u0438 \u0434\u043E\u043B\u044C\u0448\u0435.",
-    requires: { heroLevel: 6, abilityLevel: 1 },
-    // шесть углей: пять Корневиков дают по одному (и при повторных встречах тоже) + один из сухого куста у Круга
-    cost: { schoolXP: 180, items: { crimson_ember: 6 } },
-    timerSec: { prototype: 90, live: 15 * 60 },
-    doneText: "\u041F\u043B\u0430\u043C\u044F \u0431\u044C\u0451\u0442 \u0441\u0438\u043B\u044C\u043D\u0435\u0435, \u0430 \u0433\u043E\u0440\u0435\u043D\u0438\u0435 \u0434\u0435\u0440\u0436\u0438\u0442\u0441\u044F \u0434\u043E\u043B\u044C\u0448\u0435."
-  },
-  // v0.11.1 — ступень III Телекинеза: две ветки, выбирается одна (после изучения вторая закрывается).
-  // Цена общая. Осколки и пыль добываются в мире заново; уровень 7 игрок получает к концу главы I.
-  telekinesis_3_lord: {
-    ability: "telekinesis",
-    toLevel: 3,
-    branch: "lord",
-    title: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 III \xB7 \u041F\u043E\u0432\u0435\u043B\u0438\u0442\u0435\u043B\u044C",
-    description: "\u0414\u0432\u0430 \u0431\u0440\u043E\u0441\u043A\u0430 \u043F\u043E\u0434\u0440\u044F\u0434. \u0412\u0435\u0442\u043A\u0430 \xAB\u041F\u043E\u0432\u0435\u043B\u0438\u0442\u0435\u043B\u044C\xBB: \u0443\u0434\u0430\u0447\u043D\u043E\u0435 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u0435 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043F\u043E\u043B\u043E\u0432\u0438\u043D\u0443 \u043C\u0430\u043D\u044B \u0438 \u0443\u0441\u043A\u043E\u0440\u044F\u0435\u0442 \u043F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0443.",
-    requires: { heroLevel: 7, abilityLevel: 2 },
-    cost: { schoolXP: 250, items: { lunar_shard: 8, rune_dust: 3 } },
-    timerSec: { prototype: 90, live: 60 * 60 },
-    doneText: "\u0414\u0432\u0430 \u0431\u0440\u043E\u0441\u043A\u0430 \u043F\u043E\u0434\u0440\u044F\u0434. \u041A\u0430\u0436\u0434\u043E\u0435 \u0443\u0434\u0430\u0447\u043D\u043E\u0435 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u0435 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043C\u0430\u043D\u0443 \u0438 \u0443\u0441\u043A\u043E\u0440\u044F\u0435\u0442 \u043F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0443."
-  },
-  telekinesis_3_breaker: {
-    ability: "telekinesis",
-    toLevel: 3,
-    branch: "breaker",
-    title: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 III \xB7 \u0420\u0430\u0437\u0440\u0443\u0448\u0438\u0442\u0435\u043B\u044C",
-    description: "\u0414\u0432\u0430 \u0431\u0440\u043E\u0441\u043A\u0430 \u043F\u043E\u0434\u0440\u044F\u0434. \u0412\u0435\u0442\u043A\u0430 \xAB\u0420\u0430\u0437\u0440\u0443\u0448\u0438\u0442\u0435\u043B\u044C\xBB: \u0431\u0440\u043E\u0441\u043A\u0438 \u043A\u0430\u043C\u043D\u0435\u0439 \u0431\u044C\u044E\u0442 \u043D\u0430 30% \u0441\u0438\u043B\u044C\u043D\u0435\u0435, \u043D\u043E \u0441\u0442\u043E\u044F\u0442 \u043D\u0430 4 \u043C\u0430\u043D\u044B \u0431\u043E\u043B\u044C\u0448\u0435.",
-    requires: { heroLevel: 7, abilityLevel: 2 },
-    cost: { schoolXP: 250, items: { lunar_shard: 8, rune_dust: 3 } },
-    timerSec: { prototype: 90, live: 60 * 60 },
-    doneText: "\u0414\u0432\u0430 \u0431\u0440\u043E\u0441\u043A\u0430 \u043F\u043E\u0434\u0440\u044F\u0434, \u0438 \u043A\u0430\u0436\u0434\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C \u0431\u044C\u0451\u0442 \u0437\u0430\u043C\u0435\u0442\u043D\u043E \u0441\u0438\u043B\u044C\u043D\u0435\u0435."
-  },
-  seal_2: {
-    ability: "seal",
-    toLevel: 2,
-    title: "\u0410\u0441\u0442\u0440\u0430\u043B II",
-    description: "+40% \u0443\u0440\u043E\u043D\u0430: \u0410\u0441\u0442\u0440\u0430\u043B \u0431\u044C\u0451\u0442 \u0435\u0449\u0451 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u0438 \u0432\u0441\u0451 \u0442\u0430\u043A \u0436\u0435 \u043F\u0440\u043E\u0431\u0438\u0432\u0430\u0435\u0442 \u0437\u0430\u0449\u0438\u0442\u0443.",
-    requires: { heroLevel: 7, abilityLevel: 1 },
-    cost: { schoolXP: 100, items: { lunar_shard: 6 } },
-    timerSec: { prototype: 90, live: 30 * 60 },
-    doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u0440\u0430\u0437\u0438\u0442 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u2014 \u0442\u0435\u043D\u044C \u0425\u0440\u0430\u043D\u0438\u0442\u0435\u043B\u044F \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u0437\u0430\u0449\u0438\u0442\u0430."
-  }
-};
-var BRANCH_RESPEC = { coins: 150 };
-var EVENT_REWARDS = {
-  first_world_interaction: { heroXP: 10 },
-  lunar_quest_complete: { heroXP: 50, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUpFor: "telekinesis_2" },
-  telekinesis_2_complete: { heroXP: 30 },
-  heavy_path_open: { heroXP: 20 },
-  unlock_fire_1: { heroXP: 30 },
-  fire_gate_open: { heroXP: 20, schoolXP: { fire: 20 } },
-  // v0.10.0: Селена открывает Печать I сюжетно — без уровня, платы и таймера. Учебный знак и ворота дают только
-  // обычный школьный опыт мира (+6), отдельной награды «за обучение» нет.
-  unlock_seal_1: { heroXP: 60 }
-};
-
 // src/config/game.config.js
 var SAVE = {
   key: "witch_rpg_proto_save_v1",
@@ -1315,6 +1169,303 @@ var GameState = class {
     return { ok: true, price: BRANCH_RESPEC.coins };
   }
 };
+
+// src/config/recipes.js
+var RECIPES = {
+  elixir_life: {
+    kind: "potion",
+    result: "elixir_life",
+    amount: 1,
+    needs: { moon_herb: 2, forest_mushroom: 1 },
+    note: "\u041B\u0443\u043D\u043D\u0430\u044F \u0442\u0440\u0430\u0432\u0430 \u0438 \u0433\u0440\u0438\u0431, \u0442\u043E\u043C\u043B\u0451\u043D\u044B\u0435 \u0434\u043E \u0437\u043E\u043B\u043E\u0442\u0430."
+  },
+  elixir_mana: {
+    kind: "potion",
+    result: "elixir_mana",
+    amount: 1,
+    needs: { moon_herb: 1, rune_dust: 1 },
+    note: "\u0420\u0443\u043D\u043D\u0430\u044F \u043F\u044B\u043B\u044C \u043D\u0435 \u0434\u0430\u0451\u0442 \u0441\u0432\u0435\u0442\u0443 \u0440\u0430\u0441\u0441\u0435\u044F\u0442\u044C\u0441\u044F."
+  },
+  resin_flask: {
+    kind: "potion",
+    result: "resin_flask",
+    amount: 1,
+    needs: { tree_resin: 2, rune_dust: 1 },
+    note: "\u0421\u043C\u043E\u043B\u0430 \u0433\u043E\u0440\u0438\u0442 \u0434\u043E\u043B\u0433\u043E, \u043F\u044B\u043B\u044C \u0437\u0430\u0441\u0442\u0430\u0432\u043B\u044F\u0435\u0442 \u0435\u0451 \u043B\u0438\u043F\u043D\u0443\u0442\u044C \u043A \u0446\u0435\u043B\u0438."
+  },
+  // ---- сюжетные (v0.10.0): нужны в одной копии
+  lunar_wick: {
+    kind: "story",
+    result: "lunar_wick",
+    amount: 1,
+    needs: { moon_herb: 1, tree_resin: 1, rune_dust: 1, lunar_flame: 3 },
+    requires: ["lunar_quest_start"],
+    crafted: "lunar_wick_crafted",
+    blockedBy: ["lunar_wick_crafted", "lunar_quest_complete"],
+    note: "\u0422\u0440\u0438 \u043E\u0433\u043E\u043D\u044C\u043A\u0430, \u0441\u0432\u0438\u0442\u044B\u0435 \u0442\u0440\u0430\u0432\u043E\u0439 \u0438 \u0441\u043C\u043E\u043B\u043E\u0439, \u2014 \u0441\u0432\u0435\u0442, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u0430\u043B\u0442\u0430\u0440\u044C \u043F\u0440\u0438\u043C\u0435\u0442.",
+    learn: "\u0420\u0435\u0446\u0435\u043F\u0442 \u043E\u0431\u044A\u044F\u0441\u043D\u0438\u0442 \u0421\u0435\u043B\u0435\u043D\u0430 \u0443 \u041B\u0443\u043D\u043D\u043E\u0433\u043E \u0430\u043B\u0442\u0430\u0440\u044F."
+  },
+  revealing_compound: {
+    kind: "story",
+    result: "revealing_compound",
+    amount: 1,
+    needs: { moon_herb: 1, forest_mushroom: 1, rune_dust: 1 },
+    requires: ["lunar_quest_complete"],
+    crafted: "revealing_compound_crafted",
+    blockedBy: ["revealing_compound_crafted", "gate_marks_revealed"],
+    note: "\u041F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442 \u0441\u0442\u0451\u0440\u0442\u044B\u0435 \u043D\u0430\u0440\u043E\u0447\u043D\u043E \u0437\u043D\u0430\u043A\u0438 \u0434\u0440\u0435\u0432\u043D\u0435\u0439 \u043C\u0430\u0433\u0438\u0438.",
+    learn: "\u0420\u0435\u0446\u0435\u043F\u0442 \u0441\u0442\u0430\u043D\u0435\u0442 \u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D, \u043A\u043E\u0433\u0434\u0430 \u0430\u043B\u0442\u0430\u0440\u044C \u0441\u043D\u043E\u0432\u0430 \u0437\u0430\u0441\u0432\u0435\u0442\u0438\u0442\u0441\u044F."
+  },
+  restoration_bundle: {
+    kind: "story",
+    result: "restoration_bundle",
+    amount: 1,
+    needs: { moon_herb: 2, tree_resin: 2, rune_dust: 2, lunar_shard: 1, rare_core: 1 },
+    requires: ["lunar_quest_complete"],
+    crafted: "restoration_bundle_crafted",
+    blockedBy: ["restoration_bundle_crafted", "chapter_1_complete"],
+    note: "\u042F\u0434\u0440\u043E \u0421\u0442\u0440\u0430\u0436\u0430, \u0441\u0442\u044F\u043D\u0443\u0442\u043E\u0435 \u0441\u043C\u043E\u043B\u043E\u0439 \u0438 \u043F\u044B\u043B\u044C\u044E, \u2014 \u043B\u0435\u043A\u0430\u0440\u0441\u0442\u0432\u043E \u0434\u043B\u044F \u0441\u0435\u0440\u0434\u0446\u0430 \u0440\u043E\u0449\u0438.",
+    learn: "\u0420\u0435\u0446\u0435\u043F\u0442 \u0441\u0442\u0430\u043D\u0435\u0442 \u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D, \u043A\u043E\u0433\u0434\u0430 \u0430\u043B\u0442\u0430\u0440\u044C \u0441\u043D\u043E\u0432\u0430 \u0437\u0430\u0441\u0432\u0435\u0442\u0438\u0442\u0441\u044F."
+  }
+};
+var RECIPE_ORDER = ["elixir_life", "elixir_mana", "resin_flask", "lunar_wick", "revealing_compound", "restoration_bundle"];
+var POTION_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "potion");
+var STORY_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "story");
+
+// src/config/quests.js
+var SIDE_QUESTS = {
+  sq_herbs: {
+    title: "\u041B\u0443\u043D\u043D\u044B\u0435 \u0442\u0440\u0430\u0432\u044B \u0434\u043B\u044F \u0412\u0435\u0434\u044B",
+    giver: "veda",
+    place: "\u0421\u0442\u0430\u0440\u0442\u043E\u0432\u0430\u044F \u043F\u043E\u043B\u044F\u043D\u0430",
+    summary: "\u0422\u0440\u0430\u0432\u043D\u0438\u0446\u0430 \u0412\u0435\u0434\u0430 \u0432\u0430\u0440\u0438\u0442 \u043D\u0430\u0441\u0442\u043E\u0439 \u0438 \u043F\u0440\u043E\u0441\u0438\u0442 \u043F\u0440\u0438\u043D\u0435\u0441\u0442\u0438 \u0442\u0440\u0438 \u043B\u0443\u043D\u043D\u044B\u0435 \u0442\u0440\u0430\u0432\u044B. \u041E\u043D\u0438 \u0440\u0430\u0441\u0442\u0443\u0442 \u043D\u0430 \u043F\u043E\u043B\u044F\u043D\u0435 \u0438 \u0432 \u043B\u0435\u0441\u0443 \u2014 \u0438\u0445 \u043C\u043E\u0436\u043D\u043E \u0441\u043E\u0440\u0432\u0430\u0442\u044C \u0438\u043B\u0438 \u043F\u0440\u0438\u0442\u044F\u043D\u0443\u0442\u044C \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C.",
+    objectives: [{ type: "item", item: "moon_herb", count: 3, text: "\u041B\u0443\u043D\u043D\u044B\u0435 \u0442\u0440\u0430\u0432\u044B" }],
+    turnIn: { npc: "veda", consume: { moon_herb: 3 } },
+    reward: { heroXP: 15, coins: 25, items: { elixir_life: 1 } },
+    rewardText: "\u041D\u0430\u0441\u0442\u043E\u0439 \u0436\u0438\u0437\u043D\u0438, 25 \u043C\u043E\u043D\u0435\u0442, 15 \u043E\u043F\u044B\u0442\u0430"
+  },
+  sq_dust: {
+    title: "\u041F\u044B\u043B\u044C \u0434\u0440\u0435\u0432\u043D\u0438\u0445 \u0440\u0443\u043D",
+    giver: "selena",
+    place: "\u041B\u0443\u043D\u043D\u044B\u0439 \u0430\u043B\u0442\u0430\u0440\u044C",
+    summary: "\u0414\u0443\u0445 \u0430\u043B\u0442\u0430\u0440\u044F \u0421\u0435\u043B\u0435\u043D\u0430 \u043F\u0440\u043E\u0441\u0438\u0442 \u043D\u0430\u0439\u0442\u0438 \u0440\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0443\u044E \u043F\u044B\u043B\u044C \u0443 \u0430\u043B\u0442\u0430\u0440\u044F: \u0435\u0451 \u043C\u043E\u0436\u043D\u043E \u0441\u043E\u0431\u0440\u0430\u0442\u044C \u0441 \u0440\u0443\u043D\u043D\u043E\u0439 \u043F\u043B\u0438\u0442\u044B \u0438\u043B\u0438 \u043D\u0430\u0439\u0442\u0438 \u043F\u043E\u0434 \u0441\u0434\u0432\u0438\u043D\u0443\u0442\u044B\u043C \u043A\u0430\u043C\u043D\u0435\u043C.",
+    objectives: [{ type: "item", item: "rune_dust", count: 1, text: "\u0420\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C" }],
+    turnIn: { npc: "selena", consume: { rune_dust: 1 } },
+    reward: { heroXP: 20, schoolXP: { telekinesis: 15 }, items: { lunar_shard: 1, elixir_mana: 1 } },
+    rewardText: "\u041B\u0443\u043D\u043D\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A, \u043B\u0443\u043D\u043D\u044B\u0439 \u044D\u043B\u0438\u043A\u0441\u0438\u0440, 20 \u043E\u043F\u044B\u0442\u0430",
+    requires: { event: "lunar_quest_start" }
+    // Селена просит пыль, когда алтарь уже заговорил с героиней
+  },
+  sq_hunter: {
+    title: "\u041F\u0430\u0434\u0430\u043B\u044C\u0449\u0438\u043A \u0443 \u0442\u0440\u043E\u043F\u044B",
+    giver: "goran",
+    place: "\u041B\u0435\u0441\u043D\u0430\u044F \u0442\u0440\u043E\u043F\u0430",
+    summary: "\u041E\u0445\u043E\u0442\u043D\u0438\u043A \u0413\u043E\u0440\u0430\u043D \u043F\u0440\u043E\u0441\u0438\u0442 \u043F\u0440\u043E\u0433\u043D\u0430\u0442\u044C \u043F\u0430\u0434\u0430\u043B\u044C\u0449\u0438\u043A\u0430, \u0440\u0430\u0437\u043E\u0440\u0438\u0432\u0448\u0435\u0433\u043E \u0435\u0433\u043E \u043B\u0430\u0433\u0435\u0440\u044C \u0443 \u0440\u0443\u0447\u044C\u044F. \u041E\u0433\u043E\u043D\u044C \u043F\u0443\u0433\u0430\u0435\u0442 \u0437\u0432\u0435\u0440\u044F, \u0431\u0440\u043E\u0448\u0435\u043D\u043D\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C \u0440\u0430\u043D\u0438\u0442.",
+    objectives: [{ type: "enemy", id: "scavenger_02", text: "\u041F\u0440\u043E\u0433\u043D\u0430\u0442\u044C \u043F\u0430\u0434\u0430\u043B\u044C\u0449\u0438\u043A\u0430" }],
+    turnIn: { npc: "goran", consume: {} },
+    reward: { heroXP: 25, coins: 40, items: { tree_resin: 2, resin_flask: 1 } },
+    rewardText: "\u0421\u043C\u043E\u043B\u044F\u043D\u0430\u044F \u0441\u043A\u043B\u044F\u043D\u043A\u0430, 2 \u0441\u043C\u043E\u043B\u044B, 40 \u043C\u043E\u043D\u0435\u0442, 25 \u043E\u043F\u044B\u0442\u0430"
+  }
+};
+var SIDE_QUEST_ORDER = ["sq_herbs", "sq_hunter", "sq_dust"];
+var questEvent = (id, kind) => `${id}_${kind}`;
+
+// src/config/serverRules.js
+function grantOf(r = {}) {
+  const g = {};
+  if (r.heroXP) g.heroXP = r.heroXP;
+  if (r.coins) g.coins = r.coins;
+  if (r.items && Object.keys(r.items).length) g.items = { ...r.items };
+  if (r.schoolXP && Object.keys(r.schoolXP).length) g.schoolXP = { ...r.schoolXP };
+  const up = r.topUpFor ? UPGRADES[r.topUpFor] : null;
+  if (up) {
+    const items = {};
+    for (const [k, v] of Object.entries(up.cost.items || {})) if (!up.cost.noTopUp?.includes(k)) items[k] = v;
+    g.topUp = { school: { [up.ability]: up.cost.schoolXP }, items };
+  }
+  return g;
+}
+var EVENT_ACTIONS = {
+  prologue_seen: {},
+  mirra_taught_alchemy: {},
+  // подсказки «здесь нужен дар / сила»: отмечаются при первом взгляде на закрытый объект, наград нет
+  fire_required_01: {},
+  heavy_blocked_01: {},
+  unlock_telekinesis_1: { unlock: { telekinesis: 1 } },
+  lunar_quest_start: { requires: ["unlock_telekinesis_1"] },
+  unlock_fire_1: { requires: ["heavy_path_open"], unlock: { fire: 1 } },
+  unlock_seal_1: { requires: ["gate_marks_revealed"], unlock: { seal: 1 } }
+};
+function worldRules() {
+  const world = {};
+  const base = (o) => ({
+    requires: o.requiresEvent ? [o.requiresEvent] : [],
+    requiresEnemy: o.requiresEnemyDefeated ? [o.requiresEnemyDefeated] : []
+  });
+  const itemReward = (item, amount) => item === "coins" ? { coins: amount } : { items: { [item]: amount } };
+  const tkLevel = (weight) => {
+    for (const [lvl, st] of Object.entries(ABILITIES.telekinesis.levels)) if (WEIGHT_CLASSES.indexOf(weight) <= WEIGHT_CLASSES.indexOf(st.maxWeight)) return Number(lvl);
+    return 99;
+  };
+  const pickupAfter = (o, spawn, parentState) => {
+    if (spawn) world[`${o.id}_reward`] = { kind: "loot", mark: "collected", reward: itemReward(spawn.item, spawn.amount || 1), parent: { id: o.id, state: parentState } };
+  };
+  const school = (ability) => ({ [ability]: SCHOOL_XP_PER_USE.exploration[ability] || 0 });
+  const effects = (o) => {
+    const events = [];
+    if (o.countsAsFirstInteraction) events.push("first_world_interaction");
+    for (const k of [o.doneEvent, o.openEvent, o.destroyEvent]) if (k) events.push(k);
+    const out = { events };
+    if (o.opensPath) out.path = o.opensPath;
+    return out;
+  };
+  for (const o of INTERACTIVES) {
+    switch (o.kind) {
+      case "gather":
+        world[o.id] = { kind: "gather", item: o.res, amount: o.amount || 1, respawnSec: o.respawnSec ?? 180, mana: WORLD_MANA_COST.gather, ...base(o) };
+        break;
+      case "chest":
+        world[o.id] = { kind: "loot", mark: "opened", reward: o.reward, ...base(o) };
+        break;
+      case "pickup":
+        world[o.id] = { kind: "loot", mark: "collected", reward: itemReward(o.item, o.amount || 1), ...base(o) };
+        break;
+      case "inspect":
+        if (o.first) world[o.id] = { kind: "loot", mark: "looted", reward: { items: o.first.items }, ...base(o) };
+        break;
+      case "stash":
+        world[o.id] = { kind: "stash", guard: o.guard, items: o.items, ...base(o) };
+        break;
+      case "telekinesis": {
+        const weight = o.weight || "light";
+        const mana2 = o.mode === "pull" ? WORLD_MANA_COST.pull : WORLD_MANA_COST.push[weight] ?? WORLD_MANA_COST.push.light;
+        if (o.mode === "pull") world[o.id] = { kind: "loot", mark: "collected", reward: o.reward || {}, mana: mana2, ability: "telekinesis", minLevel: tkLevel(weight), school: school("telekinesis"), ...effects(o), ...base(o) };
+        else world[o.id] = { kind: "cast", mark: "moved", mana: mana2, ability: "telekinesis", minLevel: tkLevel(weight), blockedBy: [], school: school("telekinesis"), ...effects(o), ...base(o) };
+        pickupAfter(o, o.hiddenReward?.spawnPickup, "moved");
+        break;
+      }
+      case "fire":
+        world[o.id] = {
+          kind: "cast",
+          mark: o.persistent ? "burning" : "destroyed",
+          mana: WORLD_MANA_COST.fire,
+          ability: "fire",
+          minLevel: 1,
+          blockedBy: [],
+          school: school("fire"),
+          ...effects(o),
+          ...base(o)
+        };
+        pickupAfter(o, o.reveal?.spawnPickup, "destroyed");
+        break;
+      case "gate":
+        world[o.id] = {
+          kind: "cast",
+          mana: WORLD_MANA_COST.seal,
+          ability: "seal",
+          minLevel: 1,
+          blockedBy: [o.openEvent],
+          school: school("seal"),
+          ...effects(o),
+          requires: ["guardian_defeated", "gate_marks_revealed", "unlock_seal_1", "seal_training_complete"],
+          requiresEnemy: []
+        };
+        break;
+      case "seal_sigil":
+        world[o.id] = { kind: "cast", mana: WORLD_MANA_COST.seal, ability: "seal", minLevel: 1, blockedBy: [o.doneEvent], school: school("seal"), ...effects(o), ...base(o) };
+        break;
+      default:
+        break;
+    }
+  }
+  return world;
+}
+function questRules() {
+  const out = {};
+  for (const id of SIDE_QUEST_ORDER) {
+    const q = SIDE_QUESTS[id];
+    out[id] = {
+      start: questEvent(id, "start"),
+      done: questEvent(id, "done"),
+      requires: q.requires?.event || null,
+      objectives: q.objectives.map((o) => o.type === "item" ? { type: "item", item: o.item, count: o.count } : o.type === "enemy" ? { type: "enemy", id: o.id } : { type: "event", key: o.key }),
+      consume: { ...q.turnIn?.consume || {} },
+      reward: grantOf(q.reward)
+    };
+  }
+  return out;
+}
+function researchRules() {
+  const out = {};
+  for (const [id, up] of Object.entries(UPGRADES)) {
+    const r = up.requires || {};
+    out[id] = {
+      ability: up.ability,
+      toLevel: up.toLevel,
+      branch: up.branch || null,
+      locked: !!up.locked,
+      heroLevel: r.heroLevel || 0,
+      abilityLevel: r.abilityLevel || 0,
+      event: r.event || null,
+      schoolXP: up.cost.schoolXP,
+      items: { ...up.cost.items || {} },
+      durationMs: up.timerSec[TIMER_MODE] * 1e3,
+      startEvent: up.startEvent || null,
+      completeEvent: up.completeEvent || null
+    };
+  }
+  return out;
+}
+function buildRules() {
+  const branches = {};
+  for (const [id, a] of Object.entries(ABILITIES)) {
+    if (!a.branches) continue;
+    branches[id] = Object.fromEntries(Object.entries(a.branches).map(([b, v]) => [b, { fromLevel: v.fromLevel || 1 }]));
+  }
+  return { respecCoins: BRANCH_RESPEC.coins, branches };
+}
+function spawnStartRules() {
+  const out = {};
+  for (const s of ENEMY_SPAWNS) if (s.startEvent) out[s.id] = { event: s.startEvent, requires: s.requiresEvent || null };
+  return out;
+}
+function serverRules() {
+  const recipes = Object.fromEntries(Object.entries(RECIPES).map(([id, r]) => [id, {
+    result: r.result,
+    amount: r.amount,
+    needs: r.needs,
+    requires: r.requires || [],
+    crafted: r.crafted || null,
+    blockedBy: r.blockedBy || []
+  }]));
+  const house = ZONES.find((z) => z.id === VITALS.houseZone);
+  const vitals = {
+    hpRegenPerSec: VITALS.hpRegenPerSec,
+    manaRegenWorld: VITALS.manaRegenWorld,
+    manaRegenHouse: VITALS.manaRegenHouse,
+    house: { x: house.x, y: house.y, w: house.w, h: house.h },
+    defeatHpFraction: HERO_RECOVERY.defeatHpFraction,
+    staleCombatSec: VITALS.staleCombatSec
+  };
+  const potions = Object.fromEntries(Object.entries(POTIONS).filter(([, p]) => p.outside && (p.effect.type === "heal" || p.effect.type === "mana")).map(([id, p]) => [id, { kind: p.effect.type, amount: p.effect.amount }]));
+  const events = Object.fromEntries(Object.entries(EVENT_ACTIONS).map(([k, e]) => [k, { requires: e.requires || [], unlock: e.unlock || {} }]));
+  const eventRewards = Object.fromEntries(Object.entries(EVENT_REWARDS).map(([k, r]) => [k, grantOf(r)]));
+  return {
+    recipes,
+    uses: STORY_USES,
+    firstCraft: FIRST_CRAFT,
+    migration: MIGRATION_V10,
+    vitals,
+    potions,
+    world: worldRules(),
+    events,
+    eventRewards,
+    quests: questRules(),
+    research: researchRules(),
+    build: buildRules(),
+    spawnStart: spawnStartRules()
+  };
+}
 
 // src/cloud/playerModel.js
 var RULES = serverRules();
@@ -1903,6 +2054,8 @@ var AbilitySystem = class {
     this.state = state;
     this.quests = quests;
     this.bus = bus2;
+    this.mirror = null;
+    this.holdUntil = 0;
   }
   def(id) {
     return ABILITIES[id];
@@ -1948,18 +2101,23 @@ var AbilitySystem = class {
   startResearch(upgradeId) {
     if (!this.state.startResearch(upgradeId)) return false;
     const up = UPGRADES[upgradeId];
-    if (up.startEvent) this.quests.complete(up.startEvent, { upgradeId });
+    if (up.startEvent) this.quests.complete(up.startEvent, { upgradeId }, { mirror: false });
+    this.mirror?.({ op: "research_start", upgrade: upgradeId });
     this.state.save();
     this.bus.emit(MSG.HUD_REFRESH);
     return true;
   }
   /** Вызывается каждый кадр из UIScene (работает и во время боя). */
   update(force = false) {
+    if (this.mirror && this.state.data.research && this.state.now() < this.holdUntil) return;
     const done = this.state.completeResearchIfReady(force);
     if (!done) return;
     const up = UPGRADES[done];
     this.state.save();
-    if (up.completeEvent) this.quests.complete(up.completeEvent, { upgradeId: done });
+    if (up.completeEvent) this.quests.complete(up.completeEvent, { upgradeId: done }, { mirror: false });
+    this.mirror?.({ op: "research_finish" })?.then((r) => {
+      if (r && !r.ok && r.reason === "wait") this.holdUntil = this.state.now() + (r.left || 1) * 1e3 + 500;
+    });
     this.bus.emit(MSG.RESEARCH_DONE, done, up);
     this.bus.emit(MSG.HUD_REFRESH);
   }

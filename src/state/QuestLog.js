@@ -10,6 +10,7 @@ export class QuestLog {
     this.state = state;
     this.bus = bus;
     this.announced = new Set(); // 'ready' сообщаем один раз за сессию
+    this.mirror = null;         // v0.15.0: (action) => Promise — подтверждение на сервере (services.js); без сервера null
   }
 
   def(id) { return SIDE_QUESTS[id] || null; }
@@ -61,6 +62,7 @@ export class QuestLog {
   accept(id) {
     if (this.status(id) !== 'available') return false;
     this.state.markEvent(questEvent(id, 'start'));
+    this.mirror?.({ op: 'quest_accept', quest: id });
     this.state.save();
     this.bus?.emit(MSG.SIDE_QUEST, id, 'start');
     this.bus?.emit(MSG.QUEST_CHANGED);
@@ -78,6 +80,7 @@ export class QuestLog {
     for (const [k, v] of Object.entries(q.turnIn?.consume || {})) this.state.removeItem(k, v);
     this.state.markEvent(questEvent(id, 'done'));
     const result = this.state.applyReward(q.reward);
+    this.mirror?.({ op: 'quest_turn_in', quest: id });
     this.state.save();
     this.bus?.emit(MSG.REWARD, { title: q.title, ...result });
     this.bus?.emit(MSG.SIDE_QUEST, id, 'done');

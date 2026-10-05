@@ -744,7 +744,7 @@ export class ExplorationScene extends Phaser.Scene {
     const prevEnc = services.state.getObject(encKey(trigger.id));
     services.state.setObject(encKey(trigger.id), { state: 'fighting', x: at.x, y: at.y });
     this.savePosition();
-    if (trigger.cfg.startEvent) services.quests.complete(trigger.cfg.startEvent, { spawnId: trigger.id });
+    if (trigger.cfg.startEvent) services.quests.complete(trigger.cfg.startEvent, { spawnId: trigger.id }, { mirror: false });   // v0.15.0: на сервере событие ставит combat_start
     const cam = this.cameras.main;
     this.toast(`${trigger.def.name} преграждает путь!`, COLORS.danger);
     cam.shake(250, 0.006);

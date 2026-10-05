@@ -23,7 +23,7 @@ import { windows09 } from '../ui/windows09.js';
 import { windows11 } from '../ui/windows11.js';
 import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from '../ui/noticeClose.js';
-import { addCraftMedallion, setCraftMedallion, addCraftDock } from '../ui/witchcraftUI.js';
+import { addCraftMedallion, setCraftMedallion } from '../ui/witchcraftUI.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -138,9 +138,8 @@ export class UIScene extends Phaser.Scene {
     this.questBottom = this.fieldTop() + (this.hintPlate?.visible ? h + 12 : 0);   // где начинаются тосты
   }
 
-  /** Дары и Сумка в общей прозрачной рамке, без перекрывающей мир плашки. */
+  /** Крупные Дары и Сумка прямо поверх мира — одинаковый размер в прогулке и бою. */
   buildBottomBar() {
-    this.dockFrame = addCraftDock(this);
     const xs = UI.dock.centers;
     this.buttons = {};
     ABILITY_ORDER.forEach((id, i) => { this.buttons[id] = this.makeButton(xs[i], BTN_Y, `icon_${id}`, ABILITIES[id].name, COLORS[ABILITIES[id].color], () => this.bus.emit(MSG.ABILITY_USE, id)); });

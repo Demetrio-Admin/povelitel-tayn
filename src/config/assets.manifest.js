@@ -8,8 +8,8 @@
 // поэтому исходники можно делать крупнее (например 512×512).
 
 export const ASSET_FILES = {
-  // Одобренный рисованный UI: общие медальоны, прозрачная нижняя рамка и меню.
-  ui_craft_medallion: 'assets/ui/craft-medallion.webp', ui_craft_dock: 'assets/ui/craft-dock.webp',
+  // Одобренный рисованный UI: тонкие медальоны без общей нижней рамки и меню.
+  ui_craft_medallion: 'assets/ui/craft-medallion-thin.webp',
   ui_craft_menu: 'assets/ui/craft-menu.webp', ui_craft_portrait: 'assets/ui/craft-portrait.webp',
   // герой (Hero & Sprite Spec v0.1 §18 — минимальный набор)
   hero_down: 'assets/sprites/hero_down.png', hero_up: 'assets/sprites/hero_up.png', hero_side: 'assets/sprites/hero_side.png', hero_shadow: null,

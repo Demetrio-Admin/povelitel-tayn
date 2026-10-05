@@ -14,12 +14,6 @@ export function setCraftMedallion(image, locked) {
   image.setAlpha(locked ? 0.48 : 1);
 }
 
-export function addCraftDock(scene) {
-  const D = UI.dock;
-  return scene.add.image(D.left, D.top - D.crest, 'ui_craft_dock').setOrigin(0)
-    .setDisplaySize(D.width, D.height + D.crest).setDepth(-3);
-}
-
 export function addCraftMenuPanel(scene, x, y, width, height) {
   // Исходник включает выступающий серп над верхней кромкой панели.
   return scene.add.image(x, y - UI.menu.crest, 'ui_craft_menu').setOrigin(0)

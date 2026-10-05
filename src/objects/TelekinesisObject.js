@@ -110,7 +110,6 @@ export class TelekinesisObject extends InteractiveObject {
         if (this.weight_class === 'heavy') services.audio.vibrate(50);
         scene.burst(t.x, t.y - 10, 0xb8a990, 14);
         this.busy = false;
-        this.persist({ state: 'moved', x: t.x, y: t.y });
         this.finish();
         this.spawnHiddenReward();
       },
@@ -138,12 +137,8 @@ export class TelekinesisObject extends InteractiveObject {
     });
   }
 
+  // v0.15.0: опыт школы, состояние объекта, открытый проход и события записал сервер вместе с действием (операция world)
   finish() {
-    this.abilities.grantUseXP('telekinesis', 'exploration');
-    if (this.cfg.countsAsFirstInteraction) this.quests.complete(EV.FIRST_WORLD_INTERACTION);
-    if (this.cfg.opensPath) this.state.openPath(this.cfg.opensPath);
-    if (this.cfg.doneEvent) this.quests.complete(this.cfg.doneEvent);
-    this.state.save();
     services.bus.emit(MSG.QUEST_CHANGED);
     if (this.cfg.panOnOpen) this.scene.panTo(this.cfg.panOnOpen.x, this.cfg.panOnOpen.y);
   }

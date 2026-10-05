@@ -86,11 +86,10 @@ await p.waitForFunction(() => !!window.__witch?.session, null, { timeout: 120000
 await ev(async () => {
   const S = window.__witch;
   await S.session.playAsGuest('witch');
-  const st = S.state;
-  st.markEvent('prologue_seen'); st.markEvent('unlock_telekinesis_1'); st.unlockAbility('telekinesis', 1);
-  st.addItem('coins', 50); st.save();
-  await S.session.flush();
 });
+// v0.15.0: опыт, предметы, события и дары закрыты для sync_player — «прогресс» выдаётся прямо на сервере
+srv.grant(await ev(() => window.__witch.session.userId), { quests: ['prologue_seen', 'unlock_telekinesis_1'], abilities: { telekinesis: { level: 1, unlocked: true } }, inv: { coins: 50 } });
+await ev(async () => { await window.__witch.session.flush({ force: true }); });
 // v0.12.0: HP и ману задаёт сервер — выставляем их на сервере (не полные), мир их восстанавливает
 srv.setVitals(await ev(() => window.__witch.session.userId), { hp: 45, mana: 20 });
 await p.goto(new URL('?skipmenu', BASE).href);

@@ -8,6 +8,7 @@ import { combatApply, combatCtxOf, fillDefaults } from '../../src/cloud/playerMo
 import { verifyCombat } from '../../src/cloud/combatVerify.js';
 import { STEP } from '../../src/systems/combatReplay.js';
 import { playBot } from '../../tests/helpers/combat-bot.mjs';
+import { grantPg } from '../../tests/helpers/fake-supabase.mjs';
 import { handle } from '../../src/cloud/combatHandler.js';
 import { readFileSync, writeFileSync, mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
@@ -23,7 +24,8 @@ function q(sql, as = null) {
 }
 const J = (r) => { try { return JSON.parse(r.out); } catch (e) { throw new Error('не JSON: ' + r.out + ' / ' + r.err); } };
 const esc = (o) => JSON.stringify(o).replace(/'/g, "''");
-const sync = (u, patch) => J(q(`select public.sync_player('${esc(patch)}');`, u));
+// v0.15.0: опыт, предметы, события, дары и билд sync_player не принимает — «прогресс» выдаётся напрямую в таблицы (как владелец базы)
+const sync = (u, patch) => grantPg(u, patch);
 const act = (u, action) => J(q(`select public.player_action('${esc({ id: randomUUID(), ...action })}');`, u));
 const load = (u) => J(q(`select public.combat_load('${u}');`, 'service'));
 const apply = (u, verdict) => J(q(`select public.combat_apply('${u}', '${esc(verdict)}');`, 'service'));

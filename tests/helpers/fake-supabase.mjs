@@ -195,6 +195,25 @@ export class FakeSupabase {
     }
   }
 
+  /**
+   * v0.15.0. Тесты: «выдать прогресс» мимо игры — напрямую в таблицы игрока (sync_player опыт, предметы, события и дары больше не принимает).
+   * st: { inv: {item: n}, quests: [событие], enemies: [id], paths: [id], abilities: {id: {level, unlocked}}, xp: n, school: {id: n}, research: {…}|null, objects: {id: {…}|null} }.
+   * Сумма предметов и опыта добавляется, остальное объединяется. Работает на обоих бэкендах.
+   */
+  grant(uid, st) {
+    if (this.backend === 'pg') { grantPg(uid, st); return; }
+    const m = this.players.get(uid).snap;
+    for (const [k, n] of Object.entries(st.inv || {})) m.inventory[k] = Math.min((m.inventory[k] || 0) + n, 1e9);
+    for (const k of st.quests || []) if (!m.quests.includes(k)) m.quests.push(k);
+    for (const k of st.enemies || []) if (!m.enemies.includes(k)) m.enemies.push(k);
+    for (const k of st.paths || []) if (!m.paths.includes(k)) m.paths.push(k);
+    for (const [k, v] of Object.entries(st.abilities || {})) { const a = m.abilities[k] || { level: 0, unlocked: false }; m.abilities[k] = { level: Math.max(a.level, v.level), unlocked: a.unlocked || !!v.unlocked }; }
+    if (st.xp) { m.xp = Math.max(m.xp, st.xp); m.level = Math.max(m.level, levelForXp(m.xp)); }
+    for (const [k, n] of Object.entries(st.school || {})) m.school[k] = (m.school[k] || 0) + n;
+    if ('research' in st) m.research = st.research;
+    for (const [k, v] of Object.entries(st.objects || {})) { if (v === null) delete m.objects[k]; else m.objects[k] = v; }
+  }
+
   /** Тесты: «прошло sec секунд» для восстановления на сервере — записи сдвигаются в прошлое (в pg настоящее время не перематывается). */
   timeTravel(uid, sec) {
     if (this.backend === 'pg') {
@@ -343,6 +362,21 @@ export class FakeSupabase {
 }
 
 /** psql: SQL из stdin; возвращает { status, stdout, stderr } (raw) или бросает при ошибке. */
+/** v0.15.0. Выдать прогресс игроку на Postgres напрямую в таблицы (мимо sync_player); форма st — как у FakeSupabase.grant. */
+export function grantPg(uid, st) {
+  const U = `'${uid}'`, q1 = (x) => String(x).replace(/'/g, "''"), q = [];
+  for (const [k, n] of Object.entries(st.inv || {})) q.push(`insert into public.player_inventory (user_id, item_id, quantity) values (${U}, '${q1(k)}', ${n}) on conflict (user_id, item_id) do update set quantity = least(public.player_inventory.quantity + ${n}, 1000000000);`);
+  for (const k of st.quests || []) q.push(`insert into public.player_quests (user_id, quest_id) values (${U}, '${q1(k)}') on conflict (user_id, quest_id) do update set status = 'done';`);
+  for (const [kind, list] of [['enemy', st.enemies || []], ['path', st.paths || []]]) for (const k of list) q.push(`insert into public.player_world (user_id, kind, key) values (${U}, '${kind}', '${q1(k)}') on conflict do nothing;`);
+  for (const [k, v] of Object.entries(st.abilities || {})) q.push(`insert into public.player_abilities (user_id, ability_id, level, unlocked) values (${U}, '${k}', ${v.level}, ${!!v.unlocked}) on conflict (user_id, ability_id) do update set level = greatest(public.player_abilities.level, excluded.level), unlocked = public.player_abilities.unlocked or excluded.unlocked;`);
+  if (st.xp) q.push(`update public.player_progress set hero_xp = greatest(hero_xp, ${st.xp}), hero_level = greatest(hero_level, coalesce((select max(level) from public.game_hero_levels where xp <= greatest(hero_xp, ${st.xp})), 1)) where user_id = ${U};`);
+  for (const [k, n] of Object.entries(st.school || {})) q.push(`update public.player_progress set school_xp = jsonb_set(school_xp, '{${k}}', to_jsonb(coalesce((school_xp ->> '${k}')::numeric, 0) + ${n})) where user_id = ${U};`);
+  if ('research' in st) q.push(`update public.player_progress set research = ${st.research ? `'${q1(JSON.stringify(st.research))}'::jsonb` : 'null'} where user_id = ${U};`);
+  for (const [k, v] of Object.entries(st.objects || {})) q.push(v === null ? `delete from public.player_world where user_id = ${U} and kind = 'object' and key = '${q1(k)}';`
+    : `insert into public.player_world (user_id, kind, key, data) values (${U}, 'object', '${q1(k)}', '${q1(JSON.stringify(v))}'::jsonb) on conflict (user_id, kind, key) do update set data = excluded.data;`);
+  pg(q.join(' '));
+}
+
 export function pg(sql, raw = false) {
   const r = spawnSync('psql', ['-X', '-q', '-At'], { input: sql, encoding: 'utf8', env: process.env });
   if (raw) return r;

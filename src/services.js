@@ -90,6 +90,9 @@ export function initServices() {
   services.dialogue = new DialogueSystem({ state: services.state, log: services.log, bus, goalText: () => services.quests.objectiveText() });
   services.guidance = new GuidanceSystem({ state: services.state, quests: services.quests, log: services.log, bus });
   services.actions = new PlayerActions({ state: services.state, getSession: () => services.session, bus });
+  // v0.15.0: опыт, события, квесты и изучение закрыты для sync_player — всё, что игра показала локально, подтверждает сервер
+  const mirror = (a) => services.actions.mirror(a);
+  services.quests.mirror = mirror; services.log.mirror = mirror; services.dialogue.mirror = mirror; services.abilities.mirror = mirror;
   if (services.session) services.telemetry = createTelemetry({ session: services.session, bus, state: services.state, heroId: heroIdNow, storage });
   // отправляем прогресс, когда игрок сворачивает вкладку или закрывает игру
   const flushNow = () => { if (!services.session) return; services.savePosition?.(); services.session.flush({ keepalive: true }).catch(() => {}); };

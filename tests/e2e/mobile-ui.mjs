@@ -207,6 +207,8 @@ try {
     assert.equal(afterDefeat.combat, false);
     assert.equal(afterDefeat.focus, 'Сразиться снова');
     await shot('v09-retry-near');
+    // порог предупреждения (40%) близок к HP после поражения (20% + восстановление по часам): на медленной машине HP успевает его перерасти — фиксируем
+    await ui(() => { const st = window.__witch.state; st.data.hp = Math.ceil(st.heroStats().maxHp * 0.3); st.data.vitalsClock = Date.now(); });
     await ui(() => { const ex = window.__game.scene.getScene('ExplorationScene'); ex.onContext(); });
     await page.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Мало здоровья', null, { timeout: 120000 });
     await shot('v09-retry-warning');

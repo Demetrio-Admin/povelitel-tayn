@@ -157,6 +157,7 @@ export const windows11 = {
       services.audio.play('locked');
       this.toast(r.reason === 'coins' ? `Не хватает монет: нужно ${r.need}` : 'Ветку сменить нельзя.');
     } else {
+      services.actions.respec(abilityId, opt.id);   // v0.15.0: цену и смену ветки подтверждает сервер
       services.state.save();
       services.audio.play('unlock_magic');
       this.toast(`Ветка «${opt.name}» выбрана`, COLORS[ABILITIES[abilityId].color]);

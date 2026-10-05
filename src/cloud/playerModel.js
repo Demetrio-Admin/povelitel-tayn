@@ -11,16 +11,23 @@
 //   • v0.12.0: HP и мана принадлежат серверу. Они восстанавливаются по времени сервера (в том числе пока игрок офлайн),
 //     клиент их не записывает — только атомарные действия (drink, heal, combat_*, v0.13.0: world — сбор, находки и магия в мире).
 //   • v0.13.0: состояние объектов мира kind gather/loot/stash (rules.world) пишет только сервер; их ключи в patch.objects игнорируются.
+//   • v0.15.0: клиент больше не пишет прогресс вообще: опыт героя и даров, предметы, дары, события, пути, побеждённые враги и изучение —
+//     поля xp, school, inv, abilities, quests, paths, enemies, research в patch игнорируются. Всё это решают операции сервера
+//     (event, quest_*, research_*, respec, world, craft, use, combat_*). Клиент пишет только позицию, точку возрождения, время игры,
+//     историю боёв, подсказки и состояние «мелких» объектов мира (след врага, прочитанная книга).
 // applyPatch ниже — точное зеркало SQL-функции sync_player (supabase/schema.sql); соответствие проверяет tools/sql/diff-test.mjs.
 // applyAction — зеркало player_action (v0.9): платное лечение и стартовый набор зелий — атомарные операции сервера,
 // а не дельты patch (иначе при нехватке монет сервер обрезал бы списание до нуля, а HP всё равно стало бы полным).
 import { createDefaultState } from '../state/GameState.js';
 import { HERO_LEVELS, HEALING } from '../config/balance.hero.js';
-import { serverRules } from '../config/storyItems.js';
+import { serverRules } from '../config/serverRules.js';
 
 const RULES = serverRules();
-/** v0.13.0: ключи объектов мира, состояние которых пишет только сервер (сбор, находки, запасы). Магия (kind cast) остаётся за клиентом. */
-export const serverOwnedObject = (k) => typeof k === 'string' && Object.hasOwn(RULES.world, k) && RULES.world[k].kind !== 'cast';
+/**
+ * Ключи объектов мира, состояние которых пишет только сервер: всё, что есть в RULES.world (с v0.15.0 и магия — сервер ставит mark),
+ * победы над врагами rep:* (по ним открываются запасы) и build — ветки даров (player_build).
+ */
+export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build');
 
 export const ABILITY_IDS = ['telekinesis', 'fire', 'seal'];
 export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal'];
@@ -126,32 +133,21 @@ export function fromSnapshot(s, base = createDefaultState()) {
   return d;
 }
 
-/** Что изменилось в cur по сравнению с base. Пустой объект — менять нечего. */
+/**
+ * Что изменилось в cur по сравнению с base. Пустой объект — менять нечего.
+ * v0.15.0: только то, что клиент вправе записывать (подсказки, объекты мира без серверных правил, позиция, точка возрождения, время игры,
+ * история боёв). Прогресс (опыт, предметы, дары, события, пути, враги, изучение) приходит от сервера как результат операций.
+ */
 export function diffSnapshots(base, cur) {
   const p = {};
-  if (cur.xp > base.xp) p.xp = cur.xp; // уровень сервер считает сам по опыту
-  const school = {};
-  for (const k of new Set([...Object.keys(base.school), ...Object.keys(cur.school)])) { const dlt = (cur.school[k] || 0) - (base.school[k] || 0); if (dlt) school[k] = dlt; }
-  if (Object.keys(school).length) p.school = school;
-  const inv = {};
-  for (const k of new Set([...Object.keys(base.inventory), ...Object.keys(cur.inventory)])) { const dlt = (cur.inventory[k] || 0) - (base.inventory[k] || 0); if (dlt) inv[k] = dlt; }
-  if (Object.keys(inv).length) p.inv = inv;
-  const abilities = {};
-  for (const id of ABILITY_IDS) {
-    const b = base.abilities[id] || { level: 0, unlocked: false }, c = cur.abilities[id] || { level: 0, unlocked: false };
-    if (c.level > b.level || (c.unlocked && !b.unlocked)) abilities[id] = { level: c.level, unlocked: !!c.unlocked };
-  }
-  if (Object.keys(abilities).length) p.abilities = abilities;
-  for (const [key, field] of [['quests', 'quests'], ['paths', 'paths'], ['enemies', 'enemies'], ['tutorial', 'tutorial']]) {
-    const add = cur[field].filter(x => !base[field].includes(x));
-    if (add.length) p[key] = add;
-  }
+  const tutorial = cur.tutorial.filter(x => !base.tutorial.includes(x));
+  if (tutorial.length) p.tutorial = tutorial;
   const objects = {};
   for (const k of new Set([...Object.keys(base.objects), ...Object.keys(cur.objects)])) {
+    if (serverOwnedObject(k)) continue;
     if (!(k in cur.objects)) objects[k] = null; else if (!eq(base.objects[k], cur.objects[k])) objects[k] = cur.objects[k];
   }
   if (Object.keys(objects).length) p.objects = objects;
-  if (!eq(base.research, cur.research)) p.research = { value: cur.research };
   if (!eq(base.pos, cur.pos)) p.pos = cur.pos;
   if (!eq(base.safe, cur.safe)) p.safe = cur.safe;
   if (cur.play > base.play) p.play = cur.play - base.play;
@@ -212,33 +208,13 @@ export function advanceVitals(s, nowMs) {
 export function applyPatch(snap, patch = {}, nowMs = null) {
   const s = JSON.parse(JSON.stringify(snap));
   if (num(nowMs)) advanceVitals(s, nowMs);
-  if (num(patch.xp)) s.xp = clamp(Math.min(Math.max(s.xp, int(patch.xp)), s.xp + LIMITS.gainXp), 0, LIMITS.maxXp);
-  s.level = Math.max(s.level, levelForXp(s.xp));
-  for (const [k, v] of Object.entries(isObj(patch.school) ? patch.school : {})) {
-    if (!SCHOOL_IDS.includes(k) || !num(v)) continue;
-    s.school[k] = clamp((s.school[k] || 0) + clamp(int(v), -LIMITS.maxSpendPerSync, LIMITS.gainSchool), 0, LIMITS.maxCounter);
-  }
-  for (const [k, v] of Object.entries(isObj(patch.inv) ? patch.inv : {})) {
-    if (!isId(k) || !num(v)) continue;
-    if (!(k in s.inventory) && Object.keys(s.inventory).length >= LIMITS.maxItems) continue;
-    const gain = k === 'coins' ? LIMITS.gainCoins : LIMITS.gainItem;
-    s.inventory[k] = clamp((s.inventory[k] || 0) + clamp(int(v), -LIMITS.maxSpendPerSync, gain), 0, LIMITS.maxCounter);
-  }
-  for (const [k, v] of Object.entries(isObj(patch.abilities) ? patch.abilities : {})) {
-    if (!ABILITY_IDS.includes(k) || !isObj(v)) continue;
-    const cur = s.abilities[k] || { level: 0, unlocked: false };
-    s.abilities[k] = { level: clamp(Math.max(cur.level, int(v.level)), 0, LIMITS.maxAbilityLevel), unlocked: !!cur.unlocked || v.unlocked === true };
-  }
-  s.quests = union(s.quests, patch.quests, LIMITS.maxKeys);
-  s.paths = union(s.paths, patch.paths, LIMITS.maxKeys);
-  s.enemies = union(s.enemies, patch.enemies, LIMITS.maxKeys);
+  // v0.15.0: поля xp, school, inv, abilities, quests, paths, enemies и research игнорируются — прогресс пишут только операции сервера
   s.tutorial = union(s.tutorial, patch.tutorial, LIMITS.maxKeys);
   for (const [k, v] of Object.entries(isObj(patch.objects) ? patch.objects : {})) {
     if (!isId(k) || serverOwnedObject(k)) continue;
     if (v === null) delete s.objects[k];
     else if (isObj(v) && (k in s.objects || Object.keys(s.objects).length < LIMITS.maxObjects)) s.objects[k] = v;
   }
-  if (isObj(patch.research) && 'value' in patch.research) s.research = isObj(patch.research.value) ? patch.research.value : null;
   if (isObj(patch.pos) && num(patch.pos.x) && num(patch.pos.y)) s.pos = { x: patch.pos.x, y: patch.pos.y };
   if (isObj(patch.safe) && num(patch.safe.x) && num(patch.safe.y)) s.safe = { x: patch.safe.x, y: patch.safe.y };
   // HP и ману клиент не записывает: поля hp, mana (и устаревшее mana_spent, v0.12.0) игнорируются.
@@ -319,6 +295,108 @@ function useItem(s, id) {
   return { ok: true, item: id, events: u.events };
 }
 
+// ---------------------------------------------------------------- v0.15.0: события, задания, изучение, ветки, магия в мире
+/** Новое событие с наградой EVENT_REWARDS (одна на событие). false — событие уже было. */
+function setEvent(s, key) {
+  if (has(s, key)) return false;
+  addEvent(s, key);
+  if (Object.hasOwn(RULES.eventRewards, key)) grant(s, RULES.eventRewards[key]);
+  return true;
+}
+const openPath = (s, id) => { if (!s.paths.includes(id)) s.paths = [...s.paths, id]; };
+/** Открыть дар (или поднять ступень); ступень только растёт. */
+function unlockAbility(s, id, level) {
+  const a = s.abilities[id] || { level: 0, unlocked: false };
+  s.abilities[id] = { level: Math.max(a.level || 0, level), unlocked: true };
+}
+const buildBranches = (s) => (isObj(s.objects.player_build) && isObj(s.objects.player_build.branches) ? s.objects.player_build.branches : {});
+function setBranch(s, ability, branch) { s.objects.player_build = { branches: { ...buildBranches(s), [ability]: branch } }; }
+
+/** Сюжетное событие по действию игрока (книга, алтарь, круг Огня, Селена, подсказки): только из RULES.events, с условиями и наградой. */
+function eventAct(s, key) {
+  const r = typeof key === 'string' && Object.hasOwn(RULES.events, key) ? RULES.events[key] : null;
+  if (!r) return { ok: false, reason: 'unknown' };
+  if (has(s, key)) return { ok: false, reason: 'already' };
+  if (!r.requires.every(ev => has(s, ev))) return { ok: false, reason: 'locked' };
+  setEvent(s, key);
+  for (const [id, lvl] of Object.entries(r.unlock)) unlockAbility(s, id, lvl);
+  return { ok: true, key };
+}
+
+const questRule = (id) => (typeof id === 'string' && Object.hasOwn(RULES.quests, id) ? RULES.quests[id] : null);
+/** Принять побочное задание: доступно (условие выполнено), не принято и не сдано. */
+function questAccept(s, id) {
+  const q = questRule(id);
+  if (!q) return { ok: false, reason: 'unknown' };
+  if (has(s, q.done) || has(s, q.start)) return { ok: false, reason: 'already' };
+  if (q.requires && !has(s, q.requires)) return { ok: false, reason: 'locked' };
+  addEvent(s, q.start);
+  return { ok: true, id };
+}
+/** Сдать задание: принято, все цели выполнены по данным сервера (сумка, побеждённые враги, события), предметы отдаются, награда выдаётся. */
+function questTurnIn(s, id) {
+  const q = questRule(id);
+  if (!q) return { ok: false, reason: 'unknown' };
+  if (has(s, q.done)) return { ok: false, reason: 'already' };
+  if (!has(s, q.start)) return { ok: false, reason: 'not_started' };
+  const done = (o) => (o.type === 'item' ? (s.inventory[o.item] || 0) >= o.count : o.type === 'enemy' ? s.enemies.includes(o.id) : has(s, o.key));
+  if (!q.objectives.every(done)) return { ok: false, reason: 'not_ready' };
+  if (Object.entries(q.consume).some(([k, n]) => (s.inventory[k] || 0) < n)) return { ok: false, reason: 'missing' };
+  for (const [k, n] of Object.entries(q.consume)) addItem(s, k, -n);
+  addEvent(s, q.done);
+  grant(s, q.reward);
+  return { ok: true, id };
+}
+
+/** Начать изучение: условия и цена (опыт дара, предметы) проверяет и списывает сервер; таймер идёт по времени сервера. */
+function researchStart(s, id) {
+  const up = typeof id === 'string' && Object.hasOwn(RULES.research, id) ? RULES.research[id] : null;
+  if (!up) return { ok: false, reason: 'unknown' };
+  if (up.locked) return { ok: false, reason: 'locked' };
+  if ((s.abilities[up.ability]?.level || 0) >= up.toLevel) return { ok: false, reason: 'done' };
+  if (s.research) return { ok: false, reason: s.research.upgradeId === id ? 'in_progress' : 'busy' };
+  if (up.event && !has(s, up.event)) return { ok: false, reason: 'event' };
+  const enough = s.level >= up.heroLevel && (s.abilities[up.ability]?.level || 0) >= up.abilityLevel
+    && (s.school[up.ability] || 0) >= up.schoolXP && Object.entries(up.items).every(([k, n]) => (s.inventory[k] || 0) >= n);
+  if (!enough) return { ok: false, reason: 'missing' };
+  s.school[up.ability] = (s.school[up.ability] || 0) - up.schoolXP;
+  for (const [k, n] of Object.entries(up.items)) addItem(s, k, -n);
+  s.research = { upgradeId: id, startedAt: num(s.vitalsAt) ? s.vitalsAt : 0, durationMs: up.durationMs };
+  if (up.startEvent) setEvent(s, up.startEvent);
+  return { ok: true, upgrade: id };
+}
+/** Завершить изучение, когда по времени сервера оно готово: дар поднимается, ветка записывается, событие завершения выдаёт награду. */
+function researchFinish(s) {
+  if (!s.research) return { ok: false, reason: 'none' };
+  const id = s.research.upgradeId;
+  const up = typeof id === 'string' && Object.hasOwn(RULES.research, id) ? RULES.research[id] : null;
+  if (!up) return { ok: false, reason: 'unknown' };
+  const now = num(s.vitalsAt) ? s.vitalsAt : 0;
+  const left = (num(s.research.startedAt) ? s.research.startedAt : 0) + (num(s.research.durationMs) ? s.research.durationMs : up.durationMs) - now;
+  if (left > 0) return { ok: false, reason: 'wait', left: Math.ceil(left / 1000) };
+  unlockAbility(s, up.ability, up.toLevel);
+  if (up.branch) setBranch(s, up.ability, up.branch);
+  s.research = null;
+  if (up.completeEvent) setEvent(s, up.completeEvent);
+  return { ok: true, upgrade: id, events: up.completeEvent ? [up.completeEvent] : [] };
+}
+
+/** Смена ветки дара за монеты (вне боя): ветка должна быть открыта уровнем дара и отличаться от текущей. */
+function respec(s, ability, branch) {
+  const B = RULES.build;
+  const opt = isId(ability) && isId(branch) ? B.branches[ability]?.[branch] : null;
+  const lvl = s.abilities[ability]?.level || 0;
+  const curId = isId(ability) ? buildBranches(s)[ability] : null;
+  const curOpt = isId(curId) ? B.branches[ability]?.[curId] : null;
+  if (!opt || !curOpt || lvl < curOpt.fromLevel || lvl < opt.fromLevel) return { ok: false, reason: 'unavailable' };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  if (curId === branch) return { ok: false, reason: 'same' };
+  if ((s.inventory.coins || 0) < B.respecCoins) return { ok: false, reason: 'coins', need: B.respecCoins };
+  addItem(s, 'coins', -B.respecCoins);
+  setBranch(s, ability, branch);
+  return { ok: true, price: B.respecCoins };
+}
+
 /** Зелье из сумки вне боя: возвращает долю максимума; при полном запасе не тратится. */
 function drink(s, item) {
   const u = typeof item === 'string' && Object.hasOwn(RULES.potions, item) ? RULES.potions[item] : null;
@@ -351,7 +429,7 @@ function worldAct(s, id) {
   if (locked) return { ok: false, reason: 'locked' };
   if ((r.blockedBy || []).some(ev => has(s, ev))) return { ok: false, reason: 'done' };
   let wins = 0;
-  if (r.kind === 'loot' && st(id)?.state === r.mark) return { ok: false, reason: 'done' };
+  if ((r.kind === 'loot' || r.kind === 'cast') && r.mark && st(id)?.state === r.mark) return { ok: false, reason: 'done' };
   if (r.kind === 'gather') {
     const o = st(id);
     if (o && o.state === 'picked') {
@@ -381,7 +459,13 @@ function worldAct(s, id) {
   } else if (r.kind === 'stash') {
     grant(s, { items: r.items });
     s.objects[id] = { ...(st(id) || {}), claimed: wins };
+  } else if (r.mark) {
+    s.objects[id] = { state: r.mark };
   }
+  // v0.15.0: опыт дара за применение в мире, события и путь, которые открывает успех (с наградами событий)
+  for (const [k, n] of Object.entries(r.school || {})) if (n > 0) s.school[k] = clamp((s.school[k] || 0) + n, 0, LIMITS.maxCounter);
+  for (const ev of r.events || []) setEvent(s, ev);
+  if (r.path) openPath(s, r.path);
   return { ok: true, kind: r.kind, id, mana: r.mana || 0 };
 }
 
@@ -412,6 +496,9 @@ function combatStart(s, action = {}) {
   if (!isId(action.spawn) || !isId(action.enemy)) return { ok: false, reason: 'bad_spawn' };
   if (s.combatSince == null) s.combatSince = s.vitalsAt;
   s.combatCtx = combatCtxOf(s, action.spawn, action.enemy);
+  // v0.15.0: событие «встреча началась» (combat_intro_01 и др.) ставит сервер, если место боя уже открыто
+  const ss = Object.hasOwn(RULES.spawnStart, action.spawn) ? RULES.spawnStart[action.spawn] : null;
+  if (ss && (!ss.requires || has(s, ss.requires))) setEvent(s, ss.event);
   return { ok: true, hp: s.combatCtx.hp, mana: s.combatCtx.mana };
 }
 
@@ -499,6 +586,11 @@ function migrateV10(s) {
  *   { op: 'combat_end', outcome: 'victory'|'defeat'|'retreat', mana } — бой закончен (с v0.14.0 победу и поражение принимает только combatApply)
  *   v0.13.0:
  *   { op: 'world', obj }    — сбор узла, находка, запас или магия в мире (правила RULES.world: мана, дар, возрождение, награда)
+ *   v0.15.0 (прогресс только от сервера):
+ *   { op: 'event', key }              — сюжетное событие по действию игрока (RULES.events: условия, дар, награда)
+ *   { op: 'quest_accept' | 'quest_turn_in', quest } — побочное задание: принять / сдать (цели и награда — RULES.quests)
+ *   { op: 'research_start', upgrade } — начать изучение (цена и условия — RULES.research), { op: 'research_finish' } — завершить, когда время вышло
+ *   { op: 'respec', ability, branch } — сменить ветку дара за монеты
  * nowMs — время сервера: перед любым действием HP и мана восстанавливаются до него (как player_action).
  */
 export function applyAction(snap, action = {}, nowMs = null) {
@@ -512,6 +604,12 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'world') return { snapshot: s, result: worldAct(s, action.obj) };
   if (op === 'combat_start') return { snapshot: s, result: combatStart(s, action) };
   if (op === 'combat_end') return { snapshot: s, result: combatEnd(s, action) };
+  if (op === 'event') return { snapshot: s, result: eventAct(s, action.key) };
+  if (op === 'quest_accept') return { snapshot: s, result: questAccept(s, action.quest) };
+  if (op === 'quest_turn_in') return { snapshot: s, result: questTurnIn(s, action.quest) };
+  if (op === 'research_start') return { snapshot: s, result: researchStart(s, action.upgrade) };
+  if (op === 'research_finish') return { snapshot: s, result: researchFinish(s) };
+  if (op === 'respec') return { snapshot: s, result: respec(s, action.ability, action.branch) };
   if (op === 'heal') {
     const price = healPriceOf(s);
     if (s.combatSince != null) return { snapshot: s, result: { ok: false, reason: 'combat', price: 0 } };

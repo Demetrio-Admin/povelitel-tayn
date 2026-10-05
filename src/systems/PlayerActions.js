@@ -8,12 +8,19 @@
 // v0.14.0: бой проверяет сервер. combatStart(spawn, enemy) — сервер запоминает состояние героя; combatSubmit(log) — запись боя
 // проигрывается на сервере (Edge Function combat), исход, награда и потери приходят в ответе. Без сервера — тот же путь на JS.
 // v0.10.0: крафт ({ op: 'craft', recipe }), сюжетные предметы ({ op: 'use', item }) и миграция ({ op: 'migrate_v10' }).
+// v0.15.0: опыт, предметы, события, квесты, дары и изучение закрыты для sync_player — меняются только операциями сервера.
+// Игровой код по-прежнему сразу показывает результат у себя (отклик без задержки), а mirror(action) в фоне просит сервер сделать то же;
+// ответ сервера заменяет локальное состояние. Операции идут по очереди (одна за другой), при потере связи повторяются с тем же id.
 // После успеха к результату добавляется outcome — что реально изменилось (опыт, новые уровни, предметы, новые события),
 // а для новых событий шлётся обычный WORLD_EVENT: мир, журнал и наведение обновляются так же, как после QuestFlags.complete.
 import { applyAction, combatApply, toSnapshot, fromSnapshot } from '../cloud/playerModel.js';
 import { verifyCombat } from '../cloud/combatVerify.js';
 import { HERO_LEVELS } from '../config/balance.hero.js';
 import { MSG } from '../state/EventBus.js';
+
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const newId = () => (globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID()
+  : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (ch) => { const r = Math.random() * 16 | 0; return (ch === 'x' ? r : (r & 3 | 8)).toString(16); }));
 
 export class PlayerActions {
   constructor({ state, getSession = () => null, bus = null }) {
@@ -39,6 +46,40 @@ export class PlayerActions {
   }
 
   get busy() { return !!this.pending; }
+
+  /** Есть ли сервер, который подтверждает действия (в режиме разработки без сервера — нет, всё считается на устройстве). */
+  get online() { return !!this.getSession(); }
+
+  /**
+   * v0.15.0: подтвердить на сервере действие, которое игра уже показала локально. Без сервера ничего не делает.
+   * Операции выполняются по очереди; сетевой сбой — повторы (до минуты) с тем же id (сервер не применит дважды).
+   * Возвращает ответ сервера. Если сервер отказал, его состояние уже заменило локальное — интерфейс обновляется.
+   */
+  mirror(action) {
+    const ses0 = this.getSession();
+    if (!ses0) return Promise.resolve(null);
+    const uid = ses0.userId;   // действие принадлежит этому игроку: после выхода или смены аккаунта оно не отправляется
+    const act = { ...action, id: action.id || newId() };
+    const job = async () => {
+      let r = null;
+      for (let i = 0; i < 20; i++) {
+        if (this.getSession()?.userId !== uid) return { ok: false, reason: 'session' };
+        while (this.pending) await this.pending.catch(() => {});
+        r = await this.run(act);
+        if (r.reason === 'busy') { await sleep(30); continue; }
+        if (r.reason !== 'network') break;
+        await sleep(3000);
+      }
+      if (!r?.ok) {
+        if (r?.reason !== 'session') console.warn('[PlayerActions] сервер не подтвердил', act.op, r?.reason, r?.error || '');
+        this.bus?.emit(MSG.QUEST_CHANGED);
+        this.bus?.emit(MSG.HUD_REFRESH);
+      }
+      return r;
+    };
+    this.chain = (this.chain || Promise.resolve()).then(job, job);
+    return this.chain;
+  }
 
   async run(action) {
     return this.exec(action.op, async (ses) => {
@@ -108,4 +149,12 @@ export class PlayerActions {
   /** v0.13.0: сбор узла, находка, запас или магия в мире — решает и записывает сервер (правила: config/storyItems.js worldRules). */
   world(obj) { return this.run({ op: 'world', obj }); }
   starterKit() { return this.run({ op: 'starter_kit' }); }
+
+  // v0.15.0: подтверждение локальных действий (см. mirror). Условия и награды определяет сервер (config/serverRules.js).
+  event(key) { return this.mirror({ op: 'event', key }); }
+  questAccept(quest) { return this.mirror({ op: 'quest_accept', quest }); }
+  questTurnIn(quest) { return this.mirror({ op: 'quest_turn_in', quest }); }
+  researchStart(upgrade) { return this.mirror({ op: 'research_start', upgrade }); }
+  researchFinish() { return this.mirror({ op: 'research_finish' }); }
+  respec(ability, branch) { return this.mirror({ op: 'respec', ability, branch }); }
 }

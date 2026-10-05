@@ -27,12 +27,11 @@ const toEnemy = () => ev(() => { const ex = window.__game.scene.getScene('Explor
 console.log(`\nСервер: ${srv.backend === 'pg' ? 'настоящий Postgres' : 'JS-зеркало схемы'}`);
 await p.goto(BASE);
 await p.waitForFunction(() => !!window.__witch?.session, null, { timeout: +(process.env.WAIT_MS || 120000) });
-await ev(async () => {
-  const S = window.__witch; await S.session.playAsGuest('witch');
-  const st = S.state; st.markEvent('prologue_seen'); st.markEvent('unlock_telekinesis_1'); st.unlockAbility('telekinesis', 1); st.markEvent('mirra_starter_kit');
-  st.addItem('elixir_life', 4); st.addItem('moon_herb', 0); st.save(); await S.session.flush();
-});
+await ev(async () => { await window.__witch.session.playAsGuest('witch'); });
 const uid = await ev(() => window.__witch.session.userId);
+// v0.15.0: опыт, предметы, события и дары закрыты для sync_player — «прогресс» выдаётся прямо на сервере
+srv.grant(uid, { quests: ['prologue_seen', 'unlock_telekinesis_1', 'mirra_starter_kit'], abilities: { telekinesis: { level: 1, unlocked: true } }, inv: { elixir_life: 4 } });
+await ev(async () => { await window.__witch.session.flush({ force: true }); });
 srv.setVitals(uid, { hp: 50, mana: 40 });
 await p.goto(new URL('?skipmenu', BASE).href);
 await inGame();

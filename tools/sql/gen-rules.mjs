@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { serverRules } from '../../src/config/storyItems.js';
+import { serverRules } from '../../src/config/serverRules.js';
 
 const file = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../supabase/schema.sql');
 const json = JSON.stringify(serverRules());

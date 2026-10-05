@@ -222,6 +222,8 @@ await mute(async () => {
     ok(!h.modal && !sv.modalOpen && !h.modalQueue.length, 'быстрые открытия/закрытия не оставляют блокировку и очередь окон');
     // Esc закрывает
     h.openMenu(); h.pressModalButton(false); ok(!h.modal && !sv.modalOpen, 'Esc закрывает меню');
+    h.openMenu(); h.modal.closeHit.emit('pointerdown');
+    ok(!h.modal && !sv.modalOpen, 'крестик внутри меню закрывает окно и возвращает управление в мир');
 
     // Четыре заглушки; чат открывает отдельный DOM-интерфейс (проверяется в e2e/chat.mjs).
     const snap = () => JSON.stringify({ inv: sv.state.data.inventory, ev: sv.state.data.completedEvents, lvl: sv.state.data.heroLevel, mode: sv.mode });

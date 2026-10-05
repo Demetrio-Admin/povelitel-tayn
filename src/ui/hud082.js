@@ -13,7 +13,8 @@ import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from './noticeClose.js';
 import { ABILITY_ORDER } from '../systems/AbilitySystem.js';
 import { ROMAN } from '../objects/InteractiveObject.js';
-import { ensureTexture, addOrb, addMedallion, drawPlate, UIBar } from './widgets.js';
+import { ensureTexture, addMedallion, addDivider, drawPlate, UIBar } from './widgets.js';
+import { addCraftMedallion, addCraftMenuPanel, addCraftPortrait } from './witchcraftUI.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -44,7 +45,7 @@ export const hud082 = {
 
     // портрет — кнопка профиля героя
     this.portraitGlow = this.add.image(T.portraitX, T.portraitY, 'fx_glow').setTint(COLORS.gold).setBlendMode('ADD').setScale(1.1).setAlpha(0.18);
-    this.portrait = addMedallion(this, T.portraitX, T.portraitY, T.portrait, COLORS.gold);
+    this.portrait = addCraftPortrait(this, T.portraitX, T.portraitY, T.portrait);
     this.portraitHit = this.add.zone(T.portraitX, T.portraitY, T.portraitHit, T.portraitHit).setInteractive({ useHandCursor: true });
     this.portraitHit.on('pointerdown', () => {
       if (this.modal) return;
@@ -107,7 +108,7 @@ export const hud082 = {
     const S = UI.side;
     const make = (y, icon, label, onPress) => {
       const c = this.add.container(S.x, y).setDepth(60);
-      const orb = addOrb(this, 0, 0, S.orb, COLORS.gold, { gem: false });
+      const orb = addCraftMedallion(this, 0, 0, S.orb);
       const ic = fit(this.add.image(0, -2, icon), S.icon);
       const text = this.add.text(0, S.orb / 2 + 4, label, { fontFamily: FONT, fontSize: S.label, color: '#fbefd2', shadow: SH, ...STROKE, strokeThickness: 4 }).setOrigin(0.5, 0);
       const hitH = S.orb / 2 + 4 + 30 + S.orb / 2 + 4;     // кружок + подпись
@@ -199,17 +200,27 @@ export const hud082 = {
     const overlay = this.add.rectangle(0, 0, W, H, 0x000000, M.dim).setOrigin(0).setDepth(9400).setInteractive();
     overlay.on('pointerdown', () => { services.audio.play('ui_back'); this.closeMenu(); });   // касание снаружи только закрывает
     const pw = M.cellW * M.cols + 32, rows = Math.ceil(MENU_ITEMS.length / M.cols);
-    const ph = 84 + rows * M.rowH + 8;
+    const ph = M.header + rows * M.rowH + M.footer;
     const left = M.left, top = M.top;
     const c = this.add.container(0, 0).setDepth(9500);
-    const bg = drawPlate(this.add.graphics(), pw, ph, { accent: COLORS.gold, fill: 0x120d0b, alpha: 0.93, radius: 18 }).setPosition(left + pw / 2, top + ph / 2);
+    const bg = addCraftMenuPanel(this, left, top, pw, ph);
     const blocker = this.add.zone(left + pw / 2, top + ph / 2, pw, ph).setInteractive();   // касание по фону панели не закрывает меню
-    const title = this.add.text(left + pw / 2, top + 22, 'Меню', { fontFamily: FONT, fontSize: UI.type.title, fontStyle: 'bold', color: COLORS.textGold, shadow: SH }).setOrigin(0.5, 0);
+    const title = this.add.text(left + pw / 2, top + 18, 'Меню', { fontFamily: FONT, fontSize: UI.type.title, fontStyle: 'bold', color: COLORS.text, shadow: SH }).setOrigin(0.5, 0);
     c.add([bg, blocker, title]);
+    for (let col = 1; col < M.cols; col++) {
+      c.add(addDivider(this, left + 16 + M.cellW * col, top + M.header + (ph - M.header) / 2,
+        ph - M.header - 48).setAngle(90).setAlpha(0.25));
+    }
+    const closeX = left + pw - 34, closeY = top + 24;
+    const closeOrb = addCraftMedallion(this, closeX, closeY, 52);
+    const closeIcon = fit(this.add.image(closeX, closeY, 'icon_close'), 28);
+    const closeHit = this.add.zone(closeX, closeY, UI.touch.button, UI.touch.button).setInteractive({ useHandCursor: true });
+    closeHit.on('pointerdown', () => { services.audio.play('ui_back'); this.closeMenu(); });
+    c.add([closeOrb, closeIcon, closeHit]);
     const items = MENU_ITEMS.map((item, i) => {
       const col = i % M.cols, row = Math.floor(i / M.cols);
-      const cx = left + 16 + M.cellW * (col + 0.5), cy = top + 84 + row * M.rowH + M.orb / 2 + 4;
-      const orb = addOrb(this, cx, cy, M.orb, COLORS.gold, { gem: false });
+      const cx = left + 16 + M.cellW * (col + 0.5), cy = top + M.header + row * M.rowH + M.orb / 2 + 4;
+      const orb = addCraftMedallion(this, cx, cy, M.orb);
       const icon = fit(this.add.image(cx, cy, item.icon), M.icon);
       const text = this.add.text(cx, cy + M.orb / 2 + 6, item.label, { fontFamily: FONT, fontSize: M.label, color: COLORS.text, shadow: SH }).setOrigin(0.5, 0);
       const hit = this.add.zone(cx, cy + 18, M.cellW - 8, M.hit + 30).setInteractive({ useHandCursor: true });
@@ -223,8 +234,7 @@ export const hud082 = {
     c.setAlpha(0).setX(36);
     this.tweens.add({ targets: c, alpha: 1, x: 0, duration: M.animMs, ease: 'Cubic.easeOut' });
     this.menuBtn.c.setDepth(9600);
-    this.menuBtn.ic.setTexture('icon_close'); fit(this.menuBtn.ic, UI.side.icon * 0.8);
-    this.modal = { menu: true, container: c, overlay, buttons: [], views: [], items, final: false, top, height: ph, left, width: pw };
+    this.modal = { menu: true, container: c, overlay, closeHit, buttons: [], views: [], items, final: false, top, height: ph, left, width: pw };
     this.bus.emit(MSG.MODAL_OPEN);
   },
 

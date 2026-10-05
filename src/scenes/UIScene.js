@@ -23,13 +23,14 @@ import { windows09 } from '../ui/windows09.js';
 import { windows11 } from '../ui/windows11.js';
 import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from '../ui/noticeClose.js';
+import { addCraftMedallion, setCraftMedallion, addCraftDock } from '../ui/witchcraftUI.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
 const W = VIEW.width;
 const H = VIEW.height;
 const BAR_Y = 1096;          // верх зоны нижних кнопок (касания ниже — только кнопки)
-const BTN_Y = 1170;
+const BTN_Y = UI.dock.buttonY;
 const BTN_R = 58;
 const hex = c => '#' + c.toString(16).padStart(6, '0');
 const fmtTime = (ms) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
@@ -137,9 +138,10 @@ export class UIScene extends Phaser.Scene {
     this.questBottom = this.fieldTop() + (this.hintPlate?.visible ? h + 12 : 0);   // где начинаются тосты
   }
 
-  /** Дары и Сумка — отдельные плавающие кнопки без общей плашки (мир виден между ними). */
+  /** Дары и Сумка в общей прозрачной рамке, без перекрывающей мир плашки. */
   buildBottomBar() {
-    const xs = [100, 260, 420, 610];
+    this.dockFrame = addCraftDock(this);
+    const xs = UI.dock.centers;
     this.buttons = {};
     ABILITY_ORDER.forEach((id, i) => { this.buttons[id] = this.makeButton(xs[i], BTN_Y, `icon_${id}`, ABILITIES[id].name, COLORS[ABILITIES[id].color], () => this.bus.emit(MSG.ABILITY_USE, id)); });
     this.buttons.bag = this.makeButton(xs[3], BTN_Y, 'icon_bag', 'Сумка', COLORS.gold, () => this.bus.emit(MSG.OPEN_BAG));
@@ -147,9 +149,11 @@ export class UIScene extends Phaser.Scene {
 
   makeButton(x, y, iconKey, label, color, onPress) {
     const glow = this.add.image(x, y, 'fx_glow').setTint(color).setBlendMode('ADD').setScale(1.5).setAlpha(0);
-    const orb = addOrb(this, x, y, UI.orb.ability, color);
+    const orb = addCraftMedallion(this, x, y, UI.orb.ability);
     const bg = this.add.zone(x, y, BTN_R * 2, BTN_R * 2);   // зона нажатия (прозрачная)
-    const icon = this.add.image(x, y, iconKey).setScale(1.25);
+    const icon = this.add.image(x, y, iconKey);
+    const baseIconScale = UI.dock.icon / Math.max(icon.width, icon.height, 1);
+    icon.setScale(baseIconScale);
     const cd = this.add.graphics();
     const cdText = this.add.text(x, y, '', { fontFamily: FONT, fontSize: UI.type.body, color: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5);
     const lock = this.add.image(x + 34, y - 34, 'icon_lock').setScale(0.42).setVisible(false);
@@ -161,7 +165,7 @@ export class UIScene extends Phaser.Scene {
       this.tweens.add({ targets: [orb, icon], scale: '*=0.92', duration: 70, yoyo: true });
       onPress();
     });
-    return { x, y, glow, orb, bg, icon, cd, cdText, lock, text, color, baseIconScale: 1.25 };
+    return { x, y, glow, orb, bg, icon, cd, cdText, lock, text, color, baseIconScale };
   }
 
   buildContextButton() {
@@ -332,8 +336,8 @@ export class UIScene extends Phaser.Scene {
       const st = prov ? prov(id) : { state: 'locked' };
       const locked = st.state === 'locked';
       b.lock.setVisible(locked);
-      b.icon.setAlpha(locked || st.state === 'benched' ? 0.3 : st.state === 'nomana' ? 0.45 : 1);   // benched (v0.16.0): дар не в слоте
-      setOrb(b.orb, this, b.color, UI.orb.ability, locked);
+      b.icon.setAlpha(locked || st.state === 'benched' ? 0.3 : st.state === 'nomana' ? 0.45 : 1);   // дар вне боевого слота остаётся приглушённым
+      setCraftMedallion(b.orb, locked);
       b.text.setText(locked ? ABILITIES[id].name : services.abilities.label(id));
       b.cd.clear();
       if (st.state === 'cooldown') {

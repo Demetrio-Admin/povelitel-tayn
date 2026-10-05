@@ -46,6 +46,31 @@ for (const [enemy, spawn, level] of MATCHUPS) {
 ok(same, `${combos} боёв (5 врагов × 2 стиля × 3 «игрока»): повтор совпал с игрой бит в бит — HP, мана, враг, время, перезарядки, опыт даров`);
 ok(wins >= 5 && losses >= 1, `среди них и победы (${wins}), и поражения (${losses}) — проверен весь диапазон`);
 
+console.log('\nБой: новые ветки, слоты и амулеты (v0.16.0) — сервер проигрывает то же самое');
+{
+  const ABIL = { telekinesis: { level: 3, unlocked: true }, fire: { level: 3, unlocked: true }, seal: { level: 3, unlocked: true } };
+  const BUILDS = [
+    { branches: { fire: 'arsonist', seal: 'seer', telekinesis: 'lord' }, slots: ['fire', 'seal', 'telekinesis'], amulets: ['amulet_forest', 'amulet_lunar'] },
+    { branches: { fire: 'blaster', seal: 'piercer', telekinesis: 'breaker' }, slots: ['fire', 'seal'], amulets: ['amulet_focus'] },
+    { branches: { fire: 'arsonist' }, slots: ['telekinesis', 'fire'], amulets: [] },
+  ];
+  let n = 0, all = true, withFlash = 0, withPuddle = 0;
+  for (const build of BUILDS) for (const [enemy, spawn, level] of MATCHUPS) for (const policy of ['smart', 'mixed']) {
+    const [mh, mm] = maxOf(level);
+    const ctx = ctxFor({ enemy, spawn, level: 10, abilities: ABIL, hp: mh, mana: mm, potions: { elixir_life: 2, elixir_mana: 2, resin_flask: 2 }, build });
+    const play = playBot(ctx, { seed: 4, policy, maxTicks: 60 * 200 });
+    const snap = snapFor(ctx);
+    const r = verifyCombat(snap, JSON.parse(JSON.stringify(play.log)), snap.combatSince + play.log.ticks * STEP * 1000 + 1000);
+    n++;
+    if (!r.ok || r.verdict.outcome !== (play.cm.result || 'retreat') || r.verdict.mana !== play.cm.hero.mana) { all = false; console.log('   ✗ расхождение', enemy, policy, r.reason, r.verdict?.outcome, play.cm.result); }
+    if (play.cm.stats.abilityUses.seal && build.branches.seal) withFlash++;
+    if (play.cm.stats.abilityUses.fire && build.branches.fire === 'arsonist') withPuddle++;
+    if (build.slots.length < 3 && !build.slots.includes('seal') && play.cm.stats.abilityUses.seal) { all = false; console.log('   ✗ дар вне слота сработал'); }
+  }
+  ok(all, `${n} боёв с ветками Огня и Астрала, слотами и амулетами: сервер проигрывает запись бит в бит`);
+  ok(withFlash > 0 && withPuddle > 0, `в этих боях применялись и вспышка (${withFlash}), и лужа (${withPuddle})`);
+}
+
 console.log('\nБой: запись');
 {
   const ctx = ctxOf('rootling', 'rootling_01', 5);

@@ -138,6 +138,64 @@ var MIGRATION_V10 = {
   notIf: ["restoration_bundle_crafted", "chapter_1_complete"]
 };
 
+// src/config/build.js
+var GIFT_IDS = ["telekinesis", "fire", "seal"];
+var SLOT_RULES = { base: 3, extraAtLevel: 10 };
+var AMULET_SLOTS = 2;
+var AMULETS = {
+  amulet_focus: {
+    name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0421\u043E\u0441\u0440\u0435\u0434\u043E\u0442\u043E\u0447\u0435\u043D\u0438\u044F",
+    icon: "icon_core",
+    text: "\u0423\u0440\u043E\u043D \u0434\u0430\u0440\u043E\u0432 \u0438 \u0430\u0432\u0442\u043E\u0430\u0442\u0430\u043A\u0438 +12%.",
+    tradeoff: "\u041D\u0435\u0442 \u0437\u0430\u0449\u0438\u0442\u044B: \u0432\u0440\u0430\u0433 \u0431\u044C\u0451\u0442 \u043A\u0430\u043A \u043E\u0431\u044B\u0447\u043D\u043E.",
+    effect: { damageMult: 1.12 }
+  },
+  amulet_forest: {
+    name: "\u041B\u0435\u0441\u043D\u043E\u0439 \u0430\u043C\u0443\u043B\u0435\u0442",
+    icon: "icon_ember",
+    text: "\u041F\u043E\u043B\u0443\u0447\u0430\u0435\u043C\u044B\u0439 \u0443\u0440\u043E\u043D \u221220%.",
+    tradeoff: "\u0423\u0440\u043E\u043D \u0433\u0435\u0440\u043E\u044F \u22128%.",
+    effect: { incomingMult: 0.8, damageMult: 0.92 }
+  },
+  amulet_lunar: {
+    name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u0430\u043C\u0443\u043B\u0435\u0442",
+    icon: "icon_shard",
+    text: "\u041E\u0434\u0438\u043D \u0440\u0430\u0437 \u0437\u0430 \u0431\u043E\u0439, \u043A\u043E\u0433\u0434\u0430 \u043C\u0430\u043D\u044B \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043C\u0435\u043D\u044C\u0448\u0435 20%, \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043F\u043E\u043B\u043E\u0432\u0438\u043D\u0443 \u0437\u0430\u043F\u0430\u0441\u0430.",
+    tradeoff: "\u0421\u0430\u043C \u043F\u043E \u0441\u0435\u0431\u0435 \u0441\u0438\u043B\u0443 \u043D\u0435 \u0434\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442.",
+    effect: { manaRescue: { below: 0.2, gainPct: 0.5 } }
+  }
+};
+var AMULET_IDS = Object.keys(AMULETS);
+var slotCount = (level, rules = SLOT_RULES) => rules.base + ((level || 0) >= rules.extraAtLevel ? 1 : 0);
+var defaultSlots = (unlocked, count, gifts = GIFT_IDS) => gifts.filter((g) => unlocked.includes(g)).slice(0, count);
+var isStrArr = (a) => Array.isArray(a) && a.length <= 8 && a.every((x) => typeof x === "string");
+var hasDup = (a) => new Set(a).size !== a.length;
+function checkBuild(c, want, rules) {
+  const hasSlots = want.slots !== void 0 && want.slots !== null;
+  const hasAmulets = want.amulets !== void 0 && want.amulets !== null;
+  if (hasSlots && !isStrArr(want.slots) || hasAmulets && !isStrArr(want.amulets) || !hasSlots && !hasAmulets) return { ok: false, reason: "bad" };
+  if (c.combat) return { ok: false, reason: "combat" };
+  if (hasSlots) {
+    const a = want.slots;
+    if (a.length === 0) return { ok: false, reason: "none" };
+    if (hasDup(a)) return { ok: false, reason: "dup" };
+    if (a.some((g) => !rules.gifts.includes(g))) return { ok: false, reason: "unknown" };
+    if (a.some((g) => !c.unlocked.includes(g))) return { ok: false, reason: "locked" };
+    if (a.length > slotCount(c.level, rules.slots)) return { ok: false, reason: "too_many" };
+  }
+  if (hasAmulets) {
+    const a = want.amulets;
+    if (hasDup(a)) return { ok: false, reason: "dup" };
+    if (a.some((g) => !rules.amulets.includes(g))) return { ok: false, reason: "unknown" };
+    if (a.some((g) => !c.owns(g))) return { ok: false, reason: "missing" };
+    if (a.length > rules.amuletSlots) return { ok: false, reason: "too_many" };
+  }
+  return { ok: true };
+}
+function buildSlotRules() {
+  return { slots: { ...SLOT_RULES }, amuletSlots: AMULET_SLOTS, amulets: [...AMULET_IDS], gifts: [...GIFT_IDS] };
+}
+
 // src/config/balance.progression.js
 var ITEMS = {
   coins: { name: "\u041C\u043E\u043D\u0435\u0442\u044B", icon: "icon_coin" },
@@ -150,6 +208,8 @@ var ITEMS = {
   ...RESOURCE_ITEMS,
   // v0.8: лесные грибы, смола, пыль и расходники (названия лунной травы и осколка берутся отсюда)
   // v0.10.0: сюжетные предметы первой главы
+  // v0.16.0: амулеты (лежат в сумке, надеваются на экране «Дары»)
+  ...Object.fromEntries(Object.entries(AMULETS).map(([id, a]) => [id, { name: a.name, icon: a.icon }])),
   ...Object.fromEntries(Object.entries(STORY_ITEMS).map(([id, it]) => [id, { name: it.name, icon: it.icon }]))
 };
 var TIMER_MODE = "live";
@@ -1252,7 +1312,15 @@ var GameState = class {
   // («последний записал»), поэтому схему базы менять не пришлось. Слоты и амулеты лягут туда же.
   buildData() {
     const b = this.getObject("player_build");
-    return { branches: { ...b && typeof b.branches === "object" && b.branches ? b.branches : {} } };
+    const o = b && typeof b === "object" ? b : {};
+    const ids = (a) => Array.isArray(a) ? a.filter((x) => typeof x === "string") : null;
+    return {
+      branches: { ...o.branches && typeof o.branches === "object" ? o.branches : {} },
+      slots: ids(o.slots),
+      // null — слоты не настраивались: действуют первые открытые дары
+      amulets: ids(o.amulets) || [],
+      preset: o.preset && typeof o.preset === "object" ? { slots: ids(o.preset.slots) || [], amulets: ids(o.preset.amulets) || [] } : null
+    };
   }
   /** Выбранная ветка дара или null. Ветка действует, только пока она есть в данных дара и ступень её достигла. */
   branchOf(abilityId) {
@@ -1261,9 +1329,65 @@ var GameState = class {
     return br && this.abilityLevel(abilityId) >= (br.fromLevel || 1) ? id : null;
   }
   setBranch(abilityId, branchId) {
+    const raw = this.getObject("player_build");
+    const o = raw && typeof raw === "object" ? raw : {};
+    this.setObject("player_build", { ...o, branches: { ...o.branches && typeof o.branches === "object" ? o.branches : {}, [abilityId]: branchId } });
+  }
+  // ---------- слоты даров, пресет и амулеты (v0.16.0, config/build.js) ----------
+  /** Сколько слотов даров у героини. */
+  giftSlotCount() {
+    return slotCount(this.data.heroLevel);
+  }
+  /** Дары, которые сейчас в слотах (действуют в бою). Пока слоты не настраивали — первые открытые по порядку. */
+  equippedGifts() {
+    const unlocked = GIFT_IDS.filter((g) => this.isUnlocked(g));
     const b = this.buildData();
-    b.branches[abilityId] = branchId;
-    this.setObject("player_build", { branches: b.branches });
+    if (!b.slots) return defaultSlots(unlocked, this.giftSlotCount());
+    return b.slots.filter((g) => unlocked.includes(g)).slice(0, this.giftSlotCount());
+  }
+  isEquipped(id) {
+    return this.equippedGifts().includes(id);
+  }
+  /** Надетые амулеты (их эффекты считает бой). */
+  equippedAmulets() {
+    return this.buildData().amulets.filter((a) => AMULETS[a]);
+  }
+  hasAmulet(id) {
+    return this.equippedAmulets().includes(id);
+  }
+  buildContext(inCombat = false) {
+    return { level: this.data.heroLevel, unlocked: GIFT_IDS.filter((g) => this.isUnlocked(g)), owns: (id) => this.item(id) >= 1, combat: inCombat };
+  }
+  /** Выбрать слоты и/или амулеты ({ slots?, amulets? }). Проверка общая с сервером (checkBuild). */
+  setBuild(want, inCombat = false) {
+    const r = checkBuild(this.buildContext(inCombat), want, buildSlotRules());
+    if (!r.ok) return r;
+    const raw = this.getObject("player_build");
+    const o = raw && typeof raw === "object" ? { ...raw } : {};
+    if (want.slots != null) o.slots = [...want.slots];
+    if (want.amulets != null) o.amulets = [...want.amulets];
+    this.setObject("player_build", o);
+    return { ok: true };
+  }
+  /** Единственный бесплатный пресет: сохранить текущие слоты и амулеты / применить сохранённые. */
+  buildPreset(mode, inCombat = false) {
+    if (inCombat) return { ok: false, reason: "combat" };
+    const raw = this.getObject("player_build");
+    const o = raw && typeof raw === "object" ? { ...raw } : {};
+    if (mode === "save") {
+      o.preset = { slots: this.equippedGifts(), amulets: this.equippedAmulets() };
+      this.setObject("player_build", o);
+      return { ok: true };
+    }
+    if (mode === "load") {
+      const p = this.buildData().preset;
+      if (!p) return { ok: false, reason: "empty" };
+      o.slots = [...p.slots];
+      o.amulets = [...p.amulets];
+      this.setObject("player_build", o);
+      return { ok: true };
+    }
+    return { ok: false, reason: "bad" };
   }
   /** Смена ветки за монеты. Не в бою — это проверяет окно (в бою кнопки нет). */
   respecBranch(abilityId, branchId) {
@@ -1359,8 +1483,8 @@ var SIDE_QUESTS = {
     summary: "\u0414\u0443\u0445 \u0430\u043B\u0442\u0430\u0440\u044F \u0421\u0435\u043B\u0435\u043D\u0430 \u043F\u0440\u043E\u0441\u0438\u0442 \u043D\u0430\u0439\u0442\u0438 \u0440\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0443\u044E \u043F\u044B\u043B\u044C \u0443 \u0430\u043B\u0442\u0430\u0440\u044F: \u0435\u0451 \u043C\u043E\u0436\u043D\u043E \u0441\u043E\u0431\u0440\u0430\u0442\u044C \u0441 \u0440\u0443\u043D\u043D\u043E\u0439 \u043F\u043B\u0438\u0442\u044B \u0438\u043B\u0438 \u043D\u0430\u0439\u0442\u0438 \u043F\u043E\u0434 \u0441\u0434\u0432\u0438\u043D\u0443\u0442\u044B\u043C \u043A\u0430\u043C\u043D\u0435\u043C.",
     objectives: [{ type: "item", item: "rune_dust", count: 1, text: "\u0420\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C" }],
     turnIn: { npc: "selena", consume: { rune_dust: 1 } },
-    reward: { heroXP: 20, schoolXP: { telekinesis: 15 }, items: { lunar_shard: 1, elixir_mana: 1 } },
-    rewardText: "\u041B\u0443\u043D\u043D\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A, \u043B\u0443\u043D\u043D\u044B\u0439 \u044D\u043B\u0438\u043A\u0441\u0438\u0440, 20 \u043E\u043F\u044B\u0442\u0430",
+    reward: { heroXP: 20, schoolXP: { telekinesis: 15 }, items: { lunar_shard: 1, elixir_mana: 1, amulet_lunar: 1 } },
+    rewardText: "\u041B\u0443\u043D\u043D\u044B\u0439 \u0430\u043C\u0443\u043B\u0435\u0442, \u043B\u0443\u043D\u043D\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A, \u043B\u0443\u043D\u043D\u044B\u0439 \u044D\u043B\u0438\u043A\u0441\u0438\u0440, 20 \u043E\u043F\u044B\u0442\u0430",
     requires: { event: "lunar_quest_start" }
     // Селена просит пыль, когда алтарь уже заговорил с героиней
   },
@@ -1371,8 +1495,8 @@ var SIDE_QUESTS = {
     summary: "\u041E\u0445\u043E\u0442\u043D\u0438\u043A \u0413\u043E\u0440\u0430\u043D \u043F\u0440\u043E\u0441\u0438\u0442 \u043F\u0440\u043E\u0433\u043D\u0430\u0442\u044C \u043F\u0430\u0434\u0430\u043B\u044C\u0449\u0438\u043A\u0430, \u0440\u0430\u0437\u043E\u0440\u0438\u0432\u0448\u0435\u0433\u043E \u0435\u0433\u043E \u043B\u0430\u0433\u0435\u0440\u044C \u0443 \u0440\u0443\u0447\u044C\u044F. \u041E\u0433\u043E\u043D\u044C \u043F\u0443\u0433\u0430\u0435\u0442 \u0437\u0432\u0435\u0440\u044F, \u0431\u0440\u043E\u0448\u0435\u043D\u043D\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C \u0440\u0430\u043D\u0438\u0442.",
     objectives: [{ type: "enemy", id: "scavenger_02", text: "\u041F\u0440\u043E\u0433\u043D\u0430\u0442\u044C \u043F\u0430\u0434\u0430\u043B\u044C\u0449\u0438\u043A\u0430" }],
     turnIn: { npc: "goran", consume: {} },
-    reward: { heroXP: 25, coins: 40, items: { tree_resin: 2, resin_flask: 1 } },
-    rewardText: "\u0421\u043C\u043E\u043B\u044F\u043D\u0430\u044F \u0441\u043A\u043B\u044F\u043D\u043A\u0430, 2 \u0441\u043C\u043E\u043B\u044B, 40 \u043C\u043E\u043D\u0435\u0442, 25 \u043E\u043F\u044B\u0442\u0430"
+    reward: { heroXP: 25, coins: 40, items: { tree_resin: 2, resin_flask: 1, amulet_focus: 1 } },
+    rewardText: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0421\u043E\u0441\u0440\u0435\u0434\u043E\u0442\u043E\u0447\u0435\u043D\u0438\u044F, \u0441\u043C\u043E\u043B\u044F\u043D\u0430\u044F \u0441\u043A\u043B\u044F\u043D\u043A\u0430, 2 \u0441\u043C\u043E\u043B\u044B, 40 \u043C\u043E\u043D\u0435\u0442, 25 \u043E\u043F\u044B\u0442\u0430"
   }
 };
 var SIDE_QUEST_ORDER = ["sq_herbs", "sq_hunter", "sq_dust"];
@@ -1530,7 +1654,7 @@ function buildRules() {
     if (!a.branches) continue;
     branches[id] = Object.fromEntries(Object.entries(a.branches).map(([b, v]) => [b, { fromLevel: v.fromLevel || 1 }]));
   }
-  return { respecCoins: BRANCH_RESPEC.coins, branches };
+  return { respecCoins: BRANCH_RESPEC.coins, branches, ...buildSlotRules() };
 }
 function spawnStartRules() {
   const out = {};
@@ -1756,7 +1880,7 @@ var ENEMIES = {
     interruptedCooldownSec: 7,
     defense: 0,
     armor: { value: 0.45, source: "crystal", disabledSec: 8 },
-    rewards: { heroXP: 150, schoolXP: { telekinesis: 60, fire: 60 }, items: { rare_core: 1, lunar_shard: 3 }, coins: 60 },
+    rewards: { heroXP: 150, schoolXP: { telekinesis: 60, fire: 60 }, items: { rare_core: 1, lunar_shard: 3, amulet_forest: 1 }, coins: 60 },
     arena: "guardian"
   },
   // v0.10.0 — финальное испытание первой главы за Древними воротами. 900 HP (не старый босс на 1050), три фазы.
@@ -2289,6 +2413,17 @@ var CombatManager = class {
       damageMult: hs.damageMult,
       autoTimer: HERO_BASE.autoAttack.intervalSec
     };
+    this.amulets = state.equippedAmulets ? state.equippedAmulets() : [];
+    let dm = 1, inc = 1;
+    for (const a of this.amulets) {
+      const e = AMULETS[a].effect;
+      if (e.damageMult) dm *= e.damageMult;
+      if (e.incomingMult) inc *= e.incomingMult;
+    }
+    this.hero.damageMult = Math.round(this.hero.damageMult * dm * 1e3) / 1e3;
+    this.incomingMult = inc;
+    this.manaRescue = this.amulets.map((a) => AMULETS[a].effect.manaRescue).find(Boolean) || null;
+    this.manaRescueUsed = false;
     this.cooldowns = Object.fromEntries(ABILITY_ORDER.map((id) => [id, 0]));
     const arena = ARENAS[this.def.arena] || ARENAS.glade;
     this.arena = arena;
@@ -2346,6 +2481,7 @@ var CombatManager = class {
   abilityState(id) {
     const s = this.abilities.stats(id);
     if (!s || !this.abilities.isUnlocked(id)) return { id, state: "locked" };
+    if (this.state.isEquipped && !this.state.isEquipped(id)) return { id, state: "benched" };
     const cd = this.cooldowns[id];
     if (cd > 0) return { id, state: "cooldown", cdLeft: cd, cdFrac: cd / s.cooldownSec };
     if (this.hero.mana < s.manaCost) return { id, state: "nomana" };
@@ -2358,6 +2494,7 @@ var CombatManager = class {
     if (st.state !== "ready") return { ok: false, reason: st.state };
     const s = this.abilities.stats(id);
     this.hero.mana -= s.manaCost;
+    this.checkManaRescue();
     this.cooldowns[id] = this.startCooldown(id, s);
     this.stats.abilityUses[id]++;
     this.abilities.grantUseXP(id, "combat");
@@ -2498,6 +2635,15 @@ var CombatManager = class {
       }
     }
   }
+  /** v0.16.0: Лунный амулет — один раз за бой, когда маны меньше below от максимума, возвращает gainPct максимума. */
+  checkManaRescue() {
+    const r = this.manaRescue;
+    if (!r || this.manaRescueUsed || this.hero.mana >= this.hero.maxMana * r.below) return;
+    this.manaRescueUsed = true;
+    const gain = Math.min(this.hero.maxMana - this.hero.mana, Math.round(this.hero.maxMana * r.gainPct));
+    this.hero.mana += gain;
+    this.emit({ type: "manaRescue", mana: gain });
+  }
   handleInterrupt(tags) {
     const r = this.enemy.tryInterrupt(tags);
     if (!r.attempted) return;
@@ -2589,6 +2735,7 @@ var CombatManager = class {
     this.commit();
   }
   hitHero(damage, strong, name) {
+    damage = Math.max(1, Math.round(damage * this.incomingMult));
     this.hero.hp = Math.max(0, this.hero.hp - damage);
     this.stats.damageTaken += damage;
     this.emit({ type: "damage", target: "hero", amount: damage, strong, name });

@@ -4,11 +4,11 @@ import { QuestFlags } from '../src/state/QuestFlags.js';
 import { EventBus } from '../src/state/EventBus.js';
 import { AbilitySystem } from '../src/systems/AbilitySystem.js';
 import { CombatManager } from '../src/systems/CombatManager.js';
-import { UPGRADES, TIMER_MODE, BRANCH_RESPEC } from '../src/config/balance.progression.js';
+import { UPGRADES, TIMER_MODE, BRANCH_RESPEC, ITEMS } from '../src/config/balance.progression.js';
 import { ENEMIES } from '../src/config/balance.enemies.js';
 import { ABILITIES } from '../src/config/balance.abilities.js';
 import { toSnapshot, fromSnapshot, diffSnapshots, applyPatch, emptySnapshot } from '../src/cloud/playerModel.js';
-import { giftCards, statLines, nextStep, upgradesOf } from '../src/systems/gifts.js';
+import { giftCards, statLines, nextStep, upgradesOf, buildView, toggleSlot, toggleAmulet } from '../src/systems/gifts.js';
 
 let failures = 0;
 const ok = (c, m) => { if (c) console.log('  ✓', m); else { failures++; console.log('  ✗', m); } };
@@ -273,6 +273,98 @@ console.log('\n[v0.16.0] Экран «Дары»: новые ветки');
   ok(w.state.abilityLevel('fire') === 3 && w.state.branchOf('fire') === 'blaster', 'по таймеру — Огонь III и ветка Взрывника');
   const after = giftCards(w.state).find(c => c.id === 'fire');
   ok(after.respec.length === 1 && after.respec[0].id === 'arsonist' && after.maxed, 'можно сменить ветку на Поджигателя, ступеней выше нет');
+}
+
+console.log('\n[v0.16.0] Слоты даров, пресет, амулеты');
+{
+  const { checkBuild, slotCount, buildSlotRules, AMULETS, AMULET_SLOTS, SLOT_RULES } = await import('../src/config/build.js');
+  const { applyAction } = await import('../src/cloud/playerModel.js');
+  ok(slotCount(1) === 3 && slotCount(9) === 3 && slotCount(10) === 4 && SLOT_RULES.base === 3, 'слотов даров три, четвёртый — с 10 уровня героя');
+  ok(AMULET_SLOTS === 2 && Object.keys(AMULETS).join() === 'amulet_focus,amulet_forest,amulet_lunar', 'два слота амулетов, три амулета');
+  for (const [id, a] of Object.entries(AMULETS)) ok(a.text && a.tradeoff && ITEMS[id]?.name === a.name, `${id}: есть описание, цена и предмет в сумке`);
+  const rules = buildSlotRules();
+  const ctx = (o = {}) => ({ level: 3, unlocked: ['telekinesis', 'fire'], owns: (id) => id === 'amulet_focus', combat: false, ...o });
+  const reason = (want, c) => { const r = checkBuild(c || ctx(), want, rules); return r.ok ? 'ok' : r.reason; };
+  ok(reason({ slots: ['fire'] }) === 'ok' && reason({ slots: [] }) === 'none' && reason({ slots: ['fire', 'fire'] }) === 'dup' && reason({ slots: ['x'] }) === 'unknown' && reason({ slots: ['seal'] }) === 'locked', 'слоты: порядок проверок none / dup / unknown / locked');
+  ok(reason({ slots: ['telekinesis', 'fire'] }, ctx({ unlocked: ['telekinesis', 'fire', 'seal'] })) === 'ok' && reason({}) === 'bad' && reason({ slots: 'fire' }) === 'bad', 'пустой и неверный выбор — bad');
+  ok(reason({ amulets: ['amulet_focus'] }) === 'ok' && reason({ amulets: ['amulet_lunar'] }) === 'missing' && reason({ amulets: ['nope'] }) === 'unknown' && reason({ amulets: ['amulet_focus', 'amulet_focus'] }) === 'dup', 'амулеты: ok / missing / unknown / dup');
+  ok(reason({ slots: ['fire'] }, ctx({ combat: true })) === 'combat', 'в бою выбор закрыт');
+  ok(reason({ amulets: ['amulet_focus', 'amulet_forest', 'amulet_lunar'] }, ctx({ owns: () => true })) === 'too_many', 'больше двух амулетов не надеть');
+
+  // GameState: слоты по умолчанию, выбор, пресет, ветки не затирают билд
+  const w = ready(world());
+  w.abilities.unlock('fire', 2); w.abilities.unlock('telekinesis', 3);
+  ok(w.state.equippedGifts().join() === 'telekinesis,fire,seal', 'по умолчанию в слотах все три открытых дара');
+  ok(w.state.setBuild({ slots: ['fire'] }).ok && w.state.equippedGifts().join() === 'fire' && w.state.isEquipped('fire') && !w.state.isEquipped('seal'), 'выбранный слот действует');
+  w.state.setBranch('telekinesis', 'lord');
+  ok(w.state.buildData().slots.join() === 'fire' && w.state.branchOf('telekinesis') === 'lord', 'смена ветки не стирает слоты');
+  ok(w.state.buildPreset('load').reason === 'empty', 'пустой пресет не загрузить');
+  w.state.addItem('amulet_focus', 1);
+  ok(w.state.buildPreset('save').ok && w.state.setBuild({ slots: ['telekinesis', 'seal'], amulets: ['amulet_focus'] }).ok, 'пресет сохранён, билд изменён');
+  ok(w.state.buildPreset('load').ok && w.state.equippedGifts().join() === 'fire' && w.state.equippedAmulets().length === 0, 'пресет вернул прежние слоты и амулеты');
+  ok(w.state.buildPreset('load', true).reason === 'combat', 'в бою пресет закрыт');
+  ok(w.state.setBuild({ slots: ['fire', 'seal'] }).ok && w.state.equippedGifts().join() === 'fire,seal', 'можно поставить любой набор открытых даров');
+
+  // модель окна: слоты и амулеты
+  const w2 = ready(world()); w2.abilities.unlock('fire', 2);
+  let bv = buildView(w2.state);
+  ok(bv.slotCount === 3 && bv.slots.length === 3 && bv.slots.every(x => x.equipped) && bv.amulets.length === 0 && !bv.hasPreset, 'экран: три дара в слотах, амулетов нет, пресета нет');
+  ok(toggleSlot(w2.state, 'fire').slots.join() === 'telekinesis,seal', 'нажатие на дар в слоте убирает его');
+  w2.state.setBuild({ slots: ['fire'] });
+  ok(toggleSlot(w2.state, 'fire').reason === 'none', 'последний дар из слота не убрать');
+  ok(toggleSlot(w2.state, 'seal').slots.join() === 'fire,seal', 'нажатие на дар в запасе ставит его в слот (порядок как у даров)');
+  w2.state.addItem('amulet_focus', 1); w2.state.addItem('amulet_forest', 1); w2.state.addItem('amulet_lunar', 1);
+  bv = buildView(w2.state);
+  ok(bv.amulets.length === 3 && bv.amulets.every(a => !a.equipped), 'в окне видны амулеты из сумки');
+  w2.state.setBuild({ amulets: ['amulet_focus', 'amulet_forest'] });
+  ok(toggleAmulet(w2.state, 'amulet_lunar').reason === 'full' && toggleAmulet(w2.state, 'amulet_focus').amulets.join() === 'amulet_forest', 'амулетов два: третий не надеть, снять можно');
+
+  // JS-модель сервера выдаёт те же ответы
+  const snap = { ...emptySnapshot(), level: 3, abilities: { telekinesis: { level: 3, unlocked: true }, fire: { level: 2, unlocked: true }, seal: { level: 0, unlocked: false } }, inventory: { amulet_focus: 1 } };
+  const act = (sn, a) => applyAction(sn, a, null);
+  let r = act(snap, { op: 'build_set', slots: ['fire'], amulets: ['amulet_focus'] });
+  ok(r.result.ok && r.snapshot.objects.player_build.slots[0] === 'fire' && r.snapshot.objects.player_build.amulets[0] === 'amulet_focus', 'модель сервера: build_set');
+  ok(act(snap, { op: 'build_set', slots: ['seal'] }).result.reason === 'locked' && act({ ...snap, combatSince: 5 }, { op: 'build_set', slots: ['fire'] }).result.reason === 'combat', 'модель сервера: locked и combat');
+  r = act(r.snapshot, { op: 'build_preset', mode: 'save' });
+  ok(r.result.ok && r.snapshot.objects.player_build.preset.slots[0] === 'fire', 'модель сервера: пресет сохранён');
+  r = act(r.snapshot, { op: 'respec', ability: 'telekinesis', branch: 'breaker' });
+  ok(r.result.reason === 'unavailable' && r.snapshot.objects.player_build.slots[0] === 'fire', 'модель сервера: билд цел после отклонённой смены ветки');
+}
+
+console.log('\n[v0.16.0] Бой: слоты и амулеты');
+{
+  const mk = (setup, enemy = 'rootling') => {
+    const w = ready(world()); w.abilities.unlock('fire', 2); w.abilities.unlock('seal', 2);
+    setup?.(w);
+    const cm = new CombatManager({ enemyType: enemy, state: w.state, abilities: w.abilities });
+    cm.hero.mana = cm.hero.maxMana; cm.hero.hp = cm.hero.maxHp;
+    return cm;
+  };
+  const noAmulet = mk(), bench = mk((w) => w.state.setBuild({ slots: ['telekinesis'] }));
+  ok(noAmulet.abilityState('fire').state === 'ready', 'без настройки дары доступны');
+  ok(bench.abilityState('fire').state === 'benched' && bench.abilityState('telekinesis').state === 'ready', 'дар вне слота — benched, в слоте — готов');
+  ok(!bench.useAbility('fire').ok && bench.useAbility('fire').reason === 'benched' && bench.hero.mana === bench.hero.maxMana, 'дар вне слота не применить, мана не тратится');
+  const withAmulet = (id) => mk((w) => { w.state.addItem(id, 1); w.state.setBuild({ amulets: [id] }); });
+  const fm = withAmulet('amulet_focus'), fo = withAmulet('amulet_forest'), pl = mk();
+  ok(Math.abs(fm.hero.damageMult / pl.hero.damageMult - 1.12) < 0.003, `Сосредоточение: урон ×1,12 (${fm.hero.damageMult} против ${pl.hero.damageMult})`);
+  ok(fo.hero.damageMult < pl.hero.damageMult && fo.incomingMult === 0.8, 'Лесной: урон героя ниже, входящий ×0,8');
+  const hit = (cm) => { const h = cm.hero.hp; cm.hitHero(20, false); return h - cm.hero.hp; };
+  ok(hit(fo) === 16 && hit(pl) === 20, 'Лесной амулет: удар 20 → 16');
+  const dmg = (cm) => { cm.enemy.def = { ...cm.enemy.def, defense: 0, weaknesses: null }; const h = cm.enemy.hp; cm.useAbility('seal'); return h - cm.enemy.hp; };
+  ok(dmg(withAmulet('amulet_focus')) > dmg(mk()), 'Сосредоточение: Астрал бьёт сильнее');
+  // Лунный: один раз за бой возвращает ману
+  const lu = withAmulet('amulet_lunar');
+  lu.hero.mana = 30;   // 30 из 135: после траты станет ниже 20%
+  lu.useAbility('fire');
+  const ev = lu.drainEvents().find(e => e.type === 'manaRescue');
+  ok(ev && lu.hero.mana > 60 && lu.manaRescueUsed, `Лунный амулет вернул ману (+${ev?.mana})`);
+  lu.hero.mana = 10; lu.cooldowns.fire = 0; lu.useAbility('fire');
+  ok(!lu.drainEvents().some(e => e.type === 'manaRescue'), 'второй раз за бой не срабатывает');
+  ok(!mk().drainEvents().some(e => e.type === 'manaRescue') && mk().manaRescue === null, 'без амулета ничего не происходит');
+  // экран «Дары» читает те же слоты
+  const w = ready(world()); w.abilities.unlock('fire', 2);
+  w.state.setBuild({ slots: ['fire'] });
+  ok(giftCards(w.state).find(c => c.id === 'telekinesis').equipped === false && giftCards(w.state).find(c => c.id === 'fire').equipped === true, 'карточки даров знают, какой дар в слоте');
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты даров пройдены');

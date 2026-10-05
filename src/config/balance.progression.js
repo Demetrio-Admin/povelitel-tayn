@@ -2,6 +2,7 @@
 // Источник: Progression & Economy v0.1, First Location Blueprint v0.1 (зоны E, F).
 import { RESOURCE_ITEMS } from './resources.js';
 import { STORY_ITEMS } from './storyItems.js';
+import { AMULETS } from './build.js';
 
 export const ITEMS = {
   coins:        { name: 'Монеты',          icon: 'icon_coin' },
@@ -13,6 +14,8 @@ export const ITEMS = {
   rare_core:    { name: 'Редкое ядро',      icon: 'icon_core' },
   ...RESOURCE_ITEMS, // v0.8: лесные грибы, смола, пыль и расходники (названия лунной травы и осколка берутся отсюда)
   // v0.10.0: сюжетные предметы первой главы
+  // v0.16.0: амулеты (лежат в сумке, надеваются на экране «Дары»)
+  ...Object.fromEntries(Object.entries(AMULETS).map(([id, a]) => [id, { name: a.name, icon: a.icon }])),
   ...Object.fromEntries(Object.entries(STORY_ITEMS).map(([id, it]) => [id, { name: it.name, icon: it.icon }])),
 };
 

@@ -157,4 +157,7 @@ export class PlayerActions {
   researchStart(upgrade) { return this.mirror({ op: 'research_start', upgrade }); }
   researchFinish() { return this.mirror({ op: 'research_finish' }); }
   respec(ability, branch) { return this.mirror({ op: 'respec', ability, branch }); }
+  // v0.16.0: слоты даров, амулеты и единственный пресет — сервер проверяет и записывает (player_build)
+  buildSet(want) { return this.mirror({ op: 'build_set', ...want }); }
+  buildPreset(mode) { return this.mirror({ op: 'build_preset', mode }); }
 }

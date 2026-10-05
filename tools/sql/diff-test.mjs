@@ -28,7 +28,7 @@ const NEW_EVENTS = [...new Set([...EVENT_KEYS, ...Object.values(RULES.events).fl
   ...Object.values(RULES.spawnStart).flatMap(x => [x.event, ...(x.requires ? [x.requires] : [])]),
   ...Object.values(RULES.world).flatMap(w => w.events || [])])];
 const NEW_ITEMS = [...new Set([...Object.values(RULES.quests).flatMap(q => Object.keys(q.consume)), ...Object.values(RULES.quests).flatMap(q => q.objectives.filter(o => o.type === 'item').map(o => o.item)),
-  ...Object.values(RULES.research).flatMap(u => Object.keys(u.items)), 'coins'])];
+  ...Object.values(RULES.research).flatMap(u => Object.keys(u.items)), ...RULES.build.amulets, 'coins'])];
 const NEW_ENEMIES = [...new Set(Object.values(RULES.quests).flatMap(q => q.objectives.filter(o => o.type === 'enemy').map(o => o.id)))];
 let seed = 12345;
 const rnd = () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -177,6 +177,15 @@ const SCRIPTED = [
   A('research_start', { upgrade: 'fire_2' }), RS(1000), A('research_finish'), A('research_start', { upgrade: 'telekinesis_3_lord' }), RS(4000), A('research_finish'),
   A('respec', { ability: 'telekinesis', branch: 'breaker' }), A('respec', { ability: 'telekinesis', branch: 'breaker' }), A('respec', { ability: 'telekinesis', branch: 'lord' }), A('respec', { ability: 'fire', branch: 'x' }),
   SET({ inv: { coins: 200 } }), A('respec', { ability: 'telekinesis', branch: 'breaker' }),
+  // v0.16.0: слоты даров, амулеты, пресет; ветки и билд живут в одном объекте и не затирают друг друга
+  SET({ abilities: { telekinesis: { level: 3, unlocked: true }, fire: { level: 2, unlocked: true } }, inv: { amulet_focus: 1, amulet_forest: 1, coins: 500 } }),
+  A('build_set', { slots: ['fire', 'telekinesis'] }), A('build_set', { slots: [] }), A('build_set', { slots: ['fire', 'fire'] }), A('build_set', { slots: ['nope'] }), A('build_set', { slots: ['seal'] }),
+  A('build_set', { slots: 'fire' }), A('build_set', { slots: [1] }), A('build_set', {}), A('build_set', { slots: null, amulets: null }),
+  A('build_set', { amulets: ['amulet_focus', 'amulet_forest'] }), A('build_set', { amulets: ['amulet_lunar'] }), A('build_set', { amulets: ['amulet_focus', 'amulet_focus'] }), A('build_set', { amulets: ['x'] }),
+  A('build_set', { amulets: ['amulet_focus', 'amulet_forest', 'amulet_lunar'] }), A('build_set', { amulets: [] }), A('build_set', { slots: ['telekinesis'], amulets: ['amulet_forest'] }),
+  A('build_preset', { mode: 'load' }), A('build_preset', { mode: 'save' }), A('build_set', { slots: ['fire'], amulets: [] }), A('build_preset', { mode: 'load' }), A('build_preset', { mode: 'nope' }), A('build_preset', {}),
+  A('respec', { ability: 'telekinesis', branch: 'breaker' }), A('build_preset', { mode: 'save' }),
+  A('combat_start', { spawn: 'scavenger_01', enemy: 'forest_scavenger' }), A('build_set', { slots: ['fire'] }), A('build_preset', { mode: 'load' }), A('build_preset', { mode: 'save' }), A('combat_end', { outcome: 'retreat', mana: 1 }),
   // магия в мире: опыт дара, события и пути выдаёт сам успех (камень, корни, ворота), повтор — «уже сделано»
   SET({ abilities: { telekinesis: { level: 3, unlocked: true }, fire: { level: 2, unlocked: true } }, objects: { glade_rock: null, heavy_boulder: null, corrupted_roots: null } }), MANA(100),
   W('glade_rock'), W('glade_rock'), MANA(100), W('heavy_boulder'), MANA(100), W('corrupted_roots'), W('corrupted_roots'), MANA(100), W('moon_plant'), MANA(100), W('ritual_torch'), W('ritual_torch'),
@@ -194,13 +203,17 @@ for (let s = 0; s < SERIES + 1; s++) {
       actionIds.push(id);
       // v0.10: крафт, сюжетные предметы, миграция (вместе с неверными id)
       const op = pick(['heal', 'heal', 'starter_kit', 'bogus', 'craft', 'craft', 'craft', 'use', 'use', 'migrate_v10', 'drink', 'drink', 'combat_start', 'combat_end', 'combat_end', 'world', 'world', 'world', 'world', 'world', 'world',
-        'event', 'event', 'event', 'quest_accept', 'quest_turn_in', 'quest_turn_in', 'research_start', 'research_start', 'research_finish', 'research_finish', 'respec', 'respec']);
+        'event', 'event', 'event', 'quest_accept', 'quest_turn_in', 'quest_turn_in', 'research_start', 'research_start', 'research_finish', 'research_finish', 'respec', 'respec', 'build_set', 'build_set', 'build_preset']);
       const act = { op, id };
       if (op === 'craft') act.recipe = pick([...RECIPE_IDS, 'nope', 5, null]);
       if (op === 'event') act.key = pick([...EVENT_KEYS, ...EVENT_KEYS, ...EVENT_KEYS, 'nope', null, 5, 'lunar_quest_complete']);
       if (op === 'quest_accept' || op === 'quest_turn_in') act.quest = pick([...QUEST_IDS, ...QUEST_IDS, 'nope', null, 5]);
       if (op === 'research_start') act.upgrade = pick([...RES_IDS, ...RES_IDS, 'nope', null, 5]);
       if (op === 'respec') { const [a, b] = pick(BRANCHES); Object.assign(act, pick([{ ability: a, branch: b }, { ability: a, branch: b }, { ability: 'fire', branch: 'x' }, { ability: null, branch: 5 }, { ability: 'nope' }])); }
+      if (op === 'build_set') { const G = ['telekinesis', 'fire', 'seal'], AM = ['amulet_focus', 'amulet_forest', 'amulet_lunar'];
+        if (rnd() < 0.7) act.slots = pick([[pick(G)], [pick(G), pick(G)], G, [], ['nope'], 'fire', null, [1], [...G, 'x'], [...G, ...G]]);
+        if (rnd() < 0.6) act.amulets = pick([[pick(AM)], [pick(AM), pick(AM)], AM, [], ['nope'], 7, null]); }
+      if (op === 'build_preset') act.mode = pick(['save', 'load', 'load', 'save', 'x', null, 5]);
       if (op === 'use') act.item = pick([...USE_IDS, 'elixir_life', 'nope', null]);
       if (op === 'world') act.obj = pick([...WORLD_IDS, ...WORLD_IDS, 'nope', null, 5, '__proto__', 'constructor']);
       if (op === 'drink') act.item = pick(['elixir_life', 'elixir_mana', 'elixir_life', 'resin_flask', 'nope', null, 5]);

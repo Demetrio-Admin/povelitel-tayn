@@ -21,6 +21,7 @@
 import { createDefaultState } from '../state/GameState.js';
 import { HERO_LEVELS, HEALING } from '../config/balance.hero.js';
 import { serverRules } from '../config/serverRules.js';
+import { checkBuild, slotCount, defaultSlots } from '../config/build.js';
 
 const RULES = serverRules();
 /**
@@ -310,7 +311,9 @@ function unlockAbility(s, id, level) {
   s.abilities[id] = { level: Math.max(a.level || 0, level), unlocked: true };
 }
 const buildBranches = (s) => (isObj(s.objects.player_build) && isObj(s.objects.player_build.branches) ? s.objects.player_build.branches : {});
-function setBranch(s, ability, branch) { s.objects.player_build = { branches: { ...buildBranches(s), [ability]: branch } }; }
+const buildObj = (s) => (isObj(s.objects.player_build) ? s.objects.player_build : {});
+// v0.16.0: в player_build лежат ещё слоты, амулеты и пресет — смена ветки их не трогает
+function setBranch(s, ability, branch) { s.objects.player_build = { ...buildObj(s), branches: { ...buildBranches(s), [ability]: branch } }; }
 
 /** Сюжетное событие по действию игрока (книга, алтарь, круг Огня, Селена, подсказки): только из RULES.events, с условиями и наградой. */
 function eventAct(s, key) {
@@ -395,6 +398,44 @@ function respec(s, ability, branch) {
   addItem(s, 'coins', -B.respecCoins);
   setBranch(s, ability, branch);
   return { ok: true, price: B.respecCoins };
+}
+
+const unlockedGifts = (s) => RULES.build.gifts.filter((g) => !!s.abilities?.[g]?.unlocked);
+const strIds = (a) => (Array.isArray(a) ? a.filter((x) => typeof x === 'string') : null);
+
+/** v0.16.0: слоты даров и амулеты (op 'build_set', { slots?, amulets? }); проверки и их порядок — config/build.js checkBuild. */
+function buildSet(s, action) {
+  const want = {
+    slots: Array.isArray(action.slots) ? action.slots : (action.slots == null ? undefined : 'bad'),
+    amulets: Array.isArray(action.amulets) ? action.amulets : (action.amulets == null ? undefined : 'bad'),
+  };
+  const ctx = { level: s.level, unlocked: unlockedGifts(s), owns: (id) => (s.inventory[id] || 0) >= 1, combat: s.combatSince != null };
+  const r = checkBuild(ctx, want, RULES.build);
+  if (!r.ok) return r;
+  const o = { ...buildObj(s) };
+  if (want.slots !== undefined) o.slots = [...want.slots];
+  if (want.amulets !== undefined) o.amulets = [...want.amulets];
+  s.objects.player_build = o;
+  return { ok: true };
+}
+
+/** v0.16.0: единственный бесплатный пресет (op 'build_preset', mode 'save' | 'load'): слоты и амулеты; ветки за монеты не трогает. */
+function buildPreset(s, mode) {
+  if (mode !== 'save' && mode !== 'load') return { ok: false, reason: 'bad' };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  const o = { ...buildObj(s) };
+  if (mode === 'save') {
+    const un = unlockedGifts(s), n = slotCount(s.level, RULES.build.slots);
+    const cur = strIds(o.slots);
+    o.preset = { slots: cur ? cur.filter((g) => un.includes(g)).slice(0, n) : defaultSlots(un, n, RULES.build.gifts), amulets: (strIds(o.amulets) || []).filter((a) => RULES.build.amulets.includes(a)) };
+  } else {
+    const p = isObj(o.preset) ? o.preset : null;
+    if (!p) return { ok: false, reason: 'empty' };
+    o.slots = strIds(p.slots) || [];
+    o.amulets = strIds(p.amulets) || [];
+  }
+  s.objects.player_build = o;
+  return { ok: true };
 }
 
 /** Зелье из сумки вне боя: возвращает долю максимума; при полном запасе не тратится. */
@@ -591,6 +632,7 @@ function migrateV10(s) {
  *   { op: 'quest_accept' | 'quest_turn_in', quest } — побочное задание: принять / сдать (цели и награда — RULES.quests)
  *   { op: 'research_start', upgrade } — начать изучение (цена и условия — RULES.research), { op: 'research_finish' } — завершить, когда время вышло
  *   { op: 'respec', ability, branch } — сменить ветку дара за монеты
+ *   v0.16.0: { op: 'build_set', slots?, amulets? } — слоты даров и амулеты; { op: 'build_preset', mode: 'save' | 'load' } — один бесплатный пресет
  * nowMs — время сервера: перед любым действием HP и мана восстанавливаются до него (как player_action).
  */
 export function applyAction(snap, action = {}, nowMs = null) {
@@ -610,6 +652,8 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'research_start') return { snapshot: s, result: researchStart(s, action.upgrade) };
   if (op === 'research_finish') return { snapshot: s, result: researchFinish(s) };
   if (op === 'respec') return { snapshot: s, result: respec(s, action.ability, action.branch) };
+  if (op === 'build_set') return { snapshot: s, result: buildSet(s, action) };
+  if (op === 'build_preset') return { snapshot: s, result: buildPreset(s, action.mode) };
   if (op === 'heal') {
     const price = healPriceOf(s);
     if (s.combatSince != null) return { snapshot: s, result: { ok: false, reason: 'combat', price: 0 } };

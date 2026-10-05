@@ -3,6 +3,7 @@
 import { ABILITIES } from '../config/balance.abilities.js';
 import { UPGRADES, ITEMS, TIMER_MODE, BRANCH_RESPEC } from '../config/balance.progression.js';
 import { statsFor } from './abilityStats.js';
+import { AMULETS, AMULET_IDS, AMULET_SLOTS, GIFT_IDS } from '../config/build.js';
 
 export const GIFT_ORDER = ['telekinesis', 'fire', 'seal'];
 const WEIGHT_RU = { light: 'лёгкие', medium: 'лёгкие и средние', heavy: 'любые, включая тяжёлые' };
@@ -90,6 +91,7 @@ export function giftCards(state) {
     const open = state.isUnlocked(id);
     return {
       id, name: ABILITIES[id].name, level, open,
+      equipped: open && state.isEquipped(id),   // v0.16.0: стоит ли дар в слоте
       xp: state.data.schoolXP[id] || 0,
       branch: open && state.branchOf(id) ? { id: state.branchOf(id), ...pickBranch(id, state.branchOf(id)) } : null,
       now: open ? statLines(id, level, state.branchOf(id)) : [],
@@ -99,4 +101,37 @@ export function giftCards(state) {
       maxed: open && !upgradesOf(id).some((u) => u.toLevel > level),
     };
   });
+}
+
+/**
+ * v0.16.0: билд для экрана «Дары»: слоты даров, амулеты, пресет. Только данные — решения принимает GameState / сервер.
+ * slots — открытые дары с отметкой «в слоте»; amulets — амулеты, которые есть в сумке (equipped — надеты).
+ */
+export function buildView(state) {
+  const equipped = state.equippedGifts();
+  const worn = state.equippedAmulets();
+  return {
+    slotCount: state.giftSlotCount(),
+    slotsUsed: equipped.length,
+    slots: GIFT_IDS.filter((id) => state.isUnlocked(id)).map((id) => ({ id, name: ABILITIES[id].name, equipped: equipped.includes(id) })),
+    amuletSlots: AMULET_SLOTS,
+    amulets: AMULET_IDS.filter((id) => state.item(id) >= 1).map((id) => ({ id, name: AMULETS[id].name, text: AMULETS[id].text, tradeoff: AMULETS[id].tradeoff, equipped: worn.includes(id) })),
+    hasPreset: !!state.buildData().preset,
+  };
+}
+
+/** Что получится, если нажать на дар в слотах: новый набор или причина отказа ('none' — последний дар, 'full' — все слоты заняты). */
+export function toggleSlot(state, id) {
+  const cur = state.equippedGifts();
+  if (cur.includes(id)) return cur.length <= 1 ? { ok: false, reason: 'none' } : { ok: true, slots: cur.filter((g) => g !== id) };
+  if (cur.length >= state.giftSlotCount()) return { ok: false, reason: 'full' };
+  return { ok: true, slots: [...GIFT_IDS.filter((g) => state.isUnlocked(g) && (cur.includes(g) || g === id))] };
+}
+
+/** То же для амулета: надеть / снять; 'full' — оба слота заняты. */
+export function toggleAmulet(state, id) {
+  const cur = state.equippedAmulets();
+  if (cur.includes(id)) return { ok: true, amulets: cur.filter((a) => a !== id) };
+  if (cur.length >= AMULET_SLOTS) return { ok: false, reason: 'full' };
+  return { ok: true, amulets: [...cur, id] };
 }

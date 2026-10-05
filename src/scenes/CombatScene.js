@@ -262,7 +262,7 @@ export class CombatScene extends Phaser.Scene {
     const res = this.cm.useAbility(id);
     if (!res.ok) {
       if (res.reason === 'nomana' && this.sim.item('elixir_mana') > 0 && (this.cm.stats.potions || 0) < POTION_BATTLE_LIMIT) this.queueHint(COMBAT_HINTS.lowMana, 'lowMana');
-      const msg = { cooldown: 'Перезарядка…', nomana: 'Не хватает маны', locked: `${ABILITIES[id].name}: дар ещё не изучен` }[res.reason];
+      const msg = { cooldown: 'Перезарядка…', nomana: 'Не хватает маны', locked: `${ABILITIES[id].name}: дар ещё не изучен`, benched: `${ABILITIES[id].name}: дар не в слоте — выберите слоты в «Дарах» вне боя` }[res.reason];
       if (msg) this.toast(msg);
       services.audio.play('locked');
       return;
@@ -400,6 +400,9 @@ export class CombatScene extends Phaser.Scene {
           break;
         case 'chain':   // v0.11.1: Телекинез III — второй бросок без перезарядки
           this.floatText(ENEMY_POS.x - 120, ENEMY_POS.y + 40, 'ЕЩЁ БРОСОК!', COLORS.telekinesis, 28);
+          break;
+        case 'manaRescue':   // v0.16.0: Лунный амулет вернул ману
+          this.floatText(ENEMY_POS.x + 120, ENEMY_POS.y + 80, `Лунный амулет: +${ev.mana} маны`, COLORS.mana, 26);
           break;
         case 'refund':  // ветка «Повелитель»: удачное прерывание вернуло ману и ускорило перезарядку
           this.floatText(ENEMY_POS.x + 120, ENEMY_POS.y + 40, `+${ev.mana} маны · −${ev.cooldownSec} с`, COLORS.mana, 26);

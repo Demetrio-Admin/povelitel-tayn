@@ -332,7 +332,7 @@ export class UIScene extends Phaser.Scene {
       const st = prov ? prov(id) : { state: 'locked' };
       const locked = st.state === 'locked';
       b.lock.setVisible(locked);
-      b.icon.setAlpha(locked ? 0.3 : st.state === 'nomana' ? 0.45 : 1);
+      b.icon.setAlpha(locked || st.state === 'benched' ? 0.3 : st.state === 'nomana' ? 0.45 : 1);   // benched (v0.16.0): дар не в слоте
       setOrb(b.orb, this, b.color, UI.orb.ability, locked);
       b.text.setText(locked ? ABILITIES[id].name : services.abilities.label(id));
       b.cd.clear();

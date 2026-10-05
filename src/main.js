@@ -11,6 +11,7 @@ import '@fontsource/philosopher/cyrillic-400.css';
 import '@fontsource/philosopher/latin-400.css';
 import Phaser from 'phaser';
 import { VIEW } from './config/game.config.js';
+import { GAME_TITLE } from './config/branding.js';
 import { BootScene } from './scenes/BootScene.js';
 import { PreloadScene } from './scenes/PreloadScene.js';
 import { ExplorationScene } from './scenes/ExplorationScene.js';
@@ -21,8 +22,10 @@ import { loadUIFont } from './ui/fonts.js';
 import { showLoadingScreen } from './ui/loadingScreen.js';
 
 const debug = new URLSearchParams(window.location.search).has('debug');
+document.title = GAME_TITLE;
 
 const config = {
+  title: GAME_TITLE,
   type: Phaser.AUTO,
   parent: 'game',
   backgroundColor: VIEW.background,

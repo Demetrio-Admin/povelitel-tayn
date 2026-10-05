@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { duelEnemyDef, leagueOf } from '../config/duel.js';
+import { duelStateOf } from '../cloud/playerModel.js';
 import { VIEW, COLORS, DEPTH } from '../config/game.config.js';
 import { ENEMY_SPAWNS } from '../config/world.layout.js';
 import { COMBAT } from '../config/balance.enemies.js';
@@ -37,6 +39,7 @@ export class CombatScene extends Phaser.Scene {
   constructor() { super('CombatScene'); }
 
   init(data) {
+    this.duel = !!data.duel;   // v0.26.0: Магическая Дуэль — соперник из слепка героя (combatCtx.duel)
     this.spawnId = data.spawnId;
     this.spawn = ENEMY_SPAWNS.find(s => s.id === data.spawnId) || {};
     this.enemyType = data.enemyType;
@@ -49,7 +52,8 @@ export class CombatScene extends Phaser.Scene {
     // Настоящее состояние игры (сумка, опыт, HP) бой не трогает: итог — HP, мана, зелья, награда — приходит в ответе сервера.
     const ctx = state.data.combatCtx;
     this.sim = ctx ? startState(ctx, state.now()) : Object.assign(new GameState(null, () => state.now()), { data: JSON.parse(JSON.stringify(state.data)) });
-    this.cm = new CombatManager({ enemyType: this.enemyType, state: this.sim, abilities: new AbilitySystem(this.sim, null, null) });
+    const duelDef = this.duel && ctx?.duel?.opponent ? duelEnemyDef(ctx.duel.opponent) : null;
+    this.cm = new CombatManager({ enemyType: this.enemyType, enemyDef: duelDef, state: this.sim, abilities: new AbilitySystem(this.sim, null, null) });
     this.rec = new CombatRecorder();   // действия игрока по номеру шага: их сервер проигрывает заново
     this.acc = 0;
     this.def = this.cm.def;
@@ -682,6 +686,7 @@ export class CombatScene extends Phaser.Scene {
   /** Окно итога по ответу сервера r (см. PlayerActions.combatSubmit). */
   showOutcome(r, clientSecs) {
     const { state } = services;
+    if (this.duel) { this.showDuelOutcome(r, clientSecs); return; }
     const out = r?.ok ? r.verdict?.outcome : null;
     const secs = r?.verdict?.entry?.timeSec ?? clientSecs;
     const v = vitals.view(state);   // уже по ответу сервера
@@ -735,10 +740,39 @@ export class CombatScene extends Phaser.Scene {
     return { ok: false, reason: 'network' };
   }
 
+  /** v0.26.0: итог Дуэли — победа/поражение, изменение рейтинга и лига (по ответу сервера). */
+  showDuelOutcome(r, clientSecs) {
+    const out = r?.ok ? r.verdict?.outcome : null;
+    const d = r?.verdict?.duel;
+    const g = r?.verdict?.reward || {};
+    if (out === 'victory' || out === 'defeat') {
+      const st = duelStateOf({ objects: { duel: services.state.getObject('duel') } }, services.state.now());
+      const lines = [
+        out === 'victory' ? `Соперник «${d?.opponent || this.def.name}» повержен.` : `«${d?.opponent || this.def.name}» оказался сильнее.`,
+        '', `Рейтинг: ${st.rating} (${d?.delta > 0 ? '+' : ''}${d?.delta ?? 0})   ·   ${leagueOf(st.rating).name}`,
+        `Время боя: ${r?.verdict?.entry?.timeSec ?? clientSecs} сек`, '',
+      ];
+      if (g.heroXP) lines.push(`+${g.heroXP} опыта`);
+      if (g.items?.coins) lines.push(`+${g.items.coins} монет`);
+      lines.push('', 'Дуэль — арена: здоровье после боя не теряется.');
+      this.bus.emit(MSG.DIALOG, {
+        title: out === 'victory' ? 'Победа в Дуэли!' : 'Поражение в Дуэли', color: out === 'victory' ? COLORS.gold : COLORS.danger, text: lines.join('\n'),
+        buttons: [{ label: 'Продолжить', primary: true, onClick: () => this.exit(out) }],
+      });
+    } else {
+      services.actions?.combatEnd('retreat')?.catch(() => {});
+      this.bus.emit(MSG.DIALOG, {
+        title: 'Дуэль не засчитана', color: COLORS.danger,
+        text: `${r?.reason === 'network' ? 'Нет связи с сервером, итог не удалось подтвердить.' : 'Сервер не принял запись этого боя.'}\n\nРейтинг не изменился. Попытка потрачена.`,
+        buttons: [{ label: 'Вернуться', primary: true, onClick: () => this.exit('defeat') }],
+      });
+    }
+  }
+
   exit(result) {
     this.cameras.main.fadeOut(350, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      this.scene.wake('ExplorationScene', { result, spawnId: this.spawnId });
+      this.scene.wake('ExplorationScene', { result, spawnId: this.spawnId, duel: this.duel });
       this.scene.stop();
     });
   }

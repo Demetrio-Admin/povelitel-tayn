@@ -28,7 +28,7 @@ const RULES = serverRules();
  * Ключи объектов мира, состояние которых пишет только сервер: всё, что есть в RULES.world (с v0.15.0 и магия — сервер ставит mark),
  * победы над врагами rep:* (по ним открываются запасы) и build — ветки даров (player_build).
  */
-export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build' || k === 'daily');   // v0.23.0: + доска поручений
+export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build' || k === 'daily' || k === 'duel');   // v0.23.0: + доска поручений; v0.26.0: + Дуэль
 
 export const ABILITY_IDS = ['telekinesis', 'fire', 'seal', 'ice'];   // v0.18.0: + Лёд
 export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal', 'ice'];
@@ -733,6 +733,42 @@ export function combatCtxOf(s, spawn, enemy) {
   };
 }
 
+// ---------------------------------------------------------------- v0.26.0: Магическая Дуэль (config/duel.js)
+/** Состояние Дуэли игрока сейчас: { season, rating, wins, losses, best, d, used }. Новый сезон — рейтинг сжимается к базовому наполовину. */
+export function duelStateOf(s, nowMs) {
+  const D = RULES.duel;
+  const season = Math.max(0, Math.floor((nowMs - D.seasonStartMs) / D.seasonMs));
+  const day = Math.floor(nowMs / D.dayMs);
+  const o = isObj(s.objects.duel) ? s.objects.duel : null;
+  const r0 = o && num(o.rating) ? o.rating : D.baseRating;
+  const st = o && o.season === season
+    ? { season, rating: r0, wins: int(o.wins), losses: int(o.losses), best: num(o.best) ? o.best : r0, d: o.d, used: int(o.used) }
+    : { season, rating: Math.round(D.baseRating + (r0 - D.baseRating) / 2), wins: 0, losses: 0, best: 0, d: day, used: 0 };
+  if (st.d !== day) { st.d = day; st.used = 0; }
+  if (!(st.best >= st.rating)) st.best = st.rating;
+  return st;
+}
+/** Слепок соперника из своего героя — «Тень дуэлянта» (когда других подходящих героев нет; в JS-модели — всегда). */
+export function duelGhostOf(s, rating) {
+  const abilities = {};
+  for (const id of ABILITY_IDS) { const a = s.abilities?.[id]; abilities[id] = { level: a?.level || 0, unlocked: !!a?.unlocked }; }
+  return { name: 'Тень дуэлянта', ghost: true, level: s.level, hero: null, abilities, build: s.objects?.player_build ?? null, rating };
+}
+/** Вызов на Дуэль: попытка списывается сразу; сервер запоминает героя и соперника (бой проверяется как обычный). */
+function duelStart(s, nowMs) {
+  const D = RULES.duel;
+  if (!has(s, D.requires)) return { ok: false, reason: 'locked' };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  const st = duelStateOf(s, nowMs);
+  if (st.used >= D.attemptsPerDay) return { ok: false, reason: 'attempts' };
+  st.used += 1;
+  s.objects.duel = st;
+  const opponent = duelGhostOf(s, st.rating);
+  s.combatSince = s.vitalsAt;
+  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), duel: { opponent, rating: st.rating, season: st.season } };
+  return { ok: true, opponent, rating: st.rating, left: D.attemptsPerDay - st.used };
+}
+
 /** Начало боя: HP и мана замирают, лечение и зелья из сумки закрыты. Повтор начало не сдвигает, но состояние героя запоминается заново. */
 function combatStart(s, action = {}) {
   if (!isId(action.spawn) || !isId(action.enemy)) return { ok: false, reason: 'bad_spawn' };
@@ -780,6 +816,27 @@ export function combatApply(snap, v, nowMs = null) {
   if (v.since !== s.combatSince || v.spawn !== ctx.spawn) return res({ ok: false, reason: 'stale' });
   const mx0 = maxVitals(s.level);
   const cur = num(s.hp) ? clamp(s.hp, 0, mx0.hp) : mx0.hp;
+  if (ctx.spawn === 'duel') {
+    // v0.26.0: Дуэль — арена: здоровье и мана после боя как до него; рейтинг, награда и выпитые зелья — по итогу
+    if (v.outcome !== 'retreat') {
+      for (const id of COMBAT_POTIONS) {
+        const used = int(v.potions?.[id]);
+        if (used > 0) s.inventory[id] = Math.min(s.inventory[id] || 0, Math.max(0, (ctx.potions[id] || 0) - used));
+      }
+      grant(s, v.reward || {});
+      const st = duelStateOf(s, num(nowMs) ? nowMs : s.vitalsAt);
+      const delta = clamp(int(isObj(v.duel) ? v.duel.delta : 0), -RULES.duel.k, RULES.duel.k);
+      st.rating = Math.max(0, st.rating + delta);
+      if (v.outcome === 'victory') st.wins += 1; else st.losses += 1;
+      if (st.rating > st.best) st.best = st.rating;
+      s.objects.duel = st;
+      if (isObj(v.entry)) s.combats = [...s.combats, v.entry].slice(-LIMITS.maxCombats);
+    }
+    s.hp = cur;
+    s.combatSince = null;
+    s.combatCtx = null;
+    return res({ ok: true, outcome: v.outcome });
+  }
   if (v.outcome !== 'retreat') {
     for (const id of COMBAT_POTIONS) {
       const used = int(v.potions?.[id]);
@@ -861,6 +918,7 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'amulet_upgrade') return { snapshot: s, result: amuletUpgrade(s, action.amulet) };
   // v0.25.0: Ковены живут в отдельных таблицах (миграция 20261007_covens.sql) — JS-зеркало о них не знает и отвечает как сервер
   // игроку без ковена (или базе без миграции): 'no_coven'
+  if (op === 'duel_start') return { snapshot: s, result: duelStart(s, num(nowMs) ? nowMs : Date.now()) };   // v0.26.0
   if (op === 'coven_give' || op === 'coven_claim') return { snapshot: s, result: { ok: false, reason: 'no_coven' } };
   if (op === 'daily_take') return { snapshot: s, result: dailyTake(s, action.offer, num(nowMs) ? nowMs : Date.now()) };   // v0.23.0
   if (op === 'daily_done') return { snapshot: s, result: dailyDone(s, action.offer, num(nowMs) ? nowMs : Date.now()) };

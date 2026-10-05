@@ -4,6 +4,7 @@ import { CombatManager } from '../../src/systems/CombatManager.js';
 import { AbilitySystem, ABILITY_ORDER } from '../../src/systems/AbilitySystem.js';
 import { CombatRecorder, STEP } from '../../src/systems/combatReplay.js';
 import { startState } from '../../src/cloud/combatVerify.js';
+import { duelEnemyDef } from '../../src/config/duel.js';
 
 /**
  * @param ctx   combatCtx (то, что запомнил сервер)
@@ -12,7 +13,7 @@ import { startState } from '../../src/cloud/combatVerify.js';
  */
 export function playBot(ctx, opts = {}) {
   const st = startState(ctx, opts.nowMs ?? 1_700_000_000_000);
-  const cm = new CombatManager({ enemyType: ctx.enemy, state: st, abilities: new AbilitySystem(st, null, null) });
+  const cm = new CombatManager({ enemyType: ctx.enemy, enemyDef: ctx.duel ? duelEnemyDef(ctx.duel.opponent) : null, state: st, abilities: new AbilitySystem(st, null, null) });   // v0.26.0: Дуэль
   const rec = new CombatRecorder();
   let x = (opts.seed ?? 1) >>> 0 || 1;
   const rnd = () => { x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; return x / 4294967296; };

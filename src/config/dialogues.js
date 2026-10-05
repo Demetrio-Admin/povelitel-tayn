@@ -1114,6 +1114,14 @@ export const DIALOGUES = {
     },
   ],
   duelist: [
+    // v0.26.0: Магическая Дуэль открыта после главы II
+    {
+      id: 'duelist_open', repeat: true, when: c => c.has('chapter_2_complete'),
+      nodes: { start: {
+        lines: ['Зал открыт: идёт Сезон 0. Маг против мага — ваш герой против слепка другого.', 'Смотрите, какие дары у соперника: к тем, которых у него нет в слотах, он уязвим. Подбирайте свои под него.'],
+        choices: [{ label: 'Магическая Дуэль', do: [{ duel: true }] }, BYE],
+      } },
+    },
     {
       id: 'duelist_default', repeat: true, when: () => true,
       nodes: { start: {

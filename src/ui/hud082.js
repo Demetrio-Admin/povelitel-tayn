@@ -264,6 +264,7 @@ export const hud082 = {
     // v0.20.0: Банк — окно кошелька; Город — переход в город, когда глава II началась (до того — прежняя заглушка)
     if (item.id === 'bank') { this.closeMenu(() => this.openWallet()); return; }
     if (item.id === 'city' && services.state.hasEvent('ch2_start')) { this.closeMenu(() => this.goCity()); return; }
+    if (item.id === 'rating' && services.state.hasEvent('chapter_2_complete')) { this.closeMenu(() => this.openDuel()); return; }   // v0.26.0: рейтинг Дуэли
     this.closeMenu(() => item.id === 'chat' ? this.openChat() : (item.stub ? this.openStub(item) : this.openSettings()));
   },
 

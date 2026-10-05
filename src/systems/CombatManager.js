@@ -16,10 +16,10 @@ export class CombatManager {
    * @param {import('../state/GameState.js').GameState} o.state
    * @param {import('./AbilitySystem.js').AbilitySystem} o.abilities
    */
-  constructor({ enemyType, state, abilities }) {
+  constructor({ enemyType, enemyDef = null, state, abilities }) {
     this.state = state;
     this.abilities = abilities;
-    this.def = ENEMIES[enemyType];
+    this.def = enemyDef || ENEMIES[enemyType];   // v0.26.0: соперник Дуэли — профиль из слепка игрока (config/duel.js duelEnemyDef)
     if (!this.def) throw new Error(`Unknown enemy type ${enemyType}`);
     this.enemy = new Enemy(enemyType, this.def);
 

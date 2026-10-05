@@ -130,6 +130,7 @@ export class ExplorationScene extends Phaser.Scene {
     bus.on(MSG.UNLOCK_SEAL, this.unlockSeal, this);
     bus.on(MSG.UNLOCK_GIFT, this.unlockGift, this);
     bus.on(MSG.CHAPTER_FINALE, this.chapterFinale, this);
+    bus.on(MSG.DUEL_START, this.startDuel, this);   // v0.26.0
     bus.on(MSG.TRAVEL, (t) => this.travelTo(t, t?.text), this);   // v0.20.0: «Город» в меню
     bus.on(MSG.SIDE_QUEST, (id, what) => { this.refreshAll(); if (what === 'ready') services.audio.play('quest_update'); }, this);
     this.events.on('wake', this.onWake, this);
@@ -821,6 +822,33 @@ export class ExplorationScene extends Phaser.Scene {
     });
   }
 
+  /** v0.26.0: Магическая Дуэль. Сервер подбирает соперника и запоминает его слепок; бой — обычный CombatScene с этим соперником. */
+  async startDuel() {
+    if (this.inTransition || services.mode !== 'exploration') return;
+    this.inTransition = true;
+    services.mode = 'transition';
+    this.player.stop();
+    this.interaction.clearFocus();
+    this.savePosition();
+    const r = await services.actions.duelStart();
+    if (!r?.ok) {
+      this.inTransition = false;
+      services.mode = 'exploration';
+      this.toast({ attempts: 'На сегодня попытки Дуэли закончились.', locked: 'Дуэль откроется после главы II.', combat: 'Сначала закончите бой.', network: 'Нет связи с сервером.' }[r?.reason] || 'Не удалось начать Дуэль.', COLORS.danger);
+      return;
+    }
+    const opp = r.opponent || {};
+    this.toast(`Соперник: ${opp.name}${opp.ghost ? '' : `, ${opp.level} уровень`}`, COLORS.gold);
+    services.audio.play('combat_start');
+    const cam = this.cameras.main;
+    cam.fadeOut(450, 0, 0, 0);
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.scene.sleep();
+      this.scene.run('CombatScene', { spawnId: 'duel', enemyType: 'duel_mage', duel: true });
+      this.scene.bringToTop('UIScene');
+    });
+  }
+
   /** Сервер не принял начало боя (нет связи, занят): бой не начинается, враг остаётся как был. */
   cancelCombat(trigger, prevEnc, r) {
     const st = services.state;
@@ -861,6 +889,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.bus.emit(MSG.HUD_REFRESH);
     this.bus.emit(MSG.QUEST_CHANGED);
     if (data.result === 'victory' && trig?.cfg.opensPath) this.time.delayedCall(450, () => this.panTo(trig.cfg.x, trig.cfg.y - 500));
+    if (data.duel) this.time.delayedCall(500, () => this.bus.emit(MSG.OPEN_DUEL));   // v0.26.0: после Дуэли — снова окно Дуэли
   }
 
   /** Враг, ждущий «Сразиться снова», становится объектом взаимодействия (кнопка действия, тап, клавиатура). */

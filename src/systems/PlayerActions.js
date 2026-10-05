@@ -173,4 +173,5 @@ export class PlayerActions {
   dailyDone(offer) { return this.run({ op: 'daily_done', offer }); }
   covenGive(item, qty) { return this.run({ op: 'coven_give', item, qty }); }   // v0.25.0: материалы в цель недели ковена
   covenClaim() { return this.run({ op: 'coven_claim' }); }
+  duelStart() { return this.run({ op: 'duel_start' }); }   // v0.26.0: вызов на Дуэль (соперника подбирает сервер)
 }

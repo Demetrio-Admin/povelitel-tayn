@@ -2679,6 +2679,79 @@ function covenRules() {
   };
 }
 
+// src/config/duel.js
+var DUEL = {
+  requires: "chapter_2_complete",
+  attemptsPerDay: 8,
+  // 5–10 значимых боёв в день (§31)
+  baseRating: 1e3,
+  k: 32,
+  // Эло: изменение за бой — до 32 очков
+  dayMs: 864e5,
+  // Сезон 0 — тестовый, 4 недели (§33); следующие идут подряд той же длины. При смене сезона рейтинг сжимается к базовому наполовину.
+  season: { startMs: Date.UTC(2026, 9, 5), lengthDays: 28 },
+  matchWindow: 200,
+  // соперник ищется в этом окне рейтинга, дальше — ближайший
+  reward: { victory: { coins: 30, heroXP: 20 }, defeat: { coins: 10 } }
+};
+function ratingDelta(my, opp, win) {
+  const expected = 1 / (1 + 10 ** ((opp - my) / 400));
+  return Math.round(DUEL.k * ((win ? 1 : 0) - expected));
+}
+var levelRow = (lvl) => HERO_LEVELS[Math.max(1, Math.min(HERO_LEVELS.length, Math.floor(lvl) || 1)) - 1];
+function duelSlots(opp) {
+  const open = GIFT_IDS.filter((g) => opp.abilities?.[g]?.unlocked && (opp.abilities[g].level || 0) > 0);
+  const slots = Array.isArray(opp.build?.slots) ? opp.build.slots.filter((g) => open.includes(g)) : [];
+  return (slots.length ? slots : open).slice(0, SLOT_RULES.base);
+}
+var SIGNATURE = {
+  fire: { name: "\u041E\u0433\u043D\u0435\u043D\u043D\u044B\u0439 \u0448\u0430\u0440", damage: 26, prepSec: 2, cooldownSec: 9, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
+  ice: { name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0435 \u043A\u043E\u043F\u044C\u0451", damage: 24, prepSec: 2.2, cooldownSec: 10, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
+  seal: { name: "\u0410\u0441\u0442\u0440\u0430\u043B\u044C\u043D\u044B\u0439 \u0443\u0434\u0430\u0440", damage: 28, prepSec: 2.4, cooldownSec: 10, interruptBy: ["telekinesis_heavy"], hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!" },
+  telekinesis: { name: "\u041A\u0430\u043C\u0435\u043D\u043D\u044B\u0439 \u0433\u0440\u0430\u0434", damage: 25, prepSec: 2, cooldownSec: 9, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" }
+};
+var PRIORITY = ["fire", "ice", "seal", "telekinesis"];
+function duelEnemyDef(opp) {
+  const lv = levelRow(opp.level), mult = lv.damageMult;
+  const slots = duelSlots(opp);
+  const amulets = Array.isArray(opp.build?.amulets) ? opp.build.amulets.slice(0, 2) : [];
+  const main = [...slots].sort((a, b) => (opp.abilities[b]?.level || 0) - (opp.abilities[a]?.level || 0) || PRIORITY.indexOf(a) - PRIORITY.indexOf(b))[0] || "telekinesis";
+  const sig = SIGNATURE[main];
+  const weaknesses = {};
+  for (const g of GIFT_IDS) if (!slots.includes(g)) weaknesses[g] = 0.25;
+  const hero = HEROES.find((h) => h.id === opp.hero) || HEROES.find((h) => h.id === DEFAULT_HERO_ID);
+  return {
+    name: opp.name || "\u0422\u0435\u043D\u044C \u0434\u0443\u044D\u043B\u044F\u043D\u0442\u0430",
+    texture: hero.textures.down,
+    tier: "strong",
+    hp: Math.round(lv.maxHp * 4.2 * (1 + 0.05 * amulets.length)),
+    normalAttack: { damage: Math.round(9 * mult), intervalSec: 2.8, ...slots.includes("ice") ? { chill: { pct: 0.3, sec: 2.5 } } : {} },
+    strongAttack: { ...sig, damage: Math.round(sig.damage * mult), firstDelaySec: 5 },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: slots.includes("seal") ? 0.2 : 0,
+    ...slots.includes("seal") ? { onFireHit: { disableDefenseSec: 4 } } : {},
+    ...(opp.abilities?.telekinesis?.level || 0) >= 3 && slots.includes("telekinesis") ? { armor: { value: 0.35, source: "crystal", disabledSec: 8 } } : {},
+    weaknesses,
+    rewards: {},
+    arena: "duel",
+    duel: { slots, main }
+  };
+}
+function duelRules() {
+  return {
+    requires: DUEL.requires,
+    attemptsPerDay: DUEL.attemptsPerDay,
+    baseRating: DUEL.baseRating,
+    k: DUEL.k,
+    dayMs: DUEL.dayMs,
+    seasonStartMs: DUEL.season.startMs,
+    seasonMs: DUEL.season.lengthDays * DUEL.dayMs,
+    matchWindow: DUEL.matchWindow,
+    reward: DUEL.reward
+  };
+}
+
 // src/config/serverRules.js
 function grantOf(r = {}) {
   const g = {};
@@ -2944,6 +3017,8 @@ function serverRules() {
     // v0.23.0: доска поручений
     covens: covenRules(),
     // v0.25.0: Ковены (недельная цель)
+    duel: duelRules(),
+    // v0.26.0: Магическая Дуэль
     combatPotions: Object.keys(POTIONS)
     // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
   };
@@ -3898,6 +3973,10 @@ var MSG = {
   // v0.23.0: доска поручений
   OPEN_COVENS: "ui:open-covens",
   // v0.25.0: окно Ковенов
+  OPEN_DUEL: "ui:open-duel",
+  // v0.26.0: окно Магической Дуэли
+  DUEL_START: "story:duel-start",
+  // v0.26.0: вызов на Дуэль (ExplorationScene)
   OPEN_WALLET: "ui:open-wallet",
   // v0.20.0: кошелёк / банк (из диалога и меню)   // v0.10.0: Селена открывает Печать I (после закрытия диалога)
   ZONE_CHANGED: "world:zone",
@@ -4037,10 +4116,10 @@ var CombatManager = class {
    * @param {import('../state/GameState.js').GameState} o.state
    * @param {import('./AbilitySystem.js').AbilitySystem} o.abilities
    */
-  constructor({ enemyType, state, abilities }) {
+  constructor({ enemyType, enemyDef = null, state, abilities }) {
     this.state = state;
     this.abilities = abilities;
-    this.def = ENEMIES[enemyType];
+    this.def = enemyDef || ENEMIES[enemyType];
     if (!this.def) throw new Error(`Unknown enemy type ${enemyType}`);
     this.enemy = new Enemy(enemyType, this.def);
     const hs = state.heroStats();
@@ -4617,6 +4696,7 @@ function verifyCombat(snap, rawLog, nowMs) {
   if (snap?.combatSince == null || !ctx) return fail2("no_combat");
   const log = normalizeLog(rawLog);
   if (!log) return fail2("bad_log");
+  if (ctx.spawn === "duel") return verifyDuel(snap, ctx, log, nowMs);
   const spawn = spawnOf(ctx.spawn);
   if (!spawn || spawn.enemy !== ctx.enemy || !Object.hasOwn(ENEMIES, ctx.enemy)) return fail2("bad_spawn");
   if (spawn.requiresEvent && !snap.quests.includes(spawn.requiresEvent)) return fail2("locked");
@@ -4664,6 +4744,39 @@ function verifyCombat(snap, rawLog, nowMs) {
   verdict.entry = {
     enemy: ctx.enemy,
     spawnId: spawn.id,
+    result: outcome,
+    timeSec: Math.round(cm.time * 10) / 10,
+    interrupts: cm.stats.interrupts,
+    uses: { ...cm.stats.abilityUses }
+  };
+  return { ok: true, verdict };
+}
+function verifyDuel(snap, ctx, log, nowMs) {
+  const fail2 = (reason) => ({ ok: false, reason });
+  const d = ctx.duel;
+  if (ctx.enemy !== "duel_mage" || !d || typeof d !== "object" || !d.opponent || typeof d.opponent !== "object") return fail2("bad_spawn");
+  if (log.ticks * STEP > (nowMs - snap.combatSince) / 1e3 + SLACK_SEC) return fail2("too_fast");
+  const st = startState(ctx, nowMs);
+  const cm = new CombatManager({ enemyType: "duel_mage", enemyDef: duelEnemyDef(d.opponent), state: st, abilities: new AbilitySystem(st, null, null) });
+  const run = replayCombat(cm, log);
+  if (run.held > 0) return fail2("bad_log");
+  const outcome = cm.result || "retreat";
+  const verdict = { outcome, since: snap.combatSince, spawn: "duel", ticks: run.ticks, mana: cm.hero.mana };
+  if (outcome === "retreat") return { ok: true, verdict };
+  verdict.potions = {};
+  for (const id of COMBAT_POTIONS) add(verdict.potions, id, (ctx.potions[id] || 0) - st.item(id));
+  const win = outcome === "victory";
+  const reward = { heroXP: 0, schoolXP: {}, items: {} };
+  mergeReward(reward, { schoolXP: { ...st.data.schoolXP } });
+  const r = win ? DUEL.reward.victory : DUEL.reward.defeat;
+  mergeReward(reward, { heroXP: r.heroXP || 0, items: r.coins ? { coins: r.coins } : {} });
+  if (!reward.heroXP) delete reward.heroXP;
+  verdict.reward = reward;
+  const my = Number.isFinite(d.rating) ? d.rating : DUEL.baseRating, opp = Number.isFinite(d.opponent.rating) ? d.opponent.rating : DUEL.baseRating;
+  verdict.duel = { win, delta: ratingDelta(my, opp, win), opponent: String(d.opponent.name || "").slice(0, 40) };
+  verdict.entry = {
+    enemy: "duel_mage",
+    spawnId: "duel",
     result: outcome,
     timeSec: Math.round(cm.time * 10) / 10,
     interrupts: cm.stats.interrupts,

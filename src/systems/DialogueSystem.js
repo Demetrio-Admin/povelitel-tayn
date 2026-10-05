@@ -170,6 +170,8 @@ export class DialogueSystem {
       else if (e.heal) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_HEAL));
       else if (e.kit) this.pendingAfter.push(() => this.bus?.emit(MSG.STARTER_KIT));
       else if (e.seal) this.pendingAfter.push(() => this.bus?.emit(MSG.UNLOCK_SEAL));   // v0.10.0
+      else if (e.shop) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_SHOP));       // v0.20.0: лавка
+      else if (e.bank) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_WALLET));     // v0.20.0: банк (кошелёк)
     }
   }
 }

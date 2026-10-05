@@ -20,6 +20,18 @@ import { fm } from '../state/hero.js';
 const GOT_IT = fm('Поняла.', 'Понял.');
 
 const BYE = { label: 'Спасибо.' };
+
+// v0.20.0 — глава II, квест 1 «Дорога в большой мир»: Мирра впервые отправляет героя одного
+const CH2_SEND_OFF = {
+  lines: [
+    'Я изучила то, что ты принесла из-за ворот. Там чужая техника — я такой не пользуюсь. Городская.',
+    'Найди в городе архивиста Иларию Восс. Она знает о странной магии больше всех, кого я знаю.',
+    'Я могу рассказать тебе, что искать. Но искать теперь придётся тебе самому.',
+    { hero: fm('Одна? Без тебя?', 'Один? Без тебя?') },
+    fm('Ты уже умеешь достаточно, чтобы разобраться без меня. Указатель — у восточного края тропы.', 'Ты уже умеешь достаточно, чтобы разобраться без меня. Указатель — у восточного края тропы.'),
+  ],
+  choices: [{ label: 'Отправляюсь в город.', do: [{ event: 'ch2_start' }] }, { label: 'Ещё не время.' }],
+};
 // v0.9 — услуга Мирры: лечение за монеты (окно подтверждения открывается после закрытия диалога)
 const HEAL = { label: 'Восстановить здоровье', when: c => c.hpMissing, do: [{ heal: true }] };
 const INTRO_ASK = [
@@ -63,9 +75,36 @@ export const DIALOGUES = {
             'В город… Значит, кто-то знает о защите леса больше, чем должен. Туда мы ещё дойдём.',
             fm('Сегодня ты справилась сама. Я горжусь тобой.', 'Сегодня ты справился сам. Я горжусь тобой.'),
           ],
-          choices: [{ label: 'Сварить зелье', do: [{ alchemy: true }] }, HEAL, { label: 'Открыть журнал', do: [{ journal: true }] }, BYE],
+          choices: [{ label: 'Что дальше? Город?', next: 'city' }, { label: 'Сварить зелье', do: [{ alchemy: true }] }, HEAL, { label: 'Открыть журнал', do: [{ journal: true }] }, BYE],
         },
+        city: CH2_SEND_OFF,
       },
+    },
+    // v0.20.0 — глава II: Мирра отправляет героя в город (если эпилог уже был, а в город ещё не пошли)
+    {
+      id: 'mirra_ch2_ready', when: c => c.has('chapter_1_complete') && !c.has('ch2_start'),
+      nodes: { start: CH2_SEND_OFF },
+    },
+    {
+      id: 'mirra_ch2_severin', repeat: true, when: c => c.has('ch2_met_severin'),
+      nodes: { start: {
+        lines: ['Северин Вейр… Я слышала это имя. Умный и упрямый. Будь осторожнее с теми, кто обещает лёгкий путь.'],
+        choices: [{ label: 'Сварить зелье', do: [{ alchemy: true }] }, HEAL, { label: 'Открыть журнал', do: [{ journal: true }] }, BYE],
+      } },
+    },
+    {
+      id: 'mirra_ch2_city', repeat: true, when: c => c.has('ch2_city_arrived'),
+      nodes: { start: {
+        lines: ['Ну как город? Шумно, людно — и холодно, говорят. Илария толковая, держись её.'],
+        choices: [{ label: 'Сварить зелье', do: [{ alchemy: true }] }, HEAL, { label: 'Открыть журнал', do: [{ journal: true }] }, BYE],
+      } },
+    },
+    {
+      id: 'mirra_ch2', repeat: true, when: c => c.has('ch2_start'),
+      nodes: { start: {
+        lines: ['Илария Восс — в городском Архиве. Указатель у восточного края тропы.'],
+        choices: [{ label: 'Сварить зелье', do: [{ alchemy: true }] }, HEAL, { label: 'Открыть журнал', do: [{ journal: true }] }, BYE],
+      } },
     },
     // v0.10.0 — подсказки к сюжетным рецептам (один раз; потом — обычная болтовня с котлом)
     {
@@ -445,6 +484,142 @@ export const DIALOGUES = {
       nodes: { start: {
         lines: ['Лунный свет не гаснет, пока его помнят.', 'Если хочешь изучить новый дар — алтарь к твоим услугам.'],
         choices: [{ label: 'Открыть алтарь', do: [{ upgrade: 'telekinesis_2' }] }, { label: 'Спасибо.' }],
+      } },
+    },
+  ],
+  // ================================================================== v0.20.0 — глава II, город
+  ilaria: [
+    {
+      id: 'ilaria_after_severin', repeat: true, when: c => c.has('ch2_met_severin'),
+      nodes: { start: {
+        lines: ['Северин был любезен? Он всегда любезен.', 'Я подниму записи о складах Общества. Приходите позже — мне нужно время.'],
+        choices: [BYE],
+      } },
+    },
+    {
+      id: 'ilaria_archive_active', when: c => c.has('ch2_trace_found') && !c.has('ch2_archive_read'),
+      nodes: { start: {
+        lines: ['Документ лежит на столе в Архиве. Строки выцвели — нарочно, похоже.', 'Ваш Астрал прочтёт то, что стёрли.'],
+        choices: [{ label: GOT_IT }],
+      } },
+    },
+    {
+      id: 'ilaria_archive_ready', when: c => c.has('ch2_archive_read') && !c.has('ch2_met_severin'),
+      nodes: { start: {
+        lines: ['Северин Вейр. Я так и думала, что это имя всплывёт.', 'Общество Преображения — к востоку, вход с площади. Ведите себя вежливо: у них влиятельные друзья.'],
+        choices: [{ label: 'Иду к ним.' }],
+      } },
+    },
+    {
+      id: 'ilaria_trace_ready', when: c => c.has('ch2_trace_astral') && c.has('ch2_trace_debris') && !c.has('ch2_trace_found'),
+      nodes: { start: {
+        lines: [
+          { hero: 'Под инеем — руническая пыль и следы лунных осколков. И клеймо мастерской на обломке.' },
+          'Пыль и осколки — как в вашем лесу. А клеймо… Я видела похожее в архивных папках.',
+          'Пойдёмте в Архив. Старый документ на столе — посмотрите его своим Астралом.',
+        ],
+        choices: [{ label: 'Пойдёмте.', do: [{ event: 'ch2_trace_found' }] }],
+      } },
+    },
+    {
+      id: 'ilaria_trace_active', when: c => c.has('ch2_met_ilaria') && !c.has('ch2_trace_found'),
+      nodes: { start: {
+        lines: ['Иней лёг узором у фонтана — проверьте его Астралом.', 'И тот разбитый ящик к востоку: под ним что-то блестит.'],
+        choices: [{ label: GOT_IT }],
+      } },
+    },
+    {
+      id: 'ilaria_meet_ready', when: c => c.has('ch2_plaza_cleared') && !c.has('ch2_met_ilaria'),
+      nodes: {
+        start: {
+          lines: [
+            'Вы отогнали его? Хорошо. Илария Восс, городской Архив.',
+            'Вас прислала Мирра — я знаю её почерк в письмах. Она писала про чужую магию в лесу.',
+            'Сегодня у нас третья вспышка за месяц. Холод из ниоткуда и изменённые звери.',
+          ],
+          choices: [{ label: 'Что здесь происходит?', next: 'what' }],
+        },
+        what: {
+          lines: ['Пока не знаю. Но вокруг вспышки остаются следы — и они похожи на ваши лесные.', 'Осмотрите площадь. Мне нужен свежий взгляд и ваш дар.'],
+          choices: [{ label: 'Осмотрю.', do: [{ event: 'ch2_met_ilaria' }] }],
+        },
+      },
+    },
+    {
+      id: 'ilaria_danger', when: c => c.has('ch2_city_arrived') && !c.has('ch2_plaza_cleared'),
+      nodes: { start: {
+        lines: ['Осторожно! Зверь у фонтана — он бросается на людей.', 'Бейте его огнём, холод он не любит… то есть любит слишком.'],
+        choices: [{ label: 'Разберусь.' }],
+      } },
+    },
+    {
+      id: 'ilaria_default', repeat: true, when: () => true,
+      nodes: { start: { lines: ['Архив открыт для тех, кто ищет.'], choices: [BYE] } },
+    },
+  ],
+  severin: [
+    {
+      id: 'severin_meet_ready', when: c => c.has('ch2_archive_read') && !c.has('ch2_met_severin'),
+      nodes: {
+        start: {
+          lines: [
+            'А, ученица Мирры! Наслышан. Северин Вейр, Общество Преображения.',
+            'Записи о ледяной магии? Да, я их взял. Мы изучаем, как магия меняет вещи и людей. Это не тайна.',
+            'Скажите честно — сколько времени у вас ушло на первый настоящий дар?',
+          ],
+          choices: [{ label: 'Годы учёбы у Мирры.', next: 'ten' }, { label: 'Дар проснулся сам — от книги.', next: 'ten' }],
+        },
+        ten: {
+          lines: [
+            'А если бы это можно было сократить в десять раз?',
+            'Магия развивается слишком медленно — из-за традиций. Мы хотим это изменить.',
+            'А вспышки холода — не наша работа, уверяю. Возьмите это в знак добрых намерений: тёплый настой, наш рецепт.',
+          ],
+          choices: [{ label: 'Посмотрим.', do: [{ event: 'ch2_met_severin' }] }],
+        },
+      },
+    },
+    {
+      id: 'severin_after', repeat: true, when: c => c.has('ch2_met_severin'),
+      nodes: { start: { lines: ['Двери Общества открыты. Подумайте о моём вопросе.'], choices: [BYE] } },
+    },
+    {
+      id: 'severin_default', repeat: true, when: () => true,
+      nodes: { start: { lines: ['Общество Преображения рад гостям. Но сейчас я занят опытом — загляните позже.'], choices: [BYE] } },
+    },
+  ],
+  merchant: [
+    {
+      id: 'merchant_first', when: c => c.has('ch2_city_arrived') && !c.has('city_merchant_open'),
+      nodes: { start: {
+        lines: ['Новенькая? Добро пожаловать! Травы, смола, пыль, осколки — всё, что нужно магу в дороге.', 'Покупаю и сам, но, уж простите, за треть цены — у меня ведь лавка, а не богадельня.'],
+        choices: [{ label: 'Посмотреть товар', do: [{ event: 'city_merchant_open' }, { shop: true }] }, { label: 'Потом.', do: [{ event: 'city_merchant_open' }] }],
+      } },
+    },
+    {
+      id: 'merchant_shop', repeat: true, when: c => c.has('city_merchant_open'),
+      nodes: { start: { lines: ['Что сегодня?'], choices: [{ label: 'Посмотреть товар', do: [{ shop: true }] }, BYE] } },
+    },
+    {
+      id: 'merchant_default', repeat: true, when: () => true,
+      nodes: { start: { lines: ['Лавка скоро откроется.'], choices: [BYE] } },
+    },
+  ],
+  banker: [
+    {
+      id: 'banker_default', repeat: true, when: () => true,
+      nodes: { start: {
+        lines: ['Банк хранит монеты и сапфиры — редкую валюту для особых случаев.', 'Новым клиентам — небольшой подарок.'],
+        choices: [{ label: 'Открыть счёт', do: [{ bank: true }] }, BYE],
+      } },
+    },
+  ],
+  duelist: [
+    {
+      id: 'duelist_default', repeat: true, when: () => true,
+      nodes: { start: {
+        lines: ['Магическая Дуэль — официальное соревнование магов. Маг против мага, рейтинг, слава.', 'Зал пока закрыт: готовим первый сезон. Приходите, когда научитесь выбирать дары под соперника.'],
+        choices: [{ label: 'Обязательно приду.' }],
       } },
     },
   ],

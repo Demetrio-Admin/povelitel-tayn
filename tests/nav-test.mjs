@@ -1,4 +1,5 @@
 // Маршруты tap-to-move: обход препятствий, закрытые цели, узкие проходы, реальный мир. node tests/nav-test.mjs
+import { CITY_START, EAST_X } from '../src/config/world.city.js';
 import { buildNav, findPath, lineClear, NAV } from '../src/world/nav.js';
 import { WORLD, INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
 import { buildTerrain } from '../src/world/terrain.js';
@@ -90,11 +91,12 @@ console.log('\nМаршруты: реальный мир (первая глав�
   let worst = 0, bad = [], unreachable = [];
   for (const o of [...INTERACTIVES, ...ENEMY_SPAWNS]) {
     if (o.id === 'flame_c') continue;
+    const from = o.x >= EAST_X ? CITY_START : start;   // v0.20.0: город — отдельный участок (переход по указателю)
     const t = performance.now();
-    const r = findPath(gOpen, start, { x: o.x, y: o.y });
+    const r = findPath(gOpen, from, { x: o.x, y: o.y });
     worst = Math.max(worst, performance.now() - t);
     if (!r || r.points.length === 0) { unreachable.push(o.id); continue; }
-    if (!pathClear(gOpen[1], start, r.points)) bad.push(o.id);
+    if (!pathClear(gOpen[1], from, r.points)) bad.push(o.id);
     if (Math.hypot(r.end.x - o.x, r.end.y - o.y) > Math.max(o.radius || 100, 130)) unreachable.push(o.id + '(далеко)');
   }
   ok(bad.length === 0, 'пути ко всем объектам не задевают препятствия' + (bad.length ? ': ' + bad.join(',') : ''));

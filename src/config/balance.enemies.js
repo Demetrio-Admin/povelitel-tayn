@@ -46,6 +46,28 @@ export const ENEMIES = {
     arena: 'glade_small',
   },
 
+  // v0.20.0 — глава II (chapter-2-balance-v0.1.md §9). Инеевый зверёк: быстрые удары с холодом (замедляют героя),
+  // ледяной рывок прерывается Телекинезом, слабость к Огню. Бой ~20–25 с у героя 8–9 уровня.
+  frost_critter: {
+    name: 'Инеевый зверёк',
+    texture: 'enemy_frost_critter',
+    tier: 'normal',
+    hp: 440,
+    normalAttack: { damage: 11, intervalSec: 2.5, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: {
+      name: 'Ледяной рывок', damage: 26, prepSec: 1.8, cooldownSec: 9, firstDelaySec: 5,
+      interruptBy: ['telekinesis'],
+      hint: 'Прервите Телекинезом!',
+    },
+    staggerSec: 1.0,
+    interruptedCooldownSec: 6,
+    defense: 0,
+    weaknesses: { fire: 0.3 },
+    rewards: { heroXP: 80, schoolXP: { fire: 20, telekinesis: 20 }, items: { frost_herb: 1 }, coins: 20 },
+    repeatRewards: { heroXP: 14, schoolXP: { fire: 3 }, coins: 5 },
+    arena: 'city',
+  },
+
   // Враг со слабостью из Combat Math §7. v0.10.0: пять Корневиков в старом лесу (world.layout.js, rootling_01…05).
   // Защита 20%, Огонь +50% и снимает защиту на 6 с. Первая победа на месте — rewards; повторная (возобновляемые места) — repeatRewards.
   rootling: {
@@ -132,6 +154,14 @@ export const FIELD_OBJECTS = {
 
 // Расстановка объектов поля по аренам (координаты в viewport 720×1280).
 export const ARENAS = {
+  // v0.20.0: городская мостовая — обломки ящиков вместо камней
+  city: {
+    ground: 0x2a2c33,
+    objects: [
+      { id: 'rock_a', type: 'light_rock', x: 190, y: 720 },
+      { id: 'heavy_a', type: 'heavy_rock', x: 540, y: 710 },
+    ],
+  },
   glade: {
     ground: 0x2c3a24,
     objects: [

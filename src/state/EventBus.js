@@ -44,7 +44,10 @@ export const MSG = {
   FOCUS_CHANGED: 'interaction:focus', // (info | null)
   COMBAT_CYCLE: 'combat:cycle',
   FINAL_SCREEN: 'ui:final',          // v0.10.0: ({ outcome, reward }) — финал первой главы
-  UNLOCK_SEAL: 'story:unlock-seal',   // v0.10.0: Селена открывает Печать I (после закрытия диалога)
+  UNLOCK_SEAL: 'story:unlock-seal',
+  TRAVEL: 'world:travel',            // v0.20.0: переход между лесом и городом ({ x, y, text })
+  OPEN_SHOP: 'ui:open-shop',         // v0.20.0: лавка торговца (из диалога)
+  OPEN_WALLET: 'ui:open-wallet',     // v0.20.0: кошелёк / банк (из диалога и меню)   // v0.10.0: Селена открывает Печать I (после закрытия диалога)
   ZONE_CHANGED: 'world:zone',         // (zone)
   TUTORIAL: 'ui:tutorial',            // ({ id, text, target, ttl } | null)
   OPEN_PAUSE: 'ui:pause',

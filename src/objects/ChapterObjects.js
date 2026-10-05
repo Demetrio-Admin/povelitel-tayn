@@ -178,7 +178,7 @@ export class SealSigilObject extends InteractiveObject {
     if (!this.isAvailable()) return;
     if (this.rejectWrongAbility(abilityId)) return;
     if (!this.abilities.isUnlocked('seal')) {
-      this.scene.toast('Угасший камень. Селена знает, как вернуть ему свет.', SEAL);
+      this.scene.toast(this.cfg.lockedText || 'Угасший камень. Селена знает, как вернуть ему свет.', SEAL);
       return;
     }
     const r = await this.serverAct();   // v0.13.0: ману списывает сервер (операция world)
@@ -191,12 +191,12 @@ export class SealSigilObject extends InteractiveObject {
       this.busy = false;
       this.light(true);
       services.audio.play('quest_update');
-      sc.dialog({
-        title: 'Камень ожил', color: SEAL,
-        text: 'Трещины затянулись, и камень засиял ровным холодным светом. Астрал не ломает и не жжёт — он видит скрытое и будит спящее.\n\n'
+      sc.dialog({   // v0.20.0: тексты можно задать в конфиге объекта (знаки главы II)
+        title: this.cfg.doneTitle || 'Камень ожил', color: SEAL,
+        text: this.cfg.doneText || ('Трещины затянулись, и камень засиял ровным холодным светом. Астрал не ломает и не жжёт — он видит скрытое и будит спящее.\n\n'
           + 'В бою он бьёт силой, которой не помеха ни броня, ни кора. Атаки врага Астрал не останавливает — их прерывает Телекинез.\n\n'
-          + 'Теперь — к Древним воротам.',
-        buttons: [{ label: 'К воротам', primary: true }],
+          + 'Теперь — к Древним воротам.'),
+        buttons: [{ label: this.cfg.doneButton || 'К воротам', primary: true }],
       });
     });
   }

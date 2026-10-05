@@ -124,6 +124,12 @@ export const EVENT_REWARDS = {
   // v0.10.0: Селена открывает Печать I сюжетно — без уровня, платы и таймера. Учебный знак и ворота дают только
   // обычный школьный опыт мира (+6), отдельной награды «за обучение» нет.
   unlock_seal_1:           { heroXP: 60 },
+  // v0.20.0 — глава II, квесты 1–5 (chapter-2-balance-v0.1.md §4; опыт боёв — в наградах врагов)
+  ch2_city_arrived:        { heroXP: 220, coins: 60 },
+  ch2_met_ilaria:          { heroXP: 200, coins: 50, items: { frost_herb: 1 } },
+  ch2_trace_found:         { heroXP: 300, coins: 80, items: { frost_herb: 2, rune_dust: 1 } },
+  ch2_archive_read:        { heroXP: 320, coins: 90 },
+  ch2_met_severin:         { heroXP: 340, coins: 80, items: { warm_potion: 1 } },
 };
 // lunar_quest_complete теперь выдаёт атомарная операция «применить Лунный фитиль» (storyItems.js STORY_USES.lunar_wick,
 // те же числа); запись выше осталась для старого пути QuestFlags.complete и тестов — алтарь его больше не вызывает.

@@ -55,6 +55,8 @@ export const CHAPTER_1_FINAL = 'Защита рощи восстановлена
 // use — сюжетный предмет, который шаг просит применить (журнал показывает, есть ли он в сумке).
 const has = (s, k) => s.hasEvent(k);
 const WH_GUARDS = ['wh_collector_1', 'wh_collector_2', 'wh_elite'];   // v0.21.0: сборщики на складах (квест 6)
+const LAB_FIGHTS = ['ch2_vol_1', 'ch2_vol_2', 'ch2_lab_construct'];      // v0.22.0: лаборатория (квест 12)
+const FINAL_ROUTE = ['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal'];   // v0.22.0: экзамен по четырём дарам (квест 15)
 const altarLit = s => has(s, EV.LUNAR_QUEST_COMPLETE);
 export const QUEST_STEPS = [
   { id: 'book',     text: 'Прочтите книгу первого дара на столе в доме',          done: s => has(s, EV.UNLOCK_TELEKINESIS_1) },
@@ -122,5 +124,33 @@ export const QUEST_STEPS = [
     progress: s => `${['ch2_deep_1', 'ch2_deep_2', 'ch2_ice_guardian_defeated'].filter(k => has(s, k)).length}/3`,
     done: s => ['ch2_deep_1', 'ch2_deep_2', 'ch2_ice_guardian_defeated'].every(k => has(s, k)) || has(s, 'ch2_quarter_cleared') },
   { id: 'ch2_choice_tell', text: 'Вернитесь к Нэрис', done: s => has(s, 'ch2_quarter_cleared') },
-  { id: 'ch2_next',    text: 'Продолжение — Хрупкость и тайна Общества — в следующем обновлении главы II', done: () => false },
+  // ---- v0.22.0: квесты 11–15
+  { id: 'ch2_ice2',        text: 'Нэрис готова к следующему уроку — поговорите с ней', done: s => has(s, 'unlock_ice_2') },
+  { id: 'ch2_brittle',     text: 'Хрупкость: одолейте два учебных конструкта во дворе квартала',
+    progress: s => `${['ch2_brittle_1', 'ch2_brittle_2'].filter(k => has(s, k)).length}/2`,
+    done: s => (has(s, 'ch2_brittle_1') && has(s, 'ch2_brittle_2')) || has(s, 'ch2_brittle_done') },
+  { id: 'ch2_brittle_craft', text: 'Сварите Флакон хрупкости в котле Нэрис', craft: 'brittle_flask', done: s => has(s, 'brittle_flask_crafted') || has(s, 'ch2_brittle_done') },
+  { id: 'ch2_brittle_tell', text: 'Покажите Нэрис, чему научились', done: s => has(s, 'ch2_brittle_done') },
+  { id: 'ch2_lab_lead',    text: 'Илария что-то нашла — поговорите с ней', done: s => has(s, 'ch2_lab_found') },
+  { id: 'ch2_lab_door',    text: 'Тайная лаборатория к югу от дороги: успокойте печать на двери Льдом', done: s => has(s, 'ch2_lab_open') },
+  { id: 'ch2_lab_fight',   text: 'Обезвредьте добровольцев, потерявших контроль, и конструкт',
+    progress: s => `${LAB_FIGHTS.filter(k => has(s, k)).length}/${LAB_FIGHTS.length}`, done: s => LAB_FIGHTS.every(k => has(s, k)) },
+  { id: 'ch2_stabilize',   text: 'Сварите два Стабилизирующих настоя и отдайте их Тихону', craft: 'stabilizing_potion', done: s => has(s, 'ch2_stabilized') },
+  { id: 'ch2_lab_journal', text: 'Прочтите лабораторный журнал Астралом', done: s => has(s, 'ch2_lab_journal') },
+  { id: 'ch2_lab_tell',    text: 'Расскажите Иларии, что было в лаборатории', done: s => has(s, 'ch2_lab_reported') },
+  { id: 'ch2_confront',    text: 'Поговорите с Северином начистоту', done: s => has(s, 'ch2_severin_confronted') },
+  { id: 'ch2_coven',       text: 'Дом Ковенов: найдите Ровену', done: s => has(s, 'ch2_coven_met') },
+  { id: 'ch2_coven_tasks', text: 'Помогите Ковену: две нестабильные конструкции, Кристальный покров и 2 морозника',
+    progress: s => `${['ch2_unstable_1', 'ch2_unstable_2', 'ch2_coven_supplies'].filter(k => has(s, k)).length}/3`,
+    done: s => ['ch2_unstable_1', 'ch2_unstable_2', 'ch2_coven_supplies'].every(k => has(s, k)) || has(s, 'ch2_coven_ready') },
+  { id: 'ch2_coven_tell',  text: 'Вернитесь к Ровене', done: s => has(s, 'ch2_coven_ready') },
+  { id: 'ch2_final_go',    text: 'Илария зовёт — что-то случилось', done: s => has(s, 'ch2_final_start') },
+  { id: 'ch2_final_route', text: 'Город во льду! Четыре преграды: Телекинез, Огонь, Лёд и Астрал (даров — три, меняйте)',
+    progress: s => `${FINAL_ROUTE.filter(k => has(s, k)).length}/4`, done: s => FINAL_ROUTE.every(k => has(s, k)) || has(s, 'ch2_ice3') },
+  { id: 'ch2_ice3',        text: 'Нэрис у Дуэльного зала: Лёд III и выбор ветки', done: s => has(s, 'ch2_ice3') },
+  { id: 'ch2_boss',        text: 'Остановите Северина в Дуэльном зале', done: s => has(s, 'ch2_severin_defeated') },
+  { id: 'ch2_letters',     text: 'Прочтите письма Северина Астралом', done: s => has(s, 'ch2_letters_read') },
+  { id: 'ch2_epilogue',    text: 'Город оттаивает — поговорите с Иларией', done: s => has(s, 'ch2_epilogue') },
+  { id: 'ch2_home',        text: 'Вернитесь домой, к Мирре', done: s => has(s, 'chapter_2_complete') },
+  { id: 'ch2_next',    text: 'Глава II завершена. Дальше — поручения, Ковены и Магическая Дуэль', done: () => false },
 ];

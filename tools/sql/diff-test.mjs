@@ -216,6 +216,14 @@ const SCRIPTED = [
   A('event', { key: 'unlock_ice_1' }), SET({ inv: { moon_herb: 2, frost_herb: 2, forest_mushroom: 2 } }), A('craft', { recipe: 'warm_potion' }), A('event', { key: 'unlock_ice_1' }), A('event', { key: 'unlock_ice_1' }),
   MANA(100), W('fq_water'), A('build_set', { slots: ['ice', 'fire', 'telekinesis'] }), W('fq_water'), W('fq_water'), A('event', { key: 'ch2_ice_trained' }), A('event', { key: 'ch2_quarter_cleared' }),
   A('event', { key: 'ch2_cargo_start' }), W('wh_cargo'), W('wh_equipment'), A('event', { key: 'ch2_cargo_reported' }),
+  // v0.22.0: события с ценой (consume), веткой дара (branch), сопутствующими событиями (marks), сапфирами и blockedBy
+  A('event', { key: 'ch2_stabilized' }), SET({ quests: ['ch2_vol_1', 'ch2_vol_2'] }), A('event', { key: 'ch2_stabilized' }), SET({ inv: { stabilizing_potion: 1 } }),
+  A('event', { key: 'ch2_stabilized' }), SET({ inv: { stabilizing_potion: 3 } }), A('event', { key: 'ch2_stabilized' }), A('event', { key: 'ch2_stabilized' }),
+  SET({ quests: ['ch2_lab_reported'] }), A('event', { key: 'ch2_view_market' }), A('event', { key: 'ch2_severin_confronted' }), A('event', { key: 'ch2_view_danger' }),
+  A('event', { key: 'ch2_ice3_frost' }), SET({ quests: ['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal'] }), A('event', { key: 'ch2_ice3_frost' }),
+  A('event', { key: 'ch2_ice3_shard' }), A('event', { key: 'ch2_ice3_frost' }), A('respec', { ability: 'ice', branch: 'shard' }),
+  A('event', { key: 'chapter_2_complete' }), SET({ quests: ['ch2_epilogue'] }), A('event', { key: 'chapter_2_complete' }), A('event', { key: 'chapter_2_complete' }),
+  W('lab_seal'), SET({ quests: ['ch2_lab_found'] }), MANA(100), W('lab_seal'), W('final_ward'), SET({ quests: ['ch2_final_start'] }), W('final_ward'), W('final_rift'), W('final_ice_wall'),
 ];
 const SCRIPT = SCRIPTED.flatMap(splitSet);
 for (let s = 0; s < SERIES + 1; s++) {

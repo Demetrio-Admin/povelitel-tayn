@@ -138,6 +138,16 @@ export const EVENT_REWARDS = {
   unlock_ice_1:            { heroXP: 60 },
   ch2_ice_trained:         { heroXP: 240, coins: 60 },
   ch2_quarter_cleared:     { heroXP: 340, coins: 160, items: { ice_crystal: 2 } },
+  // v0.22.0: квесты 11–15
+  unlock_ice_2:            { heroXP: 60, items: { ice_crystal: 1, tree_resin: 1, rune_dust: 1 } },   // материалы на первый Флакон хрупкости
+  ch2_brittle_done:        { heroXP: 240, coins: 70 },
+  ch2_stabilized:          { heroXP: 120 },
+  ch2_lab_reported:        { heroXP: 300, coins: 180, items: { frost_shard: 1, lunar_shard: 2 } },
+  ch2_severin_confronted:  { heroXP: 380, coins: 80 },
+  ch2_coven_met:           { heroXP: 60 },
+  ch2_coven_ready:         { heroXP: 300, coins: 180, items: { ice_crystal: 2 } },
+  ch2_epilogue:            { heroXP: 250 },
+  chapter_2_complete:      { heroXP: 300, coins: 150, items: { frost_shard: 1 } },   // + 5 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
 };
 // lunar_quest_complete теперь выдаёт атомарная операция «применить Лунный фитиль» (storyItems.js STORY_USES.lunar_wick,
 // те же числа); запись выше осталась для старого пути QuestFlags.complete и тестов — алтарь его больше не вызывает.

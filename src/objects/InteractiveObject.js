@@ -65,6 +65,7 @@ export class InteractiveObject {
     const s = this.state;
     if (this.cfg.requiresEvent && !s.hasEvent(this.cfg.requiresEvent)) return false;
     if (this.cfg.requiresEnemyDefeated && !s.isEnemyDefeated(this.cfg.requiresEnemyDefeated)) return false;
+    if (this.cfg.hideEvent && s.hasEvent(this.cfg.hideEvent)) return false;   // v0.22.0: персонаж ушёл по сюжету
     return true;
   }
 

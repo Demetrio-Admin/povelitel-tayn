@@ -78,7 +78,7 @@ console.log('\nМаршруты: реальный мир (первая глав�
 {
   const LIVE = resolveMap({ storage: null, useDraft: false });
   const terrain = buildTerrain({ ROADS: LIVE.roads, WATERS: LIVE.waters });
-  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', 'frost_barrier', 'fq_water'];
+  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', 'frost_barrier', 'fq_water', 'lab_seal', 'final_ward'];
   const solidsFor = (skip) => collectSolids({ colliders: LIVE.colliders, props: PROPS, interactives: INTERACTIVES, enemies: ENEMY_SPAWNS, waterRects: terrain.waterRects, skip: new Set(skip) });
   const dims = { width: WORLD.width, height: WORLD.height };
   const t0 = performance.now();

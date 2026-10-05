@@ -41,6 +41,9 @@ export function grantOf(r = {}) {
  * Всё, чего здесь нет, клиент отметить не может: события боёв, крафта, применения предметов, заданий и изучения ставят свои операции.
  *   requires — какие события уже должны быть (то же условие, что у диалога или объекта в игре),
  *   unlock   — дар, который открывается вместе с событием ({ id: ступень }); награда события — из EVENT_REWARDS (balance.progression.js).
+ *   v0.22.0: blockedBy — события, после которых это уже нельзя (reason 'done'); consume — предметы, которые событие забирает
+ *   ({ id: N }, не хватает — 'missing'); branch — ветка дара ({ ice: 'frost' }); marks — какие события отметить вместе с этим;
+ *   sapphires — сапфиры в награду (в журнал сапфиров с ref 'event:<ключ>', повтор невозможен).
  */
 export const EVENT_ACTIONS = {
   prologue_seen: {},
@@ -70,6 +73,27 @@ export const EVENT_ACTIONS = {
   ch2_ice_trained: { requires: ['ch2_training_done'] },
   ch2_choice_start: { requires: ['ch2_ice_trained'] },
   ch2_quarter_cleared: { requires: ['ch2_ice_guardian_defeated', 'ch2_deep_1', 'ch2_deep_2'] },
+  // v0.22.0 — квесты 11–15 (Нэрис, Тихон, Илария, Северин, Ровена, Мирра)
+  unlock_ice_2: { requires: ['ch2_quarter_cleared'], unlock: { ice: 2 } },
+  ch2_brittle_done: { requires: ['ch2_brittle_1', 'ch2_brittle_2', 'brittle_flask_crafted'] },
+  ch2_lab_found: { requires: ['ch2_brittle_done'] },
+  ch2_stabilized: { requires: ['ch2_vol_1', 'ch2_vol_2'], consume: { stabilizing_potion: 2 } },
+  ch2_lab_reported: { requires: ['ch2_stabilized', 'ch2_lab_journal'] },
+  // ответ героя Северину — без ветвления сюжета, только отношение (его вспомнит Мирра)
+  ch2_view_danger: { requires: ['ch2_lab_reported'], blockedBy: ['ch2_severin_confronted'] },
+  ch2_view_methods: { requires: ['ch2_lab_reported'], blockedBy: ['ch2_severin_confronted'] },
+  ch2_view_market: { requires: ['ch2_lab_reported'], blockedBy: ['ch2_severin_confronted'] },
+  ch2_view_unsure: { requires: ['ch2_lab_reported'], blockedBy: ['ch2_severin_confronted'] },
+  ch2_severin_confronted: { requires: ['ch2_lab_reported'] },
+  ch2_coven_met: { requires: ['ch2_severin_confronted'] },
+  ch2_coven_supplies: { requires: ['ch2_coven_met'], consume: { crystal_guard: 1, frost_herb: 2 } },
+  ch2_coven_ready: { requires: ['ch2_unstable_1', 'ch2_unstable_2', 'ch2_coven_supplies'] },
+  ch2_final_start: { requires: ['ch2_coven_ready'] },
+  // Лёд III перед боем: ветка выбирается один раз (ch2_ice3 — общая отметка, по ней появляется Северин)
+  ch2_ice3_frost: { requires: ['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal'], blockedBy: ['ch2_ice3'], unlock: { ice: 3 }, branch: { ice: 'frost' }, marks: ['ch2_ice3'] },
+  ch2_ice3_shard: { requires: ['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal'], blockedBy: ['ch2_ice3'], unlock: { ice: 3 }, branch: { ice: 'shard' }, marks: ['ch2_ice3'] },
+  ch2_epilogue: { requires: ['ch2_letters_read'] },
+  chapter_2_complete: { requires: ['ch2_epilogue'], marks: ['title_frost_survivor'], sapphires: 5 },
 };
 
 /**
@@ -216,7 +240,12 @@ export function serverRules() {
   const potions = Object.fromEntries(Object.entries(POTIONS).filter(([, p]) => p.outside && (p.effect.type === 'heal' || p.effect.type === 'mana'))
     .map(([id, p]) => [id, { kind: p.effect.type, amount: p.effect.amount }]));
   // v0.15.0
-  const events = Object.fromEntries(Object.entries(EVENT_ACTIONS).map(([k, e]) => [k, { requires: e.requires || [], unlock: e.unlock || {} }]));
+  const events = Object.fromEntries(Object.entries(EVENT_ACTIONS).map(([k, e]) => [k, {
+    requires: e.requires || [], unlock: e.unlock || {},
+    // v0.22.0: blockedBy — событие уже не нужно; consume — что забирает (предметы); branch — ветка дара вместе с открытием;
+    // marks — ещё события вместе с этим (с их наградами); sapphires — сапфиры в награду (журнал сапфиров, один раз)
+    blockedBy: e.blockedBy || [], consume: e.consume || {}, branch: e.branch || {}, marks: e.marks || [], sapphires: e.sapphires || 0,
+  }]));
   const eventRewards = Object.fromEntries(Object.entries(EVENT_REWARDS).map(([k, r]) => [k, grantOf(r)]));
   return {
     recipes, uses: STORY_USES, firstCraft: FIRST_CRAFT, migration: MIGRATION_V10, vitals, potions, world: worldRules(),

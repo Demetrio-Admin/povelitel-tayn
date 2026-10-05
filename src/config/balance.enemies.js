@@ -135,6 +135,82 @@ export const ENEMIES = {
     arena: 'frost',
   },
 
+  // v0.22.0 — Доброволец, потерявший контроль (квест 12, chapter-2-balance §10). Не монстр: победа — «обезвредить»,
+  // повторно не появляется (место не возобновляется). Нестабильная магия: холодные удары, «Выброс» прерывает Телекинез.
+  volunteer: {
+    name: 'Доброволец без контроля',
+    texture: 'enemy_volunteer',
+    tier: 'normal',
+    hp: 600,
+    normalAttack: { damage: 13, intervalSec: 2.7, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: {
+      name: 'Выброс холода', damage: 30, prepSec: 2.0, cooldownSec: 9, firstDelaySec: 5,
+      interruptBy: ['telekinesis'],
+      hint: 'Прервите Телекинезом!',
+    },
+    staggerSec: 1.0,
+    interruptedCooldownSec: 6,
+    defense: 0.2,
+    weaknesses: { seal: 0.3 },
+    rewards: { heroXP: 90, schoolXP: { seal: 15, ice: 15 }, coins: 20 },
+    arena: 'lab',
+  },
+
+  // Экспериментальный конструкт (квест 12 и дальше, §9): 60–80 с. Кристальная броня и защитная корка; Огонь растапливает корку.
+  experimental_construct: {
+    name: 'Экспериментальный конструкт',
+    texture: 'enemy_experimental_construct',
+    tier: 'strong',
+    hp: 850,
+    normalAttack: { damage: 12, intervalSec: 3.4, chill: { pct: 0.35, sec: 3 } },
+    strongAttack: {
+      name: 'Ледяной разряд', damage: 34, prepSec: 2.4, cooldownSec: 10, firstDelaySec: 6,
+      interruptBy: ['telekinesis_heavy'],
+      hint: 'Бросьте тяжёлый камень!',
+    },
+    staggerSec: 1.1,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    armor: { value: 0.4, source: 'crystal', disabledSec: 8 },
+    weaknesses: { fire: 0.2 },
+    rewards: { heroXP: 100, schoolXP: { telekinesis: 30, fire: 30, seal: 30, ice: 30 }, items: { ice_crystal: 1, frost_shard: 1 }, coins: 40 },
+    repeatRewards: { heroXP: 65, schoolXP: { ice: 5 }, items: { ice_crystal: 1 }, coins: 18 },
+    arena: 'lab',
+  },
+
+  // v0.22.0 — финальный босс главы II: Северин Вейр (квест 15, §11). Первый бой «маг против мага», 120–180 с, три фазы.
+  // 1 «Дуэль» — защитный барьер (−25%, Астрал пробивает, Огонь снимает на 5 с), Ледяное копьё прерывает Телекинез.
+  // 2 «Перегрузка» — кристальная броня эксперимента (тяжёлый камень разбивает кристалл), удар сильнее, Огонь +30%.
+  // 3 «Предел» — магия рвётся: защита 40%, только Астрал и Лёд бьют в полную силу; тяжёлый удар — тяжёлым камнем.
+  severin_boss: {
+    name: 'Северин Вейр',
+    texture: 'enemy_severin',
+    tier: 'strong',
+    hp: 1500,
+    normalAttack: { damage: 11, intervalSec: 3.4, chill: { pct: 0.3, sec: 3 } },
+    strongAttack: {
+      name: 'Ледяное копьё', damage: 28, prepSec: 2.2, cooldownSec: 11, firstDelaySec: 6,
+      interruptBy: ['telekinesis'],
+      hint: 'Прервите Телекинезом!',
+    },
+    staggerSec: 1.1,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    phases: [
+      { above: 1000, set: { defense: 0.25, armor: null, weaknesses: null, onFireHit: { disableDefenseSec: 5 } },
+        message: 'Барьер Северина гасит удары. Астрал пробивает его, Огонь снимает на 5 секунд.' },
+      { above: 480, set: { defense: 0, armor: { value: 0.45, source: 'crystal', disabledSec: 8 }, weaknesses: { fire: 0.3 }, onFireHit: null,
+        normalAttack: { damage: 12, intervalSec: 3.2, chill: { pct: 0.35, sec: 3 } } },
+        strongAttack: { name: 'Перегрузка', damage: 32, interruptBy: ['telekinesis_heavy'], hint: 'Бросьте тяжёлый камень!' },
+        message: '«Система держит!» Эксперимент даёт Северину кристальную броню. Разбейте кристалл тяжёлым камнем.', tint: 0xa8e4ff },
+      { above: 0, set: { defense: 0.4, armor: null, weaknesses: { seal: 0.4, ice: 0.4 }, onFireHit: null },
+        strongAttack: { name: 'Предел', damage: 34, prepSec: 2.6, interruptBy: ['telekinesis_heavy'], hint: 'Бросьте тяжёлый камень!' },
+        message: '«Я не могу её остановить…» Магия рвётся наружу: в полную силу бьют только Астрал и Лёд.', tint: 0xd2a8ff },
+    ],
+    rewards: { heroXP: 350, schoolXP: { telekinesis: 40, fire: 40, seal: 40, ice: 60 }, items: { cold_heart: 1 }, coins: 150 },
+    arena: 'duel',
+  },
+
   // Враг со слабостью из Combat Math §7. v0.10.0: пять Корневиков в старом лесу (world.layout.js, rootling_01…05).
   // Защита 20%, Огонь +50% и снимает защиту на 6 с. Первая победа на месте — rewards; повторная (возобновляемые места) — repeatRewards.
   rootling: {
@@ -227,6 +303,23 @@ export const ARENAS = {
     objects: [
       { id: 'rock_a', type: 'light_rock', x: 190, y: 720 },
       { id: 'heavy_a', type: 'heavy_rock', x: 540, y: 710 },
+    ],
+  },
+  // v0.22.0: тайная лаборатория и Дуэльный зал (финал главы II)
+  lab: {
+    ground: 0x2a2633,
+    objects: [
+      { id: 'crystal_a', type: 'crystal', x: 590, y: 640 },
+      { id: 'heavy_a', type: 'heavy_rock', x: 150, y: 760 },
+      { id: 'rock_a', type: 'light_rock', x: 420, y: 800 },
+    ],
+  },
+  duel: {
+    ground: 0x2b2a38,
+    objects: [
+      { id: 'crystal_a', type: 'crystal', x: 590, y: 640 },
+      { id: 'heavy_a', type: 'heavy_rock', x: 150, y: 760 },
+      { id: 'rock_a', type: 'light_rock', x: 420, y: 800 },
     ],
   },
   // v0.21.0: Замёрзший квартал — кристалл стража и тяжёлый камень

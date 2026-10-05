@@ -127,6 +127,7 @@ export class ExplorationScene extends Phaser.Scene {
     bus.on(MSG.HERO_SAY, (t, ms) => this.heroSay(t, ms), this);
     bus.on(MSG.UNLOCK_SEAL, this.unlockSeal, this);
     bus.on(MSG.UNLOCK_GIFT, this.unlockGift, this);
+    bus.on(MSG.CHAPTER_FINALE, this.chapterFinale, this);
     bus.on(MSG.TRAVEL, (t) => this.travelTo(t, t?.text), this);   // v0.20.0: «Город» в меню
     bus.on(MSG.SIDE_QUEST, (id, what) => { this.refreshAll(); if (what === 'ready') services.audio.play('quest_update'); }, this);
     this.events.on('wake', this.onWake, this);
@@ -209,21 +210,48 @@ export class ExplorationScene extends Phaser.Scene {
 
   /**
    * v0.21.0: Нэрис открывает Лёд I (событие unlock_ice_1; дар выдаёт сервер, операция event). Даров становится четыре, а слотов — три:
-   * окно объясняет «3 из 4» и ведёт в «Дары». Повтор ничего не выдаёт.
+   * окно объясняет «3 из 4» и ведёт в «Дары». v0.22.0: 'ice:2' — Лёд II (unlock_ice_2), 'ice:3:frost' / 'ice:3:shard' — Лёд III
+   * с веткой (ch2_ice3_frost / ch2_ice3_shard). Повтор ничего не выдаёт.
    */
-  unlockGift(id) {
+  unlockGift(spec) {
+    const [id, lvlS, branch] = String(spec).split(':');
+    const level = Number(lvlS) || 1;
     if (id !== 'ice') return;
+    const GIFT = {
+      1: { event: 'unlock_ice_1', title: 'Лёд I', text: 'Лёд замораживает воду и нестабильную магию, а в бою замедляет врага: его удары и подготовка сильного удара идут медленнее.\n\n'
+        + 'Теперь даров четыре, а слотов — три. Работают только дары в слотах — и в бою, и в мире. Выберите, какой дар отложить.' },
+      2: { event: 'unlock_ice_2', title: 'Лёд II — Хрупкость', text: 'После удара Льдом враг становится хрупким: следующий удар Телекинеза, Огня или Астрала сильнее, '
+        + 'а тяжёлый камень по хрупкой цели ещё и разбивает броню.\n\nСначала Лёд — потом сильный удар.' },
+      3: { event: `ch2_ice3_${branch}`, title: `Лёд III — ${branch === 'shard' ? 'Осколок' : 'Мороз'}`, text: branch === 'shard'
+        ? 'Ветка Осколка: удар Льда по хрупкой цели раскалывает её (урон ×2,2), а Хрупкость от других даров сильнее. Замедление слабое.'
+        : 'Ветка Мороза: враг на 55% медленнее шесть секунд — больше времени, чтобы прервать удар. Сам удар Льда слабее.' },
+    }[level];
     const { state, abilities, quests } = services;
-    if (state.hasEvent('unlock_ice_1')) return;
-    abilities.unlock('ice', 1);
-    quests.complete('unlock_ice_1');
+    if (!GIFT || state.hasEvent(GIFT.event) || (level === 3 && state.hasEvent('ch2_ice3'))) return;
+    abilities.unlock('ice', level);
+    if (level === 3) state.setBranch?.('ice', branch);
+    quests.complete(GIFT.event);
+    if (level === 3) state.markEvent('ch2_ice3');
     this.burst(this.player.x, this.player.y - 60, COLORS.ice, 34);
-    this.toast('Получен дар: Лёд I', COLORS.ice);
+    this.toast(`Получен дар: ${GIFT.title}`, COLORS.ice);
     this.dialog({
-      title: 'Лёд I', color: COLORS.ice,
-      text: 'Лёд замораживает воду и нестабильную магию, а в бою замедляет врага: его удары и подготовка сильного удара идут медленнее.\n\n'
-        + 'Теперь даров четыре, а слотов — три. Работают только дары в слотах — и в бою, и в мире. Выберите, какой дар отложить.',
+      title: GIFT.title, color: COLORS.ice, text: GIFT.text,
       buttons: [{ label: 'Выбрать дары', primary: true, onClick: () => services.bus.emit(MSG.OPEN_GIFTS) }, { label: 'Позже' }],
+    });
+  }
+
+  /** v0.22.0: итог главы II — награды (их уже выдал сервер вместе с событием chapter_2_complete) и что открыто дальше. */
+  chapterFinale(n) {
+    if (n !== 2) return;
+    this.burst(this.player.x, this.player.y - 60, COLORS.ice, 40);
+    services.audio.play('quest_update');
+    this.dialog({
+      title: 'Глава II «Город под инеем» завершена', color: COLORS.ice,
+      text: 'Город оттаял, Северин остановлен — но за ним стоит кто-то ещё, и его знак — тот самый, с Древних ворот.\n\n'
+        + 'Награда: опыт, монеты, инеевый осколок, 5 сапфиров и титул «Переживший иней». Сердце холода от Северина — в сумке: '
+        + 'из него однажды выйдут сильный амулет, редкий артефакт или следующая ступень Льда. Решать не нужно сейчас.\n\n'
+        + 'Дальше: поручения, Ковены, вылазки и Магическая Дуэль.',
+      buttons: [{ label: 'Отлично', primary: true }],
     });
   }
 

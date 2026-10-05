@@ -27,8 +27,7 @@ export const UI = {
   },
   shadow: { offsetX: 0, offsetY: 2, color: '#000000', blur: 4, fill: true },   // тень текста Phaser
   orb: { ability: 128, small: 68, context: 112 },   // диаметры кнопок-«жемчужин»
-  dock: { left: 16, top: 1088, width: 688, height: 184, crest: 20,
-    buttonY: 1164, centers: [104, 274, 444, 614], icon: 94 },
+  dock: { buttonY: 1164, centers: [104, 274, 444, 614], icon: 110 },
 
   // v0.8.2 — компактный HUD без сплошных плашек. Все размеры в логических px (720×1280).
   hud: {
@@ -41,7 +40,7 @@ export const UI = {
     statIcon: 32, statH: 40, resIcon: 38,
     xp: { w: 180, h: 18 },
     shade: 0.55,           // мягкое затемнение под верхним HUD (сверху вниз до нуля)
-    bottomShade: 0.22,     // лёгкое затемнение: мир виден сквозь нижнюю рамку
+    bottomShade: 0.22,     // лёгкое затемнение для читаемых подписей плавающих кнопок
   },
   side: {                  // правая колонка: Журнал над Меню
     x: 656, orb: 92, icon: 60, hitW: 104, label: 24,

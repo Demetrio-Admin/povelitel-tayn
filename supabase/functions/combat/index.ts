@@ -140,7 +140,7 @@ var MIGRATION_V10 = {
 
 // src/config/build.js
 var GIFT_IDS = ["telekinesis", "fire", "seal"];
-var SLOT_RULES = { base: 3, extraAtLevel: 10 };
+var SLOT_RULES = { base: 3, extraAtLevel: null };
 var AMULET_SLOTS = 2;
 var AMULETS = {
   amulet_focus: {
@@ -166,7 +166,7 @@ var AMULETS = {
   }
 };
 var AMULET_IDS = Object.keys(AMULETS);
-var slotCount = (level, rules = SLOT_RULES) => rules.base + ((level || 0) >= rules.extraAtLevel ? 1 : 0);
+var slotCount = (level, rules = SLOT_RULES) => rules.base + (rules.extraAtLevel != null && (level || 0) >= rules.extraAtLevel ? 1 : 0);
 var defaultSlots = (unlocked, count, gifts = GIFT_IDS) => gifts.filter((g) => unlocked.includes(g)).slice(0, count);
 var isStrArr = (a) => Array.isArray(a) && a.length <= 8 && a.every((x) => typeof x === "string");
 var hasDup = (a) => new Set(a).size !== a.length;

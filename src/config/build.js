@@ -7,8 +7,12 @@
 /** Дары, которые можно ставить в слоты (порядок — порядок по умолчанию и на экране). */
 export const GIFT_IDS = ['telekinesis', 'fire', 'seal'];
 
-/** Слоты даров: три с начала, четвёртый — с extraAtLevel уровня героя (задел под платное расширение — позже). */
-export const SLOT_RULES = { base: 3, extraAtLevel: 10 };
+/**
+ * Слоты даров: три. Четвёртый дар (Лёд) приходит в главе II на 11 уровне, и с ним начинается выбор «3 из 4»
+ * (docs/design/stage-2-design-pack-v0.2.md §13), поэтому четвёртый слот уровнем пока не открывается: extraAtLevel = null.
+ * Позже он может стать наградой выше 15 уровня или покупкой за сапфиры (тогда — число уровня или отдельное правило).
+ */
+export const SLOT_RULES = { base: 3, extraAtLevel: null };
 
 export const AMULET_SLOTS = 2;
 
@@ -38,7 +42,7 @@ export const AMULETS = {
 export const AMULET_IDS = Object.keys(AMULETS);
 
 /** Сколько слотов даров у героя этого уровня. */
-export const slotCount = (level, rules = SLOT_RULES) => rules.base + ((level || 0) >= rules.extraAtLevel ? 1 : 0);
+export const slotCount = (level, rules = SLOT_RULES) => rules.base + (rules.extraAtLevel != null && (level || 0) >= rules.extraAtLevel ? 1 : 0);
 
 /** Слоты по умолчанию (пока игрок их не настраивал): первые N открытых даров по порядку. */
 export const defaultSlots = (unlocked, count, gifts = GIFT_IDS) => gifts.filter((g) => unlocked.includes(g)).slice(0, count);

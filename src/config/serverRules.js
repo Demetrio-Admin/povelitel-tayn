@@ -165,7 +165,7 @@ export function buildRules() {
     if (!a.branches) continue;
     branches[id] = Object.fromEntries(Object.entries(a.branches).map(([b, v]) => [b, { fromLevel: v.fromLevel || 1 }]));
   }
-  // v0.16.0: слоты даров (3 + 4-й с 10 уровня), два слота амулетов, список даров и амулетов (config/build.js)
+  // v0.16.0: слоты даров (три; 4-й уровнем не открывается — v0.16.4), два слота амулетов, список даров и амулетов (config/build.js)
   return { respecCoins: BRANCH_RESPEC.coins, branches, ...buildSlotRules() };
 }
 

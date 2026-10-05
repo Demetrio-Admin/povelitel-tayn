@@ -52,7 +52,7 @@ export const windows11 = {
           let iy = top + 12;
           const th = text(px, iy, 'Билд', { fontSize: UI.type.heading, fontStyle: 'bold', color: COLORS.textGold });
           iy += th.height + 4;
-          const sh = text(px, iy, `Слоты даров в бою: ${bv.slotsUsed} из ${bv.slotCount}${bv.slotCount < 4 ? ' (четвёртый слот — с 10 уровня героя)' : ''}`, { color: COLORS.text });
+          const sh = text(px, iy, `Слоты даров в бою: ${bv.slotsUsed} из ${bv.slotCount}`, { color: COLORS.text });
           iy += sh.height + 6;
           for (const sl of bv.slots) {
             const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `${sl.equipped ? '✓' : '○'} ${sl.name} — ${sl.equipped ? 'в слоте' : 'в запасе'}`, {

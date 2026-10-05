@@ -199,7 +199,7 @@ const SCRIPTED = [
   A('research_speedup', { chunks: 0 }), A('research_speedup', { chunks: 'x' }), A('research_speedup', { chunks: 2.5 }), A('research_speedup', { chunks: 1e9 }), A('research_speedup', {}),
   A('research_speedup', { chunks: 1 }), A('research_speedup', { chunks: 2 }), A('research_speedup', { chunks: 96 }), A('research_speedup', { chunks: 1 }), RS(600), A('research_finish'), A('research_speedup', { chunks: 1 }),
   // v0.19.0: торговец, крафт с монетами (Амулет инея), улучшение амулета
-  A('shop_buy', { item: 'frost_herb', qty: 2 }), SET({ quests: ['city_merchant_open', 'recipe_amulet_frost', 'recipe_warm_potion'], inv: { coins: 2000 } }),
+  A('shop_buy', { item: 'frost_herb', qty: 2 }), SET({ quests: ['city_merchant_open', 'ch2_quarter_cleared', 'ch2_nerys_met'], inv: { coins: 2000 } }),
   A('shop_buy', { item: 'frost_herb', qty: 2 }), A('shop_buy', { item: 'ice_crystal', qty: 5 }), A('shop_buy', { item: 'frost_shard' }), A('shop_buy', { item: 'moon_herb', qty: 100 }),
   A('shop_sell', { item: 'frost_herb', qty: 1 }), A('shop_sell', { item: 'ice_crystal', qty: 50 }), A('shop_sell', { item: 'cold_heart' }),
   A('craft', { recipe: 'warm_potion' }), A('craft', { recipe: 'amulet_frost' }), SET({ inv: { frost_shard: 4, lunar_shard: 10, rune_dust: 10, tree_resin: 4 } }),
@@ -210,6 +210,12 @@ const SCRIPTED = [
   W('glade_rock'), W('glade_rock'), MANA(100), W('heavy_boulder'), MANA(100), W('corrupted_roots'), W('corrupted_roots'), MANA(100), W('moon_plant'), MANA(100), W('ritual_torch'), W('ritual_torch'),
   A('combat_start', { spawn: 'scavenger_01', enemy: 'forest_scavenger' }), A('combat_end', { outcome: 'retreat', mana: 1 }),
   A('combat_start', { spawn: 'lunar_guard', enemy: 'x' }), A('combat_end', { outcome: 'retreat', mana: 1 }), A('combat_start', { spawn: 'forest_guardian_01', enemy: 'x' }),
+  // v0.21.0: ледяная стена ждёт волны холода (waitEvent), Лёд в мире (слот), сюжетный дар Нэрис, события квестов 6–10
+  A('combat_end', { outcome: 'retreat', mana: 1 }), MANA(100), W('frost_barrier'), SET({ quests: ['ch2_frost_wave'] }), W('frost_barrier'), W('frost_barrier'), W('ice_construct'),
+  A('event', { key: 'ch2_nerys_met' }), A('event', { key: 'unlock_ice_1' }), SET({ quests: ['ch2_rescue_door', 'ch2_rescue_cellar'] }), A('event', { key: 'ch2_rescue_done' }),
+  A('event', { key: 'unlock_ice_1' }), SET({ inv: { moon_herb: 2, frost_herb: 2, forest_mushroom: 2 } }), A('craft', { recipe: 'warm_potion' }), A('event', { key: 'unlock_ice_1' }), A('event', { key: 'unlock_ice_1' }),
+  MANA(100), W('fq_water'), A('build_set', { slots: ['ice', 'fire', 'telekinesis'] }), W('fq_water'), W('fq_water'), A('event', { key: 'ch2_ice_trained' }), A('event', { key: 'ch2_quarter_cleared' }),
+  A('event', { key: 'ch2_cargo_start' }), W('wh_cargo'), W('wh_equipment'), A('event', { key: 'ch2_cargo_reported' }),
 ];
 const SCRIPT = SCRIPTED.flatMap(splitSet);
 for (let s = 0; s < SERIES + 1; s++) {

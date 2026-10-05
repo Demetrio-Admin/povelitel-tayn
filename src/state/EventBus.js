@@ -45,6 +45,7 @@ export const MSG = {
   COMBAT_CYCLE: 'combat:cycle',
   FINAL_SCREEN: 'ui:final',          // v0.10.0: ({ outcome, reward }) — финал первой главы
   UNLOCK_SEAL: 'story:unlock-seal',
+  UNLOCK_GIFT: 'story:unlock-gift',   // v0.21.0: (id) — сюжетный дар из диалога (Лёд I у Нэрис)
   TRAVEL: 'world:travel',            // v0.20.0: переход между лесом и городом ({ x, y, text })
   OPEN_SHOP: 'ui:open-shop',         // v0.20.0: лавка торговца (из диалога)
   OPEN_WALLET: 'ui:open-wallet',     // v0.20.0: кошелёк / банк (из диалога и меню)   // v0.10.0: Селена открывает Печать I (после закрытия диалога)

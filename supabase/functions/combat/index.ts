@@ -419,7 +419,16 @@ var EVENT_REWARDS = {
   ch2_met_ilaria: { heroXP: 200, coins: 50, items: { frost_herb: 1 } },
   ch2_trace_found: { heroXP: 300, coins: 80, items: { frost_herb: 2, rune_dust: 1 } },
   ch2_archive_read: { heroXP: 320, coins: 90 },
-  ch2_met_severin: { heroXP: 340, coins: 80, items: { warm_potion: 1 } }
+  ch2_met_severin: { heroXP: 340, coins: 80, items: { warm_potion: 1 } },
+  // v0.21.0: квесты 6–10 (квест — минус опыт обязательных боёв, chapter-2-balance §4)
+  ch2_cargo_reported: { heroXP: 270, coins: 120, items: { frost_herb: 2 } },
+  ch2_frost_wave: { heroXP: 280, coins: 90 },
+  ch2_nerys_met: { heroXP: 60 },
+  ch2_rescue_done: { heroXP: 300, coins: 140, items: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 } },
+  // травы на первый Тёплый настой
+  unlock_ice_1: { heroXP: 60 },
+  ch2_ice_trained: { heroXP: 240, coins: 60 },
+  ch2_quarter_cleared: { heroXP: 340, coins: 160, items: { ice_crystal: 2 } }
 };
 
 // src/config/balance.abilities.js
@@ -721,11 +730,11 @@ var CITY_ZONES = [
   { id: "DU", name: "\u0417\u0430\u043B \u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u043E\u0439 \u0414\u0443\u044D\u043B\u0438", x: 2420, y: 4100, w: 440, h: 360, safePoint: { x: 2640, y: 4020 } },
   { id: "CV", name: "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", x: 2960, y: 4100, w: 500, h: 360, safePoint: { x: 3210, y: 4020 } },
   { id: "WH", name: "\u0421\u043A\u043B\u0430\u0434\u0441\u043A\u043E\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 4500, w: 1140, h: 500, safePoint: { x: 2910, y: 4050 } },
-  { id: "FQ", name: "\u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 1900, w: 1140, h: 600, safePoint: { x: 2910, y: 3150 } },
-  { id: "P", name: "\u0426\u0435\u043D\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C", x: 2360, y: 1900, w: 1240, h: 3100, safePoint: { x: 2600, y: 3625 } }
+  { id: "FQ", name: "\u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 1500, w: 1160, h: 1e3, safePoint: { x: 2910, y: 3150 } },
+  { id: "P", name: "\u0426\u0435\u043D\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C", x: 2360, y: 1500, w: 1240, h: 3500, safePoint: { x: 2600, y: 3625 } }
 ];
 var CITY_GROUND = [
-  { tex: "stone_path_01", x: 2360, y: 1900, w: 1240, h: 3140 },
+  { tex: "stone_path_01", x: 2360, y: 1500, w: 1240, h: 3540 },
   { tex: "wooden_floor_01", x: 2440, y: 2560, w: 420, h: 480 },
   { tex: "wooden_floor_01", x: 2960, y: 2560, w: 500, h: 480 }
 ];
@@ -743,21 +752,23 @@ var CITY_COLLIDERS = [
   // ---- всё, что вне дороги и города, — лес (тёмная заливка, деревья — украшения ниже)
   { kind: "trees", x: 1800, y: 0, w: 560, h: 3300 },
   { kind: "trees", x: 1800, y: 3950, w: 560, h: 1450 },
-  { kind: "trees", x: 2360, y: 0, w: 1240, h: 1860 },
+  { kind: "trees", x: 2360, y: 0, w: 1240, h: 1460 },
+  // v0.21.0: город вырос на север (Замёрзший квартал)
   { kind: "trees", x: 2360, y: 5040, w: 1240, h: 360 },
   // ---- городская стена (камень); ворота — проём в западной стене на y 3555–3700
-  { kind: "ruin", x: 2360, y: 1860, w: 40, h: 1695 },
+  { kind: "ruin", x: 2360, y: 1460, w: 40, h: 2095 },
   { kind: "ruin", x: 2360, y: 3700, w: 40, h: 1340 },
-  { kind: "ruin", x: 2400, y: 1860, w: 1200, h: 40 },
+  { kind: "ruin", x: 2400, y: 1460, w: 1200, h: 40 },
   { kind: "ruin", x: 2400, y: 5e3, w: 1200, h: 40 },
-  { kind: "ruin", x: 3560, y: 1900, w: 40, h: 3100 },
+  { kind: "ruin", x: 3560, y: 1500, w: 40, h: 3500 },
   // ---- Архив и Общество Преображения (разрезы с дверью), Дуэльный зал и Дом Ковенов (пока закрыты)
   ...building(2440, 2560, 420, 480, 2600),
   ...building(2960, 2560, 500, 480, 3160),
   ...building(2420, 4100, 440, 360),
   ...building(2960, 4100, 500, 360),
-  // ---- Замёрзший квартал пока закрыт ледяной стеной между Архивом и Обществом (откроется по сюжету)
-  { kind: "ruin", x: 2860, y: 2500, w: 100, h: 60 },
+  // ---- Замёрзший квартал: вход — улица между Архивом и Обществом (её закрывает ледяная стена frost_barrier, квест 7).
+  // v0.21.0: внутри квартал делит каменная ограда (y 1960–2000) с затопленным проломом fq_water — его замораживают Льдом (квест 9).
+  { kind: "ruin", x: 2400, y: 1960, w: 460, h: 40 },
   { kind: "ruin", x: 2400, y: 2500, w: 40, h: 60 },
   { kind: "ruin", x: 2440, y: 2500, w: 420, h: 60 },
   { kind: "ruin", x: 2960, y: 2500, w: 600, h: 60 },
@@ -774,9 +785,11 @@ var CITY_COLLIDERS = [
   { kind: "furniture", x: 2480, y: 4620, w: 100, h: 40, tex: "crate_01" },
   { kind: "furniture", x: 2640, y: 4700, w: 70, h: 40, tex: "barrel_01" },
   { kind: "furniture", x: 3120, y: 4640, w: 100, h: 40, tex: "crate_01" },
-  { kind: "furniture", x: 3380, y: 4800, w: 100, h: 40, tex: "crate_01" }
+  { kind: "furniture", x: 3380, y: 4800, w: 100, h: 40, tex: "crate_01" },
+  // v0.21.0 (добавлено в конец): вторая половина ограды Замёрзшего квартала
+  { kind: "ruin", x: 2960, y: 1960, w: 600, h: 40 }
 ];
-var CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }];
+var CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }, { x: 2360, y: 1460, w: 1240, h: 1840 }];
 var CITY_INTERACTIVES = [
   // переходы между лесом и городом
   {
@@ -862,13 +875,142 @@ var CITY_INTERACTIVES = [
     doneButton: "\u041A \u041E\u0431\u0449\u0435\u0441\u0442\u0432\u0443"
   },
   // Общество Преображения
-  { id: "npc_severin", kind: "npc", npc: "severin", x: 3210, y: 2760, texture: "npc_severin", collide: { w: 50, h: 24 }, radius: 140 }
+  { id: "npc_severin", kind: "npc", npc: "severin", x: 3210, y: 2760, texture: "npc_severin", collide: { w: 50, h: 24 }, radius: 140 },
+  // ---- v0.21.0: квест 6 «Пропавший груз» — Складской квартал (после боя со сборщиками)
+  {
+    id: "wh_cargo",
+    kind: "telekinesis",
+    mode: "push",
+    weight: "medium",
+    x: 3250,
+    y: 4930,
+    texture: "crate_01",
+    collide: { w: 70, h: 30 },
+    target: { x: 3330, y: 4900 },
+    radius: 120,
+    requiresEnemyDefeated: "wh_elite",
+    doneEvent: "ch2_cargo_found",
+    hint: "\u042F\u0449\u0438\u043A\u0438 \u0441 \u0433\u0440\u0443\u0437\u043E\u043C",
+    hiddenReward: { spawnPickup: { item: "ice_crystal", amount: 1 } }
+  },
+  {
+    id: "wh_equipment",
+    kind: "seal_sigil",
+    x: 2700,
+    y: 4930,
+    texture: "trunk_01",
+    litTexture: "trunk_01",
+    radius: 110,
+    requiresEvent: "ch2_cargo_found",
+    doneEvent: "ch2_serials_read",
+    hint: "\u041E\u0431\u043E\u0440\u0443\u0434\u043E\u0432\u0430\u043D\u0438\u0435 \u0441 \u043A\u043B\u0435\u0439\u043C\u043E\u043C",
+    lockedText: "\u042F\u0449\u0438\u043A \u0441 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430\u043C\u0438 \u043F\u043E\u0434 \u0438\u043D\u0435\u0435\u043C. \u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0440\u0430\u0437\u0431\u0435\u0440\u0438\u0442\u0435\u0441\u044C \u0441\u043E \u0441\u0431\u043E\u0440\u0449\u0438\u043A\u0430\u043C\u0438.",
+    doneTitle: "\u0421\u043F\u0438\u0441\u0430\u043D\u043D\u043E\u0435 \u043E\u0431\u043E\u0440\u0443\u0434\u043E\u0432\u0430\u043D\u0438\u0435",
+    doneText: "\u041F\u043E\u0434 \u0410\u0441\u0442\u0440\u0430\u043B\u043E\u043C \u043F\u0440\u043E\u0441\u0442\u0443\u043F\u0438\u043B\u0438 \u0441\u0435\u0440\u0438\u0439\u043D\u044B\u0435 \u043D\u043E\u043C\u0435\u0440\u0430 \u0438 \u043A\u043B\u0435\u0439\u043C\u043E \u041E\u0431\u0449\u0435\u0441\u0442\u0432\u0430 \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F. \u0420\u044F\u0434\u043E\u043C \u2014 \u043F\u0435\u0447\u0430\u0442\u044C: \xAB\u0421\u043F\u0438\u0441\u0430\u043D\u043E\xBB. \u041F\u043E\u043B\u0433\u043E\u0434\u0430 \u043D\u0430\u0437\u0430\u0434. \u041A\u0442\u043E-\u0442\u043E \u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442\u0441\u044F \u043E\u0431\u043E\u0440\u0443\u0434\u043E\u0432\u0430\u043D\u0438\u0435\u043C, \u043A\u043E\u0442\u043E\u0440\u043E\u0433\u043E \u043E\u0444\u0438\u0446\u0438\u0430\u043B\u044C\u043D\u043E \u043D\u0435\u0442.",
+    doneButton: "\u041A \u0418\u043B\u0430\u0440\u0438\u0438"
+  },
+  // ---- квест 7 «Чужими руками» → квест 8: ледяная стена на улице к Замёрзшему кварталу. Видна всегда, растапливается Огнём после волны холода.
+  {
+    id: "frost_barrier",
+    kind: "fire",
+    x: 2910,
+    y: 2560,
+    texture: "ice_wall_01",
+    collide: { w: 100, h: 60 },
+    radius: 130,
+    waitEvent: "ch2_frost_wave",
+    destroyEvent: "ch2_quarter_open",
+    burnSec: 1.6,
+    hint: "\u041B\u0435\u0434\u044F\u043D\u0430\u044F \u0441\u0442\u0435\u043D\u0430",
+    lockedText: "\u0423\u043B\u0438\u0446\u0443 \u043A \u0441\u0435\u0432\u0435\u0440\u043D\u043E\u043C\u0443 \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0443 \u043F\u0435\u0440\u0435\u0433\u043E\u0440\u043E\u0434\u0438\u043B\u0430 \u0441\u0442\u0435\u043D\u0430 \u043B\u044C\u0434\u0430. \u0413\u043E\u0440\u043E\u0434 \u0437\u0430\u043F\u0440\u0435\u0442\u0438\u043B \u0442\u0443\u0434\u0430 \u0445\u043E\u0434\u0438\u0442\u044C \u2014 \u043F\u043E\u043A\u0430.",
+    doneText: "\u041B\u0451\u0434 \u043F\u043E\u043F\u043B\u044B\u043B \u0438 \u043E\u0441\u0435\u043B. \u041F\u0443\u0442\u044C \u0432 \u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B \u043E\u0442\u043A\u0440\u044B\u0442."
+  },
+  // ---- квест 8 «То, что нельзя сжечь» — южная часть квартала
+  {
+    id: "ice_construct",
+    kind: "fire",
+    x: 2700,
+    y: 2330,
+    texture: "ice_construct_01",
+    collide: { w: 90, h: 30 },
+    radius: 130,
+    requiresEvent: "ch2_quarter_open",
+    destroyEvent: "ch2_construct_unstable",
+    burnSec: 1.4,
+    hint: "\u041B\u0435\u0434\u044F\u043D\u0430\u044F \u043A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F",
+    doneText: "\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F \u0442\u0440\u0435\u0441\u043D\u0443\u043B\u0430 \u2014 \u0438 \u0445\u043E\u043B\u043E\u0434 \u0440\u0432\u0430\u043D\u0443\u043B\u0441\u044F \u043D\u0430\u0440\u0443\u0436\u0443! \u041A\u0442\u043E-\u0442\u043E \u0432 \u0441\u0438\u043D\u0435\u043C \u043F\u043B\u0430\u0449\u0435 \u0432\u0441\u0442\u0430\u043B \u043C\u0435\u0436\u0434\u0443 \u0432\u0430\u043C\u0438 \u0438 \u0432\u0441\u043F\u044B\u0448\u043A\u043E\u0439."
+  },
+  { id: "npc_nerys", kind: "npc", npc: "nerys", x: 2800, y: 2230, texture: "npc_nerys", radius: 140, requiresEvent: "ch2_construct_unstable" },
+  {
+    id: "fq_door",
+    kind: "seal_sigil",
+    x: 3420,
+    y: 2140,
+    texture: "frozen_door_01",
+    litTexture: "frozen_door_01",
+    radius: 120,
+    requiresEnemyDefeated: "fq_collector",
+    doneEvent: "ch2_rescue_door",
+    hint: "\u041E\u0431\u043B\u0435\u0434\u0435\u043D\u0435\u0432\u0448\u0430\u044F \u0434\u0432\u0435\u0440\u044C",
+    lockedText: "\u0417\u0430 \u0434\u0432\u0435\u0440\u044C\u044E \u043A\u0442\u043E-\u0442\u043E \u0441\u0442\u0443\u0447\u0438\u0442. \u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u2014 \u0441\u0431\u043E\u0440\u0449\u0438\u043A \u0440\u044F\u0434\u043E\u043C.",
+    doneTitle: "\u041B\u044E\u0434\u0438 \u0437\u0430 \u0434\u0432\u0435\u0440\u044C\u044E",
+    doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u043F\u043E\u043A\u0430\u0437\u0430\u043B \u0443\u0437\u043B\u044B, \u043D\u0430 \u043A\u043E\u0442\u043E\u0440\u044B\u0445 \u0434\u0435\u0440\u0436\u0438\u0442\u0441\u044F \u043B\u0451\u0434. \u041D\u044D\u0440\u0438\u0441 \u0440\u0430\u0437\u0431\u0438\u043B\u0430 \u0438\u0445 \u043E\u0434\u043D\u0438\u043C \u043A\u0430\u0441\u0430\u043D\u0438\u0435\u043C \u2014 \u0438 \u0434\u0432\u043E\u0435 \u0436\u0438\u0442\u0435\u043B\u0435\u0439 \u0432\u044B\u0448\u043B\u0438 \u043D\u0430\u0440\u0443\u0436\u0443, \u0434\u0440\u043E\u0436\u0430 \u043E\u0442 \u0445\u043E\u043B\u043E\u0434\u0430.",
+    doneButton: "\u0414\u0430\u043B\u044C\u0448\u0435"
+  },
+  {
+    id: "fq_cellar",
+    kind: "telekinesis",
+    mode: "push",
+    weight: "medium",
+    x: 2500,
+    y: 2190,
+    texture: "crate_01",
+    collide: { w: 70, h: 30 },
+    target: { x: 2470, y: 2120 },
+    radius: 120,
+    requiresEnemyDefeated: "fq_critter",
+    doneEvent: "ch2_rescue_cellar",
+    hint: "\u042F\u0449\u0438\u043A\u0438 \u043D\u0430\u0434 \u043F\u043E\u0433\u0440\u0435\u0431\u043E\u043C",
+    hiddenReward: { spawnPickup: { item: "frost_herb", amount: 1 } }
+  },
+  { id: "fq_cauldron", kind: "alchemy", x: 3080, y: 2160, texture: "cauldron_01", collide: { w: 66, h: 26 }, radius: 120, requiresEvent: "ch2_nerys_met" },
+  // ---- квест 9 «Холодная наука»: затопленный пролом в ограде замораживают Льдом — за ним тренировочный двор
+  {
+    id: "fq_water",
+    kind: "ice",
+    x: 2910,
+    y: 2010,
+    texture: "water_patch_01",
+    frozenTexture: "ice_floor_01",
+    walkable: true,
+    collide: { w: 100, h: 50 },
+    radius: 130,
+    doneEvent: "ch2_water_frozen",
+    hint: "\u0417\u0430\u0442\u043E\u043F\u043B\u0435\u043D\u043D\u044B\u0439 \u043F\u0440\u043E\u043B\u043E\u043C",
+    lockedText: "\u0412\u043E\u0434\u0430 \u0438\u0437 \u043B\u043E\u043F\u043D\u0443\u0432\u0448\u0435\u0439 \u0442\u0440\u0443\u0431\u044B \u0437\u0430\u043B\u0438\u043B\u0430 \u043F\u0440\u043E\u043B\u043E\u043C \u0432 \u043E\u0433\u0440\u0430\u0434\u0435. \u0417\u0434\u0435\u0441\u044C \u043F\u0440\u0438\u0433\u043E\u0434\u0438\u043B\u0441\u044F \u0431\u044B \u041B\u0451\u0434.",
+    doneText: "\u0412\u043E\u0434\u0430 \u0441\u0445\u0432\u0430\u0442\u0438\u043B\u0430\u0441\u044C \u043B\u044C\u0434\u043E\u043C \u2014 \u043C\u043E\u0436\u043D\u043E \u043F\u0440\u043E\u0439\u0442\u0438."
+  }
 ];
 var CITY_ENEMIES = [
   // морозная вспышка на площади (квест 2): появляется, когда герой пришёл в город
   { id: "plaza_critter", enemy: "frost_critter", x: 2780, y: 3800, radius: 130, requiresEvent: "ch2_city_arrived", defeatEvent: "ch2_plaza_cleared" },
   // знакомый противник на дороге (квест 1, необязательный)
-  { id: "road_scavenger", enemy: "young_scavenger", x: 2120, y: 3640, radius: 110, requiresEvent: "ch2_start" }
+  { id: "road_scavenger", enemy: "young_scavenger", x: 2120, y: 3640, radius: 110, requiresEvent: "ch2_start" },
+  // v0.21.0 — квест 6: Складской квартал
+  { id: "wh_collector_1", enemy: "frost_collector", x: 2560, y: 4800, radius: 120, requiresEvent: "ch2_cargo_start" },
+  { id: "wh_collector_2", enemy: "frost_collector", x: 3240, y: 4720, radius: 120, requiresEvent: "ch2_cargo_start" },
+  { id: "wh_elite", enemy: "frost_collector_elite", x: 2930, y: 4880, radius: 130, requiresEvent: "ch2_cargo_start", defeatEvent: "ch2_wh_boss" },
+  // квест 7: зверь, сбежавший из закрытой лаборатории, — у дверей Общества
+  { id: "lab_critter", enemy: "frost_critter", x: 3210, y: 3240, radius: 120, requiresEvent: "ch2_severin_asked", defeatEvent: "ch2_lab_critter" },
+  // квест 8: Замёрзший квартал (появляются после знакомства с Нэрис)
+  { id: "fq_critter", enemy: "frost_critter", x: 2560, y: 2400, radius: 120, requiresEvent: "ch2_nerys_met" },
+  { id: "fq_collector", enemy: "frost_collector", x: 3300, y: 2300, radius: 120, requiresEvent: "ch2_nerys_met" },
+  // квест 9: тренировочный двор за проломом
+  { id: "fq_training", enemy: "frost_critter", x: 2910, y: 1830, radius: 110, requiresEvent: "unlock_ice_1", defeatEvent: "ch2_training_done" },
+  // квест 10 «Выбор»: глубина квартала
+  { id: "fq_deep_1", enemy: "frost_collector", x: 2600, y: 1740, radius: 120, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_deep_1" },
+  { id: "fq_deep_2", enemy: "frost_collector", x: 3240, y: 1740, radius: 120, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_deep_2" },
+  { id: "fq_guardian", enemy: "ice_guardian", x: 2910, y: 1690, radius: 140, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_ice_guardian_defeated" }
 ];
 var CITY_DECOR = [
   ...[3330, 3420, 3510, 3990, 4080, 4170].map((y, i) => ({ id: `ct_tree_${i}`, k: i % 2 ? "tree_dark_02" : "tree_dark_01", x: 1840 + i % 3 * 170, y: y < 3600 ? 3300 : 4030 })),
@@ -879,7 +1021,10 @@ var CITY_DECOR = [
   { id: "ct_frost_1", k: "frost_patch_01", x: 2760, y: 3700, floor: true },
   { id: "ct_frost_2", k: "frost_patch_01", x: 2980, y: 3860, floor: true },
   { id: "ct_frost_3", k: "frost_patch_01", x: 2620, y: 3560, floor: true },
-  { id: "ct_candles", k: "candle_group_01", x: 2780, y: 2650 }
+  { id: "ct_candles", k: "candle_group_01", x: 2780, y: 2650 },
+  // v0.21.0: Замёрзший квартал — иней на мостовой и фонари
+  ...[[2560, 2300], [3180, 2420], [2680, 2080], [3360, 2060], [2560, 1660], [3240, 1640], [2700, 1880], [3420, 1860]].map(([x, y], i) => ({ id: `fq_frost_${i}`, k: "frost_patch_01", x, y, floor: true })),
+  ...[[2440, 2470], [3520, 2470], [2440, 1940], [3520, 1940], [2440, 1540], [3520, 1540]].map(([x, y], i) => ({ id: `fq_lamp_${i}`, k: "city_lamp_01", x, y }))
 ];
 
 // src/config/world.content.js
@@ -1918,7 +2063,8 @@ Object.assign(RECIPES, {
     result: "warm_potion",
     amount: 1,
     needs: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 },
-    requires: ["recipe_warm_potion"],
+    requires: ["ch2_nerys_met"],
+    crafted: "warm_potion_crafted",
     note: "\u041C\u043E\u0440\u043E\u0437\u043D\u0438\u043A, \u043F\u0440\u043E\u0433\u0440\u0435\u0442\u044B\u0439 \u043B\u0443\u043D\u043D\u043E\u0439 \u0442\u0440\u0430\u0432\u043E\u0439, \u2014 \u0442\u0435\u043F\u043B\u043E \u0438\u0437\u043D\u0443\u0442\u0440\u0438."
   },
   stabilizing_potion: {
@@ -1945,7 +2091,7 @@ Object.assign(RECIPES, {
     result: "crystal_guard",
     amount: 1,
     needs: { ice_crystal: 1, forest_mushroom: 1, tree_resin: 1 },
-    requires: ["recipe_crystal_guard"],
+    requires: ["ch2_quarter_cleared"],
     note: "\u0422\u043E\u043D\u043A\u0430\u044F \u043B\u0435\u0434\u044F\u043D\u0430\u044F \u043A\u043E\u0440\u043A\u0430 \u043F\u043E\u0432\u0435\u0440\u0445 \u043A\u043E\u0436\u0438 \u2014 \u043D\u0430 \u043E\u0434\u0438\u043D \u0441\u0435\u0440\u044C\u0451\u0437\u043D\u044B\u0439 \u0431\u043E\u0439."
   },
   reinforced_resin: {
@@ -1954,7 +2100,7 @@ Object.assign(RECIPES, {
     result: "reinforced_resin",
     amount: 1,
     needs: { tree_resin: 2, crimson_ember: 1, frost_herb: 1 },
-    requires: ["recipe_reinforced_resin"],
+    requires: ["ch2_cargo_found"],
     note: "\u0421\u043C\u043E\u043B\u0430, \u0437\u0430\u043A\u0430\u043B\u0451\u043D\u043D\u0430\u044F \u0443\u0433\u043B\u0451\u043C \u0438 \u0445\u043E\u043B\u043E\u0434\u043E\u043C."
   },
   astral_lens: {
@@ -1963,7 +2109,7 @@ Object.assign(RECIPES, {
     result: "astral_lens",
     amount: 1,
     needs: { rune_dust: 2, lunar_shard: 1, ice_crystal: 1 },
-    requires: ["recipe_astral_lens"],
+    requires: ["ch2_cargo_reported"],
     note: "\u041B\u0438\u043D\u0437\u0430 \u0438\u0437 \u043B\u044C\u0434\u0430 \u0438 \u043B\u0443\u043D\u043D\u043E\u0433\u043E \u043E\u0441\u043A\u043E\u043B\u043A\u0430."
   },
   amulet_frost: {
@@ -1972,7 +2118,7 @@ Object.assign(RECIPES, {
     result: "amulet_frost",
     amount: 1,
     needs: { lunar_shard: 4, rune_dust: 4, ice_crystal: 3, frost_shard: 1, coins: 250 },
-    requires: ["recipe_amulet_frost"],
+    requires: ["ch2_quarter_cleared"],
     blockedBy: ["amulet_frost_crafted"],
     crafted: "amulet_frost_crafted",
     note: "\u041F\u0435\u0440\u0432\u044B\u0439 \u0430\u043C\u0443\u043B\u0435\u0442 \u041B\u044C\u0434\u0430. \u041D\u0443\u0436\u0435\u043D \u043E\u0434\u0438\u043D: \u0434\u0430\u043B\u044C\u0448\u0435 \u0435\u0433\u043E \u0443\u043B\u0443\u0447\u0448\u0430\u044E\u0442."
@@ -2085,12 +2231,24 @@ var EVENT_ACTIONS = {
   ch2_met_ilaria: { requires: ["ch2_plaza_cleared"] },
   ch2_trace_found: { requires: ["ch2_trace_astral", "ch2_trace_debris"] },
   ch2_met_severin: { requires: ["ch2_archive_read"] },
-  city_merchant_open: { requires: ["ch2_city_arrived"] }
+  city_merchant_open: { requires: ["ch2_city_arrived"] },
+  // v0.21.0 — квесты 6–10 (торговец, Илария, Северин, Нэрис)
+  ch2_cargo_start: { requires: ["ch2_met_severin"] },
+  ch2_cargo_reported: { requires: ["ch2_cargo_found", "ch2_serials_read"] },
+  ch2_severin_asked: { requires: ["ch2_cargo_reported"] },
+  ch2_frost_wave: { requires: ["ch2_lab_critter"] },
+  ch2_nerys_met: { requires: ["ch2_construct_unstable"] },
+  ch2_rescue_done: { requires: ["ch2_rescue_door", "ch2_rescue_cellar"] },
+  unlock_ice_1: { requires: ["ch2_rescue_done", "warm_potion_crafted"], unlock: { ice: 1 } },
+  ch2_ice_trained: { requires: ["ch2_training_done"] },
+  ch2_choice_start: { requires: ["ch2_ice_trained"] },
+  ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"] }
 };
 function worldRules() {
   const world = {};
   const base = (o) => ({
-    requires: o.requiresEvent ? [o.requiresEvent] : [],
+    requires: [o.requiresEvent, o.waitEvent].filter(Boolean),
+    // v0.21.0: waitEvent — объект виден, но поддаётся после события
     requiresEnemy: o.requiresEnemyDefeated ? [o.requiresEnemyDefeated] : []
   });
   const itemReward = (item, amount) => item === "coins" ? { coins: amount } : { items: { [item]: amount } };
@@ -2148,6 +2306,19 @@ function worldRules() {
           ...base(o)
         };
         pickupAfter(o, o.reveal?.spawnPickup, "destroyed");
+        break;
+      case "ice":
+        world[o.id] = {
+          kind: "cast",
+          mark: "frozen",
+          mana: WORLD_MANA_COST.ice,
+          ability: "ice",
+          minLevel: o.minLevel || 1,
+          blockedBy: [],
+          school: school("ice"),
+          ...effects(o),
+          ...base(o)
+        };
         break;
       case "gate":
         world[o.id] = {
@@ -2436,6 +2607,82 @@ var ENEMIES = {
     repeatRewards: { heroXP: 14, schoolXP: { fire: 3 }, coins: 5 },
     arena: "city"
   },
+  // v0.21.0 — Морозный сборщик (квест 6 «Пропавший груз», chapter-2-balance §9): магический конструкт. Защитная корка
+  // гасит 35% урона — Астрал её пробивает, Огонь растапливает на 5 с. Дальний ледяной залп замедляет перезарядки;
+  // «Ледяной таран» прерывается Телекинезом. Бой ≈30–40 с у героя 9–10 уровня.
+  frost_collector: {
+    name: "\u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u0441\u0431\u043E\u0440\u0449\u0438\u043A",
+    texture: "enemy_frost_collector",
+    tier: "normal",
+    hp: 520,
+    normalAttack: { damage: 11, intervalSec: 2.8, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: {
+      name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0442\u0430\u0440\u0430\u043D",
+      damage: 28,
+      prepSec: 2,
+      cooldownSec: 10,
+      firstDelaySec: 6,
+      interruptBy: ["telekinesis"],
+      hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!"
+    },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: 0.35,
+    onFireHit: { disableDefenseSec: 5 },
+    rewards: { heroXP: 70, schoolXP: { seal: 20, telekinesis: 15 }, items: { frost_herb: 1 }, coins: 25 },
+    repeatRewards: { heroXP: 28, schoolXP: { seal: 3 }, coins: 9 },
+    arena: "city"
+  },
+  // Усиленный сборщик — босс склада (квест 6). Корка толще, таран тяжелее; без Астрала и Огня бой заметно дольше.
+  frost_collector_elite: {
+    name: "\u0423\u0441\u0438\u043B\u0435\u043D\u043D\u044B\u0439 \u0441\u0431\u043E\u0440\u0449\u0438\u043A",
+    texture: "enemy_frost_collector_elite",
+    tier: "strong",
+    hp: 760,
+    normalAttack: { damage: 12, intervalSec: 3, chill: { pct: 0.35, sec: 3 } },
+    strongAttack: {
+      name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0442\u0430\u0440\u0430\u043D",
+      damage: 32,
+      prepSec: 2.2,
+      cooldownSec: 10,
+      firstDelaySec: 6,
+      interruptBy: ["telekinesis"],
+      hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!"
+    },
+    staggerSec: 1.1,
+    interruptedCooldownSec: 7,
+    defense: 0.4,
+    onFireHit: { disableDefenseSec: 5 },
+    rewards: { heroXP: 70, schoolXP: { seal: 30, telekinesis: 20, fire: 20 }, items: { ice_crystal: 1, rune_dust: 1 }, coins: 35 },
+    arena: "city"
+  },
+  // v0.21.0 — Ледяной страж (квест 10 «Выбор»): первый серьёзный билд-чек главы II (55–75 с). Кристальная броня −45%
+  // (Телекинез разбивает кристалл, Астрал пробивает), Огонь бьёт на 25% сильнее; тяжёлый удар — только тяжёлым камнем,
+  // а Лёд замедляет его подготовку. Обычный удар холодит. Без Телекинеза бой проходим — просто дольше и с зельями.
+  ice_guardian: {
+    name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0441\u0442\u0440\u0430\u0436",
+    texture: "enemy_ice_guardian",
+    tier: "strong",
+    hp: 780,
+    normalAttack: { damage: 12, intervalSec: 3.8, chill: { pct: 0.35, sec: 3 } },
+    strongAttack: {
+      name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u043C\u043E\u043B\u043E\u0442",
+      damage: 32,
+      prepSec: 2.6,
+      cooldownSec: 11,
+      firstDelaySec: 7,
+      interruptBy: ["telekinesis_heavy"],
+      hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!"
+    },
+    staggerSec: 1.2,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    armor: { value: 0.45, source: "crystal", disabledSec: 8 },
+    weaknesses: { fire: 0.25 },
+    rewards: { heroXP: 140, schoolXP: { telekinesis: 40, fire: 40, seal: 40, ice: 40 }, items: { ice_crystal: 2, frost_shard: 1 }, coins: 60 },
+    repeatRewards: { heroXP: 55, schoolXP: { ice: 5 }, items: { ice_crystal: 1 }, coins: 16 },
+    arena: "frost"
+  },
   // Враг со слабостью из Combat Math §7. v0.10.0: пять Корневиков в старом лесу (world.layout.js, rootling_01…05).
   // Защита 20%, Огонь +50% и снимает защиту на 6 с. Первая победа на месте — rewards; повторная (возобновляемые места) — repeatRewards.
   rootling: {
@@ -2542,6 +2789,15 @@ var ARENAS = {
     objects: [
       { id: "rock_a", type: "light_rock", x: 190, y: 720 },
       { id: "heavy_a", type: "heavy_rock", x: 540, y: 710 }
+    ]
+  },
+  // v0.21.0: Замёрзший квартал — кристалл стража и тяжёлый камень
+  frost: {
+    ground: 2502970,
+    objects: [
+      { id: "crystal_a", type: "crystal", x: 590, y: 640 },
+      { id: "heavy_a", type: "heavy_rock", x: 150, y: 760 },
+      { id: "rock_a", type: "light_rock", x: 420, y: 800 }
     ]
   },
   glade: {
@@ -2915,6 +3171,8 @@ var MSG = {
   FINAL_SCREEN: "ui:final",
   // v0.10.0: ({ outcome, reward }) — финал первой главы
   UNLOCK_SEAL: "story:unlock-seal",
+  UNLOCK_GIFT: "story:unlock-gift",
+  // v0.21.0: (id) — сюжетный дар из диалога (Лёд I у Нэрис)
   TRAVEL: "world:travel",
   // v0.20.0: переход между лесом и городом ({ x, y, text })
   OPEN_SHOP: "ui:open-shop",

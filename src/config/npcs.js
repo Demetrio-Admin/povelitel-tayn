@@ -26,6 +26,12 @@ export const NPCS = {
     greetings: ['Илария поднимает взгляд от записей.'],
     wave: false,
   },
+  // v0.21.0 — маг Льда (глава II, квесты 8–10)
+  nerys: {
+    id: 'nerys', name: 'Нэрис', title: 'Маг Льда', texture: 'npc_nerys', color: 0x9fe6ff,
+    greetings: ['Нэрис стряхивает иней с рукавов.'],
+    wave: false,
+  },
   severin: {
     id: 'severin', name: 'Северин Вейр', title: 'Общество Преображения', texture: 'npc_severin', color: 0x7f9cff,
     greetings: ['Северин откладывает прибор и улыбается — так, будто ждал вас.'],

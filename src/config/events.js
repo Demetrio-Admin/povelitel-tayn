@@ -54,6 +54,7 @@ export const CHAPTER_1_FINAL = 'Защита рощи восстановлена
 // v0.10.0: craft — сюжетный рецепт шага (журнал показывает его состав и где взять недостающее),
 // use — сюжетный предмет, который шаг просит применить (журнал показывает, есть ли он в сумке).
 const has = (s, k) => s.hasEvent(k);
+const WH_GUARDS = ['wh_collector_1', 'wh_collector_2', 'wh_elite'];   // v0.21.0: сборщики на складах (квест 6)
 const altarLit = s => has(s, EV.LUNAR_QUEST_COMPLETE);
 export const QUEST_STEPS = [
   { id: 'book',     text: 'Прочтите книгу первого дара на столе в доме',          done: s => has(s, EV.UNLOCK_TELEKINESIS_1) },
@@ -93,5 +94,33 @@ export const QUEST_STEPS = [
   { id: 'ch2_tell',    text: 'Расскажите Иларии о находках', done: s => has(s, EV.CH2_TRACE_FOUND) },
   { id: 'ch2_archive', text: 'В Архиве прочтите старый документ Астралом', done: s => has(s, EV.CH2_ARCHIVE_READ) },
   { id: 'ch2_severin', text: 'Найдите Северина Вейра в Обществе Преображения', done: s => has(s, EV.CH2_MET_SEVERIN) },
-  { id: 'ch2_next',    text: 'Продолжение расследования — в следующем обновлении главы II', done: () => false },
+  // ---- v0.21.0: квесты 6–10
+  { id: 'ch2_cargo_talk', text: 'Торговец Борис что-то потерял — расспросите его у лавки', done: s => has(s, 'ch2_cargo_start') },
+  { id: 'ch2_warehouse',  text: 'Складской квартал: одолейте морозных сборщиков',
+    progress: s => `${WH_GUARDS.filter(id => s.isEnemyDefeated(id)).length}/${WH_GUARDS.length}`,
+    done: s => WH_GUARDS.every(id => s.isEnemyDefeated(id)) || has(s, 'ch2_cargo_found') },
+  { id: 'ch2_cargo',      text: 'Найдите груз: Телекинез сдвинет ящики, Астрал прочтёт клеймо на оборудовании',
+    progress: s => `${['ch2_cargo_found', 'ch2_serials_read'].filter(k => has(s, k)).length}/2`,
+    done: s => (has(s, 'ch2_cargo_found') && has(s, 'ch2_serials_read')) || has(s, 'ch2_cargo_reported') },
+  { id: 'ch2_cargo_tell', text: 'Расскажите Иларии о списанном оборудовании', done: s => has(s, 'ch2_cargo_reported') },
+  { id: 'ch2_ask',        text: 'Спросите Северина, откуда на складах оборудование Общества', done: s => has(s, 'ch2_severin_asked') },
+  { id: 'ch2_lab',        text: 'У дверей Общества — сбежавший зверь! Остановите его', done: s => has(s, 'ch2_lab_critter') },
+  { id: 'ch2_wave',       text: 'Расскажите обо всём Иларии', done: s => has(s, 'ch2_frost_wave') },
+  { id: 'ch2_quarter',    text: 'Волна холода! Растопите ледяную стену на пути в Замёрзший квартал', done: s => has(s, 'ch2_quarter_open') },
+  { id: 'ch2_construct',  text: 'Замёрзший квартал: уберите ледяную конструкцию с улицы', done: s => has(s, 'ch2_construct_unstable') },
+  { id: 'ch2_nerys',      text: 'Поговорите с незнакомкой в синем плаще', done: s => has(s, 'ch2_nerys_met') },
+  { id: 'ch2_rescue',     text: 'Спасите жителей: обледеневшая дверь и завал над погребом',
+    progress: s => `${['ch2_rescue_door', 'ch2_rescue_cellar'].filter(k => has(s, k)).length}/2`,
+    done: s => (has(s, 'ch2_rescue_door') && has(s, 'ch2_rescue_cellar')) || has(s, 'ch2_rescue_done') },
+  { id: 'ch2_rescue_tell', text: 'Вернитесь к Нэрис', done: s => has(s, 'ch2_rescue_done') },
+  { id: 'ch2_warm',       text: 'Сварите Тёплый настой в котле Нэрис', craft: 'warm_potion', done: s => has(s, 'warm_potion_crafted') || has(s, 'unlock_ice_1') },
+  { id: 'ch2_lesson',     text: 'Нэрис готова учить Льду — поговорите с ней', done: s => has(s, 'unlock_ice_1') },
+  { id: 'ch2_water',      text: 'Поставьте Лёд в слот и заморозьте затопленный пролом в ограде', done: s => has(s, 'ch2_water_frozen') },
+  { id: 'ch2_training',   text: 'Тренировка: одолейте инеевого зверька во дворе за оградой', done: s => has(s, 'ch2_training_done') },
+  { id: 'ch2_trained',    text: 'Расскажите Нэрис о тренировке', done: s => has(s, 'ch2_ice_trained') },
+  { id: 'ch2_choice',     text: 'Выберите три дара и пройдите в глубину квартала: два сборщика и Ледяной страж',
+    progress: s => `${['ch2_deep_1', 'ch2_deep_2', 'ch2_ice_guardian_defeated'].filter(k => has(s, k)).length}/3`,
+    done: s => ['ch2_deep_1', 'ch2_deep_2', 'ch2_ice_guardian_defeated'].every(k => has(s, k)) || has(s, 'ch2_quarter_cleared') },
+  { id: 'ch2_choice_tell', text: 'Вернитесь к Нэрис', done: s => has(s, 'ch2_quarter_cleared') },
+  { id: 'ch2_next',    text: 'Продолжение — Хрупкость и тайна Общества — в следующем обновлении главы II', done: () => false },
 ];

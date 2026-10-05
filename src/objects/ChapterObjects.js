@@ -6,6 +6,7 @@
 // Применение сюжетных предметов идёт через services.actions.use(item) — атомарно (сервер или JS-зеркало).
 import { COLORS } from '../config/game.config.js';
 import { WORLD_MANA_COST } from '../config/balance.abilities.js';
+import { ITEMS } from '../config/balance.progression.js';
 import { STORY_ITEMS } from '../config/storyItems.js';
 import { EV } from '../config/events.js';
 import { MSG } from '../state/EventBus.js';
@@ -237,7 +238,7 @@ export class DustStashObject extends InteractiveObject {
   }
   get markerIcon() { return 'icon_gather'; }
   get markerColor() { return 0xc9a2ff; }
-  get label() { return 'Забрать пыль'; }
+  get label() { return this.cfg.label || 'Забрать пыль'; }   // v0.24.0: запасы вылазок — свои подписи
   get title() { return this.cfg.hint; }
   /** Победный цикл охранника, за который запас ещё не взят. */
   get wins() { return this.state.getObject(repKey(this.cfg.guard))?.wins || (this.state.isEnemyDefeated(this.cfg.guard) ? 1 : 0); }
@@ -259,7 +260,7 @@ export class DustStashObject extends InteractiveObject {
 
   async interact() {
     if (!this.isAvailable()) {
-      if (this.guardAlive()) this.scene.toast('Запас стережёт Корневик.', COLORS.danger);
+      if (this.guardAlive()) this.scene.toast(this.cfg.guardText || 'Запас стережёт Корневик.', COLORS.danger);
       return;
     }
     // один победный цикл — одно разрешение: сервер отмечает claimed = номер цикла (операция world), перезаход второй выдачи не даёт
@@ -267,7 +268,7 @@ export class DustStashObject extends InteractiveObject {
     if (!r || this.removed || !this.sprite.active) return;
     services.audio.play('gather_done');
     this.scene.burst(this.x - 20, this.baseY - 14, 0xc9a2ff, 18);
-    for (const [k, v] of Object.entries(this.cfg.items)) this.scene.floatIcon?.(this.x, this.baseY - 60, 'icon_dust', `+${v} ${itemName(k)}`, 0xc9a2ff);
+    for (const [k, v] of Object.entries(this.cfg.items)) this.scene.floatIcon?.(this.x, this.baseY - 60, ITEMS[k]?.icon || 'icon_dust', `+${v} ${itemName(k)}`, 0xc9a2ff);
     this.applyVisual();
     services.bus.emit(MSG.GATHERED, { item: Object.keys(this.cfg.items)[0], amount: Object.values(this.cfg.items)[0], id: this.id });
     services.bus.emit(MSG.HUD_REFRESH);

@@ -32,7 +32,7 @@ console.log('\nГлава II: данные');
   ok(ch2.every(s => STEP_WHY[s.id] && STEP_GUIDE[s.id]), 'у каждой цели есть «зачем» и подсказки');
   for (const id of ['ilaria', 'severin', 'merchant', 'banker', 'duelist']) ok(NPCS[id] && DIALOGUES[id]?.length && ASSETS?.[`npc_${id}`] !== undefined || fs.existsSync(`public/assets/sprites/npc_${id}.png`), `NPC ${NPCS[id]?.name}: данные, диалоги, спрайт`);
   for (const id of ['ilaria', 'severin', 'merchant', 'banker', 'duelist']) ok(fs.existsSync(`public/assets/sprites/portrait_${id}.png`), `портрет ${id}`);
-  ok(WORLD.width === 3600 && ZONES.some(z => z.id === 'P') && ZONES.findIndex(z => z.id === 'AR') < ZONES.findIndex(z => z.id === 'P'), 'мир шире (город к востоку), зоны зданий проверяются раньше площади');
+  ok(WORLD.width >= 3600 && ZONES.some(z => z.id === 'P') && ZONES.findIndex(z => z.id === 'AR') < ZONES.findIndex(z => z.id === 'P'), 'мир шире (город к востоку), зоны зданий проверяются раньше площади');
   const city = [...INTERACTIVES, ...ENEMY_SPAWNS].filter(o => o.x >= EAST_X);
   ok(city.length >= 12 && city.every(o => o.x < WORLD.width && o.y < WORLD.height), `в городе и на дороге ${city.length} объектов, все внутри мира`);
   ok(ENEMIES.frost_critter && fs.existsSync('public/assets/sprites/enemy_frost_critter.png') && ENEMIES.frost_critter.normalAttack.chill, 'Инеевый зверёк: данные, спрайт, холод');

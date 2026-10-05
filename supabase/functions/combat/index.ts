@@ -1210,6 +1210,140 @@ var CITY_DECOR = [
   ...[[2440, 2470], [3520, 2470], [2440, 1940], [3520, 1940], [2440, 1540], [3520, 1540]].map(([x, y], i) => ({ id: `fq_lamp_${i}`, k: "city_lamp_01", x, y }))
 ];
 
+// src/config/world.expeditions.js
+var FROSTWOOD_START = { x: 3820, y: 2380 };
+var GRAVEYARD_START = { x: 3820, y: 5060 };
+var CITY_EAST_POINT = { x: 3470, y: 3220 };
+var OPEN = "chapter_2_complete";
+var EXP_ZONES = [
+  { id: "FW", name: "\u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441", x: 3700, y: 300, w: 1600, h: 2200, safePoint: FROSTWOOD_START },
+  { id: "GY", name: "\u0421\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435", x: 3700, y: 2800, w: 1600, h: 2400, safePoint: GRAVEYARD_START }
+];
+var EXP_GROUND = [
+  { tex: "snow_ground_01", x: 3700, y: 300, w: 1600, h: 2200 },
+  { tex: "grave_ground_01", x: 3700, y: 2800, w: 1600, h: 2400 }
+];
+var EXP_COLLIDERS = [
+  // лес вокруг участков и между ними
+  { kind: "trees", x: 3600, y: 0, w: 100, h: 5400 },
+  { kind: "trees", x: 3700, y: 0, w: 1700, h: 300 },
+  { kind: "trees", x: 3700, y: 2500, w: 1700, h: 300 },
+  { kind: "trees", x: 3700, y: 5200, w: 1700, h: 200 },
+  { kind: "trees", x: 5300, y: 0, w: 100, h: 5400 },
+  // Морозный лес: чащи, между которыми вьётся тропа на север
+  { kind: "trees", x: 3700, y: 1900, w: 700, h: 180 },
+  { kind: "trees", x: 4600, y: 1900, w: 700, h: 180 },
+  { kind: "trees", x: 4150, y: 1300, w: 1150, h: 160 },
+  { kind: "trees", x: 3700, y: 760, w: 1050, h: 160 },
+  // Старое кладбище: ограды рядов и склеп
+  { kind: "ruin", x: 3700, y: 4500, w: 650, h: 40 },
+  { kind: "ruin", x: 4550, y: 4500, w: 750, h: 40 },
+  { kind: "ruin", x: 3700, y: 3700, w: 900, h: 40 },
+  { kind: "ruin", x: 4800, y: 3700, w: 500, h: 40 },
+  { kind: "furniture", x: 4400, y: 3040, w: 200, h: 50, tex: "crypt_01" }
+];
+var EXP_KEEP_CLEAR = [{ x: 3600, y: 0, w: 1800, h: 5400 }];
+var EXP_OBJECT_LIST = [
+  // указатели: из города — в вылазки (с описанием места), из вылазок — в город
+  {
+    id: "travel_frostwood",
+    kind: "travel",
+    x: 3500,
+    y: 3150,
+    texture: "signpost_01",
+    radius: 110,
+    target: FROSTWOOD_START,
+    requiresEvent: OPEN,
+    hint: "\u0412\u044B\u043B\u0430\u0437\u043A\u0430: \u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441",
+    lockedText: "\u0421\u0435\u0432\u0435\u0440\u043D\u0430\u044F \u0434\u043E\u0440\u043E\u0433\u0430 \u0432\u0435\u0434\u0451\u0442 \u0432 \u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441. \u0422\u0443\u0434\u0430 \u0445\u043E\u0434\u044F\u0442 \u0442\u0435, \u043A\u0442\u043E \u0443\u0436\u0435 \u043F\u0435\u0440\u0435\u0436\u0438\u043B \u0438\u043D\u0435\u0439 (\u043F\u043E\u0441\u043B\u0435 \u0433\u043B\u0430\u0432\u044B II).",
+    brief: { title: "\u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441", text: "\u0412\u043E\u043B\u043A\u0438 \u0438 \u0432\u043E\u0436\u0430\u043A \u043C\u0435\u0442\u0435\u043B\u0438. \u0425\u043E\u043B\u043E\u0434 \u0438\u043C \u043D\u0435 \u0441\u0442\u0440\u0430\u0448\u0435\u043D \u2014 \u041B\u0451\u0434 \u0431\u044C\u0451\u0442 \u0441\u043B\u0430\u0431\u0435\u0435, \u0430 \u0432\u043E\u0442 \u041E\u0433\u043E\u043D\u044C \u043E\u043D\u0438 \u043D\u0435 \u043B\u044E\u0431\u044F\u0442.\n\n\u0412\u043D\u0443\u0442\u0440\u0438: \u043C\u043E\u0440\u043E\u0437\u043D\u0438\u043A \u0438 \u043B\u0435\u0434\u044F\u043D\u044B\u0435 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u044B, \u0447\u0435\u0442\u044B\u0440\u0435 \u0432\u043E\u043B\u0447\u0438\u0446\u044B, \u0412\u043E\u0436\u0430\u043A \u043C\u0435\u0442\u0435\u043B\u0438 \u0438 \u0435\u0433\u043E \u0437\u0430\u043F\u0430\u0441 (\u0438\u043D\u0435\u0435\u0432\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A). \u0417\u0432\u0435\u0440\u0438 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u044E\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 10 \u043C\u0438\u043D\u0443\u0442, \u0432\u043E\u0436\u0430\u043A \u2014 \u0447\u0435\u0440\u0435\u0437 \u0447\u0430\u0441." },
+    text: "\u0421\u0435\u0432\u0435\u0440\u043D\u0430\u044F \u0434\u043E\u0440\u043E\u0433\u0430 \u0432\u044B\u0432\u043E\u0434\u0438\u0442 \u0432 \u0437\u0430\u0441\u043D\u0435\u0436\u0435\u043D\u043D\u044B\u0439 \u043B\u0435\u0441."
+  },
+  {
+    id: "travel_graveyard",
+    kind: "travel",
+    x: 3500,
+    y: 3300,
+    texture: "signpost_01",
+    radius: 110,
+    target: GRAVEYARD_START,
+    requiresEvent: OPEN,
+    hint: "\u0412\u044B\u043B\u0430\u0437\u043A\u0430: \u0421\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435",
+    lockedText: "\u0421\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435 \u0437\u0430 \u0432\u043E\u0441\u0442\u043E\u0447\u043D\u044B\u043C\u0438 \u0432\u043E\u0440\u043E\u0442\u0430\u043C\u0438. \u0422\u0443\u0434\u0430 \u0445\u043E\u0434\u044F\u0442 \u0442\u0435, \u043A\u0442\u043E \u0443\u0436\u0435 \u043F\u0435\u0440\u0435\u0436\u0438\u043B \u0438\u043D\u0435\u0439 (\u043F\u043E\u0441\u043B\u0435 \u0433\u043B\u0430\u0432\u044B II).",
+    brief: { title: "\u0421\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435", text: "\u041C\u043E\u0433\u0438\u043B\u044C\u043D\u044B\u0435 \u043E\u0433\u043E\u043D\u044C\u043A\u0438, \u043F\u0441\u044B \u0438 \u0421\u0442\u0440\u0430\u0436 \u043A\u0443\u0440\u0433\u0430\u043D\u0430. \u041E\u0433\u043E\u043D\u044C \u0437\u0434\u0435\u0441\u044C \u043F\u043E\u0447\u0442\u0438 \u0431\u0435\u0441\u043F\u043E\u043B\u0435\u0437\u0435\u043D; \u0410\u0441\u0442\u0440\u0430\u043B \u043F\u0440\u043E\u0431\u0438\u0432\u0430\u0435\u0442 \u0438 \u0437\u0430\u0449\u0438\u0442\u0443 \u043E\u0433\u043E\u043D\u044C\u043A\u043E\u0432, \u0438 \u0431\u0440\u043E\u043D\u044E \u0441\u0442\u0440\u0430\u0436\u0430. \u041F\u0441\u0430\u043C \u043D\u0438\u043F\u043E\u0447\u0451\u043C \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437.\n\n\u0412\u043D\u0443\u0442\u0440\u0438: \u0440\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C, \u0433\u0440\u0438\u0431\u044B \u0438 \u043B\u0443\u043D\u043D\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A, \u0447\u0435\u0442\u0432\u0435\u0440\u043E \u043F\u0440\u043E\u0442\u0438\u0432\u043D\u0438\u043A\u043E\u0432, \u0421\u0442\u0440\u0430\u0436 \u043A\u0443\u0440\u0433\u0430\u043D\u0430 \u0438 \u0435\u0433\u043E \u0437\u0430\u043F\u0430\u0441. \u041F\u0440\u043E\u0442\u0438\u0432\u043D\u0438\u043A\u0438 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u044E\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 10 \u043C\u0438\u043D\u0443\u0442, \u0441\u0442\u0440\u0430\u0436 \u2014 \u0447\u0435\u0440\u0435\u0437 \u0447\u0430\u0441." },
+    text: "\u0417\u0430 \u0432\u043E\u0440\u043E\u0442\u0430\u043C\u0438 \u2014 \u0442\u0438\u0445\u043E\u0435 \u0441\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435. \u0421\u043B\u0438\u0448\u043A\u043E\u043C \u0442\u0438\u0445\u043E\u0435."
+  },
+  { id: "travel_fw_back", kind: "travel", x: 3760, y: 2440, texture: "signpost_01", radius: 110, target: CITY_EAST_POINT, hint: "\u0412 \u0433\u043E\u0440\u043E\u0434", text: "\u041D\u0430\u0437\u0430\u0434, \u0432 \u0433\u043E\u0440\u043E\u0434." },
+  { id: "travel_gy_back", kind: "travel", x: 3760, y: 5120, texture: "signpost_01", radius: 110, target: CITY_EAST_POINT, hint: "\u0412 \u0433\u043E\u0440\u043E\u0434", text: "\u041D\u0430\u0437\u0430\u0434, \u0432 \u0433\u043E\u0440\u043E\u0434." },
+  // Морозный лес: сбор
+  { id: "fw_herb_1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 4500, y: 2300, texture: "moon_herb_01", radius: 90 },
+  { id: "fw_herb_2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 3900, y: 1650, texture: "moon_herb_01", radius: 90 },
+  { id: "fw_herb_3", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 5100, y: 1100, texture: "moon_herb_01", radius: 90 },
+  { id: "fw_crystal_1", kind: "gather", res: "ice_crystal", amount: 1, respawnSec: 900, x: 5150, y: 2250, texture: "ice_crystal_node_01", radius: 90 },
+  { id: "fw_crystal_2", kind: "gather", res: "ice_crystal", amount: 1, respawnSec: 900, x: 3850, y: 600, texture: "ice_crystal_node_01", radius: 90 },
+  {
+    id: "fw_cache",
+    kind: "stash",
+    guard: "fw_alpha",
+    x: 4500,
+    y: 450,
+    texture: "trunk_01",
+    emptyTexture: "trunk_01",
+    radius: 110,
+    items: { frost_shard: 1, ice_crystal: 1 },
+    hint: "\u041B\u043E\u0433\u043E\u0432\u043E \u0432\u043E\u0436\u0430\u043A\u0430",
+    label: "\u0417\u0430\u0431\u0440\u0430\u0442\u044C \u0434\u043E\u0431\u044B\u0447\u0443",
+    guardText: "\u041B\u043E\u0433\u043E\u0432\u043E \u0441\u0442\u0435\u0440\u0435\u0436\u0451\u0442 \u0412\u043E\u0436\u0430\u043A \u043C\u0435\u0442\u0435\u043B\u0438."
+  },
+  // Старое кладбище: сбор
+  { id: "gy_dust_1", kind: "gather", res: "rune_dust", amount: 1, respawnSec: 300, x: 4100, y: 4800, texture: "rune_sigil_01", radius: 90 },
+  { id: "gy_dust_2", kind: "gather", res: "rune_dust", amount: 1, respawnSec: 300, x: 5100, y: 3950, texture: "rune_sigil_01", radius: 90 },
+  { id: "gy_mush_1", kind: "gather", res: "forest_mushroom", amount: 1, respawnSec: 300, x: 5050, y: 4900, texture: "mushrooms_brown_01", radius: 90 },
+  { id: "gy_mush_2", kind: "gather", res: "forest_mushroom", amount: 1, respawnSec: 300, x: 3900, y: 4100, texture: "mushrooms_brown_01", radius: 90 },
+  { id: "gy_shard_1", kind: "gather", res: "lunar_shard", amount: 1, respawnSec: 900, x: 3900, y: 3300, texture: "field_crystal", radius: 90 },
+  {
+    id: "gy_cache",
+    kind: "stash",
+    guard: "gy_warden",
+    x: 4800,
+    y: 3050,
+    texture: "trunk_01",
+    emptyTexture: "trunk_01",
+    radius: 110,
+    items: { frost_shard: 1, lunar_shard: 2 },
+    hint: "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u0435 \u043A\u0443\u0440\u0433\u0430\u043D\u0430",
+    label: "\u0417\u0430\u0431\u0440\u0430\u0442\u044C \u0434\u043E\u0431\u044B\u0447\u0443",
+    guardText: "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u0435 \u0441\u0442\u0435\u0440\u0435\u0436\u0451\u0442 \u0421\u0442\u0440\u0430\u0436 \u043A\u0443\u0440\u0433\u0430\u043D\u0430."
+  }
+];
+var EXP_INTERACTIVES = EXP_OBJECT_LIST.map((o) => o.kind === "travel" ? o : { ...o, requiresEvent: OPEN });
+var EXP_ENEMY_LIST = [
+  { id: "fw_wolf_1", enemy: "frost_wolf", x: 4150, y: 2250, radius: 120, repeatSec: 600 },
+  { id: "fw_wolf_2", enemy: "frost_wolf", x: 4800, y: 1650, radius: 120, repeatSec: 600 },
+  { id: "fw_wolf_3", enemy: "frost_wolf", x: 4e3, y: 1150, radius: 120, repeatSec: 600 },
+  { id: "fw_wolf_4", enemy: "frost_wolf", x: 4950, y: 900, radius: 120, repeatSec: 600 },
+  { id: "fw_alpha", enemy: "frost_alpha", x: 4500, y: 620, radius: 140, repeatSec: 3600 },
+  { id: "gy_wisp_1", enemy: "grave_wisp", x: 4300, y: 4850, radius: 120, repeatSec: 600 },
+  { id: "gy_hound_1", enemy: "grave_hound", x: 4900, y: 4700, radius: 120, repeatSec: 600 },
+  { id: "gy_wisp_2", enemy: "grave_wisp", x: 4300, y: 4100, radius: 120, repeatSec: 600 },
+  { id: "gy_hound_2", enemy: "grave_hound", x: 4950, y: 4150, radius: 120, repeatSec: 600 },
+  { id: "gy_warden", enemy: "barrow_warden", x: 4500, y: 3300, radius: 140, repeatSec: 3600 }
+];
+var EXP_ENEMIES = EXP_ENEMY_LIST.map((e) => ({ ...e, requiresEvent: OPEN }));
+var EXP_DECOR = [
+  // заснеженные ели вдоль чащ и по краям
+  ...[[3760, 520], [3990, 470], [5240, 520], [5240, 1500], [3760, 1450], [5240, 2350], [4700, 2440], [4380, 1720], [4740, 1180], [4250, 640]].map(([x, y], i) => ({ id: `fw_tree_${i}`, k: i % 2 ? "tree_frost_02" : "tree_frost_01", x, y })),
+  ...[[4300, 1980], [4900, 1600], [4100, 1500], [4700, 800], [5e3, 2200], [3900, 900]].map(([x, y], i) => ({ id: `fw_frost_${i}`, k: "frost_patch_01", x, y, floor: true })),
+  // надгробия рядами, сухие деревья, свечи у склепа
+  ...[3850, 4e3, 4150, 4700, 4850, 5e3, 5150].flatMap((x, i) => [
+    { id: `gy_stone_a${i}`, k: i % 2 ? "gravestone_02" : "gravestone_01", x, y: 4650 },
+    { id: `gy_stone_b${i}`, k: i % 2 ? "gravestone_01" : "gravestone_02", x: x + 30, y: 3880 }
+  ]),
+  ...[[3760, 3050], [5240, 3100], [5240, 4350], [3760, 4350], [4650, 5150]].map(([x, y], i) => ({ id: `gy_dead_${i}`, k: "dead_tree_grey_01", x, y })),
+  { id: "gy_candles_1", k: "candle_group_01", x: 4380, y: 3110 },
+  { id: "gy_candles_2", k: "candle_group_01", x: 4640, y: 3110 }
+];
+
 // src/config/world.content.js
 var CONTENT_INTERACTIVES = [
   // ================================================================== ДОМ ВЕДЬМЫ (зона A)
@@ -1461,14 +1595,16 @@ var CONTENT_DECOR = [
   { id: "dc_herbs_r", k: "herb_bundle_01", x: 936, y: 4918, flip: true },
   { id: "dc_plant", k: "plant_pot_01", x: 1108, y: 5250 },
   { id: "dc_campfire", k: "campfire_01", x: 1462, y: 3978, fire: true },
-  ...CITY_DECOR
+  ...CITY_DECOR,
   // v0.20.0: город
+  ...EXP_DECOR
+  // v0.24.0: вылазки
 ];
 
 // src/config/world.layout.js
 var WORLD = {
-  width: 3600,
-  // v0.20.0: восточнее леса — дорога и город (world.city.js)
+  width: 5400,
+  // v0.20.0: восточнее леса — дорога и город (world.city.js); v0.24.0: ещё восточнее — вылазки (world.expeditions.js)
   height: 5400,
   playerStart: { x: 900, y: 5200 },
   defaultSafePoint: { x: 900, y: 4820 }
@@ -1483,12 +1619,15 @@ var ZONES = [
   { id: "J", name: "\u041D\u043E\u0432\u0430\u044F \u0447\u0430\u0441\u0442\u044C \u043B\u0435\u0441\u0430", x: 100, y: 1640, w: 600, h: 2460, safePoint: { x: 400, y: 3900 } },
   { id: "K", name: "\u041F\u043E\u043B\u044F\u043D\u0430 \u041B\u0435\u0441\u043D\u043E\u0433\u043E \u0421\u0442\u0440\u0430\u0436\u0430", x: 100, y: 1100, w: 600, h: 540, safePoint: { x: 400, y: 1760 } },
   { id: "L", name: "\u0414\u0440\u0435\u0432\u043D\u0438\u0435 \u0432\u043E\u0440\u043E\u0442\u0430", x: 0, y: 0, w: 1800, h: 1100, safePoint: { x: 900, y: 820 } },
-  ...CITY_ZONES
+  ...CITY_ZONES,
   // v0.20.0: глава II
+  ...EXP_ZONES
+  // v0.24.0: вылазки
 ];
 var GROUND = [
   { tex: "wooden_floor_01", x: 640, y: 4880, w: 520, h: 420 },
-  ...CITY_GROUND
+  ...CITY_GROUND,
+  ...EXP_GROUND
 ];
 var KEEP_CLEAR = [
   { x: 300, y: 3990, w: 200, h: 200 },
@@ -1501,7 +1640,8 @@ var KEEP_CLEAR = [
   // ворота
   { x: 700, y: 125, w: 960, h: 210 },
   // v0.10.0: поляна узла за воротами (то же, что CLEARINGS в world.content.js)
-  ...CITY_KEEP_CLEAR
+  ...CITY_KEEP_CLEAR,
+  ...EXP_KEEP_CLEAR
 ];
 var COLLIDERS = [
   // границы мира (лес)
@@ -1557,7 +1697,9 @@ var COLLIDERS = [
   { kind: "ruin", x: 100, y: 330, w: 540, h: 110 },
   { kind: "ruin", x: 1160, y: 330, w: 540, h: 110 },
   // v0.20.0: дорога и город (только в конец — id коллайдеров c<номер>)
-  ...CITY_COLLIDERS
+  ...CITY_COLLIDERS,
+  ...EXP_COLLIDERS
+  // v0.24.0: после городских (номера коллайдеров города не сдвигаются)
 ];
 var BASE_INTERACTIVES = [
   // A
@@ -1697,7 +1839,7 @@ for (const o of BASE_INTERACTIVES) {
   const extra = CACHE_RESOURCE_REWARDS[o.id];
   if (extra) o.reward = { ...o.reward, items: { ...o.reward.items || {}, ...extra } };
 }
-var INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES];
+var INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES, ...EXP_INTERACTIVES];
 var BASE_ENEMY_SPAWNS = [
   { id: "scavenger_01", enemy: "forest_scavenger", x: 1250, y: 3010, radius: 180, startEvent: "combat_intro_01" },
   {
@@ -1722,7 +1864,7 @@ var BASE_ENEMY_SPAWNS = [
     scale: 1.5
   }
 ];
-var ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES, ...CITY_ENEMIES];
+var ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES, ...CITY_ENEMIES, ...EXP_ENEMIES];
 
 // src/config/game.config.js
 var SAVE = {
@@ -2477,6 +2619,23 @@ var DAILY_POOL = {
     text: "\u0412 \u0433\u043B\u0443\u0431\u0438\u043D\u0435 \u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0435\u0433\u043E \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0430 \u0441\u043D\u043E\u0432\u0430 \u0441\u0442\u043E\u0438\u0442 \u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0441\u0442\u0440\u0430\u0436. \u041F\u0440\u043E\u0439\u0434\u0438\u0442\u0435 \u043C\u0438\u043C\u043E \u043D\u0435\u0433\u043E \u2014 \u0447\u0435\u0440\u0435\u0437 \u043D\u0435\u0433\u043E.",
     goal: { type: "wins", spawns: ["fq_guardian"], count: 1 },
     reward: { heroXP: 60, coins: 40, items: { ice_crystal: 1 } }
+  },
+  // v0.24.0: охота в вылазках (после главы II)
+  hunt_wolves: {
+    giver: "\u041E\u0445\u043E\u0442\u043D\u0438\u043A\u0438 \u0443 \u0441\u0435\u0432\u0435\u0440\u043D\u043E\u0439 \u0434\u043E\u0440\u043E\u0433\u0438",
+    title: "\u0412\u043E\u043B\u0447\u0438\u0446\u044B \u043C\u0435\u0442\u0435\u043B\u0438",
+    text: "\u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0435 \u0432\u043E\u043B\u0447\u0438\u0446\u044B \u043F\u043E\u0434\u0445\u043E\u0434\u044F\u0442 \u043A \u0441\u0435\u0432\u0435\u0440\u043D\u043E\u0439 \u0434\u043E\u0440\u043E\u0433\u0435 \u0432\u0441\u0451 \u0431\u043B\u0438\u0436\u0435. \u041E\u0442\u0433\u043E\u043D\u0438\u0442\u0435 \u0442\u0440\u043E\u0438\u0445.",
+    goal: { type: "wins", spawns: ["fw_wolf_1", "fw_wolf_2", "fw_wolf_3", "fw_wolf_4"], count: 3 },
+    requires: "chapter_2_complete",
+    reward: { heroXP: 60, coins: 40, items: { ice_crystal: 1 } }
+  },
+  hunt_wisps: {
+    giver: "\u0421\u0442\u043E\u0440\u043E\u0436 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0430",
+    title: "\u041E\u0433\u043E\u043D\u044C\u043A\u0438 \u043D\u0430 \u043F\u043E\u0433\u043E\u0441\u0442\u0435",
+    text: "\u041F\u043E \u043D\u043E\u0447\u0430\u043C \u043D\u0430\u0434 \u043C\u043E\u0433\u0438\u043B\u0430\u043C\u0438 \u0441\u043D\u043E\u0432\u0430 \u0431\u0440\u043E\u0434\u044F\u0442 \u043E\u0433\u043E\u043D\u044C\u043A\u0438. \u0421\u0442\u043E\u0440\u043E\u0436 \u043F\u0440\u043E\u0441\u0438\u0442 \u0440\u0430\u0437\u0432\u0435\u044F\u0442\u044C \u0434\u0432\u043E\u0438\u0445.",
+    goal: { type: "wins", spawns: ["gy_wisp_1", "gy_wisp_2"], count: 2 },
+    requires: "chapter_2_complete",
+    reward: { heroXP: 55, coins: 35, items: { rune_dust: 2 } }
   }
 };
 var DAILY_ORDER = Object.keys(DAILY_POOL);
@@ -3108,6 +3267,86 @@ var ENEMIES = {
     rewards: { heroXP: 350, schoolXP: { telekinesis: 40, fire: 40, seal: 40, ice: 60 }, items: { cold_heart: 1 }, coins: 150 },
     arena: "duel"
   },
+  // v0.24.0 — вылазки (stage-2-design-pack §24–25). Отрицательная «слабость» — сопротивление: этот дар бьёт слабее.
+  // Морозный лес: звери не боятся холода (Лёд −40…50%), зато горят (Огонь +30…40%).
+  frost_wolf: {
+    name: "\u041C\u043E\u0440\u043E\u0437\u043D\u0430\u044F \u0432\u043E\u043B\u0447\u0438\u0446\u0430",
+    texture: "enemy_frost_wolf",
+    tier: "normal",
+    hp: 650,
+    normalAttack: { damage: 14, intervalSec: 2.4, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: { name: "\u041F\u0440\u044B\u0436\u043E\u043A \u0438\u0437 \u043C\u0435\u0442\u0435\u043B\u0438", damage: 30, prepSec: 1.9, cooldownSec: 9, firstDelaySec: 5, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: 0,
+    weaknesses: { fire: 0.4, ice: -0.4 },
+    rewards: { heroXP: 50, schoolXP: { fire: 10 }, items: { frost_herb: 1 }, coins: 15 },
+    repeatRewards: { heroXP: 25, schoolXP: { fire: 3 }, items: { frost_herb: 1 }, coins: 8 },
+    arena: "frostwood"
+  },
+  frost_alpha: {
+    name: "\u0412\u043E\u0436\u0430\u043A \u043C\u0435\u0442\u0435\u043B\u0438",
+    texture: "enemy_frost_alpha",
+    tier: "strong",
+    hp: 1300,
+    normalAttack: { damage: 13, intervalSec: 3, chill: { pct: 0.4, sec: 3 } },
+    strongAttack: { name: "\u0412\u043E\u0439 \u0441\u0442\u0430\u0438", damage: 34, prepSec: 2.4, cooldownSec: 10, firstDelaySec: 6, interruptBy: ["telekinesis_heavy"], hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!" },
+    staggerSec: 1.2,
+    interruptedCooldownSec: 7,
+    defense: 0.2,
+    onFireHit: { disableDefenseSec: 6 },
+    weaknesses: { fire: 0.3, ice: -0.5 },
+    rewards: { heroXP: 150, schoolXP: { fire: 30, telekinesis: 20 }, items: { ice_crystal: 2 }, coins: 60 },
+    repeatRewards: { heroXP: 70, schoolXP: { fire: 5 }, items: { ice_crystal: 1 }, coins: 25 },
+    arena: "frostwood"
+  },
+  // Старое кладбище: огоньки и стражи кургана — плотная защита, Огонь их почти не берёт, Астрал пробивает.
+  grave_wisp: {
+    name: "\u041C\u043E\u0433\u0438\u043B\u044C\u043D\u044B\u0439 \u043E\u0433\u043E\u043D\u0451\u043A",
+    texture: "enemy_grave_wisp",
+    tier: "normal",
+    hp: 560,
+    normalAttack: { damage: 13, intervalSec: 2.6 },
+    strongAttack: { name: "\u0425\u043E\u043B\u043E\u0434\u043D\u044B\u0439 \u0448\u0451\u043F\u043E\u0442", damage: 28, prepSec: 2, cooldownSec: 9, firstDelaySec: 5, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: 0.45,
+    weaknesses: { seal: 0.5, fire: -0.3 },
+    rewards: { heroXP: 50, schoolXP: { seal: 10 }, items: { rune_dust: 1 }, coins: 15 },
+    repeatRewards: { heroXP: 25, schoolXP: { seal: 3 }, items: { rune_dust: 1 }, coins: 8 },
+    arena: "graveyard"
+  },
+  grave_hound: {
+    name: "\u041C\u043E\u0433\u0438\u043B\u044C\u043D\u044B\u0439 \u043F\u0451\u0441",
+    texture: "enemy_grave_hound",
+    tier: "normal",
+    hp: 700,
+    normalAttack: { damage: 15, intervalSec: 2.5 },
+    strongAttack: { name: "\u041C\u0451\u0440\u0442\u0432\u0430\u044F \u0445\u0432\u0430\u0442\u043A\u0430", damage: 32, prepSec: 2, cooldownSec: 9, firstDelaySec: 5, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: 0,
+    weaknesses: { fire: 0.3, telekinesis: -0.3 },
+    rewards: { heroXP: 50, schoolXP: { fire: 10 }, items: { forest_mushroom: 1 }, coins: 15 },
+    repeatRewards: { heroXP: 25, schoolXP: { fire: 3 }, items: { forest_mushroom: 1 }, coins: 8 },
+    arena: "graveyard"
+  },
+  barrow_warden: {
+    name: "\u0421\u0442\u0440\u0430\u0436 \u043A\u0443\u0440\u0433\u0430\u043D\u0430",
+    texture: "enemy_barrow_warden",
+    tier: "strong",
+    hp: 1400,
+    normalAttack: { damage: 13, intervalSec: 3.4 },
+    strongAttack: { name: "\u0423\u0434\u0430\u0440 \u043A\u0443\u0440\u0433\u0430\u043D\u0430", damage: 36, prepSec: 2.6, cooldownSec: 11, firstDelaySec: 7, interruptBy: ["telekinesis_heavy"], hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!" },
+    staggerSec: 1.2,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    armor: { value: 0.45, source: "crystal", disabledSec: 8 },
+    weaknesses: { seal: 0.4, fire: -0.4 },
+    rewards: { heroXP: 150, schoolXP: { seal: 30, telekinesis: 20 }, items: { lunar_shard: 2, rune_dust: 2 }, coins: 60 },
+    repeatRewards: { heroXP: 70, schoolXP: { seal: 5 }, items: { lunar_shard: 1 }, coins: 25 },
+    arena: "graveyard"
+  },
   // Враг со слабостью из Combat Math §7. v0.10.0: пять Корневиков в старом лесу (world.layout.js, rootling_01…05).
   // Защита 20%, Огонь +50% и снимает защиту на 6 с. Первая победа на месте — rewards; повторная (возобновляемые места) — repeatRewards.
   rootling: {
@@ -3216,6 +3455,9 @@ var ARENAS = {
       { id: "heavy_a", type: "heavy_rock", x: 540, y: 710 }
     ]
   },
+  // v0.24.0: вылазки
+  frostwood: { ground: 3819090, objects: [{ id: "crystal_a", type: "crystal", x: 590, y: 640 }, { id: "heavy_a", type: "heavy_rock", x: 150, y: 760 }, { id: "rock_a", type: "light_rock", x: 420, y: 800 }] },
+  graveyard: { ground: 2369578, objects: [{ id: "crystal_a", type: "crystal", x: 590, y: 640 }, { id: "heavy_a", type: "heavy_rock", x: 150, y: 760 }, { id: "rock_a", type: "light_rock", x: 420, y: 800 }] },
   // v0.22.0: тайная лаборатория и Дуэльный зал (финал главы II)
   lab: {
     ground: 2762291,

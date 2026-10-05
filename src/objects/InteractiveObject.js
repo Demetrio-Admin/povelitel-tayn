@@ -412,6 +412,15 @@ export class TravelObject extends InteractiveObject {
   interact() {
     const need = this.cfg.requiresEvent;
     if (need && !this.state.hasEvent(need)) { this.scene.toast(this.cfg.lockedText || 'Путь пока закрыт.'); return; }
-    this.scene.travelTo?.(this.cfg.target, this.cfg.text);
+    const go = () => this.scene.travelTo?.(this.cfg.target, this.cfg.text);
+    // v0.24.0: вылазка — сначала описание места: какие дары взять (3 из 4), что внутри
+    if (this.cfg.brief && this.scene.dialog) {
+      this.scene.dialog({
+        title: this.cfg.brief.title, color: COLORS.gold, text: this.cfg.brief.text,
+        buttons: [{ label: 'Отправиться', primary: true, onClick: go }, { label: 'Дары', onClick: () => services.bus.emit(MSG.OPEN_GIFTS) }, { label: 'Не сейчас', cancel: true }],
+      });
+      return;
+    }
+    go();
   }
 }

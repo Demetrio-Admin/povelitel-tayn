@@ -9,7 +9,8 @@
 //   inspect — осмотр: lines — реплики героини по кругу, first — награда при первом осмотре
 // Остальные виды (telekinesis, fire, chest, pickup) — существующие.
 import { fm } from '../state/hero.js';
-import { CITY_DECOR } from './world.city.js';   // v0.9.2: реплики героя с вариантами для ведьмы / колдуна (разрешает heroSay)
+import { CITY_DECOR } from './world.city.js';
+import { EXP_DECOR } from './world.expeditions.js';   // v0.9.2: реплики героя с вариантами для ведьмы / колдуна (разрешает heroSay)
 
 export const CONTENT_INTERACTIVES = [
   // ================================================================== ДОМ ВЕДЬМЫ (зона A)
@@ -118,6 +119,7 @@ export const CONTENT_DECOR = [
   { id: 'dc_plant', k: 'plant_pot_01', x: 1108, y: 5250 },
   { id: 'dc_campfire', k: 'campfire_01', x: 1462, y: 3978, fire: true },
   ...CITY_DECOR,   // v0.20.0: город
+  ...EXP_DECOR,    // v0.24.0: вылазки
 ];
 
 // Живые мелочи: мерцание свечей, пылинки в воздухе дома. Рисуются сценой.

@@ -2,7 +2,7 @@ const witchFlight = new URL('../assets/loading/witch-flight.webp', import.meta.u
 
 let screen = null;
 
-/** One small illustration and six reusable sparks; no frame loop or particle allocation. */
+/** Small static art and fixed CSS sparks; no frame loop or particle allocation. */
 export function showLoadingScreen(message = 'Пробуждаем магию…') {
   if (typeof document === 'undefined') return;
   if (screen) {
@@ -18,7 +18,9 @@ export function showLoadingScreen(message = 'Пробуждаем магию…'
       </div>
       <p class="witch-loading__brand">Повелитель тайн</p>
       <div class="witch-loading__orbit" aria-hidden="true"></div>
-      <div class="witch-loading__moon" aria-hidden="true"></div>
+      <div class="witch-loading__moon" aria-hidden="true">
+        <svg viewBox="0 0 64 64"><path d="M48 8A25 25 0 1 0 56 48A23 23 0 0 1 48 8Z"/></svg>
+      </div>
       <div class="witch-loading__flight" aria-hidden="true">
         <img class="witch-loading__witch" src="${witchFlight}" width="480" height="320" alt="" fetchpriority="high" decoding="async">
         <div class="witch-loading__sparks"><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -33,7 +35,13 @@ export function showLoadingScreen(message = 'Пробуждаем магию…'
           <span role="status"></span><span class="witch-loading__percent" aria-hidden="true"></span>
         </div>
         <div class="witch-loading__track" role="progressbar" aria-label="Загрузка ресурсов игры" aria-valuemin="0" aria-valuemax="100">
-          <div class="witch-loading__fill"></div>
+          <div class="witch-loading__channel"><div class="witch-loading__fill"></div></div>
+          <div class="witch-loading__charge-area" aria-hidden="true">
+            <span class="witch-loading__charge">
+              <svg viewBox="0 0 24 24"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z"/></svg>
+              <i></i><i></i>
+            </span>
+          </div>
         </div>
       </div>
     </section>`;
@@ -61,6 +69,8 @@ export function setLoadingProgress(value) {
   screen.percent.textContent = `${percent}%`;
   screen.track.setAttribute('aria-valuenow', String(percent));
   screen.fill.style.transform = `scaleX(${progress})`;
+  screen.track.style.setProperty('--loading-progress', String(progress));
+  screen.track.classList.toggle('has-progress', progress > 0);
 }
 
 export function hideLoadingScreen() {

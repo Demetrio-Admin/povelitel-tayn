@@ -16,10 +16,7 @@
   overflow: hidden;
   container-type: size;
   text-align: center;
-  background:
-    radial-gradient(ellipse at 55% 40%, #483044 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 105%, #302d38 0%, transparent 60%),
-    linear-gradient(160deg, #1b1825, #221824 55%, #17151f);
+  background: #24233d url('../assets/loading/enchanted-night.webp') center / cover no-repeat;
 }
 
 .witch-loading__panel::after {
@@ -40,6 +37,7 @@
   color: #d8bf90;
   font: 700 clamp(12px, 4.6cqw, 25px) 'Philosopher', Georgia, serif;
   letter-spacing: .06em;
+  text-shadow: 0 2px 8px #131024;
 }
 
 .witch-loading__orbit {
@@ -58,17 +56,9 @@
   left: 69%;
   width: 10%;
   aspect-ratio: 1;
-  border-radius: 50%;
-  background: #e4d7b6;
-  box-shadow: 0 0 0 7px #dfcfa50c, 0 0 0 18px #dfcfa507;
+  filter: drop-shadow(0 0 8px #f4dba555);
 }
-.witch-loading__moon::after {
-  content: '';
-  position: absolute;
-  inset: -6% -18% 20% 28%;
-  border-radius: 50%;
-  background: #342333;
-}
+.witch-loading__moon svg { display: block; width: 100%; height: 100%; fill: #f0d5a0; }
 
 .witch-loading__flight {
   position: absolute;
@@ -114,20 +104,66 @@
 .witch-loading__sky i:nth-child(7) { top: 30%; left: 42%; width: 2px; height: 2px; }
 .witch-loading__sky i:nth-child(8) { top: 59%; left: 65%; }
 
-.witch-loading__copy { position: absolute; top: 64%; width: 100%; padding: 0 8%; box-sizing: border-box; font-size: clamp(8px, 2.6cqw, 14px); line-height: 1.2; }
+.witch-loading__copy { position: absolute; top: 64%; width: 100%; padding: 0 8%; box-sizing: border-box; font-size: clamp(8px, 2.6cqw, 14px); line-height: 1.2; text-shadow: 0 2px 8px #131024; }
 .witch-loading__ornament { color: #d6b881; font-size: clamp(8px, 3cqw, 15px); }
 .witch-loading__copy h1 {
   margin: min(12px, 2.4cqw) 0 min(8px, 1.6cqw);
   font: 700 clamp(13px, 5.1cqw, 28px) / 1.2 'Philosopher', Georgia, serif;
 }
-.witch-loading__copy p { margin: 0; color: #b9acb4; font-size: clamp(8px, 2.6cqw, 14px); line-height: 1.4; }
-.witch-loading__progress { position: absolute; top: 81%; left: 17%; width: 66%; }
-.witch-loading__status { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 10px; font-size: clamp(8px, 2.6cqw, 14px); color: #dac69f; text-align: left; }
+.witch-loading__copy p { margin: 0; color: #d0c4d6; font-size: clamp(8px, 2.6cqw, 14px); line-height: 1.4; }
+.witch-loading__progress { position: absolute; top: 81%; left: 8%; width: 84%; }
+.witch-loading__status { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 10px; font-size: clamp(8px, 2.6cqw, 14px); color: #f0dfb4; text-align: left; text-shadow: 0 2px 5px #11172c; }
 .witch-loading__percent { font-variant-numeric: tabular-nums; }
-.witch-loading__track { height: 4px; border-radius: 4px; overflow: hidden; background: #d6bb8626; }
-.witch-loading__fill { width: 100%; height: 100%; background: linear-gradient(90deg, #987347, #ebd29b); transform: scaleX(0); transform-origin: left; }
+.witch-loading__track {
+  position: relative;
+  height: clamp(12px, 3.4cqw, 18px);
+  box-sizing: border-box;
+  border: 1px solid #dfc38ba6;
+  border-radius: 20px;
+  background: #11172edb;
+  box-shadow: 0 0 0 3px #26203480, 0 0 15px #cfa96924;
+}
+.witch-loading__channel { position: absolute; inset: 3px; overflow: hidden; border-radius: 20px; }
+.witch-loading__fill {
+  position: relative;
+  width: 100%; height: 100%;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #9473af, #81bcb8 40%, #dcbf7c 78%, #fff0c0);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .28s linear;
+}
+.witch-loading__fill::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: 0; width: 40%;
+  background: linear-gradient(90deg, transparent, #fff7d9b3, transparent);
+  animation: witch-magic-flow 2.6s ease-in-out infinite;
+}
+.witch-loading__charge-area { position: absolute; inset: 3px; }
+.witch-loading__charge {
+  position: absolute;
+  top: 50%; left: calc(var(--loading-progress, 0) * 100%);
+  width: clamp(15px, 4.2cqw, 22px); height: clamp(15px, 4.2cqw, 22px);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: left .28s linear;
+}
+.witch-loading__track.has-progress .witch-loading__charge { opacity: 1; }
+.witch-loading__charge::before {
+  content: '';
+  position: absolute; inset: -75%;
+  background: radial-gradient(circle, #fff5ca9e, #f0cd622b 40%, transparent 70%);
+}
+.witch-loading__charge svg { display: block; width: 100%; height: 100%; fill: #fff0be; animation: witch-charge-glint 1.8s ease-in-out infinite; }
+.witch-loading__charge i {
+  position: absolute; left: -4px; top: 0;
+  width: 3px; height: 3px; border-radius: 1px;
+  background: #ffebb2; opacity: 0;
+  animation: witch-charge-spark 1.7s ease-out infinite;
+}
+.witch-loading__charge i:last-child { top: 14px; animation-delay: -.85s; background: #bae2d6; }
 
-/* Only transform/opacity animate; no full-screen animated blur, video or timers. */
+/* Continuous effects use transform/opacity. Bar position changes only on loader events. */
 @keyframes witch-flight {
   0%, 100% { transform: translateY(5px) rotate(-1.5deg); }
   50% { transform: translateY(-7px) rotate(1deg); }
@@ -137,8 +173,26 @@
   15% { opacity: .8; }
   100% { opacity: 0; transform: translate(-32px, 16px) rotate(120deg) scale(.2); }
 }
-.witch-loading--paused *, .witch-loading--paused *::after { animation-play-state: paused; }
+@keyframes witch-magic-flow {
+  0% { transform: translateX(-110%); opacity: 0; }
+  20% { opacity: .8; }
+  80% { opacity: .8; }
+  100% { transform: translateX(350%); opacity: 0; }
+}
+@keyframes witch-charge-glint {
+  0%, 100% { transform: scale(.8); opacity: .8; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+@keyframes witch-charge-spark {
+  0% { transform: translate(0, 0) rotate(45deg) scale(.4); opacity: 0; }
+  20% { opacity: .8; }
+  100% { transform: translate(-16px, -7px) rotate(100deg) scale(.3); opacity: 0; }
+}
+.witch-loading--paused *, .witch-loading--paused *::before, .witch-loading--paused *::after { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) {
-  .witch-loading__flight, .witch-loading__sparks i { animation: none; }
+  .witch-loading__flight, .witch-loading__sparks i,
+  .witch-loading__fill::after, .witch-loading__charge svg, .witch-loading__charge i { animation: none; }
+  .witch-loading__fill, .witch-loading__charge { transition: none; }
+  .witch-loading__fill::after { opacity: 0; }
   .witch-loading__sparks i { opacity: .5; transform: rotate(45deg); }
 }

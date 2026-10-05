@@ -6,7 +6,7 @@
 // В базе должна быть схема из supabase/schema.sql и заглушка Supabase Auth (tools/sql/auth-stub.sql).
 import { execFileSync } from 'child_process';
 import { randomUUID } from 'crypto';
-import { applyPatch, applyAction, combatApply, advanceVitals, fillDefaults, emptySnapshot, levelForXp } from '../../src/cloud/playerModel.js';
+import { applyPatch, applyAction, combatApply, advanceVitals, fillDefaults, emptySnapshot, levelForXp, walletOf } from '../../src/cloud/playerModel.js';
 import { HERO_LEVELS } from '../../src/config/balance.hero.js';
 
 import { serverRules } from '../../src/config/serverRules.js';
@@ -40,7 +40,7 @@ const maybe = (p, f) => (rnd() < p ? f() : undefined);
 const arrOf = (f, n = 3) => Array.from({ length: Math.floor(rnd() * n) + 1 }, f);
 
 // ---- v0.15.0: «прогресс» задаётся мимо sync_player — напрямую в таблицы игрока и в JS-снимок
-const CLOSED = ['xp', 'school', 'inv', 'abilities', 'quests', 'paths', 'enemies', 'research'];
+const CLOSED = ['xp', 'school', 'inv', 'abilities', 'quests', 'paths', 'enemies', 'research', 'sapphires'];
 const splitSet = (st) => {
   if (!st || st.__action || st.__apply || st.__shift || st.__age || st.__mana !== undefined || st.__set || st.__rshift) return [st];
   const set = {}, rest = {};
@@ -56,6 +56,7 @@ function setSql(uid, st) {
   for (const [k, v] of Object.entries(st.abilities || {})) q.push(`insert into public.player_abilities (user_id, ability_id, level, unlocked) values (${U}, '${k}', ${v.level}, ${!!v.unlocked}) on conflict (user_id, ability_id) do update set level = greatest(public.player_abilities.level, excluded.level), unlocked = public.player_abilities.unlocked or excluded.unlocked;`);
   if (st.xp) q.push(`update public.player_progress set hero_xp = greatest(hero_xp, ${st.xp}), hero_level = greatest(hero_level, coalesce((select max(level) from public.game_hero_levels where xp <= greatest(hero_xp, ${st.xp})), 1)) where user_id = ${U};`);
   for (const [k, n] of Object.entries(st.school || {})) q.push(`update public.player_progress set school_xp = jsonb_set(school_xp, '{${k}}', to_jsonb(coalesce((school_xp ->> '${k}')::numeric, 0) + ${n})) where user_id = ${U};`);
+  if (st.sapphires) q.push(`insert into public.player_wallet (user_id, sapphires) values (${U}, ${st.sapphires}) on conflict (user_id) do update set sapphires = public.player_wallet.sapphires + ${st.sapphires};`);
   if ('research' in st) q.push(`update public.player_progress set research = ${st.research ? `'${q1(JSON.stringify(st.research))}'::jsonb` : 'null'} where user_id = ${U};`);
   for (const [k, v] of Object.entries(st.objects || {})) q.push(v === null ? `delete from public.player_world where user_id = ${U} and kind = 'object' and key = '${q1(k)}';`
     : `insert into public.player_world (user_id, kind, key, data) values (${U}, 'object', '${q1(k)}', '${q1(JSON.stringify(v))}'::jsonb) on conflict (user_id, kind, key) do update set data = excluded.data;`);
@@ -71,6 +72,7 @@ function applySet(m, st) {
   for (const [k, n] of Object.entries(st.school || {})) m.school[k] = (m.school[k] || 0) + n;
   if ('research' in st) m.research = st.research;
   for (const [k, v] of Object.entries(st.objects || {})) { if (v === null) delete m.objects[k]; else m.objects[k] = v; }
+  if (st.sapphires) m.wallet = { ...walletOf(m.wallet), sapphires: walletOf(m.wallet).sapphires + st.sapphires };
 }
 const SET = (st) => ({ __set: st });
 const RS = (sec) => ({ __rshift: sec });   // «прошло sec секунд» с начала изучения (отметка начала сдвигается в прошлое)
@@ -186,6 +188,15 @@ const SCRIPTED = [
   A('build_preset', { mode: 'load' }), A('build_preset', { mode: 'save' }), A('build_set', { slots: ['fire'], amulets: [] }), A('build_preset', { mode: 'load' }), A('build_preset', { mode: 'nope' }), A('build_preset', {}),
   A('respec', { ability: 'telekinesis', branch: 'breaker' }), A('build_preset', { mode: 'save' }),
   A('combat_start', { spawn: 'scavenger_01', enemy: 'forest_scavenger' }), A('build_set', { slots: ['fire'] }), A('build_preset', { mode: 'load' }), A('build_preset', { mode: 'save' }), A('combat_end', { outcome: 'retreat', mana: 1 }),
+  // v0.17.0: сапфиры — приветствие, ускорение изучения (шаги, предел, суточный лимит), смена ветки и пресеты за сапфиры
+  A('bank_welcome'), A('bank_welcome'), A('research_speedup', { chunks: 1 }), A('preset_unlock'), A('respec', { ability: 'telekinesis', branch: 'lord', pay: 'sapphires' }),
+  SET({ sapphires: 100 }), A('respec', { ability: 'telekinesis', branch: 'lord', pay: 'sapphires' }), A('respec', { ability: 'telekinesis', branch: 'breaker', pay: 'gold' }),
+  A('build_preset', { mode: 'save', slot: 2 }), A('preset_unlock'), A('build_preset', { mode: 'save', slot: 2 }), A('build_preset', { mode: 'load', slot: 2 }), A('build_preset', { mode: 'load', slot: 3 }),
+  A('build_preset', { mode: 'save', slot: 9 }), A('build_preset', { mode: 'save', slot: 1.5 }), A('build_preset', { mode: 'save', slot: '2' }), A('build_preset', { mode: 'save', slot: 1e20 }),
+  A('preset_unlock'), A('preset_unlock'),
+  SET({ school: { seal: 300 }, inv: { lunar_shard: 10 }, xp: 1400 }), A('research_start', { upgrade: 'seal_2' }),
+  A('research_speedup', { chunks: 0 }), A('research_speedup', { chunks: 'x' }), A('research_speedup', { chunks: 2.5 }), A('research_speedup', { chunks: 1e9 }), A('research_speedup', {}),
+  A('research_speedup', { chunks: 1 }), A('research_speedup', { chunks: 2 }), A('research_speedup', { chunks: 96 }), A('research_speedup', { chunks: 1 }), RS(600), A('research_finish'), A('research_speedup', { chunks: 1 }),
   // магия в мире: опыт дара, события и пути выдаёт сам успех (камень, корни, ворота), повтор — «уже сделано»
   SET({ abilities: { telekinesis: { level: 3, unlocked: true }, fire: { level: 2, unlocked: true } }, objects: { glade_rock: null, heavy_boulder: null, corrupted_roots: null } }), MANA(100),
   W('glade_rock'), W('glade_rock'), MANA(100), W('heavy_boulder'), MANA(100), W('corrupted_roots'), W('corrupted_roots'), MANA(100), W('moon_plant'), MANA(100), W('ritual_torch'), W('ritual_torch'),
@@ -203,7 +214,7 @@ for (let s = 0; s < SERIES + 1; s++) {
       actionIds.push(id);
       // v0.10: крафт, сюжетные предметы, миграция (вместе с неверными id)
       const op = pick(['heal', 'heal', 'starter_kit', 'bogus', 'craft', 'craft', 'craft', 'use', 'use', 'migrate_v10', 'drink', 'drink', 'combat_start', 'combat_end', 'combat_end', 'world', 'world', 'world', 'world', 'world', 'world',
-        'event', 'event', 'event', 'quest_accept', 'quest_turn_in', 'quest_turn_in', 'research_start', 'research_start', 'research_finish', 'research_finish', 'respec', 'respec', 'build_set', 'build_set', 'build_preset']);
+        'event', 'event', 'event', 'quest_accept', 'quest_turn_in', 'quest_turn_in', 'research_start', 'research_start', 'research_finish', 'research_finish', 'respec', 'respec', 'build_set', 'build_set', 'build_preset', 'research_speedup', 'research_speedup', 'preset_unlock', 'bank_welcome']);
       const act = { op, id };
       if (op === 'craft') act.recipe = pick([...RECIPE_IDS, 'nope', 5, null]);
       if (op === 'event') act.key = pick([...EVENT_KEYS, ...EVENT_KEYS, ...EVENT_KEYS, 'nope', null, 5, 'lunar_quest_complete']);
@@ -213,7 +224,9 @@ for (let s = 0; s < SERIES + 1; s++) {
       if (op === 'build_set') { const G = ['telekinesis', 'fire', 'seal'], AM = ['amulet_focus', 'amulet_forest', 'amulet_lunar'];
         if (rnd() < 0.7) act.slots = pick([[pick(G)], [pick(G), pick(G)], G, [], ['nope'], 'fire', null, [1], [...G, 'x'], [...G, ...G]]);
         if (rnd() < 0.6) act.amulets = pick([[pick(AM)], [pick(AM), pick(AM)], AM, [], ['nope'], 7, null]); }
-      if (op === 'build_preset') act.mode = pick(['save', 'load', 'load', 'save', 'x', null, 5]);
+      if (op === 'build_preset') { act.mode = pick(['save', 'load', 'load', 'save', 'x', null, 5]); if (rnd() < 0.5) act.slot = pick([1, 2, 3, 4, 0, 1.5, '2', null]); }
+      if (op === 'research_speedup') act.chunks = pick([1, 1, 2, 4, 30, 96, 0, -1, 2.5, 'x', null, 1e12]);
+      if (op === 'respec' && rnd() < 0.4) act.pay = pick(['sapphires', 'sapphires', 'coins', 'x']);
       if (op === 'use') act.item = pick([...USE_IDS, 'elixir_life', 'nope', null]);
       if (op === 'world') act.obj = pick([...WORLD_IDS, ...WORLD_IDS, 'nope', null, 5, '__proto__', 'constructor']);
       if (op === 'drink') act.item = pick(['elixir_life', 'elixir_mana', 'elixir_life', 'resin_flask', 'nope', null, 5]);
@@ -237,6 +250,7 @@ for (let s = 0; s < SERIES + 1; s++) {
     if (rnd() < 0.2) st.paths = ['gate_path'];
     if (rnd() < 0.3) st.abilities = Object.fromEntries(['telekinesis', 'fire', 'seal'].filter(() => rnd() < 0.6).map(k => [k, { level: pick([1, 1, 2, 3]), unlocked: true }]));
     if (rnd() < 0.3) st.xp = pick([100, 600, 900, 1290, 2400, 4000]);
+    if (rnd() < 0.15) st.sapphires = pick([1, 3, 10, 40]);   // v0.17.0
     if (rnd() < 0.3) st.school = Object.fromEntries(['telekinesis', 'fire', 'seal'].filter(() => rnd() < 0.6).map(k => [k, pick([40, 100, 200, 400])]));
     if (rnd() < 0.15) st.research = pick([null, { upgradeId: pick(RES_IDS), startedAt: Date.now() - pick([0, 1000, 100000, 400000, 4000000]), durationMs: pick([60000, 300000, 1800000]) }, { upgradeId: 'bogus', startedAt: 1, durationMs: 1 }]);
     if (rnd() < 0.25) st.objects = Object.fromEntries(arrOf(() => [pick([...WORLD_IDS, 'rep:rootling_02', 'rep:rootling_05']),

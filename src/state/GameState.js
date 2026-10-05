@@ -9,6 +9,7 @@ import { SAVE } from '../config/game.config.js';
 import { materialize } from './vitals.js';
 import { DEFAULT_HERO_ID } from '../config/heroes.js';
 import { GIFT_IDS, AMULETS, slotCount, defaultSlots, checkBuild, buildSlotRules } from '../config/build.js';
+import { SAPPHIRES } from '../config/sapphires.js';
 
 const SAVE_VERSION = 1;
 
@@ -31,7 +32,8 @@ export function createDefaultState(heroId = DEFAULT_HERO_ID) {
     inventory: { coins: 0, lunar_shard: 0, lunar_flame: 0 },
     // состояние отдельных объектов мира: { [id]: { state, x, y } }
     worldObjects: {},
-    research: null, // { upgradeId, startedAt, durationMs }
+    research: null, // { upgradeId, startedAt, durationMs, fullMs? } (fullMs — полное время до ускорений за сапфиры)
+    wallet: { sapphires: 0, daily: {}, welcome: false },   // v0.17.0: кошелёк сапфиров — только от сервера
     player: { x: WORLD.playerStart.x, y: WORLD.playerStart.y },
     safePoint: { ...WORLD.defaultSafePoint },
     hp: null,   // null = полное (старые сохранения и новый персонаж); дальше — число 0…max (v0.9: общее для мира и боя)
@@ -259,6 +261,12 @@ export class GameState {
       slots: ids(o.slots),                       // null — слоты не настраивались: действуют первые открытые дары
       amulets: ids(o.amulets) || [],
       preset: o.preset && typeof o.preset === 'object' ? { slots: ids(o.preset.slots) || [], amulets: ids(o.preset.amulets) || [] } : null,
+      // v0.17.0: пресеты по номерам (1 — бесплатный, 2… — открытые за сапфиры) и сколько их открыто
+      presetSlots: Number.isInteger(o.presetSlots) && o.presetSlots >= 1 ? Math.min(o.presetSlots, SAPPHIRES.preset.max) : 1,
+      presets: Object.fromEntries(Array.from({ length: SAPPHIRES.preset.max }, (_, i) => {
+        const p = o[i === 0 ? 'preset' : `preset${i + 1}`];
+        return [i + 1, p && typeof p === 'object' ? { slots: ids(p.slots) || [], amulets: ids(p.amulets) || [] } : null];
+      })),
     };
   }
   /** Выбранная ветка дара или null. Ветка действует, только пока она есть в данных дара и ступень её достигла. */
@@ -271,6 +279,15 @@ export class GameState {
     const raw = this.getObject('player_build');
     const o = raw && typeof raw === 'object' ? raw : {};
     this.setObject('player_build', { ...o, branches: { ...(o.branches && typeof o.branches === 'object' ? o.branches : {}), [abilityId]: branchId } });
+  }
+
+  // ---------- v0.17.0: сапфиры (баланс — только от сервера) ----------
+  sapphires() { return Number(this.data.wallet?.sapphires) || 0; }
+  /** Сколько шагов ускорения изучения ещё можно сегодня (сутки UTC). */
+  speedupStepsLeftToday() {
+    const d = this.data.wallet?.daily || {};
+    const day = Math.floor(this.now() / 86_400_000);
+    return SAPPHIRES.speedup.dailyChunks - (d.d === day ? d.n || 0 : 0);
   }
 
   // ---------- слоты даров, пресет и амулеты (v0.16.0, config/build.js) ----------
@@ -302,17 +319,21 @@ export class GameState {
     return { ok: true };
   }
   /** Единственный бесплатный пресет: сохранить текущие слоты и амулеты / применить сохранённые. */
-  buildPreset(mode, inCombat = false) {
+  buildPreset(mode, inCombat = false, slot = 1) {
+    if (mode !== 'save' && mode !== 'load') return { ok: false, reason: 'bad' };
+    if (!Number.isInteger(slot) || slot < 1 || slot > SAPPHIRES.preset.max) return { ok: false, reason: 'bad' };
     if (inCombat) return { ok: false, reason: 'combat' };
+    if (slot > this.buildData().presetSlots) return { ok: false, reason: 'locked' };
+    const key = slot === 1 ? 'preset' : `preset${slot}`;
     const raw = this.getObject('player_build');
     const o = raw && typeof raw === 'object' ? { ...raw } : {};
     if (mode === 'save') {
-      o.preset = { slots: this.equippedGifts(), amulets: this.equippedAmulets() };
+      o[key] = { slots: this.equippedGifts(), amulets: this.equippedAmulets() };
       this.setObject('player_build', o);
       return { ok: true };
     }
     if (mode === 'load') {
-      const p = this.buildData().preset;
+      const p = this.buildData().presets[slot];
       if (!p) return { ok: false, reason: 'empty' };
       o.slots = [...p.slots]; o.amulets = [...p.amulets];
       this.setObject('player_build', o);

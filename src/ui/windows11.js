@@ -5,6 +5,8 @@ import { UI } from '../config/ui.config.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { giftCards, buildView, toggleSlot, toggleAmulet } from '../systems/gifts.js';
+import { speedupOptions, sapphires, sapphireFailText } from '../systems/wallet.js';
+import { SAPPHIRES } from '../config/sapphires.js';
 import { ROMAN } from '../objects/InteractiveObject.js';
 import { UPGRADES } from '../config/balance.progression.js';
 import { ABILITIES } from '../config/balance.abilities.js';
@@ -41,7 +43,23 @@ export const windows11 = {
         if (research) {
           const up = UPGRADES[research.upgradeId];
           const t = text(x, cy, `✦ Идёт изучение «${up.title}»: осталось ${fmtMs(state.researchRemainingMs())}`, { fontSize: UI.type.body, color: hex(COLORS[ABILITIES[up.ability].color]) });
-          cy += t.height + 12;
+          cy += t.height + 8;
+          // v0.17.0: ускорение за сапфиры (решает и списывает сервер)
+          const opts = speedupOptions(state);
+          if (opts.length && state.researchRemainingMs() > 0) {
+            const half = (w - 60) / 2;
+            opts.forEach((o, i) => {
+              const b = addButton(this, x + 24 + half / 2 + i * (half + 12), cy + UI.touch.button / 2 + 2, half, UI.touch.button, o.label, {
+                primary: false, accent: o.can ? 0x6fa8ff : null, fontSize: UI.type.small,
+                onPress: () => { if (this.modal?.scroll?.canTap()) this.speedupResearch(o.chunks); },
+              });
+              if (!o.can) b.text.setAlpha(0.6);
+              c.add(b.parts);
+            });
+            cy += UI.touch.button + 6;
+            const n = text(x, cy, `У вас ◆ ${sapphires(state.sapphires())}. Ускорений сегодня осталось: ${state.speedupStepsLeftToday()}.`, { color: COLORS.textDim });
+            cy += n.height + 12;
+          }
         }
         // v0.16.0: билд — слоты даров, амулеты, пресет (над карточками даров)
         {
@@ -82,16 +100,29 @@ export const windows11 = {
             const t2 = text(px, iy, `Цена: ${am.tradeoff}`, { color: hex(0xe0a07a) }); iy += t2.height + 8;
           }
           const half = (w - 60) / 2;
-          for (const [i, [label, mode, can]] of [['Запомнить билд', 'save', true], ['Вернуть билд', 'load', bv.hasPreset]].entries()) {
-            const b = addButton(this, x + 24 + half / 2 + i * (half + 12), iy + UI.touch.button / 2 + 2, half, UI.touch.button, label, {
-              primary: false, accent: can ? COLORS.gold : null, fontSize: UI.type.small,
-              onPress: () => { if (this.modal?.scroll?.canTap()) this.changePreset(mode); },
-            });
-            if (!can) b.text.setAlpha(0.6);
-            c.add(b.parts);
+          // v0.17.0: пресеты по номерам; первый бесплатный, следующий открывается за сапфиры
+          for (const p of bv.presets) {
+            if (bv.presets.length > 1) { const pt = text(px, iy, `Пресет ${p.n}${p.n === 1 ? ' (бесплатный)' : ''}`, { color: COLORS.textGold }); iy += pt.height + 4; }
+            for (const [i, [label, mode, can]] of [['Запомнить билд', 'save', true], ['Вернуть билд', 'load', p.saved]].entries()) {
+              const b = addButton(this, x + 24 + half / 2 + i * (half + 12), iy + UI.touch.button / 2 + 2, half, UI.touch.button, label, {
+                primary: false, accent: can ? COLORS.gold : null, fontSize: UI.type.small,
+                onPress: () => { if (this.modal?.scroll?.canTap()) this.changePreset(mode, p.n); },
+              });
+              if (!can) b.text.setAlpha(0.6);
+              c.add(b.parts);
+            }
+            iy += UI.touch.button + 8;
           }
-          iy += UI.touch.button + 8;
-          const note = text(px, iy, 'Один бесплатный пресет: слоты и амулеты (ветки меняются за монеты отдельно). Менять билд можно только вне боя.', { color: COLORS.textDim });
+          if (bv.nextPreset) {
+            const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `Открыть пресет ${bv.nextPreset.n} — ◆ ${sapphires(bv.nextPreset.price)}`, {
+              primary: false, accent: 0x6fa8ff, fontSize: UI.type.small,
+              onPress: () => { if (this.modal?.scroll?.canTap()) this.unlockPreset(); },
+            });
+            if (!bv.nextPreset.canPay) b.text.setAlpha(0.6);
+            c.add(b.parts);
+            iy += UI.touch.button + 8;
+          }
+          const note = text(px, iy, 'Пресет запоминает слоты и амулеты (ветки меняются отдельно). Менять билд можно только вне боя.', { color: COLORS.textDim });
           iy += note.height + 4;
           const h = iy - top + 12;
           drawPlate(plate, w, h, { accent: COLORS.gold, fill: 0x18121a, alpha: 0.85, radius: 12 });
@@ -126,6 +157,14 @@ export const windows11 = {
                 });
                 if (!o.canPay) b.text.setAlpha(0.6);
                 c.add(b.parts);
+                iy += UI.touch.button + 6;
+                // v0.17.0: то же за сапфиры
+                const bs = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `…или за ◆ ${sapphires(o.sapphires)}`, {
+                  primary: false, accent: o.canPaySapphires ? 0x6fa8ff : null, fontSize: UI.type.small,
+                  onPress: () => { if (this.modal?.scroll?.canTap()) this.confirmRespec(g.id, o, 'sapphires'); },
+                });
+                if (!o.canPaySapphires) bs.text.setAlpha(0.6);
+                c.add(bs.parts);
                 iy += UI.touch.button + 10;
               }
             }
@@ -191,15 +230,16 @@ export const windows11 = {
   },
 
   /** Подтверждение смены ветки: монеты тратятся сразу, поэтому спрашиваем. */
-  confirmRespec(abilityId, opt) {
+  confirmRespec(abilityId, opt, pay = 'coins') {
     if (this.mode === 'combat') return;
+    const price = pay === 'sapphires' ? sapphires(opt.sapphires) : `${opt.price} монет`;
     const closeAndAsk = () => {
       this.closeModal(null);
       this.openModal({
         title: 'Сменить ветку?', color: COLORS.gold,
-        text: `Ветка «${opt.name}» заменит нынешнюю. Это стоит ${opt.price} монет, изучение заново не нужно.`,
+        text: `Ветка «${opt.name}» заменит нынешнюю. Это стоит ${price}, изучение заново не нужно.`,
         buttons: [
-          { label: 'Сменить', primary: true, onClick: () => this.doRespec(abilityId, opt) },
+          { label: 'Сменить', primary: true, onClick: () => (pay === 'sapphires' ? this.doRespecSapphires(abilityId, opt) : this.doRespec(abilityId, opt)) },
           { label: 'Отмена', onClick: () => this.openGifts() },
         ],
       });
@@ -255,19 +295,40 @@ export const windows11 = {
     }
     this.applyBuild({ amulets: r.amulets });
   },
-  changePreset(mode) {
+  changePreset(mode, slot = 1) {
     const { state, actions } = services;
-    const r = state.buildPreset(mode, this.mode === 'combat');
+    const r = state.buildPreset(mode, this.mode === 'combat', slot);
     if (!r.ok) {
       services.audio.play('locked');
       this.toast(r.reason === 'empty' ? 'Билд ещё не сохранён.' : r.reason === 'combat' ? 'Билд меняется только вне боя.' : 'Не получилось.');
       return;
     }
-    actions.buildPreset(mode);
+    actions.buildPreset(mode, slot);
     state.save();
     services.audio.play('unlock_magic');
     this.toast(mode === 'save' ? 'Билд запомнен' : 'Билд возвращён', COLORS.gold);
     this.reopenModal();
+  },
+
+  // ---------- v0.17.0: траты сапфиров — решает сервер, окно показывает его ответ ----------
+  async doRespecSapphires(abilityId, opt) {
+    const r = await services.actions.respecSapphires(abilityId, opt.id);
+    if (!r?.ok) { services.audio.play('locked'); this.toast(r?.reason === 'unavailable' || r?.reason === 'same' ? 'Ветку сменить нельзя.' : sapphireFailText(r)); }
+    else { services.audio.play('unlock_magic'); this.toast(`Ветка «${opt.name}» выбрана`, COLORS[ABILITIES[abilityId].color]); this.refreshHud(); }
+    this.openGifts();
+  },
+  async speedupResearch(chunks) {
+    const r = await services.actions.researchSpeedup(chunks);
+    if (!r?.ok) { services.audio.play('locked'); this.toast(sapphireFailText(r)); }
+    else { services.audio.play('unlock_magic'); this.toast(`Изучение ускорено на ${Math.round(r.cutMs / 60000)} мин (◆ −${r.price})`, 0x6fa8ff); }
+    this.refreshHud();
+    if (this.modal) this.reopenModal();
+  },
+  async unlockPreset() {
+    const r = await services.actions.presetUnlock();
+    if (!r?.ok) { services.audio.play('locked'); this.toast(sapphireFailText(r)); }
+    else { services.audio.play('unlock_magic'); this.toast(`Открыт пресет ${r.slots}`, 0x6fa8ff); }
+    if (this.modal) this.reopenModal();
   },
 
   startGiftResearch(upgradeId) {

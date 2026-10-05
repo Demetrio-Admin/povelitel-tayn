@@ -73,6 +73,13 @@ const levelRow = (lvl) => HERO_LEVELS.find(r => r.level === lvl) || HERO_LEVELS[
 /** Максимум HP и маны уровня (как game_hero_levels.max_hp / max_mana на сервере). */
 export const maxVitals = (lvl) => ({ hp: levelRow(lvl).maxHp, mana: levelRow(lvl).maxMana });
 
+/** v0.17.0: кошелёк сапфиров в снимке: { sapphires, daily: { d: номер дня UTC, n: шагов ускорения за день }, welcome }. */
+export function walletOf(w) {
+  const o = isObj(w) ? w : {};
+  const daily = isObj(o.daily) && num(o.daily.d) && num(o.daily.n) ? { d: o.daily.d, n: o.daily.n } : {};
+  return { sapphires: num(o.sapphires) ? o.sapphires : 0, daily, welcome: o.welcome === true };
+}
+
 /** Снимок игрока по умолчанию (новый персонаж). */
 export function emptySnapshot() {
   return toSnapshot(createDefaultState());
@@ -92,6 +99,7 @@ export function toSnapshot(d) {
     enemies: uniq(d.defeatedEnemies || []),
     objects: JSON.parse(JSON.stringify(d.worldObjects || {})),
     research: d.research ? { ...d.research } : null,
+    wallet: walletOf(d.wallet),           // v0.17.0: сапфиры (пишет только сервер)
     pos: { x: d.player?.x ?? 0, y: d.player?.y ?? 0 },
     safe: { x: d.safePoint?.x ?? 0, y: d.safePoint?.y ?? 0 },
     hp: d.hp ?? null,
@@ -122,6 +130,7 @@ export function fromSnapshot(s, base = createDefaultState()) {
   d.defeatedEnemies = [...(s.enemies || [])];
   d.worldObjects = JSON.parse(JSON.stringify(s.objects || {}));
   d.research = s.research ? { ...s.research } : null;
+  d.wallet = walletOf(s.wallet);
   d.player = { x: s.pos.x, y: s.pos.y };
   d.safePoint = { x: s.safe.x, y: s.safe.y };
   d.hp = s.hp ?? null;
@@ -384,8 +393,63 @@ function researchFinish(s) {
   return { ok: true, upgrade: id, events: up.completeEvent ? [up.completeEvent] : [] };
 }
 
-/** Смена ветки дара за монеты (вне боя): ветка должна быть открыта уровнем дара и отличаться от текущей. */
-function respec(s, ability, branch) {
+// ---------- v0.17.0: сапфиры ----------
+const DAY_MS = 86_400_000;
+const spend = (s, n) => { s.wallet = { ...walletOf(s.wallet), sapphires: walletOf(s.wallet).sapphires - n }; };
+
+/**
+ * Ускорить идущее изучение (op 'research_speedup', chunks — сколько шагов по 15 минут): за каждый шаг — цена в сапфирах.
+ * До нуля нельзя: останется не меньше minLeftMs и не меньше (1 − maxCutPct) полного времени; за сутки (UTC) — не больше dailyChunks шагов.
+ * Платится только за реально снятое время (последний шаг может быть неполным — он всё равно стоит целиком).
+ */
+function researchSpeedup(s, chunks) {
+  const R = RULES.sapphires.speedup;
+  if (!Number.isInteger(chunks) || chunks < 1 || chunks > 96) return { ok: false, reason: 'bad' };
+  if (!isObj(s.research)) return { ok: false, reason: 'none' };
+  const now = num(s.vitalsAt) ? s.vitalsAt : 0;
+  const started = num(s.research.startedAt) ? s.research.startedAt : 0;
+  const up = typeof s.research.upgradeId === 'string' && Object.hasOwn(RULES.research, s.research.upgradeId) ? RULES.research[s.research.upgradeId] : null;
+  const dur = num(s.research.durationMs) ? s.research.durationMs : (up ? up.durationMs : 0);
+  const full = num(s.research.fullMs) ? s.research.fullMs : dur;
+  const minDur = Math.max(full - Math.floor(full * R.maxCutPct), now - started + R.minLeftMs);
+  const maxCut = dur - minDur;
+  if (maxCut <= 0) return { ok: false, reason: 'limit' };
+  const w = walletOf(s.wallet);
+  const day = Math.floor(now / DAY_MS);
+  const used = w.daily.d === day ? w.daily.n : 0;
+  const avail = R.dailyChunks - used;
+  if (avail <= 0) return { ok: false, reason: 'daily' };
+  const cut = Math.min(Math.min(chunks, avail) * R.chunkMs, maxCut);
+  const steps = Math.ceil(cut / R.chunkMs);
+  const price = steps * R.price;
+  if (w.sapphires < price) return { ok: false, reason: 'sapphires', need: price };
+  s.research = { ...s.research, durationMs: dur - cut, fullMs: full };
+  s.wallet = { ...w, sapphires: w.sapphires - price, daily: { d: day, n: used + steps } };
+  return { ok: true, cutMs: cut, price, leftMs: started + dur - cut - now };
+}
+
+/** Открыть ещё один пресет билда за сапфиры (op 'preset_unlock'): первый бесплатный, всего не больше presetMax. */
+function presetUnlock(s) {
+  const R = RULES.sapphires;
+  const o = buildObj(s);
+  const cur = presetSlotsOf(o);
+  if (cur >= R.presetMax) return { ok: false, reason: 'max' };
+  if (walletOf(s.wallet).sapphires < R.presetPrice) return { ok: false, reason: 'sapphires', need: R.presetPrice };
+  spend(s, R.presetPrice);
+  s.objects.player_build = { ...o, presetSlots: cur + 1 };
+  return { ok: true, slots: cur + 1, price: R.presetPrice };
+}
+
+/** Приветственные сапфиры — один раз (op 'bank_welcome'). */
+function bankWelcome(s) {
+  const w = walletOf(s.wallet);
+  if (w.welcome) return { ok: false, reason: 'already' };
+  s.wallet = { ...w, sapphires: w.sapphires + RULES.sapphires.welcome, welcome: true };
+  return { ok: true, amount: RULES.sapphires.welcome };
+}
+
+/** Смена ветки дара за монеты или сапфиры (вне боя): ветка должна быть открыта уровнем дара и отличаться от текущей. */
+function respec(s, ability, branch, pay = 'coins') {
   const B = RULES.build;
   const opt = isId(ability) && isId(branch) ? B.branches[ability]?.[branch] : null;
   const lvl = s.abilities[ability]?.level || 0;
@@ -394,12 +458,22 @@ function respec(s, ability, branch) {
   if (!opt || !curOpt || lvl < curOpt.fromLevel || lvl < opt.fromLevel) return { ok: false, reason: 'unavailable' };
   if (s.combatSince != null) return { ok: false, reason: 'combat' };
   if (curId === branch) return { ok: false, reason: 'same' };
+  if (pay === 'sapphires') {   // v0.17.0
+    const price = RULES.sapphires.respec;
+    if (walletOf(s.wallet).sapphires < price) return { ok: false, reason: 'sapphires', need: price };
+    spend(s, price);
+    setBranch(s, ability, branch);
+    return { ok: true, price, currency: 'sapphires' };
+  }
   if ((s.inventory.coins || 0) < B.respecCoins) return { ok: false, reason: 'coins', need: B.respecCoins };
   addItem(s, 'coins', -B.respecCoins);
   setBranch(s, ability, branch);
   return { ok: true, price: B.respecCoins };
 }
 
+/** v0.17.0: сколько пресетов открыто (1 — только бесплатный) и ключ пресета в player_build: 1 → 'preset', 2 → 'preset2'… */
+export const presetSlotsOf = (o) => (Number.isInteger(o?.presetSlots) && o.presetSlots >= 1 ? Math.min(o.presetSlots, RULES.sapphires.presetMax) : 1);
+export const presetKey = (n) => (n === 1 ? 'preset' : `preset${n}`);
 const unlockedGifts = (s) => RULES.build.gifts.filter((g) => !!s.abilities?.[g]?.unlocked);
 const strIds = (a) => (Array.isArray(a) ? a.filter((x) => typeof x === 'string') : null);
 
@@ -420,16 +494,20 @@ function buildSet(s, action) {
 }
 
 /** v0.16.0: единственный бесплатный пресет (op 'build_preset', mode 'save' | 'load'): слоты и амулеты; ветки за монеты не трогает. */
-function buildPreset(s, mode) {
+function buildPreset(s, mode, slot = 1) {
   if (mode !== 'save' && mode !== 'load') return { ok: false, reason: 'bad' };
+  const n0 = slot == null ? 1 : slot;   // v0.17.0: номер пресета (1 — бесплатный, следующие открываются за сапфиры)
+  if (!Number.isInteger(n0) || n0 < 1 || n0 > RULES.sapphires.presetMax) return { ok: false, reason: 'bad' };
   if (s.combatSince != null) return { ok: false, reason: 'combat' };
   const o = { ...buildObj(s) };
+  if (n0 > presetSlotsOf(o)) return { ok: false, reason: 'locked' };
+  const key = presetKey(n0);
   if (mode === 'save') {
     const un = unlockedGifts(s), n = slotCount(s.level, RULES.build.slots);
     const cur = strIds(o.slots);
-    o.preset = { slots: cur ? cur.filter((g) => un.includes(g)).slice(0, n) : defaultSlots(un, n, RULES.build.gifts), amulets: (strIds(o.amulets) || []).filter((a) => RULES.build.amulets.includes(a)) };
+    o[key] = { slots: cur ? cur.filter((g) => un.includes(g)).slice(0, n) : defaultSlots(un, n, RULES.build.gifts), amulets: (strIds(o.amulets) || []).filter((a) => RULES.build.amulets.includes(a)) };
   } else {
-    const p = isObj(o.preset) ? o.preset : null;
+    const p = isObj(o[key]) ? o[key] : null;
     if (!p) return { ok: false, reason: 'empty' };
     o.slots = strIds(p.slots) || [];
     o.amulets = strIds(p.amulets) || [];
@@ -651,9 +729,12 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'quest_turn_in') return { snapshot: s, result: questTurnIn(s, action.quest) };
   if (op === 'research_start') return { snapshot: s, result: researchStart(s, action.upgrade) };
   if (op === 'research_finish') return { snapshot: s, result: researchFinish(s) };
-  if (op === 'respec') return { snapshot: s, result: respec(s, action.ability, action.branch) };
+  if (op === 'respec') return { snapshot: s, result: respec(s, action.ability, action.branch, action.pay === 'sapphires' ? 'sapphires' : 'coins') };
+  if (op === 'research_speedup') return { snapshot: s, result: researchSpeedup(s, action.chunks) };
+  if (op === 'preset_unlock') return { snapshot: s, result: presetUnlock(s) };
+  if (op === 'bank_welcome') return { snapshot: s, result: bankWelcome(s) };
   if (op === 'build_set') return { snapshot: s, result: buildSet(s, action) };
-  if (op === 'build_preset') return { snapshot: s, result: buildPreset(s, action.mode) };
+  if (op === 'build_preset') return { snapshot: s, result: buildPreset(s, action.mode, action.slot) };
   if (op === 'heal') {
     const price = healPriceOf(s);
     if (s.combatSince != null) return { snapshot: s, result: { ok: false, reason: 'combat', price: 0 } };

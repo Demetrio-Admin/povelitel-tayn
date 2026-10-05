@@ -1028,6 +1028,29 @@ function materialize(state) {
   setMana(state, mana(state));
 }
 
+// src/config/sapphires.js
+var SAPPHIRES = {
+  // ускорение изучения: за price сапфиров таймер короче на chunkMin минут; совсем до нуля нельзя (остаётся не меньше minLeftSec
+  // и не меньше (1 − maxCutPct) полного времени); за сутки (UTC) — не больше dailyChunks таких шагов
+  speedup: { chunkMin: 15, price: 1, maxCutPct: 0.75, minLeftSec: 60, dailyChunks: 24 },
+  respec: 5,
+  // смена ветки вместо монет (BRANCH_RESPEC.coins)
+  preset: { price: 30, max: 3 },
+  // первый пресет бесплатный, следующие — за сапфиры, всего не больше max
+  welcome: 3
+  // один раз — за открытие кошелька (в главе II — «Банк»)
+};
+function sapphireRules() {
+  const s = SAPPHIRES.speedup;
+  return {
+    speedup: { chunkMs: s.chunkMin * 6e4, price: s.price, maxCutPct: s.maxCutPct, minLeftMs: s.minLeftSec * 1e3, dailyChunks: s.dailyChunks },
+    respec: SAPPHIRES.respec,
+    presetPrice: SAPPHIRES.preset.price,
+    presetMax: SAPPHIRES.preset.max,
+    welcome: SAPPHIRES.welcome
+  };
+}
+
 // src/state/GameState.js
 var SAVE_VERSION = 1;
 function createDefaultState(heroId = DEFAULT_HERO_ID) {
@@ -1050,7 +1073,9 @@ function createDefaultState(heroId = DEFAULT_HERO_ID) {
     // состояние отдельных объектов мира: { [id]: { state, x, y } }
     worldObjects: {},
     research: null,
-    // { upgradeId, startedAt, durationMs }
+    // { upgradeId, startedAt, durationMs, fullMs? } (fullMs — полное время до ускорений за сапфиры)
+    wallet: { sapphires: 0, daily: {}, welcome: false },
+    // v0.17.0: кошелёк сапфиров — только от сервера
     player: { x: WORLD.playerStart.x, y: WORLD.playerStart.y },
     safePoint: { ...WORLD.defaultSafePoint },
     hp: null,
@@ -1319,7 +1344,13 @@ var GameState = class {
       slots: ids(o.slots),
       // null — слоты не настраивались: действуют первые открытые дары
       amulets: ids(o.amulets) || [],
-      preset: o.preset && typeof o.preset === "object" ? { slots: ids(o.preset.slots) || [], amulets: ids(o.preset.amulets) || [] } : null
+      preset: o.preset && typeof o.preset === "object" ? { slots: ids(o.preset.slots) || [], amulets: ids(o.preset.amulets) || [] } : null,
+      // v0.17.0: пресеты по номерам (1 — бесплатный, 2… — открытые за сапфиры) и сколько их открыто
+      presetSlots: Number.isInteger(o.presetSlots) && o.presetSlots >= 1 ? Math.min(o.presetSlots, SAPPHIRES.preset.max) : 1,
+      presets: Object.fromEntries(Array.from({ length: SAPPHIRES.preset.max }, (_, i) => {
+        const p = o[i === 0 ? "preset" : `preset${i + 1}`];
+        return [i + 1, p && typeof p === "object" ? { slots: ids(p.slots) || [], amulets: ids(p.amulets) || [] } : null];
+      }))
     };
   }
   /** Выбранная ветка дара или null. Ветка действует, только пока она есть в данных дара и ступень её достигла. */
@@ -1332,6 +1363,16 @@ var GameState = class {
     const raw = this.getObject("player_build");
     const o = raw && typeof raw === "object" ? raw : {};
     this.setObject("player_build", { ...o, branches: { ...o.branches && typeof o.branches === "object" ? o.branches : {}, [abilityId]: branchId } });
+  }
+  // ---------- v0.17.0: сапфиры (баланс — только от сервера) ----------
+  sapphires() {
+    return Number(this.data.wallet?.sapphires) || 0;
+  }
+  /** Сколько шагов ускорения изучения ещё можно сегодня (сутки UTC). */
+  speedupStepsLeftToday() {
+    const d = this.data.wallet?.daily || {};
+    const day = Math.floor(this.now() / 864e5);
+    return SAPPHIRES.speedup.dailyChunks - (d.d === day ? d.n || 0 : 0);
   }
   // ---------- слоты даров, пресет и амулеты (v0.16.0, config/build.js) ----------
   /** Сколько слотов даров у героини. */
@@ -1370,17 +1411,21 @@ var GameState = class {
     return { ok: true };
   }
   /** Единственный бесплатный пресет: сохранить текущие слоты и амулеты / применить сохранённые. */
-  buildPreset(mode, inCombat = false) {
+  buildPreset(mode, inCombat = false, slot = 1) {
+    if (mode !== "save" && mode !== "load") return { ok: false, reason: "bad" };
+    if (!Number.isInteger(slot) || slot < 1 || slot > SAPPHIRES.preset.max) return { ok: false, reason: "bad" };
     if (inCombat) return { ok: false, reason: "combat" };
+    if (slot > this.buildData().presetSlots) return { ok: false, reason: "locked" };
+    const key = slot === 1 ? "preset" : `preset${slot}`;
     const raw = this.getObject("player_build");
     const o = raw && typeof raw === "object" ? { ...raw } : {};
     if (mode === "save") {
-      o.preset = { slots: this.equippedGifts(), amulets: this.equippedAmulets() };
+      o[key] = { slots: this.equippedGifts(), amulets: this.equippedAmulets() };
       this.setObject("player_build", o);
       return { ok: true };
     }
     if (mode === "load") {
-      const p = this.buildData().preset;
+      const p = this.buildData().presets[slot];
       if (!p) return { ok: false, reason: "empty" };
       o.slots = [...p.slots];
       o.amulets = [...p.amulets];
@@ -1695,7 +1740,9 @@ function serverRules() {
     quests: questRules(),
     research: researchRules(),
     build: buildRules(),
-    spawnStart: spawnStartRules()
+    spawnStart: spawnStartRules(),
+    sapphires: sapphireRules()
+    // v0.17.0
   };
 }
 
@@ -1703,7 +1750,14 @@ function serverRules() {
 var RULES = serverRules();
 var ABILITY_IDS = ["telekinesis", "fire", "seal"];
 var SCHOOL_IDS = ["telekinesis", "fire", "seal"];
+var num = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 1e15;
+var isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var uniq = (a) => [...new Set(a)];
+function walletOf(w) {
+  const o = isObj(w) ? w : {};
+  const daily = isObj(o.daily) && num(o.daily.d) && num(o.daily.n) ? { d: o.daily.d, n: o.daily.n } : {};
+  return { sapphires: num(o.sapphires) ? o.sapphires : 0, daily, welcome: o.welcome === true };
+}
 function emptySnapshot() {
   return toSnapshot(createDefaultState());
 }
@@ -1721,6 +1775,8 @@ function toSnapshot(d) {
     enemies: uniq(d.defeatedEnemies || []),
     objects: JSON.parse(JSON.stringify(d.worldObjects || {})),
     research: d.research ? { ...d.research } : null,
+    wallet: walletOf(d.wallet),
+    // v0.17.0: сапфиры (пишет только сервер)
     pos: { x: d.player?.x ?? 0, y: d.player?.y ?? 0 },
     safe: { x: d.safePoint?.x ?? 0, y: d.safePoint?.y ?? 0 },
     hp: d.hp ?? null,
@@ -1753,6 +1809,7 @@ function fromSnapshot(s, base = createDefaultState()) {
   d.defeatedEnemies = [...s.enemies || []];
   d.worldObjects = JSON.parse(JSON.stringify(s.objects || {}));
   d.research = s.research ? { ...s.research } : null;
+  d.wallet = walletOf(s.wallet);
   d.player = { x: s.pos.x, y: s.pos.y };
   d.safePoint = { x: s.safe.x, y: s.safe.y };
   d.hp = s.hp ?? null;

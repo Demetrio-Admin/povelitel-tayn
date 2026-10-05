@@ -6,8 +6,9 @@ import { VIEW, COLORS } from '../config/game.config.js';
 import { ABILITIES } from '../config/balance.abilities.js';
 import { ENEMIES } from '../config/balance.enemies.js';
 import { ITEMS } from '../config/balance.progression.js';
-import { RESOURCES, POTIONS, RESOURCE_ORDER, POTION_ORDER } from '../config/resources.js';
-import { RECIPES } from '../config/recipes.js';
+import { RESOURCES, POTIONS, RESOURCE_ORDER, POTION_ORDER, BASE_RESOURCES, CRAFT_ITEMS } from '../config/resources.js';
+import { RECIPES, RECIPE_SECTIONS } from '../config/recipes.js';
+import { AMULETS, RARITY } from '../config/build.js';
 import { STORY_ITEMS, STORY_ITEM_ORDER } from '../config/storyItems.js';
 import { RESOURCE_WHERE } from '../config/guidance.js';
 import { actionFailText } from './windows09.js';
@@ -31,6 +32,16 @@ const hex = c => '#' + c.toString(16).padStart(6, '0');
 const fit = (img, size) => { img.setScale(size / Math.max(img.width, img.height, 1)); return img; };
 
 /** Размер текста: добавляет в контейнер и возвращает объект. */
+/** v0.19.0: что показать про результат рецепта любого вида (зелье, сюжетный предмет, компонент, инструмент, амулет). */
+function craftInfo(r) {
+  if (r.kind === 'story') return STORY_ITEMS[r.result];
+  if (POTIONS[r.result]) return POTIONS[r.result];
+  if (CRAFT_ITEMS[r.result]) return CRAFT_ITEMS[r.result];
+  const a = AMULETS[r.result];
+  if (a) return { name: a.name, icon: a.icon, color: RARITY[a.rarity]?.color || 0xd9cbb0, text: `${a.text} Цена: ${a.tradeoff}` };
+  return { name: ITEMS[r.result]?.name || r.result, icon: ITEMS[r.result]?.icon || 'icon_shard', color: 0xd9cbb0, text: r.note || '' };
+}
+
 function label(scene, c, x, y, text, style = {}) {
   const t = scene.add.text(x, y, text, { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, shadow: SH, ...style });
   c.add(t);
@@ -190,8 +201,9 @@ export const windows08 = {
         let cy = y;
         label(this, c, x, cy, 'Ресурсы в сумке', { fontSize: UI.type.heading, fontStyle: 'bold', color: COLORS.textGold });
         cy += 48;
-        const step = w / RESOURCE_ORDER.length;
-        RESOURCE_ORDER.forEach((id, i) => {
+        const resShown = RESOURCE_ORDER.filter((id) => BASE_RESOURCES.includes(id) || state.item(id) > 0);   // v0.19.0: новые — когда они уже есть
+        const step = w / resShown.length;
+        resShown.forEach((id, i) => {
           const cx = x + step * (i + 0.5);
           c.add(fit(this.add.image(cx, cy + 30, RESOURCES[id].icon), UI.icon.resource));
           label(this, c, cx, cy + 68, `${state.item(id)}`, { fontSize: UI.type.body, fontStyle: 'bold' }).setOrigin(0.5, 0);
@@ -199,14 +211,17 @@ export const windows08 = {
         cy += 118;
         // v0.10.0: два раздела — зелья и предметы для главного задания; неизвестный рецепт показывает, откуда придёт знание
         let section = null;
-        for (const r of alchemy.recipes()) {
+        // v0.19.0: разделы по виду рецепта; рецепты главы II не показываются, пока неизвестны
+        const list = alchemy.recipes().filter((r) => !(r.chapter >= 2 && alchemy.status(r.id).state === 'locked'))
+          .sort((a, b) => Object.keys(RECIPE_SECTIONS).indexOf(a.kind) - Object.keys(RECIPE_SECTIONS).indexOf(b.kind));
+        for (const r of list) {
           if (r.kind !== section) {
             section = r.kind;
-            const t = label(this, c, x, cy + 4, section === 'story' ? 'Для главного задания' : 'Зелья', { fontSize: UI.type.heading, fontStyle: 'bold', color: COLORS.textGold });
+            const t = label(this, c, x, cy + 4, RECIPE_SECTIONS[section] || 'Рецепты', { fontSize: UI.type.heading, fontStyle: 'bold', color: COLORS.textGold });
             cy = t.y + t.height + 14;
           }
           const story = r.kind === 'story';
-          const p = story ? STORY_ITEMS[r.result] : POTIONS[r.result];
+          const p = craftInfo(r);
           const st = alchemy.status(r.id), chk = st.chk;
           const canCraft = st.state === 'ready';
           const name = label(this, c, x + 104, cy + 18, p.name, { fontSize: UI.type.heading, fontStyle: 'bold', color: hex(p.color), wordWrap: { width: w - 128 } });
@@ -233,7 +248,7 @@ export const windows08 = {
             const note = st.state === 'have' ? 'Готово — в сумке' : st.state === 'used' ? 'Задача выполнена' : `В сумке: ${state.item(r.result)}`;
             label(this, c, x + 20, top + ch - 66, note, { fontSize: UI.type.small, color: st.state === 'have' ? '#9be8a0' : COLORS.textDim }).setOrigin(0, 0.5);
             if (st.state === 'ready' || st.state === 'missing') {
-              const b = addButton(this, x + w - 132, top + ch - 62, 224, UI.touch.button, 'Сварить', {
+              const b = addButton(this, x + w - 132, top + ch - 62, 224, UI.touch.button, r.kind === 'amulet' ? 'Создать' : r.kind === 'potion' || r.kind === 'story' ? 'Сварить' : 'Изготовить', {
                 primary: canCraft, accent: canCraft ? p.color : null, fontSize: UI.type.body,
                 onPress: () => { if (this.modal?.scroll?.canTap()) this.craftRecipe(r.id); },
               });
@@ -256,7 +271,7 @@ export const windows08 = {
   async craftRecipe(id) {
     if (services.actions.busy) return;
     const r = RECIPES[id];
-    const p = r.kind === 'story' ? STORY_ITEMS[r.result] : POTIONS[r.result];
+    const p = craftInfo(r);
     const miss = services.alchemy.missing(id);
     if (miss.length) {   // заранее, без запроса: понятная нехватка
       services.audio.play('locked');
@@ -472,10 +487,10 @@ export const windows08 = {
           }
           cy += 12;
         };
-        grid('Ресурсы', RESOURCE_ORDER, (id) => RESOURCES[id]);
+        grid('Ресурсы', RESOURCE_ORDER.filter((id) => BASE_RESOURCES.includes(id) || state.item(id) > 0), (id) => RESOURCES[id]);
         // v0.9: расходники — строкой: эффект, когда применять, «Выпить» для восстановительных
         sec('Расходники');
-        for (const id of POTION_ORDER) {
+        for (const id of POTION_ORDER.filter((id) => ['elixir_life', 'elixir_mana', 'resin_flask'].includes(id) || state.item(id) > 0)) {   // v0.19.0: новые — если есть
           const p = POTIONS[id], have = state.item(id);
           const top = cy;
           c.add(fit(this.add.image(x + 40, cy + 44, p.icon), UI.icon.resource).setAlpha(have ? 1 : 0.45));

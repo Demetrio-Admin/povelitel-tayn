@@ -214,10 +214,15 @@ export class CombatScene extends Phaser.Scene {
   }
 
   refreshPotions() {
+    // v0.19.0: зелий стало семь — видимые раскладываются подряд слева, шаг сжимается, чтобы уместиться в ширину
+    const shown = [...this.potionViews.keys()].filter((id) => this.sim.item(id) > 0);
+    const step = Math.min(114, (VIEW.width - 120) / Math.max(1, shown.length - 1 || 1));
     for (const [id, v] of this.potionViews) {
       const n = this.sim.item(id);
       for (const o of [v.ring, v.icon, v.badge, v.hit]) o.setVisible(n > 0);
       v.badge.setText(String(n));
+      const i = shown.indexOf(id);
+      if (i >= 0) { const x = 68 + i * step; v.ring.x = x; v.icon.x = x; v.badge.x = x + 30; v.hit.x = x; }
     }
   }
 
@@ -503,6 +508,9 @@ export class CombatScene extends Phaser.Scene {
     } else if (ev.kind === 'mana') {
       this.floatText(HERO_POS.x - 60, HERO_POS.y - 150, `+${ev.amount}`, COLORS.mana, 36);
       this.burst(HERO_POS.x, HERO_POS.y - 70, COLORS.mana, 26);
+    } else if (ev.kind === 'warm' || ev.kind === 'guard') {   // v0.19.0: на себя — свечение вокруг героя
+      this.burst(HERO_POS.x, HERO_POS.y - 70, p.color, 30);
+      this.floatText(HERO_POS.x - 60, HERO_POS.y - 150, ev.kind === 'warm' ? 'Тепло' : `Защита ${ev.sec} с`, p.color, 30);
     } else {
       // бросок склянки: пламенный росчерк от героини к врагу
       for (let i = 0; i < 8; i++) {

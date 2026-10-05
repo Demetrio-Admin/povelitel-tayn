@@ -4,7 +4,7 @@ import { VIEW, COLORS } from '../config/game.config.js';
 import { UI } from '../config/ui.config.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
-import { giftCards, buildView, toggleSlot, toggleAmulet } from '../systems/gifts.js';
+import { giftCards, buildView, toggleSlot, toggleAmulet, amuletLine } from '../systems/gifts.js';
 import { speedupOptions, sapphires, sapphireFailText } from '../systems/wallet.js';
 import { SAPPHIRES } from '../config/sapphires.js';
 import { ROMAN } from '../objects/InteractiveObject.js';
@@ -89,15 +89,27 @@ export const windows11 = {
             iy += t.height + 6;
           }
           for (const am of bv.amulets) {
-            const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `${am.equipped ? '✓' : '○'} ${am.name}`, {
+            const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `${am.equipped ? '✓' : '○'} ${am.name}${am.level ? ` +${am.level}` : ''}`, {
               primary: false, accent: am.equipped ? COLORS.gold : null, fontSize: UI.type.small,
               onPress: () => { if (this.modal?.scroll?.canTap()) this.changeAmulet(am.id); },
             });
             if (!am.equipped) b.text.setAlpha(0.65);
             c.add(b.parts);
             iy += UI.touch.button + 4;
-            const d = text(px, iy, am.text, { color: COLORS.text }); iy += d.height + 1;
-            const t2 = text(px, iy, `Цена: ${am.tradeoff}`, { color: hex(0xe0a07a) }); iy += t2.height + 8;
+            const rr = text(px, iy, `${am.rarityName || ''}${am.level ? ` · улучшен до +${am.level}` : ''}`, { color: hex(am.rarityColor || 0xd9cbb0) }); iy += rr.height + 1;
+            const d = text(px, iy, am.level ? `Сейчас: ${amuletLine(am.effect)}.` : am.text, { color: COLORS.text }); iy += d.height + 1;
+            const t2 = text(px, iy, `Цена: ${am.tradeoff}`, { color: hex(0xe0a07a) }); iy += t2.height + 4;
+            // v0.19.0: улучшение +1…+3 (монеты и материалы; решает сервер)
+            if (am.next) {
+              const nn = text(px + 6, iy, `До +${am.next.level}: ${am.next.need.map((n) => `${n.ok ? '✓' : '✗'} ${n.name} ${Math.min(n.have, n.need)}/${n.need}`).join(' · ')}`, { color: COLORS.textDim }); iy += nn.height + 4;
+              const ub = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `Улучшить до +${am.next.level}`, {
+                primary: false, accent: am.next.canPay ? COLORS.gold : null, fontSize: UI.type.small,
+                onPress: () => { if (this.modal?.scroll?.canTap()) this.upgradeAmulet(am.id, am.next.level); },
+              });
+              if (!am.next.canPay) ub.text.setAlpha(0.6);
+              c.add(ub.parts);
+              iy += UI.touch.button + 8;
+            } else { const mx = text(px + 6, iy, 'Улучшен до предела.', { color: COLORS.textDim }); iy += mx.height + 8; }
           }
           const half = (w - 60) / 2;
           // v0.17.0: пресеты по номерам; первый бесплатный, следующий открывается за сапфиры
@@ -322,6 +334,14 @@ export const windows11 = {
     if (!r?.ok) { services.audio.play('locked'); this.toast(sapphireFailText(r)); }
     else { services.audio.play('unlock_magic'); this.toast(`Изучение ускорено на ${Math.round(r.cutMs / 60000)} мин (◆ −${r.price})`, 0x6fa8ff); }
     this.refreshHud();
+    if (this.modal) this.reopenModal();
+  },
+  async upgradeAmulet(id, level) {
+    const r = await services.actions.amuletUpgrade(id);
+    if (!r?.ok) {
+      services.audio.play('locked');
+      this.toast({ missing: 'Не хватает монет или материалов — ничего не потрачено.', max: 'Амулет уже улучшен до предела.', combat: 'Улучшать можно только вне боя.' }[r?.reason] || sapphireFailText(r));
+    } else { services.audio.play('unlock_magic'); this.toast(`Амулет улучшен до +${r.level ?? level}`, COLORS.gold); }
     if (this.modal) this.reopenModal();
   },
   async unlockPreset() {

@@ -22,6 +22,7 @@ import { hud082 } from '../ui/hud082.js';
 import { windows09 } from '../ui/windows09.js';
 import { windows11 } from '../ui/windows11.js';
 import { windows17 } from '../ui/windows17.js';
+import { windows19 } from '../ui/windows19.js';
 import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from '../ui/noticeClose.js';
 import { addCraftMedallion, setCraftMedallion } from '../ui/witchcraftUI.js';
@@ -733,4 +734,4 @@ export class UIScene extends Phaser.Scene {
   }
 }
 
-Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11, windows17);
+Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11, windows17, windows19);

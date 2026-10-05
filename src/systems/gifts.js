@@ -4,7 +4,7 @@ import { ABILITIES } from '../config/balance.abilities.js';
 import { UPGRADES, ITEMS, TIMER_MODE, BRANCH_RESPEC } from '../config/balance.progression.js';
 import { SAPPHIRES } from '../config/sapphires.js';
 import { statsFor } from './abilityStats.js';
-import { AMULETS, AMULET_IDS, AMULET_SLOTS, GIFT_IDS } from '../config/build.js';
+import { AMULETS, AMULET_IDS, AMULET_SLOTS, GIFT_IDS, AMULET_UPGRADES, RARITY, amuletEffect } from '../config/build.js';
 
 export const GIFT_ORDER = ['telekinesis', 'fire', 'seal', 'ice'];
 const WEIGHT_RU = { light: 'лёгкие', medium: 'лёгкие и средние', heavy: 'любые, включая тяжёлые' };
@@ -121,13 +121,34 @@ export function buildView(state) {
     slotsUsed: equipped.length,
     slots: GIFT_IDS.filter((id) => state.isUnlocked(id)).map((id) => ({ id, name: ABILITIES[id].name, equipped: equipped.includes(id) })),
     amuletSlots: AMULET_SLOTS,
-    amulets: AMULET_IDS.filter((id) => state.item(id) >= 1).map((id) => ({ id, name: AMULETS[id].name, text: AMULETS[id].text, tradeoff: AMULETS[id].tradeoff, equipped: worn.includes(id) })),
+    amulets: AMULET_IDS.filter((id) => state.item(id) >= 1).map((id) => {
+      const level = state.buildData().amuletLevels[id] || 0;
+      const up = AMULET_UPGRADES[level] || null;   // v0.19.0: следующее улучшение (null — максимум)
+      const need = up ? [{ id: 'coins', name: ITEMS.coins.name, have: state.item('coins'), need: up.coins },
+        ...Object.entries(up.items).map(([k, n]) => ({ id: k, name: ITEMS[k]?.name || k, have: state.item(k), need: n }))].map((n) => ({ ...n, ok: n.have >= n.need })) : [];
+      return { id, name: AMULETS[id].name, text: AMULETS[id].text, tradeoff: AMULETS[id].tradeoff, equipped: worn.includes(id),
+        rarity: AMULETS[id].rarity, rarityName: RARITY[AMULETS[id].rarity]?.name, rarityColor: RARITY[AMULETS[id].rarity]?.color,
+        level, maxLevel: AMULET_UPGRADES.length, effect: amuletEffect(id, level), next: up ? { level: level + 1, need, canPay: need.every((n) => n.ok) } : null };
+    }),
     hasPreset: !!state.buildData().preset,
     // v0.17.0: пресеты по номерам и следующий, который можно открыть за сапфиры
     presets: Array.from({ length: state.buildData().presetSlots }, (_, i) => ({ n: i + 1, saved: !!state.buildData().presets[i + 1] })),
     nextPreset: state.buildData().presetSlots < SAPPHIRES.preset.max
       ? { n: state.buildData().presetSlots + 1, price: SAPPHIRES.preset.price, canPay: state.sapphires() >= SAPPHIRES.preset.price } : null,
   };
+}
+
+/** v0.19.0: числа амулета (с учётом уровня) одной строкой. */
+export function amuletLine(e) {
+  const p = (v) => `${Math.round(v * 100)}%`;
+  const out = [];
+  if (e.damageMult > 1) out.push(`урон +${p(e.damageMult - 1)}`);
+  if (e.damageMult && e.damageMult < 1) out.push(`урон −${p(1 - e.damageMult)}`);
+  if (e.incomingMult) out.push(`получаемый урон −${p(1 - e.incomingMult)}`);
+  if (e.manaRescue) out.push(`раз за бой при мане ниже ${p(e.manaRescue.below)} возвращает ${p(e.manaRescue.gainPct)}`);
+  if (e.iceMult) out.push(`удар Льда +${p(e.iceMult - 1)}`);
+  if (e.slowBonus) out.push(`замедление Льдом +${p(e.slowBonus)}`);
+  return out.join(', ');
 }
 
 /** Что получится, если нажать на дар в слотах: новый набор или причина отказа ('none' — последний дар, 'full' — все слоты заняты). */

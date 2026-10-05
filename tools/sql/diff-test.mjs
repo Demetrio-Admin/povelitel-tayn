@@ -26,9 +26,10 @@ const NEW_EVENTS = [...new Set([...EVENT_KEYS, ...Object.values(RULES.events).fl
   ...Object.values(RULES.quests).flatMap(q => [q.start, q.done, ...(q.requires ? [q.requires] : []), ...q.objectives.filter(o => o.type === 'event').map(o => o.key)]),
   ...Object.values(RULES.research).flatMap(u => [u.event, u.startEvent, u.completeEvent].filter(Boolean)),
   ...Object.values(RULES.spawnStart).flatMap(x => [x.event, ...(x.requires ? [x.requires] : [])]),
-  ...Object.values(RULES.world).flatMap(w => w.events || [])])];
+  ...Object.values(RULES.world).flatMap(w => w.events || []), RULES.shop.requires, ...Object.values(RULES.recipes).flatMap(r => r.requires)])];
 const NEW_ITEMS = [...new Set([...Object.values(RULES.quests).flatMap(q => Object.keys(q.consume)), ...Object.values(RULES.quests).flatMap(q => q.objectives.filter(o => o.type === 'item').map(o => o.item)),
-  ...Object.values(RULES.research).flatMap(u => Object.keys(u.items)), ...RULES.build.amulets, 'coins'])];
+  ...Object.values(RULES.research).flatMap(u => Object.keys(u.items)), ...RULES.build.amulets, 'coins',
+  ...Object.values(RULES.recipes).flatMap(r => Object.keys(r.needs)), ...Object.keys(RULES.shop.buy), ...RULES.combatPotions])];
 const NEW_ENEMIES = [...new Set(Object.values(RULES.quests).flatMap(q => q.objectives.filter(o => o.type === 'enemy').map(o => o.id)))];
 let seed = 12345;
 const rnd = () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -197,6 +198,13 @@ const SCRIPTED = [
   SET({ school: { seal: 300 }, inv: { lunar_shard: 10 }, xp: 1400 }), A('research_start', { upgrade: 'seal_2' }),
   A('research_speedup', { chunks: 0 }), A('research_speedup', { chunks: 'x' }), A('research_speedup', { chunks: 2.5 }), A('research_speedup', { chunks: 1e9 }), A('research_speedup', {}),
   A('research_speedup', { chunks: 1 }), A('research_speedup', { chunks: 2 }), A('research_speedup', { chunks: 96 }), A('research_speedup', { chunks: 1 }), RS(600), A('research_finish'), A('research_speedup', { chunks: 1 }),
+  // v0.19.0: торговец, крафт с монетами (Амулет инея), улучшение амулета
+  A('shop_buy', { item: 'frost_herb', qty: 2 }), SET({ quests: ['city_merchant_open', 'recipe_amulet_frost', 'recipe_warm_potion'], inv: { coins: 2000 } }),
+  A('shop_buy', { item: 'frost_herb', qty: 2 }), A('shop_buy', { item: 'ice_crystal', qty: 5 }), A('shop_buy', { item: 'frost_shard' }), A('shop_buy', { item: 'moon_herb', qty: 100 }),
+  A('shop_sell', { item: 'frost_herb', qty: 1 }), A('shop_sell', { item: 'ice_crystal', qty: 50 }), A('shop_sell', { item: 'cold_heart' }),
+  A('craft', { recipe: 'warm_potion' }), A('craft', { recipe: 'amulet_frost' }), SET({ inv: { frost_shard: 4, lunar_shard: 10, rune_dust: 10, tree_resin: 4 } }),
+  A('craft', { recipe: 'amulet_frost' }), A('craft', { recipe: 'amulet_frost' }), A('amulet_upgrade', { amulet: 'amulet_frost' }), A('amulet_upgrade', { amulet: 'amulet_frost' }),
+  A('amulet_upgrade', { amulet: 'amulet_frost' }), A('amulet_upgrade', { amulet: 'amulet_frost' }), A('amulet_upgrade', { amulet: 'amulet_lunar' }), A('amulet_upgrade', { amulet: 'nope' }),
   // магия в мире: опыт дара, события и пути выдаёт сам успех (камень, корни, ворота), повтор — «уже сделано»
   SET({ abilities: { telekinesis: { level: 3, unlocked: true }, fire: { level: 2, unlocked: true } }, objects: { glade_rock: null, heavy_boulder: null, corrupted_roots: null } }), MANA(100),
   W('glade_rock'), W('glade_rock'), MANA(100), W('heavy_boulder'), MANA(100), W('corrupted_roots'), W('corrupted_roots'), MANA(100), W('moon_plant'), MANA(100), W('ritual_torch'), W('ritual_torch'),
@@ -214,7 +222,7 @@ for (let s = 0; s < SERIES + 1; s++) {
       actionIds.push(id);
       // v0.10: крафт, сюжетные предметы, миграция (вместе с неверными id)
       const op = pick(['heal', 'heal', 'starter_kit', 'bogus', 'craft', 'craft', 'craft', 'use', 'use', 'migrate_v10', 'drink', 'drink', 'combat_start', 'combat_end', 'combat_end', 'world', 'world', 'world', 'world', 'world', 'world',
-        'event', 'event', 'event', 'quest_accept', 'quest_turn_in', 'quest_turn_in', 'research_start', 'research_start', 'research_finish', 'research_finish', 'respec', 'respec', 'build_set', 'build_set', 'build_preset', 'research_speedup', 'research_speedup', 'preset_unlock', 'bank_welcome']);
+        'event', 'event', 'event', 'quest_accept', 'quest_turn_in', 'quest_turn_in', 'research_start', 'research_start', 'research_finish', 'research_finish', 'respec', 'respec', 'build_set', 'build_set', 'build_preset', 'research_speedup', 'research_speedup', 'preset_unlock', 'bank_welcome', 'shop_buy', 'shop_sell', 'amulet_upgrade', 'amulet_upgrade']);
       const act = { op, id };
       if (op === 'craft') act.recipe = pick([...RECIPE_IDS, 'nope', 5, null]);
       if (op === 'event') act.key = pick([...EVENT_KEYS, ...EVENT_KEYS, ...EVENT_KEYS, 'nope', null, 5, 'lunar_quest_complete']);
@@ -225,6 +233,8 @@ for (let s = 0; s < SERIES + 1; s++) {
         if (rnd() < 0.7) act.slots = pick([[pick(G)], [pick(G), pick(G)], G, [], ['nope'], 'fire', null, [1], [...G, 'x'], [...G, ...G]]);
         if (rnd() < 0.6) act.amulets = pick([[pick(AM)], [pick(AM), pick(AM)], AM, [], ['nope'], 7, null]); }
       if (op === 'build_preset') { act.mode = pick(['save', 'load', 'load', 'save', 'x', null, 5]); if (rnd() < 0.5) act.slot = pick([1, 2, 3, 4, 0, 1.5, '2', null]); }
+      if (op === 'shop_buy' || op === 'shop_sell') { act.item = pick([...Object.keys(RULES.shop.buy), 'frost_shard', 'coins', 'nope', null, 5]); if (rnd() < 0.7) act.qty = pick([1, 2, 5, 99, 100, 0, 1.5, '2', null]); }
+      if (op === 'amulet_upgrade') act.amulet = pick([...RULES.build.amulets, ...RULES.build.amulets, 'nope', null, 3]);
       if (op === 'research_speedup') act.chunks = pick([1, 1, 2, 4, 30, 96, 0, -1, 2.5, 'x', null, 1e12]);
       if (op === 'respec' && rnd() < 0.4) act.pay = pick(['sapphires', 'sapphires', 'coins', 'x']);
       if (op === 'use') act.item = pick([...USE_IDS, 'elixir_life', 'nope', null]);

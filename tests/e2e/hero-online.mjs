@@ -8,7 +8,7 @@ import path from 'path';
 import { chromium } from 'playwright';
 import { startFakeHttp } from '../helpers/fake-http.mjs';
 import { SupabaseApi } from '../../src/cloud/api.js';
-import { PlayerSession } from '../../src/cloud/PlayerSession.js';
+import { PlayerSession, TOKENS_KEY } from '../../src/cloud/PlayerSession.js';
 import { GameState } from '../../src/state/GameState.js';
 import { CLOUD } from '../../src/config/cloud.config.js';
 
@@ -16,6 +16,21 @@ const BASE = process.env.UI_BASE_URL || 'http://127.0.0.1:5173/';
 const OUT = process.env.UI_SHOTS_DIR || '/tmp/witch-rpg-hero-online';
 fs.mkdirSync(OUT, { recursive: true });
 const { srv, close } = await startFakeHttp({ backend: process.env.BACKEND || 'model', port: +(process.env.SERVER_PORT || 8174), delayMs: 120 });
+
+// Этот набор проверяет персонажа; полный чат проверяется в tests/e2e/chat.mjs.
+// FakeSupabase для персонажа не реализует chat_request, хотя клиент теперь запрашивает значок непрочитанного.
+const characterRoute = srv.route;
+srv.route = async function(method, url, headers, body) {
+  if (url.pathname === '/rest/v1/rpc/chat_request' && body?.op === 'bootstrap') {
+    const user = this.userByAccess(headers);
+    if (!user) return this.reply(401, { code: '28000', message: 'not_authenticated' });
+    return this.reply(200, {
+      me: { ref: user.id, roles: ['player'], policyVersion: 2, revision: 0, staffRevision: 0 },
+      rooms: [], sanctions: [], mentions: 0, supportUnread: 0,
+    });
+  }
+  return characterRoute.call(this, method, url, headers, body);
+};
 
 let failures = 0;
 const ok = (c, m) => { if (c) console.log('  ✓', m); else { failures++; console.log('  ✗', m); } };
@@ -30,7 +45,7 @@ async function account(hero, nickname) {
   const s = new PlayerSession({ api, state: st, storage: { getItem: k => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v), removeItem: k => mem.delete(k) }, setTimer: () => 0, clearTimer: () => {} });
   await s.registerNew({ hero, nickname, password: PASS, password2: PASS });
   srv.grant(s.userId, { inv: { coins: hero === 'witch' ? 17 : 23 }, quests: ['prologue_seen'] }); await s.flush({ force: true });
-  return { nickname, coins: st.item('coins') };
+  return { nickname, coins: st.item('coins'), uid: s.userId, auth: mem.get(TOKENS_KEY) };
 }
 
 const b = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -41,7 +56,13 @@ async function device(name, { width = 390, height = 844 } = {}) {
   await ctx.route('https://fonts.googleapis.com/**', r => r.fulfill({ contentType: 'text/css', body: '' }));
   const p = await ctx.newPage();
   p.on('pageerror', e => errs.push(`${name}: ${e.message}`));
-  p.on('console', m => { if (m.type() === 'error') errs.push(`${name}: ${m.text()}`); });
+  p.on('console', m => {
+    if (m.type() !== 'error') return;
+    const url = m.location().url;
+    // Ожидаемый отказ серверного доступа проверяется сценарием блокировки ниже.
+    if (name === 'restricted' && url.endsWith('/rest/v1/rpc/get_player') && m.text().includes('403')) return;
+    errs.push(`${name}: ${m.text()} (${url})`);
+  });
   const ev = (f, a) => p.evaluate(f, a);
   const tap = async (x, y) => {
     const s = await ev(({ x, y }) => { const r = document.querySelector('canvas').getBoundingClientRect(); return { x: r.x + x * r.width / 720, y: r.y + y * r.height / 1280 }; }, { x, y });
@@ -84,12 +105,17 @@ console.log('\n1. Новый гость-колдун');
   const prof = await d.ev(() => { const u = window.__game.scene.getScene('UIScene'); return { title: u.modal?.opts?.title, labels: u.children.list.flatMap(function walk(o) { return [...(o.type === 'Text' ? [o.text] : []), ...((o.list || []).flatMap(walk))]; }) }; });
   ok(prof.title === 'Колдун' && prof.labels.includes('Ученик лесной ведьмы'), 'профиль: «Колдун», «Ученик лесной ведьмы»');
   await d.shot('profile-warlock');
-  // повторный вход (перезагрузка): меню «Продолжить», в предпросмотре колдун, без переключателя
-  await d.p.goto(BASE); await d.menu();
-  const m = await d.ev(() => { const s = window.__game.scene.getScene('MenuScene'); return { tex: s.picker.image.texture.key, toggles: s.picker.toggles.length, mode: s.mode }; });
-  ok(m.tex === 'warlock_down' && m.toggles === 0 && m.mode === 'continue-online', 'перезагрузка: «Продолжить», предпросмотр — колдун, переключателя нет');
-  await d.shot('menu-continue-warlock');
-  await d.tap(360, 1046); await d.inGame();
+  // Перезагрузка гостя: загрузить тот же профиль и сразу открыть мир, без экрана «Продолжить».
+  const saved = await d.ev(async () => {
+    const s = window.__witch;
+    s.savePosition(); await s.session.flush();
+    return { uid: s.session.userId, coins: s.state.item('coins'), pos: s.state.data.player };
+  });
+  await d.p.goto(BASE); await d.inGame();
+  ok(!(await d.ev(() => window.__game.scene.isActive('MenuScene'))), 'перезагрузка гостя сразу открывает мир без меню');
+  const restored = await d.ev(() => ({ uid: window.__witch.session.userId, coins: window.__witch.state.item('coins'), pos: window.__witch.state.data.player }));
+  ok(restored.uid === saved.uid && restored.coins === saved.coins && JSON.stringify(restored.pos) === JSON.stringify(saved.pos), 'гость возвращается к своему персонажу, ресурсам и позиции');
+  await d.shot('resume-warlock');
   l = await d.look();
   ok(l.world === 'warlock_down' && l.portrait.includes('warlock_down'), 'после повторного входа — колдун в мире и в портрете');
   await d.ctx.close();
@@ -118,6 +144,8 @@ console.log('\n2. Регистрация ведьмы и вход с друго�
   l = await e.look();
   ok(l.session === 'witch' && l.world === 'hero_down' && l.portrait.includes('hero_down'), `предпросмотр колдуна → вход в аккаунт ведьмы: ведьма (мир, портрет) ${JSON.stringify(l)}`);
   await e.shot('login-witch-from-warlock-preview');
+  await e.p.goto(BASE); await e.inGame();
+  ok(!(await e.ev(() => window.__game.scene.isActive('MenuScene'))) && (await e.look()).session === 'witch', 'зарегистрированный игрок после загрузки сразу в мире со своим героем');
   await e.ctx.close();
 }
 
@@ -136,11 +164,39 @@ console.log('\n3. Обратный случай и аккаунт колдуна
   // смена аккаунта на этом же устройстве (как «Войти в другой аккаунт» в профиле): после перезапуска — портрет нового героя
   const accW = await account('witch', `Vedunya_${SUF}`);
   await d.ev(async ({ n, p }) => { await window.__witch.session.login({ nickname: n, password: p }); }, { n: accW.nickname, p: PASS });
-  await d.p.goto(BASE); await d.menu();
-  await d.tap(360, 1046); await d.inGame(); await d.p.waitForTimeout(800);
+  await d.p.goto(BASE); await d.inGame(); await d.p.waitForTimeout(800);
   const l2 = await d.look();
   ok(l2.session === 'witch' && l2.world === 'hero_down' && l2.portrait.includes('hero_down') && l2.coins === accW.coins, 'вход в другой аккаунт: портрет и герой сменились (без старого медальона)');
+  ok(!(await d.ev(() => window.__game.scene.isActive('MenuScene'))), 'смена аккаунта сразу открывает мир нового игрока');
+  await d.ev(() => window.__witch.session.logout());
+  await d.p.goto(BASE); await d.menu();
+  ok(!(await d.ev(() => window.__game.scene.isActive('ExplorationScene'))) && !(await d.ev(() => window.__witch.session.signedIn)), 'после выхода открывается вход/выбор героя, а не мир предыдущего аккаунта');
   await d.ctx.close();
+}
+
+console.log('\n4. Блокировка сохраняет доступ только к поддержке');
+{
+  const acc = await account('warlock', `Restricted_${SUF}`);
+  const originalRoute = srv.route;
+  srv.route = async function(method, url, headers, body) {
+    if (this.userByAccess(headers)?.id === acc.uid) {
+      if (url.pathname === '/rest/v1/rpc/get_player') return this.reply(403, { code: 'P0001', message: 'game_banned' });
+      if (url.pathname === '/rest/v1/rpc/chat_request' && body?.op === 'bootstrap') {
+        return this.reply(200, { me: { nickname: acc.nickname, registered: true, hero: 'warlock', playerId: 41 }, sanctions: [{ kind: 'game', reason: 'Проверка ограничения' }] });
+      }
+    }
+    return originalRoute.call(this, method, url, headers, body);
+  };
+  const d = await device('restricted');
+  try {
+    await d.ctx.addInitScript(({ key, auth }) => localStorage.setItem(key, auth), { key: TOKENS_KEY, auth: acc.auth });
+    for (const suffix of ['', '?skipmenu']) {
+      await d.p.goto(new URL(suffix, BASE).href);
+      await d.menu();
+      const r = await d.ev(() => ({ status: window.__witch.session.status, mode: window.__game.scene.getScene('MenuScene').mode, world: window.__game.scene.isActive('ExplorationScene') }));
+      ok(r.status === 'banned' && r.mode === 'restricted' && !r.world, `блокировка: мир закрыт, доступна поддержка (${suffix || 'обычный вход'})`);
+    }
+  } finally { await d.ctx.close(); srv.route = originalRoute; }
 }
 
 ok(!errs.length, 'без ошибок в консоли страниц' + (errs.length ? ': ' + errs.join(' | ') : ''));

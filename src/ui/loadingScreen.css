@@ -31,11 +31,11 @@
 .witch-loading__brand {
   position: absolute;
   top: 16%;
-  left: 0;
-  width: 100%;
+  left: 8%;
+  width: 84%;
   margin: 0;
   color: #d8bf90;
-  font: 700 clamp(12px, 4.6cqw, 25px) 'Philosopher', Georgia, serif;
+  font: 700 clamp(12px, 4.6cqw, 25px) / 1.25 'Philosopher', Georgia, serif;
   letter-spacing: .06em;
   text-shadow: 0 2px 8px #131024;
 }

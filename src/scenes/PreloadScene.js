@@ -39,8 +39,11 @@ export class PreloadScene extends Phaser.Scene {
       g.destroy();
     }
     hideLoadingScreen();
-    // ?skipmenu — сразу в игру (автотесты, быстрая проверка); онлайн — только если персонаж уже загружен с сервера
-    if (services.skipMenu && (!services.session || services.session.ready)) startGame(this);
+    // Загруженный персонаж сразу возвращается в мир. Выбор героя/вход нужен только без персонажа.
+    // ?skipmenu и редактор по-прежнему пропускают выбор в режиме без сервера; онлайн нужен готовый профиль.
+    const canPlay = !services.session || services.session.ready;
+    const continueGame = services.skipMenu || services.session?.ready || services.hadSave;
+    if (canPlay && continueGame) startGame(this);
     else this.scene.start('MenuScene');
   }
 }

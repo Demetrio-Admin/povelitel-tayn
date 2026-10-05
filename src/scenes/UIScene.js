@@ -579,8 +579,8 @@ export class UIScene extends Phaser.Scene {
   openPause() { this.openMenu(); }
 
   /**
-   * Рабочие настройки (ui/SettingsPanel.js). В исследовании внизу — служебные «Главное меню» и «Сбросить прогресс»
-   * (в бою их нет, как и раньше). Каждое действие сначала закрывает окно настроек, потом выполняется.
+   * Рабочие настройки (ui/SettingsPanel.js). В исследовании доступен «Сбросить прогресс» (в бою его нет).
+   * Действие сначала закрывает окно настроек, потом выполняется.
    */
   openSettings() {
     if (this.modal) return;
@@ -588,7 +588,6 @@ export class UIScene extends Phaser.Scene {
     this.resetJoystick();
     const done = { label: 'Готово', primary: true };
     const extra = this.mode === 'combat' ? [] : [
-      { label: 'Главное меню', onClick: () => this.goToMenu() },
       { label: 'Сбросить прогресс', onClick: () => this.confirmReset() },
     ];
     const container = buildSettingsPanel(this, {
@@ -597,14 +596,6 @@ export class UIScene extends Phaser.Scene {
     });
     this.modal = { container, buttons: [done], views: [], final: false, settings: true };
     this.bus.emit(MSG.MODAL_OPEN);
-  }
-
-  goToMenu() {
-    this.registry.get('savePosition')?.();
-    const go = () => reloadToMenu();
-    const ses = services.session;
-    if (ses?.ready) Promise.race([ses.flush(), new Promise(r => setTimeout(r, 2500))]).then(go, go); // успеваем отправить прогресс
-    else go();
   }
 
   // ================================================================== обучение

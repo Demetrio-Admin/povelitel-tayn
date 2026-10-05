@@ -1,5 +1,4 @@
 import { COLORS, DEPTH } from '../config/game.config.js';
-import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { InteractiveObject, itemName } from './InteractiveObject.js';
 
@@ -28,21 +27,22 @@ export class InspectObject extends InteractiveObject {
     if (this.zz <= 0) { this.zz = 3.4; this.scene.floatText?.(this.x + 14, this.baseY - this.sprite.displayHeight - 6, 'z', 0xcfe3ff, 20, 1500); }
   }
 
+  /** v0.13.0: находка при первом осмотре — операция сервера (world). */
+  async lootFirst() {
+    const r = await this.serverAct();
+    if (!r || this.removed || !this.sprite.active) return;
+    const sc = this.scene;
+    services.audio.play('pickup');
+    sc.sparkleShower?.(this.x, this.baseY - 30, COLORS.gold);
+    sc.heroSay?.(this.cfg.first.text, 4200);
+    this.announce(r);
+  }
+
   interact() {
     const sc = this.scene;
     sc.player.face(this.x - sc.player.x, this.baseY - sc.player.y);
     this.react(this.markerColor, this.cfg.living ? 1.1 : 1.04);
-    if (this.cfg.first && !this.looted()) {
-      this.persist({ state: 'looted' });
-      services.audio.play('pickup');
-      sc.sparkleShower?.(this.x, this.baseY - 30, COLORS.gold);
-      const res = this.state.applyReward({ items: this.cfg.first.items });
-      this.state.save();
-      sc.heroSay?.(this.cfg.first.text, 4200);
-      services.bus.emit(MSG.REWARD, { title: null, ...res, silent: true });
-      services.bus.emit(MSG.HUD_REFRESH);
-      return;
-    }
+    if (this.cfg.first && !this.looted()) { this.lootFirst(); return; }
     const lines = this.cfg.lines || ['…'];
     const line = lines[this.n++ % lines.length];
     if (this.cfg.living === 'cat') {

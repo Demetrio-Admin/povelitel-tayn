@@ -309,7 +309,8 @@ export class UIScene extends Phaser.Scene {
     if (this.modal) { services.input.move.x = 0; services.input.move.y = 0; }
 
     // v0.9: HP / мана — общие запасы героини (мир и бой пишут в одно состояние), не зависят от последней сцены
-    const hud = vitals.view(services.state);
+    // v0.14.0: в бою HP и мана — на копии героя (services.combatSim), настоящее состояние обновит сервер по итогу боя
+    const hud = vitals.view(services.combatSim || services.state);
     this.updateV09(delta / 1000);
     {
       this.hpBar.setFraction(hud.hp / hud.maxHp);

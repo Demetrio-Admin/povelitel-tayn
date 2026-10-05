@@ -4,12 +4,14 @@
 //     backend: 'model' — функции на JS (зеркало supabase/schema.sql через src/cloud/playerModel.js), быстро и без базы;
 //     backend: 'pg'    — НАСТОЯЩИЕ SQL-функции и права на Postgres (psql; нужны PGHOST/PGPORT/PGUSER и схема в базе).
 //   Edge Function account: вызывается настоящий supabase/functions/account/index.ts.
+//   Edge Function combat (v0.14.0): src/cloud/combatHandler.js (тот же код, что собирается в supabase/functions/combat/index.ts).
 // Управление для тестов: offline (сеть пропала), loseNextResponse (запрос дошёл, ответ потерялся), expireAccess() и т.д.
 // Работает и в Node, и в браузере (DOM-стенд tools/ui/dom): модули Node подгружаются только для backend 'pg'.
 const randomUUID = () => globalThis.crypto.randomUUID();
 let spawnSync = null;
 if (typeof process !== 'undefined' && process.versions?.node) ({ spawnSync } = await import('child_process'));
-import { applyPatch, applyAction, advanceVitals, emptySnapshot, levelForXp } from '../../src/cloud/playerModel.js';
+import { applyPatch, applyAction, combatApply, advanceVitals, emptySnapshot, levelForXp } from '../../src/cloud/playerModel.js';
+import { handle as combatFunction } from '../../src/cloud/combatHandler.js';
 import { handle as accountFunction } from '../../supabase/functions/account/index.ts';
 
 const ANON = 'anon-key', SERVICE = 'service-key';
@@ -164,6 +166,14 @@ export class FakeSupabase {
       const inner = (url, o) => this.route(o?.method || 'GET', new URL(url), Object.fromEntries(Object.entries(o?.headers || {}).map(([k, v]) => [k.toLowerCase(), v])), o?.body ? JSON.parse(o.body) : null);
       return accountFunction(req, { SUPABASE_URL: this.url, SUPABASE_SERVICE_ROLE_KEY: SERVICE }, inner);
     }
+    if (p === '/functions/v1/combat') {
+      const t = this.bearer(h);
+      if (this.combatFunctionMissing) return this.reply(404, { msg: 'Function not found' });   // тесты: функция не развёрнута
+      if (!this.access.has(t)) return this.reply(401, { msg: 'Invalid JWT' });
+      const req = new Request(this.url + p, { method, headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const inner = (url, o) => this.route(o?.method || 'GET', new URL(url), Object.fromEntries(Object.entries(o?.headers || {}).map(([k, v]) => [k.toLowerCase(), v])), o?.body ? JSON.parse(o.body) : null);
+      return combatFunction(req, { SUPABASE_URL: this.url, SUPABASE_SERVICE_ROLE_KEY: SERVICE }, inner, () => (this.backend === 'pg' ? Math.max(this.clock, Date.now()) : this.clock));   // в pg время базы настоящее
+    }
     return this.reply(404, { msg: 'not found: ' + p });
   }
 
@@ -192,6 +202,15 @@ export class FakeSupabase {
     } else {
       const pl = this.players.get(uid);
       pl.snap.vitalsAt -= sec * 1000; if (pl.snap.combatSince != null) pl.snap.combatSince -= sec * 1000;
+    }
+  }
+
+  /** v0.13.0. Тесты: «прошло sec секунд» с момента сбора — отметка времени объекта сдвигается в прошлое. */
+  ageObject(uid, id, sec) {
+    if (this.backend === 'pg') {
+      pg(`update public.player_world set data = jsonb_set(data, '{t}', to_jsonb((data->>'t')::numeric - ${sec} * 1000)) where user_id = '${uid}' and kind = 'object' and key = '${id}';`);
+    } else {
+      const pl = this.players.get(uid); pl.snap.objects[id].t -= sec * 1000;
     }
   }
 
@@ -266,6 +285,20 @@ export class FakeSupabase {
         this.actionCalls = (this.actionCalls || 0) + 1;
         return this.reply(200, { ...this.snapshot(uid), action: result });
       }
+      case 'combat_load': {   // v0.14.0: только Edge Function combat (service_role)
+        if (role !== 'service') return err(403, '42501', 'permission denied for function combat_load');
+        return this.reply(200, this.snapshot(a.uid));
+      }
+      case 'combat_apply': {
+        if (role !== 'service') return err(403, '42501', 'permission denied for function combat_apply');
+        const pl = this.players.get(a.uid);
+        if (!pl) return err(404, 'P0002', 'no_player');
+        const base = { ...pl.snap, pos: pl.snap.pos || { x: 0, y: 0 }, safe: pl.snap.safe || { x: 0, y: 0 } };
+        const { snapshot: next, result } = combatApply(base, a.verdict, this.clock);
+        pl.snap = { ...next, pos: pl.snap.pos, safe: pl.snap.safe };
+        pl.rev++;
+        return this.reply(200, { ...this.snapshot(a.uid), action: result });
+      }
       case 'claim_nickname': {
         if (role !== 'service') return err(403, '42501', 'permission denied for function claim_nickname');
         const pl = this.players.get(a.uid);
@@ -290,7 +323,7 @@ export class FakeSupabase {
   rpcPg(fn, a, role, uid) {
     const SIG = {
       nickname_login: ['norm'], nickname_available: ['norm'], create_player: ['hero'], get_player: [], reset_player: ['hero'], sync_player: ['patch'], player_action: ['action'],
-      claim_nickname: ['uid', 'nick', 'norm'], release_nickname: ['uid'],
+      claim_nickname: ['uid', 'nick', 'norm'], release_nickname: ['uid'], combat_load: ['uid'], combat_apply: ['uid', 'verdict'],
     };
     if (!SIG[fn]) return this.reply(404, { code: 'PGRST202', message: 'function not found' });
     const lit = (v) => (v === null || v === undefined ? 'null' : typeof v === 'object' ? `$j$${JSON.stringify(v)}$j$::jsonb` : `$q$${String(v)}$q$`);

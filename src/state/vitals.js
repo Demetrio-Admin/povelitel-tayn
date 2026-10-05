@@ -32,23 +32,14 @@ export function normalize(state) {
 export const canAfford = (state, cost) => mana(state) + EPS >= cost;
 
 /**
- * Списать ману. false — не хватает (ничего не меняется). Списанное копится в data.manaSpent: PlayerSession отправляет
- * серверу прирост (mana_spent), а сервер вычитает его из своей маны.
+ * Списать ману локально. false — не хватает (ничего не меняется). С v0.13.0 действия в мире оплачивает сервер (операция world),
+ * а эта функция остаётся для боевой сцены и инструментов баланса: бой идёт и на устройстве, и при проверке на сервере (combatVerify) одним и тем же движком.
  */
 export function spendMana(state, cost) {
   if (!(cost > 0)) return true;
   if (!canAfford(state, cost)) return false;
-  const before = mana(state);
-  setMana(state, Math.max(0, before - cost));
-  state.data.manaSpent = (state.data.manaSpent || 0) + (before - mana(state));
+  setMana(state, Math.max(0, mana(state) - cost));
   return true;
-}
-
-/** Вернуть ману, списанную через spendMana (сбор отменён): уменьшает и счётчик потраченного. */
-export function refundMana(state, amount) {
-  const back = restoreMana(state, amount);
-  state.data.manaSpent = Math.max(0, (state.data.manaSpent || 0) - back);
-  return back;
 }
 
 /** Восстановить; возвращает фактически добавленное (0, если запас полный). */

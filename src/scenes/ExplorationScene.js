@@ -751,7 +751,7 @@ export class ExplorationScene extends Phaser.Scene {
     services.audio.play('combat_start');
     services.audio.vibrate(60);
     // v0.12.0: сервер должен узнать о бое до его начала (восстановление HP и маны встаёт); идёт параллельно затемнению
-    const started = services.actions ? services.actions.combatStart() : Promise.resolve({ ok: true });
+    const started = services.actions ? services.actions.combatStart(trigger.id, trigger.cfg.enemy) : Promise.resolve({ ok: true });
     cam.fadeOut(450, 0, 0, 0);
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, async () => {
       const r = await started;
@@ -873,7 +873,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.placeSpeech();
 
     for (const o of this.objects) {
-      if (o instanceof PickupObject && o.isAvailable() && Math.hypot(o.x - this.player.x, o.y - this.player.y) < o.autoRadius) o.interact();
+      if (o instanceof PickupObject && o.canAuto() && Math.hypot(o.x - this.player.x, o.y - this.player.y) < o.autoRadius) o.interact();
     }
     for (const e of this.enemies) {
       if (e.update(dt, this.player)) { this.startCombat(e); break; }

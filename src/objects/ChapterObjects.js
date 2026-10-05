@@ -121,8 +121,10 @@ export class GateObject extends InteractiveObject {
     });
   }
 
-  openWithSeal() {
-    if (this.busy || !this.payMana()) return;
+  async openWithSeal() {
+    if (this.busy) return;
+    const r = await this.serverAct();   // v0.13.0: ману списывает сервер (операция world)
+    if (!r || this.removed || !this.sprite.active) return;
     this.busy = true;
     const sc = this.scene;
     sc.player.castAt(this.x, this.baseY, 'telekinesis');
@@ -174,14 +176,15 @@ export class SealSigilObject extends InteractiveObject {
   isDone() { return this.state.hasEvent(this.cfg.doneEvent); }
   manaCost() { return this.abilities.isUnlocked('seal') && !this.isDone() ? WORLD_MANA_COST.seal : 0; }
 
-  interact(abilityId) {
+  async interact(abilityId) {
     if (!this.isAvailable()) return;
     if (this.rejectWrongAbility(abilityId)) return;
     if (!this.abilities.isUnlocked('seal')) {
       this.scene.toast('Угасший камень. Селена знает, как вернуть ему свет.', SEAL);
       return;
     }
-    if (!this.payMana()) return;
+    const r = await this.serverAct();   // v0.13.0: ману списывает сервер (операция world)
+    if (!r || this.removed || !this.sprite.active) return;
     this.busy = true;
     const sc = this.scene;
     sc.player.castAt(this.x, this.baseY, 'telekinesis');
@@ -249,15 +252,14 @@ export class DustStashObject extends InteractiveObject {
     for (const g of this.glows || []) g.setVisible(this.full || this.guardAlive());
   }
 
-  interact() {
+  async interact() {
     if (!this.isAvailable()) {
       if (this.guardAlive()) this.scene.toast('Запас стережёт Корневик.', COLORS.danger);
       return;
     }
-    // один победный цикл — одно разрешение: отметка claimed = номер цикла, перезаход второй выдачи не даёт
-    this.persist({ claimed: this.wins });
-    for (const [k, v] of Object.entries(this.cfg.items)) this.state.addItem(k, v);
-    this.state.save();
+    // один победный цикл — одно разрешение: сервер отмечает claimed = номер цикла (операция world), перезаход второй выдачи не даёт
+    const r = await this.serverAct();
+    if (!r || this.removed || !this.sprite.active) return;
     services.audio.play('gather_done');
     this.scene.burst(this.x - 20, this.baseY - 14, 0xc9a2ff, 18);
     for (const [k, v] of Object.entries(this.cfg.items)) this.scene.floatIcon?.(this.x, this.baseY - 60, 'icon_dust', `+${v} ${itemName(k)}`, 0xc9a2ff);

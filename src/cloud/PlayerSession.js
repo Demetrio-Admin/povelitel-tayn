@@ -40,8 +40,7 @@ export class PlayerSession {
     this.saving = 'saved';     // saved | saving | offline
     this.meta = {};            // ник, герой, даты (из ответа сервера)
     this.base = null;          // последний снимок с сервера
-    this.inflight = null;      // { id, patch, sent, spentTo } — отправка, ответ на которую ещё не пришёл (или потерялся)
-    this.spentAcked = 0;       // v0.12.0: сколько из data.manaSpent сервер уже учёл (mana_spent)
+    this.inflight = null;      // { id, patch, sent } — отправка, ответ на которую ещё не пришёл (или потерялся)
     this.timer = null; this.timerMinor = false;
     this.retryTimer = null; this.retryN = 0;
     this.busy = null;          // текущий flush()
@@ -129,7 +128,6 @@ export class PlayerSession {
     this.base = snapshot;
     this.meta = meta;
     this.state.setData(fromSnapshot(snapshot, this.state.data));
-    this.state.data.manaSpent = 0; this.spentAcked = 0;
     this.state.data.vitalsClock = this.now();
     this.emit('profile');
   }
@@ -294,21 +292,12 @@ export class PlayerSession {
   }
 
   // ---------------------------------------------------------------- v0.12.0: HP и мана на сервере
-  /** Мана, потраченная после последнего учтённого сервером отчёта. */
-  _pendingSpent() { return Math.max(0, (this.state.data.manaSpent || 0) - this.spentAcked); }
-
-  /** Что отправить серверу: изменения снимка + потраченная мана (mana_spent). HP и ману клиент не записывает. */
-  _patchFor(snap) {
-    const patch = diffSnapshots(this.base, snap);
-    const spent = Math.round(this._pendingSpent() * 1000) / 1000;
-    if (spent > 0) patch.mana_spent = spent;
-    return patch;
-  }
+  /** Что отправить серверу: изменения снимка. HP и ману клиент не записывает (v0.13.0: ману тратит и сам сервер — операция world). */
+  _patchFor(snap) { return diffSnapshots(this.base, snap); }
 
   /**
-   * Принять ответ сервера. later — изменения игры за время запроса, кладутся поверх. HP и ману берём у сервера, но:
-   *  • ещё не отправленная мана (потрачена после отчёта) вычитается;
-   *  • идёт бой — его HP и ману ведёт боевая сцена, ответ сервера их не трогает.
+   * Принять ответ сервера. later — изменения игры за время запроса, кладутся поверх. HP и ману берём у сервера, но
+   * идёт бой — его HP и ману ведёт боевая сцена, ответ сервера их не трогает.
    */
   _adopt(snapshot, later = null) {
     const before = this.state.data;
@@ -316,12 +305,7 @@ export class PlayerSession {
     this.state.setData(fromSnapshot(!isEmpty(later) ? applyPatch(snapshot, later) : snapshot, before));
     const d = this.state.data;
     d.vitalsClock = this.now();
-    if (keep) { d.hp = keep.hp; d.mana = keep.mana; return; }
-    const unsent = this._pendingSpent();
-    if (unsent > 0 && d.combatSince == null) {
-      const cur = Number.isFinite(d.mana) ? d.mana : maxVitals(d.heroLevel).mana;
-      d.mana = Math.max(0, cur - unsent);
-    }
+    if (keep) { d.hp = keep.hp; d.mana = keep.mana; }
   }
 
   // ---------------------------------------------------------------- автосохранение
@@ -375,7 +359,7 @@ export class PlayerSession {
         const sent = toSnapshot(this.state.data);
         const patch = this._patchFor(sent);
         if (isEmpty(patch) && !force) { this._setSaving('saved'); return true; }
-        this.inflight = { id: randomId(), patch, sent, spentTo: this.spentAcked + (patch.mana_spent || 0) };
+        this.inflight = { id: randomId(), patch, sent };
       }
       force = false;
       const { id, patch, sent } = this.inflight;
@@ -398,14 +382,13 @@ export class PlayerSession {
       const { snapshot, meta } = fillDefaults(raw);
       this.base = snapshot;
       this.meta = { ...this.meta, ...meta };
-      this.spentAcked = Math.max(this.spentAcked, this.inflight.spentTo);
       this.inflight = null;
       this._adopt(snapshot, later);
       this._backOnline();
       // отправленный снимок сделан уже внутри этого вызова — всё, что было до flush(), на сервере
       if (!resend || isEmpty(later)) {
         this._setSaving('saved');
-        if (!isEmpty(later) || this._pendingSpent() > 0) this.onStateSaved();   // свежие изменения — обычным автосохранением
+        if (!isEmpty(later)) this.onStateSaved();   // свежие изменения — обычным автосохранением
         return true;
       }
     }
@@ -422,6 +405,21 @@ export class PlayerSession {
    *   'session' — нет входа (сессия завершилась); иначе — ответ сервера (coins, full, already, …).
    */
   async runAction(action) {
+    const act = { ...action, id: action.id || randomId() };
+    return this._act('player_action', act, (t) => this.api.playerAction(t, act));
+  }
+
+  /**
+   * v0.14.0: отправить серверу запись боя (Edge Function combat). Сервер проигрывает её, решает исход и записывает итог;
+   * ответ — снимок игрока и action = { ok, outcome, verdict } либо { ok: false, reason } (bad_log, too_fast, no_combat, …).
+   * Причины отказа транспорта те же, что у runAction; 'server' с error.status 404 — функция ещё не развёрнута.
+   */
+  async submitCombat(log) {
+    return this._act('combat', null, (t) => this.api.combat(t, log));
+  }
+
+  /** Общий путь действий с ответом-снимком: сначала отправляем накопленные изменения, потом действие, потом принимаем ответ сервера. */
+  async _act(rpc, act, call) {
     if (this.status === 'offline') return { ok: false, reason: 'network' };
     if (!this.base || !this.auth || this.status !== 'ready') return { ok: false, reason: 'session' };
     if (!(await this.flush())) {
@@ -429,33 +427,32 @@ export class PlayerSession {
       if (this.status === 'signed_out') return { ok: false, reason: 'session' };
       return { ok: false, reason: 'server', error: this.lastFlushError || { rpc: 'sync_player', code: this.lastError?.code || 'unknown', status: this.lastError?.status || 0 } };
     }
-    const act = { ...action, id: action.id || randomId() };
     const sent = toSnapshot(this.state.data);
     let raw = null;
     for (let attempt = 0; attempt < 2 && !raw; attempt++) {
-      try { raw = await this._authed(t => this.api.playerAction(t, act)); } catch (e) {
+      try { raw = await this._authed(call); } catch (e) {
         this.lastError = e;
         if (!isNetworkError(e)) {
           if (this.status === 'signed_out') return { ok: false, reason: 'session' };
-          return { ok: false, reason: 'server', error: { rpc: 'player_action', code: e?.code || 'unknown', status: e?.status || 0, detail: e?.detail || '' } };
+          return { ok: false, reason: 'server', error: { rpc, code: e?.code || 'unknown', status: e?.status || 0, detail: e?.detail || '' } };
         }
         if (attempt === 1) { this._goOffline(); return { ok: false, reason: 'network' }; }
       }
     }
-    if (!raw) return { ok: false, reason: 'server', error: { rpc: 'player_action', code: 'empty_response', status: 200 } };
+    if (!raw) return { ok: false, reason: 'server', error: { rpc, code: 'empty_response', status: 200 } };
     // пока ждали, игра могла что-то изменить (HP и ману задаёт сервер)
     const later = diffSnapshots(sent, toSnapshot(this.state.data));
     const { snapshot, meta, action: res } = fillDefaults(raw);
     this.base = snapshot;
     this.meta = { ...this.meta, ...meta };
     this._adopt(snapshot, later);
-    if (Object.keys(later).length || this._pendingSpent() > 0) this.onStateSaved();
+    if (Object.keys(later).length) this.onStateSaved();
     if (res?.duplicate) return res;      // v0.10: сервер вернул сохранённый результат первой попытки
     if (res?.reason === 'duplicate') {   // ответ на первую попытку потерялся (действие до v0.10): итог видно по состоянию
-      const ok = act.op === 'heal' ? snapshot.hp === maxVitals(snapshot.level).hp : snapshot.quests.includes(STARTER_KIT.event);
-      return ok ? { ok } : { ok, reason: 'server', error: { rpc: 'player_action', code: 'duplicate_unconfirmed', status: 200 } };
+      const ok = act?.op === 'heal' ? snapshot.hp === maxVitals(snapshot.level).hp : snapshot.quests.includes(STARTER_KIT.event);
+      return ok ? { ok } : { ok, reason: 'server', error: { rpc, code: 'duplicate_unconfirmed', status: 200 } };
     }
-    return res || { ok: false, reason: 'server', error: { rpc: 'player_action', code: 'no_result', status: 200 } };
+    return res || { ok: false, reason: 'server', error: { rpc, code: 'no_result', status: 200 } };
   }
 
   /** Телеметрия живого теста: пачка событий. Ошибки наружу не влияют на игру (статус связи не меняется). */

@@ -116,10 +116,10 @@ assert.equal(loginCalls.length, 0);
 await renamedPlayer.login({ nickname: "Alina", password: "unchanged" });
 assert.equal(loginCalls[0].email, await loginEmail("alice", "game.test"));
 assert.equal(loginCalls[0].password, "unchanged");
-// Staff changes refresh via normal delta synchronization, even with no local changes.
+// Staff changes refresh via sync_player; v0.15+ inventory is controlled by the server.
 const refreshedState = new GameState(null);
 let balance = 5, patches = [];
-const refreshedPlayer = new PlayerSession({ api: { enabled: true, syncPlayer: async (_t, p) => { patches.push(p); balance += p.inv?.coins || 0; return { inventory: { coins: balance }, meta: { nickname: "Alina" } }; } }, state: refreshedState, storage: null, setTimer: () => 0 });
+const refreshedPlayer = new PlayerSession({ api: { enabled: true, syncPlayer: async (_t, p) => { patches.push(p); return { inventory: { coins: balance }, meta: { nickname: "Alina" } }; } }, state: refreshedState, storage: null, setTimer: () => 0 });
 refreshedPlayer.auth = { access_token: "a", expires_at: Date.now()+3600000, user: { id: "a" } };
 refreshedPlayer._applyServer({ inventory: { coins: 5 } });
 balance = 11;
@@ -127,7 +127,8 @@ assert.equal(await refreshedPlayer.flush({ force: true }), true);
 assert.equal(patches.length, 1); assert.equal(refreshedState.data.inventory.coins, 11);
 refreshedState.data.inventory.coins += 2; balance += 6;
 await refreshedPlayer.flush({ force: true });
-assert.equal(patches[1].inv.coins, 2); assert.equal(refreshedState.data.inventory.coins, 19);
+assert.equal(Object.hasOwn(patches[1], 'inv'), false);
+assert.equal(refreshedState.data.inventory.coins, 17); // server staff grant wins over local edits
 assert.equal(refreshedPlayer.nickname, "Alina");
 console.log(
   "✓ Chat retry, shared auth, account isolation, renamed login and live staff resource refresh",

@@ -16,7 +16,10 @@ async function as(n, fn) {
 }
 const call = (n, op, args = {}, id = randomUUID()) => as(n, async () => (await sql("select public.chat_request($1,$2::jsonb,$3::uuid) j", [op, JSON.stringify(args), id])).rows[0].j);
 const deny = async (n, op, args = {}, pattern = /chat_forbidden|chat_protected/) => { await assert.rejects(() => call(n, op, args), pattern); checks++; };
-const migrate = () => db.exec(readFileSync("supabase/migrations/20261004_chat_roles_v2.sql", "utf8"));
+const migrate = async () => {
+  await db.exec(readFileSync("supabase/migrations/20261004_chat_roles_v2.sql", "utf8"));
+  await db.exec(readFileSync("supabase/migrations/20261005_chat_amulet_catalog.sql", "utf8"));
+};
 try {
   for (const f of ["tools/sql/auth-stub.sql", "supabase/schema.sql", "supabase/migrations/20261004_game_chat.sql"]) await db.exec(readFileSync(f, "utf8"));
   const names = ["player", "moderator", "support", "developer", "admin", "owner", "alice", "bob", "guest"];
@@ -73,7 +76,8 @@ try {
   await deny("admin", "roles_set", { playerId: me.bob.playerId, roles: [], revision: assigned.revision, reason: "Peer" });
   await call("owner", "roles_set", { playerId: me.bob.playerId, roles: [], revision: assigned.revision, reason: "Remove admin" });
   for (const n of ["player", "moderator", "support"]) await deny(n, "player_lookup", { playerId: me.alice.playerId });
-  await as("alice", () => sql("select public.sync_player('{\"inv\":{\"coins\":31}}')"));
+  // Existing balance is server data; sync_player no longer accepts inventory deltas.
+  await sql("insert into public.player_inventory(user_id,item_id,quantity) values($1,'coins',31) on conflict(user_id,item_id) do update set quantity=excluded.quantity", [users.alice]);
   const p = await call("developer", "player_lookup", { playerId: me.alice.playerId });
   check(Object.keys(p.catalog).sort().join() === Object.keys(ITEMS).sort().join() && Object.entries(ITEMS).every(([id, item]) => p.catalog[id] === item.name), "server resource IDs and names match the game");
   const args = { playerId: p.playerId, revision: p.inventoryRevision, item: "coins", delta: 100, reason: "Compensation" }, request = randomUUID();
@@ -83,10 +87,10 @@ try {
   await deny("developer", "resources", { ...args, revision: given.inventoryRevision, delta: -132 }, /chat_invalid_request/);
   await deny("developer", "resources", { ...args, revision: given.inventoryRevision, item: "made_up" }, /chat_invalid_request/);
   const synced = await as("alice", async () => (await sql("select public.sync_player('{\"inv\":{\"coins\":2}}') j")).rows[0].j);
-  check(synced.inventory.coins === 133, "pending player deltas do not overwrite a staff grant");
+  check(synced.inventory.coins === 131, "client inventory deltas cannot alter a staff grant");
   const current = await call("developer", "player_lookup", { playerId: me.alice.playerId });
   const taken = await call("developer", "resources", { ...args, revision: current.inventoryRevision, delta: -20 });
-  check(taken.inventory.coins === 113, "resource withdrawal is exact and audited");
+  check(taken.inventory.coins === 111, "resource withdrawal is exact and audited");
   const renamed = await call("developer", "rename", { playerId: me.alice.playerId, revision: taken.staffRevision, nickname: "Alina", reason: "Rename" });
   check(renamed.nickname === "Alina", "developer changes player nickname");
   const login = async (norm) => (await sql("select public.nickname_login($1) j", [norm])).rows[0].j;
@@ -97,7 +101,7 @@ try {
   await deny("developer", "resources", { ...args, playerId: me.admin.playerId, revision: "0" });
   await deny("developer", "rename", { playerId: me.owner.playerId, revision: "0", nickname: "NewOwner", reason: "Protected" });
   const audits = await call("moderator", "audit");
-  check(audits.some((e) => e.action === "resources" && e.detail.before === 133 && e.detail.after === 113) && audits.some((e) => e.action === "rename" && e.detail.before === "alice" && e.detail.after === "Alina"), "audit includes reasons and before/after values");
+  check(audits.some((e) => e.action === "resources" && e.detail.before === 131 && e.detail.after === 111) && audits.some((e) => e.action === "rename" && e.detail.before === "alice" && e.detail.after === "Alina"), "audit includes reasons and before/after values");
   for (const n of ["player", "moderator"]) await deny(n, "templates");
   const tpl = await call("support", "template_save", { title: "Connection", body: "Reload the game." });
   let templates = await call("developer", "templates");
@@ -128,7 +132,7 @@ try {
   for (const table of ["templates", "notes", "roles", "audit"]) { await assert.rejects(() => as("player", () => sql(`select * from game_chat.${table}`)), /permission denied/); checks++; }
   await assert.rejects(() => as("player", () => sql("select game_chat.staff_player($1,$1)", [users.player])), /permission denied/); checks++;
   await db.exec(readFileSync("supabase/schema.sql", "utf8")); await migrate();
-  check(await login("alice") === null && await login("alina") === "alice" && (await call("developer", "player_lookup", { playerId: me.alice.playerId })).inventory.coins === 113, "repeat installs preserve renamed login and inventory");
+  check(await login("alice") === null && await login("alina") === "alice" && (await call("developer", "player_lookup", { playerId: me.alice.playerId })).inventory.coins === 111, "repeat installs preserve renamed login and inventory");
   // Lost privileged responses must not replay after demotion.
   await sql("update game_chat.roles set roles='{}',revision=revision+1 where user_id=$1", [users.developer]);
   await assert.rejects(() => call("developer", "resources", args, request), /chat_forbidden/); checks++; // same UUID after demotion

@@ -60,9 +60,9 @@ try {
     if (n !== "guest")
       await sql("select public.claim_nickname($1,$2,$3)", [id, n, n]);
   }
-  await as("alice", () =>
-    sql(`select public.sync_player('{"xp":160,"inv":{"coins":31}}')`),
-  );
+  // Seed existing server progress: v0.15+ sync_player cannot grant XP or resources.
+  await sql("update public.player_progress set hero_xp=160,hero_level=2 where user_id=$1", [users.alice]);
+  await sql("insert into public.player_inventory(user_id,item_id,quantity) values($1,'coins',31) on conflict(user_id,item_id) do update set quantity=excluded.quantity", [users.alice]);
   await db.exec(migration);
   await db.exec(migration);
   for (const [n, role] of Object.entries({

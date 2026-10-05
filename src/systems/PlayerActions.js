@@ -52,15 +52,18 @@ export class PlayerActions {
 
   /**
    * v0.15.0: подтвердить на сервере действие, которое игра уже показала локально. Без сервера ничего не делает.
-   * Операции выполняются по очереди; сетевой сбой — до 5 повторов с тем же id (сервер не применит дважды).
+   * Операции выполняются по очереди; сетевой сбой — повторы (до минуты) с тем же id (сервер не применит дважды).
    * Возвращает ответ сервера. Если сервер отказал, его состояние уже заменило локальное — интерфейс обновляется.
    */
   mirror(action) {
-    if (!this.getSession()) return Promise.resolve(null);
+    const ses0 = this.getSession();
+    if (!ses0) return Promise.resolve(null);
+    const uid = ses0.userId;   // действие принадлежит этому игроку: после выхода или смены аккаунта оно не отправляется
     const act = { ...action, id: action.id || newId() };
     const job = async () => {
       let r = null;
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 20; i++) {
+        if (this.getSession()?.userId !== uid) return { ok: false, reason: 'session' };
         while (this.pending) await this.pending.catch(() => {});
         r = await this.run(act);
         if (r.reason === 'busy') { await sleep(30); continue; }

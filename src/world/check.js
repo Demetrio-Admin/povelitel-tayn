@@ -2,6 +2,7 @@
 // Используется редактором карты (кнопка «Проверить проходимость») и тестами.
 import { WORLD } from '../config/world.layout.js';
 import { CITY_START, EAST_X, CITY_GATE_IDS, CITY_BEHIND_GATES } from '../config/world.city.js';
+import { regionStart } from '../config/world.expeditions.js';
 import { buildWalkGrid, floodFrom, reachableNear } from './walk.js';
 import { collectSolids } from './solids.js';
 
@@ -18,9 +19,10 @@ export function checkWalkability({ colliders, props, interactives, enemies, terr
 
   const problems = [];
   const open = buildWalkGrid({ ...dims, solids: solidsFor(GATE_IDS) });
-  const seenO = floodFrom(open, start.x, start.y);
-  const seenE = floodFrom(open, CITY_START.x, CITY_START.y);   // v0.20.0: город — отдельный участок, переход по указателю
-  for (const o of all) if (o.id !== 'flame_c' && !near(open, o.x >= EAST_X ? seenE : seenO, o.id)) problems.push({ id: o.id, text: `«${o.id}» недостижим даже с открытыми проходами` });
+  // v0.20.0: город — отдельный участок, переход по указателю; v0.24.0: участки вылазок — тоже
+  const floods = new Map();
+  const seenFor = (o) => { const p = regionStart(o, start, CITY_START, EAST_X); if (!floods.has(p)) floods.set(p, floodFrom(open, p.x, p.y)); return floods.get(p); };
+  for (const o of all) if (o.id !== 'flame_c' && !near(open, seenFor(o), o.id)) problems.push({ id: o.id, text: `«${o.id}» недостижим даже с открытыми проходами` });
 
   const closed = buildWalkGrid({ ...dims, solids: solidsFor([]) });
   const seenC = floodFrom(closed, start.x, start.y);

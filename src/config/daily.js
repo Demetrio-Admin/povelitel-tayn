@@ -41,6 +41,11 @@ export const DAILY_POOL = {
     goal: { type: 'wins', spawns: ['lab_construct'], count: 1 }, requires: 'ch2_lab_open', reward: { heroXP: 60, coins: 40, items: { ice_crystal: 2 } } },
   guardian_hunt: { giver: 'Стража квартала', title: 'Ледяной страж', text: 'В глубине Замёрзшего квартала снова стоит Ледяной страж. Пройдите мимо него — через него.',
     goal: { type: 'wins', spawns: ['fq_guardian'], count: 1 }, reward: { heroXP: 60, coins: 40, items: { ice_crystal: 1 } } },
+  // v0.24.0: охота в вылазках (после главы II)
+  hunt_wolves: { giver: 'Охотники у северной дороги', title: 'Волчицы метели', text: 'Морозные волчицы подходят к северной дороге всё ближе. Отгоните троих.',
+    goal: { type: 'wins', spawns: ['fw_wolf_1', 'fw_wolf_2', 'fw_wolf_3', 'fw_wolf_4'], count: 3 }, requires: 'chapter_2_complete', reward: { heroXP: 60, coins: 40, items: { ice_crystal: 1 } } },
+  hunt_wisps: { giver: 'Сторож кладбища', title: 'Огоньки на погосте', text: 'По ночам над могилами снова бродят огоньки. Сторож просит развеять двоих.',
+    goal: { type: 'wins', spawns: ['gy_wisp_1', 'gy_wisp_2'], count: 2 }, requires: 'chapter_2_complete', reward: { heroXP: 55, coins: 35, items: { rune_dust: 2 } } },
 };
 /** Порядок списка для выбора дня (не менять местами: от него зависит, какие поручения выпадут в какой день). */
 export const DAILY_ORDER = Object.keys(DAILY_POOL);

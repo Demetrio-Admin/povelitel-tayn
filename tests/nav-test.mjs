@@ -1,5 +1,6 @@
 // Маршруты tap-to-move: обход препятствий, закрытые цели, узкие проходы, реальный мир. node tests/nav-test.mjs
 import { CITY_START, EAST_X } from '../src/config/world.city.js';
+import { regionStart } from '../src/config/world.expeditions.js';
 import { buildNav, findPath, lineClear, NAV } from '../src/world/nav.js';
 import { WORLD, INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
 import { buildTerrain } from '../src/world/terrain.js';
@@ -91,7 +92,7 @@ console.log('\nМаршруты: реальный мир (первая глав�
   let worst = 0, bad = [], unreachable = [];
   for (const o of [...INTERACTIVES, ...ENEMY_SPAWNS]) {
     if (o.id === 'flame_c') continue;
-    const from = o.x >= EAST_X ? CITY_START : start;   // v0.20.0: город — отдельный участок (переход по указателю)
+    const from = regionStart(o, start, CITY_START, EAST_X);   // v0.20.0: город, v0.24.0: вылазки — отдельные участки (переход по указателю)
     const t = performance.now();
     const r = findPath(gOpen, from, { x: o.x, y: o.y });
     worst = Math.max(worst, performance.now() - t);

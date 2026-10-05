@@ -751,7 +751,7 @@ export class ExplorationScene extends Phaser.Scene {
     services.audio.play('combat_start');
     services.audio.vibrate(60);
     // v0.12.0: сервер должен узнать о бое до его начала (восстановление HP и маны встаёт); идёт параллельно затемнению
-    const started = services.actions ? services.actions.combatStart() : Promise.resolve({ ok: true });
+    const started = services.actions ? services.actions.combatStart(trigger.id, trigger.cfg.enemy) : Promise.resolve({ ok: true });
     cam.fadeOut(450, 0, 0, 0);
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, async () => {
       const r = await started;

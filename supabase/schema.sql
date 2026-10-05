@@ -69,6 +69,9 @@ alter table public.player_progress add column if not exists mana double precisio
 -- combat_since — начало боя, о завершении которого сервер ещё не знает (пока бой идёт, восстановления нет).
 alter table public.player_progress add column if not exists vitals_at timestamptz;
 alter table public.player_progress add column if not exists combat_since timestamptz;
+-- v0.14.0: что сервер запомнил о герое в начале боя (уровень, дары, ветки, зелья, HP, мана, место боя). По этому состоянию Edge Function combat
+-- проигрывает запись боя и решает исход. Очищается вместе с combat_since.
+alter table public.player_progress add column if not exists combat_ctx jsonb;
 alter table public.player_progress
   alter column pos_x type double precision, alter column pos_y type double precision,
   alter column safe_x type double precision, alter column safe_y type double precision, alter column hp type double precision;
@@ -181,6 +184,7 @@ begin
       h := greatest(h, fl);                            -- о конце боя сервер так и не узнал: это отступление
       from_t := greatest(from_t, stale_at);
       pr.combat_since := null;
+      pr.combat_ctx := null;
     end if;
   end if;
   el := greatest(0, extract(epoch from (t0 - from_t))::numeric);
@@ -217,6 +221,7 @@ begin
     'hp', pr.hp, 'mana', pr.mana, 'play', pr.play_ms, 'combats', pr.combats, 'tutorial', pr.tutorial,
     'vitalsAt', (extract(epoch from pr.vitals_at) * 1000)::bigint,
     'combatSince', case when pr.combat_since is null then null else (extract(epoch from pr.combat_since) * 1000)::bigint end,
+    'combatCtx', pr.combat_ctx,
     'meta', jsonb_build_object('playerId', to_jsonb(pf)->>'player_id', 'hero', pf.hero_id, 'nickname', pf.nickname, 'registered', pf.nickname is not null,
                                'rev', pr.rev, 'createdAt', pf.created_at, 'registeredAt', pf.registered_at, 'lastSeenAt', pf.last_seen_at)
   );
@@ -303,7 +308,7 @@ begin
   insert into player_progress (user_id) values (uid)
     on conflict (user_id) do update set rev = player_progress.rev + 1, hero_level = 1, hero_xp = 0,
       school_xp = '{"telekinesis":0,"fire":0,"seal":0}', research = null, pos_x = null, pos_y = null, safe_x = null, safe_y = null,
-      hp = null, mana = null, vitals_at = date_trunc('milliseconds', now()), combat_since = null, play_ms = 0, combats = '[]', tutorial = '[]', updated_at = now();
+      hp = null, mana = null, vitals_at = date_trunc('milliseconds', now()), combat_since = null, combat_ctx = null, play_ms = 0, combats = '[]', tutorial = '[]', updated_at = now();
   return _snapshot(uid);
 end $$;
 
@@ -454,7 +459,7 @@ begin
 
   update player_progress set hero_level = pr.hero_level, hero_xp = pr.hero_xp, school_xp = pr.school_xp, research = pr.research,
     pos_x = pr.pos_x, pos_y = pr.pos_y, safe_x = pr.safe_x, safe_y = pr.safe_y, hp = pr.hp, mana = pr.mana,
-    vitals_at = pr.vitals_at, combat_since = pr.combat_since, play_ms = pr.play_ms,
+    vitals_at = pr.vitals_at, combat_since = pr.combat_since, combat_ctx = pr.combat_ctx, play_ms = pr.play_ms,
     combats = pr.combats, tutorial = pr.tutorial, recent_syncs = pr.recent_syncs, rev = pr.rev + 1, updated_at = now()
     where user_id = uid;
   update profiles set last_seen_at = now() where id = uid;
@@ -647,14 +652,31 @@ begin
       end if;
     end if;
   elsif op = 'combat_start' then
-    -- с этого момента восстановление стоит, а лечение и зелья из сумки закрыты; повтор не сдвигает начало
-    if pr.combat_since is null then pr.combat_since := pr.vitals_at; end if;
-    res := jsonb_build_object('ok', true);
+    -- с этого момента восстановление стоит, а лечение и зелья из сумки закрыты; повтор не сдвигает начало.
+    -- v0.14.0: сервер запоминает состояние героя — по нему Edge Function combat потом проигрывает запись боя.
+    -- Клиент называет только место боя (spawn) и врага; допустимость пары проверяет проигрыш (cloud/combatVerify.js).
+    if not coalesce(_valid_id(action ->> 'spawn'), false) or not coalesce(_valid_id(action ->> 'enemy'), false) then
+      res := jsonb_build_object('ok', false, 'reason', 'bad_spawn');
+    else
+      if pr.combat_since is null then pr.combat_since := pr.vitals_at; end if;
+      cur := _clamp(coalesce(pr.hp::numeric, mx_hp), 0, mx_hp);
+      price := _clamp(coalesce(pr.mana::numeric, mx_mana), 0, mx_mana);
+      pr.combat_ctx := jsonb_build_object(
+        'spawn', action ->> 'spawn', 'enemy', action ->> 'enemy', 'level', pr.hero_level,
+        'abilities', (select jsonb_object_agg(a, jsonb_build_object('level', coalesce(pa.level, 0), 'unlocked', coalesce(pa.unlocked, false)))
+                        from unnest(array['telekinesis', 'fire', 'seal']) a left join player_abilities pa on pa.user_id = uid and pa.ability_id = a),
+        'hp', cur, 'mana', price,
+        'potions', (select jsonb_object_agg(p, _inv(uid, p)) from unnest(array['elixir_life', 'elixir_mana', 'resin_flask']) p),
+        'build', (select data from player_world where user_id = uid and kind = 'object' and key = 'player_build'));
+      res := jsonb_build_object('ok', true, 'hp', cur, 'mana', price);
+    end if;
   elsif op = 'combat_end' then
-    -- итог боя: победа — полное HP, поражение — 20% максимума, отступление (перезагрузка посреди боя) — не ниже этой доли.
-    -- Остаток маны сообщает клиент (до серверного боя, этап 3); в пределах максимума.
+    -- итог боя без проверки записи — только отступление (перезагрузка посреди боя): HP не ниже 20% максимума, мана как была.
+    -- Победа и поражение с v0.14.0 принимаются только через combat_apply (Edge Function combat), пока сервер запомнил состояние боя.
+    -- Без запомненного состояния (бой начат до обновления) работает прежнее правило: остаток маны сообщает клиент.
     if pr.combat_since is null then res := jsonb_build_object('ok', false, 'reason', 'no_combat');
     elsif coalesce(action ->> 'outcome', '') not in ('victory', 'defeat', 'retreat') then res := jsonb_build_object('ok', false, 'reason', 'bad_outcome');
+    elsif action ->> 'outcome' <> 'retreat' and pr.combat_ctx is not null then res := jsonb_build_object('ok', false, 'reason', 'verify');
     else
       cur := _clamp(coalesce(pr.hp::numeric, mx_hp), 0, mx_hp);
       price := greatest(1, ceil(mx_hp * (rules -> 'vitals' ->> 'defeatHpFraction')::numeric - 1e-9));
@@ -664,6 +686,7 @@ begin
       end if;
       if action ->> 'outcome' <> 'retreat' and _num(action -> 'mana') is not null then pr.mana := _clamp(_num(action -> 'mana'), 0, mx_mana); end if;
       pr.combat_since := null;
+      pr.combat_ctx := null;
       res := jsonb_build_object('ok', true, 'outcome', action ->> 'outcome');
     end if;
   elsif op = 'starter_kit' then
@@ -731,8 +754,84 @@ begin
       order by i desc limit 20) z);
   end if;
   update player_progress set hp = pr.hp, mana = pr.mana, hero_xp = pr.hero_xp, hero_level = pr.hero_level, school_xp = pr.school_xp,
-    vitals_at = pr.vitals_at, combat_since = pr.combat_since,
+    vitals_at = pr.vitals_at, combat_since = pr.combat_since, combat_ctx = pr.combat_ctx,
     recent_syncs = pr.recent_syncs, recent_actions = pr.recent_actions, rev = pr.rev + 1, updated_at = now() where user_id = uid;
+  return _snapshot(uid) || jsonb_build_object('action', res);
+end $$;
+
+-- ---------------------------------------------------------------- v0.14.0: бой проверяет сервер
+-- Эти две функции вызывает только Edge Function combat (ключ service_role); из браузера они недоступны.
+-- combat_load: состояние игрока (с combatSince и combatCtx) — Edge Function проигрывает по нему запись боя.
+create or replace function public.combat_load(uid uuid) returns jsonb
+language sql security definer set search_path = public as $$ select _snapshot(uid) $$;
+
+-- combat_apply: применить итог боя, который Edge Function получила, проиграв запись (зеркало playerModel.combatApply).
+-- verdict: { outcome, since, spawn, mana, potions, reward, coinsLost, path, events, rep, entry }. Принимается один раз:
+-- бой должен идти (combat_since и combat_ctx), совпадать по началу и месту; потом оба поля очищаются.
+create or replace function public.combat_apply(uid uuid, verdict jsonb) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  pr player_progress%rowtype; ctx jsonb; res jsonb; outc text; mx_hp numeric; mx_mana numeric; cur numeric; fl numeric;
+  k text; v jsonb; used numeric; have numeric; lost numeric;
+begin
+  select * into pr from player_progress where user_id = uid for update;
+  if not found then raise exception 'no_player' using errcode = 'P0002'; end if;
+  pr := _advance(pr);
+  ctx := pr.combat_ctx;
+  outc := case when jsonb_typeof(verdict) = 'object' then verdict ->> 'outcome' end;
+  select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels where level = pr.hero_level;
+  if mx_hp is null then select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels order by level desc limit 1; end if;
+  if pr.combat_since is null or ctx is null then res := jsonb_build_object('ok', false, 'reason', 'no_combat');
+  elsif outc is null or outc not in ('victory', 'defeat', 'retreat') then res := jsonb_build_object('ok', false, 'reason', 'bad_verdict');
+  elsif _num(verdict -> 'since') is distinct from (extract(epoch from pr.combat_since) * 1000)::bigint or verdict ->> 'spawn' is distinct from ctx ->> 'spawn' then
+    res := jsonb_build_object('ok', false, 'reason', 'stale');
+  else
+    cur := _clamp(coalesce(pr.hp::numeric, mx_hp), 0, mx_hp);
+    if outc <> 'retreat' then
+      -- зелья: в сумке остаётся не больше, чем было в начале боя минус выпитое
+      for k in select jsonb_object_keys(coalesce(ctx -> 'potions', '{}'::jsonb)) loop
+        used := trunc(coalesce(_num(verdict -> 'potions' -> k), 0));
+        if used > 0 then
+          have := _inv(uid, k);
+          perform _inv_add(uid, k, least(have, greatest(0, coalesce(_num(ctx -> 'potions' -> k), 0) - used)) - have);
+        end if;
+      end loop;
+      pr := _grant(uid, pr, coalesce(verdict -> 'reward', '{}'::jsonb));
+      lost := trunc(coalesce(_num(verdict -> 'coinsLost'), 0));
+      if lost > 0 then perform _inv_add(uid, 'coins', -lost); end if;
+      if outc = 'victory' then
+        insert into player_world (user_id, kind, key, data) values (uid, 'enemy', ctx ->> 'spawn', '{}'::jsonb) on conflict (user_id, kind, key) do nothing;
+        if _valid_id(verdict ->> 'path') then
+          insert into player_world (user_id, kind, key, data) values (uid, 'path', verdict ->> 'path', '{}'::jsonb) on conflict (user_id, kind, key) do nothing;
+        end if;
+        if jsonb_typeof(verdict -> 'events') = 'array' then
+          for k in select jsonb_array_elements_text(verdict -> 'events') loop
+            if _valid_id(k) then perform _add_event(uid, k); end if;
+          end loop;
+        end if;
+        if jsonb_typeof(verdict -> 'rep') = 'object' and _valid_id(verdict -> 'rep' ->> 'key') then
+          insert into player_world (user_id, kind, key, data)
+            values (uid, 'object', verdict -> 'rep' ->> 'key', jsonb_build_object('wins', trunc(coalesce(_num(verdict -> 'rep' -> 'wins'), 0)), 'at', coalesce(_num(verdict -> 'rep' -> 'at'), 0)))
+            on conflict (user_id, kind, key) do update set data = player_world.data || excluded.data;
+        end if;
+      end if;
+      if jsonb_typeof(verdict -> 'entry') = 'object' then
+        pr.combats := (select coalesce(jsonb_agg(e order by i), '[]'::jsonb) from (
+          select e, i from jsonb_array_elements(pr.combats || jsonb_build_array(verdict -> 'entry')) with ordinality as t(e, i) order by i desc limit 50) z);
+      end if;
+    end if;
+    select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels where level = pr.hero_level;   -- после награды уровень мог вырасти
+    if mx_hp is null then select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels order by level desc limit 1; end if;
+    fl := greatest(1, ceil(mx_hp * (_game_rules() -> 'vitals' ->> 'defeatHpFraction')::numeric - 1e-9));
+    pr.hp := case outc when 'victory' then mx_hp when 'defeat' then fl else greatest(cur, fl) end;
+    if outc <> 'retreat' and _num(verdict -> 'mana') is not null then pr.mana := _clamp(_num(verdict -> 'mana'), 0, mx_mana); end if;
+    pr.combat_since := null;
+    pr.combat_ctx := null;
+    res := jsonb_build_object('ok', true, 'outcome', outc);
+  end if;
+  update player_progress set hp = pr.hp, mana = pr.mana, hero_xp = pr.hero_xp, hero_level = pr.hero_level, school_xp = pr.school_xp,
+    vitals_at = pr.vitals_at, combat_since = pr.combat_since, combat_ctx = pr.combat_ctx, combats = pr.combats,
+    rev = pr.rev + 1, updated_at = now() where user_id = uid;
   return _snapshot(uid) || jsonb_build_object('action', res);
 end $$;
 
@@ -747,6 +846,8 @@ revoke all on function public.create_player(text), public.get_player(), public.r
 grant execute on function public.create_player(text), public.get_player(), public.reset_player(text), public.sync_player(jsonb), public.player_action(jsonb) to authenticated;
 revoke all on function public.nickname_available(text) from public;
 grant execute on function public.nickname_available(text) to anon, authenticated;
+revoke all on function public.combat_load(uuid), public.combat_apply(uuid, jsonb) from public, anon, authenticated;
+grant execute on function public.combat_load(uuid), public.combat_apply(uuid, jsonb) to service_role;
 revoke all on function public.claim_nickname(uuid, text, text), public.release_nickname(uuid) from public, anon, authenticated;
 grant execute on function public.claim_nickname(uuid, text, text), public.release_nickname(uuid) to service_role;
 -- _num/_clamp/_valid_id нужны вызывающим функциям, а они security definer (права владельца), поэтому отдельный доступ клиенту не нужен

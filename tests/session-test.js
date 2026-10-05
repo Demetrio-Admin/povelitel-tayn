@@ -15,6 +15,8 @@ import { heroById } from '../src/config/heroes.js';
 import { PlayerActions } from '../src/systems/PlayerActions.js';
 import { advanceWorld, serverActionBusy } from '../src/systems/WorldClock.js';
 import * as vitalsMod from '../src/state/vitals.js';
+import { playBot } from './helpers/combat-bot.mjs';
+import { STEP } from '../src/systems/combatReplay.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BACKEND = process.env.BACKEND || 'model';
@@ -542,30 +544,27 @@ console.log('\nv0.12.0. HP и мана на сервере: восстановл
   // 4) бой: восстановление стоит, лечение и зелья закрыты, потраченная мана не считается
   st.data.player = { ...FOREST }; st.addItem('coins', 50); st.addItem('elixir_life', 2); st.save(); await d.session.flush();
   await setVitals(d, { hp: 50, mana: 40 });
-  const cs = await acts.combatStart();
-  ok(cs.ok && st.data.combatSince != null && srv.rawVitals(uid).combat, 'combat_start: сервер знает о бое');
+  st.unlockAbility('telekinesis', 1); st.save(); await d.session.flush();
+  const cs = await acts.combatStart('scavenger_01', 'forest_scavenger');
+  ok(cs.ok && st.data.combatSince != null && st.data.combatCtx?.spawn === 'scavenger_01' && srv.rawVitals(uid).combat, 'combat_start: сервер знает о бое и запомнил состояние героя');
+  ok(near(cs.hp, 50) && near(cs.mana, 40) && near(st.data.combatCtx.hp, 50) && near(st.data.combatCtx.mana, 40), 'запомнены HP и мана на старт боя (они же — в ответе)');
   srv.timeTravel(uid, 120);
   await d.session.flush({ force: true });
   ok(near(st.data.hp, 50) && near(st.data.mana, 40), 'во время боя время не засчитывается (две минуты — ни HP, ни маны)');
   const h = await acts.heal(), dr = await acts.drink('elixir_life');
   ok(!h.ok && h.reason === 'combat' && !dr.ok && dr.reason === 'combat' && st.item('elixir_life') === 2 && st.item('coins') >= 50, 'в бою лечение у Мирры и зелья из сумки отказывают, ничего не списано');
   vitalsMod.spendMana(st, 5); await d.session.flush();
-  ok(near(srv.rawVitals(uid).mana, 40), 'мана, потраченная в бою на устройстве, сервер не меняет (итог сообщает конец боя)');
-  // 5) конец боя: победа — полное HP, мана — остаток; повтор не работает
-  const win = await acts.combatEnd('victory', 33.5);
-  ok(win.ok && st.data.hp === 120 && near(st.data.mana, 33.5) && st.data.combatSince == null && !srv.rawVitals(uid).combat, 'победа: HP полное, мана — остаток, восстановление снова идёт');
-  const dup = await acts.combatEnd('victory', 100);
-  ok(!dup.ok && dup.reason === 'no_combat' && near(st.data.mana, 33.5), 'повторный конец боя ничего не даёт (боя нет)');
-  await acts.combatStart(); const lose = await acts.combatEnd('defeat', 7);
-  ok(lose.ok && st.data.hp === 24 && near(st.data.mana, 7), 'поражение: 20% максимума HP (24 из 120), мана — остаток');
-  await acts.combatStart();
+  ok(near(srv.rawVitals(uid).mana, 40), 'мана, потраченная в бою на устройстве, сервер не меняет');
+  // 5) конец боя. С v0.14.0 победу и поражение не принимают «на слово»: сервер проигрывает запись действий
   const bad = await acts.run({ op: 'combat_end', outcome: 'cheat', mana: 100 });
   ok(!bad.ok && bad.reason === 'bad_outcome' && srv.rawVitals(uid).combat, 'неизвестный исход боя отклонён');
+  for (const o of ['victory', 'defeat']) { const x = await acts.combatEnd(o, 100); ok(!x.ok && x.reason === 'verify' && srv.rawVitals(uid).combat, `combat_end ${o} без проверки записи отклонён (verify)`); }
   const ret = await acts.combatEnd('retreat');
-  ok(ret.ok && st.data.hp >= 24 && st.data.hp < 40, 'отступление: HP не ниже доли поражения, лишнего не даёт');
+  ok(ret.ok && near(st.data.hp, 50) && st.data.combatSince == null && st.data.combatCtx == null && !srv.rawVitals(uid).combat, 'отступление: HP не падает (50 остаётся 50; ниже 24 не опустится), бой закрыт, запомненное состояние очищено');
+  ok((await acts.combatEnd('retreat')).reason === 'no_combat', 'повторный конец боя ничего не даёт (боя нет)');
   // 6) бой, о конце которого сервер не узнал: через 15 минут — отступление, дальше время идёт
   await setVitals(d, { hp: 5, mana: 10 });
-  await acts.combatStart();
+  await acts.combatStart('rootling_05', 'rootling');
   srv.timeTravel(uid, 14 * 60);
   await d.session.flush({ force: true });
   ok(near(st.data.hp, 5, 2) && st.data.combatSince != null, '14 минут боя без вестей: сервер ещё ждёт итога');
@@ -595,9 +594,43 @@ console.log('\nv0.12.0. HP и мана на сервере: восстановл
   ok(st.data.heroLevel >= 2 && near(st.data.hp, 50) && near(st.data.mana, 50), 'повышение уровня не восстанавливает HP и ману втихую');
   // 10) нет связи: бой не начинается
   srv.offline = true;
-  const off = await acts.combatStart();
+  const off = await acts.combatStart('rootling_05', 'rootling');
   srv.offline = false; await d.session.retryNow();
   ok(!off.ok && off.reason === 'network' && st.data.combatSince == null, 'без связи бой не начинается (сервер не узнал о нём)');
+
+  // 11) v0.14.0: бой проверяет сервер
+  // 5б) настоящий бой: бот играет, действия записываются, сервер проигрывает запись
+  await setVitals(d, { hp: 120, mana: 100 });
+  await acts.combatStart('scavenger_01', 'forest_scavenger');
+  const ctx1 = st.data.combatCtx;
+  const play = playBot(ctx1, { seed: 3, potions: false });
+  ok(play.cm.result === 'victory', `бот победил Падальщика (${play.log.ticks} шагов)`);
+  const forged = await acts.combatSubmit({ v: 1, ticks: 99999999, ev: [], hold: [] });
+  ok(!forged.ok && forged.reason === 'bad_log' && st.data.combatSince != null, 'испорченная запись: отказ bad_log, бой остаётся открытым');
+  const fast = await acts.combatSubmit(play.log);
+  ok(!fast.ok && fast.reason === 'too_fast' && st.data.combatSince != null, 'запись длиннее, чем прошло времени с начала боя: отказ too_fast');
+  srv.timeTravel(uid, Math.ceil(play.log.ticks * STEP) + 2);
+  const coins0 = st.item('coins'), lifes0 = st.item('elixir_life');
+  const win = await acts.combatSubmit(play.log);
+  ok(win.ok && win.verdict.outcome === 'victory' && st.data.combatSince == null && st.data.combatCtx == null && !srv.rawVitals(uid).combat, 'победа: сервер проиграл запись и засчитал; бой закрыт');
+  ok(st.data.hp === vitalsMod.maxHp(st) && near(st.data.mana, play.cm.hero.mana, 1e-6), 'победа: HP полное (по новому уровню), мана — остаток боя, как у устройства');
+  ok(st.isEnemyDefeated('scavenger_01') && st.item('coins') === coins0 + 15 && st.data.heroXP >= 70 && win.outcome.items.coins === 15 && win.outcome.heroXP === 70, 'победа: враг побеждён, награда выдана сервером (+70 опыта, +15 монет)');
+  ok(st.item('elixir_life') === lifes0 && st.item('elixir_mana') === 0 + st.item('elixir_mana'), 'зелья не тронуты, если не пили');
+  ok(st.data.stats.combats.at(-1)?.spawnId === 'scavenger_01' && st.data.stats.combats.at(-1).result === 'victory', 'история боёв дополнена сервером');
+  ok((await acts.combatSubmit(play.log)).reason === 'no_combat', 'та же запись второй раз: боя нет — ничего не выдано');
+  // 5в) поражение: бездействие. Монеты −5, HP — доля максимума
+  await setVitals(d, { hp: 120, mana: 100 });
+  await acts.combatStart('rootling_04', 'rootling');
+  const idle = playBot(st.data.combatCtx, { policy: 'idle', maxTicks: 60 * 100, potions: false });
+  srv.timeTravel(uid, Math.ceil(idle.log.ticks * STEP) + 2);
+  const coins1 = st.item('coins');
+  const lose = await acts.combatSubmit(idle.log);
+  ok(lose.ok && lose.verdict.outcome === 'defeat' && st.data.hp === Math.ceil(vitalsMod.maxHp(st) * 0.2) && st.item('coins') === coins1 - 5 && !st.isEnemyDefeated('rootling_04'), 'поражение: 20% максимума HP, −5 монет, враг не побеждён');
+  // 5г) побеждённый враг, который не возрождается, повторно не засчитывается
+  await acts.combatStart('scavenger_01', 'forest_scavenger');
+  const again = await acts.combatSubmit({ v: 1, ticks: 10, ev: [], hold: [] });
+  ok(!again.ok && again.reason === 'down', 'враг уже побеждён: бой на этом месте не засчитывается (down)');
+  await acts.combatEnd('retreat');
 }
 
 console.log('\nv0.13.0. Действия в мире — на сервере: сбор, находки, запасы, магия');
@@ -668,7 +701,7 @@ console.log('\nv0.13.0. Действия в мире — на сервере: с
   // 9) выдуманные и служебные идентификаторы, бой, повтор запроса
   ok((await W('no_such_object')).reason === 'unknown' && (await W('__proto__')).reason === 'unknown' && (await W('constructor')).reason === 'unknown' && (await W(null)).reason === 'unknown', 'выдуманные и служебные идентификаторы: unknown');
   const acts = new PlayerActions({ state: st, getSession: () => d.session });
-  await acts.combatStart();
+  await acts.combatStart('rootling_05', 'rootling');
   ok((await W('mush_t1')).reason === 'combat', 'в бою действия в мире закрыты');
   await acts.combatEnd('retreat');
   await setVitals(d, { hp: null, mana: 50 });

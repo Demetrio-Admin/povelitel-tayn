@@ -8,26 +8,8 @@ import * as vitals from '../state/vitals.js';
 
 /** Ключ состояния попытки боя в state.data.worldObjects (сохраняется на сервере, «последний записал»). */
 export const encKey = (spawnId) => `enc:${spawnId}`;
-/**
- * v0.10.0: живое состояние возобновляемого места (cfg.repeatSec): { wins — победных циклов, at — время последней победы }.
- * История первой победы (state.enemies) не очищается; враг снова на месте, когда прошло repeatSec с последней победы.
- * Возврат через несколько часов даёт одного врага (и одну выдачу запаса), а не несколько циклов.
- */
-export const repKey = (spawnId) => `rep:${spawnId}`;
-export function repState(state, spawnId) { return state.getObject(repKey(spawnId)) || null; }
-/** Записать победу на возобновляемом месте (вызывает CombatScene вместе с наградой, до сохранения). */
-export function recordRepeatWin(state, spawnId) {
-  const r = repState(state, spawnId);
-  state.setObject(repKey(spawnId), { wins: (r?.wins || 0) + 1, at: state.now() });
-}
-/** Побеждён ли враг сейчас (с учётом возрождения возобновляемых мест). */
-export function enemyDownNow(state, cfg) {
-  if (!state.isEnemyDefeated(cfg.id)) return false;
-  if (!cfg.repeatSec) return true;
-  const r = repState(state, cfg.id);
-  if (!r || !Number.isFinite(r.at)) return false;  // старая победа без отметки времени — место уже восстановилось
-  return state.now() - r.at < cfg.repeatSec * 1000;
-}
+export { repKey, repState, recordRepeatWin, enemyDownNow } from '../state/enemyRep.js';
+import { enemyDownNow } from '../state/enemyRep.js';
 
 /**
  * EnemyTrigger — враг на карте exploration. При входе героини в radius сцена запускает CombatScene.

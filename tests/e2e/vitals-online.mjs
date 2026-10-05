@@ -5,6 +5,7 @@
 // Запуск: UI_BASE_URL=http://… [BACKEND=pg] node tests/e2e/vitals-online.mjs
 import { chromium } from 'playwright';
 import { startFakeHttp } from '../helpers/fake-http.mjs';
+import { playRealCombat } from '../helpers/e2e-combat.mjs';
 
 const BASE = process.env.UI_BASE_URL || 'http://127.0.0.1:5173/';
 const { srv, close: closeServer } = await startFakeHttp({ backend: process.env.BACKEND || 'model', port: +(process.env.SERVER_PORT || 8174), delayMs: +(process.env.SERVER_DELAY_MS || 120) });
@@ -29,7 +30,7 @@ await p.waitForFunction(() => !!window.__witch?.session, null, { timeout: +(proc
 await ev(async () => {
   const S = window.__witch; await S.session.playAsGuest('witch');
   const st = S.state; st.markEvent('prologue_seen'); st.markEvent('unlock_telekinesis_1'); st.unlockAbility('telekinesis', 1); st.markEvent('mirra_starter_kit');
-  st.addItem('elixir_life', 2); st.addItem('moon_herb', 0); st.save(); await S.session.flush();
+  st.addItem('elixir_life', 4); st.addItem('moon_herb', 0); st.save(); await S.session.flush();
 });
 const uid = await ev(() => window.__witch.session.userId);
 srv.setVitals(uid, { hp: 50, mana: 40 });
@@ -45,9 +46,12 @@ await toEnemy();
 await inCombat();
 ok(srv.rawVitals(uid).combat === true, 'сервер узнал о бое до его начала (combat_since)');
 ok(await ev(() => window.__witch.state.data.combatSince != null), 'клиент знает, что бой идёт');
+// v0.14.0: настоящий бой — игра пишет действия, сервер проигрывает запись и сам решает исход (подтасовать cm.* уже нельзя)
 srv.timeTravel(uid, 600);   // десять минут «боя» — на сервере время не засчитывается
-await ev(() => { const c = window.__game.scene.getScene('CombatScene'); c.cm.hero.mana = 77.5; c.cm.enemy.hp = 0; c.cm.checkResult(); c.processEvents(); });
-await p.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Победа!' || window.__game.scene.getScene('UIScene').dlgModal, null, { timeout: 30000 }).catch(() => {});
+const fight = await playRealCombat(p);   // бот пьёт настой при низком HP (HP в начале неполный — запуск занял время)
+ok(fight.result === 'victory' && fight.events > 0, `бой сыгран по-настоящему: победа на устройстве за ${(fight.ticks / 60).toFixed(1)} с, действий в записи: ${fight.events}`);
+await p.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Победа!' || window.__game.scene.getScene('UIScene').dlgModal, null, { timeout: 60000 }).catch(() => {});
+ok(srv.calls.some(c => c.path === '/functions/v1/combat'), 'запись боя ушла на проверку (Edge Function combat)');
 await sleep(1500);
 await ev(() => window.__game.scene.getScene('UIScene').pressModalButton(true));
 await p.waitForFunction(() => { const g = window.__game; return g.scene.isActive('ExplorationScene') && !g.scene.isActive('CombatScene') && !g.scene.isSleeping('ExplorationScene') && window.__witch.mode === 'exploration'; }, null, { timeout: 60000 });
@@ -55,14 +59,17 @@ await sleep(800);
 const after = await ev(() => { const s = window.__witch.state; return { hp: s.data.hp, max: s.heroStats().maxHp, mana: s.data.mana, cs: s.data.combatSince }; });
 const sv = srv.rawVitals(uid);
 ok(!sv.combat && sv.hp >= after.max - 0.01, `итог боя на сервере: бой закрыт, HP полное (${sv.hp})`);
-ok(sv.mana >= 77 && sv.mana < 95 && after.mana >= 77 && after.mana < 95, `остаток маны (77,5 + восстановление после боя) из боя на сервере и в игре (${after.mana.toFixed(1)})`);
+ok(sv.mana >= fight.mana - 0.01 && sv.mana < fight.mana + 12 && after.mana >= fight.mana - 0.01 && after.mana < fight.mana + 12, `остаток маны из боя (${fight.mana.toFixed(2)} на устройстве) на сервере совпал с повтором: ${sv.mana.toFixed(2)}, в игре ${after.mana.toFixed(2)}`);
+const won = await ev(() => ({ def: window.__witch.state.isEnemyDefeated('scavenger_01'), xp: window.__witch.state.data.heroXP, last: window.__witch.state.data.stats.combats.at(-1) }));
+ok(won.def && won.xp >= 70 && won.last?.result === 'victory' && won.last.spawnId === 'scavenger_01', 'награда и победа пришли от сервера: враг побеждён, +70 опыта, бой в истории');
 ok(after.cs == null && after.hp >= after.max - 0.01, 'в игре восстановление снова идёт, HP полное');
 
 console.log('\nСумка и сбор: зелье и мана через сервер');
 srv.setVitals(uid, { hp: 60, mana: 30 });
 await ev(() => window.__witch.session.flush({ force: true }));
+const life0 = await ev(() => window.__witch.state.item('elixir_life'));
 const d1 = await ev(async () => { const u = window.__game.scene.getScene('UIScene'); await u.drinkFromBag('elixir_life'); const s = window.__witch.state; return { hp: s.data.hp, life: s.item('elixir_life') }; });
-ok(near(d1.hp, 60 + 54, 4) && d1.life === 1, `настой жизни выпит на сервере: HP ${d1.hp.toFixed(1)}, остался 1`);
+ok(near(d1.hp, 60 + 54, 4) && d1.life === life0 - 1, `настой жизни выпит на сервере: HP ${d1.hp.toFixed(1)}, осталось ${d1.life} из ${life0}`);
 // v0.13.0: настоящий сбор в мире — ману списывает и траву выдаёт сервер (операция world), состояние узла пишет он же
 srv.setVitals(uid, { hp: null, mana: 50 });
 await ev(() => window.__witch.session.flush({ force: true }));

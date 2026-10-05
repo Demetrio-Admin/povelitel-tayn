@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { playRealCombat } from '../helpers/e2e-combat.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const out = process.env.UI_SHOTS_DIR || '/tmp/witch-rpg-mobile-ui';
 await fs.mkdir(out, { recursive: true });
@@ -176,12 +177,14 @@ try {
     // подсказка зелья при низком HP (бой на паузе, чтобы медленный эмулятор не закончил его сам)
     await ui(() => { window.__game.scene.getScene('CombatScene').cm.tick = () => {}; });
     await page.waitForFunction(() => !window.__game.scene.getScene('CombatScene').tut.active, null, { timeout: 120000 });
-    await ui(() => { const s = window.__witch; s.state.addItem('elixir_life', 1); const c = window.__game.scene.getScene('CombatScene'); c.cm.tick = () => {};   // бой на паузе для снимка
+    await ui(() => { const s = window.__witch; const c = window.__game.scene.getScene('CombatScene'); s.state.addItem('elixir_life', 1); c.sim.addItem('elixir_life', 1); const cx = s.state.data.combatCtx; if (cx) cx.potions.elixir_life = (cx.potions.elixir_life || 0) + 1; c.cm.tick = () => {};   // v0.14.0: сумка боя — копия на начало боя; бой на паузе для снимка
       c.cm.hero.hp = 40; c.cm.hitHero(4); c.processEvents(); c.refreshPotions(); c.hintQueue = c.hintQueue.filter(h => h.key === 'lowHp'); });
     await page.waitForFunction(() => window.__game.scene.getScene('CombatScene').coachKey === 'hint:lowHp', null, { timeout: 120000 });
     await shot('v09-combat-lowhp-hint');
     // победа (экран результата): здоровье полностью восстановлено, мана — остаток
-    await ui(() => { const c = window.__game.scene.getScene('CombatScene'); c.cm.enemy.hp = 0; c.cm.checkResult(); c.processEvents(); });
+    // v0.14.0: исход боя решает повтор записи, подделать победу нельзя — играем бой по-настоящему (бот), снимаем настоящий экран победы
+    await ui(() => { const c = window.__game.scene.getScene('CombatScene'); delete c.cm.tick; });
+    await playRealCombat(page);
     await page.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Победа!', null, { timeout: 120000 });
     await shot('v09-victory');
     await ui(() => window.__game.scene.getScene('UIScene').pressModalButton(true));
@@ -191,8 +194,8 @@ try {
     await ui(() => { const g = window.__game; const ex = g.scene.getScene('ExplorationScene'); const s = window.__witch; s.state.markEvent('lunar_quest_start');
       const t = ex.enemies.find(e => e.id === 'lunar_guard'); ex.player.setPosition(t.cfg.x, t.cfg.y + 150); window.__preFight = { x: t.cfg.x, y: t.cfg.y + 150 }; ex.startCombat(t); });
     await page.waitForFunction(() => { const g = window.__game, c = g.scene.getScene('CombatScene'); return g.scene.isActive('CombatScene') && c.spawnId === 'lunar_guard' && c.started && !c.ended; }, null, { timeout: 120000 });
-    await ui(() => { const c = window.__game.scene.getScene('CombatScene'); c.cm.hero.hp = 3; c.cm.hitHero(10); c.processEvents(); });
-    await page.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Поражение', null, { timeout: 120000 });
+    // настоящее поражение: игрок бездействует, страж побеждает (сервер проигрывает запись и подтверждает)
+    await page.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Поражение', null, { timeout: 300000 });
     await shot('v09-defeat');
     await ui(() => window.__game.scene.getScene('UIScene').pressModalButton(true));
     await page.waitForFunction(() => { const g = window.__game; return g.scene.isActive('ExplorationScene') && !g.scene.isActive('CombatScene') && !g.scene.isSleeping('ExplorationScene') && !g.scene.getScene('ExplorationScene').inTransition && window.__witch.mode === 'exploration'; }, null, { timeout: 60000 });
@@ -374,6 +377,7 @@ try {
     });
     await shot('combat');
     // Combat: HP from the battle, Menu in the Journal slot, settings reachable, no exit/reset.
+    await page.waitForFunction(()=>window.__game.scene.getScene('UIScene').hpText.text.startsWith('40 /'),null,{timeout:30000}).catch(()=>{});   // v0.14.0: панель обновляется раз в кадр (на медленном эмуляторе — не сразу)
     assert.equal(await ui(()=>window.__game.scene.getScene('UIScene').hpText.text.startsWith('40 /')), true);
     const cm = await ui(()=>{const u=window.__game.scene.getScene('UIScene');const r=u.menuBtn.hit.getBounds();return {x:r.centerX,y:r.centerY,j:u.journalBtn.c.visible};});
     assert.equal(cm.j, false);
@@ -389,8 +393,9 @@ try {
       const c=window.__game.scene.getScene('CombatScene'),u=window.__game.scene.getScene('UIScene');
       const a=u.buttons.telekinesis.bg.getBounds();return [...c.potionViews.values()].map(v=>{const b=v.hit.getBounds();return {w:b.width,h:b.height,clear:b.bottom<a.top};});
     });assert.ok(controls.every(b=>b.w>=96&&b.h>=96&&b.clear));
-    before=await page.evaluate(()=>window.__witch.state.item('elixir_life'));await tap(68,1028);
-    assert.equal(await page.evaluate(()=>window.__witch.state.item('elixir_life')),before-1);
+    // v0.14.0: в бою сумка — копия героя (sim)
+    before=await page.evaluate(()=>window.__game.scene.getScene('CombatScene').sim.item('elixir_life'));await tap(68,1028);
+    assert.equal(await page.evaluate(()=>window.__game.scene.getScene('CombatScene').sim.item('elixir_life')),before-1);
     // A field object tap selects that object in the combat model.
     const object=await page.evaluate(()=>{const c=window.__game.scene.getScene('CombatScene');const o=c.cm.fieldObjects.find(o=>o.id!==c.cm.selectedId);const v=c.fieldViews.get(o.id);return {id:o.id,x:v.img.x,y:v.img.y-v.img.displayHeight/2};});
     await tap(object.x,object.y);assert.equal(await page.evaluate(()=>window.__game.scene.getScene('CombatScene').cm.selectedId),object.id);

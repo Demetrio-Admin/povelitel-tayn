@@ -10,7 +10,8 @@ const ev = (f, a) => p.evaluate(f, a);
 await p.goto(new URL('?reset&skipmenu', BASE).href); await p.waitForFunction(() => window.__game?.scene.isActive('UIScene'));
 await p.waitForFunction(() => !!window.__game.scene.getScene('UIScene').dlg, null, { timeout: 120000 });
 await ev(() => window.__game.scene.getScene('UIScene').closeDialogue(true));
-await ev(() => { const s = window.__witch; s.abilities.unlock('telekinesis', 1); s.quests.complete('unlock_telekinesis_1'); s.state.markEvent('mirra_starter_kit'); s.state.save(); });
+await ev(() => { const s = window.__witch; s.abilities.unlock('telekinesis', 1); s.quests.complete('unlock_telekinesis_1'); s.state.markEvent('mirra_starter_kit'); s.state.data.hp = 60; s.state.data.mana = 30; s.state.save(); });
+// v0.14.0: бой идёт на копии героя; при перезагрузке остаются HP/мана на начало боя (60/30)
 const pre = await ev(() => { const ex = window.__game.scene.getScene('ExplorationScene'); const t = ex.enemies.find(e => e.id === 'scavenger_01'); ex.player.setPosition(t.cfg.x, t.cfg.y + 30); return { x: t.cfg.x, y: t.cfg.y + 30 }; });
 await p.waitForFunction(() => { const g = window.__game, c = g.scene.getScene('CombatScene'); return g.scene.isActive('CombatScene') && c.started; }, null, { timeout: 120000 });
 const enc = await ev(() => window.__witch.state.getObject('enc:scavenger_01'));
@@ -24,6 +25,6 @@ const r = await ev(() => { const ex = window.__game.scene.getScene('ExplorationS
 await p.waitForTimeout(8000);
 const still = await ev(() => window.__game.scene.isActive('CombatScene'));
 console.log('after reload:', JSON.stringify(r), 'combat after 8s:', still);
-const ok = r.enc?.state === 'lost' && Math.hypot(r.pos.x - pre.x, r.pos.y - pre.y) < 3 && r.hp >= 49 && r.hp < r.max && !r.combat && !still && !r.defeated && r.retry;
+const ok = r.enc?.state === 'lost' && Math.hypot(r.pos.x - pre.x, r.pos.y - pre.y) < 3 && r.hp >= 59 && r.hp < r.max && !r.combat && !still && !r.defeated && r.retry;
 console.log(ok ? '✓ перезагрузка посреди боя = отступление рядом с врагом, без полного HP, без автоповтора' : '✗ FAIL', 'errors:', JSON.stringify(errs));
 await b.close(); process.exit(ok ? 0 : 1);

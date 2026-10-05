@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { VIEW, COLORS, DEPTH } from '../config/game.config.js';
 import { ENEMY_SPAWNS } from '../config/world.layout.js';
 import { COMBAT } from '../config/balance.enemies.js';
-import { HERO_RECOVERY } from '../config/balance.hero.js';
 import { ABILITIES } from '../config/balance.abilities.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
@@ -11,7 +10,10 @@ import { HeroAnimator } from '../systems/HeroAnimator.js';
 import { UI } from '../config/ui.config.js';
 import { UIBar, drawPlate } from '../ui/widgets.js';
 import { applyDisplaySize, itemName } from '../objects/InteractiveObject.js';
-import { recordRepeatWin } from '../objects/EnemyTrigger.js';
+import { AbilitySystem } from '../systems/AbilitySystem.js';
+import { CombatRecorder, STEP } from '../systems/combatReplay.js';
+import { startState } from '../cloud/combatVerify.js';
+import { GameState } from '../state/GameState.js';
 import { POTIONS, POTION_ORDER, POTION_BATTLE_LIMIT } from '../config/resources.js';
 import { CombatTutorial } from '../systems/CombatTutorial.js';
 import { STORY, COMBAT_HINTS } from '../config/story.js';
@@ -41,9 +43,15 @@ export class CombatScene extends Phaser.Scene {
   }
 
   create() {
-    const { state, abilities, bus } = services;
+    const { state, bus } = services;
     this.bus = bus;
-    this.cm = new CombatManager({ enemyType: this.enemyType, state, abilities });
+    // v0.14.0: бой идёт на копии героя в том состоянии, которое сервер запомнил при старте боя (combatCtx), — оно же у проверки на сервере.
+    // Настоящее состояние игры (сумка, опыт, HP) бой не трогает: итог — HP, мана, зелья, награда — приходит в ответе сервера.
+    const ctx = state.data.combatCtx;
+    this.sim = ctx ? startState(ctx, state.now()) : Object.assign(new GameState(null, () => state.now()), { data: JSON.parse(JSON.stringify(state.data)) });
+    this.cm = new CombatManager({ enemyType: this.enemyType, state: this.sim, abilities: new AbilitySystem(this.sim, null, null) });
+    this.rec = new CombatRecorder();   // действия игрока по номеру шага: их сервер проигрывает заново
+    this.acc = 0;
     this.def = this.cm.def;
     this.started = false;
     this.ended = false;
@@ -69,7 +77,8 @@ export class CombatScene extends Phaser.Scene {
     this.enemyShake = 0;
     this.firstCombat = !state.data.stats.combats.length;
 
-    this.registry.set('hudProvider', () => vitals.view(state));   // те же общие запасы, что в мире (CombatManager.commit)
+    services.combatSim = this.sim;   // верхняя панель (UIScene) показывает HP/ману боя
+    this.registry.set('hudProvider', () => vitals.view(this.sim));   // те же общие запасы, что в мире (CombatManager.commit)
     this.registry.set('abilityProvider', (id) => {
       const st = this.cm.abilityState(id);
       const e = this.cm.enemy;
@@ -79,11 +88,11 @@ export class CombatScene extends Phaser.Scene {
     });
 
     bus.on(MSG.ABILITY_USE, this.onAbility, this);
-    bus.on(MSG.COMBAT_CYCLE, () => { if (this.canAct()) { this.cm.cycleSelection(); this.processEvents(); } }, this);
+    bus.on(MSG.COMBAT_CYCLE, () => { if (this.canAct()) { this.cm.cycleSelection(); this.rec.input('c'); this.processEvents(); } }, this);
     bus.on(MSG.CONTEXT_ACTION, () => this.onAbility('telekinesis'), this);
     this.events.once('shutdown', () => bus.offContext(this));
 
-    this.events.once('shutdown', () => { services.audio.lowHp = false; services.tutorial.hide(); });
+    this.events.once('shutdown', () => { services.combatSim = null; services.audio.lowHp = false; services.tutorial.hide(); });
     this.cameras.main.fadeIn(350);
     this.showBanner(`Бой: ${this.def.name}`, COLORS.danger);
     const first = !state.data.stats.combats.length;
@@ -93,7 +102,7 @@ export class CombatScene extends Phaser.Scene {
       else if (first) this.toast('Враг атакует сам. Прерывайте сильные атаки Телекинезом!', COLORS.telekinesis);
       else if (this.def.phases) this.toast('Три фазы: кристалл — Телекинез, кора — Огонь и Астрал, тень — Астрал.', COLORS.seal);
       else if (this.def.armor) this.toast('Броня Стража держится на кристалле. Выберите его и разбейте Телекинезом.', COLORS.telekinesis);
-      if (state.item('resin_flask') > 0) this.queueHint(COMBAT_HINTS.flask, 'flask');
+      if (this.sim.item('resin_flask') > 0) this.queueHint(COMBAT_HINTS.flask, 'flask');
     });
   }
 
@@ -156,7 +165,7 @@ export class CombatScene extends Phaser.Scene {
       const label = this.add.text(o.x, o.y + 6, o.def.name, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 200 } }).setOrigin(0.5, 0).setDepth(o.y);
       // большая зона нажатия — без требований к точности
       const hit = this.add.zone(o.x, o.y - img.displayHeight / 2, Math.max(150, img.displayWidth * 1.6), Math.max(150, img.displayHeight * 1.6)).setInteractive({ useHandCursor: true });
-      hit.on('pointerdown', () => { if (this.canAct()) { this.tut?.beforeSelect(o.id); this.cm.selectObject(o.id); this.processEvents(); } });
+      hit.on('pointerdown', () => { if (this.canAct()) { this.tut?.beforeSelect(o.id); if (this.cm.selectObject(o.id)) this.rec.input('s', o.id); this.processEvents(); } });
       this.fieldViews.set(o.id, { img, ring, label, home: { x: o.x, y: o.y } });
     }
     if (this.cm.fieldObjects.length) {
@@ -206,7 +215,7 @@ export class CombatScene extends Phaser.Scene {
 
   refreshPotions() {
     for (const [id, v] of this.potionViews) {
-      const n = services.state.item(id);
+      const n = this.sim.item(id);
       for (const o of [v.ring, v.icon, v.badge, v.hit]) o.setVisible(n > 0);
       v.badge.setText(String(n));
     }
@@ -221,7 +230,7 @@ export class CombatScene extends Phaser.Scene {
       services.audio.play('locked');
       return;
     }
-    services.state.save();
+    this.rec.input('p', id);
     this.refreshPotions();
     services.audio.play('potion');
     this.heroAnim.playCast('auto');
@@ -252,12 +261,13 @@ export class CombatScene extends Phaser.Scene {
     this.tut?.beforeAbility(id, this.cm.abilityState(id).state);
     const res = this.cm.useAbility(id);
     if (!res.ok) {
-      if (res.reason === 'nomana' && services.state.item('elixir_mana') > 0 && (this.cm.stats.potions || 0) < POTION_BATTLE_LIMIT) this.queueHint(COMBAT_HINTS.lowMana, 'lowMana');
+      if (res.reason === 'nomana' && this.sim.item('elixir_mana') > 0 && (this.cm.stats.potions || 0) < POTION_BATTLE_LIMIT) this.queueHint(COMBAT_HINTS.lowMana, 'lowMana');
       const msg = { cooldown: 'Перезарядка…', nomana: 'Не хватает маны', locked: `${ABILITIES[id].name}: дар ещё не изучен` }[res.reason];
       if (msg) this.toast(msg);
       services.audio.play('locked');
       return;
     }
+    this.rec.input('a', id);
     services.audio.play(id === 'fire' ? 'fire_cast' : 'telekinesis_cast');
     this.heroCast(SCHOOL_COLOR[id], obj, id);
     this.processEvents();
@@ -283,13 +293,20 @@ export class CombatScene extends Phaser.Scene {
     this.updateHero(delta);
     if (this.ended) return;
     if (!services.modalOpen && !services.offline) { // без связи бой стоит: враг не бьёт, пока висит «Нет соединения»
-      const dt = Math.min(delta, 50) / 1000;
-      if (this.hitstop > 0) this.hitstop -= delta;
-      else this.cm.tick(dt * this.timeScale, { holdEnemy: this.tut.holdEnemy() });
+      const dt = Math.min(delta, 100) / 1000;
+      if (this.hitstop > 0) { this.hitstop -= delta; this.acc = 0; }
+      else {
+        // v0.14.0: фиксированный шаг STEP (одинаковый на устройстве и на сервере); каждый шаг и пауза врага (обучение) записываются
+        this.acc += dt;
+        for (let n = 0; this.acc >= STEP && !this.cm.result && n < 12; n++, this.acc -= STEP) {
+          const hold = this.tut.holdEnemy();
+          this.rec.beforeTick(hold);
+          this.cm.tick(STEP, { holdEnemy: hold });
+          this.rec.afterTick();
+        }
+        if (this.acc >= STEP) this.acc = 0;   // кадр сильно запоздал — накопленное не догоняем
+      }
       this.tut.tick(dt);
-      // текущие HP/мана боя сохраняются раз в несколько секунд: перезагрузка посреди боя не вернёт полный запас
-      this.saveT += delta;
-      if (this.saveT > 3000) { this.saveT = 0; services.state.save(); }
     }
     this.processEvents();
     this.updateHud();
@@ -454,7 +471,7 @@ export class CombatScene extends Phaser.Scene {
       services.audio.play(ev.strong ? 'strong_hurt' : 'hero_hurt');
       this.queueHint(COMBAT_HINTS.firstDamage, 'firstDamage');
       const h = this.cm.hero;
-      if (h.hp > 0 && h.hp < h.maxHp * VITALS.combatLowHpHint && services.state.item('elixir_life') > 0 && (this.cm.stats.potions || 0) < POTION_BATTLE_LIMIT) this.queueHint(COMBAT_HINTS.lowHp, 'lowHp');
+      if (h.hp > 0 && h.hp < h.maxHp * VITALS.combatLowHpHint && this.sim.item('elixir_life') > 0 && (this.cm.stats.potions || 0) < POTION_BATTLE_LIMIT) this.queueHint(COMBAT_HINTS.lowHp, 'lowHp');
       services.audio.vibrate(ev.strong ? [80, 40, 120] : 30);
       if (ev.strong) this.freeze(140);
     }
@@ -601,17 +618,20 @@ export class CombatScene extends Phaser.Scene {
   }
 
   // ------------------------------------------------------------------ итог
+  /**
+   * Бой закончился на экране. v0.14.0: исход решает сервер — запись действий проигрывается там заново тем же движком,
+   * а награда, потери, HP и мана приходят в ответе. Экран показывает то, что сказал сервер (он может не согласиться с устройством).
+   */
   endCombat(result, time) {
     if (this.ended) return;
     this.ended = true;
     this.warn.setVisible(false);
-    const { state, quests } = services;
+    const { state } = services;
     const secs = Math.round(time * 10) / 10;
-    state.data.stats.combats.push({ enemy: this.enemyType, spawnId: this.spawnId, result, timeSec: secs, interrupts: this.cm.stats.interrupts, uses: this.cm.stats.abilityUses });
     console.info(`[combat] ${this.enemyType} ${result} in ${secs}s`, this.cm.stats);
-    { const v = vitals.view(state); services.telemetry?.track('combat_end', { enemy: this.enemyType, spawn: this.spawnId, result, sec: secs, hp: v.hp, mana: v.mana, intr: this.cm.stats.interrupts, lvl: state.data.heroLevel }); }
+    { const h = this.cm.hero; services.telemetry?.track('combat_end', { enemy: this.enemyType, spawn: this.spawnId, result, sec: secs, hp: Math.ceil(h.hp), mana: Math.floor(h.mana), intr: this.cm.stats.interrupts, lvl: state.data.heroLevel }); }
     this.coach?.setVisible(false);
-    this.settled = this.settleServer(result === 'victory' ? 'victory' : 'defeat', this.cm.hero.mana);   // сервер узнаёт итог боя и возобновляет восстановление
+    this.settled = this.settleServer(this.rec.toJSON());
 
     if (result === 'victory') {
       this.tweens.add({ targets: this.enemySprite, alpha: 0, scaleY: 0.2, duration: 600 });
@@ -619,57 +639,71 @@ export class CombatScene extends Phaser.Scene {
       services.audio.play('victory');
       services.audio.vibrate([40, 40, 80]);
       this.burst(ENEMY_POS.x, ENEMY_POS.y - 80, COLORS.gold, 40);
-      // v0.10.0: первая победа на месте — полная награда; повторная (возобновляемое место) — уменьшенная, без разовых бонусов
-      const first = !state.isEnemyDefeated(this.spawnId);
-      state.markEnemyDefeated(this.spawnId);
-      if (this.spawn.repeatSec) recordRepeatWin(state, this.spawnId);
-      const r = state.applyReward(first || !this.def.repeatRewards ? this.def.rewards : this.def.repeatRewards);
-      vitals.afterVictory(state, this.cm.hero.mana);   // HP — новый максимум после наград, мана — фактический остаток
-      if (this.spawn.opensPath) state.openPath(this.spawn.opensPath);
-      state.save();
-      if (this.spawn.defeatEvent && first) quests.complete(this.spawn.defeatEvent, { spawnId: this.spawnId });
-      this.bus.emit(MSG.QUEST_CHANGED);
-      this.bus.emit(MSG.HUD_REFRESH);
-      const g = r.granted;
-      const v = vitals.view(state);
-      const lines = [STORY.victory, `Мана: ${v.mana} / ${v.maxMana}`, '', `Время боя: ${secs} сек   ·   прерываний: ${this.cm.stats.interrupts}`, '', T(fm(`+${g.heroXP} опыта героини`, `+${g.heroXP} опыта героя`))];
-      for (const [k, v] of Object.entries(g.schoolXP)) lines.push(`+${v} опыта дара «${ABILITIES[k].name}»`);
-      for (const [k, v] of Object.entries(g.items)) lines.push(`+${v} ${itemName(k)}`);
-      for (const lv of r.levelUps) lines.push('', `★ Новый уровень ${lv.level}! ${lv.note || ''}`);
-      this.time.delayedCall(700, () => this.bus.emit(MSG.DIALOG, {
-        title: 'Победа!', color: COLORS.gold, text: lines.join('\n'),
-        buttons: [{ label: 'Продолжить', primary: true, onClick: async () => { await this.settled; this.exit('victory'); } }],
-      }));
     } else {
-      const lost = Math.min(state.item('coins'), HERO_RECOVERY.coinsLostOnDefeat);
-      if (lost) state.removeItem('coins', lost);
-      vitals.afterDefeat(state, this.cm.hero.mana);    // 20% HP, мана — фактический остаток; позицию у врага ставит ExplorationScene
-      state.save();
-      const v = vitals.view(state);
       this.heroAnim.playDeath();
       services.audio.setMusic(null);
       services.audio.play('defeat');
       services.audio.vibrate(200);
-      this.time.delayedCall(700, () => this.bus.emit(MSG.DIALOG, {
+    }
+    const slow = this.time.delayedCall(2200, () => this.toast('Сверяем итог боя с сервером…'));
+    this.time.delayedCall(700, async () => {
+      const r = await this.settled;
+      slow.remove(false);
+      this.showOutcome(r, secs);
+    });
+  }
+
+  /** Окно итога по ответу сервера r (см. PlayerActions.combatSubmit). */
+  showOutcome(r, clientSecs) {
+    const { state } = services;
+    const out = r?.ok ? r.verdict?.outcome : null;
+    const secs = r?.verdict?.entry?.timeSec ?? clientSecs;
+    const v = vitals.view(state);   // уже по ответу сервера
+    const g = r?.verdict?.reward || {};
+    if (out === 'victory') {
+      const lines = [STORY.victory, `Мана: ${v.mana} / ${v.maxMana}`, '', `Время боя: ${secs} сек   ·   прерываний: ${this.cm.stats.interrupts}`, ''];
+      if (g.heroXP) lines.push(T(fm(`+${g.heroXP} опыта героини`, `+${g.heroXP} опыта героя`)));
+      for (const [k, n] of Object.entries(g.schoolXP || {})) lines.push(`+${n} опыта дара «${ABILITIES[k].name}»`);
+      for (const [k, n] of Object.entries(g.items || {})) lines.push(`+${n} ${itemName(k)}`);
+      for (const lv of r.outcome?.levelUps || []) lines.push('', `★ Новый уровень ${lv.level}! ${lv.note || ''}`);
+      this.bus.emit(MSG.DIALOG, {
+        title: 'Победа!', color: COLORS.gold, text: lines.join('\n'),
+        buttons: [{ label: 'Продолжить', primary: true, onClick: () => this.exit('victory') }],
+      });
+    } else if (out === 'defeat') {
+      const lost = r.verdict.coinsLost || 0;
+      this.bus.emit(MSG.DIALOG, {
         title: 'Поражение', color: COLORS.danger,
         text: `${STORY.defeat}\n\nЗдоровье: ${v.hp} / ${v.maxHp}   ·   мана: ${v.mana} / ${v.maxMana}${lost ? `\nПотеряно монет: ${lost}.` : ''}\n\n${STORY.retryHint}\nСовет: следите за красным предупреждением и держите Телекинез готовым для прерывания.${this.def.phases ? ' Кристалл снимает броню, Огонь выжигает кору, а в третьей фазе тень пробивает только Астрал; сильный удар прерывает Телекинез.' : this.def.armor ? ' Сначала разбейте кристалл, чтобы снять броню.' : ''}`,
-        buttons: [{ label: 'Вернуться', primary: true, onClick: async () => { await this.settled; this.exit('defeat'); } }],
-      }));
+        buttons: [{ label: 'Вернуться', primary: true, onClick: () => this.exit('defeat') }],
+      });
+    } else {
+      // сервер не засчитал бой (нет связи, запись отклонена, функция не развёрнута): награды нет, герой отступает
+      const why = r?.reason === 'network' ? 'Нет связи с сервером, итог боя не удалось подтвердить.'
+        : r?.reason === 'server' ? 'Сервер проверки боя сейчас недоступен.'
+        : out === 'retreat' ? 'Бой не был доведён до конца.' : 'Сервер не принял запись этого боя.';
+      console.error('[combat] бой не засчитан', r);
+      services.actions?.combatEnd('retreat')?.catch(() => {});
+      this.bus.emit(MSG.DIALOG, {
+        title: 'Бой не засчитан', color: COLORS.danger,
+        text: `${why}\n\nНаграда не выдана, зелья не потрачены. Попробуйте ещё раз.`,
+        buttons: [{ label: 'Вернуться', primary: true, onClick: () => this.exit('defeat') }],
+      });
     }
   }
 
   /**
-   * v0.12.0: сообщить серверу итог боя (combat_end). Нет связи — повторяем, пока не получится: кнопка «Продолжить» ждёт.
-   * Остальные отказы (сервер не знает о бое и т. п.) не мешают вернуться в мир.
+   * v0.14.0: отправить серверу запись боя (Edge Function combat). Нет связи — повторяем, пока не получится (кнопка итога ждёт);
+   * сервер временно недоступен — несколько попыток. Отказ по существу (запись не принята) повтором не лечится.
    */
-  async settleServer(outcome, mana) {
+  async settleServer(log) {
     const wait = (ms) => new Promise(r => setTimeout(r, ms));
+    let hiccups = 0;
     for (let i = 0; i < 60; i++) {
-      if (!services.actions) return { ok: true };
-      const r = await services.actions.combatEnd(outcome, mana);
+      const r = await services.actions.combatSubmit(log, this.spawnId);
       if (r.reason === 'busy') { await wait(250); continue; }
       if (r.reason === 'network') { await wait(1500); continue; }
-      if (!r.ok && r.reason !== 'no_combat' && r.reason !== 'session') console.error('[combat] сервер не принял итог боя', r);
+      if (r.reason === 'server' && hiccups++ < 4) { await wait(2000); continue; }
       return r;
     }
     return { ok: false, reason: 'network' };

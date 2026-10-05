@@ -4,7 +4,7 @@
 // В базе должна быть схема из supabase/schema.sql и заглушка Supabase Auth (tools/sql/auth-stub.sql).
 import { execFileSync } from 'child_process';
 import { randomUUID } from 'crypto';
-import { applyPatch, applyAction, advanceVitals, fillDefaults, emptySnapshot } from '../../src/cloud/playerModel.js';
+import { applyPatch, applyAction, combatApply, advanceVitals, fillDefaults, emptySnapshot } from '../../src/cloud/playerModel.js';
 import { HERO_LEVELS } from '../../src/config/balance.hero.js';
 
 import { serverRules } from '../../src/config/storyItems.js';
@@ -67,6 +67,17 @@ const COVER = {};   // какие исходы операций встретил
 // нехватка маны при ремонте, повышение уровня наградой) — до случайных серий
 const A = (op, extra = {}, id = randomUUID()) => ({ __action: { op, id, ...extra } });
 const W = (obj, id = randomUUID()) => ({ __action: { op: 'world', obj, id } });   // v0.13.0: действие в мире
+const CS = { spawn: 'scavenger_01', enemy: 'forest_scavenger' };   // v0.14.0: бой называет место и врага
+// v0.14.0: итог проверенного боя (verdict) — как его строит cloud/combatVerify.js; since и spawn подставляются из состояния игрока на каждой стороне
+const VERDICT = (v = {}) => ({ __apply: { outcome: 'victory', mana: 33.5, potions: {}, reward: { heroXP: 70, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 1, coins: 15 } }, coinsLost: 0, entry: { enemy: 'forest_scavenger', spawnId: 'scavenger_01', result: 'victory', timeSec: 22.8, interrupts: 1, uses: { telekinesis: 4, fire: 0, seal: 0 } }, ...v } });
+const randomVerdict = () => VERDICT({
+  outcome: pick(['victory', 'victory', 'defeat', 'retreat', 'win', null]), mana: pick([0, 12.25, 33.5, 500, -4]),
+  potions: pick([{}, { elixir_life: 1 }, { elixir_life: 2, elixir_mana: 1 }, { resin_flask: 3 }, { elixir_life: 0 }]),
+  reward: pick([{}, { heroXP: 70, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 1, coins: 15 } }, { heroXP: 600, items: { rare_core: 1 } }, { schoolXP: { fire: 5, seal: 2 } }]),
+  coinsLost: pick([0, 5, 3, 500]), path: pick([undefined, 'gate_path', 'bad id']), events: pick([undefined, [], ['guardian_defeated'], ['ok_event', 'bad id']]),
+  rep: pick([undefined, { key: 'rep:rootling_01', wins: 1, at: 1790000000000 }, { key: 'rep:rootling_01', wins: 3, at: 5 }, { key: 'bad key', wins: 1, at: 1 }]),
+  entry: pick([undefined, { enemy: 'rootling', spawnId: 'rootling_01', result: 'defeat', timeSec: 9, interrupts: 0, uses: {} }]),
+});
 const AGE = (obj, sec) => ({ __age: [obj, sec] });   // «прошло sec секунд» с момента сбора (отметка времени объекта сдвигается в прошлое)
 const MANA = (v) => ({ __mana: v });                 // сервер хранит ровно v маны (без пересчёта по времени)
 const S = (sec) => ({ __shift: sec });   // v0.12.0: «прошло sec секунд» — записи игрока на сервере сдвигаются в прошлое
@@ -87,11 +98,11 @@ const SCRIPTED = [
   { inv: { elixir_life: 3, elixir_mana: 3, coins: 40 } }, { mana_spent: 40 }, S(10), { pos: { x: 700, y: 5000 } }, S(20), { mana_spent: 15 },
   A('drink', { item: 'elixir_mana' }), A('drink', { item: 'elixir_life' }), A('drink', { item: 'resin_flask' }), A('drink', { item: 'nope' }), A('heal'),
   S(100000), A('drink', { item: 'elixir_life' }), A('drink', { item: 'elixir_mana' }),
-  { mana_spent: 50 }, A('combat_start'), A('combat_start'), S(300), { mana_spent: 20 }, A('drink', { item: 'elixir_life' }), A('heal'),
+  { mana_spent: 50 }, A('combat_start', CS), A('combat_start', CS), VERDICT({ outcome: 'defeat', coinsLost: 5, reward: {} }), A('combat_start', CS), S(300), { mana_spent: 20 }, A('drink', { item: 'elixir_life' }), A('heal'),
   { hp: { value: 3 }, mana: { value: 3 } }, A('combat_end', { outcome: 'cheat', mana: 50 }), A('combat_end', { outcome: 'defeat', mana: 33.5 }), A('combat_end', { outcome: 'victory', mana: 50 }),
-  S(40), A('combat_start'), S(500), { xp: 200 }, A('combat_end', { outcome: 'retreat', mana: 99 }),
-  A('combat_start'), S(901), { play: 1000 }, A('combat_end', { outcome: 'victory', mana: 500 }),
-  { pos: { x: 100, y: 200 } }, S(50), { mana_spent: 1 }, A('combat_start'), S(5000), A('combat_end', { outcome: 'defeat', mana: -4 }), A('combat_end', { outcome: 'defeat', mana: 'x' }),
+  S(40), A('combat_start', CS), S(500), { xp: 200 }, A('combat_end', { outcome: 'retreat', mana: 99 }), A('combat_start', CS), VERDICT(), VERDICT(),
+  A('combat_start', CS), S(901), { play: 1000 }, A('combat_end', { outcome: 'victory', mana: 500 }),
+  { pos: { x: 100, y: 200 } }, S(50), { mana_spent: 1 }, A('combat_start', CS), S(5000), A('combat_end', { outcome: 'defeat', mana: -4 }), A('combat_end', { outcome: 'defeat', mana: 'x' }),
   // v0.13.0: сбор и возрождение по времени сервера, мана, находки, дар и ступень, камень и награда под ним, запас под охраной, бой
   S(5000), MANA(100), W('herb_g1'), W('herb_g1'), AGE('herb_g1', 100), W('herb_g1'), AGE('herb_g1', 60), W('herb_g1'),
   MANA(3), W('mush_t1'), MANA(100), W('mush_t1'), W('crystal_a1'),
@@ -103,7 +114,7 @@ const SCRIPTED = [
   W('dust_stash'), { enemies: ['rootling_02'] }, W('dust_stash'), W('dust_stash'), { objects: { 'rep:rootling_02': { wins: 2, at: 5 } } }, W('dust_stash'), W('dust_stash'),
   W('ancient_gate'), { quests: ['guardian_defeated', 'gate_marks_revealed', 'unlock_seal_1', 'seal_training_complete'], abilities: { seal: { level: 1, unlocked: true } } }, W('ancient_gate'),
   { quests: ['ancient_gate_open'] }, W('ancient_gate'), W('seal_sigil'), W('house_trunk'), W('house_trunk'), W('moonstone'),
-  A('combat_start'), W('herb_g3'), A('combat_end', { outcome: 'victory', mana: 50 }), W('herb_g3'), W('nope'), W('__proto__'),
+  A('combat_start', CS), W('herb_g3'), A('combat_end', { outcome: 'victory', mana: 50 }), W('herb_g3'), W('nope'), W('__proto__'),
 ];
 for (let s = 0; s < SERIES + 1; s++) {
   const uid = randomUUID();
@@ -120,9 +131,11 @@ for (let s = 0; s < SERIES + 1; s++) {
       if (op === 'use') act.item = pick([...USE_IDS, 'elixir_life', 'nope', null]);
       if (op === 'world') act.obj = pick([...WORLD_IDS, ...WORLD_IDS, 'nope', null, 5, '__proto__', 'constructor']);
       if (op === 'drink') act.item = pick(['elixir_life', 'elixir_mana', 'elixir_life', 'resin_flask', 'nope', null, 5]);
+      if (op === 'combat_start') { Object.assign(act, pick([CS, CS, { spawn: 'rootling_01', enemy: 'rootling' }, { spawn: 'bad id', enemy: 'x' }, { spawn: 7, enemy: null }, {}])); }
       if (op === 'combat_end') { act.outcome = pick(['victory', 'defeat', 'retreat', 'victory', 'cheat', null, 5]); act.mana = pick([0, 33.5, 500, -4, 'x', null, 12.25]); }
       return { __action: act };
     }
+    if (rnd() < 0.08) return randomVerdict();
     if (rnd() < 0.2) return S(pick([5, 30, 60, 300, 1000, 5000, 100000]));
     if (rnd() < 0.08) return MANA(pick([0, 3, 4, 8, 12, 15.5, 100]));
     if (rnd() < 0.08) return AGE(pick(WORLD_IDS), pick([10, 100, 150, 200, 500]));
@@ -140,6 +153,8 @@ for (let s = 0; s < SERIES + 1; s++) {
     if (rnd() < 0.15) p.xp = pick([600, 900, 1290, 2400]);
     return p;
   });
+  // v0.14.0: после начала боя чаще идёт итог (иначе combat_apply почти всегда упирался бы в «боя нет»)
+  for (let i = patches.length - 1; i >= 0; i--) if (patches[i].__action?.op === 'combat_start' && rnd() < 0.7) patches.splice(i + 1, 0, randomVerdict());
   // сдвиги времени и «ровно столько маны» имеют смысл, когда у игрока уже записаны запасы: первый шаг серии — обычное сохранение
   if (patches[0].__shift || patches[0].__age || patches[0].__mana !== undefined) patches.unshift({ play: 1 });
   const script = [
@@ -149,6 +164,7 @@ for (let s = 0; s < SERIES + 1; s++) {
     ...patches.map(p => (p.__age ? `reset role; update public.player_world set data = jsonb_set(data, '{t}', to_jsonb((data->>'t')::numeric - ${p.__age[1]} * 1000)) where user_id = '${uid}' and kind = 'object' and key = '${p.__age[0]}' and data ? 't'; set role authenticated;`
       : p.__mana !== undefined ? `reset role; update public.player_progress set mana = ${p.__mana} where user_id = '${uid}'; set role authenticated;`
       : p.__shift ? `reset role; update public.player_progress set vitals_at = vitals_at - ${p.__shift} * interval '1 second', combat_since = combat_since - ${p.__shift} * interval '1 second' where user_id = '${uid}'; set role authenticated;`
+      : p.__apply ? `reset role; select jsonb_build_object('since', (extract(epoch from combat_since) * 1000)::bigint, 'spawn', combat_ctx ->> 'spawn')::text as extra from public.player_progress where user_id = '${uid}' \\gset\nset role service_role; select public.combat_apply('${uid}', $j$${JSON.stringify(p.__apply)}$j$::jsonb || :'extra'::jsonb); reset role; set role authenticated; select set_config('request.jwt.claim.sub', '${uid}', false) \\g /dev/null`
       : p.__action ? `select public.player_action($j$${JSON.stringify(p.__action)}$j$::jsonb);` : `select public.sync_player($j$${JSON.stringify(p)}$j$::jsonb);`)),
   ].join('\n');
   const out = psql(script);
@@ -163,9 +179,12 @@ for (let s = 0; s < SERIES + 1; s++) {
     if (patches[i].__shift) { model.vitalsAt -= patches[i].__shift * 1000; if (model.combatSince != null) model.combatSince -= patches[i].__shift * 1000; continue; }
     n++;
     const reply = JSON.parse(out[n]);
-    const a = patches[i].__action;
+    const a = patches[i].__action || (patches[i].__apply ? { op: 'combat_apply', id: 'apply-' + i } : null);
     let want = null;
-    if (a) {
+    if (patches[i].__apply) {
+      const r = combatApply(model, { ...patches[i].__apply, since: model.combatSince, spawn: model.combatCtx?.spawn }, reply.vitalsAt);
+      model = r.snapshot; want = r.result; const key = `apply:${r.result.ok ? 'ok:' + r.result.outcome : r.result.reason}`; COVER[key] = (COVER[key] || 0) + 1;
+    } else if (a) {
       if (!seen.has(a.id)) { const r = applyAction(model, a, reply.vitalsAt); model = r.snapshot; seen.set(a.id, r.result); want = r.result; const key = `${a.op}:${r.result.ok ? 'ok' : r.result.reason}`; COVER[key] = (COVER[key] || 0) + 1; }
       else { want = { ...seen.get(a.id), duplicate: true }; model = { ...model, hp: model.hp, mana: model.mana }; }
     } else model = applyPatch(model, patches[i], reply.vitalsAt);

@@ -1,6 +1,7 @@
 import { VERSION } from '../config/version.js';
 import Phaser from 'phaser';
 import { VIEW, COLORS } from '../config/game.config.js';
+import { GAME_NAME, GAME_SUBTITLE } from '../config/branding.js';
 import { services, resetProgress, reloadToMenu, heroIdNow } from '../services.js';
 import { showLogin, showProfile, showRegister, showLoading, showNotice } from '../ui/accountUI.js';
 import { showChat } from '../ui/ChatWindow.js';
@@ -47,8 +48,8 @@ export class MenuScene extends Phaser.Scene {
     this.htmlDlg = null;   // окно регистрации / входа из «Как продолжить?»
     this.buildBackground();
 
-    const title = this.add.text(W / 2, 96, 'Witch RPG', { fontFamily: FONT, fontSize: '64px', fontStyle: 'bold', color: '#f6e3a1', stroke: '#1a0f08', strokeThickness: 10, shadow: { offsetX: 0, offsetY: 5, color: '#000', blur: 12, fill: true } }).setOrigin(0.5).setDepth(5);
-    this.add.text(W / 2, 156, 'Шепчущий лес · прототип', { fontFamily: FONT, fontSize: `${UI.type.small}px`, color: COLORS.text, stroke: '#000', strokeThickness: 4, shadow: SH }).setOrigin(0.5).setDepth(5);
+    const title = this.add.text(W / 2, 96, `${GAME_NAME}:`, { fontFamily: FONT, fontSize: '64px', fontStyle: 'bold', color: '#f6e3a1', stroke: '#1a0f08', strokeThickness: 10, shadow: { offsetX: 0, offsetY: 5, color: '#000', blur: 12, fill: true } }).setOrigin(0.5).setDepth(5);
+    this.add.text(W / 2, 156, GAME_SUBTITLE, { fontFamily: FONT, fontSize: `${UI.type.bodyLarge}px`, color: COLORS.text, stroke: '#000', strokeThickness: 4, shadow: SH }).setOrigin(0.5).setDepth(5);
     addDivider(this, W / 2, 190, 420).setDepth(5);
     this.tweens.add({ targets: title, y: 90, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 

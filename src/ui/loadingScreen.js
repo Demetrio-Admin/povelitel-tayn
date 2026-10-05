@@ -1,3 +1,5 @@
+import { GAME_TITLE } from '../config/branding.js';
+
 const witchFlight = new URL('../assets/loading/witch-flight.webp', import.meta.url).href;
 
 let screen = null;
@@ -16,7 +18,7 @@ export function showLoadingScreen(message = 'Пробуждаем магию…'
       <div class="witch-loading__sky" aria-hidden="true">
         <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
       </div>
-      <p class="witch-loading__brand">Повелитель тайн</p>
+      <p class="witch-loading__brand">${GAME_TITLE}</p>
       <div class="witch-loading__orbit" aria-hidden="true"></div>
       <div class="witch-loading__moon" aria-hidden="true">
         <svg viewBox="0 0 64 64"><path d="M48 8A25 25 0 1 0 56 48A23 23 0 0 1 48 8Z"/></svg>

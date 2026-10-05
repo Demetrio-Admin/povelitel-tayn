@@ -33,6 +33,17 @@ export const EV = {
   CHAPTER_TRIAL_DEFEATED: 'chapter_trial_defeated',
   RESTORATION_BUNDLE_CRAFTED: 'restoration_bundle_crafted',
   CHAPTER_1_COMPLETE: 'chapter_1_complete',
+  // v0.20.0 — глава II «Город под инеем», квесты 1–5 (docs/design/chapter-2-quests-v0.1.md)
+  CH2_START: 'ch2_start',
+  CH2_CITY_ARRIVED: 'ch2_city_arrived',
+  CH2_PLAZA_CLEARED: 'ch2_plaza_cleared',
+  CH2_MET_ILARIA: 'ch2_met_ilaria',
+  CH2_TRACE_ASTRAL: 'ch2_trace_astral',
+  CH2_TRACE_DEBRIS: 'ch2_trace_debris',
+  CH2_TRACE_FOUND: 'ch2_trace_found',
+  CH2_ARCHIVE_READ: 'ch2_archive_read',
+  CH2_MET_SEVERIN: 'ch2_met_severin',
+  CITY_MERCHANT_OPEN: 'city_merchant_open',
 };
 
 // Финальная запись главы (журнал, HUD, финальное окно)
@@ -70,5 +81,17 @@ export const QUEST_STEPS = [
     done: s => has(s, EV.RESTORATION_BUNDLE_CRAFTED) || has(s, EV.CHAPTER_1_COMPLETE) },
   { id: 'trial',    text: 'Одолейте Хранителя сердца за воротами',             done: s => has(s, EV.CHAPTER_TRIAL_DEFEATED) },
   { id: 'repair',   text: 'Оживите сердце рощи: Целебный сбор и Астрал',  use: 'restoration_bundle', done: s => has(s, EV.CHAPTER_1_COMPLETE) },
-  { id: 'end',      text: CHAPTER_1_FINAL, done: () => false },
+  // v0.20.0: финал главы I — пока герой не поговорил с Миррой о городе
+  { id: 'end',      text: CHAPTER_1_FINAL, done: s => has(s, EV.CH2_START) },
+  // ---- глава II «Город под инеем», квесты 1–5
+  { id: 'ch2_road',    text: 'Дорога в большой мир: идите по восточной тропе в город', done: s => has(s, EV.CH2_CITY_ARRIVED) },
+  { id: 'ch2_plaza',   text: 'Морозная вспышка на площади! Остановите инеевого зверька', done: s => has(s, EV.CH2_PLAZA_CLEARED) },
+  { id: 'ch2_ilaria',  text: 'Поговорите с Иларией Восс у Архива', done: s => has(s, EV.CH2_MET_ILARIA) },
+  { id: 'ch2_trace',   text: 'Осмотрите площадь: Астрал проявит иней, Телекинез уберёт ящик',
+    progress: s => `${[EV.CH2_TRACE_ASTRAL, EV.CH2_TRACE_DEBRIS].filter(k => has(s, k)).length}/2`,
+    done: s => (has(s, EV.CH2_TRACE_ASTRAL) && has(s, EV.CH2_TRACE_DEBRIS)) || has(s, EV.CH2_TRACE_FOUND) },
+  { id: 'ch2_tell',    text: 'Расскажите Иларии о находках', done: s => has(s, EV.CH2_TRACE_FOUND) },
+  { id: 'ch2_archive', text: 'В Архиве прочтите старый документ Астралом', done: s => has(s, EV.CH2_ARCHIVE_READ) },
+  { id: 'ch2_severin', text: 'Найдите Северина Вейра в Обществе Преображения', done: s => has(s, EV.CH2_MET_SEVERIN) },
+  { id: 'ch2_next',    text: 'Продолжение расследования — в следующем обновлении главы II', done: () => false },
 ];

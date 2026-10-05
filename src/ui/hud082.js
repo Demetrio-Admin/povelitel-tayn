@@ -12,6 +12,7 @@ import { xpProgress } from '../state/heroProgress.js';
 import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from './noticeClose.js';
 import { ABILITY_ORDER } from '../systems/AbilitySystem.js';
+import { CITY_START, EAST_X } from '../config/world.city.js';
 import { ROMAN } from '../objects/InteractiveObject.js';
 import { ensureTexture, addMedallion, addDivider, drawPlate, UIBar } from './widgets.js';
 import { addCraftMedallion, addCraftMenuPanel, addCraftPortrait } from './witchcraftUI.js';
@@ -260,7 +261,19 @@ export const hud082 = {
 
   onMenuItem(item) {
     if (!this.modal?.menu) return;
+    // v0.20.0: Банк — окно кошелька; Город — переход в город, когда глава II началась (до того — прежняя заглушка)
+    if (item.id === 'bank') { this.closeMenu(() => this.openWallet()); return; }
+    if (item.id === 'city' && services.state.hasEvent('ch2_start')) { this.closeMenu(() => this.goCity()); return; }
     this.closeMenu(() => item.id === 'chat' ? this.openChat() : (item.stub ? this.openStub(item) : this.openSettings()));
+  },
+
+  /** v0.20.0: быстрый переход в город из леса (в городе — подсказка, как вернуться). */
+  goCity() {
+    if (this.mode !== 'exploration') { this.toast('Сейчас не время для дороги.'); return; }
+    const p = services.state.data.player || {};
+    if ((p.x || 0) >= EAST_X) { this.toast('Вы уже в городе. Домой — по указателю в начале дороги.'); return; }
+    const target = services.state.hasEvent('ch2_city_arrived') ? { x: 2600, y: 3625 } : CITY_START;
+    this.bus.emit(MSG.TRAVEL, { ...target, text: 'Дорога через лес — и вот город.' });
   },
 
   /** Раздел в разработке: понятный ответ на нажатие, без каких-либо изменений в игре. */

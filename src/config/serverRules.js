@@ -52,6 +52,13 @@ export const EVENT_ACTIONS = {
   lunar_quest_start: { requires: ['unlock_telekinesis_1'] },
   unlock_fire_1: { requires: ['heavy_path_open'], unlock: { fire: 1 } },
   unlock_seal_1: { requires: ['gate_marks_revealed'], unlock: { seal: 1 } },
+  // v0.20.0 — глава II, квесты 1–5 (диалоги Мирры, Иларии, Северина, торговца; первый вход на площадь)
+  ch2_start: { requires: ['chapter_1_complete'] },
+  ch2_city_arrived: { requires: ['ch2_start'] },
+  ch2_met_ilaria: { requires: ['ch2_plaza_cleared'] },
+  ch2_trace_found: { requires: ['ch2_trace_astral', 'ch2_trace_debris'] },
+  ch2_met_severin: { requires: ['ch2_archive_read'] },
+  city_merchant_open: { requires: ['ch2_city_arrived'] },
 };
 
 /**

@@ -30,11 +30,13 @@ import { HIGHLIGHT } from '../config/guidance.js';
 import { UI } from '../config/ui.config.js';
 import { drawPlate } from '../ui/widgets.js';
 import {
-  applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject,
+  applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject, TravelObject,
 } from '../objects/InteractiveObject.js';
+import { ZONE_EVENTS } from '../config/world.city.js';
 import { GateObject, SealSigilObject, DustStashObject, ForestNodeObject } from '../objects/ChapterObjects.js';
 
 const OBJECT_CLASSES = {
+  travel: TravelObject,   // v0.20.0
   book: BookObject,
   telekinesis: TelekinesisObject,
   fire: FireObject,
@@ -122,6 +124,7 @@ export class ExplorationScene extends Phaser.Scene {
     bus.on(MSG.CRAFTED, ({ result }) => this.objects.find(o => o instanceof AlchemyObject)?.celebrate(POTIONS[result]?.color), this);
     bus.on(MSG.HERO_SAY, (t, ms) => this.heroSay(t, ms), this);
     bus.on(MSG.UNLOCK_SEAL, this.unlockSeal, this);
+    bus.on(MSG.TRAVEL, (t) => this.travelTo(t, t?.text), this);   // v0.20.0: «Город» в меню
     bus.on(MSG.SIDE_QUEST, (id, what) => { this.refreshAll(); if (what === 'ready') services.audio.play('quest_update'); }, this);
     this.events.on('wake', this.onWake, this);
     this.events.once('shutdown', () => bus.offContext(this));
@@ -849,6 +852,29 @@ export class ExplorationScene extends Phaser.Scene {
     this.zone = z;
     services.state.data.safePoint = { ...z.safePoint };
     this.bus.emit(MSG.ZONE_CHANGED, z);
+    // v0.20.0: события «пришёл в место» (например, первый вход в город); условия и награду проверяет сервер
+    const ze = ZONE_EVENTS[z.id];
+    if (ze && !services.state.hasEvent(ze.event) && (ze.requires || []).every(e => services.state.hasEvent(e))) services.quests.complete(ze.event);
+  }
+
+  /** v0.20.0: переход между лесом и городом — затемнение, герой на новом месте, точка возрождения там же. */
+  travelTo(target, text) {
+    if (!target || this.traveling) return;
+    this.traveling = true;
+    const cam = this.cameras.main;
+    cam.fadeOut(260, 0, 0, 0);
+    cam.once('camerafadeoutcomplete', () => {
+      this.player.setPosition(target.x, target.y);
+      const st = services.state;
+      st.data.player = { x: Math.round(target.x), y: Math.round(target.y) };
+      st.data.safePoint = { x: Math.round(target.x), y: Math.round(target.y) };
+      st.save();
+      this.zone = null;
+      this.updateZone();
+      cam.fadeIn(320);
+      this.traveling = false;
+      if (text) this.toast(text);
+    });
   }
 
   update(time, delta) {

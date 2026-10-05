@@ -1,6 +1,7 @@
 // Проверка расстановки: можно ли дойти до всех мест, когда проходы открыты, и закрыты ли ворота, пока их не открыли.
 // Используется редактором карты (кнопка «Проверить проходимость») и тестами.
 import { WORLD } from '../config/world.layout.js';
+import { CITY_START, EAST_X } from '../config/world.city.js';
 import { buildWalkGrid, floodFrom, reachableNear } from './walk.js';
 import { collectSolids } from './solids.js';
 
@@ -18,7 +19,8 @@ export function checkWalkability({ colliders, props, interactives, enemies, terr
   const problems = [];
   const open = buildWalkGrid({ ...dims, solids: solidsFor(GATE_IDS) });
   const seenO = floodFrom(open, start.x, start.y);
-  for (const o of all) if (o.id !== 'flame_c' && !near(open, seenO, o.id)) problems.push({ id: o.id, text: `«${o.id}» недостижим даже с открытыми проходами` });
+  const seenE = floodFrom(open, CITY_START.x, CITY_START.y);   // v0.20.0: город — отдельный участок, переход по указателю
+  for (const o of all) if (o.id !== 'flame_c' && !near(open, o.x >= EAST_X ? seenE : seenO, o.id)) problems.push({ id: o.id, text: `«${o.id}» недостижим даже с открытыми проходами` });
 
   const closed = buildWalkGrid({ ...dims, solids: solidsFor([]) });
   const seenC = floodFrom(closed, start.x, start.y);

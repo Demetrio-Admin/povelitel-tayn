@@ -413,7 +413,13 @@ var EVENT_REWARDS = {
   fire_gate_open: { heroXP: 20, schoolXP: { fire: 20 } },
   // v0.10.0: Селена открывает Печать I сюжетно — без уровня, платы и таймера. Учебный знак и ворота дают только
   // обычный школьный опыт мира (+6), отдельной награды «за обучение» нет.
-  unlock_seal_1: { heroXP: 60 }
+  unlock_seal_1: { heroXP: 60 },
+  // v0.20.0 — глава II, квесты 1–5 (chapter-2-balance-v0.1.md §4; опыт боёв — в наградах врагов)
+  ch2_city_arrived: { heroXP: 220, coins: 60 },
+  ch2_met_ilaria: { heroXP: 200, coins: 50, items: { frost_herb: 1 } },
+  ch2_trace_found: { heroXP: 300, coins: 80, items: { frost_herb: 2, rune_dust: 1 } },
+  ch2_archive_read: { heroXP: 320, coins: 90 },
+  ch2_met_severin: { heroXP: 340, coins: 80, items: { warm_potion: 1 } }
 };
 
 // src/config/balance.abilities.js
@@ -705,6 +711,177 @@ var BY_ID = new Map(HEROES.map((h) => [h.id, h]));
 // src/state/hero.js
 var fm = (female, male) => ({ female, male });
 
+// src/config/world.city.js
+var CITY_START = { x: 1960, y: 3625 };
+var FOREST_RETURN = { x: 1600, y: 3625 };
+var CITY_ZONES = [
+  { id: "R", name: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0431\u043E\u043B\u044C\u0448\u043E\u0439 \u043C\u0438\u0440", x: 1800, y: 3300, w: 560, h: 650, safePoint: { x: 1960, y: 3625 } },
+  { id: "AR", name: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", x: 2440, y: 2560, w: 420, h: 480, safePoint: { x: 2650, y: 3150 } },
+  { id: "SO", name: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", x: 2960, y: 2560, w: 500, h: 480, safePoint: { x: 3210, y: 3150 } },
+  { id: "DU", name: "\u0417\u0430\u043B \u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u043E\u0439 \u0414\u0443\u044D\u043B\u0438", x: 2420, y: 4100, w: 440, h: 360, safePoint: { x: 2640, y: 4020 } },
+  { id: "CV", name: "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", x: 2960, y: 4100, w: 500, h: 360, safePoint: { x: 3210, y: 4020 } },
+  { id: "WH", name: "\u0421\u043A\u043B\u0430\u0434\u0441\u043A\u043E\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 4500, w: 1140, h: 500, safePoint: { x: 2910, y: 4050 } },
+  { id: "FQ", name: "\u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 1900, w: 1140, h: 600, safePoint: { x: 2910, y: 3150 } },
+  { id: "P", name: "\u0426\u0435\u043D\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C", x: 2360, y: 1900, w: 1240, h: 3100, safePoint: { x: 2600, y: 3625 } }
+];
+var CITY_GROUND = [
+  { tex: "stone_path_01", x: 2360, y: 1900, w: 1240, h: 3140 },
+  { tex: "wooden_floor_01", x: 2440, y: 2560, w: 420, h: 480 },
+  { tex: "wooden_floor_01", x: 2960, y: 2560, w: 500, h: 480 }
+];
+function building(x, y, w, h, doorX = null) {
+  const t = 30, out = [
+    { kind: "wall", x, y, w, h: t },
+    { kind: "wall", x, y, w: t, h },
+    { kind: "wall", x: x + w - t, y, w: t, h }
+  ];
+  if (doorX == null) out.push({ kind: "wall", x, y: y + h - t, w, h: t });
+  else out.push({ kind: "wall", x, y: y + h - t, w: doorX - x, h: t }, { kind: "wall", x: doorX + 100, y: y + h - t, w: x + w - doorX - 100, h: t });
+  return out;
+}
+var CITY_COLLIDERS = [
+  // ---- всё, что вне дороги и города, — лес (тёмная заливка, деревья — украшения ниже)
+  { kind: "trees", x: 1800, y: 0, w: 560, h: 3300 },
+  { kind: "trees", x: 1800, y: 3950, w: 560, h: 1450 },
+  { kind: "trees", x: 2360, y: 0, w: 1240, h: 1860 },
+  { kind: "trees", x: 2360, y: 5040, w: 1240, h: 360 },
+  // ---- городская стена (камень); ворота — проём в западной стене на y 3555–3700
+  { kind: "ruin", x: 2360, y: 1860, w: 40, h: 1695 },
+  { kind: "ruin", x: 2360, y: 3700, w: 40, h: 1340 },
+  { kind: "ruin", x: 2400, y: 1860, w: 1200, h: 40 },
+  { kind: "ruin", x: 2400, y: 5e3, w: 1200, h: 40 },
+  { kind: "ruin", x: 3560, y: 1900, w: 40, h: 3100 },
+  // ---- Архив и Общество Преображения (разрезы с дверью), Дуэльный зал и Дом Ковенов (пока закрыты)
+  ...building(2440, 2560, 420, 480, 2600),
+  ...building(2960, 2560, 500, 480, 3160),
+  ...building(2420, 4100, 440, 360),
+  ...building(2960, 4100, 500, 360),
+  // ---- Замёрзший квартал пока закрыт ледяной стеной между Архивом и Обществом (откроется по сюжету)
+  { kind: "ruin", x: 2860, y: 2500, w: 100, h: 60 },
+  { kind: "ruin", x: 2400, y: 2500, w: 40, h: 60 },
+  { kind: "ruin", x: 2440, y: 2500, w: 420, h: 60 },
+  { kind: "ruin", x: 2960, y: 2500, w: 600, h: 60 },
+  // ---- предметы с картинкой (низ спрайта на нижней кромке)
+  { kind: "furniture", x: 2700, y: 3520, w: 180, h: 60, tex: "fountain_frozen" },
+  { kind: "furniture", x: 3240, y: 3360, w: 220, h: 50, tex: "market_stall_01" },
+  { kind: "furniture", x: 2470, y: 2600, w: 140, h: 40, tex: "bookshelf_01" },
+  { kind: "furniture", x: 2650, y: 2600, w: 140, h: 40, tex: "bookshelf_01" },
+  { kind: "furniture", x: 2560, y: 2820, w: 110, h: 40, tex: "table_01" },
+  { kind: "furniture", x: 3e3, y: 2600, w: 140, h: 40, tex: "bookshelf_01" },
+  { kind: "furniture", x: 3300, y: 2620, w: 90, h: 40, tex: "cauldron_01" },
+  { kind: "furniture", x: 3060, y: 2840, w: 110, h: 40, tex: "table_01" },
+  { kind: "furniture", x: 3330, y: 3770, w: 110, h: 40, tex: "table_01" },
+  { kind: "furniture", x: 2480, y: 4620, w: 100, h: 40, tex: "crate_01" },
+  { kind: "furniture", x: 2640, y: 4700, w: 70, h: 40, tex: "barrel_01" },
+  { kind: "furniture", x: 3120, y: 4640, w: 100, h: 40, tex: "crate_01" },
+  { kind: "furniture", x: 3380, y: 4800, w: 100, h: 40, tex: "crate_01" }
+];
+var CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }];
+var CITY_INTERACTIVES = [
+  // переходы между лесом и городом
+  {
+    id: "travel_to_city",
+    kind: "travel",
+    x: 1640,
+    y: 3625,
+    texture: "signpost_01",
+    radius: 110,
+    target: CITY_START,
+    requiresEvent: "ch2_start",
+    hint: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0433\u043E\u0440\u043E\u0434",
+    lockedText: "\u0412\u043E\u0441\u0442\u043E\u0447\u043D\u0430\u044F \u0442\u0440\u043E\u043F\u0430 \u0443\u0445\u043E\u0434\u0438\u0442 \u043A \u0431\u043E\u043B\u044C\u0448\u043E\u043C\u0443 \u043C\u0438\u0440\u0443. \u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u043D\u0443\u0436\u043D\u043E \u0437\u0430\u043A\u043E\u043D\u0447\u0438\u0442\u044C \u0434\u0435\u043B\u0430 \u0432 \u043B\u0435\u0441\u0443 \u2014 \u0438 \u043F\u043E\u0433\u043E\u0432\u043E\u0440\u0438\u0442\u044C \u0441 \u041C\u0438\u0440\u0440\u043E\u0439.",
+    text: "\u0422\u0440\u043E\u043F\u0430 \u0432\u044B\u0432\u043E\u0434\u0438\u0442 \u0438\u0437 \u043B\u0435\u0441\u0430 \u043D\u0430 \u0431\u043E\u043B\u044C\u0448\u0443\u044E \u0434\u043E\u0440\u043E\u0433\u0443. \u0412\u043F\u0435\u0440\u0435\u0434\u0438 \u2014 \u0433\u043E\u0440\u043E\u0434."
+  },
+  {
+    id: "travel_to_forest",
+    kind: "travel",
+    x: 1880,
+    y: 3625,
+    texture: "signpost_01",
+    radius: 110,
+    target: FOREST_RETURN,
+    hint: "\u0422\u0440\u043E\u043F\u0430 \u0432 \u043B\u0435\u0441",
+    text: "\u0417\u043D\u0430\u043A\u043E\u043C\u0430\u044F \u0442\u0440\u043E\u043F\u0430 \u2014 \u0434\u043E\u043C\u043E\u0439, \u043A \u041C\u0438\u0440\u0440\u0435."
+  },
+  // дорога: ресурсы
+  { id: "frostherb_r1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2060, y: 3420, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_start" },
+  { id: "frostherb_r2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2240, y: 3880, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_start" },
+  { id: "resin_r1", kind: "gather", res: "tree_resin", amount: 1, respawnSec: 240, x: 1920, y: 3860, texture: "resin_log_01", radius: 90 },
+  // площадь
+  { id: "npc_ilaria", kind: "npc", npc: "ilaria", x: 2560, y: 3260, texture: "npc_ilaria", collide: { w: 50, h: 24 }, radius: 140 },
+  { id: "npc_merchant", kind: "npc", npc: "merchant", x: 3350, y: 3500, texture: "npc_merchant", collide: { w: 50, h: 24 }, radius: 140 },
+  { id: "npc_banker", kind: "npc", npc: "banker", x: 3380, y: 3880, texture: "npc_banker", collide: { w: 50, h: 24 }, radius: 140 },
+  { id: "npc_duelist", kind: "npc", npc: "duelist", x: 2640, y: 4040, texture: "npc_duelist", collide: { w: 50, h: 24 }, radius: 140 },
+  {
+    id: "plaza_trace",
+    kind: "seal_sigil",
+    x: 2860,
+    y: 3720,
+    texture: "seal_sigil_dim",
+    litTexture: "seal_sigil_lit",
+    radius: 120,
+    requiresEvent: "ch2_met_ilaria",
+    doneEvent: "ch2_trace_astral",
+    hint: "\u0418\u043D\u0435\u0439 \u043D\u0430 \u043A\u0430\u043C\u043D\u044F\u0445",
+    lockedText: "\u0418\u043D\u0435\u0439 \u043B\u0451\u0433 \u0443\u0437\u043E\u0440\u043E\u043C \u2014 \u0431\u0443\u0434\u0442\u043E \u043A\u0442\u043E-\u0442\u043E \u0432\u044B\u0436\u0435\u0433 \u0435\u0433\u043E \u043C\u0430\u0433\u0438\u0435\u0439. \u0411\u0435\u0437 \u0410\u0441\u0442\u0440\u0430\u043B\u0430 \u043D\u0435 \u0440\u0430\u0437\u043E\u0431\u0440\u0430\u0442\u044C.",
+    doneTitle: "\u0421\u043B\u0435\u0434 \u043F\u0440\u043E\u044F\u0432\u0438\u043B\u0441\u044F",
+    doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u043F\u0440\u043E\u044F\u0432\u0438\u043B \u043F\u043E\u0434 \u0438\u043D\u0435\u0435\u043C \u0437\u043D\u0430\u043A\u0438: \u0440\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C, \u0441\u043B\u0435\u0434\u044B \u043B\u0443\u043D\u043D\u044B\u0445 \u043E\u0441\u043A\u043E\u043B\u043A\u043E\u0432 \u2014 \u0438 \u043A\u043B\u0435\u0439\u043C\u043E \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u043E\u0439, \u043A\u043E\u0442\u043E\u0440\u043E\u0433\u043E \u0432\u044B \u043D\u0438\u043A\u043E\u0433\u0434\u0430 \u043D\u0435 \u0432\u0438\u0434\u0435\u043B\u0438.",
+    doneButton: "\u0414\u0430\u043B\u044C\u0448\u0435"
+  },
+  {
+    id: "plaza_debris",
+    kind: "telekinesis",
+    mode: "push",
+    weight: "light",
+    x: 2960,
+    y: 3420,
+    texture: "crate_01",
+    collide: { w: 70, h: 30 },
+    target: { x: 3040, y: 3380 },
+    radius: 120,
+    requiresEvent: "ch2_met_ilaria",
+    doneEvent: "ch2_trace_debris",
+    hint: "\u0420\u0430\u0437\u0431\u0438\u0442\u044B\u0439 \u044F\u0449\u0438\u043A",
+    hiddenReward: { spawnPickup: { item: "frost_herb", amount: 2 } }
+  },
+  // Архив: старый документ, который читает Астрал
+  {
+    id: "archive_document",
+    kind: "seal_sigil",
+    x: 2615,
+    y: 2880,
+    texture: "magic_book_01",
+    litTexture: "magic_book_01",
+    radius: 110,
+    requiresEvent: "ch2_trace_found",
+    doneEvent: "ch2_archive_read",
+    hint: "\u0421\u0442\u0430\u0440\u044B\u0439 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442",
+    lockedText: "\u041F\u044B\u043B\u044C\u043D\u044B\u0435 \u043F\u0430\u043F\u043A\u0438 \u043E \u0445\u043E\u043B\u043E\u0434\u043D\u043E\u0439 \u043C\u0430\u0433\u0438\u0438. \u0418\u043B\u0430\u0440\u0438\u044F \u0441\u043A\u0430\u0436\u0435\u0442, \u0447\u0442\u043E \u0438\u0441\u043A\u0430\u0442\u044C.",
+    doneTitle: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F",
+    doneText: "\u041F\u043E\u0434 \u0410\u0441\u0442\u0440\u0430\u043B\u043E\u043C \u0432\u044B\u0446\u0432\u0435\u0442\u0448\u0438\u0435 \u0441\u0442\u0440\u043E\u043A\u0438 \u043F\u0440\u043E\u0441\u0442\u0443\u043F\u0438\u043B\u0438 \u0441\u043D\u043E\u0432\u0430. \u041B\u0435\u0434\u044F\u043D\u0430\u044F \u043C\u0430\u0433\u0438\u044F \u0432 \u044D\u0442\u0438\u0445 \u043A\u0440\u0430\u044F\u0445 \u0440\u0435\u0434\u043A\u0430 \u2014 \u0430 \u043D\u0435\u0434\u0430\u0432\u043D\u043E \u0432\u0441\u0435 \u0437\u0430\u043F\u0438\u0441\u0438 \u043E \u043D\u0435\u0439 \u0437\u0430\u0431\u0440\u0430\u043B \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u0442\u0435\u043B\u044C \u041E\u0431\u0449\u0435\u0441\u0442\u0432\u0430 \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F. \u041F\u043E\u0434\u043F\u0438\u0441\u044C: \u0421\u0435\u0432\u0435\u0440\u0438\u043D \u0412\u0435\u0439\u0440.",
+    doneButton: "\u041A \u041E\u0431\u0449\u0435\u0441\u0442\u0432\u0443"
+  },
+  // Общество Преображения
+  { id: "npc_severin", kind: "npc", npc: "severin", x: 3210, y: 2760, texture: "npc_severin", collide: { w: 50, h: 24 }, radius: 140 }
+];
+var CITY_ENEMIES = [
+  // морозная вспышка на площади (квест 2): появляется, когда герой пришёл в город
+  { id: "plaza_critter", enemy: "frost_critter", x: 2780, y: 3800, radius: 130, requiresEvent: "ch2_city_arrived", defeatEvent: "ch2_plaza_cleared" },
+  // знакомый противник на дороге (квест 1, необязательный)
+  { id: "road_scavenger", enemy: "young_scavenger", x: 2120, y: 3640, radius: 110, requiresEvent: "ch2_start" }
+];
+var CITY_DECOR = [
+  ...[3330, 3420, 3510, 3990, 4080, 4170].map((y, i) => ({ id: `ct_tree_${i}`, k: i % 2 ? "tree_dark_02" : "tree_dark_01", x: 1840 + i % 3 * 170, y: y < 3600 ? 3300 : 4030 })),
+  ...[1900, 2050, 2200, 2330].map((x, i) => ({ id: `ct_treeN_${i}`, k: "tree_dark_01", x, y: 3290 })),
+  ...[1900, 2050, 2200, 2330].map((x, i) => ({ id: `ct_treeS_${i}`, k: "tree_dark_02", x, y: 4060 })),
+  { id: "ct_board", k: "notice_board_01", x: 2480, y: 3420 },
+  ...[[2440, 3530], [2440, 3800], [3040, 3240], [3040, 4e3], [2900, 4300], [2900, 2470]].map(([x, y], i) => ({ id: `ct_lamp_${i}`, k: "city_lamp_01", x, y })),
+  { id: "ct_frost_1", k: "frost_patch_01", x: 2760, y: 3700, floor: true },
+  { id: "ct_frost_2", k: "frost_patch_01", x: 2980, y: 3860, floor: true },
+  { id: "ct_frost_3", k: "frost_patch_01", x: 2620, y: 3560, floor: true },
+  { id: "ct_candles", k: "candle_group_01", x: 2780, y: 2650 }
+];
+
 // src/config/world.content.js
 var CONTENT_INTERACTIVES = [
   // ================================================================== ДОМ ВЕДЬМЫ (зона A)
@@ -950,10 +1127,20 @@ var CACHE_RESOURCE_REWARDS = {
   trail_cache: { forest_mushroom: 1 },
   west_chest: { rune_dust: 1 }
 };
+var CONTENT_DECOR = [
+  { id: "dc_rug", k: "rug_01", x: 905, y: 5222, floor: true },
+  { id: "dc_herbs_l", k: "herb_bundle_01", x: 866, y: 4918 },
+  { id: "dc_herbs_r", k: "herb_bundle_01", x: 936, y: 4918, flip: true },
+  { id: "dc_plant", k: "plant_pot_01", x: 1108, y: 5250 },
+  { id: "dc_campfire", k: "campfire_01", x: 1462, y: 3978, fire: true },
+  ...CITY_DECOR
+  // v0.20.0: город
+];
 
 // src/config/world.layout.js
 var WORLD = {
-  width: 1800,
+  width: 3600,
+  // v0.20.0: восточнее леса — дорога и город (world.city.js)
   height: 5400,
   playerStart: { x: 900, y: 5200 },
   defaultSafePoint: { x: 900, y: 4820 }
@@ -967,7 +1154,82 @@ var ZONES = [
   { id: "H", name: "\u0414\u0440\u0435\u0432\u043D\u0438\u0439 \u043A\u0440\u0443\u0433 \u041E\u0433\u043D\u044F", x: 820, y: 1100, w: 880, h: 780, safePoint: { x: 1250, y: 1760 } },
   { id: "J", name: "\u041D\u043E\u0432\u0430\u044F \u0447\u0430\u0441\u0442\u044C \u043B\u0435\u0441\u0430", x: 100, y: 1640, w: 600, h: 2460, safePoint: { x: 400, y: 3900 } },
   { id: "K", name: "\u041F\u043E\u043B\u044F\u043D\u0430 \u041B\u0435\u0441\u043D\u043E\u0433\u043E \u0421\u0442\u0440\u0430\u0436\u0430", x: 100, y: 1100, w: 600, h: 540, safePoint: { x: 400, y: 1760 } },
-  { id: "L", name: "\u0414\u0440\u0435\u0432\u043D\u0438\u0435 \u0432\u043E\u0440\u043E\u0442\u0430", x: 0, y: 0, w: 1800, h: 1100, safePoint: { x: 900, y: 820 } }
+  { id: "L", name: "\u0414\u0440\u0435\u0432\u043D\u0438\u0435 \u0432\u043E\u0440\u043E\u0442\u0430", x: 0, y: 0, w: 1800, h: 1100, safePoint: { x: 900, y: 820 } },
+  ...CITY_ZONES
+  // v0.20.0: глава II
+];
+var GROUND = [
+  { tex: "wooden_floor_01", x: 640, y: 4880, w: 520, h: 420 },
+  ...CITY_GROUND
+];
+var KEEP_CLEAR = [
+  { x: 300, y: 3990, w: 200, h: 200 },
+  // проём корней
+  { x: 1120, y: 1860, w: 260, h: 200 },
+  // проход под глыбу
+  { x: 250, y: 1260, w: 300, h: 240 },
+  // проход Стража
+  { x: 820, y: 330, w: 160, h: 220 },
+  // ворота
+  { x: 700, y: 125, w: 960, h: 210 },
+  // v0.10.0: поляна узла за воротами (то же, что CLEARINGS в world.content.js)
+  ...CITY_KEEP_CLEAR
+];
+var COLLIDERS = [
+  // границы мира (лес)
+  { kind: "trees", x: 0, y: 0, w: 100, h: 4880 },
+  { kind: "trees", x: 1700, y: 0, w: 100, h: 3550 },
+  { kind: "trees", x: 1700, y: 3700, w: 100, h: 1180 },
+  { kind: "trees", x: 1760, y: 3550, w: 40, h: 150 },
+  { kind: "trees", x: 100, y: 0, w: 1600, h: 110 },
+  // A — дом ведьмы
+  { kind: "wall", x: 640, y: 4880, w: 220, h: 30 },
+  { kind: "wall", x: 940, y: 4880, w: 220, h: 30 },
+  { kind: "wall", x: 640, y: 4880, w: 30, h: 420 },
+  { kind: "wall", x: 1130, y: 4880, w: 30, h: 420 },
+  { kind: "wall", x: 640, y: 5270, w: 520, h: 30 },
+  // v0.8: tex — картинка мебели (вместо прямоугольника с подписью); размер на экране — DISPLAY_SIZE
+  { kind: "furniture", x: 690, y: 5150, w: 90, h: 100, label: "\u043A\u0440\u043E\u0432\u0430\u0442\u044C", tex: "bed_01" },
+  { kind: "furniture", x: 1010, y: 4960, w: 100, h: 60, label: "\u0441\u0442\u043E\u043B", tex: "table_01" },
+  { kind: "furniture", x: 690, y: 4910, w: 150, h: 34, label: "\u043F\u043E\u043B\u043A\u0438", tex: "bookshelf_01" },
+  { kind: "furniture", x: 960, y: 4910, w: 140, h: 34, label: "\u043F\u043E\u043B\u043A\u0438", tex: "bookshelf_01" },
+  { kind: "trees", x: 100, y: 4880, w: 540, h: 520 },
+  { kind: "trees", x: 1160, y: 4880, w: 640, h: 520 },
+  // B — стартовая поляна: вход в западный лес закрыт корнями (проем 300–500)
+  { kind: "trees", x: 100, y: 4030, w: 200, h: 110 },
+  { kind: "trees", x: 500, y: 4030, w: 200, h: 110 },
+  // C — лесная тропа
+  { kind: "trees", x: 820, y: 3300, w: 130, h: 800 },
+  { kind: "trees", x: 1550, y: 3300, w: 150, h: 250 },
+  { kind: "trees", x: 1550, y: 3700, w: 150, h: 400 },
+  // D — первая боевая поляна (коридор мимо врага)
+  { kind: "trees", x: 820, y: 2900, w: 280, h: 220 },
+  { kind: "trees", x: 1400, y: 2900, w: 300, h: 220 },
+  // E — лунный алтарь
+  { kind: "ruin", x: 1180, y: 2170, w: 140, h: 50, label: "\u0430\u043B\u0442\u0430\u0440\u044C" },
+  { kind: "trees", x: 1560, y: 2360, w: 80, h: 50, single: true },
+  // G — тяжёлый проход (проем 1150–1350 закрыт глыбой)
+  { kind: "ruin", x: 820, y: 1900, w: 330, h: 120 },
+  { kind: "ruin", x: 1350, y: 1900, w: 350, h: 120 },
+  // H — круг Огня (тупик)
+  { kind: "trees", x: 820, y: 1250, w: 880, h: 50 },
+  // J — новая часть леса (извилистая тропа)
+  { kind: "trees", x: 100, y: 3600, w: 230, h: 120 },
+  { kind: "trees", x: 470, y: 3200, w: 230, h: 120 },
+  { kind: "trees", x: 100, y: 2700, w: 240, h: 120 },
+  { kind: "trees", x: 460, y: 2250, w: 240, h: 120 },
+  // K — поляна Стража (проем 280–520 закрыт Стражем)
+  { kind: "ruin", x: 100, y: 1300, w: 180, h: 160 },
+  { kind: "ruin", x: 520, y: 1300, w: 180, h: 160 },
+  // L — древние ворота
+  { kind: "ruin", x: 640, y: 330, w: 120, h: 110 },
+  { kind: "ruin", x: 1040, y: 330, w: 120, h: 110 },
+  // v0.10.0: древняя стена по обе стороны ворот — за ворота можно попасть только через них (Печать открывает проход).
+  // Новые стены — в конце списка: базовые c0… сохраняют свои номера для правок редактора.
+  { kind: "ruin", x: 100, y: 330, w: 540, h: 110 },
+  { kind: "ruin", x: 1160, y: 330, w: 540, h: 110 },
+  // v0.20.0: дорога и город (только в конец — id коллайдеров c<номер>)
+  ...CITY_COLLIDERS
 ];
 var BASE_INTERACTIVES = [
   // A
@@ -1107,7 +1369,7 @@ for (const o of BASE_INTERACTIVES) {
   const extra = CACHE_RESOURCE_REWARDS[o.id];
   if (extra) o.reward = { ...o.reward, items: { ...o.reward.items || {}, ...extra } };
 }
-var INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES];
+var INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES];
 var BASE_ENEMY_SPAWNS = [
   { id: "scavenger_01", enemy: "forest_scavenger", x: 1250, y: 3010, radius: 180, startEvent: "combat_intro_01" },
   {
@@ -1132,7 +1394,7 @@ var BASE_ENEMY_SPAWNS = [
     scale: 1.5
   }
 ];
-var ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES];
+var ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES, ...CITY_ENEMIES];
 
 // src/config/game.config.js
 var SAVE = {
@@ -1816,7 +2078,14 @@ var EVENT_ACTIONS = {
   unlock_telekinesis_1: { unlock: { telekinesis: 1 } },
   lunar_quest_start: { requires: ["unlock_telekinesis_1"] },
   unlock_fire_1: { requires: ["heavy_path_open"], unlock: { fire: 1 } },
-  unlock_seal_1: { requires: ["gate_marks_revealed"], unlock: { seal: 1 } }
+  unlock_seal_1: { requires: ["gate_marks_revealed"], unlock: { seal: 1 } },
+  // v0.20.0 — глава II, квесты 1–5 (диалоги Мирры, Иларии, Северина, торговца; первый вход на площадь)
+  ch2_start: { requires: ["chapter_1_complete"] },
+  ch2_city_arrived: { requires: ["ch2_start"] },
+  ch2_met_ilaria: { requires: ["ch2_plaza_cleared"] },
+  ch2_trace_found: { requires: ["ch2_trace_astral", "ch2_trace_debris"] },
+  ch2_met_severin: { requires: ["ch2_archive_read"] },
+  city_merchant_open: { requires: ["ch2_city_arrived"] }
 };
 function worldRules() {
   const world = {};
@@ -2142,6 +2411,31 @@ var ENEMIES = {
     rewards: { heroXP: 40, schoolXP: { telekinesis: 30 }, items: { lunar_shard: 1 }, coins: 10 },
     arena: "glade_small"
   },
+  // v0.20.0 — глава II (chapter-2-balance-v0.1.md §9). Инеевый зверёк: быстрые удары с холодом (замедляют героя),
+  // ледяной рывок прерывается Телекинезом, слабость к Огню. Бой ~20–25 с у героя 8–9 уровня.
+  frost_critter: {
+    name: "\u0418\u043D\u0435\u0435\u0432\u044B\u0439 \u0437\u0432\u0435\u0440\u0451\u043A",
+    texture: "enemy_frost_critter",
+    tier: "normal",
+    hp: 440,
+    normalAttack: { damage: 11, intervalSec: 2.5, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: {
+      name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0440\u044B\u0432\u043E\u043A",
+      damage: 26,
+      prepSec: 1.8,
+      cooldownSec: 9,
+      firstDelaySec: 5,
+      interruptBy: ["telekinesis"],
+      hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!"
+    },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: 0,
+    weaknesses: { fire: 0.3 },
+    rewards: { heroXP: 80, schoolXP: { fire: 20, telekinesis: 20 }, items: { frost_herb: 1 }, coins: 20 },
+    repeatRewards: { heroXP: 14, schoolXP: { fire: 3 }, coins: 5 },
+    arena: "city"
+  },
   // Враг со слабостью из Combat Math §7. v0.10.0: пять Корневиков в старом лесу (world.layout.js, rootling_01…05).
   // Защита 20%, Огонь +50% и снимает защиту на 6 с. Первая победа на месте — rewards; повторная (возобновляемые места) — repeatRewards.
   rootling: {
@@ -2242,6 +2536,14 @@ var FIELD_OBJECTS = {
   crystal: { name: "\u0417\u0430\u0449\u0438\u0442\u043D\u044B\u0439 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B", texture: "field_crystal", weight: "medium", throwable: false, breaksArmor: true, respawnAfterArmorSec: 10 }
 };
 var ARENAS = {
+  // v0.20.0: городская мостовая — обломки ящиков вместо камней
+  city: {
+    ground: 2763827,
+    objects: [
+      { id: "rock_a", type: "light_rock", x: 190, y: 720 },
+      { id: "heavy_a", type: "heavy_rock", x: 540, y: 710 }
+    ]
+  },
   glade: {
     ground: 2898468,
     objects: [
@@ -2613,7 +2915,12 @@ var MSG = {
   FINAL_SCREEN: "ui:final",
   // v0.10.0: ({ outcome, reward }) — финал первой главы
   UNLOCK_SEAL: "story:unlock-seal",
-  // v0.10.0: Селена открывает Печать I (после закрытия диалога)
+  TRAVEL: "world:travel",
+  // v0.20.0: переход между лесом и городом ({ x, y, text })
+  OPEN_SHOP: "ui:open-shop",
+  // v0.20.0: лавка торговца (из диалога)
+  OPEN_WALLET: "ui:open-wallet",
+  // v0.20.0: кошелёк / банк (из диалога и меню)   // v0.10.0: Селена открывает Печать I (после закрытия диалога)
   ZONE_CHANGED: "world:zone",
   // (zone)
   TUTORIAL: "ui:tutorial",

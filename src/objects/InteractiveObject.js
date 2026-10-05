@@ -396,3 +396,18 @@ export class FireCircleObject extends InteractiveObject {
 }
 
 // v0.10.0: Древние ворота — GateObject в objects/ChapterObjects.js (вместо SealObject прототипа).
+
+/**
+ * v0.20.0: переход между частями мира (лес ↔ дорога в город). Указатель виден всегда; если путь ещё закрыт (requiresEvent),
+ * герой слышит lockedText. Перемещение — на стороне клиента (позицию сохраняет обычная синхронизация), наград нет.
+ */
+export class TravelObject extends InteractiveObject {
+  get label() { return this.cfg.hint || 'Идти'; }
+  requirementsMet() { return true; }
+  isDone() { return false; }
+  interact() {
+    const need = this.cfg.requiresEvent;
+    if (need && !this.state.hasEvent(need)) { this.scene.toast(this.cfg.lockedText || 'Путь пока закрыт.'); return; }
+    this.scene.travelTo?.(this.cfg.target, this.cfg.text);
+  }
+}

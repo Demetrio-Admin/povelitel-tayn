@@ -274,7 +274,7 @@ try {
     const menuItem = async id => { await tap(menuBtn.x, menuBtn.y); await menuOpen();
       const p = await ui(id=>{const u=window.__game.scene.getScene('UIScene');const r=u.modal.items.find(i=>i.item.id===id).orb.getBounds();return {x:r.centerX,y:r.centerY};}, id);
       await tap(p.x, p.y); await page.waitForTimeout(250); };
-    for (const id of ['city','bank','rating','forum']) {
+    for (const id of ['city','rating','forum']) {   // v0.20.0: «Банк» открывает кошелёк
       const before = await ui(()=>JSON.stringify({...window.__witch.state.data,hp:0,mana:0,vitalsClock:0,player:0,stats:{...window.__witch.state.data.stats,playTimeMs:0},tutorial:window.__witch.state.data.tutorial.filter(t=>!t.startsWith('hero:'))}))   /* v0.9: HP/мана восстанавливаются сами; v0.9.2: отложенные реплики героя о новых предметах не зависят от заглушки */;
       await menuItem(id);
       assert.equal(await ui(()=>window.__game.scene.getScene('UIScene').modal?.opts?.stub), id);

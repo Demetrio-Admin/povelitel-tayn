@@ -84,6 +84,8 @@ export class UIScene extends Phaser.Scene {
     bus.on(MSG.UI_MODE, this.setMode, this);
     bus.on(MSG.OPEN_UPGRADE, this.openUpgrade, this);
     bus.on(MSG.OPEN_BAG, this.openBag, this);
+    bus.on(MSG.OPEN_SHOP, () => this.openShop('Лавка Бориса'), this);   // v0.20.0
+    bus.on(MSG.OPEN_WALLET, () => this.openWallet(), this);
     bus.on(MSG.OPEN_GIFTS, this.openGifts, this);
     this.input.keyboard?.on('keydown-G', () => { if (!this.modal && this.mode === 'exploration') this.openGifts(); });
     bus.on(MSG.REWARD, this.onReward, this);
@@ -725,7 +727,7 @@ export class UIScene extends Phaser.Scene {
       `Время игры: ${fmtTime(d.stats.playTimeMs)}`,
       T(fm(`Уровень героини: ${d.heroLevel}`, `Уровень героя: ${d.heroLevel}`)),
       `Побед: ${wins.length}`, '',
-      'Город — следующая глава. А пока можно собирать травы, варить зелья и возвращаться к Корневикам старого леса. Мирра ждёт рассказа.',
+      'Мирра ждёт рассказа — поговорите с ней, и начнётся глава II «Город под инеем».',
     ];
     this.openModal({
       final: true, title: 'Глава I завершена\nЛес, который забыл нас', color: 0x7be2c8, text: lines.join('\n'),

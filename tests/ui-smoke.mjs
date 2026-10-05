@@ -233,7 +233,7 @@ await mute(async () => {
     h.openMenu(); h.modal.items.find(x => x.item.id === 'chat').hit.emit('pointerdown');
     ok(chatOpened && !h.modal && !sv.modalOpen, 'пункт Чат закрывает меню и вызывает настоящий интерфейс');
     h.openChat = originalChat;
-    for (const id of ['city', 'bank', 'rating', 'forum']) {
+    for (const id of ['city', 'rating', 'forum']) {   // v0.20.0: «Банк» — уже не заглушка (кошелёк), «Город» — заглушка до главы II
       const before = snap();
       h.openMenu();
       const it = h.modal.items.find(x => x.item.id === id);

@@ -13,6 +13,7 @@ import { UPGRADES, TIMER_MODE, EVENT_REWARDS, BRANCH_RESPEC } from './balance.pr
 import { SIDE_QUESTS, SIDE_QUEST_ORDER, questEvent } from './quests.js';
 import { STORY_USES, FIRST_CRAFT, MIGRATION_V10 } from './storyItems.js';
 import { buildSlotRules } from './build.js';
+import { sapphireRules } from './sapphires.js';
 
 /**
  * Награда из конфигов → формат серверной операции (_grant / grant):
@@ -197,5 +198,6 @@ export function serverRules() {
   return {
     recipes, uses: STORY_USES, firstCraft: FIRST_CRAFT, migration: MIGRATION_V10, vitals, potions, world: worldRules(),
     events, eventRewards, quests: questRules(), research: researchRules(), build: buildRules(), spawnStart: spawnStartRules(),
+    sapphires: sapphireRules(),   // v0.17.0
   };
 }

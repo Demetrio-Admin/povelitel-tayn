@@ -368,5 +368,36 @@ console.log('\n[v0.16.0] Бой: слоты и амулеты');
   ok(giftCards(w.state).find(c => c.id === 'telekinesis').equipped === false && giftCards(w.state).find(c => c.id === 'fire').equipped === true, 'карточки даров знают, какой дар в слоте');
 }
 
+console.log('\n[v0.17.0] Сапфиры: модель окон');
+{
+  const { sapphireWord, speedupOptions, walletView, sapphireFailText } = await import('../src/systems/wallet.js');
+  const { SAPPHIRES } = await import('../src/config/sapphires.js');
+  ok([1, 2, 5, 11, 21, 22, 25, 111].map(sapphireWord).join() === 'сапфир,сапфира,сапфиров,сапфиров,сапфир,сапфира,сапфиров,сапфиров', 'склонение: 1 сапфир, 2 сапфира, 5 сапфиров, 11 сапфиров, 21 сапфир');
+  const w = ready(world());
+  ok(w.state.sapphires() === 0 && walletView(w.state).welcome === SAPPHIRES.welcome, 'новый герой: 0 сапфиров, доступен подарок');
+  w.state.data.wallet = { sapphires: 1, daily: {}, welcome: true };
+  w.clock.t = 1_000_000;
+  w.state.data.research = { upgradeId: 'seal_2', startedAt: 1_000_000, durationMs: 30 * 60_000 };
+  let o = speedupOptions(w.state);
+  ok(o.length === 2 && o[0].can && o[0].price === 1 && !o[1].can && o[1].why === 'sapphires' && o[1].price === 2 && o[1].label === '−23 мин · 2 сапфира', `ускорение: −15 мин за 1 доступно; второй вариант честно показывает, сколько снимется и за сколько (${o[1].label})`);
+  w.state.data.wallet.daily = { d: Math.floor(w.clock.t / 86_400_000), n: SAPPHIRES.speedup.dailyChunks };
+  ok(speedupOptions(w.state)[0].why === 'daily' && w.state.speedupStepsLeftToday() === 0, 'суточный лимит ускорений');
+  w.state.data.wallet.daily = {};
+  w.state.data.research.durationMs = Math.ceil(30 * 60_000 * 0.25);
+  w.state.data.research.fullMs = 30 * 60_000;
+  ok(speedupOptions(w.state)[0].why === 'limit', 'больше 75% таймера не снять');
+  ok(sapphireFailText({ reason: 'sapphires', need: 5 }) === 'Не хватает сапфиров: нужно 5 сапфиров.', 'понятный текст отказа');
+  // пресеты по номерам
+  w.state.data.wallet.sapphires = 100;
+  ok(buildView(w.state).presets.length === 1 && buildView(w.state).nextPreset.n === 2 && buildView(w.state).nextPreset.canPay, 'один пресет, второй можно открыть');
+  ok(w.state.buildPreset('save', false, 2).reason === 'locked', 'второй пресет закрыт, пока не открыт за сапфиры');
+  w.state.setObject('player_build', { ...(w.state.getObject('player_build') || {}), presetSlots: 2 });
+  w.state.setBuild({ slots: ['seal'] });
+  ok(w.state.buildPreset('save', false, 2).ok && w.state.setBuild({ slots: ['telekinesis'] }).ok && w.state.buildPreset('load', false, 2).ok && w.state.equippedGifts().join() === 'seal', 'второй пресет сохраняется и возвращается отдельно от первого');
+  ok(buildView(w.state).presets.map(p => p.saved).join() === 'false,true', 'окно знает, какие пресеты сохранены');
+  const card = giftCards(w.state).find(c => c.id === 'telekinesis');
+  ok(!card.respec.length || card.respec[0].sapphires === SAPPHIRES.respec, 'смена ветки предлагается и за сапфиры');
+}
+
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты даров пройдены');
 process.exit(failures ? 1 : 0);

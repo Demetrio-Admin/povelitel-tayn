@@ -2,6 +2,7 @@
 // Данные берутся из конфигов баланса и из GameState; окно (ui/windows11.js) только рисует.
 import { ABILITIES } from '../config/balance.abilities.js';
 import { UPGRADES, ITEMS, TIMER_MODE, BRANCH_RESPEC } from '../config/balance.progression.js';
+import { SAPPHIRES } from '../config/sapphires.js';
 import { statsFor } from './abilityStats.js';
 import { AMULETS, AMULET_IDS, AMULET_SLOTS, GIFT_IDS } from '../config/build.js';
 
@@ -79,7 +80,8 @@ export function respecOptions(state, id) {
   const cur = state.branchOf(id);
   if (!cur) return [];
   return Object.entries(ABILITIES[id].branches || {}).filter(([k]) => k !== cur)
-    .map(([k, b]) => ({ id: k, name: b.name, price: BRANCH_RESPEC.coins, canPay: state.item('coins') >= BRANCH_RESPEC.coins }));
+    .map(([k, b]) => ({ id: k, name: b.name, price: BRANCH_RESPEC.coins, canPay: state.item('coins') >= BRANCH_RESPEC.coins,
+      sapphires: SAPPHIRES.respec, canPaySapphires: state.sapphires() >= SAPPHIRES.respec }));
 }
 
 const pickBranch = (id, b) => { const x = ABILITIES[id].branches[b]; return { name: x.name, text: x.text, tradeoff: x.tradeoff }; };
@@ -117,6 +119,10 @@ export function buildView(state) {
     amuletSlots: AMULET_SLOTS,
     amulets: AMULET_IDS.filter((id) => state.item(id) >= 1).map((id) => ({ id, name: AMULETS[id].name, text: AMULETS[id].text, tradeoff: AMULETS[id].tradeoff, equipped: worn.includes(id) })),
     hasPreset: !!state.buildData().preset,
+    // v0.17.0: пресеты по номерам и следующий, который можно открыть за сапфиры
+    presets: Array.from({ length: state.buildData().presetSlots }, (_, i) => ({ n: i + 1, saved: !!state.buildData().presets[i + 1] })),
+    nextPreset: state.buildData().presetSlots < SAPPHIRES.preset.max
+      ? { n: state.buildData().presetSlots + 1, price: SAPPHIRES.preset.price, canPay: state.sapphires() >= SAPPHIRES.preset.price } : null,
   };
 }
 

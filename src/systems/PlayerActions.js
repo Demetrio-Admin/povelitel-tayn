@@ -159,5 +159,10 @@ export class PlayerActions {
   respec(ability, branch) { return this.mirror({ op: 'respec', ability, branch }); }
   // v0.16.0: слоты даров, амулеты и единственный пресет — сервер проверяет и записывает (player_build)
   buildSet(want) { return this.mirror({ op: 'build_set', ...want }); }
-  buildPreset(mode) { return this.mirror({ op: 'build_preset', mode }); }
+  buildPreset(mode, slot = 1) { return this.mirror({ op: 'build_preset', mode, slot }); }
+  // v0.17.0: сапфиры — только сервер (без локального показа заранее): ответ сервера и есть результат
+  researchSpeedup(chunks) { return this.run({ op: 'research_speedup', chunks }); }
+  presetUnlock() { return this.run({ op: 'preset_unlock' }); }
+  bankWelcome() { return this.run({ op: 'bank_welcome' }); }
+  respecSapphires(ability, branch) { return this.run({ op: 'respec', ability, branch, pay: 'sapphires' }); }
 }

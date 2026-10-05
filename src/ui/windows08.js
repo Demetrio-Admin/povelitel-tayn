@@ -433,6 +433,14 @@ export const windows08 = {
         const row = (text, style = {}) => { const t = label(this, c, x, cy, text, { fontSize: UI.type.small, wordWrap: { width: w }, ...style }); cy += t.height + 3; };
         row(T(fm(`Уровень героини: ${d.heroLevel}`, `Уровень героя: ${d.heroLevel}`)) + `   ·   опыт ${d.heroXP}${next ? ` / ${next}` : ''}`, { fontSize: UI.type.body });
         { const v = vitals.view(state); row(`Здоровье ${v.hp} / ${v.maxHp}   ·   мана ${v.mana} / ${v.maxMana}`, { fontSize: UI.type.body, color: COLORS.textGold }); }
+        // v0.17.0: монеты и сапфиры; кнопка — окно кошелька
+        {
+          const b = addButton(this, x + w / 2, cy + 8 + UI.touch.button / 2, w - 24, UI.touch.button, `Монеты: ${state.item('coins')}   ·   ◆ Сапфиры: ${state.sapphires()}`, {
+            primary: false, accent: 0x6fa8ff, fontSize: UI.type.body,
+            onPress: () => { if (this.modal?.scroll?.canTap()) this.openWallet(); },
+          });
+          c.add(b.parts); cy += UI.touch.button + 16;
+        }
         cy += 4;
         sec('Дары');
         for (const id of ABILITY_ORDER) {

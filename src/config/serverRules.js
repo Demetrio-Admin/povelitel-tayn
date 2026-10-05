@@ -15,6 +15,7 @@ import { STORY_USES, FIRST_CRAFT, MIGRATION_V10 } from './storyItems.js';
 import { buildSlotRules } from './build.js';
 import { sapphireRules } from './sapphires.js';
 import { shopRules } from './shop.js';
+import { dailyRules } from './daily.js';
 
 /**
  * Награда из конфигов → формат серверной операции (_grant / grant):
@@ -252,6 +253,7 @@ export function serverRules() {
     events, eventRewards, quests: questRules(), research: researchRules(), build: buildRules(), spawnStart: spawnStartRules(),
     sapphires: sapphireRules(),   // v0.17.0
     shop: shopRules(),             // v0.19.0: торговец
+    daily: dailyRules(),           // v0.23.0: доска поручений
     combatPotions: Object.keys(POTIONS),   // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
   };
 }

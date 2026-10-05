@@ -34,11 +34,13 @@ import {
 } from '../objects/InteractiveObject.js';
 import { ZONE_EVENTS } from '../config/world.city.js';
 import { IceObject } from '../objects/IceObject.js';
+import { BoardObject } from '../objects/BoardObject.js';
 import { GateObject, SealSigilObject, DustStashObject, ForestNodeObject } from '../objects/ChapterObjects.js';
 
 const OBJECT_CLASSES = {
   travel: TravelObject,   // v0.20.0
   ice: IceObject,         // v0.21.0
+  board: BoardObject,     // v0.23.0: доска поручений
   book: BookObject,
   telekinesis: TelekinesisObject,
   fire: FireObject,

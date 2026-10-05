@@ -10,6 +10,7 @@ import { applyPatch, applyAction, combatApply, advanceVitals, fillDefaults, empt
 import { HERO_LEVELS } from '../../src/config/balance.hero.js';
 
 import { serverRules } from '../../src/config/serverRules.js';
+import { DAILY_ORDER } from '../../src/config/daily.js';
 
 const SERIES = Number(process.argv[2]) || 60, STEPS = 14;
 const RULES = serverRules();
@@ -224,6 +225,14 @@ const SCRIPTED = [
   A('event', { key: 'ch2_ice3_shard' }), A('event', { key: 'ch2_ice3_frost' }), A('respec', { ability: 'ice', branch: 'shard' }),
   A('event', { key: 'chapter_2_complete' }), SET({ quests: ['ch2_epilogue'] }), A('event', { key: 'chapter_2_complete' }), A('event', { key: 'chapter_2_complete' }),
   W('lab_seal'), SET({ quests: ['ch2_lab_found'] }), MANA(100), W('lab_seal'), W('final_ward'), SET({ quests: ['ch2_final_start'] }), W('final_ward'), W('final_rift'), W('final_ice_wall'),
+  // v0.23.0: доска поручений — взять (только поручения дня, не больше трёх), сдать (принести / победы после того, как взято)
+  ...DAILY_ORDER.map(id => A('daily_take', { offer: id })), A('daily_take', { offer: 'nope' }), A('daily_take', {}),
+  SET({ quests: ['ch2_quarter_cleared'] }), ...DAILY_ORDER.map(id => A('daily_done', { offer: id })),
+  ...DAILY_ORDER.map(id => A('daily_take', { offer: id })),
+  SET({ inv: { frost_herb: 10, ice_crystal: 3, warm_potion: 2, tree_resin: 5, rune_dust: 5, elixir_life: 3, forest_mushroom: 5 } }),
+  SET({ objects: { 'rep:fq_critter': { wins: 4, at: 1 }, 'rep:wh_collector_1': { wins: 2, at: 1 }, 'rep:rootling_01': { wins: 'x' } } }),
+  ...DAILY_ORDER.map(id => A('daily_done', { offer: id })), ...DAILY_ORDER.map(id => A('daily_done', { offer: id })),
+  SET({ quests: ['ch2_lab_open'] }), ...DAILY_ORDER.map(id => A('daily_take', { offer: id })),
 ];
 const SCRIPT = SCRIPTED.flatMap(splitSet);
 for (let s = 0; s < SERIES + 1; s++) {
@@ -264,7 +273,7 @@ for (let s = 0; s < SERIES + 1; s++) {
     if (rnd() < 0.08) return AGE(pick(WORLD_IDS), pick([10, 100, 150, 200, 500]));
     const p = randomPatch();   // в нём бывает и «прогресс» (xp, inv, quests…): сервер и модель обязаны одинаково его игнорировать
     if (rnd() < 0.2) p.inv = { ...(typeof p.inv === 'object' && !Array.isArray(p.inv) ? p.inv : {}), coins: pick([5, 20, 100]) };
-    if (rnd() < 0.3) p.objects = { ...(typeof p.objects === 'object' && !Array.isArray(p.objects) ? p.objects : {}), ...Object.fromEntries(arrOf(() => [pick([...WORLD_IDS, 'rep:rootling_02', 'rep:rootling_05', 'player_build']),
+    if (rnd() < 0.3) p.objects = { ...(typeof p.objects === 'object' && !Array.isArray(p.objects) ? p.objects : {}), ...Object.fromEntries(arrOf(() => [pick([...WORLD_IDS, 'rep:rootling_02', 'rep:rootling_05', 'player_build', 'daily']),
       pick([null, { state: 'picked', t: 1 }, { state: 'opened' }, { state: 'moved' }, { state: 'destroyed' }, { claimed: 1 }, { wins: 1, at: 1 }, { wins: 3, at: 1 }, { branches: { fire: 'x' } }])], 2)) };
     // настоящее состояние игрока задаёт __set (ингредиенты, события, побеждённые враги, дары, опыт, ветки, изучение) — чтобы операции реально срабатывали
     const st = {};

@@ -861,7 +861,8 @@ var CITY_INTERACTIVES = [
   { id: "frostherb_r1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2060, y: 3420, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_start" },
   { id: "frostherb_r2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2240, y: 3880, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_start" },
   { id: "resin_r1", kind: "gather", res: "tree_resin", amount: 1, respawnSec: 240, x: 1920, y: 3860, texture: "resin_log_01", radius: 90 },
-  // площадь
+  // площадь. v0.23.0: доска поручений (5 поручений дня, взять 3) — открывается после квеста 10
+  { id: "city_board", kind: "board", x: 2480, y: 3420, texture: "notice_board_01", collide: { w: 80, h: 20 }, radius: 120, hint: "\u0414\u043E\u0441\u043A\u0430 \u043F\u043E\u0440\u0443\u0447\u0435\u043D\u0438\u0439" },
   { id: "npc_ilaria", kind: "npc", npc: "ilaria", x: 2560, y: 3260, texture: "npc_ilaria", collide: { w: 50, h: 24 }, radius: 140 },
   { id: "npc_merchant", kind: "npc", npc: "merchant", x: 3350, y: 3500, texture: "npc_merchant", collide: { w: 50, h: 24 }, radius: 140 },
   { id: "npc_banker", kind: "npc", npc: "banker", x: 3380, y: 3880, texture: "npc_banker", collide: { w: 50, h: 24 }, radius: 140 },
@@ -1164,27 +1165,27 @@ var CITY_ENEMIES = [
   // знакомый противник на дороге (квест 1, необязательный)
   { id: "road_scavenger", enemy: "young_scavenger", x: 2120, y: 3640, radius: 110, requiresEvent: "ch2_start" },
   // v0.21.0 — квест 6: Складской квартал
-  { id: "wh_collector_1", enemy: "frost_collector", x: 2560, y: 4800, radius: 120, requiresEvent: "ch2_cargo_start" },
-  { id: "wh_collector_2", enemy: "frost_collector", x: 3240, y: 4720, radius: 120, requiresEvent: "ch2_cargo_start" },
+  { id: "wh_collector_1", enemy: "frost_collector", x: 2560, y: 4800, radius: 120, requiresEvent: "ch2_cargo_start", repeatSec: 600 },
+  { id: "wh_collector_2", enemy: "frost_collector", x: 3240, y: 4720, radius: 120, requiresEvent: "ch2_cargo_start", repeatSec: 600 },
   { id: "wh_elite", enemy: "frost_collector_elite", x: 2930, y: 4880, radius: 130, requiresEvent: "ch2_cargo_start", defeatEvent: "ch2_wh_boss" },
   // квест 7: зверь, сбежавший из закрытой лаборатории, — у дверей Общества
   { id: "lab_critter", enemy: "frost_critter", x: 3210, y: 3240, radius: 120, requiresEvent: "ch2_severin_asked", defeatEvent: "ch2_lab_critter" },
   // квест 8: Замёрзший квартал (появляются после знакомства с Нэрис)
-  { id: "fq_critter", enemy: "frost_critter", x: 2560, y: 2400, radius: 120, requiresEvent: "ch2_nerys_met" },
+  { id: "fq_critter", enemy: "frost_critter", x: 2560, y: 2400, radius: 120, requiresEvent: "ch2_nerys_met", repeatSec: 480 },
   { id: "fq_collector", enemy: "frost_collector", x: 3300, y: 2300, radius: 120, requiresEvent: "ch2_nerys_met" },
   // квест 9: тренировочный двор за проломом
   { id: "fq_training", enemy: "frost_critter", x: 2910, y: 1830, radius: 110, requiresEvent: "unlock_ice_1", defeatEvent: "ch2_training_done" },
   // квест 10 «Выбор»: глубина квартала
-  { id: "fq_deep_1", enemy: "frost_collector", x: 2600, y: 1740, radius: 120, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_deep_1" },
-  { id: "fq_deep_2", enemy: "frost_collector", x: 3240, y: 1740, radius: 120, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_deep_2" },
-  { id: "fq_guardian", enemy: "ice_guardian", x: 2910, y: 1690, radius: 140, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_ice_guardian_defeated" },
+  { id: "fq_deep_1", enemy: "frost_collector", x: 2600, y: 1740, radius: 120, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_deep_1", repeatSec: 600 },
+  { id: "fq_deep_2", enemy: "frost_collector", x: 3240, y: 1740, radius: 120, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_deep_2", repeatSec: 600 },
+  { id: "fq_guardian", enemy: "ice_guardian", x: 2910, y: 1690, radius: 140, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_ice_guardian_defeated", repeatSec: 1200 },
   // v0.22.0 — квест 11 «Хрупкость»: учебные бои во дворе
   { id: "yard_brittle_1", enemy: "frost_collector", x: 2480, y: 1880, radius: 110, requiresEvent: "unlock_ice_2", defeatEvent: "ch2_brittle_1" },
   { id: "yard_brittle_2", enemy: "frost_collector", x: 3400, y: 1880, radius: 110, requiresEvent: "unlock_ice_2", defeatEvent: "ch2_brittle_2" },
   // квест 12: добровольцы и конструкт в лаборатории
   { id: "vol_1", enemy: "volunteer", x: 1970, y: 4320, radius: 110, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_vol_1" },
   { id: "vol_2", enemy: "volunteer", x: 2200, y: 4420, radius: 110, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_vol_2" },
-  { id: "lab_construct", enemy: "experimental_construct", x: 2080, y: 4600, radius: 120, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_lab_construct" },
+  { id: "lab_construct", enemy: "experimental_construct", x: 2080, y: 4600, radius: 120, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_lab_construct", repeatSec: 900 },
   // квест 14: нестабильные конструкции в городе
   { id: "unstable_1", enemy: "frost_collector", x: 3e3, y: 3980, radius: 110, requiresEvent: "ch2_coven_met", defeatEvent: "ch2_unstable_1" },
   { id: "unstable_2", enemy: "frost_collector", x: 2720, y: 4660, radius: 110, requiresEvent: "ch2_coven_met", defeatEvent: "ch2_unstable_2" },
@@ -1199,7 +1200,6 @@ var CITY_DECOR = [
   // v0.22.0: проход к лаборатории свободен
   ...[1900, 2050, 2200, 2330].map((x, i) => ({ id: `ct_treeN_${i}`, k: "tree_dark_01", x, y: 3290 })),
   ...[1880, 1960, 2200, 2330].map((x, i) => ({ id: `ct_treeS_${i}`, k: "tree_dark_02", x, y: 4060 })),
-  { id: "ct_board", k: "notice_board_01", x: 2480, y: 3420 },
   ...[[2440, 3530], [2440, 3800], [3040, 3240], [3040, 4e3], [2900, 4300], [2900, 2470]].map(([x, y], i) => ({ id: `ct_lamp_${i}`, k: "city_lamp_01", x, y })),
   { id: "ct_frost_1", k: "frost_patch_01", x: 2760, y: 3700, floor: true },
   { id: "ct_frost_2", k: "frost_patch_01", x: 2980, y: 3860, floor: true },
@@ -2384,6 +2384,113 @@ function shopRules() {
   return { requires: SHOP.requires, buy: { ...SHOP.buy }, sell: Object.fromEntries(Object.keys(SHOP.buy).map((k) => [k, sellPrice(k)])), maxQty: SHOP.maxQty };
 }
 
+// src/config/daily.js
+var DAILY = {
+  requires: "ch2_quarter_cleared",
+  // доска открывается во второй половине главы II (после квеста 10)
+  offers: 5,
+  picks: 3,
+  dayMs: 864e5
+};
+var DAILY_POOL = {
+  herbs_alchemist: {
+    giver: "\u0411\u043E\u0440\u0438\u0441, \u043B\u0430\u0432\u043A\u0430",
+    title: "\u041C\u043E\u0440\u043E\u0437\u043D\u0438\u043A \u0434\u043B\u044F \u043D\u0430\u0441\u0442\u043E\u0435\u043A",
+    text: "\u0410\u043B\u0445\u0438\u043C\u0438\u043A\u0443 \u0441 \u0440\u044B\u043D\u043A\u0430 \u043D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442 \u043C\u043E\u0440\u043E\u0437\u043D\u0438\u043A\u0430 \u2014 \u043F\u043E\u043A\u0443\u043F\u0430\u0442\u0435\u043B\u0438 \u0433\u0440\u0435\u044E\u0442\u0441\u044F \u043D\u0430\u0441\u0442\u043E\u0439\u043A\u0430\u043C\u0438.",
+    goal: { type: "deliver", items: { frost_herb: 4 } },
+    reward: { heroXP: 40, coins: 30, items: { moon_herb: 1 } }
+  },
+  archive_crystal: {
+    giver: "\u0418\u043B\u0430\u0440\u0438\u044F, \u0410\u0440\u0445\u0438\u0432",
+    title: "\u041E\u0431\u0440\u0430\u0437\u0435\u0446 \u0434\u043B\u044F \u0410\u0440\u0445\u0438\u0432\u0430",
+    text: "\u0410\u0440\u0445\u0438\u0432\u0443 \u043D\u0443\u0436\u0435\u043D \u043E\u0431\u0440\u0430\u0437\u0435\u0446 \u043B\u0435\u0434\u044F\u043D\u043E\u0433\u043E \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u0430 \u2014 \u0441\u0440\u0430\u0432\u043D\u0438\u0442\u044C \u0441 \u0437\u0430\u043F\u0438\u0441\u044F\u043C\u0438 \u043E \u043F\u0440\u043E\u0448\u043B\u044B\u0445 \u0432\u0441\u043F\u044B\u0448\u043A\u0430\u0445.",
+    goal: { type: "deliver", items: { ice_crystal: 1 } },
+    reward: { heroXP: 50, coins: 25, items: { rune_dust: 1 } }
+  },
+  warm_test: {
+    giver: "\u041D\u044D\u0440\u0438\u0441",
+    title: "\u0418\u0441\u043F\u044B\u0442\u0430\u0442\u044C \u0442\u0451\u043F\u043B\u044B\u0439 \u043D\u0430\u0441\u0442\u043E\u0439",
+    text: "\u041D\u044D\u0440\u0438\u0441 \u043F\u0440\u043E\u0441\u0438\u0442 \u0442\u0451\u043F\u043B\u044B\u0439 \u043D\u0430\u0441\u0442\u043E\u0439 \u2014 \u043F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u043D\u043E\u0432\u0443\u044E \u0437\u0430\u043A\u0432\u0430\u0441\u043A\u0443 \u043C\u043E\u0440\u043E\u0437\u043D\u0438\u043A\u0430.",
+    goal: { type: "deliver", items: { warm_potion: 1 } },
+    reward: { heroXP: 45, coins: 35, items: { ice_crystal: 1 } }
+  },
+  guard_resin: {
+    giver: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u0430\u044F \u0441\u0442\u0440\u0430\u0436\u0430",
+    title: "\u0421\u043C\u043E\u043B\u0430 \u0434\u043B\u044F \u0444\u0430\u043A\u0435\u043B\u043E\u0432",
+    text: "\u041D\u043E\u0447\u043D\u044B\u0435 \u043F\u0430\u0442\u0440\u0443\u043B\u0438 \u0436\u0433\u0443\u0442 \u0444\u0430\u043A\u0435\u043B\u044B \u0432\u0442\u0440\u043E\u0435 \u0447\u0430\u0449\u0435. \u041D\u0443\u0436\u043D\u0430 \u0441\u043C\u043E\u043B\u0430.",
+    goal: { type: "deliver", items: { tree_resin: 3 } },
+    reward: { heroXP: 35, coins: 25, items: { forest_mushroom: 1 } }
+  },
+  society_dust: {
+    giver: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F",
+    title: "\u041F\u044B\u043B\u044C \u0434\u043B\u044F \u043F\u0440\u0438\u0431\u043E\u0440\u043E\u0432",
+    text: "\u0427\u0435\u0441\u0442\u043D\u0430\u044F \u0447\u0430\u0441\u0442\u044C \u041E\u0431\u0449\u0435\u0441\u0442\u0432\u0430 \u0447\u0438\u043D\u0438\u0442 \u0441\u0432\u043E\u0438 \u043F\u0440\u0438\u0431\u043E\u0440\u044B \u2014 \u0438\u043C \u043D\u0443\u0436\u043D\u0430 \u0440\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C.",
+    goal: { type: "deliver", items: { rune_dust: 2 } },
+    reward: { heroXP: 40, coins: 30, items: { lunar_shard: 1 } }
+  },
+  healer_elixirs: {
+    giver: "\u041B\u0435\u043A\u0430\u0440\u044C \u0443 \u0444\u043E\u043D\u0442\u0430\u043D\u0430",
+    title: "\u041D\u0430\u0441\u0442\u043E\u0438 \u0434\u043B\u044F \u043E\u0431\u043C\u043E\u0440\u043E\u0436\u0435\u043D\u043D\u044B\u0445",
+    text: "\u041F\u043E\u0441\u043B\u0435 \u0432\u043E\u043B\u043D\u044B \u0445\u043E\u043B\u043E\u0434\u0430 \u0443 \u043B\u0435\u043A\u0430\u0440\u044F \u043E\u0447\u0435\u0440\u0435\u0434\u044C. \u0414\u0432\u0430 \u043D\u0430\u0441\u0442\u043E\u044F \u0436\u0438\u0437\u043D\u0438 \u0441\u043F\u0430\u0441\u0443\u0442 \u0447\u0435\u0439-\u0442\u043E \u0432\u0435\u0447\u0435\u0440.",
+    goal: { type: "deliver", items: { elixir_life: 2 } },
+    reward: { heroXP: 50, coins: 40 }
+  },
+  coven_mushrooms: {
+    giver: "\u0420\u043E\u0432\u0435\u043D\u0430, \u041A\u043E\u0432\u0435\u043D",
+    title: "\u0413\u0440\u0438\u0431\u044B \u0434\u043B\u044F \u043E\u0431\u0435\u0440\u0435\u0433\u043E\u0432",
+    text: "\u041A\u043E\u0432\u0435\u043D \u043F\u043B\u0435\u0442\u0451\u0442 \u043E\u0431\u0435\u0440\u0435\u0433\u0438 \u0434\u043B\u044F \u0441\u0442\u0435\u043D. \u041D\u0443\u0436\u043D\u044B \u043B\u0435\u0441\u043D\u044B\u0435 \u0433\u0440\u0438\u0431\u044B.",
+    goal: { type: "deliver", items: { forest_mushroom: 3 } },
+    reward: { heroXP: 35, coins: 25, items: { frost_herb: 1 } }
+  },
+  hunt_collectors: {
+    giver: "\u0421\u043A\u043B\u0430\u0434\u0441\u043A\u043E\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B",
+    title: "\u0421\u0431\u043E\u0440\u0449\u0438\u043A\u0438 \u0432\u0435\u0440\u043D\u0443\u043B\u0438\u0441\u044C",
+    text: "\u041D\u0430 \u0441\u043A\u043B\u0430\u0434\u0430\u0445 \u0438 \u0432 \u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0435\u043C \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0435 \u0441\u043D\u043E\u0432\u0430 \u0431\u0440\u043E\u0434\u044F\u0442 \u043C\u043E\u0440\u043E\u0437\u043D\u044B\u0435 \u0441\u0431\u043E\u0440\u0449\u0438\u043A\u0438. \u041E\u0442\u0433\u043E\u043D\u0438\u0442\u0435 \u0434\u0432\u043E\u0438\u0445.",
+    goal: { type: "wins", spawns: ["wh_collector_1", "wh_collector_2", "fq_deep_1", "fq_deep_2"], count: 2 },
+    reward: { heroXP: 60, coins: 40, items: { ice_crystal: 1 } }
+  },
+  hunt_critter: {
+    giver: "\u0416\u0438\u0442\u0435\u043B\u0438 \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0430",
+    title: "\u0417\u0432\u0435\u0440\u0451\u043A \u0443 \u043F\u043E\u0433\u0440\u0435\u0431\u0430",
+    text: "\u0418\u043D\u0435\u0435\u0432\u044B\u0439 \u0437\u0432\u0435\u0440\u0451\u043A \u0441\u043D\u043E\u0432\u0430 \u0441\u043A\u0440\u0435\u0431\u0451\u0442\u0441\u044F \u0443 \u043F\u043E\u0433\u0440\u0435\u0431\u0430 \u043D\u0430 \u0437\u0430\u043F\u0430\u0434\u0435 \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0430.",
+    goal: { type: "wins", spawns: ["fq_critter"], count: 1 },
+    reward: { heroXP: 40, coins: 25, items: { frost_herb: 2 } }
+  },
+  hunt_rootlings: {
+    giver: "\u041C\u0438\u0440\u0440\u0430",
+    title: "\u041A\u043E\u0440\u043D\u0435\u0432\u0438\u043A\u0438 \u0443 \u0442\u0440\u043E\u043F\u044B",
+    text: "\u041C\u0438\u0440\u0440\u0430 \u043F\u0438\u0448\u0435\u0442: \u043A\u043E\u0440\u043D\u0435\u0432\u0438\u043A\u0438 \u0432 \u0441\u0442\u0430\u0440\u043E\u043C \u043B\u0435\u0441\u0443 \u0441\u043D\u043E\u0432\u0430 \u043E\u0436\u0438\u0432\u0438\u043B\u0438\u0441\u044C. \u0414\u0432\u043E\u0438\u0445 \u0445\u0432\u0430\u0442\u0438\u0442, \u0447\u0442\u043E\u0431\u044B \u043E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0435 \u043F\u0440\u0438\u0442\u0438\u0445\u043B\u0438.",
+    goal: { type: "wins", spawns: ["rootling_01", "rootling_02", "rootling_03"], count: 2 },
+    reward: { heroXP: 45, coins: 30, items: { tree_resin: 2 } }
+  },
+  construct_test: {
+    giver: "\u041D\u044D\u0440\u0438\u0441",
+    title: "\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442 \u0432 \u043F\u043E\u0433\u0440\u0435\u0431\u0435",
+    text: "\u0412 \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u0438 \u0441\u043D\u043E\u0432\u0430 \u0441\u043E\u0431\u0440\u0430\u043B\u0441\u044F \u043A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442. \u0420\u0430\u0437\u0431\u0435\u0440\u0438\u0442\u0435 \u0435\u0433\u043E \u2014 \u041D\u044D\u0440\u0438\u0441 \u0438\u0437\u0443\u0447\u0438\u0442 \u043E\u0431\u043B\u043E\u043C\u043A\u0438.",
+    goal: { type: "wins", spawns: ["lab_construct"], count: 1 },
+    requires: "ch2_lab_open",
+    reward: { heroXP: 60, coins: 40, items: { ice_crystal: 2 } }
+  },
+  guardian_hunt: {
+    giver: "\u0421\u0442\u0440\u0430\u0436\u0430 \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0430",
+    title: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0441\u0442\u0440\u0430\u0436",
+    text: "\u0412 \u0433\u043B\u0443\u0431\u0438\u043D\u0435 \u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0435\u0433\u043E \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0430 \u0441\u043D\u043E\u0432\u0430 \u0441\u0442\u043E\u0438\u0442 \u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0441\u0442\u0440\u0430\u0436. \u041F\u0440\u043E\u0439\u0434\u0438\u0442\u0435 \u043C\u0438\u043C\u043E \u043D\u0435\u0433\u043E \u2014 \u0447\u0435\u0440\u0435\u0437 \u043D\u0435\u0433\u043E.",
+    goal: { type: "wins", spawns: ["fq_guardian"], count: 1 },
+    reward: { heroXP: 60, coins: 40, items: { ice_crystal: 1 } }
+  }
+};
+var DAILY_ORDER = Object.keys(DAILY_POOL);
+function dailyRules() {
+  return {
+    requires: DAILY.requires,
+    offers: DAILY.offers,
+    picks: DAILY.picks,
+    dayMs: DAILY.dayMs,
+    order: DAILY_ORDER,
+    pool: Object.fromEntries(Object.entries(DAILY_POOL).map(([id, o]) => [id, { goal: o.goal, reward: o.reward, requires: o.requires || null }]))
+  };
+}
+
 // src/config/serverRules.js
 function grantOf(r = {}) {
   const g = {};
@@ -2645,6 +2752,8 @@ function serverRules() {
     // v0.17.0
     shop: shopRules(),
     // v0.19.0: торговец
+    daily: dailyRules(),
+    // v0.23.0: доска поручений
     combatPotions: Object.keys(POTIONS)
     // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
   };
@@ -3512,6 +3621,8 @@ var MSG = {
   // v0.20.0: переход между лесом и городом ({ x, y, text })
   OPEN_SHOP: "ui:open-shop",
   // v0.20.0: лавка торговца (из диалога)
+  OPEN_DAILY: "ui:open-daily",
+  // v0.23.0: доска поручений
   OPEN_WALLET: "ui:open-wallet",
   // v0.20.0: кошелёк / банк (из диалога и меню)   // v0.10.0: Селена открывает Печать I (после закрытия диалога)
   ZONE_CHANGED: "world:zone",

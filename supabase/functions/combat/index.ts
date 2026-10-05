@@ -428,7 +428,19 @@ var EVENT_REWARDS = {
   // травы на первый Тёплый настой
   unlock_ice_1: { heroXP: 60 },
   ch2_ice_trained: { heroXP: 240, coins: 60 },
-  ch2_quarter_cleared: { heroXP: 340, coins: 160, items: { ice_crystal: 2 } }
+  ch2_quarter_cleared: { heroXP: 340, coins: 160, items: { ice_crystal: 2 } },
+  // v0.22.0: квесты 11–15
+  unlock_ice_2: { heroXP: 60, items: { ice_crystal: 1, tree_resin: 1, rune_dust: 1 } },
+  // материалы на первый Флакон хрупкости
+  ch2_brittle_done: { heroXP: 240, coins: 70 },
+  ch2_stabilized: { heroXP: 120 },
+  ch2_lab_reported: { heroXP: 300, coins: 180, items: { frost_shard: 1, lunar_shard: 2 } },
+  ch2_severin_confronted: { heroXP: 380, coins: 80 },
+  ch2_coven_met: { heroXP: 60 },
+  ch2_coven_ready: { heroXP: 300, coins: 180, items: { ice_crystal: 2 } },
+  ch2_epilogue: { heroXP: 250 },
+  chapter_2_complete: { heroXP: 300, coins: 150, items: { frost_shard: 1 } }
+  // + 5 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
 };
 
 // src/config/balance.abilities.js
@@ -727,6 +739,7 @@ var CITY_ZONES = [
   { id: "R", name: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0431\u043E\u043B\u044C\u0448\u043E\u0439 \u043C\u0438\u0440", x: 1800, y: 3300, w: 560, h: 650, safePoint: { x: 1960, y: 3625 } },
   { id: "AR", name: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", x: 2440, y: 2560, w: 420, h: 480, safePoint: { x: 2650, y: 3150 } },
   { id: "SO", name: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", x: 2960, y: 2560, w: 500, h: 480, safePoint: { x: 3210, y: 3150 } },
+  { id: "LB", name: "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", x: 1840, y: 4060, w: 480, h: 700, safePoint: { x: 2070, y: 3800 } },
   { id: "DU", name: "\u0417\u0430\u043B \u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u043E\u0439 \u0414\u0443\u044D\u043B\u0438", x: 2420, y: 4100, w: 440, h: 360, safePoint: { x: 2640, y: 4020 } },
   { id: "CV", name: "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", x: 2960, y: 4100, w: 500, h: 360, safePoint: { x: 3210, y: 4020 } },
   { id: "WH", name: "\u0421\u043A\u043B\u0430\u0434\u0441\u043A\u043E\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 4500, w: 1140, h: 500, safePoint: { x: 2910, y: 4050 } },
@@ -736,8 +749,23 @@ var CITY_ZONES = [
 var CITY_GROUND = [
   { tex: "stone_path_01", x: 2360, y: 1500, w: 1240, h: 3540 },
   { tex: "wooden_floor_01", x: 2440, y: 2560, w: 420, h: 480 },
-  { tex: "wooden_floor_01", x: 2960, y: 2560, w: 500, h: 480 }
+  { tex: "wooden_floor_01", x: 2960, y: 2560, w: 500, h: 480 },
+  // v0.22.0: Дуэльный зал и Дом Ковенов открыты (полы), тайная лаборатория к югу от дороги и проход к ней
+  { tex: "wooden_floor_01", x: 2420, y: 4100, w: 440, h: 360 },
+  { tex: "wooden_floor_01", x: 2960, y: 4100, w: 500, h: 360 },
+  { tex: "stone_path_01", x: 2020, y: 3950, w: 100, h: 120 },
+  { tex: "stone_path_01", x: 1840, y: 4060, w: 480, h: 700 }
 ];
+function buildingTop(x, y, w, h, doorX) {
+  const t = 30;
+  return [
+    { kind: "wall", x, y, w: doorX - x, h: t },
+    { kind: "wall", x: doorX + 100, y, w: x + w - doorX - 100, h: t },
+    { kind: "wall", x, y, w: t, h },
+    { kind: "wall", x: x + w - t, y, w: t, h },
+    { kind: "wall", x, y: y + h - t, w, h: t }
+  ];
+}
 function building(x, y, w, h, doorX = null) {
   const t = 30, out = [
     { kind: "wall", x, y, w, h: t },
@@ -751,7 +779,8 @@ function building(x, y, w, h, doorX = null) {
 var CITY_COLLIDERS = [
   // ---- всё, что вне дороги и города, — лес (тёмная заливка, деревья — украшения ниже)
   { kind: "trees", x: 1800, y: 0, w: 560, h: 3300 },
-  { kind: "trees", x: 1800, y: 3950, w: 560, h: 1450 },
+  { kind: "trees", x: 1800, y: 3950, w: 220, h: 110 },
+  // v0.22.0: к югу от дороги — проход к тайной лаборатории (x 2020–2120)
   { kind: "trees", x: 2360, y: 0, w: 1240, h: 1460 },
   // v0.21.0: город вырос на север (Замёрзший квартал)
   { kind: "trees", x: 2360, y: 5040, w: 1240, h: 360 },
@@ -761,11 +790,12 @@ var CITY_COLLIDERS = [
   { kind: "ruin", x: 2400, y: 1460, w: 1200, h: 40 },
   { kind: "ruin", x: 2400, y: 5e3, w: 1200, h: 40 },
   { kind: "ruin", x: 3560, y: 1500, w: 40, h: 3500 },
-  // ---- Архив и Общество Преображения (разрезы с дверью), Дуэльный зал и Дом Ковенов (пока закрыты)
+  // ---- Архив и Общество Преображения (разрезы с дверью). v0.22.0: Дуэльный зал и Дом Ковенов — с дверью на площадь
+  //      (дверь зала закрыта астральным барьером final_ward до финала главы)
   ...building(2440, 2560, 420, 480, 2600),
   ...building(2960, 2560, 500, 480, 3160),
-  ...building(2420, 4100, 440, 360),
-  ...building(2960, 4100, 500, 360),
+  ...buildingTop(2420, 4100, 440, 360, 2590),
+  ...buildingTop(2960, 4100, 500, 360, 3160),
   // ---- Замёрзший квартал: вход — улица между Архивом и Обществом (её закрывает ледяная стена frost_barrier, квест 7).
   // v0.21.0: внутри квартал делит каменная ограда (y 1960–2000) с затопленным проломом fq_water — его замораживают Льдом (квест 9).
   { kind: "ruin", x: 2400, y: 1960, w: 460, h: 40 },
@@ -787,9 +817,20 @@ var CITY_COLLIDERS = [
   { kind: "furniture", x: 3120, y: 4640, w: 100, h: 40, tex: "crate_01" },
   { kind: "furniture", x: 3380, y: 4800, w: 100, h: 40, tex: "crate_01" },
   // v0.21.0 (добавлено в конец): вторая половина ограды Замёрзшего квартала
-  { kind: "ruin", x: 2960, y: 1960, w: 600, h: 40 }
+  { kind: "ruin", x: 2960, y: 1960, w: 600, h: 40 },
+  // v0.22.0 (добавлено в конец): лес вокруг тайной лаборатории и её каменные стены (вход — пролом x 2020–2120, его держит печать lab_seal)
+  { kind: "trees", x: 2120, y: 3950, w: 240, h: 110 },
+  { kind: "trees", x: 1800, y: 4060, w: 40, h: 1340 },
+  { kind: "trees", x: 2320, y: 4060, w: 40, h: 1340 },
+  { kind: "trees", x: 1840, y: 4760, w: 480, h: 640 },
+  { kind: "ruin", x: 1840, y: 4060, w: 180, h: 40 },
+  { kind: "ruin", x: 2120, y: 4060, w: 200, h: 40 },
+  { kind: "ruin", x: 1840, y: 4720, w: 480, h: 40 },
+  { kind: "furniture", x: 1880, y: 4400, w: 110, h: 40, tex: "table_01" },
+  { kind: "furniture", x: 2180, y: 4120, w: 140, h: 40, tex: "bookshelf_01" },
+  { kind: "furniture", x: 3020, y: 4140, w: 140, h: 40, tex: "bookshelf_01" }
 ];
-var CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }, { x: 2360, y: 1460, w: 1240, h: 1840 }];
+var CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }, { x: 2360, y: 1460, w: 1240, h: 1840 }, { x: 1800, y: 3950, w: 560, h: 1450 }];
 var CITY_INTERACTIVES = [
   // переходы между лесом и городом
   {
@@ -875,7 +916,7 @@ var CITY_INTERACTIVES = [
     doneButton: "\u041A \u041E\u0431\u0449\u0435\u0441\u0442\u0432\u0443"
   },
   // Общество Преображения
-  { id: "npc_severin", kind: "npc", npc: "severin", x: 3210, y: 2760, texture: "npc_severin", collide: { w: 50, h: 24 }, radius: 140 },
+  { id: "npc_severin", kind: "npc", npc: "severin", x: 3210, y: 2760, texture: "npc_severin", collide: { w: 50, h: 24 }, radius: 140, hideEvent: "ch2_final_start" },
   // ---- v0.21.0: квест 6 «Пропавший груз» — Складской квартал (после боя со сборщиками)
   {
     id: "wh_cargo",
@@ -940,7 +981,7 @@ var CITY_INTERACTIVES = [
     hint: "\u041B\u0435\u0434\u044F\u043D\u0430\u044F \u043A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F",
     doneText: "\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F \u0442\u0440\u0435\u0441\u043D\u0443\u043B\u0430 \u2014 \u0438 \u0445\u043E\u043B\u043E\u0434 \u0440\u0432\u0430\u043D\u0443\u043B\u0441\u044F \u043D\u0430\u0440\u0443\u0436\u0443! \u041A\u0442\u043E-\u0442\u043E \u0432 \u0441\u0438\u043D\u0435\u043C \u043F\u043B\u0430\u0449\u0435 \u0432\u0441\u0442\u0430\u043B \u043C\u0435\u0436\u0434\u0443 \u0432\u0430\u043C\u0438 \u0438 \u0432\u0441\u043F\u044B\u0448\u043A\u043E\u0439."
   },
-  { id: "npc_nerys", kind: "npc", npc: "nerys", x: 2800, y: 2230, texture: "npc_nerys", radius: 140, requiresEvent: "ch2_construct_unstable" },
+  { id: "npc_nerys", kind: "npc", npc: "nerys", x: 2800, y: 2230, texture: "npc_nerys", radius: 140, requiresEvent: "ch2_construct_unstable", hideEvent: "ch2_final_start" },
   {
     id: "fq_door",
     kind: "seal_sigil",
@@ -989,7 +1030,133 @@ var CITY_INTERACTIVES = [
     hint: "\u0417\u0430\u0442\u043E\u043F\u043B\u0435\u043D\u043D\u044B\u0439 \u043F\u0440\u043E\u043B\u043E\u043C",
     lockedText: "\u0412\u043E\u0434\u0430 \u0438\u0437 \u043B\u043E\u043F\u043D\u0443\u0432\u0448\u0435\u0439 \u0442\u0440\u0443\u0431\u044B \u0437\u0430\u043B\u0438\u043B\u0430 \u043F\u0440\u043E\u043B\u043E\u043C \u0432 \u043E\u0433\u0440\u0430\u0434\u0435. \u0417\u0434\u0435\u0441\u044C \u043F\u0440\u0438\u0433\u043E\u0434\u0438\u043B\u0441\u044F \u0431\u044B \u041B\u0451\u0434.",
     doneText: "\u0412\u043E\u0434\u0430 \u0441\u0445\u0432\u0430\u0442\u0438\u043B\u0430\u0441\u044C \u043B\u044C\u0434\u043E\u043C \u2014 \u043C\u043E\u0436\u043D\u043E \u043F\u0440\u043E\u0439\u0442\u0438."
-  }
+  },
+  // ---- v0.22.0, квест 12 «Добровольцы»: тайная лаборатория к югу от дороги. Вход держит нестабильная печать — её успокаивает Лёд.
+  {
+    id: "lab_seal",
+    kind: "ice",
+    x: 2070,
+    y: 4100,
+    texture: "lab_seal_01",
+    frozenTexture: "lab_seal_frozen_01",
+    walkable: true,
+    collide: { w: 100, h: 40 },
+    radius: 130,
+    waitEvent: "ch2_lab_found",
+    doneEvent: "ch2_lab_open",
+    hint: "\u041D\u0435\u0441\u0442\u0430\u0431\u0438\u043B\u044C\u043D\u0430\u044F \u043F\u0435\u0447\u0430\u0442\u044C",
+    lockedText: "\u0421\u0442\u0430\u0440\u0430\u044F \u0434\u0432\u0435\u0440\u044C \u0432 \u0441\u043A\u043B\u043E\u043D\u0435 \u0445\u043E\u043B\u043C\u0430, \u043D\u0430 \u043D\u0435\u0439 \u0434\u0440\u043E\u0436\u0438\u0442 \u0447\u0443\u0436\u0430\u044F \u043F\u0435\u0447\u0430\u0442\u044C. \u0427\u0442\u043E \u0437\u0430 \u043D\u0435\u0439 \u2014 \u043F\u043E\u043A\u0430 \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E.",
+    doneText: "\u041B\u0451\u0434 \u0443\u0441\u043F\u043E\u043A\u043E\u0438\u043B \u043F\u0435\u0447\u0430\u0442\u044C \u2014 \u043C\u0430\u0433\u0438\u044F \u0437\u0430\u043C\u0435\u0440\u043B\u0430, \u0438 \u0434\u0432\u0435\u0440\u044C \u043F\u043E\u0434\u0430\u043B\u0430\u0441\u044C."
+  },
+  { id: "lab_herb_1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 1900, y: 4230, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_lab_open" },
+  { id: "lab_herb_2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2270, y: 4300, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_lab_open" },
+  {
+    id: "lab_chest",
+    kind: "chest",
+    x: 1910,
+    y: 4680,
+    texture: "trunk_01",
+    radius: 110,
+    requiresEvent: "ch2_lab_open",
+    reward: { items: { rune_dust: 2, lunar_shard: 2, frost_herb: 2 } }
+  },
+  { id: "lab_cauldron", kind: "alchemy", x: 2260, y: 4690, texture: "cauldron_01", collide: { w: 66, h: 26 }, radius: 120, requiresEvent: "ch2_lab_open" },
+  { id: "npc_tikhon", kind: "npc", npc: "tikhon", x: 1950, y: 4560, texture: "npc_tikhon", radius: 130, requiresEvent: "ch2_vol_1" },
+  {
+    id: "lab_journal",
+    kind: "seal_sigil",
+    x: 2160,
+    y: 4600,
+    texture: "magic_book_01",
+    litTexture: "magic_book_01",
+    radius: 110,
+    requiresEnemyDefeated: "lab_construct",
+    doneEvent: "ch2_lab_journal",
+    hint: "\u041B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u043D\u044B\u0439 \u0436\u0443\u0440\u043D\u0430\u043B",
+    doneTitle: "\u0416\u0443\u0440\u043D\u0430\u043B \u043E\u043F\u044B\u0442\u043E\u0432",
+    doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u043F\u0440\u043E\u044F\u0432\u0438\u043B \u0441\u0442\u0451\u0440\u0442\u044B\u0435 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u044B. \xAB\u0418\u0441\u043F\u044B\u0442\u0443\u0435\u043C\u044B\u0439 \u21164 \u2014 \u043F\u0440\u0438\u0448\u0451\u043B \u0441\u0430\u043C, \u0445\u043E\u0447\u0435\u0442 \u0437\u0430\u0449\u0438\u0449\u0430\u0442\u044C \u0441\u0435\u043C\u044C\u044E\xBB. \xAB\u0414\u043E\u0437\u0430 \u0441\u043D\u0438\u0436\u0435\u043D\u0430 \u043F\u043E \u0443\u043A\u0430\u0437\u0430\u043D\u0438\u044E \u0421. \u0412.\xBB. \u041F\u043E\u0434\u043F\u0438\u0441\u044C \u043F\u043E\u0434 \u043E\u0442\u0447\u0451\u0442\u043E\u043C \u2014 \u0421\u0435\u0432\u0435\u0440\u0438\u043D \u0412\u0435\u0439\u0440. \u041E\u043D \u0437\u043D\u0430\u043B.",
+    doneButton: "\u041A \u0418\u043B\u0430\u0440\u0438\u0438"
+  },
+  // ---- квест 15 «Город под инеем»: экзамен по четырём дарам на площади (даров — три из четырёх, слоты можно менять)
+  {
+    id: "final_debris",
+    kind: "telekinesis",
+    mode: "push",
+    weight: "heavy",
+    x: 2760,
+    y: 3960,
+    texture: "crate_01",
+    collide: { w: 70, h: 30 },
+    target: { x: 2820, y: 3900 },
+    radius: 120,
+    requiresEvent: "ch2_final_start",
+    doneEvent: "ch2_fin_tk",
+    hint: "\u0417\u0430\u0432\u0430\u043B \u0443 \u0414\u0443\u044D\u043B\u044C\u043D\u043E\u0433\u043E \u0437\u0430\u043B\u0430"
+  },
+  {
+    id: "final_ice_wall",
+    kind: "fire",
+    x: 3100,
+    y: 3700,
+    texture: "ice_wall_01",
+    radius: 130,
+    requiresEvent: "ch2_final_start",
+    destroyEvent: "ch2_fin_fire",
+    burnSec: 1.4,
+    hint: "\u041B\u0435\u0434\u044F\u043D\u0430\u044F \u043F\u0440\u0435\u0433\u0440\u0430\u0434\u0430",
+    doneText: "\u041F\u0440\u0435\u0433\u0440\u0430\u0434\u0430 \u0440\u0430\u0441\u0442\u0430\u044F\u043B\u0430 \u2014 \u0443\u043B\u0438\u0446\u0430 \u043A \u0440\u044B\u043D\u043A\u0443 \u0441\u0432\u043E\u0431\u043E\u0434\u043D\u0430."
+  },
+  {
+    id: "final_rift",
+    kind: "ice",
+    x: 2520,
+    y: 3880,
+    texture: "rift_01",
+    frozenTexture: "rift_frozen_01",
+    radius: 130,
+    requiresEvent: "ch2_final_start",
+    doneEvent: "ch2_fin_ice",
+    hint: "\u041D\u0435\u0441\u0442\u0430\u0431\u0438\u043B\u044C\u043D\u044B\u0439 \u0440\u0430\u0437\u043B\u043E\u043C",
+    lockedText: "\u0420\u0430\u0437\u043B\u043E\u043C \u0434\u0440\u043E\u0436\u0438\u0442 \u0438 \u0432\u044B\u043F\u043B\u0451\u0432\u044B\u0432\u0430\u0435\u0442 \u0445\u043E\u043B\u043E\u0434. \u0415\u0433\u043E \u0443\u0441\u043F\u043E\u043A\u043E\u0438\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u041B\u0451\u0434.",
+    doneText: "\u0420\u0430\u0437\u043B\u043E\u043C \u0441\u0445\u0432\u0430\u0442\u0438\u043B\u0441\u044F \u0440\u043E\u0432\u043D\u044B\u043C \u043B\u044C\u0434\u043E\u043C \u0438 \u0437\u0430\u0442\u0438\u0445."
+  },
+  {
+    id: "final_ward",
+    kind: "seal_sigil",
+    x: 2640,
+    y: 4130,
+    texture: "astral_ward_01",
+    litTexture: "astral_ward_01",
+    collide: { w: 100, h: 30 },
+    opens: true,
+    radius: 130,
+    requiresEvent: "ch2_final_start",
+    doneEvent: "ch2_fin_seal",
+    hint: "\u0410\u0441\u0442\u0440\u0430\u043B\u044C\u043D\u044B\u0439 \u0431\u0430\u0440\u044C\u0435\u0440",
+    lockedText: "\u0414\u0443\u044D\u043B\u044C\u043D\u044B\u0439 \u0437\u0430\u043B \u0437\u0430\u043A\u0440\u044B\u0442.",
+    doneTitle: "\u0411\u0430\u0440\u044C\u0435\u0440 \u0441\u043D\u044F\u0442",
+    doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u043D\u0430\u0448\u0451\u043B \u0448\u0432\u044B \u0431\u0430\u0440\u044C\u0435\u0440\u0430 \u2014 \u0438 \u0437\u0430\u0432\u0435\u0441\u0430 \u0440\u0430\u0441\u0441\u044B\u043F\u0430\u043B\u0430\u0441\u044C \u0438\u0441\u043A\u0440\u0430\u043C\u0438. \u0418\u0437\u043D\u0443\u0442\u0440\u0438 \u0442\u044F\u043D\u0435\u0442 \u0445\u043E\u043B\u043E\u0434\u043E\u043C \u0438 \u0433\u043E\u043B\u043E\u0441\u043E\u043C \u0421\u0435\u0432\u0435\u0440\u0438\u043D\u0430.",
+    doneButton: "\u0414\u0430\u043B\u044C\u0448\u0435"
+  },
+  { id: "npc_nerys_final", kind: "npc", npc: "nerys", x: 2800, y: 4040, texture: "npc_nerys", radius: 140, requiresEvent: "ch2_final_start" },
+  {
+    id: "final_letters",
+    kind: "seal_sigil",
+    x: 2510,
+    y: 4280,
+    texture: "magic_book_01",
+    litTexture: "magic_book_01",
+    radius: 110,
+    requiresEnemyDefeated: "final_severin",
+    doneEvent: "ch2_letters_read",
+    hint: "\u0417\u0430\u0448\u0438\u0444\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u043F\u0438\u0441\u044C\u043C\u0430",
+    doneTitle: "\u0427\u0443\u0436\u0430\u044F \u0440\u0443\u043A\u0430",
+    doneText: "\u041F\u043E\u0434 \u0410\u0441\u0442\u0440\u0430\u043B\u043E\u043C \u0448\u0438\u0444\u0440 \u043F\u043E\u043F\u043B\u044B\u043B. \u0414\u0435\u043D\u044C\u0433\u0438, \u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B\u044B, \u0441\u0442\u0430\u0440\u044B\u0435 \u0441\u0445\u0435\u043C\u044B \u2014 \u0432\u0441\u0451 \u044D\u0442\u043E \u0421\u0435\u0432\u0435\u0440\u0438\u043D\u0443 \u043F\u0435\u0440\u0435\u0434\u0430\u0432\u0430\u043B \u043A\u0442\u043E-\u0442\u043E \u0434\u0440\u0443\u0433\u043E\u0439. \u041F\u043E\u0434\u043F\u0438\u0441\u0438 \u043D\u0435\u0442. \u0422\u043E\u043B\u044C\u043A\u043E \u0437\u043D\u0430\u043A \u2014 \u0442\u043E\u0442 \u0441\u0430\u043C\u044B\u0439 \u0441\u0442\u0451\u0440\u0442\u044B\u0439 \u0443\u0437\u043E\u0440 \u0441 \u0414\u0440\u0435\u0432\u043D\u0438\u0445 \u0432\u043E\u0440\u043E\u0442 \u0432 \u043B\u0435\u0441\u0443 \u041C\u0438\u0440\u0440\u044B.",
+    doneButton: "\u041A \u0418\u043B\u0430\u0440\u0438\u0438"
+  },
+  { id: "npc_severin_after", kind: "npc", npc: "severin", x: 2780, y: 4380, texture: "npc_severin", radius: 130, requiresEvent: "ch2_severin_defeated" },
+  // ---- квест 14 «Не в одиночку»: Дом Ковенов
+  { id: "npc_rowena", kind: "npc", npc: "rowena", x: 3240, y: 4300, texture: "npc_rowena", collide: { w: 50, h: 24 }, radius: 140 }
 ];
 var CITY_ENEMIES = [
   // морозная вспышка на площади (квест 2): появляется, когда герой пришёл в город
@@ -1010,12 +1177,28 @@ var CITY_ENEMIES = [
   // квест 10 «Выбор»: глубина квартала
   { id: "fq_deep_1", enemy: "frost_collector", x: 2600, y: 1740, radius: 120, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_deep_1" },
   { id: "fq_deep_2", enemy: "frost_collector", x: 3240, y: 1740, radius: 120, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_deep_2" },
-  { id: "fq_guardian", enemy: "ice_guardian", x: 2910, y: 1690, radius: 140, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_ice_guardian_defeated" }
+  { id: "fq_guardian", enemy: "ice_guardian", x: 2910, y: 1690, radius: 140, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_ice_guardian_defeated" },
+  // v0.22.0 — квест 11 «Хрупкость»: учебные бои во дворе
+  { id: "yard_brittle_1", enemy: "frost_collector", x: 2480, y: 1880, radius: 110, requiresEvent: "unlock_ice_2", defeatEvent: "ch2_brittle_1" },
+  { id: "yard_brittle_2", enemy: "frost_collector", x: 3400, y: 1880, radius: 110, requiresEvent: "unlock_ice_2", defeatEvent: "ch2_brittle_2" },
+  // квест 12: добровольцы и конструкт в лаборатории
+  { id: "vol_1", enemy: "volunteer", x: 1970, y: 4320, radius: 110, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_vol_1" },
+  { id: "vol_2", enemy: "volunteer", x: 2200, y: 4420, radius: 110, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_vol_2" },
+  { id: "lab_construct", enemy: "experimental_construct", x: 2080, y: 4600, radius: 120, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_lab_construct" },
+  // квест 14: нестабильные конструкции в городе
+  { id: "unstable_1", enemy: "frost_collector", x: 3e3, y: 3980, radius: 110, requiresEvent: "ch2_coven_met", defeatEvent: "ch2_unstable_1" },
+  { id: "unstable_2", enemy: "frost_collector", x: 2720, y: 4660, radius: 110, requiresEvent: "ch2_coven_met", defeatEvent: "ch2_unstable_2" },
+  // квест 15: город во льду и Северин в Дуэльном зале
+  { id: "final_critter", enemy: "frost_critter", x: 2900, y: 3420, radius: 110, requiresEvent: "ch2_final_start" },
+  { id: "final_collector", enemy: "frost_collector", x: 3240, y: 3620, radius: 110, requiresEvent: "ch2_final_start" },
+  { id: "final_construct", enemy: "experimental_construct", x: 2480, y: 3560, radius: 120, requiresEvent: "ch2_final_start" },
+  { id: "final_severin", enemy: "severin_boss", x: 2640, y: 4320, radius: 130, requiresEvent: "ch2_ice3", defeatEvent: "ch2_severin_defeated" }
 ];
 var CITY_DECOR = [
-  ...[3330, 3420, 3510, 3990, 4080, 4170].map((y, i) => ({ id: `ct_tree_${i}`, k: i % 2 ? "tree_dark_02" : "tree_dark_01", x: 1840 + i % 3 * 170, y: y < 3600 ? 3300 : 4030 })),
+  ...[3330, 3420, 3510, 3990, 4080, 4170].map((y, i) => ({ id: `ct_tree_${i}`, k: i % 2 ? "tree_dark_02" : "tree_dark_01", x: i === 4 ? 2250 : 1840 + i % 3 * 170, y: y < 3600 ? 3300 : 4030 })),
+  // v0.22.0: проход к лаборатории свободен
   ...[1900, 2050, 2200, 2330].map((x, i) => ({ id: `ct_treeN_${i}`, k: "tree_dark_01", x, y: 3290 })),
-  ...[1900, 2050, 2200, 2330].map((x, i) => ({ id: `ct_treeS_${i}`, k: "tree_dark_02", x, y: 4060 })),
+  ...[1880, 1960, 2200, 2330].map((x, i) => ({ id: `ct_treeS_${i}`, k: "tree_dark_02", x, y: 4060 })),
   { id: "ct_board", k: "notice_board_01", x: 2480, y: 3420 },
   ...[[2440, 3530], [2440, 3800], [3040, 3240], [3040, 4e3], [2900, 4300], [2900, 2470]].map(([x, y], i) => ({ id: `ct_lamp_${i}`, k: "city_lamp_01", x, y })),
   { id: "ct_frost_1", k: "frost_patch_01", x: 2760, y: 3700, floor: true },
@@ -2073,7 +2256,7 @@ Object.assign(RECIPES, {
     result: "stabilizing_potion",
     amount: 1,
     needs: { frost_herb: 2, rune_dust: 1, lunar_shard: 1 },
-    requires: ["recipe_stabilizing_potion"],
+    requires: ["ch2_lab_open"],
     note: "\u0423\u0441\u043F\u043E\u043A\u0430\u0438\u0432\u0430\u0435\u0442 \u043D\u0435\u0441\u0442\u0430\u0431\u0438\u043B\u044C\u043D\u0443\u044E \u043C\u0430\u0433\u0438\u044E \u0432 \u0442\u0435\u043B\u0435."
   },
   brittle_flask: {
@@ -2082,7 +2265,8 @@ Object.assign(RECIPES, {
     result: "brittle_flask",
     amount: 1,
     needs: { ice_crystal: 1, tree_resin: 1, rune_dust: 1 },
-    requires: ["recipe_brittle_flask"],
+    requires: ["unlock_ice_2"],
+    crafted: "brittle_flask_crafted",
     note: "\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u043B \u0445\u043E\u043B\u043E\u0434\u0430 \u0432 \u0441\u043C\u043E\u043B\u0435: \u0440\u0430\u0437\u0431\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u043E \u0446\u0435\u043B\u044C \u0438 \u0434\u0435\u043B\u0430\u0435\u0442 \u0435\u0451 \u0445\u0440\u0443\u043F\u043A\u043E\u0439."
   },
   crystal_guard: {
@@ -2242,7 +2426,28 @@ var EVENT_ACTIONS = {
   unlock_ice_1: { requires: ["ch2_rescue_done", "warm_potion_crafted"], unlock: { ice: 1 } },
   ch2_ice_trained: { requires: ["ch2_training_done"] },
   ch2_choice_start: { requires: ["ch2_ice_trained"] },
-  ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"] }
+  ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"] },
+  // v0.22.0 — квесты 11–15 (Нэрис, Тихон, Илария, Северин, Ровена, Мирра)
+  unlock_ice_2: { requires: ["ch2_quarter_cleared"], unlock: { ice: 2 } },
+  ch2_brittle_done: { requires: ["ch2_brittle_1", "ch2_brittle_2", "brittle_flask_crafted"] },
+  ch2_lab_found: { requires: ["ch2_brittle_done"] },
+  ch2_stabilized: { requires: ["ch2_vol_1", "ch2_vol_2"], consume: { stabilizing_potion: 2 } },
+  ch2_lab_reported: { requires: ["ch2_stabilized", "ch2_lab_journal"] },
+  // ответ героя Северину — без ветвления сюжета, только отношение (его вспомнит Мирра)
+  ch2_view_danger: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
+  ch2_view_methods: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
+  ch2_view_market: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
+  ch2_view_unsure: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
+  ch2_severin_confronted: { requires: ["ch2_lab_reported"] },
+  ch2_coven_met: { requires: ["ch2_severin_confronted"] },
+  ch2_coven_supplies: { requires: ["ch2_coven_met"], consume: { crystal_guard: 1, frost_herb: 2 } },
+  ch2_coven_ready: { requires: ["ch2_unstable_1", "ch2_unstable_2", "ch2_coven_supplies"] },
+  ch2_final_start: { requires: ["ch2_coven_ready"] },
+  // Лёд III перед боем: ветка выбирается один раз (ch2_ice3 — общая отметка, по ней появляется Северин)
+  ch2_ice3_frost: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], unlock: { ice: 3 }, branch: { ice: "frost" }, marks: ["ch2_ice3"] },
+  ch2_ice3_shard: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], unlock: { ice: 3 }, branch: { ice: "shard" }, marks: ["ch2_ice3"] },
+  ch2_epilogue: { requires: ["ch2_letters_read"] },
+  chapter_2_complete: { requires: ["ch2_epilogue"], marks: ["title_frost_survivor"], sapphires: 5 }
 };
 function worldRules() {
   const world = {};
@@ -2410,7 +2615,17 @@ function serverRules() {
     staleCombatSec: VITALS.staleCombatSec
   };
   const potions = Object.fromEntries(Object.entries(POTIONS).filter(([, p]) => p.outside && (p.effect.type === "heal" || p.effect.type === "mana")).map(([id, p]) => [id, { kind: p.effect.type, amount: p.effect.amount }]));
-  const events = Object.fromEntries(Object.entries(EVENT_ACTIONS).map(([k, e]) => [k, { requires: e.requires || [], unlock: e.unlock || {} }]));
+  const events = Object.fromEntries(Object.entries(EVENT_ACTIONS).map(([k, e]) => [k, {
+    requires: e.requires || [],
+    unlock: e.unlock || {},
+    // v0.22.0: blockedBy — событие уже не нужно; consume — что забирает (предметы); branch — ветка дара вместе с открытием;
+    // marks — ещё события вместе с этим (с их наградами); sapphires — сапфиры в награду (журнал сапфиров, один раз)
+    blockedBy: e.blockedBy || [],
+    consume: e.consume || {},
+    branch: e.branch || {},
+    marks: e.marks || [],
+    sapphires: e.sapphires || 0
+  }]));
   const eventRewards = Object.fromEntries(Object.entries(EVENT_REWARDS).map(([k, r]) => [k, grantOf(r)]));
   return {
     recipes,
@@ -2683,6 +2898,107 @@ var ENEMIES = {
     repeatRewards: { heroXP: 55, schoolXP: { ice: 5 }, items: { ice_crystal: 1 }, coins: 16 },
     arena: "frost"
   },
+  // v0.22.0 — Доброволец, потерявший контроль (квест 12, chapter-2-balance §10). Не монстр: победа — «обезвредить»,
+  // повторно не появляется (место не возобновляется). Нестабильная магия: холодные удары, «Выброс» прерывает Телекинез.
+  volunteer: {
+    name: "\u0414\u043E\u0431\u0440\u043E\u0432\u043E\u043B\u0435\u0446 \u0431\u0435\u0437 \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u044F",
+    texture: "enemy_volunteer",
+    tier: "normal",
+    hp: 600,
+    normalAttack: { damage: 13, intervalSec: 2.7, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: {
+      name: "\u0412\u044B\u0431\u0440\u043E\u0441 \u0445\u043E\u043B\u043E\u0434\u0430",
+      damage: 30,
+      prepSec: 2,
+      cooldownSec: 9,
+      firstDelaySec: 5,
+      interruptBy: ["telekinesis"],
+      hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!"
+    },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: 0.2,
+    weaknesses: { seal: 0.3 },
+    rewards: { heroXP: 90, schoolXP: { seal: 15, ice: 15 }, coins: 20 },
+    arena: "lab"
+  },
+  // Экспериментальный конструкт (квест 12 и дальше, §9): 60–80 с. Кристальная броня и защитная корка; Огонь растапливает корку.
+  experimental_construct: {
+    name: "\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u044B\u0439 \u043A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442",
+    texture: "enemy_experimental_construct",
+    tier: "strong",
+    hp: 850,
+    normalAttack: { damage: 12, intervalSec: 3.4, chill: { pct: 0.35, sec: 3 } },
+    strongAttack: {
+      name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0440\u0430\u0437\u0440\u044F\u0434",
+      damage: 34,
+      prepSec: 2.4,
+      cooldownSec: 10,
+      firstDelaySec: 6,
+      interruptBy: ["telekinesis_heavy"],
+      hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!"
+    },
+    staggerSec: 1.1,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    armor: { value: 0.4, source: "crystal", disabledSec: 8 },
+    weaknesses: { fire: 0.2 },
+    rewards: { heroXP: 100, schoolXP: { telekinesis: 30, fire: 30, seal: 30, ice: 30 }, items: { ice_crystal: 1, frost_shard: 1 }, coins: 40 },
+    repeatRewards: { heroXP: 65, schoolXP: { ice: 5 }, items: { ice_crystal: 1 }, coins: 18 },
+    arena: "lab"
+  },
+  // v0.22.0 — финальный босс главы II: Северин Вейр (квест 15, §11). Первый бой «маг против мага», 120–180 с, три фазы.
+  // 1 «Дуэль» — защитный барьер (−25%, Астрал пробивает, Огонь снимает на 5 с), Ледяное копьё прерывает Телекинез.
+  // 2 «Перегрузка» — кристальная броня эксперимента (тяжёлый камень разбивает кристалл), удар сильнее, Огонь +30%.
+  // 3 «Предел» — магия рвётся: защита 40%, только Астрал и Лёд бьют в полную силу; тяжёлый удар — тяжёлым камнем.
+  severin_boss: {
+    name: "\u0421\u0435\u0432\u0435\u0440\u0438\u043D \u0412\u0435\u0439\u0440",
+    texture: "enemy_severin",
+    tier: "strong",
+    hp: 1500,
+    normalAttack: { damage: 11, intervalSec: 3.4, chill: { pct: 0.3, sec: 3 } },
+    strongAttack: {
+      name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0435 \u043A\u043E\u043F\u044C\u0451",
+      damage: 28,
+      prepSec: 2.2,
+      cooldownSec: 11,
+      firstDelaySec: 6,
+      interruptBy: ["telekinesis"],
+      hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!"
+    },
+    staggerSec: 1.1,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    phases: [
+      {
+        above: 1e3,
+        set: { defense: 0.25, armor: null, weaknesses: null, onFireHit: { disableDefenseSec: 5 } },
+        message: "\u0411\u0430\u0440\u044C\u0435\u0440 \u0421\u0435\u0432\u0435\u0440\u0438\u043D\u0430 \u0433\u0430\u0441\u0438\u0442 \u0443\u0434\u0430\u0440\u044B. \u0410\u0441\u0442\u0440\u0430\u043B \u043F\u0440\u043E\u0431\u0438\u0432\u0430\u0435\u0442 \u0435\u0433\u043E, \u041E\u0433\u043E\u043D\u044C \u0441\u043D\u0438\u043C\u0430\u0435\u0442 \u043D\u0430 5 \u0441\u0435\u043A\u0443\u043D\u0434."
+      },
+      {
+        above: 480,
+        set: {
+          defense: 0,
+          armor: { value: 0.45, source: "crystal", disabledSec: 8 },
+          weaknesses: { fire: 0.3 },
+          onFireHit: null,
+          normalAttack: { damage: 12, intervalSec: 3.2, chill: { pct: 0.35, sec: 3 } }
+        },
+        strongAttack: { name: "\u041F\u0435\u0440\u0435\u0433\u0440\u0443\u0437\u043A\u0430", damage: 32, interruptBy: ["telekinesis_heavy"], hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!" },
+        message: "\xAB\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u0434\u0435\u0440\u0436\u0438\u0442!\xBB \u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442 \u0434\u0430\u0451\u0442 \u0421\u0435\u0432\u0435\u0440\u0438\u043D\u0443 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u044C\u043D\u0443\u044E \u0431\u0440\u043E\u043D\u044E. \u0420\u0430\u0437\u0431\u0435\u0439\u0442\u0435 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B \u0442\u044F\u0436\u0451\u043B\u044B\u043C \u043A\u0430\u043C\u043D\u0435\u043C.",
+        tint: 11068671
+      },
+      {
+        above: 0,
+        set: { defense: 0.4, armor: null, weaknesses: { seal: 0.4, ice: 0.4 }, onFireHit: null },
+        strongAttack: { name: "\u041F\u0440\u0435\u0434\u0435\u043B", damage: 34, prepSec: 2.6, interruptBy: ["telekinesis_heavy"], hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!" },
+        message: "\xAB\u042F \u043D\u0435 \u043C\u043E\u0433\u0443 \u0435\u0451 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C\u2026\xBB \u041C\u0430\u0433\u0438\u044F \u0440\u0432\u0451\u0442\u0441\u044F \u043D\u0430\u0440\u0443\u0436\u0443: \u0432 \u043F\u043E\u043B\u043D\u0443\u044E \u0441\u0438\u043B\u0443 \u0431\u044C\u044E\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u0410\u0441\u0442\u0440\u0430\u043B \u0438 \u041B\u0451\u0434.",
+        tint: 13805823
+      }
+    ],
+    rewards: { heroXP: 350, schoolXP: { telekinesis: 40, fire: 40, seal: 40, ice: 60 }, items: { cold_heart: 1 }, coins: 150 },
+    arena: "duel"
+  },
   // Враг со слабостью из Combat Math §7. v0.10.0: пять Корневиков в старом лесу (world.layout.js, rootling_01…05).
   // Защита 20%, Огонь +50% и снимает защиту на 6 с. Первая победа на месте — rewards; повторная (возобновляемые места) — repeatRewards.
   rootling: {
@@ -2789,6 +3105,23 @@ var ARENAS = {
     objects: [
       { id: "rock_a", type: "light_rock", x: 190, y: 720 },
       { id: "heavy_a", type: "heavy_rock", x: 540, y: 710 }
+    ]
+  },
+  // v0.22.0: тайная лаборатория и Дуэльный зал (финал главы II)
+  lab: {
+    ground: 2762291,
+    objects: [
+      { id: "crystal_a", type: "crystal", x: 590, y: 640 },
+      { id: "heavy_a", type: "heavy_rock", x: 150, y: 760 },
+      { id: "rock_a", type: "light_rock", x: 420, y: 800 }
+    ]
+  },
+  duel: {
+    ground: 2828856,
+    objects: [
+      { id: "crystal_a", type: "crystal", x: 590, y: 640 },
+      { id: "heavy_a", type: "heavy_rock", x: 150, y: 760 },
+      { id: "rock_a", type: "light_rock", x: 420, y: 800 }
     ]
   },
   // v0.21.0: Замёрзший квартал — кристалл стража и тяжёлый камень
@@ -3171,6 +3504,8 @@ var MSG = {
   FINAL_SCREEN: "ui:final",
   // v0.10.0: ({ outcome, reward }) — финал первой главы
   UNLOCK_SEAL: "story:unlock-seal",
+  CHAPTER_FINALE: "story:chapter-finale",
+  // v0.22.0: (номер главы) — итоговое окно главы
   UNLOCK_GIFT: "story:unlock-gift",
   // v0.21.0: (id) — сюжетный дар из диалога (Лёд I у Нэрис)
   TRAVEL: "world:travel",

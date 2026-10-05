@@ -32,6 +32,17 @@ export const NPCS = {
     greetings: ['Нэрис стряхивает иней с рукавов.'],
     wave: false,
   },
+  // v0.22.0 — доброволец эксперимента и глава Ковена Пепельной Луны
+  tikhon: {
+    id: 'tikhon', name: 'Тихон', title: 'Доброволец', texture: 'npc_tikhon', color: 0xa8c8e8,
+    greetings: ['Тихон кутается в плащ, хотя у котла тепло.'],
+    wave: false,
+  },
+  rowena: {
+    id: 'rowena', name: 'Ровена', title: 'Ковен Пепельной Луны', texture: 'npc_rowena', color: 0xe0b48a,
+    greetings: ['Ровена кивает, не отрываясь от карты города.'],
+    wave: true,
+  },
   severin: {
     id: 'severin', name: 'Северин Вейр', title: 'Общество Преображения', texture: 'npc_severin', color: 0x7f9cff,
     greetings: ['Северин откладывает прибор и улыбается — так, будто ждал вас.'],

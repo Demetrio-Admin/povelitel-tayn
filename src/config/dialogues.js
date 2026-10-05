@@ -85,6 +85,41 @@ export const DIALOGUES = {
       id: 'mirra_ch2_ready', when: c => c.has('chapter_1_complete') && !c.has('ch2_start'),
       nodes: { start: CH2_SEND_OFF },
     },
+    // v0.22.0 — возвращение домой после главы II: «Ну и что ты думаешь?»
+    {
+      id: 'mirra_ch2_done', repeat: true, when: c => c.has('chapter_2_complete'),
+      nodes: { start: {
+        lines: ['Город оттаял, а ты снова дома. Котёл тёплый, обереги держатся.'],
+        choices: [{ label: 'Сварить зелье', do: [{ alchemy: true }] }, HEAL, { label: 'Открыть журнал', do: [{ journal: true }] }, BYE],
+      } },
+    },
+    {
+      id: 'mirra_ch2_final_ready', when: c => c.has('ch2_epilogue') && !c.has('chapter_2_complete'),
+      nodes: {
+        start: {
+          lines: [
+            fm('Вернулась. Я слышала: город во льду, Северин, Дуэльный зал… Ты цела?', 'Вернулся. Я слышала: город во льду, Северин, Дуэльный зал… Ты цел?'),
+            { hero: 'Северин хотел дать магию тем, у кого её нет. Получилось — и чуть не заморозило город. А за ним стоит кто-то ещё.' },
+            fm('Я не буду рассказывать тебе, как всё было на самом деле. Ты была там, а не я.', 'Я не буду рассказывать тебе, как всё было на самом деле. Ты был там, а не я.'),
+            'Ну и что ты думаешь?',
+          ],
+          choices: [
+            { label: 'Магия не должна быть товаром.', next: 'end' },
+            { label: 'Идея верная. Методы — нет.', next: 'end' },
+            { label: 'Это было слишком опасно.', next: 'end' },
+            { label: 'Я пока не знаю. Хочу понять больше.', next: 'end' },
+          ],
+        },
+        end: {
+          lines: [
+            'Вот. Вот этого я и ждала. Не ответа — твоего ответа.',
+            fm('Год назад ты не могла сдвинуть камень. А сегодня спорила с Северином Вейром.', 'Год назад ты не мог сдвинуть камень. А сегодня спорил с Северином Вейром.'),
+            'Отдохни. Город, Ковены, Дуэль — всё это никуда не денется. А тот, кто стоит за Северином, — тем более.',
+          ],
+          choices: [{ label: 'Спасибо, Мирра.', do: [{ event: 'chapter_2_complete' }, { finale: 2 }] }],
+        },
+      },
+    },
     {
       id: 'mirra_ch2_severin', repeat: true, when: c => c.has('ch2_met_severin'),
       nodes: { start: {
@@ -489,6 +524,70 @@ export const DIALOGUES = {
   ],
   // ================================================================== v0.20.0 — глава II, город
   ilaria: [
+    // v0.22.0 — квесты 11–15
+    {
+      id: 'ilaria_epilogue_done', repeat: true, when: c => c.has('ch2_epilogue'),
+      nodes: { start: { lines: ['Архив снова тёплый. Я разберу письма Северина — а вам пора домой, к Мирре. Она ждёт рассказа.'], choices: [BYE] } },
+    },
+    {
+      id: 'ilaria_epilogue_ready', when: c => c.has('ch2_letters_read') && !c.has('ch2_epilogue'),
+      nodes: { start: {
+        lines: [
+          'Город оттаивает. Люди выходят на улицы — и все говорят о Северине.',
+          'Одни зовут его преступником. Другие — человеком, который зашёл слишком далеко. А кто-то уверен, что его опыты надо продолжать.',
+          { hero: 'В письмах — знак с Древних ворот. Тот, кто платил Северину, связан и с бедой в лесу.' },
+          'Значит, это только начало. Я буду искать. А вы… вы спасли город. Спасибо.',
+        ],
+        choices: [{ label: 'Мы спасли.', do: [{ event: 'ch2_epilogue' }] }],
+      } },
+    },
+    {
+      id: 'ilaria_final_active', when: c => c.has('ch2_final_start') && !c.has('ch2_letters_read'),
+      nodes: { start: { lines: ['Северин в Дуэльном зале — барьер на двери, улицы во льду. Нэрис ждёт у зала.', 'Меняйте дары, если нужно: у каждого препятствия свой ключ.'], choices: [{ label: GOT_IT }] } },
+    },
+    {
+      id: 'ilaria_final_ready', when: c => c.has('ch2_coven_ready') && !c.has('ch2_final_start'),
+      nodes: { start: {
+        lines: [
+          'Вы вовремя. Северин начал эксперимент — прямо в Дуэльном зале, при свидетелях.',
+          'Сначала всё шло идеально: доброволец засветился магией, Северин улыбался… А потом пошла перегрузка.',
+          'Холод расползается по городу. Улицы во льду, разломы, звери. Остановите его!',
+        ],
+        choices: [{ label: 'Иду!', do: [{ event: 'ch2_final_start' }] }],
+      } },
+    },
+    {
+      id: 'ilaria_coven_active', when: c => c.has('ch2_severin_confronted') && !c.has('ch2_coven_ready'),
+      nodes: { start: {
+        lines: ['Если эксперимент Северина снова выйдет из-под контроля, одному магу не справиться.', 'Идите в Дом Ковенов — к Ровене. Он на юго-востоке площади, рядом с Дуэльным залом.'],
+        choices: [{ label: GOT_IT }],
+      } },
+    },
+    {
+      id: 'ilaria_report_ready', when: c => c.has('ch2_stabilized') && c.has('ch2_lab_journal') && !c.has('ch2_lab_reported'),
+      nodes: { start: {
+        lines: [
+          { hero: 'Там были добровольцы. Они пришли сами — за магией, за силой, за деньгами. А в журнале — подпись Северина.' },
+          'Добровольцы… Это хуже, чем похищение. Никто не был обманут — и все пострадали.',
+          'Северин знал. Поговорите с ним. В этот раз — без любезностей.',
+        ],
+        choices: [{ label: 'Поговорю.', do: [{ event: 'ch2_lab_reported' }] }],
+      } },
+    },
+    {
+      id: 'ilaria_lab_active', when: c => c.has('ch2_lab_found') && !c.has('ch2_lab_reported'),
+      nodes: { start: { lines: ['Лаборатория — в старом погребе к югу от дороги в город. Дверь держит нестабильная печать: её успокоит только Лёд.'], choices: [{ label: GOT_IT }] } },
+    },
+    {
+      id: 'ilaria_lab_ready', when: c => c.has('ch2_brittle_done') && !c.has('ch2_lab_found'),
+      nodes: { start: {
+        lines: [
+          'Нашла! Накладные на списанное оборудование ведут к старому погребу у дороги, к югу от городских ворот.',
+          'Там делали морозных конструктов. И, кажется, не только их.',
+        ],
+        choices: [{ label: 'Иду туда.', do: [{ event: 'ch2_lab_found' }] }],
+      } },
+    },
     // v0.21.0 — квесты 6–7
     {
       id: 'ilaria_quarter', repeat: true, when: c => c.has('ch2_frost_wave'),
@@ -609,6 +708,42 @@ export const DIALOGUES = {
     },
   ],
   severin: [
+    // v0.22.0 — квесты 13 и 15
+    {
+      id: 'severin_after_boss', repeat: true, when: c => c.has('ch2_severin_defeated'),
+      nodes: { start: {
+        lines: ['Сегодня я ошибся.', 'Но одна ошибка не делает ошибочной саму идею. Запомните это — однажды вы со мной согласитесь.'],
+        choices: [BYE],
+      } },
+    },
+    {
+      id: 'severin_cold', repeat: true, when: c => c.has('ch2_severin_confronted') && !c.has('ch2_final_start'),
+      nodes: { start: { lines: ['Новый опыт почти готов. Я исправил ошибки. На этот раз всё получится.'], choices: [BYE] } },
+    },
+    {
+      id: 'severin_confront_ready', when: c => c.has('ch2_lab_reported') && !c.has('ch2_severin_confronted'),
+      nodes: {
+        start: {
+          lines: [
+            { hero: fm('Я была в лаборатории. Добровольцы, журнал, ваша подпись.', 'Я был в лаборатории. Добровольцы, журнал, ваша подпись.') },
+            'Да. Я знал. Хватит притворяться — вы заслужили правду.',
+            'Я ищу способ передать магический дар. Не учиться Льду годами. Не ждать, проснётся ли предрасположенность. Получить силу — сразу.',
+            'И у меня получалось. Трое добровольцев живут с даром, о котором не смели мечтать.',
+            'Вы называете это опасным, потому что видели неудачи. Но сколько людей так и не получили шанс вообще?',
+          ],
+          choices: [
+            { label: 'Это слишком опасно.', next: 'end', do: [{ event: 'ch2_view_danger' }] },
+            { label: 'Идея правильная, методы — нет.', next: 'end', do: [{ event: 'ch2_view_methods' }] },
+            { label: 'Магию нельзя превращать в товар.', next: 'end', do: [{ event: 'ch2_view_market' }] },
+            { label: 'Мне пока недостаточно известно.', next: 'end', do: [{ event: 'ch2_view_unsure' }] },
+          ],
+        },
+        end: {
+          lines: ['Возможно. А возможно, через десять лет так будут учить всех.', 'Новый эксперимент почти готов. Я исправил ошибки. Приходите посмотреть — если не боитесь.'],
+          choices: [{ label: 'Я буду рядом.', do: [{ event: 'ch2_severin_confronted' }] }],
+        },
+      },
+    },
     {
       id: 'severin_meet_ready', when: c => c.has('ch2_archive_read') && !c.has('ch2_met_severin'),
       nodes: {
@@ -696,6 +831,79 @@ export const DIALOGUES = {
   ],
   // ================================================================== v0.21.0 — Нэрис, маг Льда (квесты 8–10)
   nerys: [
+    // v0.22.0 — квесты 11 и 15
+    {
+      id: 'nerys_epilogue', repeat: true, when: c => c.has('ch2_severin_defeated'),
+      nodes: { start: {
+        lines: [fm('Лёд держит, а не ломает. Сегодня ты это доказала всему городу.', 'Лёд держит, а не ломает. Сегодня ты это доказал всему городу.')],
+        choices: [{ label: 'Котёл', do: [{ alchemy: true }] }, { label: 'Дары', do: [{ gifts: true }] }, BYE],
+      } },
+    },
+    {
+      id: 'nerys_boss_active', when: c => c.has('ch2_ice3') && !c.has('ch2_severin_defeated'),
+      nodes: { start: {
+        lines: ['Северин внутри. Сначала барьер — его пробьёт Астрал или Огонь. Потом кристальная броня — тяжёлый камень. А в конце бьют только Астрал и Лёд.', 'Возьми настои жизни. Иди.'],
+        choices: [{ label: 'Дары', do: [{ gifts: true }] }, { label: GOT_IT }],
+      } },
+    },
+    {
+      id: 'nerys_ice3_ready', when: c => ['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal'].every(k => c.has(k)) && !c.has('ch2_ice3'),
+      nodes: {
+        start: {
+          lines: [
+            'Путь чист. Перед боем — последний урок. Лёд третьей ступени: ты выберешь, каким он будет.',
+            'Мороз — контроль: враг надолго замедлен, у тебя всегда есть время ответить.',
+            'Осколок — урон: хрупкая цель раскалывается от удара Льда. Ветку потом можно сменить, но не бесплатно.',
+          ],
+          choices: [
+            { label: 'Мороз — контроль', do: [{ gift: 'ice:3:frost' }] },
+            { label: 'Осколок — урон', do: [{ gift: 'ice:3:shard' }] },
+          ],
+        },
+      },
+    },
+    {
+      id: 'nerys_final_active', when: c => c.has('ch2_final_start') && !c.has('ch2_ice3'),
+      nodes: { start: {
+        lines: [
+          'Город — это экзамен. Завал у зала — Телекинез. Ледяная преграда у рынка — Огонь. Разлом у западной стены — Лёд. Барьер на двери зала — Астрал.',
+          'Даров три, а ключей четыре. Меняй дары, когда нужно. Справишься — я доведу твой Лёд до третьей ступени.',
+        ],
+        choices: [{ label: 'Дары', do: [{ gifts: true }] }, { label: GOT_IT }],
+      } },
+    },
+    {
+      id: 'nerys_lab_hint', repeat: true, when: c => c.has('ch2_brittle_done') && !c.has('ch2_final_start'),
+      nodes: { start: {
+        lines: ['Илария хочет тебя видеть. Похоже, ей удалось найти, где делали конструктов.'],
+        choices: [{ label: 'Котёл', do: [{ alchemy: true }] }, { label: 'Дары', do: [{ gifts: true }] }, BYE],
+      } },
+    },
+    {
+      id: 'nerys_brittle_ready', when: c => c.has('ch2_brittle_1') && c.has('ch2_brittle_2') && c.has('brittle_flask_crafted') && !c.has('ch2_brittle_done'),
+      nodes: { start: {
+        lines: ['Хорошо. Лёд, потом тяжёлый камень — и броня трескается. Лёд, потом Огонь — и корка тает быстрее.', 'Не всё в магии — урон. Иногда важнее, чтобы враг не успел ударить.'],
+        choices: [{ label: 'Спасибо.', do: [{ event: 'ch2_brittle_done' }] }],
+      } },
+    },
+    {
+      id: 'nerys_brittle_active', when: c => c.has('unlock_ice_2') && !c.has('ch2_brittle_done'),
+      nodes: { start: {
+        lines: ['Во дворе два учебных конструкта. Сначала Лёд — потом сильный удар: хрупкая цель получает больше.', 'И свари Флакон хрупкости: кристалл, смола, пыль. Материалы я дала.'],
+        choices: [{ label: 'Варить', do: [{ alchemy: true }] }, { label: 'Дары', do: [{ gifts: true }] }, { label: GOT_IT }],
+      } },
+    },
+    {
+      id: 'nerys_ice2_ready', when: c => c.has('ch2_quarter_cleared') && !c.has('unlock_ice_2'),
+      nodes: { start: {
+        lines: [
+          fm('Ты освоила основы. Пора дальше.', 'Ты освоил основы. Пора дальше.'),
+          'Сильный холод делает вещи хрупкими. Камень, броню, магическую корку. Лёд II — это Хрупкость.',
+          'Ударь Льдом — и следующий удар другим даром станет сильнее. Попробуй.',
+        ],
+        choices: [{ label: 'Попробую.', do: [{ gift: 'ice:2' }] }],
+      } },
+    },
     {
       id: 'nerys_after', repeat: true, when: c => c.has('ch2_quarter_cleared'),
       nodes: { start: {
@@ -809,6 +1017,91 @@ export const DIALOGUES = {
     {
       id: 'nerys_default', repeat: true, when: () => true,
       nodes: { start: { lines: ['Холодно? Это только начало.'], choices: [BYE] } },
+    },
+  ],
+  // ================================================================== v0.22.0 — Тихон (доброволец) и Ровена (Дом Ковенов)
+  tikhon: [
+    {
+      id: 'tikhon_done', repeat: true, when: c => c.has('ch2_stabilized'),
+      nodes: { start: { lines: ['Холод внутри утих. Я пришёл сюда, чтобы защищать семью… а чуть не стал тем, от кого защищают.', 'Спасибо. Я этого не забуду.'], choices: [BYE] } },
+    },
+    {
+      id: 'tikhon_ready', when: c => c.has('ch2_vol_1') && c.has('ch2_vol_2') && c.item('stabilizing_potion') >= 2 && !c.has('ch2_stabilized'),
+      nodes: { start: {
+        lines: ['Это… стабилизирующий? Два — мне и Мирону. Он ещё не пришёл в себя.'],
+        choices: [{ label: 'Отдать два настоя', do: [{ event: 'ch2_stabilized' }] }],
+      } },
+    },
+    {
+      id: 'tikhon_active', when: c => c.has('ch2_vol_1') && !c.has('ch2_stabilized'),
+      nodes: { start: {
+        lines: [
+          'Не бейте… Я Тихон. Пришёл сам: обещали силу, чтобы защищать семью.',
+          'Нас двое осталось. Холод внутри не утихает. Нужен стабилизирующий настой — два: мне и Мирону.',
+          'Рецепт на столе: два морозника, руническая пыль и лунный осколок. Морозник растёт тут же, в сундуке — пыль и осколки, котёл у стены.',
+        ],
+        choices: [{ label: 'Варить', do: [{ alchemy: true }] }, { label: GOT_IT }],
+      } },
+    },
+    {
+      id: 'tikhon_default', repeat: true, when: () => true,
+      nodes: { start: { lines: ['…холодно…'], choices: [BYE] } },
+    },
+  ],
+  rowena: [
+    {
+      id: 'rowena_after', repeat: true, when: c => c.has('ch2_coven_ready'),
+      nodes: { start: {
+        lines: ['Ковен Пепельной Луны помнит тех, кто помог городу. Скоро у Ковенов будут общие задачи на неделю — заходи.'],
+        choices: [BYE],
+      } },
+    },
+    {
+      id: 'rowena_ready', when: c => c.has('ch2_unstable_1') && c.has('ch2_unstable_2') && c.has('ch2_coven_supplies') && !c.has('ch2_coven_ready'),
+      nodes: { start: {
+        lines: ['Конструкции уничтожены, защитные составы у магов. Город готов настолько, насколько вообще можно быть готовым.', 'Вот так и работает Ковен: никто не держит всё на себе.'],
+        choices: [{ label: 'Понимаю.', do: [{ event: 'ch2_coven_ready' }] }],
+      } },
+    },
+    {
+      id: 'rowena_supplies_ready', when: c => c.has('ch2_coven_met') && !c.has('ch2_coven_supplies') && c.item('crystal_guard') >= 1 && c.item('frost_herb') >= 2,
+      nodes: { start: {
+        lines: ['Кристальный покров и морозник? То, что нужно нашим магам на стенах.'],
+        choices: [{ label: 'Отдать покров и 2 морозника', do: [{ event: 'ch2_coven_supplies' }] }, { label: 'Потом.' }],
+      } },
+    },
+    {
+      id: 'rowena_active', when: c => c.has('ch2_coven_met') && !c.has('ch2_coven_ready'),
+      nodes: { start: {
+        lines: [
+          'Две нестабильные конструкции: одна на площади у Дома Ковенов, другая — на складах. Уничтожь их.',
+          'И нашим магам нужны защитные составы: Кристальный покров и два морозника. Покров варится из ледяного кристалла, гриба и смолы.',
+        ],
+        choices: [{ label: GOT_IT }],
+      } },
+    },
+    {
+      id: 'rowena_meet_ready', when: c => c.has('ch2_severin_confronted') && !c.has('ch2_coven_met'),
+      nodes: {
+        start: {
+          lines: [
+            'Ровена, Ковен Пепельной Луны. Илария предупредила, что ты придёшь.',
+            'Ковен — это маги, которые решили не справляться в одиночку. Общие цели, общие запасы, общая ответственность.',
+          ],
+          choices: [{ label: 'Зачем это нужно?', next: 'why' }],
+        },
+        why: {
+          lines: [
+            fm('Серьёзные угрозы одному не по силам. Ты видела Замёрзший квартал — представь такое во всём городе.', 'Серьёзные угрозы одному не по силам. Ты видел Замёрзший квартал — представь такое во всём городе.'),
+            'Вступать не обязательно. Но помочь городу подготовиться — можно прямо сейчас.',
+          ],
+          choices: [{ label: 'Чем помочь?', do: [{ event: 'ch2_coven_met' }] }],
+        },
+      },
+    },
+    {
+      id: 'rowena_default', repeat: true, when: () => true,
+      nodes: { start: { lines: ['Дом Ковенов открыт для тех, кто не боится работать вместе.'], choices: [BYE] } },
     },
   ],
   banker: [

@@ -165,8 +165,16 @@ export class SealSigilObject extends InteractiveObject {
   constructor(scene, cfg) {
     super(scene, cfg);
     this.ability = 'seal';
-    if (this.isDone()) this.light(false);
+    if (this.isDone()) { this.light(false); this.open(false); }
     else this.glow = scene.addGlow(cfg.x, cfg.y - 20, SEAL, 0.18, this, 1.0);
+  }
+
+  /** v0.22.0: opens — барьер (астральная завеса на двери): после Астрала исчезает вместе с преградой. */
+  open(animate) {
+    if (!this.cfg.opens) return;
+    if (this.blocker) { this.blocker.destroy(); this.blocker = null; }
+    if (!animate) { this.sprite.setVisible(false); for (const g of this.glows || []) g.setVisible(false); this.removed = true; return; }
+    this.scene.tweens.add({ targets: [this.sprite, ...(this.glows || [])], alpha: 0, duration: 700, onComplete: () => { this.sprite.setVisible(false); this.removed = true; } });
   }
   get markerIcon() { return 'icon_seal'; }
   get markerColor() { return SEAL; }
@@ -190,6 +198,7 @@ export class SealSigilObject extends InteractiveObject {
     sc.time.delayedCall(450, () => {
       this.busy = false;
       this.light(true);
+      this.open(true);
       services.audio.play('quest_update');
       sc.dialog({   // v0.20.0: тексты можно задать в конфиге объекта (знаки главы II)
         title: this.cfg.doneTitle || 'Камень ожил', color: SEAL,

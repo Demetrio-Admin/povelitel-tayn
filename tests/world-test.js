@@ -81,7 +81,7 @@ console.log('\nМир: таблица коллизий');
 console.log('\nМир: проходимость');
 {
   const W = WORLD.width, H = WORLD.height;
-  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', 'frost_barrier', 'fq_water'];
+  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', 'frost_barrier', 'fq_water', 'lab_seal', 'final_ward'];
   const objById = Object.fromEntries([...INTERACTIVES, ...ENEMY_SPAWNS].map(o => [o.id, o]));
   const near = (grid, seen, id, r) => { const o = objById[id]; return reachableNear(grid, seen, o.x, o.y, r ?? Math.min(o.radius || 100, 120)); };
 

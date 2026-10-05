@@ -329,9 +329,16 @@ function eventAct(s, key) {
   const r = typeof key === 'string' && Object.hasOwn(RULES.events, key) ? RULES.events[key] : null;
   if (!r) return { ok: false, reason: 'unknown' };
   if (has(s, key)) return { ok: false, reason: 'already' };
+  if ((r.blockedBy || []).some(ev => has(s, ev))) return { ok: false, reason: 'done' };
   if (!r.requires.every(ev => has(s, ev))) return { ok: false, reason: 'locked' };
+  const consume = r.consume || {};
+  if (!Object.entries(consume).every(([k, v]) => (s.inventory[k] || 0) >= v)) return { ok: false, reason: 'missing' };
+  for (const [k, v] of Object.entries(consume)) addItem(s, k, -v);
   setEvent(s, key);
   for (const [id, lvl] of Object.entries(r.unlock)) unlockAbility(s, id, lvl);
+  for (const [id, br] of Object.entries(r.branch || {})) setBranch(s, id, br);
+  for (const ev of r.marks || []) setEvent(s, ev);
+  if (r.sapphires > 0) { const w = walletOf(s.wallet); s.wallet = { ...w, sapphires: w.sapphires + r.sapphires }; }
   return { ok: true, key };
 }
 

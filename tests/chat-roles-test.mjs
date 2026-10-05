@@ -19,6 +19,7 @@ const deny = async (n, op, args = {}, pattern = /chat_forbidden|chat_protected/)
 const migrate = async () => {
   await db.exec(readFileSync("supabase/migrations/20261004_chat_roles_v2.sql", "utf8"));
   await db.exec(readFileSync("supabase/migrations/20261005_chat_amulet_catalog.sql", "utf8"));
+  await db.exec(readFileSync("supabase/migrations/20261006_chat_catalog_ch2.sql", "utf8"));   // v0.19.0
 };
 try {
   for (const f of ["tools/sql/auth-stub.sql", "supabase/schema.sql", "supabase/migrations/20261004_game_chat.sql"]) await db.exec(readFileSync(f, "utf8"));

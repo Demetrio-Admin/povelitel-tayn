@@ -169,4 +169,6 @@ export class PlayerActions {
   shopBuy(item, qty = 1) { return this.run({ op: 'shop_buy', item, qty }); }
   shopSell(item, qty = 1) { return this.run({ op: 'shop_sell', item, qty }); }
   amuletUpgrade(amulet) { return this.run({ op: 'amulet_upgrade', amulet }); }
+  dailyTake(offer) { return this.run({ op: 'daily_take', offer }); }   // v0.23.0: доска поручений
+  dailyDone(offer) { return this.run({ op: 'daily_done', offer }); }
 }

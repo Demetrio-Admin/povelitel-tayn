@@ -274,7 +274,7 @@ console.log('\nПервая глава v0.10.0: алтарь, ворота, Ас
 
   // --- возобновляемый Корневик и запас пыли
   const rcfg = ENEMY_SPAWNS.find(e => e.id === 'rootling_02');
-  ok(rcfg.repeatSec === 600 && ENEMY_SPAWNS.filter(e => e.enemy === 'rootling').length === 5 && ENEMY_SPAWNS.filter(e => e.repeatSec).length === 3, 'пять Корневиков, три возобновляемых (600 с)');
+  ok(rcfg.repeatSec === 600 && ENEMY_SPAWNS.filter(e => e.enemy === 'rootling').length === 5 && ENEMY_SPAWNS.filter(e => e.enemy === 'rootling' && e.repeatSec).length === 3, 'пять Корневиков, три возобновляемых (600 с)');
   const sc = mk();
   const guard = new EnemyTrigger(sc, rcfg); sc.enemies = [guard];
   const stash = new DustStashObject(sc, cfgOf('dust_stash'));

@@ -28,7 +28,7 @@ const RULES = serverRules();
  * Ключи объектов мира, состояние которых пишет только сервер: всё, что есть в RULES.world (с v0.15.0 и магия — сервер ставит mark),
  * победы над врагами rep:* (по ним открываются запасы) и build — ветки даров (player_build).
  */
-export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build');
+export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build' || k === 'daily');   // v0.23.0: + доска поручений
 
 export const ABILITY_IDS = ['telekinesis', 'fire', 'seal', 'ice'];   // v0.18.0: + Лёд
 export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal', 'ice'];
@@ -477,6 +477,66 @@ function shopSell(s, item, qty) {
   return { ok: true, item, qty: n, gain: price * n };
 }
 /** Улучшить амулет на уровень (op 'amulet_upgrade', amulet): он должен быть в сумке; цена — RULES.build.amuletUpgrades[уровень]. */
+// ---------------------------------------------------------------- v0.23.0: доска поручений (config/daily.js)
+/** Поручения дня: то же частичное перемешивание, что dailyOffers в config/daily.js и _daily_offers в SQL. */
+export function dailyOffersOf(day) {
+  const D = RULES.daily, a = [...D.order];
+  let x = (((day % 2147483646) + 2147483646) % 2147483646) + 1;
+  for (let i = 0; i < Math.min(D.offers, a.length); i++) {
+    x = (x * 48271) % 2147483647;
+    const j = i + (x % (a.length - i));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, D.offers);
+}
+/** Состояние доски сегодня: { d, taken: { id: база }, done: [id] }; вчерашнее — пустое. */
+export function dailyStateOf(s, nowMs) {
+  const day = Math.floor(nowMs / RULES.daily.dayMs);
+  const o = isObj(s.objects.daily) ? s.objects.daily : null;
+  if (!o || o.d !== day) return { d: day, taken: {}, done: [] };
+  const taken = {};
+  if (isObj(o.taken)) for (const [k, v] of Object.entries(o.taken)) if (Object.hasOwn(RULES.daily.pool, k) && num(v)) taken[k] = v;
+  const done = Array.isArray(o.done) ? o.done.filter(k => typeof k === 'string' && Object.hasOwn(taken, k)) : [];
+  return { d: day, taken, done };
+}
+/** Сколько побед на этих возобновляемых местах (счётчики rep:<место>). */
+export function dailyWins(s, spawns) {
+  let n = 0;
+  for (const id of spawns) { const r = s.objects[`rep:${id}`]; if (isObj(r) && num(r.wins)) n += r.wins; }
+  return n;
+}
+function dailyTake(s, id, nowMs) {
+  const D = RULES.daily;
+  const offer = typeof id === 'string' && Object.hasOwn(D.pool, id) ? D.pool[id] : null;
+  if (!offer) return { ok: false, reason: 'unknown' };
+  if (!has(s, D.requires)) return { ok: false, reason: 'locked' };
+  const st = dailyStateOf(s, nowMs);
+  if (!dailyOffersOf(st.d).includes(id)) return { ok: false, reason: 'unknown' };
+  if (Object.hasOwn(st.taken, id)) return { ok: false, reason: 'already' };
+  if (Object.keys(st.taken).length >= D.picks) return { ok: false, reason: 'limit' };
+  if (offer.requires && !has(s, offer.requires)) return { ok: false, reason: 'locked' };
+  st.taken[id] = offer.goal.type === 'wins' ? dailyWins(s, offer.goal.spawns) : 0;
+  s.objects.daily = st;
+  return { ok: true, offer: id };
+}
+function dailyDone(s, id, nowMs) {
+  const D = RULES.daily;
+  const offer = typeof id === 'string' && Object.hasOwn(D.pool, id) ? D.pool[id] : null;
+  if (!offer) return { ok: false, reason: 'unknown' };
+  const st = dailyStateOf(s, nowMs);
+  if (!Object.hasOwn(st.taken, id)) return { ok: false, reason: 'not_taken' };
+  if (st.done.includes(id)) return { ok: false, reason: 'already' };
+  const g = offer.goal;
+  if (g.type === 'deliver') {
+    if (!Object.entries(g.items).every(([k, v]) => (s.inventory[k] || 0) >= v)) return { ok: false, reason: 'missing' };
+    for (const [k, v] of Object.entries(g.items)) addItem(s, k, -v);
+  } else if (dailyWins(s, g.spawns) - st.taken[id] < g.count) return { ok: false, reason: 'progress' };
+  st.done = [...st.done, id];
+  s.objects.daily = st;
+  grant(s, offer.reward);
+  return { ok: true, offer: id };
+}
+
 function amuletUpgrade(s, id) {
   const B = RULES.build;
   if (typeof id !== 'string' || !B.amulets.includes(id)) return { ok: false, reason: 'unknown' };
@@ -799,6 +859,8 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'shop_buy') return { snapshot: s, result: shopBuy(s, action.item, action.qty) };
   if (op === 'shop_sell') return { snapshot: s, result: shopSell(s, action.item, action.qty) };
   if (op === 'amulet_upgrade') return { snapshot: s, result: amuletUpgrade(s, action.amulet) };
+  if (op === 'daily_take') return { snapshot: s, result: dailyTake(s, action.offer, num(nowMs) ? nowMs : Date.now()) };   // v0.23.0
+  if (op === 'daily_done') return { snapshot: s, result: dailyDone(s, action.offer, num(nowMs) ? nowMs : Date.now()) };
   if (op === 'build_set') return { snapshot: s, result: buildSet(s, action) };
   if (op === 'build_preset') return { snapshot: s, result: buildPreset(s, action.mode, action.slot) };
   if (op === 'heal') {

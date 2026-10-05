@@ -126,7 +126,8 @@ export const CITY_INTERACTIVES = [
   { id: 'frostherb_r1', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 240, x: 2060, y: 3420, texture: 'moon_herb_01', radius: 90, requiresEvent: 'ch2_start' },
   { id: 'frostherb_r2', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 240, x: 2240, y: 3880, texture: 'moon_herb_01', radius: 90, requiresEvent: 'ch2_start' },
   { id: 'resin_r1', kind: 'gather', res: 'tree_resin', amount: 1, respawnSec: 240, x: 1920, y: 3860, texture: 'resin_log_01', radius: 90 },
-  // площадь
+  // площадь. v0.23.0: доска поручений (5 поручений дня, взять 3) — открывается после квеста 10
+  { id: 'city_board', kind: 'board', x: 2480, y: 3420, texture: 'notice_board_01', collide: { w: 80, h: 20 }, radius: 120, hint: 'Доска поручений' },
   { id: 'npc_ilaria', kind: 'npc', npc: 'ilaria', x: 2560, y: 3260, texture: 'npc_ilaria', collide: { w: 50, h: 24 }, radius: 140 },
   { id: 'npc_merchant', kind: 'npc', npc: 'merchant', x: 3350, y: 3500, texture: 'npc_merchant', collide: { w: 50, h: 24 }, radius: 140 },
   { id: 'npc_banker', kind: 'npc', npc: 'banker', x: 3380, y: 3880, texture: 'npc_banker', collide: { w: 50, h: 24 }, radius: 140 },
@@ -222,27 +223,27 @@ export const CITY_ENEMIES = [
   // знакомый противник на дороге (квест 1, необязательный)
   { id: 'road_scavenger', enemy: 'young_scavenger', x: 2120, y: 3640, radius: 110, requiresEvent: 'ch2_start' },
   // v0.21.0 — квест 6: Складской квартал
-  { id: 'wh_collector_1', enemy: 'frost_collector', x: 2560, y: 4800, radius: 120, requiresEvent: 'ch2_cargo_start' },
-  { id: 'wh_collector_2', enemy: 'frost_collector', x: 3240, y: 4720, radius: 120, requiresEvent: 'ch2_cargo_start' },
+  { id: 'wh_collector_1', enemy: 'frost_collector', x: 2560, y: 4800, radius: 120, requiresEvent: 'ch2_cargo_start', repeatSec: 600 },
+  { id: 'wh_collector_2', enemy: 'frost_collector', x: 3240, y: 4720, radius: 120, requiresEvent: 'ch2_cargo_start', repeatSec: 600 },
   { id: 'wh_elite', enemy: 'frost_collector_elite', x: 2930, y: 4880, radius: 130, requiresEvent: 'ch2_cargo_start', defeatEvent: 'ch2_wh_boss' },
   // квест 7: зверь, сбежавший из закрытой лаборатории, — у дверей Общества
   { id: 'lab_critter', enemy: 'frost_critter', x: 3210, y: 3240, radius: 120, requiresEvent: 'ch2_severin_asked', defeatEvent: 'ch2_lab_critter' },
   // квест 8: Замёрзший квартал (появляются после знакомства с Нэрис)
-  { id: 'fq_critter', enemy: 'frost_critter', x: 2560, y: 2400, radius: 120, requiresEvent: 'ch2_nerys_met' },
+  { id: 'fq_critter', enemy: 'frost_critter', x: 2560, y: 2400, radius: 120, requiresEvent: 'ch2_nerys_met', repeatSec: 480 },
   { id: 'fq_collector', enemy: 'frost_collector', x: 3300, y: 2300, radius: 120, requiresEvent: 'ch2_nerys_met' },
   // квест 9: тренировочный двор за проломом
   { id: 'fq_training', enemy: 'frost_critter', x: 2910, y: 1830, radius: 110, requiresEvent: 'unlock_ice_1', defeatEvent: 'ch2_training_done' },
   // квест 10 «Выбор»: глубина квартала
-  { id: 'fq_deep_1', enemy: 'frost_collector', x: 2600, y: 1740, radius: 120, requiresEvent: 'ch2_choice_start', defeatEvent: 'ch2_deep_1' },
-  { id: 'fq_deep_2', enemy: 'frost_collector', x: 3240, y: 1740, radius: 120, requiresEvent: 'ch2_choice_start', defeatEvent: 'ch2_deep_2' },
-  { id: 'fq_guardian', enemy: 'ice_guardian', x: 2910, y: 1690, radius: 140, requiresEvent: 'ch2_choice_start', defeatEvent: 'ch2_ice_guardian_defeated' },
+  { id: 'fq_deep_1', enemy: 'frost_collector', x: 2600, y: 1740, radius: 120, requiresEvent: 'ch2_choice_start', defeatEvent: 'ch2_deep_1', repeatSec: 600 },
+  { id: 'fq_deep_2', enemy: 'frost_collector', x: 3240, y: 1740, radius: 120, requiresEvent: 'ch2_choice_start', defeatEvent: 'ch2_deep_2', repeatSec: 600 },
+  { id: 'fq_guardian', enemy: 'ice_guardian', x: 2910, y: 1690, radius: 140, requiresEvent: 'ch2_choice_start', defeatEvent: 'ch2_ice_guardian_defeated', repeatSec: 1200 },
   // v0.22.0 — квест 11 «Хрупкость»: учебные бои во дворе
   { id: 'yard_brittle_1', enemy: 'frost_collector', x: 2480, y: 1880, radius: 110, requiresEvent: 'unlock_ice_2', defeatEvent: 'ch2_brittle_1' },
   { id: 'yard_brittle_2', enemy: 'frost_collector', x: 3400, y: 1880, radius: 110, requiresEvent: 'unlock_ice_2', defeatEvent: 'ch2_brittle_2' },
   // квест 12: добровольцы и конструкт в лаборатории
   { id: 'vol_1', enemy: 'volunteer', x: 1970, y: 4320, radius: 110, requiresEvent: 'ch2_lab_open', defeatEvent: 'ch2_vol_1' },
   { id: 'vol_2', enemy: 'volunteer', x: 2200, y: 4420, radius: 110, requiresEvent: 'ch2_lab_open', defeatEvent: 'ch2_vol_2' },
-  { id: 'lab_construct', enemy: 'experimental_construct', x: 2080, y: 4600, radius: 120, requiresEvent: 'ch2_lab_open', defeatEvent: 'ch2_lab_construct' },
+  { id: 'lab_construct', enemy: 'experimental_construct', x: 2080, y: 4600, radius: 120, requiresEvent: 'ch2_lab_open', defeatEvent: 'ch2_lab_construct', repeatSec: 900 },
   // квест 14: нестабильные конструкции в городе
   { id: 'unstable_1', enemy: 'frost_collector', x: 3000, y: 3980, radius: 110, requiresEvent: 'ch2_coven_met', defeatEvent: 'ch2_unstable_1' },
   { id: 'unstable_2', enemy: 'frost_collector', x: 2720, y: 4660, radius: 110, requiresEvent: 'ch2_coven_met', defeatEvent: 'ch2_unstable_2' },
@@ -258,7 +259,6 @@ export const CITY_DECOR = [
   ...[3330, 3420, 3510, 3990, 4080, 4170].map((y, i) => ({ id: `ct_tree_${i}`, k: i % 2 ? 'tree_dark_02' : 'tree_dark_01', x: i === 4 ? 2250 : 1840 + (i % 3) * 170, y: y < 3600 ? 3300 : 4030 })),   // v0.22.0: проход к лаборатории свободен
   ...[1900, 2050, 2200, 2330].map((x, i) => ({ id: `ct_treeN_${i}`, k: 'tree_dark_01', x, y: 3290 })),
   ...[1880, 1960, 2200, 2330].map((x, i) => ({ id: `ct_treeS_${i}`, k: 'tree_dark_02', x, y: 4060 })),
-  { id: 'ct_board', k: 'notice_board_01', x: 2480, y: 3420 },
   ...[[2440, 3530], [2440, 3800], [3040, 3240], [3040, 4000], [2900, 4300], [2900, 2470]].map(([x, y], i) => ({ id: `ct_lamp_${i}`, k: 'city_lamp_01', x, y })),
   { id: 'ct_frost_1', k: 'frost_patch_01', x: 2760, y: 3700, floor: true },
   { id: 'ct_frost_2', k: 'frost_patch_01', x: 2980, y: 3860, floor: true },
@@ -273,6 +273,8 @@ export const CITY_DECOR = [
 export const ZONE_EVENTS = {
   P: { event: 'ch2_city_arrived', requires: ['ch2_start'] },
 };
+
+/** v0.23.0: возобновляемые места города (repeatSec) — охота для доски поручений и повторный фарм кристаллов (chapter-2-balance §30). */
 
 /** v0.21.0: проходы города для проверки проходимости (закрыты, пока их не открыл сюжет) и места за ними. */
 export const CITY_GATE_IDS = ['frost_barrier', 'fq_water', 'lab_seal', 'final_ward'];

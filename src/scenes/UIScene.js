@@ -23,6 +23,7 @@ import { windows09 } from '../ui/windows09.js';
 import { windows11 } from '../ui/windows11.js';
 import { windows17 } from '../ui/windows17.js';
 import { windows19 } from '../ui/windows19.js';
+import { windows23 } from '../ui/windows23.js';
 import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from '../ui/noticeClose.js';
 import { addCraftMedallion, setCraftMedallion } from '../ui/witchcraftUI.js';
@@ -86,6 +87,7 @@ export class UIScene extends Phaser.Scene {
     bus.on(MSG.OPEN_BAG, this.openBag, this);
     bus.on(MSG.OPEN_SHOP, () => this.openShop('Лавка Бориса'), this);   // v0.20.0
     bus.on(MSG.OPEN_WALLET, () => this.openWallet(), this);
+    bus.on(MSG.OPEN_DAILY, () => this.openDaily(), this);   // v0.23.0: доска поручений
     bus.on(MSG.OPEN_GIFTS, this.openGifts, this);
     this.input.keyboard?.on('keydown-G', () => { if (!this.modal && this.mode === 'exploration') this.openGifts(); });
     bus.on(MSG.REWARD, this.onReward, this);
@@ -736,4 +738,4 @@ export class UIScene extends Phaser.Scene {
   }
 }
 
-Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11, windows17, windows19);
+Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11, windows17, windows19, windows23);

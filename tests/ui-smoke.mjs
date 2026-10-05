@@ -87,6 +87,12 @@ await mute(async () => {
     ui.openJournal(); ui.update(8000, 16); ui.closeModal(null);
     ui.openAlchemy(); ui.craftRecipe('elixir_life'); ui.craftRecipe('resin_flask'); ui.update(8100, 16); ui.closeModal(null);
     ui.openBag(); ui.closeModal(null);
+    // v0.23.0: доска поручений — закрытая и открытая (взять поручение, сдать)
+    ui.openDaily(); ui.closeModal(null);
+    st.markEvent('ch2_quarter_cleared'); st.addItem('frost_herb', 10); st.addItem('ice_crystal', 3); st.addItem('elixir_life', 3);
+    ui.openDaily(); ui.update(8200, 16);
+    { const { dailyView } = await import('../src/systems/dailyModel.js'); const id = dailyView(st).rows[0].id; await ui.dailyAct('take', id); await ui.dailyAct('done', id); }
+    ui.closeModal(null);
     // v0.9.2: окно диалога обоими героями — ни одна надпись (реплика или кнопка ответа) не «[object Object]»
     const { setHeroSource } = await import('../src/state/hero.js');
     const { heroIdNow } = await import('../src/services.js');

@@ -248,7 +248,7 @@ await mute(async () => {
     ok(h.modal?.settings && sv.modalOpen, 'Меню → настоящие Настройки (меню закрыто до открытия)');
     const sfx0 = sv.settings.get('sfx');
     const settingTexts = texts(h.modal.container);
-    ok(['Звуки', 'Музыка', 'Вибрация', 'Подсказки', 'Готово', 'Главное меню', 'Сбросить прогресс'].every(x => settingTexts.includes(x)), 'настройки: звуки, музыка, вибрация, подсказки, «Готово» и служебные действия');
+    ok(['Звуки', 'Музыка', 'Вибрация', 'Подсказки', 'Готово', 'Сбросить прогресс'].every(x => settingTexts.includes(x)) && !settingTexts.includes('Главное меню'), 'настройки: звуки, музыка, вибрация, подсказки, «Готово» и сброс без перехода на стартовый экран');
     const hits = h.modal.container.children.filter(o => o.type === 'Zone' || o.interactive);
     const btnBy = (label) => { const tx = h.modal.container.children.find(o => o.text === label); return h.modal.container.children.find(o => o !== tx && o.handlers?.pointerup && Math.abs(o.x - tx.x) < 2 && Math.abs(o.y - (tx.y + 1)) < 3); };
     const minus = h.modal.container.children.filter(o => o.handlers?.pointerup && h.modal.container.children.some(t => t.text === '−' && Math.abs(t.x - o.x) < 2 && Math.abs(t.y + 1 - o.y) < 3))[0];

@@ -52,7 +52,8 @@ export const DEPTH = {
 export const COLORS = {
   telekinesis: 0x4fe3c1,
   fire: 0xff6a2b,
-  seal: 0x7d8bff,   // v0.10.1: Астрал — холодный бирюзово-фиолетовый
+  seal: 0x7d8bff,
+  ice: 0x9fe6ff,    // v0.18.0: Лёд — светлый ледяной голубой   // v0.10.1: Астрал — холодный бирюзово-фиолетовый
   neutral: 0xe8c56a,
   gold: 0xd9b45a,
   wood: 0x2b1d15,

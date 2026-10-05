@@ -18,6 +18,7 @@ import { EnemyTrigger, encKey } from '../objects/EnemyTrigger.js';
 import * as vitals from '../state/vitals.js';
 import { advanceWorld, serverActionBusy } from '../systems/WorldClock.js';
 import { VITALS } from '../config/balance.hero.js';
+import { ABILITIES } from '../config/balance.abilities.js';
 import { STORY } from '../config/story.js';
 import { GatherObject } from '../objects/GatherObject.js';
 import { NpcObject } from '../objects/NpcObject.js';
@@ -245,6 +246,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.registry.set('hudProvider', () => vitals.view(state));
     this.registry.set('abilityProvider', (id) => {
       if (!abilities.isUnlocked(id)) return { id, state: 'locked' };
+      if (!state.isEquipped(id)) return { id, state: 'benched' };   // v0.18.0
       const f = this.interaction.focus;
       return { id, state: 'ready', suggested: !!(f && f.ability === id && f.isAvailable()) };
     });
@@ -681,6 +683,7 @@ export class ExplorationScene extends Phaser.Scene {
       return;
     }
     if (!abilities.isUnlocked(id)) { this.toast('Этот дар ещё не изучен'); return; }
+    if (!services.state.isEquipped(id)) { this.toast(`Дар «${ABILITIES[id].name}» не в слоте — поставьте его в «Дарах» (Сумка → Дары).`); return; }   // v0.18.0
     this.interaction.act(id);
   }
 

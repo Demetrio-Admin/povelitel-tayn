@@ -27,7 +27,8 @@ export const windows17 = {
         const top = cy;
         const plate = this.add.graphics(); c.add(plate);
         cy += 14;
-        const big = this.add.text(x + w / 2, cy, `◆ ${sapphires(v.balance)}`, { fontFamily: FONT, fontSize: UI.type.title, fontStyle: 'bold', color: hex(SAPPHIRE), shadow: SH }).setOrigin(0.5, 0);
+        c.add(this.add.image(x + 48, cy + 26, 'icon_sapphire').setScale(0.9));
+        const big = this.add.text(x + w / 2, cy, `${sapphires(v.balance)}`, { fontFamily: FONT, fontSize: UI.type.title, fontStyle: 'bold', color: hex(SAPPHIRE), shadow: SH }).setOrigin(0.5, 0);
         c.add(big); cy += big.height + 14;
         drawPlate(plate, w, cy - top, { accent: SAPPHIRE, fill: 0x121a2a, alpha: 0.9, radius: 12 });
         plate.setPosition(x + w / 2, top + (cy - top) / 2);

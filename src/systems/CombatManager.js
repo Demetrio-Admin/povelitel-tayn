@@ -39,6 +39,7 @@ export class CombatManager {
     this.incomingMult = inc;
     this.manaRescue = this.amulets.map(a => AMULETS[a].effect.manaRescue).find(Boolean) || null;
     this.manaRescueUsed = false;
+    this.heroChill = { left: 0, pct: 0 };   // v0.18.0: холод врага — перезарядки и мана героя идут медленнее
     this.cooldowns = Object.fromEntries(ABILITY_ORDER.map(id => [id, 0]));
     const arena = ARENAS[this.def.arena] || ARENAS.glade;
     this.arena = arena;
@@ -47,7 +48,7 @@ export class CombatManager {
     this.time = 0;
     this.result = null; // 'victory' | 'defeat'
     this.queue = [];
-    this.stats = { abilityUses: { telekinesis: 0, fire: 0, seal: 0 }, interrupts: 0, damageTaken: 0, autoDamage: 0 };
+    this.stats = { abilityUses: { telekinesis: 0, fire: 0, seal: 0, ice: 0 }, interrupts: 0, damageTaken: 0, autoDamage: 0 };
   }
 
   emit(e) { this.queue.push(e); }
@@ -104,6 +105,7 @@ export class CombatManager {
     if (id === 'telekinesis') this.castTelekinesis(s);
     else if (id === 'fire') this.castFire(s);
     else if (id === 'seal') this.castSeal(s);
+    else if (id === 'ice') this.castIce(s);
     this.flushPhases();
     this.checkResult();
     this.commit();
@@ -207,12 +209,21 @@ export class CombatManager {
     }
     if (!s.interruptsNormalCast) tags.shift();
     this.handleInterrupt(tags);
+    // v0.18.0: Хрупкость — удар сильнее; тяжёлый бросок по хрупкой цели ещё и разбивает броню
+    const br = this.enemy.consumeBrittle();
+    if (br) {
+      base *= 1 + br;
+      this.emit({ type: 'status', status: 'shatter', bonus: br });
+      if (tags.includes('telekinesis_heavy') && this.enemy.armorActive && this.enemy.breakArmor()) this.emit({ type: 'armorBroken', sec: this.enemy.def.armor.disabledSec });
+    }
     const dmg = this.enemy.takeDamage(base, 'telekinesis', this.hero.damageMult);
     this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'telekinesis', heavy: tags.includes('telekinesis_heavy') });
   }
 
   castFire(s) {
-    const dmg = this.enemy.takeDamage(s.damage, 'fire', this.hero.damageMult);
+    const br = this.enemy.consumeBrittle();   // v0.18.0
+    if (br) this.emit({ type: 'status', status: 'shatter', bonus: br });
+    const dmg = this.enemy.takeDamage(s.damage * (1 + br), 'fire', this.hero.damageMult);
     this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'fire' });
     this.enemy.applyBurn(s.burn.dps, s.burn.durationSec);
     this.emit({ type: 'status', status: 'burn', sec: s.burn.durationSec });
@@ -223,7 +234,9 @@ export class CombatManager {
 
   // v0.10.1: Астрал — чистый урон сквозь броню и кору; атаки врага не прерывает (это только Телекинез)
   castSeal(s) {
-    const dmg = this.enemy.takeDamage(s.damage, 'seal', this.hero.damageMult);
+    const br = this.enemy.consumeBrittle();   // v0.18.0
+    if (br) this.emit({ type: 'status', status: 'shatter', bonus: br });
+    const dmg = this.enemy.takeDamage(s.damage * (1 + br), 'seal', this.hero.damageMult);
     this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'seal' });
     // v0.16.0: Астрал III — вспышка. Урон выше уже нанесён сквозь защиту, вспышка помогает остальным дарам и автоатаке.
     if (s.flash && this.enemy.alive) {
@@ -242,6 +255,26 @@ export class CombatManager {
     const gain = Math.min(this.hero.maxMana - this.hero.mana, Math.round(this.hero.maxMana * r.gainPct));
     this.hero.mana += gain;
     this.emit({ type: 'manaRescue', mana: gain });
+  }
+
+  /**
+   * v0.18.0: Лёд — урон, замедление врага, со ступени II — Хрупкость. Ветка «Осколок»: удар по хрупкой цели раскалывает её
+   * (урон ×shatter.mult, Хрупкость снимается и в этот раз заново не накладывается — иначе каждый удар был бы усиленным).
+   */
+  castIce(s) {
+    let base = s.damage, shattered = false;
+    if (s.shatter && this.enemy.isBrittle) {
+      this.enemy.consumeBrittle();
+      base *= s.shatter.mult;
+      shattered = true;
+      this.emit({ type: 'status', status: 'shatter', bonus: s.shatter.mult - 1, ice: true });
+    }
+    const dmg = this.enemy.takeDamage(base, 'ice', this.hero.damageMult);
+    this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'ice' });
+    if (!this.enemy.alive) return;
+    if (s.slow) { this.enemy.applySlow(s.slow.pct, s.slow.sec); this.emit({ type: 'status', status: 'slow', sec: s.slow.sec, pct: s.slow.pct }); }
+    if (s.brittle && !shattered) { this.enemy.applyBrittle(s.brittle.bonus, s.brittle.sec); this.emit({ type: 'status', status: 'brittle', sec: s.brittle.sec, bonus: s.brittle.bonus }); }
+    if (s.interruptsNormalCast) this.handleInterrupt(['ice']);
   }
 
   handleInterrupt(tags) {
@@ -275,10 +308,13 @@ export class CombatManager {
   tick(dt, { holdEnemy = false } = {}) {
     if (this.result) return;
     const h = this.hero;
-    h.mana = Math.min(h.maxMana, h.mana + h.regen * dt);
-    for (const id of ABILITY_ORDER) this.cooldowns[id] = Math.max(0, this.cooldowns[id] - dt);
+    // v0.18.0: под холодом врага мана и перезарядки героя идут медленнее
+    let hdt = dt;
+    if (this.heroChill.left > 0) { hdt = dt * (1 - this.heroChill.pct); this.heroChill.left -= dt; if (this.heroChill.left <= 0) { this.heroChill = { left: 0, pct: 0 }; this.emit({ type: 'chillEnd' }); } }
+    h.mana = Math.min(h.maxMana, h.mana + h.regen * hdt);
+    for (const id of ABILITY_ORDER) this.cooldowns[id] = Math.max(0, this.cooldowns[id] - hdt);
     if (this.chain) {
-      this.chain.left -= dt;
+      this.chain.left -= hdt;
       if (this.chain.left <= 0) { this.cooldowns[this.chain.id] = Math.max(0, this.chain.cooldownSec - (this.chain.window ?? 0)); this.chain = null; }
     }
     if (holdEnemy) {
@@ -311,8 +347,8 @@ export class CombatManager {
     // действия врага
     for (const a of this.enemy.update(dt, h.damageMult)) {
       switch (a.type) {
-        case 'attack': this.hitHero(a.damage, false); break;
-        case 'strongHit': this.hitHero(a.damage, true, a.name); break;
+        case 'attack': this.hitHero(a.damage, false); this.chillHero(a.chill); break;
+        case 'strongHit': this.hitHero(a.damage, true, a.name); this.chillHero(a.chill); break;
         case 'strongStart': this.emit({ type: 'warning', name: a.name, prepSec: a.prepSec, hint: a.hint, needsHeavy: a.interruptBy.includes('telekinesis_heavy') && !a.interruptBy.includes('telekinesis') }); break;
         case 'burnTick': this.emit({ type: 'damage', target: 'enemy', amount: a.damage, school: 'fire', tick: true, puddle: !!a.puddle }); break;
         case 'armorBack': this.emit({ type: 'armorBack' }); break;
@@ -322,6 +358,15 @@ export class CombatManager {
     this.flushPhases();
     this.checkResult();
     this.commit();
+  }
+
+  /** v0.18.0: холод врага ({ pct, sec }) — сильнейший действует, длительность обновляется. */
+  chillHero(c) {
+    if (!c || this.hero.hp <= 0) return;
+    const pct = c.pct * (this.chillResist ? 1 - this.chillResist : 1);
+    if (pct <= 0) return;
+    this.heroChill = { left: Math.max(this.heroChill.left, c.sec), pct: Math.max(this.heroChill.left > 0 ? this.heroChill.pct : 0, pct) };
+    this.emit({ type: 'chill', sec: c.sec, pct });
   }
 
   hitHero(damage, strong, name) {

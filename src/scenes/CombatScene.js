@@ -24,7 +24,7 @@ import { addButton } from '../ui/widgets.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
-const SCHOOL_COLOR = { telekinesis: COLORS.telekinesis, fire: COLORS.fire, seal: COLORS.seal, auto: 0xf1e3c2 };
+const SCHOOL_COLOR = { telekinesis: COLORS.telekinesis, fire: COLORS.fire, seal: COLORS.seal, ice: COLORS.ice, auto: 0xf1e3c2 };
 const ENEMY_POS = { x: VIEW.width / 2, y: 560 };
 const HERO_POS = { x: VIEW.width / 2, y: 1040 };
 const hex = c => '#' + c.toString(16).padStart(6, '0');
@@ -322,6 +322,8 @@ export class CombatScene extends Phaser.Scene {
     if (e.hasArmor) st.push(e.armorActive ? `Броня −${Math.round(e.def.armor.value * 100)}%` : `Броня разбита ${e.armorDisabledLeft.toFixed(0)}с`);
     if (e.burning) st.push(`Горение ${e.burn.left.toFixed(0)}с`);
     if (e.inPuddle) st.push(`Лужа смолы ${e.puddle.left.toFixed(0)}с`);
+    if (e.slowed) st.push(`Замедлен ${e.slow.left.toFixed(0)}с`);
+    if (e.isBrittle) st.push(`Хрупкость ${e.brittle.left.toFixed(0)}с`);
     if (e.vulnerable.left > 0) st.push(`Уязвим +${Math.round(e.vulnerable.bonus * 100)}% ${e.vulnerable.left.toFixed(0)}с`);
     if (e.staggerLeft > 0) st.push('Оглушён');
     if (e.defenseActive) st.push(`Защита −${Math.round(e.def.defense * 100)}%`);
@@ -401,6 +403,9 @@ export class CombatScene extends Phaser.Scene {
         case 'chain':   // v0.11.1: Телекинез III — второй бросок без перезарядки
           this.floatText(ENEMY_POS.x - 120, ENEMY_POS.y + 40, 'ЕЩЁ БРОСОК!', COLORS.telekinesis, 28);
           break;
+        case 'chill':   // v0.18.0: холод врага — перезарядки и мана идут медленнее
+          this.toast(`Холод: перезарядка и мана медленнее на ${Math.round(ev.pct * 100)}% (${ev.sec} с)`, COLORS.ice);
+          break;
         case 'manaRescue':   // v0.16.0: Лунный амулет вернул ману
           this.floatText(ENEMY_POS.x + 120, ENEMY_POS.y + 80, `Лунный амулет: +${ev.mana} маны`, COLORS.mana, 26);
           break;
@@ -439,6 +444,9 @@ export class CombatScene extends Phaser.Scene {
           break;
         case 'status':
           if (ev.status === 'vulnerable') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Уязвим!', COLORS.fire, UI.type.combat);
+          if (ev.status === 'slow') this.floatText(ENEMY_POS.x + 80, ENEMY_POS.y + 30, 'Замедлен', COLORS.ice, UI.type.combat);
+          if (ev.status === 'brittle') this.floatText(ENEMY_POS.x - 80, ENEMY_POS.y - 30, 'Хрупкость', COLORS.ice, UI.type.combat);
+          if (ev.status === 'shatter') { this.floatText(ENEMY_POS.x, ENEMY_POS.y - 110, 'РАСКОЛ!', COLORS.ice, 30); this.burst(ENEMY_POS.x, ENEMY_POS.y - 100, COLORS.ice, 26); }
           if (ev.status === 'puddle') this.floatText(ENEMY_POS.x - 80, ENEMY_POS.y + 30, 'Лужа смолы', COLORS.fire, UI.type.combat);
           if (ev.status === 'defenseOff') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Защита снята', COLORS.fire, UI.type.combat);
           break;

@@ -151,6 +151,51 @@ export const ABILITIES = {
       },
     },
   },
+  // v0.18.0 — Лёд, четвёртый дар (глава II, docs/design/chapter-2-story-v0.1.md §19–22, §33). Внутренний id — 'ice'.
+  // В бою: замедление врага (его атаки и подготовка сильного удара идут медленнее — больше времени на прерывание);
+  // со ступени II — «Хрупкость»: следующий удар Телекинеза, Огня или Астрала сильнее, а тяжёлый бросок по хрупкой цели
+  // ещё и разбивает броню. Ступени I–III открывает сюжет (обучение у Нэрис), без долгих таймеров.
+  ice: {
+    name: 'Лёд',
+    color: 'ice',
+    levels: {
+      1: {
+        label: 'Лёд I',
+        damage: 14, manaCost: 18, cooldownSec: 7, castSec: 0.3,
+        slow: { pct: 0.35, sec: 4 },
+        interruptsNormalCast: false,
+      },
+      2: {
+        label: 'Лёд II',
+        damage: 16, manaCost: 20, cooldownSec: 7, castSec: 0.3,
+        slow: { pct: 0.35, sec: 4 },
+        brittle: { sec: 5, bonus: 0.4 },
+        interruptsNormalCast: false,
+      },
+      3: {
+        label: 'Лёд III',
+        damage: 18, manaCost: 22, cooldownSec: 7, castSec: 0.3,
+        slow: { pct: 0.4, sec: 5 },
+        brittle: { sec: 5, bonus: 0.4 },
+        interruptsNormalCast: false,
+      },
+    },
+    branches: {
+      frost: {
+        name: 'Мороз', fromLevel: 3,
+        text: 'Контроль: замедление сильнее и дольше — враг на 55% медленнее шесть секунд.',
+        tradeoff: 'Сам удар слабее на 15%.',
+        mul: { damage: 0.85 },
+        set: { slow: { pct: 0.55, sec: 6 } },
+      },
+      shard: {
+        name: 'Осколок', fromLevel: 3,
+        text: 'Урон через Хрупкость: удар Льда по хрупкой цели раскалывает её — урон ×2,2, а Хрупкость от других даров сильнее (+70%).',
+        tradeoff: 'Замедление слабое: 20% на три секунды.',
+        set: { slow: { pct: 0.2, sec: 3 }, brittle: { sec: 5, bonus: 0.7 }, shatter: { mult: 2.2 } },
+      },
+    },
+  },
 };
 
 // v0.9 — цена магии в мире (мана за одно выполненное действие). Неуспешное действие бесплатно.
@@ -160,6 +205,7 @@ export const WORLD_MANA_COST = {
   push: { light: 8, medium: 12, heavy: 20 },   // сдвинуть камень по весу
   fire: 16,                                    // Огонь по препятствию, корням, кусту, факелу
   seal: 20,                                    // v0.10.1: значимое применение Астрала (учебный камень, ворота, сердце рощи)
+  ice: 14,                                     // v0.18.0: заморозить воду, механизм, нестабильный предмет
 };
 
 // Анимация магии в мире.
@@ -172,6 +218,6 @@ export const EXPLORATION_MAGIC = {
 
 // Магический опыт школы за использование дара (Progression & Economy: «Магический опыт школы»).
 export const SCHOOL_XP_PER_USE = {
-  exploration: { telekinesis: 6, fire: 6, seal: 6 },
-  combat: { telekinesis: 5, fire: 5, seal: 5 },
+  exploration: { telekinesis: 6, fire: 6, seal: 6, ice: 6 },
+  combat: { telekinesis: 5, fire: 5, seal: 5, ice: 5 },
 };

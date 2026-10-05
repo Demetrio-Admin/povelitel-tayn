@@ -6,7 +6,7 @@ import { SAPPHIRES } from '../config/sapphires.js';
 import { statsFor } from './abilityStats.js';
 import { AMULETS, AMULET_IDS, AMULET_SLOTS, GIFT_IDS } from '../config/build.js';
 
-export const GIFT_ORDER = ['telekinesis', 'fire', 'seal'];
+export const GIFT_ORDER = ['telekinesis', 'fire', 'seal', 'ice'];
 const WEIGHT_RU = { light: 'лёгкие', medium: 'лёгкие и средние', heavy: 'любые, включая тяжёлые' };
 const pct = (v) => `${Math.round(v * 100)}%`;
 const num = (v) => String(Math.round(v * 10) / 10).replace('.', ',');
@@ -27,6 +27,10 @@ export function statLines(id, level, branchId = null) {
   } else if (id === 'seal') {
     if (s.ignoresDefense) out.push('Пробивает броню и кору');
     if (s.flash) out.push(`Вспышка: броня и кора выключены на ${num(s.flash.sec)} с${s.flash.vulnerability ? `, враг уязвим +${pct(s.flash.vulnerability)}` : ''}`);
+  } else if (id === 'ice') {   // v0.18.0
+    if (s.slow) out.push(`Замедление: враг на ${pct(s.slow.pct)} медленнее ${num(s.slow.sec)} с — больше времени на прерывание`);
+    if (s.brittle) out.push(`Хрупкость ${num(s.brittle.sec)} с: следующий удар Телекинеза, Огня или Астрала +${pct(s.brittle.bonus)}, тяжёлый бросок разбивает броню`);
+    if (s.shatter) out.push(`Удар Льда по хрупкой цели: урон ×${num(s.shatter.mult)}`);
   }
   return out;
 }

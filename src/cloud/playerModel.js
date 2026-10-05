@@ -30,8 +30,8 @@ const RULES = serverRules();
  */
 export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build');
 
-export const ABILITY_IDS = ['telekinesis', 'fire', 'seal'];
-export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal'];
+export const ABILITY_IDS = ['telekinesis', 'fire', 'seal', 'ice'];   // v0.18.0: + Лёд
+export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal', 'ice'];
 
 /** Пределы, которые сервер проверяет у каждого patch (защита от явных подделок; см. раздел «Доверие клиенту» в README). */
 export const LIMITS = {
@@ -493,6 +493,13 @@ function buildSet(s, action) {
   return { ok: true };
 }
 
+/** v0.18.0: дары, которые сейчас в слотах (как SQL _build_slots_now): настроенные — открытые и не больше слотов, иначе первые открытые по порядку. */
+function equippedNow(s) {
+  const un = unlockedGifts(s), n = slotCount(s.level, RULES.build.slots);
+  const cur = strIds(buildObj(s).slots);
+  return cur ? cur.filter((g) => un.includes(g)).slice(0, n) : defaultSlots(un, n, RULES.build.gifts);
+}
+
 /** v0.16.0: единственный бесплатный пресет (op 'build_preset', mode 'save' | 'load'): слоты и амулеты; ветки за монеты не трогает. */
 function buildPreset(s, mode, slot = 1) {
   if (mode !== 'save' && mode !== 'load') return { ok: false, reason: 'bad' };
@@ -546,6 +553,8 @@ function worldAct(s, id) {
     || (r.parent && st(r.parent.id)?.state !== r.parent.state)
     || (r.ability && !((s.abilities[r.ability]?.unlocked) && (s.abilities[r.ability]?.level || 0) >= (r.minLevel || 1)));
   if (locked) return { ok: false, reason: 'locked' };
+  // v0.18.0: дар для действия должен стоять в слоте («3 из 4»: что взял с собой, тем и пользуешься)
+  if (r.ability && !equippedNow(s).includes(r.ability)) return { ok: false, reason: 'benched' };
   if ((r.blockedBy || []).some(ev => has(s, ev))) return { ok: false, reason: 'done' };
   let wins = 0;
   if ((r.kind === 'loot' || r.kind === 'cast') && r.mark && st(id)?.state === r.mark) return { ok: false, reason: 'done' };

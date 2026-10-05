@@ -1,6 +1,7 @@
 import { INTERACTION, DEPTH, CONTROLS } from '../config/game.config.js';
 import { ABILITIES } from '../config/balance.abilities.js';
 import { MSG } from '../state/EventBus.js';
+import { services } from '../services.js';
 
 /**
  * InteractionSystem — выбирает ближайший доступный объект (focus), рисует магические маркеры
@@ -75,6 +76,13 @@ export class InteractionSystem {
     const f = this.focus;
     if (!f || !f.isAvailable()) {
       if (abilityId) this.scene.toast(`Рядом нет цели для дара «${ABILITIES[abilityId].name}»`);
+      return false;
+    }
+    // v0.18.0: «3 из 4» — пользоваться можно только дарами из слотов (что взяли с собой)
+    const need = abilityId || f.ability;
+    const st = services.state;
+    if (need && st?.isUnlocked?.(need) && st.isEquipped && !st.isEquipped(need)) {
+      this.scene.toast(`Дар «${ABILITIES[need].name}» не в слоте — поставьте его в «Дарах» (Сумка → Дары).`);
       return false;
     }
     f.interact(abilityId);

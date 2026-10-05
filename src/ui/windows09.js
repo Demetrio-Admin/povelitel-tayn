@@ -139,6 +139,7 @@ export const windows09 = {
 export function actionFailText(r, what, retry = 'Попробуйте ещё раз.') {
   if (r.reason === 'network') return `Нет связи с сервером — ${what}.`;
   if (r.reason === 'session') return 'Сессия завершилась. Войдите снова.';
+  if (r.reason === 'benched') return 'Этот дар не в слоте — поставьте его в «Дарах» (Сумка → Дары).';   // v0.18.0
   const e = r.error || {};
   console.error('[PlayerActions] действие не выполнено:', r.reason, `rpc=${e.rpc || '?'} status=${e.status ?? '?'} code=${e.code || '?'}${e.detail ? ` detail=${e.detail}` : ''}`);
   const tech = services.debug ? `\n[${e.rpc || '?'} · HTTP ${e.status ?? '?'} · ${e.code || r.reason}${e.detail ? ` · ${e.detail}` : ''}]` : '';

@@ -819,6 +819,26 @@ console.log('\nv0.15.0. Прогресс закрыт для sync_player: игр
   // билд: смена ветки без ветки и за чужие деньги не проходит
   const rsp = await actions.respec('telekinesis', 'lord');
   ok(!rsp.ok && rsp.reason === 'unavailable', 'смена ветки, которой нет, — отказ');
+
+  // v0.16.0: слоты даров, амулеты и пресет — локально сразу, сервер подтверждает; подделка откатывается снимком сервера
+  await give(d, { abilities: { fire: { level: 2, unlocked: true } }, inv: { amulet_focus: 1 } });
+  await settle();
+  st.setBuild({ slots: ['fire'] }); st.save();
+  const bs = await actions.buildSet({ slots: ['fire'] });
+  ok(bs.ok, 'слоты даров: сервер принял');
+  await settle();
+  r = await real();
+  ok(JSON.stringify(r.objects.player_build?.slots) === '["fire"]' && JSON.stringify(st.buildData().slots) === '["fire"]', 'слоты записаны на сервере и у игрока');
+  st.setBuild({ amulets: ['amulet_focus'] });
+  const ba = await actions.buildSet({ amulets: ['amulet_focus'] });
+  ok(ba.ok, 'амулет из сумки: сервер принял');
+  await settle();
+  r = await real();
+  ok(JSON.stringify(r.objects.player_build?.amulets) === '["amulet_focus"]', 'амулет записан на сервере');
+  const bf = await actions.buildSet({ amulets: ['amulet_lunar'] });
+  ok(!bf.ok && bf.reason === 'missing', 'амулет, которого нет в сумке, сервер отклоняет');
+  const bp = await actions.buildPreset('save');
+  ok(bp.ok, 'пресет сохранён на сервере');
 }
 
 console.log('\n13–14. Старой «облачной» механики больше нет');

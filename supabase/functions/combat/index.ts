@@ -138,6 +138,64 @@ var MIGRATION_V10 = {
   notIf: ["restoration_bundle_crafted", "chapter_1_complete"]
 };
 
+// src/config/build.js
+var GIFT_IDS = ["telekinesis", "fire", "seal"];
+var SLOT_RULES = { base: 3, extraAtLevel: 10 };
+var AMULET_SLOTS = 2;
+var AMULETS = {
+  amulet_focus: {
+    name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0421\u043E\u0441\u0440\u0435\u0434\u043E\u0442\u043E\u0447\u0435\u043D\u0438\u044F",
+    icon: "icon_core",
+    text: "\u0423\u0440\u043E\u043D \u0434\u0430\u0440\u043E\u0432 \u0438 \u0430\u0432\u0442\u043E\u0430\u0442\u0430\u043A\u0438 +12%.",
+    tradeoff: "\u041D\u0435\u0442 \u0437\u0430\u0449\u0438\u0442\u044B: \u0432\u0440\u0430\u0433 \u0431\u044C\u0451\u0442 \u043A\u0430\u043A \u043E\u0431\u044B\u0447\u043D\u043E.",
+    effect: { damageMult: 1.12 }
+  },
+  amulet_forest: {
+    name: "\u041B\u0435\u0441\u043D\u043E\u0439 \u0430\u043C\u0443\u043B\u0435\u0442",
+    icon: "icon_ember",
+    text: "\u041F\u043E\u043B\u0443\u0447\u0430\u0435\u043C\u044B\u0439 \u0443\u0440\u043E\u043D \u221220%.",
+    tradeoff: "\u0423\u0440\u043E\u043D \u0433\u0435\u0440\u043E\u044F \u22128%.",
+    effect: { incomingMult: 0.8, damageMult: 0.92 }
+  },
+  amulet_lunar: {
+    name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u0430\u043C\u0443\u043B\u0435\u0442",
+    icon: "icon_shard",
+    text: "\u041E\u0434\u0438\u043D \u0440\u0430\u0437 \u0437\u0430 \u0431\u043E\u0439, \u043A\u043E\u0433\u0434\u0430 \u043C\u0430\u043D\u044B \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043C\u0435\u043D\u044C\u0448\u0435 20%, \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043F\u043E\u043B\u043E\u0432\u0438\u043D\u0443 \u0437\u0430\u043F\u0430\u0441\u0430.",
+    tradeoff: "\u0421\u0430\u043C \u043F\u043E \u0441\u0435\u0431\u0435 \u0441\u0438\u043B\u0443 \u043D\u0435 \u0434\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442.",
+    effect: { manaRescue: { below: 0.2, gainPct: 0.5 } }
+  }
+};
+var AMULET_IDS = Object.keys(AMULETS);
+var slotCount = (level, rules = SLOT_RULES) => rules.base + ((level || 0) >= rules.extraAtLevel ? 1 : 0);
+var defaultSlots = (unlocked, count, gifts = GIFT_IDS) => gifts.filter((g) => unlocked.includes(g)).slice(0, count);
+var isStrArr = (a) => Array.isArray(a) && a.length <= 8 && a.every((x) => typeof x === "string");
+var hasDup = (a) => new Set(a).size !== a.length;
+function checkBuild(c, want, rules) {
+  const hasSlots = want.slots !== void 0 && want.slots !== null;
+  const hasAmulets = want.amulets !== void 0 && want.amulets !== null;
+  if (hasSlots && !isStrArr(want.slots) || hasAmulets && !isStrArr(want.amulets) || !hasSlots && !hasAmulets) return { ok: false, reason: "bad" };
+  if (c.combat) return { ok: false, reason: "combat" };
+  if (hasSlots) {
+    const a = want.slots;
+    if (a.length === 0) return { ok: false, reason: "none" };
+    if (hasDup(a)) return { ok: false, reason: "dup" };
+    if (a.some((g) => !rules.gifts.includes(g))) return { ok: false, reason: "unknown" };
+    if (a.some((g) => !c.unlocked.includes(g))) return { ok: false, reason: "locked" };
+    if (a.length > slotCount(c.level, rules.slots)) return { ok: false, reason: "too_many" };
+  }
+  if (hasAmulets) {
+    const a = want.amulets;
+    if (hasDup(a)) return { ok: false, reason: "dup" };
+    if (a.some((g) => !rules.amulets.includes(g))) return { ok: false, reason: "unknown" };
+    if (a.some((g) => !c.owns(g))) return { ok: false, reason: "missing" };
+    if (a.length > rules.amuletSlots) return { ok: false, reason: "too_many" };
+  }
+  return { ok: true };
+}
+function buildSlotRules() {
+  return { slots: { ...SLOT_RULES }, amuletSlots: AMULET_SLOTS, amulets: [...AMULET_IDS], gifts: [...GIFT_IDS] };
+}
+
 // src/config/balance.progression.js
 var ITEMS = {
   coins: { name: "\u041C\u043E\u043D\u0435\u0442\u044B", icon: "icon_coin" },
@@ -150,6 +208,8 @@ var ITEMS = {
   ...RESOURCE_ITEMS,
   // v0.8: лесные грибы, смола, пыль и расходники (названия лунной травы и осколка берутся отсюда)
   // v0.10.0: сюжетные предметы первой главы
+  // v0.16.0: амулеты (лежат в сумке, надеваются на экране «Дары»)
+  ...Object.fromEntries(Object.entries(AMULETS).map(([id, a]) => [id, { name: a.name, icon: a.icon }])),
   ...Object.fromEntries(Object.entries(STORY_ITEMS).map(([id, it]) => [id, { name: it.name, icon: it.icon }]))
 };
 var TIMER_MODE = "live";
@@ -214,6 +274,51 @@ var UPGRADES = {
     cost: { schoolXP: 100, items: { lunar_shard: 6 } },
     timerSec: { prototype: 90, live: 30 * 60 },
     doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u0440\u0430\u0437\u0438\u0442 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u2014 \u0442\u0435\u043D\u044C \u0425\u0440\u0430\u043D\u0438\u0442\u0435\u043B\u044F \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u0437\u0430\u0449\u0438\u0442\u0430."
+  },
+  // v0.16.0 — ступень III Огня и Астрала: по две ветки (выбирается одна; цена общая). Уровень героя 8 — «дополнительный выход» после главы I.
+  fire_3_arsonist: {
+    ability: "fire",
+    toLevel: 3,
+    branch: "arsonist",
+    title: "\u041E\u0433\u043E\u043D\u044C III \xB7 \u041F\u043E\u0434\u0436\u0438\u0433\u0430\u0442\u0435\u043B\u044C",
+    description: "\u041B\u0443\u0436\u0430 \u0441\u043C\u043E\u043B\u044B \u043F\u043E\u0441\u043B\u0435 \u0443\u0434\u0430\u0440\u0430. \u0412\u0435\u0442\u043A\u0430 \xAB\u041F\u043E\u0434\u0436\u0438\u0433\u0430\u0442\u0435\u043B\u044C\xBB: \u0433\u043E\u0440\u0435\u043D\u0438\u0435 \u0438 \u043B\u0443\u0436\u0430 \u0434\u0435\u0440\u0436\u0430\u0442\u0441\u044F \u0434\u043E\u043B\u044C\u0448\u0435, \u043D\u043E \u043F\u0440\u044F\u043C\u043E\u0439 \u0443\u0434\u0430\u0440 \u0441\u043B\u0430\u0431\u0435\u0435 \u043D\u0430 20%.",
+    requires: { heroLevel: 8, abilityLevel: 2 },
+    cost: { schoolXP: 300, items: { crimson_ember: 10 } },
+    timerSec: { prototype: 120, live: 90 * 60 },
+    doneText: "\u041E\u0433\u043E\u043D\u044C \u043E\u0441\u0442\u0430\u0432\u043B\u044F\u0435\u0442 \u0433\u043E\u0440\u044F\u0449\u0443\u044E \u043B\u0443\u0436\u0443, \u0438 \u043F\u043B\u0430\u043C\u044F \u0434\u0435\u0440\u0436\u0438\u0442\u0441\u044F \u0437\u0430\u043C\u0435\u0442\u043D\u043E \u0434\u043E\u043B\u044C\u0448\u0435."
+  },
+  fire_3_blaster: {
+    ability: "fire",
+    toLevel: 3,
+    branch: "blaster",
+    title: "\u041E\u0433\u043E\u043D\u044C III \xB7 \u0412\u0437\u0440\u044B\u0432\u043D\u0438\u043A",
+    description: "\u0412\u0435\u0442\u043A\u0430 \xAB\u0412\u0437\u0440\u044B\u0432\u043D\u0438\u043A\xBB: \u043F\u0440\u044F\u043C\u043E\u0439 \u0443\u0434\u0430\u0440 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u043D\u0430 80%, \u043D\u043E \u0431\u0435\u0437 \u043B\u0443\u0436\u0438, \u0434\u043E\u0440\u043E\u0436\u0435 \u0438 \u0441 \u0434\u043E\u043B\u0433\u043E\u0439 \u043F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u043E\u0439.",
+    requires: { heroLevel: 8, abilityLevel: 2 },
+    cost: { schoolXP: 300, items: { crimson_ember: 10 } },
+    timerSec: { prototype: 120, live: 90 * 60 },
+    doneText: "\u041E\u0433\u043E\u043D\u044C \u0432\u0437\u0440\u044B\u0432\u0430\u0435\u0442\u0441\u044F \u0432 \u0446\u0435\u043B\u044C \u2014 \u043E\u0434\u0438\u043D \u0443\u0434\u0430\u0440, \u043D\u043E \u043A\u0430\u043A\u043E\u0439."
+  },
+  seal_3_seer: {
+    ability: "seal",
+    toLevel: 3,
+    branch: "seer",
+    title: "\u0410\u0441\u0442\u0440\u0430\u043B III \xB7 \u0412\u0438\u0434\u044F\u0449\u0438\u0439",
+    description: "\u0412\u0441\u043F\u044B\u0448\u043A\u0430 \u0441\u043D\u0438\u043C\u0430\u0435\u0442 \u0431\u0440\u043E\u043D\u044E \u0438 \u043A\u043E\u0440\u0443. \u0412\u0435\u0442\u043A\u0430 \xAB\u0412\u0438\u0434\u044F\u0449\u0438\u0439\xBB: \u0432\u0441\u043F\u044B\u0448\u043A\u0430 \u0434\u043B\u0438\u0442\u0441\u044F 4 \u0441, \u0438 \u0432\u0440\u0430\u0433 \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442 \u043D\u0430 15% \u0431\u043E\u043B\u044C\u0448\u0435 \u0443\u0440\u043E\u043D\u0430, \u043D\u043E \u0441\u0430\u043C \u0443\u0434\u0430\u0440 \u0441\u043B\u0430\u0431\u0435\u0435 \u043D\u0430 15%.",
+    requires: { heroLevel: 8, abilityLevel: 2 },
+    cost: { schoolXP: 300, items: { lunar_shard: 10, rune_dust: 4 } },
+    timerSec: { prototype: 120, live: 120 * 60 },
+    doneText: "\u041F\u043E\u0441\u043B\u0435 \u0443\u0434\u0430\u0440\u0430 \u0410\u0441\u0442\u0440\u0430\u043B\u0430 \u0432\u0440\u0430\u0433 \u0431\u0435\u0437\u0437\u0430\u0449\u0438\u0442\u0435\u043D \u0438 \u0443\u044F\u0437\u0432\u0438\u043C."
+  },
+  seal_3_piercer: {
+    ability: "seal",
+    toLevel: 3,
+    branch: "piercer",
+    title: "\u0410\u0441\u0442\u0440\u0430\u043B III \xB7 \u041F\u0440\u043E\u0431\u0438\u0432\u0430\u044E\u0449\u0438\u0439",
+    description: "\u0412\u0441\u043F\u044B\u0448\u043A\u0430 \u0441\u043D\u0438\u043C\u0430\u0435\u0442 \u0431\u0440\u043E\u043D\u044E \u0438 \u043A\u043E\u0440\u0443. \u0412\u0435\u0442\u043A\u0430 \xAB\u041F\u0440\u043E\u0431\u0438\u0432\u0430\u044E\u0449\u0438\u0439\xBB: \u0443\u0434\u0430\u0440 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u043D\u0430 40%, \u043D\u043E \u0432\u0441\u043F\u044B\u0448\u043A\u0430 \u043A\u043E\u0440\u043E\u0447\u0435, \u0430 \u043F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0430 \u0434\u043B\u0438\u043D\u043D\u0435\u0435.",
+    requires: { heroLevel: 8, abilityLevel: 2 },
+    cost: { schoolXP: 300, items: { lunar_shard: 10, rune_dust: 4 } },
+    timerSec: { prototype: 120, live: 120 * 60 },
+    doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u0431\u044C\u0451\u0442 \u0442\u0430\u043A, \u0447\u0442\u043E \u0437\u0430\u0449\u0438\u0442\u0430 \u043D\u0435 \u0443\u0441\u043F\u0435\u0432\u0430\u0435\u0442 \u0432\u0435\u0440\u043D\u0443\u0442\u044C\u0441\u044F."
   }
 };
 var BRANCH_RESPEC = { coins: 150 };
@@ -322,6 +427,38 @@ var ABILITIES = {
         castSec: 0.3,
         burn: { dps: 5, durationSec: 6 },
         interruptsNormalCast: false
+      },
+      // v0.16.0: ступень III — «лужа смолы»: удар оставляет на земле горящую лужу, она жжёт врага отдельно от горения.
+      // Повторный Огонь обновляет и горение, и лужу (не складывает). Ветки накладываются поверх этих чисел.
+      3: {
+        label: "\u041E\u0433\u043E\u043D\u044C III",
+        damage: 22,
+        manaCost: 26,
+        cooldownSec: 8,
+        castSec: 0.3,
+        burn: { dps: 5, durationSec: 6 },
+        puddle: { dps: 3, durationSec: 5 },
+        interruptsNormalCast: false
+      }
+    },
+    // Ветки ступени III (выбирается одна, смена — за монеты вне боя).
+    branches: {
+      arsonist: {
+        name: "\u041F\u043E\u0434\u0436\u0438\u0433\u0430\u0442\u0435\u043B\u044C",
+        fromLevel: 3,
+        text: "\u041E\u0433\u043E\u043D\u044C \u0434\u0435\u0440\u0436\u0438\u0442\u0441\u044F: \u0433\u043E\u0440\u0435\u043D\u0438\u0435 5 \u0443\u0440\u043E\u043D\u0430 \u0432 \u0441\u0435\u043A\u0443\u043D\u0434\u0443 \u0432\u043E\u0441\u0435\u043C\u044C \u0441\u0435\u043A\u0443\u043D\u0434, \u043B\u0443\u0436\u0430 \u0441\u043C\u043E\u043B\u044B \u0433\u043E\u0440\u0438\u0442 \u0448\u0435\u0441\u0442\u044C.",
+        tradeoff: "\u041F\u0440\u044F\u043C\u043E\u0439 \u0443\u0434\u0430\u0440 \u0441\u043B\u0430\u0431\u0435\u0435 \u043D\u0430 20%.",
+        mul: { damage: 0.8 },
+        set: { burn: { dps: 5, durationSec: 8 }, puddle: { dps: 3, durationSec: 6 } }
+      },
+      blaster: {
+        name: "\u0412\u0437\u0440\u044B\u0432\u043D\u0438\u043A",
+        fromLevel: 3,
+        text: "\u041E\u0433\u043E\u043D\u044C \u0432\u0437\u0440\u044B\u0432\u0430\u0435\u0442\u0441\u044F: \u043F\u0440\u044F\u043C\u043E\u0439 \u0443\u0434\u0430\u0440 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u043D\u0430 80%.",
+        tradeoff: "\u041B\u0443\u0436\u0438 \u043D\u0435\u0442, \u043F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0430 \u043D\u0430 1 \u0441 \u0434\u043E\u043B\u044C\u0448\u0435, \u043D\u0430 4 \u043C\u0430\u043D\u044B \u0434\u043E\u0440\u043E\u0436\u0435.",
+        mul: { damage: 1.8 },
+        add: { cooldownSec: 1, manaCost: 4 },
+        set: { puddle: null }
       }
     }
   },
@@ -353,6 +490,37 @@ var ABILITIES = {
         castSec: 0.3,
         ignoresDefense: true,
         interruptsStrongCast: false
+      },
+      // v0.16.0: Астрал III — «вспышка»: удар на миг ослепляет врага, и его броня и защитная кора перестают гасить урон
+      // всех остальных даров и автоатаки (flash.sec секунд). Ветки накладываются поверх этих чисел.
+      3: {
+        label: "\u0410\u0441\u0442\u0440\u0430\u043B III",
+        damage: 35,
+        manaCost: 24,
+        cooldownSec: 10,
+        castSec: 0.3,
+        ignoresDefense: true,
+        interruptsStrongCast: false,
+        flash: { sec: 2 }
+      }
+    },
+    branches: {
+      seer: {
+        name: "\u0412\u0438\u0434\u044F\u0449\u0438\u0439",
+        fromLevel: 3,
+        text: "\u0412\u0441\u043F\u044B\u0448\u043A\u0430 \u0434\u043B\u0438\u0442\u0441\u044F 4 \u0441 \u0438 \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u0441\u043B\u0430\u0431\u043E\u0435 \u043C\u0435\u0441\u0442\u043E: \u0432\u0440\u0430\u0433 \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u0442 \u043D\u0430 15% \u0431\u043E\u043B\u044C\u0448\u0435 \u0443\u0440\u043E\u043D\u0430 \u043E\u0442 \u0432\u0441\u0435\u0433\u043E.",
+        tradeoff: "\u0421\u0430\u043C \u0443\u0434\u0430\u0440 \u0441\u043B\u0430\u0431\u0435\u0435 \u043D\u0430 15%.",
+        mul: { damage: 0.85 },
+        set: { flash: { sec: 4, vulnerability: 0.15 } }
+      },
+      piercer: {
+        name: "\u041F\u0440\u043E\u0431\u0438\u0432\u0430\u044E\u0449\u0438\u0439",
+        fromLevel: 3,
+        text: "\u0423\u0434\u0430\u0440 \u0410\u0441\u0442\u0440\u0430\u043B\u0430 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u043D\u0430 40%.",
+        tradeoff: "\u0412\u0441\u043F\u044B\u0448\u043A\u0430 \u043A\u043E\u0440\u043E\u0447\u0435 (1 \u0441), \u043F\u0435\u0440\u0435\u0437\u0430\u0440\u044F\u0434\u043A\u0430 \u043D\u0430 2 \u0441 \u0434\u043E\u043B\u044C\u0448\u0435.",
+        mul: { damage: 1.4 },
+        add: { cooldownSec: 2 },
+        set: { flash: { sec: 1 } }
       }
     }
   }
@@ -1144,7 +1312,15 @@ var GameState = class {
   // («последний записал»), поэтому схему базы менять не пришлось. Слоты и амулеты лягут туда же.
   buildData() {
     const b = this.getObject("player_build");
-    return { branches: { ...b && typeof b.branches === "object" && b.branches ? b.branches : {} } };
+    const o = b && typeof b === "object" ? b : {};
+    const ids = (a) => Array.isArray(a) ? a.filter((x) => typeof x === "string") : null;
+    return {
+      branches: { ...o.branches && typeof o.branches === "object" ? o.branches : {} },
+      slots: ids(o.slots),
+      // null — слоты не настраивались: действуют первые открытые дары
+      amulets: ids(o.amulets) || [],
+      preset: o.preset && typeof o.preset === "object" ? { slots: ids(o.preset.slots) || [], amulets: ids(o.preset.amulets) || [] } : null
+    };
   }
   /** Выбранная ветка дара или null. Ветка действует, только пока она есть в данных дара и ступень её достигла. */
   branchOf(abilityId) {
@@ -1153,9 +1329,65 @@ var GameState = class {
     return br && this.abilityLevel(abilityId) >= (br.fromLevel || 1) ? id : null;
   }
   setBranch(abilityId, branchId) {
+    const raw = this.getObject("player_build");
+    const o = raw && typeof raw === "object" ? raw : {};
+    this.setObject("player_build", { ...o, branches: { ...o.branches && typeof o.branches === "object" ? o.branches : {}, [abilityId]: branchId } });
+  }
+  // ---------- слоты даров, пресет и амулеты (v0.16.0, config/build.js) ----------
+  /** Сколько слотов даров у героини. */
+  giftSlotCount() {
+    return slotCount(this.data.heroLevel);
+  }
+  /** Дары, которые сейчас в слотах (действуют в бою). Пока слоты не настраивали — первые открытые по порядку. */
+  equippedGifts() {
+    const unlocked = GIFT_IDS.filter((g) => this.isUnlocked(g));
     const b = this.buildData();
-    b.branches[abilityId] = branchId;
-    this.setObject("player_build", { branches: b.branches });
+    if (!b.slots) return defaultSlots(unlocked, this.giftSlotCount());
+    return b.slots.filter((g) => unlocked.includes(g)).slice(0, this.giftSlotCount());
+  }
+  isEquipped(id) {
+    return this.equippedGifts().includes(id);
+  }
+  /** Надетые амулеты (их эффекты считает бой). */
+  equippedAmulets() {
+    return this.buildData().amulets.filter((a) => AMULETS[a]);
+  }
+  hasAmulet(id) {
+    return this.equippedAmulets().includes(id);
+  }
+  buildContext(inCombat = false) {
+    return { level: this.data.heroLevel, unlocked: GIFT_IDS.filter((g) => this.isUnlocked(g)), owns: (id) => this.item(id) >= 1, combat: inCombat };
+  }
+  /** Выбрать слоты и/или амулеты ({ slots?, amulets? }). Проверка общая с сервером (checkBuild). */
+  setBuild(want, inCombat = false) {
+    const r = checkBuild(this.buildContext(inCombat), want, buildSlotRules());
+    if (!r.ok) return r;
+    const raw = this.getObject("player_build");
+    const o = raw && typeof raw === "object" ? { ...raw } : {};
+    if (want.slots != null) o.slots = [...want.slots];
+    if (want.amulets != null) o.amulets = [...want.amulets];
+    this.setObject("player_build", o);
+    return { ok: true };
+  }
+  /** Единственный бесплатный пресет: сохранить текущие слоты и амулеты / применить сохранённые. */
+  buildPreset(mode, inCombat = false) {
+    if (inCombat) return { ok: false, reason: "combat" };
+    const raw = this.getObject("player_build");
+    const o = raw && typeof raw === "object" ? { ...raw } : {};
+    if (mode === "save") {
+      o.preset = { slots: this.equippedGifts(), amulets: this.equippedAmulets() };
+      this.setObject("player_build", o);
+      return { ok: true };
+    }
+    if (mode === "load") {
+      const p = this.buildData().preset;
+      if (!p) return { ok: false, reason: "empty" };
+      o.slots = [...p.slots];
+      o.amulets = [...p.amulets];
+      this.setObject("player_build", o);
+      return { ok: true };
+    }
+    return { ok: false, reason: "bad" };
   }
   /** Смена ветки за монеты. Не в бою — это проверяет окно (в бою кнопки нет). */
   respecBranch(abilityId, branchId) {
@@ -1251,8 +1483,8 @@ var SIDE_QUESTS = {
     summary: "\u0414\u0443\u0445 \u0430\u043B\u0442\u0430\u0440\u044F \u0421\u0435\u043B\u0435\u043D\u0430 \u043F\u0440\u043E\u0441\u0438\u0442 \u043D\u0430\u0439\u0442\u0438 \u0440\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0443\u044E \u043F\u044B\u043B\u044C \u0443 \u0430\u043B\u0442\u0430\u0440\u044F: \u0435\u0451 \u043C\u043E\u0436\u043D\u043E \u0441\u043E\u0431\u0440\u0430\u0442\u044C \u0441 \u0440\u0443\u043D\u043D\u043E\u0439 \u043F\u043B\u0438\u0442\u044B \u0438\u043B\u0438 \u043D\u0430\u0439\u0442\u0438 \u043F\u043E\u0434 \u0441\u0434\u0432\u0438\u043D\u0443\u0442\u044B\u043C \u043A\u0430\u043C\u043D\u0435\u043C.",
     objectives: [{ type: "item", item: "rune_dust", count: 1, text: "\u0420\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C" }],
     turnIn: { npc: "selena", consume: { rune_dust: 1 } },
-    reward: { heroXP: 20, schoolXP: { telekinesis: 15 }, items: { lunar_shard: 1, elixir_mana: 1 } },
-    rewardText: "\u041B\u0443\u043D\u043D\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A, \u043B\u0443\u043D\u043D\u044B\u0439 \u044D\u043B\u0438\u043A\u0441\u0438\u0440, 20 \u043E\u043F\u044B\u0442\u0430",
+    reward: { heroXP: 20, schoolXP: { telekinesis: 15 }, items: { lunar_shard: 1, elixir_mana: 1, amulet_lunar: 1 } },
+    rewardText: "\u041B\u0443\u043D\u043D\u044B\u0439 \u0430\u043C\u0443\u043B\u0435\u0442, \u043B\u0443\u043D\u043D\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A, \u043B\u0443\u043D\u043D\u044B\u0439 \u044D\u043B\u0438\u043A\u0441\u0438\u0440, 20 \u043E\u043F\u044B\u0442\u0430",
     requires: { event: "lunar_quest_start" }
     // Селена просит пыль, когда алтарь уже заговорил с героиней
   },
@@ -1263,8 +1495,8 @@ var SIDE_QUESTS = {
     summary: "\u041E\u0445\u043E\u0442\u043D\u0438\u043A \u0413\u043E\u0440\u0430\u043D \u043F\u0440\u043E\u0441\u0438\u0442 \u043F\u0440\u043E\u0433\u043D\u0430\u0442\u044C \u043F\u0430\u0434\u0430\u043B\u044C\u0449\u0438\u043A\u0430, \u0440\u0430\u0437\u043E\u0440\u0438\u0432\u0448\u0435\u0433\u043E \u0435\u0433\u043E \u043B\u0430\u0433\u0435\u0440\u044C \u0443 \u0440\u0443\u0447\u044C\u044F. \u041E\u0433\u043E\u043D\u044C \u043F\u0443\u0433\u0430\u0435\u0442 \u0437\u0432\u0435\u0440\u044F, \u0431\u0440\u043E\u0448\u0435\u043D\u043D\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C \u0440\u0430\u043D\u0438\u0442.",
     objectives: [{ type: "enemy", id: "scavenger_02", text: "\u041F\u0440\u043E\u0433\u043D\u0430\u0442\u044C \u043F\u0430\u0434\u0430\u043B\u044C\u0449\u0438\u043A\u0430" }],
     turnIn: { npc: "goran", consume: {} },
-    reward: { heroXP: 25, coins: 40, items: { tree_resin: 2, resin_flask: 1 } },
-    rewardText: "\u0421\u043C\u043E\u043B\u044F\u043D\u0430\u044F \u0441\u043A\u043B\u044F\u043D\u043A\u0430, 2 \u0441\u043C\u043E\u043B\u044B, 40 \u043C\u043E\u043D\u0435\u0442, 25 \u043E\u043F\u044B\u0442\u0430"
+    reward: { heroXP: 25, coins: 40, items: { tree_resin: 2, resin_flask: 1, amulet_focus: 1 } },
+    rewardText: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0421\u043E\u0441\u0440\u0435\u0434\u043E\u0442\u043E\u0447\u0435\u043D\u0438\u044F, \u0441\u043C\u043E\u043B\u044F\u043D\u0430\u044F \u0441\u043A\u043B\u044F\u043D\u043A\u0430, 2 \u0441\u043C\u043E\u043B\u044B, 40 \u043C\u043E\u043D\u0435\u0442, 25 \u043E\u043F\u044B\u0442\u0430"
   }
 };
 var SIDE_QUEST_ORDER = ["sq_herbs", "sq_hunter", "sq_dust"];
@@ -1422,7 +1654,7 @@ function buildRules() {
     if (!a.branches) continue;
     branches[id] = Object.fromEntries(Object.entries(a.branches).map(([b, v]) => [b, { fromLevel: v.fromLevel || 1 }]));
   }
-  return { respecCoins: BRANCH_RESPEC.coins, branches };
+  return { respecCoins: BRANCH_RESPEC.coins, branches, ...buildSlotRules() };
 }
 function spawnStartRules() {
   const out = {};
@@ -1648,7 +1880,7 @@ var ENEMIES = {
     interruptedCooldownSec: 7,
     defense: 0,
     armor: { value: 0.45, source: "crystal", disabledSec: 8 },
-    rewards: { heroXP: 150, schoolXP: { telekinesis: 60, fire: 60 }, items: { rare_core: 1, lunar_shard: 3 }, coins: 60 },
+    rewards: { heroXP: 150, schoolXP: { telekinesis: 60, fire: 60 }, items: { rare_core: 1, lunar_shard: 3, amulet_forest: 1 }, coins: 60 },
     arena: "guardian"
   },
   // v0.10.0 — финальное испытание первой главы за Древними воротами. 900 HP (не старый босс на 1050), три фазы.
@@ -1751,6 +1983,7 @@ var Enemy = class {
     this.prepLeft = 0;
     this.staggerLeft = 0;
     this.burn = { left: 0, dps: 0, tick: 0 };
+    this.puddle = { left: 0, dps: 0, tick: 0 };
     this.defenseDisabledLeft = 0;
     this.armorDisabledLeft = 0;
     this.vulnerable = { left: 0, bonus: 0 };
@@ -1809,6 +2042,9 @@ var Enemy = class {
   get burning() {
     return this.burn.left > 0;
   }
+  get inPuddle() {
+    return this.puddle.left > 0;
+  }
   /** Множитель входящего урона для школы ('auto' | 'telekinesis' | 'fire' | 'seal'). */
   incomingMultiplier(school) {
     let m = 1;
@@ -1836,6 +2072,27 @@ var Enemy = class {
     this.burn.left = durationSec;
     this.burn.dps = dps;
     if (!wasBurning) this.burn.tick = 1;
+  }
+  /** v0.16.0: лужа смолы. Как и горение — не складывается, повторный Огонь обновляет длительность и силу. */
+  applyPuddle(dps, durationSec) {
+    const was = this.inPuddle;
+    this.puddle.left = durationSec;
+    this.puddle.dps = dps;
+    if (!was) this.puddle.tick = 1;
+  }
+  /**
+   * v0.16.0: вспышка Астрала III. На sec секунд броня и защитная кора не гасят урон (только если они есть у врага);
+   * vulnerability — враг получает на столько больше урона от всего. Возвращает события для сцены.
+   */
+  flash(sec, vulnerability = 0) {
+    const out = [{ type: "flash", sec }];
+    if (this.hasArmor && sec > this.armorDisabledLeft) this.armorDisabledLeft = sec;
+    if ((this.def.defense || 0) > 0 && sec > this.defenseDisabledLeft) this.defenseDisabledLeft = sec;
+    if (vulnerability > 0) {
+      this.vulnerable = { left: Math.max(this.vulnerable.left, sec), bonus: Math.max(this.vulnerable.left > 0 ? this.vulnerable.bonus : 0, vulnerability) };
+      out.push({ type: "vulnerable", sec, bonus: vulnerability });
+    }
+    return out;
   }
   onFireHit() {
     const f = this.def.onFireHit;
@@ -1890,6 +2147,15 @@ var Enemy = class {
         out.push({ type: "burnTick", damage: this.takeDamage(this.burn.dps, "fire", heroMult) });
       }
       if (this.burn.left <= 0) this.burn.left = 0;
+    }
+    if (this.puddle.left > 0) {
+      this.puddle.left -= dt;
+      this.puddle.tick -= dt;
+      while (this.puddle.tick <= 0 && this.alive) {
+        this.puddle.tick += 1;
+        out.push({ type: "burnTick", damage: this.takeDamage(this.puddle.dps, "fire", heroMult), puddle: true });
+      }
+      if (this.puddle.left <= 0) this.puddle.left = 0;
     }
     if (this.armorDisabledLeft > 0) {
       this.armorDisabledLeft -= dt;
@@ -2147,6 +2413,17 @@ var CombatManager = class {
       damageMult: hs.damageMult,
       autoTimer: HERO_BASE.autoAttack.intervalSec
     };
+    this.amulets = state.equippedAmulets ? state.equippedAmulets() : [];
+    let dm = 1, inc = 1;
+    for (const a of this.amulets) {
+      const e = AMULETS[a].effect;
+      if (e.damageMult) dm *= e.damageMult;
+      if (e.incomingMult) inc *= e.incomingMult;
+    }
+    this.hero.damageMult = Math.round(this.hero.damageMult * dm * 1e3) / 1e3;
+    this.incomingMult = inc;
+    this.manaRescue = this.amulets.map((a) => AMULETS[a].effect.manaRescue).find(Boolean) || null;
+    this.manaRescueUsed = false;
     this.cooldowns = Object.fromEntries(ABILITY_ORDER.map((id) => [id, 0]));
     const arena = ARENAS[this.def.arena] || ARENAS.glade;
     this.arena = arena;
@@ -2204,6 +2481,7 @@ var CombatManager = class {
   abilityState(id) {
     const s = this.abilities.stats(id);
     if (!s || !this.abilities.isUnlocked(id)) return { id, state: "locked" };
+    if (this.state.isEquipped && !this.state.isEquipped(id)) return { id, state: "benched" };
     const cd = this.cooldowns[id];
     if (cd > 0) return { id, state: "cooldown", cdLeft: cd, cdFrac: cd / s.cooldownSec };
     if (this.hero.mana < s.manaCost) return { id, state: "nomana" };
@@ -2216,6 +2494,7 @@ var CombatManager = class {
     if (st.state !== "ready") return { ok: false, reason: st.state };
     const s = this.abilities.stats(id);
     this.hero.mana -= s.manaCost;
+    this.checkManaRescue();
     this.cooldowns[id] = this.startCooldown(id, s);
     this.stats.abilityUses[id]++;
     this.abilities.grantUseXP(id, "combat");
@@ -2338,6 +2617,10 @@ var CombatManager = class {
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "fire" });
     this.enemy.applyBurn(s.burn.dps, s.burn.durationSec);
     this.emit({ type: "status", status: "burn", sec: s.burn.durationSec });
+    if (s.puddle) {
+      this.enemy.applyPuddle(s.puddle.dps, s.puddle.durationSec);
+      this.emit({ type: "status", status: "puddle", sec: s.puddle.durationSec });
+    }
     for (const e of this.enemy.onFireHit()) this.emit({ type: "status", status: e.type, sec: e.sec, bonus: e.bonus });
     if (s.interruptsNormalCast) this.handleInterrupt(["fire"]);
   }
@@ -2345,6 +2628,21 @@ var CombatManager = class {
   castSeal(s) {
     const dmg = this.enemy.takeDamage(s.damage, "seal", this.hero.damageMult);
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "seal" });
+    if (s.flash && this.enemy.alive) {
+      for (const e of this.enemy.flash(s.flash.sec, s.flash.vulnerability || 0)) {
+        if (e.type === "vulnerable") this.emit({ type: "status", status: "vulnerable", sec: e.sec, bonus: e.bonus });
+        else this.emit(e);
+      }
+    }
+  }
+  /** v0.16.0: Лунный амулет — один раз за бой, когда маны меньше below от максимума, возвращает gainPct максимума. */
+  checkManaRescue() {
+    const r = this.manaRescue;
+    if (!r || this.manaRescueUsed || this.hero.mana >= this.hero.maxMana * r.below) return;
+    this.manaRescueUsed = true;
+    const gain = Math.min(this.hero.maxMana - this.hero.mana, Math.round(this.hero.maxMana * r.gainPct));
+    this.hero.mana += gain;
+    this.emit({ type: "manaRescue", mana: gain });
   }
   handleInterrupt(tags) {
     const r = this.enemy.tryInterrupt(tags);
@@ -2423,7 +2721,7 @@ var CombatManager = class {
           this.emit({ type: "warning", name: a.name, prepSec: a.prepSec, hint: a.hint, needsHeavy: a.interruptBy.includes("telekinesis_heavy") && !a.interruptBy.includes("telekinesis") });
           break;
         case "burnTick":
-          this.emit({ type: "damage", target: "enemy", amount: a.damage, school: "fire", tick: true });
+          this.emit({ type: "damage", target: "enemy", amount: a.damage, school: "fire", tick: true, puddle: !!a.puddle });
           break;
         case "armorBack":
           this.emit({ type: "armorBack" });
@@ -2437,6 +2735,7 @@ var CombatManager = class {
     this.commit();
   }
   hitHero(damage, strong, name) {
+    damage = Math.max(1, Math.round(damage * this.incomingMult));
     this.hero.hp = Math.max(0, this.hero.hp - damage);
     this.stats.damageTaken += damage;
     this.emit({ type: "damage", target: "hero", amount: damage, strong, name });

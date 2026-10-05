@@ -8,6 +8,7 @@ import { WORLD } from '../config/world.layout.js';
 import { SAVE } from '../config/game.config.js';
 import { materialize } from './vitals.js';
 import { DEFAULT_HERO_ID } from '../config/heroes.js';
+import { GIFT_IDS, AMULETS, slotCount, defaultSlots, checkBuild, buildSlotRules } from '../config/build.js';
 
 const SAVE_VERSION = 1;
 
@@ -251,7 +252,14 @@ export class GameState {
   // («последний записал»), поэтому схему базы менять не пришлось. Слоты и амулеты лягут туда же.
   buildData() {
     const b = this.getObject('player_build');
-    return { branches: { ...(b && typeof b.branches === 'object' && b.branches ? b.branches : {}) } };
+    const o = b && typeof b === 'object' ? b : {};
+    const ids = (a) => (Array.isArray(a) ? a.filter((x) => typeof x === 'string') : null);
+    return {
+      branches: { ...(o.branches && typeof o.branches === 'object' ? o.branches : {}) },
+      slots: ids(o.slots),                       // null — слоты не настраивались: действуют первые открытые дары
+      amulets: ids(o.amulets) || [],
+      preset: o.preset && typeof o.preset === 'object' ? { slots: ids(o.preset.slots) || [], amulets: ids(o.preset.amulets) || [] } : null,
+    };
   }
   /** Выбранная ветка дара или null. Ветка действует, только пока она есть в данных дара и ступень её достигла. */
   branchOf(abilityId) {
@@ -260,9 +268,57 @@ export class GameState {
     return br && this.abilityLevel(abilityId) >= (br.fromLevel || 1) ? id : null;
   }
   setBranch(abilityId, branchId) {
+    const raw = this.getObject('player_build');
+    const o = raw && typeof raw === 'object' ? raw : {};
+    this.setObject('player_build', { ...o, branches: { ...(o.branches && typeof o.branches === 'object' ? o.branches : {}), [abilityId]: branchId } });
+  }
+
+  // ---------- слоты даров, пресет и амулеты (v0.16.0, config/build.js) ----------
+  /** Сколько слотов даров у героини. */
+  giftSlotCount() { return slotCount(this.data.heroLevel); }
+  /** Дары, которые сейчас в слотах (действуют в бою). Пока слоты не настраивали — первые открытые по порядку. */
+  equippedGifts() {
+    const unlocked = GIFT_IDS.filter((g) => this.isUnlocked(g));
     const b = this.buildData();
-    b.branches[abilityId] = branchId;
-    this.setObject('player_build', { branches: b.branches });
+    if (!b.slots) return defaultSlots(unlocked, this.giftSlotCount());
+    return b.slots.filter((g) => unlocked.includes(g)).slice(0, this.giftSlotCount());
+  }
+  isEquipped(id) { return this.equippedGifts().includes(id); }
+  /** Надетые амулеты (их эффекты считает бой). */
+  equippedAmulets() { return this.buildData().amulets.filter((a) => AMULETS[a]); }
+  hasAmulet(id) { return this.equippedAmulets().includes(id); }
+  buildContext(inCombat = false) {
+    return { level: this.data.heroLevel, unlocked: GIFT_IDS.filter((g) => this.isUnlocked(g)), owns: (id) => this.item(id) >= 1, combat: inCombat };
+  }
+  /** Выбрать слоты и/или амулеты ({ slots?, amulets? }). Проверка общая с сервером (checkBuild). */
+  setBuild(want, inCombat = false) {
+    const r = checkBuild(this.buildContext(inCombat), want, buildSlotRules());
+    if (!r.ok) return r;
+    const raw = this.getObject('player_build');
+    const o = raw && typeof raw === 'object' ? { ...raw } : {};
+    if (want.slots != null) o.slots = [...want.slots];
+    if (want.amulets != null) o.amulets = [...want.amulets];
+    this.setObject('player_build', o);
+    return { ok: true };
+  }
+  /** Единственный бесплатный пресет: сохранить текущие слоты и амулеты / применить сохранённые. */
+  buildPreset(mode, inCombat = false) {
+    if (inCombat) return { ok: false, reason: 'combat' };
+    const raw = this.getObject('player_build');
+    const o = raw && typeof raw === 'object' ? { ...raw } : {};
+    if (mode === 'save') {
+      o.preset = { slots: this.equippedGifts(), amulets: this.equippedAmulets() };
+      this.setObject('player_build', o);
+      return { ok: true };
+    }
+    if (mode === 'load') {
+      const p = this.buildData().preset;
+      if (!p) return { ok: false, reason: 'empty' };
+      o.slots = [...p.slots]; o.amulets = [...p.amulets];
+      this.setObject('player_build', o);
+      return { ok: true };
+    }
+    return { ok: false, reason: 'bad' };
   }
   /** Смена ветки за монеты. Не в бою — это проверяет окно (в бою кнопки нет). */
   respecBranch(abilityId, branchId) {

@@ -12,6 +12,7 @@ import { ABILITIES, WORLD_MANA_COST, WEIGHT_CLASSES, SCHOOL_XP_PER_USE } from '.
 import { UPGRADES, TIMER_MODE, EVENT_REWARDS, BRANCH_RESPEC } from './balance.progression.js';
 import { SIDE_QUESTS, SIDE_QUEST_ORDER, questEvent } from './quests.js';
 import { STORY_USES, FIRST_CRAFT, MIGRATION_V10 } from './storyItems.js';
+import { buildSlotRules } from './build.js';
 
 /**
  * Награда из конфигов → формат серверной операции (_grant / grant):
@@ -164,7 +165,8 @@ export function buildRules() {
     if (!a.branches) continue;
     branches[id] = Object.fromEntries(Object.entries(a.branches).map(([b, v]) => [b, { fromLevel: v.fromLevel || 1 }]));
   }
-  return { respecCoins: BRANCH_RESPEC.coins, branches };
+  // v0.16.0: слоты даров (3 + 4-й с 10 уровня), два слота амулетов, список даров и амулетов (config/build.js)
+  return { respecCoins: BRANCH_RESPEC.coins, branches, ...buildSlotRules() };
 }
 
 /** События, которые сервер ставит в начале боя: сюда место боя → событие и условие (раньше это делал клиент до combat_start). */

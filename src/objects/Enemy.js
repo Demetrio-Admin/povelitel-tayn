@@ -17,6 +17,7 @@ export class Enemy {
     this.prepLeft = 0;          // > 0 — идёт подготовка сильной атаки
     this.staggerLeft = 0;       // оглушение после прерывания / связывания
     this.burn = { left: 0, dps: 0, tick: 0 };
+    this.puddle = { left: 0, dps: 0, tick: 0 };   // v0.16.0: лужа смолы (Огонь III) жжёт отдельно от горения
     this.defenseDisabledLeft = 0;
     this.armorDisabledLeft = 0;
     this.vulnerable = { left: 0, bonus: 0 };
@@ -62,6 +63,7 @@ export class Enemy {
   get armorActive() { return this.hasArmor && this.armorDisabledLeft <= 0; }
   get defenseActive() { return (this.def.defense || 0) > 0 && this.defenseDisabledLeft <= 0; }
   get burning() { return this.burn.left > 0; }
+  get inPuddle() { return this.puddle.left > 0; }
 
   /** Множитель входящего урона для школы ('auto' | 'telekinesis' | 'fire' | 'seal'). */
   incomingMultiplier(school) {
@@ -95,6 +97,29 @@ export class Enemy {
     this.burn.left = durationSec;
     this.burn.dps = dps;
     if (!wasBurning) this.burn.tick = 1;
+  }
+
+  /** v0.16.0: лужа смолы. Как и горение — не складывается, повторный Огонь обновляет длительность и силу. */
+  applyPuddle(dps, durationSec) {
+    const was = this.inPuddle;
+    this.puddle.left = durationSec;
+    this.puddle.dps = dps;
+    if (!was) this.puddle.tick = 1;
+  }
+
+  /**
+   * v0.16.0: вспышка Астрала III. На sec секунд броня и защитная кора не гасят урон (только если они есть у врага);
+   * vulnerability — враг получает на столько больше урона от всего. Возвращает события для сцены.
+   */
+  flash(sec, vulnerability = 0) {
+    const out = [{ type: 'flash', sec }];
+    if (this.hasArmor && sec > this.armorDisabledLeft) this.armorDisabledLeft = sec;
+    if ((this.def.defense || 0) > 0 && sec > this.defenseDisabledLeft) this.defenseDisabledLeft = sec;
+    if (vulnerability > 0) {
+      this.vulnerable = { left: Math.max(this.vulnerable.left, sec), bonus: Math.max(this.vulnerable.left > 0 ? this.vulnerable.bonus : 0, vulnerability) };
+      out.push({ type: 'vulnerable', sec, bonus: vulnerability });
+    }
+    return out;
   }
 
   onFireHit() {
@@ -146,6 +171,15 @@ export class Enemy {
         out.push({ type: 'burnTick', damage: this.takeDamage(this.burn.dps, 'fire', heroMult) });
       }
       if (this.burn.left <= 0) this.burn.left = 0;
+    }
+    if (this.puddle.left > 0) {
+      this.puddle.left -= dt;
+      this.puddle.tick -= dt;
+      while (this.puddle.tick <= 0 && this.alive) {
+        this.puddle.tick += 1;
+        out.push({ type: 'burnTick', damage: this.takeDamage(this.puddle.dps, 'fire', heroMult), puddle: true });
+      }
+      if (this.puddle.left <= 0) this.puddle.left = 0;
     }
     if (this.armorDisabledLeft > 0) { this.armorDisabledLeft -= dt; if (this.armorDisabledLeft <= 0) out.push({ type: 'armorBack' }); }
     if (this.defenseDisabledLeft > 0) { this.defenseDisabledLeft -= dt; if (this.defenseDisabledLeft <= 0) out.push({ type: 'defenseBack' }); }

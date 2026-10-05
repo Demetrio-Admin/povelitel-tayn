@@ -86,7 +86,7 @@ export const ENEMIES = {
     interruptedCooldownSec: 7,
     defense: 0,
     armor: { value: 0.45, source: 'crystal', disabledSec: 8 },
-    rewards: { heroXP: 150, schoolXP: { telekinesis: 60, fire: 60 }, items: { rare_core: 1, lunar_shard: 3 }, coins: 60 },
+    rewards: { heroXP: 150, schoolXP: { telekinesis: 60, fire: 60 }, items: { rare_core: 1, lunar_shard: 3, amulet_forest: 1 }, coins: 60 },
     arena: 'guardian',
   },
 

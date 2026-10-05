@@ -73,6 +73,33 @@ export const ABILITIES = {
         burn: { dps: 5, durationSec: 6 },
         interruptsNormalCast: false,
       },
+      // v0.16.0: ступень III — «лужа смолы»: удар оставляет на земле горящую лужу, она жжёт врага отдельно от горения.
+      // Повторный Огонь обновляет и горение, и лужу (не складывает). Ветки накладываются поверх этих чисел.
+      3: {
+        label: 'Огонь III',
+        damage: 22, manaCost: 26, cooldownSec: 8, castSec: 0.3,
+        burn: { dps: 5, durationSec: 6 },
+        puddle: { dps: 3, durationSec: 5 },
+        interruptsNormalCast: false,
+      },
+    },
+    // Ветки ступени III (выбирается одна, смена — за монеты вне боя).
+    branches: {
+      arsonist: {
+        name: 'Поджигатель', fromLevel: 3,
+        text: 'Огонь держится: горение 5 урона в секунду восемь секунд, лужа смолы горит шесть.',
+        tradeoff: 'Прямой удар слабее на 20%.',
+        mul: { damage: 0.8 },
+        set: { burn: { dps: 5, durationSec: 8 }, puddle: { dps: 3, durationSec: 6 } },
+      },
+      blaster: {
+        name: 'Взрывник', fromLevel: 3,
+        text: 'Огонь взрывается: прямой удар сильнее на 80%.',
+        tradeoff: 'Лужи нет, перезарядка на 1 с дольше, на 4 маны дороже.',
+        mul: { damage: 1.8 },
+        add: { cooldownSec: 1, manaCost: 4 },
+        set: { puddle: null },
+      },
     },
   },
   // v0.10.1: «Печать» стала Астралом. Внутренний id остаётся 'seal' (сохранения, сервер, события unlock_seal_1 и т.п.),
@@ -95,6 +122,32 @@ export const ABILITIES = {
         damage: 35, manaCost: 22, cooldownSec: 10, castSec: 0.3,
         ignoresDefense: true,
         interruptsStrongCast: false,
+      },
+      // v0.16.0: Астрал III — «вспышка»: удар на миг ослепляет врага, и его броня и защитная кора перестают гасить урон
+      // всех остальных даров и автоатаки (flash.sec секунд). Ветки накладываются поверх этих чисел.
+      3: {
+        label: 'Астрал III',
+        damage: 35, manaCost: 24, cooldownSec: 10, castSec: 0.3,
+        ignoresDefense: true,
+        interruptsStrongCast: false,
+        flash: { sec: 2 },
+      },
+    },
+    branches: {
+      seer: {
+        name: 'Видящий', fromLevel: 3,
+        text: 'Вспышка длится 4 с и открывает слабое место: враг получает на 15% больше урона от всего.',
+        tradeoff: 'Сам удар слабее на 15%.',
+        mul: { damage: 0.85 },
+        set: { flash: { sec: 4, vulnerability: 0.15 } },
+      },
+      piercer: {
+        name: 'Пробивающий', fromLevel: 3,
+        text: 'Удар Астрала сильнее на 40%.',
+        tradeoff: 'Вспышка короче (1 с), перезарядка на 2 с дольше.',
+        mul: { damage: 1.4 },
+        add: { cooldownSec: 2 },
+        set: { flash: { sec: 1 } },
       },
     },
   },

@@ -147,6 +147,41 @@ const ph = q(`select public.player_action('{"op":"drink","item":"resin_flask","i
 ok(JSON.parse(ph).action.reason === 'unknown', 'боевое зелье вне боя не пьётся');
 ok(denied(q(`update public.player_progress set mana = 100 where user_id = '${B}';`, B)) || /UPDATE 0|permission/.test(q(`update public.player_progress set mana = 100 where user_id = '${B}';`, B).err + 'UPDATE 0'), 'ману нельзя записать в таблицу напрямую');
 
+console.log('\nБаза: слоты, амулеты и закрытые служебные функции (v0.16.0)');
+{
+  // служебные функции принимают чужой uid — из браузера они вызываться не должны (раньше _set_branch, _unlock_ability, _open_path, _set_event были открыты)
+  const calls = [`select public._unlock_ability('${B}', 'seal', 10);`, `select public._set_branch('${B}', 'fire', 'blaster');`, `select public._open_path('${B}', 'gate_path');`,
+    `select public._merge_build('${B}', '{"amulets":["amulet_focus"]}'::jsonb);`];
+  for (const as of ['anon', A]) for (const c of calls) ok(denied(q(c, as)), `${as === 'anon' ? 'гость' : 'игрок'} не может вызвать ${c.match(/_\w+/)[0]}`);
+  const act = (uid, o) => JSON.parse(q(`select public.player_action('${JSON.stringify(o)}'::jsonb);`, uid).out);
+  q(`insert into public.player_abilities (user_id, ability_id, level, unlocked) values ('${A}', 'telekinesis', 3, true), ('${A}', 'fire', 2, true) on conflict (user_id, ability_id) do update set level = excluded.level, unlocked = true;
+     insert into public.player_inventory (user_id, item_id, quantity) values ('${A}', 'amulet_focus', 1), ('${A}', 'coins', 400) on conflict (user_id, item_id) do update set quantity = excluded.quantity;`);
+  ok(act(A, { op: 'build_set', slots: ['fire'], id: 'sec-build-00001' }).action.ok === true, 'слоты даров выбраны');
+  ok(act(A, { op: 'build_set', slots: ['seal'], id: 'sec-build-00002' }).action.reason === 'locked', 'в слот нельзя поставить дар, которого нет');
+  ok(act(A, { op: 'build_set', amulets: ['amulet_lunar'], id: 'sec-build-00003' }).action.reason === 'missing', 'амулет, которого нет в сумке, не надеть');
+  ok(act(A, { op: 'build_set', amulets: ['amulet_focus'], id: 'sec-build-00004' }).action.ok === true, 'амулет из сумки надет');
+  const g = JSON.parse(q(`select public.get_player();`, A).out);
+  ok(JSON.stringify(g.objects.player_build.slots) === '["fire"]' && JSON.stringify(g.objects.player_build.amulets) === '["amulet_focus"]', 'слоты и амулеты записаны сервером');
+  const forged = JSON.parse(q(`select public.sync_player('{"objects":{"player_build":{"slots":["seal"],"amulets":["amulet_lunar"]}}}'::jsonb);`, A).out);
+  ok(JSON.stringify(forged.objects.player_build.amulets) === '["amulet_focus"]', 'sync_player не принимает слоты и амулеты от клиента');
+  ok(act(A, { op: 'build_preset', mode: 'save', id: 'sec-build-00005' }).action.ok === true, 'пресет сохранён');
+  act(A, { op: 'build_set', slots: ['telekinesis', 'fire'], amulets: [], id: 'sec-build-00006' });
+  ok(act(A, { op: 'build_preset', mode: 'load', id: 'sec-build-00007' }).action.ok === true, 'пресет загружен');
+  const g2 = JSON.parse(q(`select public.get_player();`, A).out);
+  ok(JSON.stringify(g2.objects.player_build.slots) === '["fire"]' && JSON.stringify(g2.objects.player_build.amulets) === '["amulet_focus"]', 'пресет вернул слоты и амулеты');
+  act(A, { op: 'respec', ability: 'telekinesis', branch: 'breaker', id: 'sec-build-00008' });
+  q(`update public.player_world set data = '{"branches":{"telekinesis":"lord"},"slots":["fire"],"amulets":["amulet_focus"]}'::jsonb where user_id = '${A}' and kind = 'object' and key = 'player_build';`);
+  act(A, { op: 'respec', ability: 'telekinesis', branch: 'breaker', id: 'sec-build-00009' });
+  const g3 = JSON.parse(q(`select public.get_player();`, A).out);
+  ok(g3.objects.player_build.branches.telekinesis === 'breaker' && JSON.stringify(g3.objects.player_build.slots) === '["fire"]' && g3.objects.player_build.amulets.length === 1, 'смена ветки не стирает слоты и амулеты');
+  q(`select 1`, A);
+  const cs2 = act(A, { op: 'combat_start', spawn: 'scavenger_01', enemy: 'forest_scavenger', id: 'sec-build-00010' });
+  ok(cs2.action.ok && act(A, { op: 'build_set', slots: ['telekinesis'], id: 'sec-build-00011' }).action.reason === 'combat', 'в бою слоты менять нельзя');
+  ok(act(A, { op: 'build_preset', mode: 'load', id: 'sec-build-00012' }).action.reason === 'combat', 'в бою пресет не загрузить');
+  ok(JSON.stringify(cs2.combatCtx.build.slots) === '["fire"]' && cs2.combatCtx.build.amulets[0] === 'amulet_focus', 'слоты и амулеты запоминаются в боевом контексте (по ним сервер проигрывает бой)');
+  act(A, { op: 'combat_end', outcome: 'retreat', id: 'sec-build-00013' });
+}
+
 console.log('\nБаза: новая игра');
 const r = JSON.parse(q(`select public.reset_player('witch');`, A).out);
 ok(r.level === 1 && !r.quests.length && !Object.keys(r.inventory).length && r.meta.nickname === NICK && r.meta.rev > a2.meta.rev, 'reset_player: прогресс с нуля, ник и аккаунт те же');

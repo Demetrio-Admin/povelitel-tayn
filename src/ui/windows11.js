@@ -4,7 +4,7 @@ import { VIEW, COLORS } from '../config/game.config.js';
 import { UI } from '../config/ui.config.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
-import { giftCards } from '../systems/gifts.js';
+import { giftCards, buildView, toggleSlot, toggleAmulet } from '../systems/gifts.js';
 import { ROMAN } from '../objects/InteractiveObject.js';
 import { UPGRADES } from '../config/balance.progression.js';
 import { ABILITIES } from '../config/balance.abilities.js';
@@ -26,11 +26,12 @@ export const windows11 = {
     if (this.mode === 'combat' || this.modal) return;
     services.audio.play('journal');
     const { state } = services;
-    const cards = giftCards(state);
-    const research = state.data.research;
     const content = {
       height: 0,
       build: (c, x, y, w) => {
+        // данные читаются при каждой отрисовке: окно перерисовывается (reopenModal) после смены билда и начала изучения
+        const cards = giftCards(state);
+        const research = state.data.research;
         let cy = y;
         const text = (tx, ty, str, style = {}) => {
           const t = this.add.text(tx, ty, str, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, shadow: SH, wordWrap: { width: w - 28 }, lineSpacing: 2, ...style });
@@ -41,6 +42,61 @@ export const windows11 = {
           const up = UPGRADES[research.upgradeId];
           const t = text(x, cy, `✦ Идёт изучение «${up.title}»: осталось ${fmtMs(state.researchRemainingMs())}`, { fontSize: UI.type.body, color: hex(COLORS[ABILITIES[up.ability].color]) });
           cy += t.height + 12;
+        }
+        // v0.16.0: билд — слоты даров, амулеты, пресет (над карточками даров)
+        {
+          const bv = buildView(state);
+          const top = cy, px = x + 14;
+          const plate = this.add.graphics();
+          c.add(plate); c.sendToBack(plate);
+          let iy = top + 12;
+          const th = text(px, iy, 'Билд', { fontSize: UI.type.heading, fontStyle: 'bold', color: COLORS.textGold });
+          iy += th.height + 4;
+          const sh = text(px, iy, `Слоты даров в бою: ${bv.slotsUsed} из ${bv.slotCount}${bv.slotCount < 4 ? ' (четвёртый слот — с 10 уровня героя)' : ''}`, { color: COLORS.text });
+          iy += sh.height + 6;
+          for (const sl of bv.slots) {
+            const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `${sl.equipped ? '✓' : '○'} ${sl.name} — ${sl.equipped ? 'в слоте' : 'в запасе'}`, {
+              primary: false, accent: sl.equipped ? COLORS[ABILITIES[sl.id].color] : null, fontSize: UI.type.small,
+              onPress: () => { if (this.modal?.scroll?.canTap()) this.changeSlot(sl.id); },
+            });
+            if (!sl.equipped) b.text.setAlpha(0.65);
+            c.add(b.parts);
+            iy += UI.touch.button + 8;
+          }
+          iy += 4;
+          const ah = text(px, iy, `Амулеты: надето ${bv.amulets.filter((a) => a.equipped).length} из ${bv.amuletSlots}`, { fontSize: UI.type.body, fontStyle: 'bold', color: COLORS.text });
+          iy += ah.height + 4;
+          if (!bv.amulets.length) {
+            const t = text(px, iy, 'Амулетов пока нет. Их дают за задания и сильных противников.', { color: COLORS.textDim });
+            iy += t.height + 6;
+          }
+          for (const am of bv.amulets) {
+            const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `${am.equipped ? '✓' : '○'} ${am.name}`, {
+              primary: false, accent: am.equipped ? COLORS.gold : null, fontSize: UI.type.small,
+              onPress: () => { if (this.modal?.scroll?.canTap()) this.changeAmulet(am.id); },
+            });
+            if (!am.equipped) b.text.setAlpha(0.65);
+            c.add(b.parts);
+            iy += UI.touch.button + 4;
+            const d = text(px, iy, am.text, { color: COLORS.text }); iy += d.height + 1;
+            const t2 = text(px, iy, `Цена: ${am.tradeoff}`, { color: hex(0xe0a07a) }); iy += t2.height + 8;
+          }
+          const half = (w - 60) / 2;
+          for (const [i, [label, mode, can]] of [['Запомнить билд', 'save', true], ['Вернуть билд', 'load', bv.hasPreset]].entries()) {
+            const b = addButton(this, x + 24 + half / 2 + i * (half + 12), iy + UI.touch.button / 2 + 2, half, UI.touch.button, label, {
+              primary: false, accent: can ? COLORS.gold : null, fontSize: UI.type.small,
+              onPress: () => { if (this.modal?.scroll?.canTap()) this.changePreset(mode); },
+            });
+            if (!can) b.text.setAlpha(0.6);
+            c.add(b.parts);
+          }
+          iy += UI.touch.button + 8;
+          const note = text(px, iy, 'Один бесплатный пресет: слоты и амулеты (ветки меняются за монеты отдельно). Менять билд можно только вне боя.', { color: COLORS.textDim });
+          iy += note.height + 4;
+          const h = iy - top + 12;
+          drawPlate(plate, w, h, { accent: COLORS.gold, fill: 0x18121a, alpha: 0.85, radius: 12 });
+          plate.setPosition(x + w / 2, top + h / 2);
+          cy = top + h + 14;
         }
         for (const g of cards) {
           const color = COLORS[ABILITIES[g.id].color];
@@ -164,6 +220,54 @@ export const windows11 = {
       this.refreshHud();
     }
     this.openGifts();
+  },
+
+  // ---------- v0.16.0: билд (слоты, амулеты, пресет). Локально сразу, сервер подтверждает (откат — снимком сервера) ----------
+  applyBuild(want, okText) {
+    const { state, actions } = services;
+    const r = state.setBuild(want, this.mode === 'combat');
+    if (!r.ok) {
+      services.audio.play('locked');
+      this.toast({ combat: 'Билд меняется только вне боя.', missing: 'Такого амулета нет в сумке.', locked: 'Этот дар ещё не открыт.', too_many: 'Все места заняты.' }[r.reason] || 'Так выбрать нельзя.');
+    } else {
+      actions.buildSet(want);
+      state.save();
+      services.audio.play('unlock_magic');
+      if (okText) this.toast(okText, COLORS.gold);
+    }
+    this.reopenModal();
+  },
+  changeSlot(id) {
+    const r = toggleSlot(services.state, id);
+    if (!r.ok) {
+      services.audio.play('locked');
+      this.toast(r.reason === 'none' ? 'Хотя бы один дар должен остаться в слоте.' : 'Все слоты заняты — сначала уберите другой дар.');
+      return;
+    }
+    this.applyBuild({ slots: r.slots });
+  },
+  changeAmulet(id) {
+    const r = toggleAmulet(services.state, id);
+    if (!r.ok) {
+      services.audio.play('locked');
+      this.toast('Оба слота амулетов заняты — сначала снимите один.');
+      return;
+    }
+    this.applyBuild({ amulets: r.amulets });
+  },
+  changePreset(mode) {
+    const { state, actions } = services;
+    const r = state.buildPreset(mode, this.mode === 'combat');
+    if (!r.ok) {
+      services.audio.play('locked');
+      this.toast(r.reason === 'empty' ? 'Билд ещё не сохранён.' : r.reason === 'combat' ? 'Билд меняется только вне боя.' : 'Не получилось.');
+      return;
+    }
+    actions.buildPreset(mode);
+    state.save();
+    services.audio.play('unlock_magic');
+    this.toast(mode === 'save' ? 'Билд запомнен' : 'Билд возвращён', COLORS.gold);
+    this.reopenModal();
   },
 
   startGiftResearch(upgradeId) {

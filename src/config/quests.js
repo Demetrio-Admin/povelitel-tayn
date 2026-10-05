@@ -26,8 +26,8 @@ export const SIDE_QUESTS = {
     summary: 'Дух алтаря Селена просит найти руническую пыль у алтаря: её можно собрать с рунной плиты или найти под сдвинутым камнем.',
     objectives: [{ type: 'item', item: 'rune_dust', count: 1, text: 'Руническая пыль' }],
     turnIn: { npc: 'selena', consume: { rune_dust: 1 } },
-    reward: { heroXP: 20, schoolXP: { telekinesis: 15 }, items: { lunar_shard: 1, elixir_mana: 1 } },
-    rewardText: 'Лунный осколок, лунный эликсир, 20 опыта',
+    reward: { heroXP: 20, schoolXP: { telekinesis: 15 }, items: { lunar_shard: 1, elixir_mana: 1, amulet_lunar: 1 } },
+    rewardText: 'Лунный амулет, лунный осколок, лунный эликсир, 20 опыта',
     requires: { event: 'lunar_quest_start' }, // Селена просит пыль, когда алтарь уже заговорил с героиней
   },
   sq_hunter: {
@@ -37,8 +37,8 @@ export const SIDE_QUESTS = {
     summary: 'Охотник Горан просит прогнать падальщика, разорившего его лагерь у ручья. Огонь пугает зверя, брошенный камень ранит.',
     objectives: [{ type: 'enemy', id: 'scavenger_02', text: 'Прогнать падальщика' }],
     turnIn: { npc: 'goran', consume: {} },
-    reward: { heroXP: 25, coins: 40, items: { tree_resin: 2, resin_flask: 1 } },
-    rewardText: 'Смоляная склянка, 2 смолы, 40 монет, 25 опыта',
+    reward: { heroXP: 25, coins: 40, items: { tree_resin: 2, resin_flask: 1, amulet_focus: 1 } },
+    rewardText: 'Амулет Сосредоточения, смоляная склянка, 2 смолы, 40 монет, 25 опыта',
   },
 };
 

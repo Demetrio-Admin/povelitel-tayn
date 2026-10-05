@@ -7,6 +7,7 @@ import { Enemy } from '../objects/Enemy.js';
 import { ABILITY_ORDER } from './AbilitySystem.js';
 import { POTIONS, POTION_BATTLE_LIMIT } from '../config/resources.js';
 import * as vitals from '../state/vitals.js';
+import { AMULETS } from '../config/build.js';
 
 export class CombatManager {
   /**
@@ -30,6 +31,14 @@ export class CombatManager {
       regen: hs.manaRegen, damageMult: hs.damageMult,
       autoTimer: HERO_BASE.autoAttack.intervalSec,
     };
+    // v0.16.0: амулеты. Их множители считаются один раз на начало боя: damageMult героя и входящий урон; лунный амулет — один раз за бой.
+    this.amulets = state.equippedAmulets ? state.equippedAmulets() : [];
+    let dm = 1, inc = 1;
+    for (const a of this.amulets) { const e = AMULETS[a].effect; if (e.damageMult) dm *= e.damageMult; if (e.incomingMult) inc *= e.incomingMult; }
+    this.hero.damageMult = Math.round(this.hero.damageMult * dm * 1000) / 1000;
+    this.incomingMult = inc;
+    this.manaRescue = this.amulets.map(a => AMULETS[a].effect.manaRescue).find(Boolean) || null;
+    this.manaRescueUsed = false;
     this.cooldowns = Object.fromEntries(ABILITY_ORDER.map(id => [id, 0]));
     const arena = ARENAS[this.def.arena] || ARENAS.glade;
     this.arena = arena;
@@ -73,6 +82,7 @@ export class CombatManager {
   abilityState(id) {
     const s = this.abilities.stats(id);
     if (!s || !this.abilities.isUnlocked(id)) return { id, state: 'locked' };
+    if (this.state.isEquipped && !this.state.isEquipped(id)) return { id, state: 'benched' };   // v0.16.0: дар не в слоте
     const cd = this.cooldowns[id];
     if (cd > 0) return { id, state: 'cooldown', cdLeft: cd, cdFrac: cd / s.cooldownSec };
     if (this.hero.mana < s.manaCost) return { id, state: 'nomana' };
@@ -86,6 +96,7 @@ export class CombatManager {
     if (st.state !== 'ready') return { ok: false, reason: st.state };
     const s = this.abilities.stats(id);
     this.hero.mana -= s.manaCost;
+    this.checkManaRescue();
     this.cooldowns[id] = this.startCooldown(id, s);
     this.stats.abilityUses[id]++;
     this.abilities.grantUseXP(id, 'combat');
@@ -205,6 +216,7 @@ export class CombatManager {
     this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'fire' });
     this.enemy.applyBurn(s.burn.dps, s.burn.durationSec);
     this.emit({ type: 'status', status: 'burn', sec: s.burn.durationSec });
+    if (s.puddle) { this.enemy.applyPuddle(s.puddle.dps, s.puddle.durationSec); this.emit({ type: 'status', status: 'puddle', sec: s.puddle.durationSec }); }
     for (const e of this.enemy.onFireHit()) this.emit({ type: 'status', status: e.type, sec: e.sec, bonus: e.bonus });
     if (s.interruptsNormalCast) this.handleInterrupt(['fire']);
   }
@@ -213,6 +225,23 @@ export class CombatManager {
   castSeal(s) {
     const dmg = this.enemy.takeDamage(s.damage, 'seal', this.hero.damageMult);
     this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'seal' });
+    // v0.16.0: Астрал III — вспышка. Урон выше уже нанесён сквозь защиту, вспышка помогает остальным дарам и автоатаке.
+    if (s.flash && this.enemy.alive) {
+      for (const e of this.enemy.flash(s.flash.sec, s.flash.vulnerability || 0)) {
+        if (e.type === 'vulnerable') this.emit({ type: 'status', status: 'vulnerable', sec: e.sec, bonus: e.bonus });
+        else this.emit(e);
+      }
+    }
+  }
+
+  /** v0.16.0: Лунный амулет — один раз за бой, когда маны меньше below от максимума, возвращает gainPct максимума. */
+  checkManaRescue() {
+    const r = this.manaRescue;
+    if (!r || this.manaRescueUsed || this.hero.mana >= this.hero.maxMana * r.below) return;
+    this.manaRescueUsed = true;
+    const gain = Math.min(this.hero.maxMana - this.hero.mana, Math.round(this.hero.maxMana * r.gainPct));
+    this.hero.mana += gain;
+    this.emit({ type: 'manaRescue', mana: gain });
   }
 
   handleInterrupt(tags) {
@@ -285,7 +314,7 @@ export class CombatManager {
         case 'attack': this.hitHero(a.damage, false); break;
         case 'strongHit': this.hitHero(a.damage, true, a.name); break;
         case 'strongStart': this.emit({ type: 'warning', name: a.name, prepSec: a.prepSec, hint: a.hint, needsHeavy: a.interruptBy.includes('telekinesis_heavy') && !a.interruptBy.includes('telekinesis') }); break;
-        case 'burnTick': this.emit({ type: 'damage', target: 'enemy', amount: a.damage, school: 'fire', tick: true }); break;
+        case 'burnTick': this.emit({ type: 'damage', target: 'enemy', amount: a.damage, school: 'fire', tick: true, puddle: !!a.puddle }); break;
         case 'armorBack': this.emit({ type: 'armorBack' }); break;
         default: this.emit({ type: 'status', status: a.type });
       }
@@ -296,6 +325,7 @@ export class CombatManager {
   }
 
   hitHero(damage, strong, name) {
+    damage = Math.max(1, Math.round(damage * this.incomingMult));   // v0.16.0: Лесной амулет
     this.hero.hp = Math.max(0, this.hero.hp - damage);
     this.stats.damageTaken += damage;
     this.emit({ type: 'damage', target: 'hero', amount: damage, strong, name });

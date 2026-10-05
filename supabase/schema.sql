@@ -672,16 +672,16 @@ begin
       res := jsonb_build_object('ok', true, 'key', ev);
     end if;
   elsif op = 'quest_accept' then
-    r := case when jsonb_typeof(action -> 'id') = 'string' then rules -> 'quests' -> (action ->> 'id') end;
+    r := case when jsonb_typeof(action -> 'quest') = 'string' then rules -> 'quests' -> (action ->> 'quest') end;
     if r is null then res := jsonb_build_object('ok', false, 'reason', 'unknown');
     elsif _has_event(uid, r ->> 'done') or _has_event(uid, r ->> 'start') then res := jsonb_build_object('ok', false, 'reason', 'already');
     elsif r ->> 'requires' is not null and not _has_event(uid, r ->> 'requires') then res := jsonb_build_object('ok', false, 'reason', 'locked');
     else
       perform _add_event(uid, r ->> 'start');
-      res := jsonb_build_object('ok', true, 'id', action ->> 'id');
+      res := jsonb_build_object('ok', true, 'id', action ->> 'quest');
     end if;
   elsif op = 'quest_turn_in' then
-    r := case when jsonb_typeof(action -> 'id') = 'string' then rules -> 'quests' -> (action ->> 'id') end;
+    r := case when jsonb_typeof(action -> 'quest') = 'string' then rules -> 'quests' -> (action ->> 'quest') end;
     if r is null then res := jsonb_build_object('ok', false, 'reason', 'unknown');
     elsif _has_event(uid, r ->> 'done') then res := jsonb_build_object('ok', false, 'reason', 'already');
     elsif not _has_event(uid, r ->> 'start') then res := jsonb_build_object('ok', false, 'reason', 'not_started');
@@ -695,7 +695,7 @@ begin
       for k, v in select * from jsonb_each(r -> 'consume') loop perform _inv_add(uid, k, -(v #>> '{}')::numeric); end loop;
       perform _add_event(uid, r ->> 'done');
       pr := _grant(uid, pr, r -> 'reward');
-      res := jsonb_build_object('ok', true, 'id', action ->> 'id');
+      res := jsonb_build_object('ok', true, 'id', action ->> 'quest');
     end if;
   elsif op = 'research_start' then
     -- v0.15.0: изучение дара — условия, цена и таймер по времени сервера (rules.research). Зеркало researchStart.

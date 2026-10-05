@@ -1,10 +1,12 @@
-// Дифф-тест: SQL-функция sync_player (supabase/schema.sql) против applyPatch (src/cloud/playerModel.js).
+// Дифф-тест: SQL-функции sync_player и player_action (supabase/schema.sql) против applyPatch и applyAction (src/cloud/playerModel.js).
+// v0.15.0: прогресс клиент в patch не пишет (поля xp, school, inv, abilities, quests, paths, enemies, research игнорируются), поэтому состояние игрока
+// для проверки операций задают шаги __set (напрямую в таблицы и в JS-снимок), а случайные patch с прогрессом проверяют, что оба «игнорируют» одинаково.
 // Случайные, в том числе испорченные, patch прогоняются через настоящий Postgres и через JS; снимки должны совпасть шаг за шагом.
 //   PGHOST=... PGPORT=... PGUSER=postgres node tools/sql/diff-test.mjs [число серий]
 // В базе должна быть схема из supabase/schema.sql и заглушка Supabase Auth (tools/sql/auth-stub.sql).
 import { execFileSync } from 'child_process';
 import { randomUUID } from 'crypto';
-import { applyPatch, applyAction, combatApply, advanceVitals, fillDefaults, emptySnapshot } from '../../src/cloud/playerModel.js';
+import { applyPatch, applyAction, combatApply, advanceVitals, fillDefaults, emptySnapshot, levelForXp } from '../../src/cloud/playerModel.js';
 import { HERO_LEVELS } from '../../src/config/balance.hero.js';
 
 import { serverRules } from '../../src/config/serverRules.js';
@@ -18,6 +20,16 @@ const WORLD_EVENTS = [...new Set(Object.values(RULES.world).flatMap(r => [...(r.
 const WORLD_ENEMIES = [...new Set(Object.values(RULES.world).flatMap(r => [...(r.requiresEnemy || []), ...(r.guard ? [r.guard] : [])]))];
 const CHAPTER_EVENTS = [...new Set([...WORLD_EVENTS, ...Object.values(RULES.recipes).flatMap(r => [...r.requires, ...r.blockedBy]), ...Object.values(RULES.uses).flatMap(u => [...u.requires, ...u.blockedBy]),
   RULES.firstCraft.event, RULES.migration.event])];
+const QUEST_IDS = Object.keys(RULES.quests), RES_IDS = Object.keys(RULES.research), EVENT_KEYS = Object.keys(RULES.events);
+const BRANCHES = Object.entries(RULES.build.branches).flatMap(([a, bs]) => Object.keys(bs).map(b => [a, b]));
+const NEW_EVENTS = [...new Set([...EVENT_KEYS, ...Object.values(RULES.events).flatMap(e => e.requires), ...Object.keys(RULES.eventRewards),
+  ...Object.values(RULES.quests).flatMap(q => [q.start, q.done, ...(q.requires ? [q.requires] : []), ...q.objectives.filter(o => o.type === 'event').map(o => o.key)]),
+  ...Object.values(RULES.research).flatMap(u => [u.event, u.startEvent, u.completeEvent].filter(Boolean)),
+  ...Object.values(RULES.spawnStart).flatMap(x => [x.event, ...(x.requires ? [x.requires] : [])]),
+  ...Object.values(RULES.world).flatMap(w => w.events || [])])];
+const NEW_ITEMS = [...new Set([...Object.values(RULES.quests).flatMap(q => Object.keys(q.consume)), ...Object.values(RULES.quests).flatMap(q => q.objectives.filter(o => o.type === 'item').map(o => o.item)),
+  ...Object.values(RULES.research).flatMap(u => Object.keys(u.items)), 'coins'])];
+const NEW_ENEMIES = [...new Set(Object.values(RULES.quests).flatMap(q => q.objectives.filter(o => o.type === 'enemy').map(o => o.id)))];
 let seed = 12345;
 const rnd = () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const pick = (a) => a[Math.floor(rnd() * a.length)];
@@ -26,6 +38,42 @@ const IDS = ['coins', 'lunar_shard', 'lunar_flame', 'potion_1', 'ev_a', 'ev_b', 
 const num = () => pick(NUMS);
 const maybe = (p, f) => (rnd() < p ? f() : undefined);
 const arrOf = (f, n = 3) => Array.from({ length: Math.floor(rnd() * n) + 1 }, f);
+
+// ---- v0.15.0: «прогресс» задаётся мимо sync_player — напрямую в таблицы игрока и в JS-снимок
+const CLOSED = ['xp', 'school', 'inv', 'abilities', 'quests', 'paths', 'enemies', 'research'];
+const splitSet = (st) => {
+  if (!st || st.__action || st.__apply || st.__shift || st.__age || st.__mana !== undefined || st.__set || st.__rshift) return [st];
+  const set = {}, rest = {};
+  for (const [k, v] of Object.entries(st)) (CLOSED.includes(k) ? set : rest)[k] = v;
+  return [...(Object.keys(set).length ? [{ __set: set }] : []), ...(Object.keys(rest).length ? [rest] : [])];
+};
+const q1 = (x) => String(x).replace(/'/g, "''");
+function setSql(uid, st) {
+  const U = `'${uid}'`, q = [];
+  for (const [k, n] of Object.entries(st.inv || {})) q.push(`insert into public.player_inventory (user_id, item_id, quantity) values (${U}, '${q1(k)}', ${n}) on conflict (user_id, item_id) do update set quantity = least(public.player_inventory.quantity + ${n}, 1000000000);`);
+  for (const k of st.quests || []) q.push(`insert into public.player_quests (user_id, quest_id) values (${U}, '${q1(k)}') on conflict (user_id, quest_id) do update set status = 'done';`);
+  for (const [kind, list] of [['enemy', st.enemies || []], ['path', st.paths || []]]) for (const k of list) q.push(`insert into public.player_world (user_id, kind, key) values (${U}, '${kind}', '${q1(k)}') on conflict do nothing;`);
+  for (const [k, v] of Object.entries(st.abilities || {})) q.push(`insert into public.player_abilities (user_id, ability_id, level, unlocked) values (${U}, '${k}', ${v.level}, ${!!v.unlocked}) on conflict (user_id, ability_id) do update set level = greatest(public.player_abilities.level, excluded.level), unlocked = public.player_abilities.unlocked or excluded.unlocked;`);
+  if (st.xp) q.push(`update public.player_progress set hero_xp = greatest(hero_xp, ${st.xp}), hero_level = greatest(hero_level, coalesce((select max(level) from public.game_hero_levels where xp <= greatest(hero_xp, ${st.xp})), 1)) where user_id = ${U};`);
+  for (const [k, n] of Object.entries(st.school || {})) q.push(`update public.player_progress set school_xp = jsonb_set(school_xp, '{${k}}', to_jsonb(coalesce((school_xp ->> '${k}')::numeric, 0) + ${n})) where user_id = ${U};`);
+  if ('research' in st) q.push(`update public.player_progress set research = ${st.research ? `'${q1(JSON.stringify(st.research))}'::jsonb` : 'null'} where user_id = ${U};`);
+  for (const [k, v] of Object.entries(st.objects || {})) q.push(v === null ? `delete from public.player_world where user_id = ${U} and kind = 'object' and key = '${q1(k)}';`
+    : `insert into public.player_world (user_id, kind, key, data) values (${U}, 'object', '${q1(k)}', '${q1(JSON.stringify(v))}'::jsonb) on conflict (user_id, kind, key) do update set data = excluded.data;`);
+  return `reset role; ${q.join(' ')} set role authenticated;`;
+}
+function applySet(m, st) {
+  for (const [k, n] of Object.entries(st.inv || {})) m.inventory[k] = Math.min((m.inventory[k] || 0) + n, 1e9);
+  for (const k of st.quests || []) if (!m.quests.includes(k)) m.quests.push(k);
+  for (const k of st.enemies || []) if (!m.enemies.includes(k)) m.enemies.push(k);
+  for (const k of st.paths || []) if (!m.paths.includes(k)) m.paths.push(k);
+  for (const [k, v] of Object.entries(st.abilities || {})) { const a = m.abilities[k] || { level: 0, unlocked: false }; m.abilities[k] = { level: Math.max(a.level, v.level), unlocked: a.unlocked || !!v.unlocked }; }
+  if (st.xp) { m.xp = Math.max(m.xp, st.xp); m.level = Math.max(m.level, levelForXp(m.xp)); }
+  for (const [k, n] of Object.entries(st.school || {})) m.school[k] = (m.school[k] || 0) + n;
+  if ('research' in st) m.research = st.research;
+  for (const [k, v] of Object.entries(st.objects || {})) { if (v === null) delete m.objects[k]; else m.objects[k] = v; }
+}
+const SET = (st) => ({ __set: st });
+const RS = (sec) => ({ __rshift: sec });   // «прошло sec секунд» с начала изучения (отметка начала сдвигается в прошлое)
 function randomPatch() {
   const p = {};
   const set = (k, v) => { if (v !== undefined) p[k] = v; };
@@ -115,19 +163,44 @@ const SCRIPTED = [
   W('ancient_gate'), { quests: ['guardian_defeated', 'gate_marks_revealed', 'unlock_seal_1', 'seal_training_complete'], abilities: { seal: { level: 1, unlocked: true } } }, W('ancient_gate'),
   { quests: ['ancient_gate_open'] }, W('ancient_gate'), W('seal_sigil'), W('house_trunk'), W('house_trunk'), W('moonstone'),
   A('combat_start', CS), W('herb_g3'), A('combat_end', { outcome: 'victory', mana: 50 }), W('herb_g3'), W('nope'), W('__proto__'),
+  // v0.15.0: сюжетные события, задания, изучение и смена ветки — прогресс только от сервера
+  A('event', { key: 'prologue_seen' }), A('event', { key: 'prologue_seen' }), A('event', { key: 'nope' }), A('event', { key: 'unlock_fire_1' }), A('event', { key: 'lunar_quest_start' }),
+  A('event', { key: 'unlock_telekinesis_1' }), A('event', { key: 'lunar_quest_start' }), A('event', { key: 'unlock_fire_1' }),
+  SET({ quests: ['heavy_path_open'] }), A('event', { key: 'unlock_fire_1' }), A('event', { key: 'unlock_seal_1' }), SET({ quests: ['gate_marks_revealed'] }), A('event', { key: 'unlock_seal_1' }),
+  A('quest_accept', { quest: 'sq_herbs' }), A('quest_accept', { quest: 'sq_herbs' }), A('quest_turn_in', { quest: 'sq_herbs' }), SET({ inv: { moon_herb: 3 } }), A('quest_turn_in', { quest: 'sq_herbs' }), A('quest_turn_in', { quest: 'sq_herbs' }),
+  A('quest_accept', { quest: 'sq_dust' }), A('quest_accept', { quest: 'sq_hunter' }), A('quest_turn_in', { quest: 'sq_hunter' }), A('combat_start', { spawn: 'scavenger_02', enemy: 'forest_scavenger' }),
+  A('combat_end', { outcome: 'retreat', mana: 1 }), SET({ enemies: ['scavenger_02'] }), A('quest_turn_in', { quest: 'sq_hunter' }), A('quest_accept', { quest: 'nope' }),
+  A('research_start', { upgrade: 'telekinesis_2' }), SET({ quests: ['lunar_quest_complete'], xp: 400, school: { telekinesis: 200 }, inv: { lunar_shard: 6, moon_herb: 3, rune_dust: 2 } }),
+  A('research_start', { upgrade: 'telekinesis_2' }), A('research_start', { upgrade: 'telekinesis_2' }), A('research_start', { upgrade: 'fire_2' }), A('research_finish'), RS(100), A('research_finish'), RS(300), A('research_finish'), A('research_finish'),
+  A('research_start', { upgrade: 'telekinesis_2' }), A('research_start', { upgrade: 'nope' }),
+  SET({ abilities: { fire: { level: 1, unlocked: true } }, xp: 3000, school: { fire: 200, telekinesis: 300 }, inv: { crimson_ember: 6, lunar_shard: 8, rune_dust: 3, coins: 400 } }),
+  A('research_start', { upgrade: 'fire_2' }), RS(1000), A('research_finish'), A('research_start', { upgrade: 'telekinesis_3_lord' }), RS(4000), A('research_finish'),
+  A('respec', { ability: 'telekinesis', branch: 'breaker' }), A('respec', { ability: 'telekinesis', branch: 'breaker' }), A('respec', { ability: 'telekinesis', branch: 'lord' }), A('respec', { ability: 'fire', branch: 'x' }),
+  SET({ inv: { coins: 200 } }), A('respec', { ability: 'telekinesis', branch: 'breaker' }),
+  // магия в мире: опыт дара, события и пути выдаёт сам успех (камень, корни, ворота), повтор — «уже сделано»
+  SET({ abilities: { telekinesis: { level: 3, unlocked: true }, fire: { level: 2, unlocked: true } }, objects: { glade_rock: null, heavy_boulder: null, corrupted_roots: null } }), MANA(100),
+  W('glade_rock'), W('glade_rock'), MANA(100), W('heavy_boulder'), MANA(100), W('corrupted_roots'), W('corrupted_roots'), MANA(100), W('moon_plant'), MANA(100), W('ritual_torch'), W('ritual_torch'),
+  A('combat_start', { spawn: 'scavenger_01', enemy: 'forest_scavenger' }), A('combat_end', { outcome: 'retreat', mana: 1 }),
+  A('combat_start', { spawn: 'lunar_guard', enemy: 'x' }), A('combat_end', { outcome: 'retreat', mana: 1 }), A('combat_start', { spawn: 'forest_guardian_01', enemy: 'x' }),
 ];
+const SCRIPT = SCRIPTED.flatMap(splitSet);
 for (let s = 0; s < SERIES + 1; s++) {
   const uid = randomUUID();
   // шаг — либо обычный patch, либо атомарное действие (иногда повтор того же id); серия 0 — сценарий главы
   const actionIds = [];
-  const patches = s === 0 ? SCRIPTED : Array.from({ length: STEPS }, () => {
+  const patches = s === 0 ? SCRIPT : Array.from({ length: STEPS }, () => {
     if (rnd() < 0.3) {
       const id = actionIds.length && rnd() < 0.3 ? pick(actionIds) : randomUUID();
       actionIds.push(id);
       // v0.10: крафт, сюжетные предметы, миграция (вместе с неверными id)
-      const op = pick(['heal', 'heal', 'starter_kit', 'bogus', 'craft', 'craft', 'craft', 'use', 'use', 'migrate_v10', 'drink', 'drink', 'combat_start', 'combat_end', 'combat_end', 'world', 'world', 'world', 'world', 'world', 'world']);
+      const op = pick(['heal', 'heal', 'starter_kit', 'bogus', 'craft', 'craft', 'craft', 'use', 'use', 'migrate_v10', 'drink', 'drink', 'combat_start', 'combat_end', 'combat_end', 'world', 'world', 'world', 'world', 'world', 'world',
+        'event', 'event', 'event', 'quest_accept', 'quest_turn_in', 'quest_turn_in', 'research_start', 'research_start', 'research_finish', 'research_finish', 'respec', 'respec']);
       const act = { op, id };
       if (op === 'craft') act.recipe = pick([...RECIPE_IDS, 'nope', 5, null]);
+      if (op === 'event') act.key = pick([...EVENT_KEYS, ...EVENT_KEYS, ...EVENT_KEYS, 'nope', null, 5, 'lunar_quest_complete']);
+      if (op === 'quest_accept' || op === 'quest_turn_in') act.quest = pick([...QUEST_IDS, ...QUEST_IDS, 'nope', null, 5]);
+      if (op === 'research_start') act.upgrade = pick([...RES_IDS, ...RES_IDS, 'nope', null, 5]);
+      if (op === 'respec') { const [a, b] = pick(BRANCHES); Object.assign(act, pick([{ ability: a, branch: b }, { ability: a, branch: b }, { ability: 'fire', branch: 'x' }, { ability: null, branch: 5 }, { ability: 'nope' }])); }
       if (op === 'use') act.item = pick([...USE_IDS, 'elixir_life', 'nope', null]);
       if (op === 'world') act.obj = pick([...WORLD_IDS, ...WORLD_IDS, 'nope', null, 5, '__proto__', 'constructor']);
       if (op === 'drink') act.item = pick(['elixir_life', 'elixir_mana', 'elixir_life', 'resin_flask', 'nope', null, 5]);
@@ -139,41 +212,52 @@ for (let s = 0; s < SERIES + 1; s++) {
     if (rnd() < 0.2) return S(pick([5, 30, 60, 300, 1000, 5000, 100000]));
     if (rnd() < 0.08) return MANA(pick([0, 3, 4, 8, 12, 15.5, 100]));
     if (rnd() < 0.08) return AGE(pick(WORLD_IDS), pick([10, 100, 150, 200, 500]));
-    const p = randomPatch();
+    const p = randomPatch();   // в нём бывает и «прогресс» (xp, inv, quests…): сервер и модель обязаны одинаково его игнорировать
     if (rnd() < 0.2) p.inv = { ...(typeof p.inv === 'object' && !Array.isArray(p.inv) ? p.inv : {}), coins: pick([5, 20, 100]) };
-    // v0.10: ингредиенты, сюжетные события и побеждённый Страж — чтобы операции главы реально срабатывали
-    if (rnd() < 0.6) p.inv = { ...(typeof p.inv === 'object' && !Array.isArray(p.inv) ? p.inv : {}), ...Object.fromEntries(arrOf(() => [pick(CHAPTER_ITEMS), pick([1, 2, 3, 5])], 5)) };
-    if (rnd() < 0.5) p.quests = [...(Array.isArray(p.quests) ? p.quests : []), ...arrOf(() => pick(CHAPTER_EVENTS), 4)];
-    if (rnd() < 0.1) p.enemies = [...(Array.isArray(p.enemies) ? p.enemies : []), 'forest_guardian_01'];
-    // v0.13.0: побеждённые враги, дары и состояния объектов мира (в том числе «чужие» ключи сервера — они должны игнорироваться)
-    if (rnd() < 0.25) p.enemies = [...(Array.isArray(p.enemies) ? p.enemies : []), ...arrOf(() => pick(WORLD_ENEMIES), 2)];
-    if (rnd() < 0.2) p.abilities = Object.fromEntries(['telekinesis', 'fire', 'seal'].filter(() => rnd() < 0.6).map(k => [k, { level: pick([1, 1, 2, 3]), unlocked: true }]));
-    if (rnd() < 0.3) p.objects = { ...(typeof p.objects === 'object' && !Array.isArray(p.objects) ? p.objects : {}), ...Object.fromEntries(arrOf(() => [pick([...WORLD_IDS, 'rep:rootling_02', 'rep:rootling_05']),
-      pick([null, { state: 'picked', t: 1 }, { state: 'opened' }, { state: 'moved' }, { state: 'destroyed' }, { claimed: 1 }, { wins: 1, at: 1 }, { wins: 3, at: 1 }])], 2)) };
-    if (rnd() < 0.15) p.xp = pick([600, 900, 1290, 2400]);
-    return p;
-  });
+    if (rnd() < 0.3) p.objects = { ...(typeof p.objects === 'object' && !Array.isArray(p.objects) ? p.objects : {}), ...Object.fromEntries(arrOf(() => [pick([...WORLD_IDS, 'rep:rootling_02', 'rep:rootling_05', 'player_build']),
+      pick([null, { state: 'picked', t: 1 }, { state: 'opened' }, { state: 'moved' }, { state: 'destroyed' }, { claimed: 1 }, { wins: 1, at: 1 }, { wins: 3, at: 1 }, { branches: { fire: 'x' } }])], 2)) };
+    // настоящее состояние игрока задаёт __set (ингредиенты, события, побеждённые враги, дары, опыт, ветки, изучение) — чтобы операции реально срабатывали
+    const st = {};
+    if (rnd() < 0.5) st.inv = Object.fromEntries(arrOf(() => [pick(rnd() < 0.5 ? CHAPTER_ITEMS : NEW_ITEMS), pick([1, 2, 3, 5, 6])], 5));
+    if (rnd() < 0.6) st.quests = arrOf(() => pick(rnd() < 0.5 ? CHAPTER_EVENTS : NEW_EVENTS), 4);
+    if (rnd() < 0.3) st.enemies = arrOf(() => pick([...WORLD_ENEMIES, ...NEW_ENEMIES, 'forest_guardian_01']), 2);
+    if (rnd() < 0.2) st.paths = ['gate_path'];
+    if (rnd() < 0.3) st.abilities = Object.fromEntries(['telekinesis', 'fire', 'seal'].filter(() => rnd() < 0.6).map(k => [k, { level: pick([1, 1, 2, 3]), unlocked: true }]));
+    if (rnd() < 0.3) st.xp = pick([100, 600, 900, 1290, 2400, 4000]);
+    if (rnd() < 0.3) st.school = Object.fromEntries(['telekinesis', 'fire', 'seal'].filter(() => rnd() < 0.6).map(k => [k, pick([40, 100, 200, 400])]));
+    if (rnd() < 0.15) st.research = pick([null, { upgradeId: pick(RES_IDS), startedAt: Date.now() - pick([0, 1000, 100000, 400000, 4000000]), durationMs: pick([60000, 300000, 1800000]) }, { upgradeId: 'bogus', startedAt: 1, durationMs: 1 }]);
+    if (rnd() < 0.25) st.objects = Object.fromEntries(arrOf(() => [pick([...WORLD_IDS, 'rep:rootling_02', 'rep:rootling_05']),
+      pick([null, { state: 'picked', t: Date.now() - 100000 }, { state: 'opened' }, { state: 'moved' }, { state: 'destroyed' }, { state: 'burning' }, { claimed: 1 }, { wins: 1, at: 1 }, { wins: 3, at: 1 }])], 2));
+    if (rnd() < 0.2 && BRANCHES.length) { const [a, b] = pick(BRANCHES); st.objects = { ...(st.objects || {}), player_build: { branches: { [a]: b } } }; }
+    return Object.keys(st).length ? [SET(st), p] : [p];
+  }).flat();
+  // v0.15.0: после начала изучения время часто «проходит» — чтобы завершение срабатывало
+  for (let i = patches.length - 1; i >= 0; i--) if (patches[i].__action?.op === 'research_start' && rnd() < 0.6) patches.splice(i + 1, 0, RS(pick([10, 400, 1000, 4000])));
   // v0.14.0: после начала боя чаще идёт итог (иначе combat_apply почти всегда упирался бы в «боя нет»)
   for (let i = patches.length - 1; i >= 0; i--) if (patches[i].__action?.op === 'combat_start' && rnd() < 0.7) patches.splice(i + 1, 0, randomVerdict());
   // сдвиги времени и «ровно столько маны» имеют смысл, когда у игрока уже записаны запасы: первый шаг серии — обычное сохранение
-  if (patches[0].__shift || patches[0].__age || patches[0].__mana !== undefined) patches.unshift({ play: 1 });
+  if (patches[0].__shift || patches[0].__age || patches[0].__mana !== undefined || patches[0].__set || patches[0].__rshift) patches.unshift({ play: 1 });
   const script = [
     `insert into auth.users (id, email) values ('${uid}', null);`,
     `set role authenticated; select set_config('request.jwt.claim.sub', '${uid}', false);`,
     `select public.create_player('witch');`,
-    ...patches.map(p => (p.__age ? `reset role; update public.player_world set data = jsonb_set(data, '{t}', to_jsonb((data->>'t')::numeric - ${p.__age[1]} * 1000)) where user_id = '${uid}' and kind = 'object' and key = '${p.__age[0]}' and data ? 't'; set role authenticated;`
+    ...patches.map(p => (p.__set ? setSql(uid, p.__set)
+      : p.__rshift ? `reset role; update public.player_progress set research = jsonb_set(research, '{startedAt}', to_jsonb((research ->> 'startedAt')::numeric - ${p.__rshift} * 1000)) where user_id = '${uid}' and research is not null; set role authenticated;`
+      : p.__age ? `reset role; update public.player_world set data = jsonb_set(data, '{t}', to_jsonb((data->>'t')::numeric - ${p.__age[1]} * 1000)) where user_id = '${uid}' and kind = 'object' and key = '${p.__age[0]}' and data ? 't'; set role authenticated;`
       : p.__mana !== undefined ? `reset role; update public.player_progress set mana = ${p.__mana} where user_id = '${uid}'; set role authenticated;`
       : p.__shift ? `reset role; update public.player_progress set vitals_at = vitals_at - ${p.__shift} * interval '1 second', combat_since = combat_since - ${p.__shift} * interval '1 second' where user_id = '${uid}'; set role authenticated;`
       : p.__apply ? `reset role; select jsonb_build_object('since', (extract(epoch from combat_since) * 1000)::bigint, 'spawn', combat_ctx ->> 'spawn')::text as extra from public.player_progress where user_id = '${uid}' \\gset\nset role service_role; select public.combat_apply('${uid}', $j$${JSON.stringify(p.__apply)}$j$::jsonb || :'extra'::jsonb); reset role; set role authenticated; select set_config('request.jwt.claim.sub', '${uid}', false) \\g /dev/null`
       : p.__action ? `select public.player_action($j$${JSON.stringify(p.__action)}$j$::jsonb);` : `select public.sync_player($j$${JSON.stringify(p)}$j$::jsonb);`)),
   ].join('\n');
   const out = psql(script);
-  const calls = patches.filter(p => !p.__shift && !p.__age && p.__mana === undefined);
+  const calls = patches.filter(p => !p.__shift && !p.__age && p.__mana === undefined && !p.__set && !p.__rshift);
   if (out.length !== calls.length + 1) { console.log(`✗ серия ${s}: ожидали ${calls.length + 1} ответов, пришло ${out.length}`); bad++; continue; }
   let model = fillDefaults(JSON.parse(out[0])).snapshot;
   const seen = new Map();   // id действия → результат первой попытки (повтор возвращает его же)
   let n = 0;
   for (let i = 0; i < patches.length; i++) {
+    if (patches[i].__set) { applySet(model, patches[i].__set); continue; }
+    if (patches[i].__rshift) { if (model.research) model.research = { ...model.research, startedAt: model.research.startedAt - patches[i].__rshift * 1000 }; continue; }
     if (patches[i].__age) { const o = model.objects[patches[i].__age[0]]; if (o && typeof o.t === 'number') o.t -= patches[i].__age[1] * 1000; continue; }
     if (patches[i].__mana !== undefined) { model.mana = patches[i].__mana; continue; }
     if (patches[i].__shift) { model.vitalsAt -= patches[i].__shift * 1000; if (model.combatSince != null) model.combatSince -= patches[i].__shift * 1000; continue; }
@@ -196,6 +280,7 @@ for (let s = 0; s < SERIES + 1; s++) {
     if (a && canonR(want) !== canonR(reply.action)) {
       bad++;
       console.log(`✗ серия ${s}, шаг ${i}: результаты действия разошлись\n  action: ${JSON.stringify(a)}\n  JS : ${canonR(want)}\n  SQL: ${canonR(reply.action)}`);
+      if (process.env.TRACE) console.log('  ход серии:', patches.map((x, j) => `${j}:${x.__action ? x.__action.op + '#' + String(x.__action.id).slice(0, 4) : Object.keys(x)[0]}`).join(' '));
       break;
     }
     if (canonR(comparable(view)) !== canonR(comparable(server))) {

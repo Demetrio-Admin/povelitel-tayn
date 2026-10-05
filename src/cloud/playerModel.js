@@ -588,7 +588,7 @@ function migrateV10(s) {
  *   { op: 'world', obj }    — сбор узла, находка, запас или магия в мире (правила RULES.world: мана, дар, возрождение, награда)
  *   v0.15.0 (прогресс только от сервера):
  *   { op: 'event', key }              — сюжетное событие по действию игрока (RULES.events: условия, дар, награда)
- *   { op: 'quest_accept' | 'quest_turn_in', id } — побочное задание: принять / сдать (цели и награда — RULES.quests)
+ *   { op: 'quest_accept' | 'quest_turn_in', quest } — побочное задание: принять / сдать (цели и награда — RULES.quests)
  *   { op: 'research_start', upgrade } — начать изучение (цена и условия — RULES.research), { op: 'research_finish' } — завершить, когда время вышло
  *   { op: 'respec', ability, branch } — сменить ветку дара за монеты
  * nowMs — время сервера: перед любым действием HP и мана восстанавливаются до него (как player_action).
@@ -605,8 +605,8 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'combat_start') return { snapshot: s, result: combatStart(s, action) };
   if (op === 'combat_end') return { snapshot: s, result: combatEnd(s, action) };
   if (op === 'event') return { snapshot: s, result: eventAct(s, action.key) };
-  if (op === 'quest_accept') return { snapshot: s, result: questAccept(s, action.id) };
-  if (op === 'quest_turn_in') return { snapshot: s, result: questTurnIn(s, action.id) };
+  if (op === 'quest_accept') return { snapshot: s, result: questAccept(s, action.quest) };
+  if (op === 'quest_turn_in') return { snapshot: s, result: questTurnIn(s, action.quest) };
   if (op === 'research_start') return { snapshot: s, result: researchStart(s, action.upgrade) };
   if (op === 'research_finish') return { snapshot: s, result: researchFinish(s) };
   if (op === 'respec') return { snapshot: s, result: respec(s, action.ability, action.branch) };

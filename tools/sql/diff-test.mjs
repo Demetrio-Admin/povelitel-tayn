@@ -7,7 +7,7 @@ import { randomUUID } from 'crypto';
 import { applyPatch, applyAction, combatApply, advanceVitals, fillDefaults, emptySnapshot } from '../../src/cloud/playerModel.js';
 import { HERO_LEVELS } from '../../src/config/balance.hero.js';
 
-import { serverRules } from '../../src/config/storyItems.js';
+import { serverRules } from '../../src/config/serverRules.js';
 
 const SERIES = Number(process.argv[2]) || 60, STEPS = 14;
 const RULES = serverRules();

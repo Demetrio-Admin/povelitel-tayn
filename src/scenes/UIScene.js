@@ -143,8 +143,43 @@ export class UIScene extends Phaser.Scene {
   buildBottomBar() {
     const xs = UI.dock.centers;
     this.buttons = {};
-    ABILITY_ORDER.forEach((id, i) => { this.buttons[id] = this.makeButton(xs[i], BTN_Y, `icon_${id}`, ABILITIES[id].name, COLORS[ABILITIES[id].color], () => this.bus.emit(MSG.ABILITY_USE, id)); });
+    // v0.18.0: три кнопки — три слота даров. Даров может быть больше (Лёд — четвёртый), в кнопках — те, что в слотах
+    this.dock = [0, 1, 2].map((i) => {
+      const slot = { id: null };
+      slot.btn = this.makeButton(xs[i], BTN_Y, `icon_${ABILITY_ORDER[i]}`, ABILITIES[ABILITY_ORDER[i]].name, COLORS[ABILITIES[ABILITY_ORDER[i]].color], () => { if (slot.id) this.bus.emit(MSG.ABILITY_USE, slot.id); });
+      return slot;
+    });
+    this.refreshDock();
     this.buttons.bag = this.makeButton(xs[3], BTN_Y, 'icon_bag', 'Сумка', COLORS.gold, () => this.bus.emit(MSG.OPEN_BAG));
+  }
+
+  /** Какие дары в кнопках: сначала стоящие в слотах, потом открытые вне слотов (серые), потом ещё закрытые (с замком). */
+  dockIds() {
+    const st = services.state;
+    const eq = st.equippedGifts();
+    const benched = ABILITY_ORDER.filter((id) => st.isUnlocked(id) && !eq.includes(id));
+    const locked = ABILITY_ORDER.filter((id) => !st.isUnlocked(id));
+    return [...eq, ...benched, ...locked].slice(0, this.dock.length);
+  }
+
+  /** Перестроить кнопки даров, если набор в слотах поменялся (иконка, подпись, цвет; this.buttons[id] — для подсказок обучения). */
+  refreshDock() {
+    const ids = this.dockIds();
+    const key = ids.join();
+    if (key === this.dockKey) return;
+    this.dockKey = key;
+    for (const id of ABILITY_ORDER) delete this.buttons[id];
+    ids.forEach((id, i) => {
+      const s = this.dock[i], b = s.btn;
+      s.id = id;
+      b.icon.setTexture(`icon_${id}`);
+      b.baseIconScale = UI.dock.icon / Math.max(b.icon.width, b.icon.height, 1);
+      b.icon.setScale(b.baseIconScale);
+      b.color = COLORS[ABILITIES[id].color];
+      b.glow.setTint(b.color);
+      b.text.setText(ABILITIES[id].name);
+      this.buttons[id] = b;
+    });
   }
 
   makeButton(x, y, iconKey, label, color, onPress) {
@@ -331,8 +366,8 @@ export class UIScene extends Phaser.Scene {
 
     // кнопки даров
     const prov = this.registry.get('abilityProvider');
-    for (const id of ABILITY_ORDER) {
-      const b = this.buttons[id];
+    this.refreshDock();
+    for (const { id, btn: b } of this.dock) {
       const st = prov ? prov(id) : { state: 'locked' };
       const locked = st.state === 'locked';
       b.lock.setVisible(locked);

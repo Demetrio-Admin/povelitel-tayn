@@ -5,7 +5,7 @@
 // SQL (supabase/schema.sql) повторяет их в тех же порядке проверок (проверяет tools/sql/diff-test.mjs).
 
 /** Дары, которые можно ставить в слоты (порядок — порядок по умолчанию и на экране). */
-export const GIFT_IDS = ['telekinesis', 'fire', 'seal'];
+export const GIFT_IDS = ['telekinesis', 'fire', 'seal', 'ice'];   // v0.18.0: + Лёд
 
 /**
  * Слоты даров: три. Четвёртый дар (Лёд) приходит в главе II на 11 уровне, и с ним начинается выбор «3 из 4»

@@ -94,7 +94,7 @@ console.log('\n[v0.11] Модель экрана «Дары»');
 {
   const w = world();
   let cards = giftCards(w.state);
-  ok(cards.length === 3 && cards.every(c => !c.open), 'в начале все три дара закрыты, показывать нечего');
+  ok(cards.length === 4 && cards.every(c => !c.open) && cards[3].id === 'ice', 'в начале все дары закрыты (с v0.18.0 их четыре — и Лёд), показывать нечего');
   ready(w);
   cards = giftCards(w.state);
   const fire = cards.find(c => c.id === 'fire');
@@ -397,6 +397,69 @@ console.log('\n[v0.17.0] Сапфиры: модель окон');
   ok(buildView(w.state).presets.map(p => p.saved).join() === 'false,true', 'окно знает, какие пресеты сохранены');
   const card = giftCards(w.state).find(c => c.id === 'telekinesis');
   ok(!card.respec.length || card.respec[0].sapphires === SAPPHIRES.respec, 'смена ветки предлагается и за сапфиры');
+}
+
+console.log('\n[v0.18.0] Лёд: замедление, Хрупкость, ветки Мороз и Осколок, холод врага');
+{
+  const mk = (lvl, branch, enemy = 'forest_scavenger', slots = null) => {
+    const w = ready(world());
+    w.abilities.unlock('ice', lvl); if (branch) w.state.setBranch('ice', branch);
+    if (slots !== false) w.state.setBuild({ slots: slots || ['ice', 'telekinesis', 'fire'] });
+    const cm = new CombatManager({ enemyType: enemy, state: w.state, abilities: w.abilities });
+    cm.hero.mana = cm.hero.maxMana; cm.hero.hp = cm.hero.maxHp;
+    return cm;
+  };
+  const i1 = ABILITIES.ice.levels[1], i2 = ABILITIES.ice.levels[2];
+  ok(i1.slow && !i1.brittle && i2.brittle && Object.keys(ABILITIES.ice.branches).join() === 'frost,shard', 'Лёд I — замедление, II — Хрупкость, III — ветки Мороз и Осколок');
+  // замедление: подготовка сильного удара идёт дольше
+  const prepTime = (useIce) => {
+    const cm = mk(1);
+    let t = 0;
+    while (!cm.enemy.isPreparing && t < 600) { cm.tick(1 / 60); t++; }
+    if (useIce) cm.useAbility('ice');
+    let n = 0;
+    while (cm.enemy.isPreparing && n < 1000) { cm.tick(1 / 60); n++; }
+    return n / 60;
+  };
+  const p0 = prepTime(false), p1 = prepTime(true);
+  ok(p1 > p0 * 1.25, `под Льдом на прерывание больше времени: подготовка удара ${p0.toFixed(1)} с → ${p1.toFixed(1)} с`);
+  // Хрупкость
+  const c2 = mk(2, null, 'rootling'); c2.enemy.def = { ...c2.enemy.def, defense: 0, weaknesses: null };
+  c2.useAbility('ice');
+  ok(c2.enemy.isBrittle && c2.enemy.slowed, 'Лёд II: враг замедлен и хрупок');
+  const h0 = c2.enemy.hp; c2.useAbility('fire');
+  const plain = mk(2, null, 'rootling'); plain.enemy.def = { ...plain.enemy.def, defense: 0, weaknesses: null };
+  const h1 = plain.enemy.hp; plain.useAbility('fire');
+  ok(h0 - c2.enemy.hp > (h1 - plain.enemy.hp) * 1.3 && !c2.enemy.isBrittle, `Хрупкость: Огонь сильнее (${h0 - c2.enemy.hp} против ${h1 - plain.enemy.hp}) и снимает её`);
+  // тяжёлый бросок по хрупкому Стражу разбивает броню
+  const g = mk(2, null, 'forest_guardian'); g.abilities.unlock('telekinesis', 2);
+  g.useAbility('ice');
+  const heavy = g.fieldObjects.find(o => o.def.weight === 'heavy');
+  g.selectObject(heavy.id); g.useAbility('telekinesis');
+  ok(!g.enemy.armorActive && g.drainEvents().some(e => e.type === 'armorBroken'), 'тяжёлый бросок по хрупкой цели разбивает броню');
+  // ветки
+  const frost = mk(3, 'frost').abilities.stats('ice'), shard = mk(3, 'shard').abilities.stats('ice');
+  ok(frost.slow.pct > 0.5 && frost.slow.sec >= 6 && frost.damage < ABILITIES.ice.levels[3].damage, 'Мороз: сильнее и дольше замедление, удар слабее');
+  const cs = mk(3, 'shard', 'rootling'); cs.enemy.def = { ...cs.enemy.def, defense: 0, weaknesses: null };
+  const a0 = cs.enemy.hp; cs.useAbility('ice'); const d1 = a0 - cs.enemy.hp;
+  cs.cooldowns.ice = 0; const a1 = cs.enemy.hp; cs.useAbility('ice'); const d2 = a1 - cs.enemy.hp;
+  ok(d2 > d1 * 2 && !cs.enemy.isBrittle && shard.shatter.mult > 2, `Осколок: удар по хрупкой цели раскалывает её (${d1} → ${d2}), Хрупкость снята`);
+  cs.cooldowns.ice = 0; cs.useAbility('ice');
+  ok(cs.enemy.isBrittle, 'после раскола следующий удар Льда снова делает цель хрупкой');
+  // холод врага: перезарядки и мана героя медленнее
+  const ch = mk(1);
+  ch.cooldowns.ice = 4; ch.hero.mana = 10;
+  ch.chillHero({ pct: 0.5, sec: 2 });
+  for (let i = 0; i < 60; i++) ch.tick(1 / 60);
+  ok(Math.abs(ch.cooldowns.ice - 3.5) < 0.02 && ch.drainEvents().some(e => e.type === 'chill'), `холод: за 1 с перезарядка сократилась на 0,5 с (осталось ${ch.cooldowns.ice.toFixed(2)})`);
+  for (let i = 0; i < 90; i++) ch.tick(1 / 60);
+  ok(ch.heroChill.left === 0, 'холод проходит');
+  // Лёд в «3 из 4»: вне слота не применяется
+  const b = mk(1, null, 'forest_scavenger', ['telekinesis', 'fire', 'seal']);
+  ok(b.abilityState('ice').state === 'benched' && b.state.equippedGifts().length === 3, 'четыре дара — три слота: Лёд вне слота в бою недоступен');
+  const d = mk(1, null, 'forest_scavenger', false);
+  ok(d.state.equippedGifts().join() === 'telekinesis,fire,seal', 'по умолчанию в слотах первые три дара по порядку — Лёд надо поставить самому');
+  ok(statLines('ice', 3, 'shard').some(l => l.includes('×2,2')) && statLines('ice', 2).some(l => l.startsWith('Хрупкость')), 'экран «Дары» показывает числа Льда');
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты даров пройдены');

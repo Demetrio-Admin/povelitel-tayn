@@ -71,6 +71,29 @@ console.log('\nБой: новые ветки, слоты и амулеты (v0.1
   ok(withFlash > 0 && withPuddle > 0, `в этих боях применялись и вспышка (${withFlash}), и лужа (${withPuddle})`);
 }
 
+console.log('\nБой: Лёд и «3 из 4» (v0.18.0) — сервер проигрывает то же самое');
+{
+  const ABIL4 = { telekinesis: { level: 3, unlocked: true }, fire: { level: 3, unlocked: true }, seal: { level: 3, unlocked: true }, ice: { level: 3, unlocked: true } };
+  const BUILDS = [
+    { branches: { ice: 'frost', telekinesis: 'lord' }, slots: ['ice', 'telekinesis', 'fire'], amulets: [] },
+    { branches: { ice: 'shard', seal: 'piercer' }, slots: ['ice', 'seal', 'telekinesis'], amulets: ['amulet_focus'] },
+    { branches: { ice: 'shard', fire: 'blaster' }, slots: ['telekinesis', 'fire', 'seal'], amulets: [] },
+  ];
+  let n = 0, all = true, iceUses = 0, benchedUsed = false;
+  for (const build of BUILDS) for (const [enemy, spawn] of MATCHUPS) for (const policy of ['smart', 'mixed']) {
+    const ctx = ctxFor({ enemy, spawn, level: 12, abilities: ABIL4, hp: 214, mana: 175, potions: { elixir_life: 2, elixir_mana: 2, resin_flask: 2 }, build });
+    const play = playBot(ctx, { seed: 5, policy, maxTicks: 60 * 200 });
+    const snap = snapFor(ctx);
+    const r = verifyCombat(snap, JSON.parse(JSON.stringify(play.log)), snap.combatSince + play.log.ticks * STEP * 1000 + 1000);
+    n++;
+    if (!r.ok || r.verdict.outcome !== (play.cm.result || 'retreat') || r.verdict.mana !== play.cm.hero.mana) { all = false; console.log('   ✗ расхождение', enemy, policy, r.reason); }
+    iceUses += play.cm.stats.abilityUses.ice;
+    for (const id of ['telekinesis', 'fire', 'seal', 'ice']) if (!build.slots.includes(id) && play.cm.stats.abilityUses[id]) benchedUsed = true;
+  }
+  ok(all, `${n} боёв с Льдом (Мороз / Осколок) и выбором 3 из 4: сервер проигрывает запись бит в бит`);
+  ok(iceUses > 0 && !benchedUsed, `Лёд применялся (${iceUses} раз), дар вне слота — ни разу`);
+}
+
 console.log('\nБой: запись');
 {
   const ctx = ctxOf('rootling', 'rootling_01', 5);

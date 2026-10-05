@@ -21,7 +21,13 @@ var HERO_LEVELS = [
   { level: 7, xp: 940, maxHp: 160, maxMana: 135, manaRegen: 3, damageMult: 1.15, note: "\u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0438\u0435 \u0433\u043B\u0430\u0432\u044B" },
   { level: 8, xp: 1300, maxHp: 170, maxMana: 140, manaRegen: 3, damageMult: 1.18, note: "\u0414\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u0432\u044B\u0445\u043E\u0434" },
   { level: 9, xp: 1750, maxHp: 180, maxMana: 145, manaRegen: 3, damageMult: 1.21, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" },
-  { level: 10, xp: 2350, maxHp: 190, maxMana: 155, manaRegen: 3, damageMult: 1.25, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" }
+  { level: 10, xp: 2350, maxHp: 190, maxMana: 155, manaRegen: 3, damageMult: 1.25, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" },
+  // v0.18.0: глава II (docs/design/chapter-2-balance-v0.1.md §2)
+  { level: 11, xp: 3100, maxHp: 202, maxMana: 165, manaRegen: 3, damageMult: 1.29, note: "\u041B\u0451\u0434 I" },
+  { level: 12, xp: 4e3, maxHp: 214, maxMana: 175, manaRegen: 3, damageMult: 1.33, note: "\u041B\u0451\u0434 II" },
+  { level: 13, xp: 5100, maxHp: 226, maxMana: 185, manaRegen: 3, damageMult: 1.37, note: "\u041B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F" },
+  { level: 14, xp: 6400, maxHp: 240, maxMana: 195, manaRegen: 3, damageMult: 1.42, note: "\u041A\u043E\u0432\u0435\u043D\u044B" },
+  { level: 15, xp: 7900, maxHp: 255, maxMana: 205, manaRegen: 3, damageMult: 1.48, note: "\u0424\u0438\u043D\u0430\u043B \u0433\u043B\u0430\u0432\u044B II" }
 ];
 var HERO_RECOVERY = {
   // Смерть не наказывает сильно (Combat Math §10).
@@ -139,7 +145,7 @@ var MIGRATION_V10 = {
 };
 
 // src/config/build.js
-var GIFT_IDS = ["telekinesis", "fire", "seal"];
+var GIFT_IDS = ["telekinesis", "fire", "seal", "ice"];
 var SLOT_RULES = { base: 3, extraAtLevel: null };
 var AMULET_SLOTS = 2;
 var AMULETS = {
@@ -523,6 +529,62 @@ var ABILITIES = {
         set: { flash: { sec: 1 } }
       }
     }
+  },
+  // v0.18.0 — Лёд, четвёртый дар (глава II, docs/design/chapter-2-story-v0.1.md §19–22, §33). Внутренний id — 'ice'.
+  // В бою: замедление врага (его атаки и подготовка сильного удара идут медленнее — больше времени на прерывание);
+  // со ступени II — «Хрупкость»: следующий удар Телекинеза, Огня или Астрала сильнее, а тяжёлый бросок по хрупкой цели
+  // ещё и разбивает броню. Ступени I–III открывает сюжет (обучение у Нэрис), без долгих таймеров.
+  ice: {
+    name: "\u041B\u0451\u0434",
+    color: "ice",
+    levels: {
+      1: {
+        label: "\u041B\u0451\u0434 I",
+        damage: 14,
+        manaCost: 18,
+        cooldownSec: 7,
+        castSec: 0.3,
+        slow: { pct: 0.35, sec: 4 },
+        interruptsNormalCast: false
+      },
+      2: {
+        label: "\u041B\u0451\u0434 II",
+        damage: 16,
+        manaCost: 20,
+        cooldownSec: 7,
+        castSec: 0.3,
+        slow: { pct: 0.35, sec: 4 },
+        brittle: { sec: 5, bonus: 0.4 },
+        interruptsNormalCast: false
+      },
+      3: {
+        label: "\u041B\u0451\u0434 III",
+        damage: 18,
+        manaCost: 22,
+        cooldownSec: 7,
+        castSec: 0.3,
+        slow: { pct: 0.4, sec: 5 },
+        brittle: { sec: 5, bonus: 0.4 },
+        interruptsNormalCast: false
+      }
+    },
+    branches: {
+      frost: {
+        name: "\u041C\u043E\u0440\u043E\u0437",
+        fromLevel: 3,
+        text: "\u041A\u043E\u043D\u0442\u0440\u043E\u043B\u044C: \u0437\u0430\u043C\u0435\u0434\u043B\u0435\u043D\u0438\u0435 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u0438 \u0434\u043E\u043B\u044C\u0448\u0435 \u2014 \u0432\u0440\u0430\u0433 \u043D\u0430 55% \u043C\u0435\u0434\u043B\u0435\u043D\u043D\u0435\u0435 \u0448\u0435\u0441\u0442\u044C \u0441\u0435\u043A\u0443\u043D\u0434.",
+        tradeoff: "\u0421\u0430\u043C \u0443\u0434\u0430\u0440 \u0441\u043B\u0430\u0431\u0435\u0435 \u043D\u0430 15%.",
+        mul: { damage: 0.85 },
+        set: { slow: { pct: 0.55, sec: 6 } }
+      },
+      shard: {
+        name: "\u041E\u0441\u043A\u043E\u043B\u043E\u043A",
+        fromLevel: 3,
+        text: "\u0423\u0440\u043E\u043D \u0447\u0435\u0440\u0435\u0437 \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u044C: \u0443\u0434\u0430\u0440 \u041B\u044C\u0434\u0430 \u043F\u043E \u0445\u0440\u0443\u043F\u043A\u043E\u0439 \u0446\u0435\u043B\u0438 \u0440\u0430\u0441\u043A\u0430\u043B\u044B\u0432\u0430\u0435\u0442 \u0435\u0451 \u2014 \u0443\u0440\u043E\u043D \xD72,2, \u0430 \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u044C \u043E\u0442 \u0434\u0440\u0443\u0433\u0438\u0445 \u0434\u0430\u0440\u043E\u0432 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 (+70%).",
+        tradeoff: "\u0417\u0430\u043C\u0435\u0434\u043B\u0435\u043D\u0438\u0435 \u0441\u043B\u0430\u0431\u043E\u0435: 20% \u043D\u0430 \u0442\u0440\u0438 \u0441\u0435\u043A\u0443\u043D\u0434\u044B.",
+        set: { slow: { pct: 0.2, sec: 3 }, brittle: { sec: 5, bonus: 0.7 }, shatter: { mult: 2.2 } }
+      }
+    }
   }
 };
 var WORLD_MANA_COST = {
@@ -534,12 +596,14 @@ var WORLD_MANA_COST = {
   // сдвинуть камень по весу
   fire: 16,
   // Огонь по препятствию, корням, кусту, факелу
-  seal: 20
+  seal: 20,
   // v0.10.1: значимое применение Астрала (учебный камень, ворота, сердце рощи)
+  ice: 14
+  // v0.18.0: заморозить воду, механизм, нестабильный предмет
 };
 var SCHOOL_XP_PER_USE = {
-  exploration: { telekinesis: 6, fire: 6, seal: 6 },
-  combat: { telekinesis: 5, fire: 5, seal: 5 }
+  exploration: { telekinesis: 6, fire: 6, seal: 6, ice: 6 },
+  combat: { telekinesis: 5, fire: 5, seal: 5, ice: 5 }
 };
 
 // src/config/heroes.js
@@ -1064,7 +1128,9 @@ function createDefaultState(heroId = DEFAULT_HERO_ID) {
     telekinesisLevel: 0,
     fireLevel: 0,
     sealLevel: 0,
-    schoolXP: { telekinesis: 0, fire: 0, seal: 0 },
+    iceLevel: 0,
+    // v0.18.0
+    schoolXP: { telekinesis: 0, fire: 0, seal: 0, ice: 0 },
     unlockedAbilities: [],
     completedEvents: [],
     openedPaths: [],
@@ -1748,8 +1814,8 @@ function serverRules() {
 
 // src/cloud/playerModel.js
 var RULES = serverRules();
-var ABILITY_IDS = ["telekinesis", "fire", "seal"];
-var SCHOOL_IDS = ["telekinesis", "fire", "seal"];
+var ABILITY_IDS = ["telekinesis", "fire", "seal", "ice"];
+var SCHOOL_IDS = ["telekinesis", "fire", "seal", "ice"];
 var num = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 1e15;
 var isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var uniq = (a) => [...new Set(a)];
@@ -2041,6 +2107,8 @@ var Enemy = class {
     this.staggerLeft = 0;
     this.burn = { left: 0, dps: 0, tick: 0 };
     this.puddle = { left: 0, dps: 0, tick: 0 };
+    this.slow = { left: 0, pct: 0 };
+    this.brittle = { left: 0, bonus: 0 };
     this.defenseDisabledLeft = 0;
     this.armorDisabledLeft = 0;
     this.vulnerable = { left: 0, bonus: 0 };
@@ -2102,6 +2170,12 @@ var Enemy = class {
   get inPuddle() {
     return this.puddle.left > 0;
   }
+  get slowed() {
+    return this.slow.left > 0;
+  }
+  get isBrittle() {
+    return this.brittle.left > 0;
+  }
   /** Множитель входящего урона для школы ('auto' | 'telekinesis' | 'fire' | 'seal'). */
   incomingMultiplier(school) {
     let m = 1;
@@ -2129,6 +2203,29 @@ var Enemy = class {
     this.burn.left = durationSec;
     this.burn.dps = dps;
     if (!wasBurning) this.burn.tick = 1;
+  }
+  /** v0.18.0: замедление Льдом. Не складывается: берётся сильнейшее, длительность — наибольшая. */
+  applySlow(pct, sec) {
+    if (this.slow.left > 0 && this.slow.pct > pct) {
+      this.slow.left = Math.max(this.slow.left, sec);
+      return;
+    }
+    this.slow = { left: Math.max(sec, this.slow.pct === pct ? this.slow.left : 0), pct };
+  }
+  /** v0.18.0: Хрупкость. Новая заменяет старую, если сильнее или дольше. */
+  applyBrittle(bonus, sec) {
+    if (this.brittle.left > 0 && this.brittle.bonus > bonus) {
+      this.brittle.left = Math.max(this.brittle.left, sec);
+      return;
+    }
+    this.brittle = { left: sec, bonus };
+  }
+  /** Снять Хрупкость ударом: возвращает бонус (0 — цель не хрупкая). */
+  consumeBrittle() {
+    if (this.brittle.left <= 0) return 0;
+    const b = this.brittle.bonus;
+    this.brittle = { left: 0, bonus: 0 };
+    return b;
   }
   /** v0.16.0: лужа смолы. Как и горение — не складывается, повторный Огонь обновляет длительность и силу. */
   applyPuddle(dps, durationSec) {
@@ -2227,11 +2324,28 @@ var Enemy = class {
       if (this.vulnerable.left <= 0) out.push({ type: "vulnerableEnd" });
     }
     if (this.weakened.left > 0) this.weakened.left -= dt;
+    if (this.brittle.left > 0) {
+      this.brittle.left -= dt;
+      if (this.brittle.left <= 0) {
+        this.brittle = { left: 0, bonus: 0 };
+        out.push({ type: "brittleEnd" });
+      }
+    }
+    let tdt = dt;
+    if (this.slow.left > 0) {
+      tdt = dt * (1 - this.slow.pct);
+      this.slow.left -= dt;
+      if (this.slow.left <= 0) {
+        this.slow = { left: 0, pct: 0 };
+        out.push({ type: "slowEnd" });
+      }
+    }
     if (!this.alive) return out;
     if (this.staggerLeft > 0) {
       this.staggerLeft -= dt;
       return out;
     }
+    dt = tdt;
     const strong = this.def.strongAttack;
     if (this.isPreparing) {
       this.prepLeft -= dt;
@@ -2239,7 +2353,7 @@ var Enemy = class {
         this.prepLeft = 0;
         this.strongCd = strong.cooldownSec;
         this.normalTimer = this.def.normalAttack.intervalSec;
-        out.push({ type: "strongHit", damage: this.outgoingDamage(strong.damage), name: strong.name });
+        out.push({ type: "strongHit", damage: this.outgoingDamage(strong.damage), name: strong.name, chill: strong.chill || null });
       }
       return out;
     }
@@ -2254,7 +2368,7 @@ var Enemy = class {
     this.normalTimer -= dt;
     if (this.normalTimer <= 0) {
       this.normalTimer += this.def.normalAttack.intervalSec;
-      out.push({ type: "attack", damage: this.outgoingDamage(this.def.normalAttack.damage) });
+      out.push({ type: "attack", damage: this.outgoingDamage(this.def.normalAttack.damage), chill: this.def.normalAttack.chill || null });
     }
     return out;
   }
@@ -2371,7 +2485,7 @@ function statsFor(id, level, branchId = null) {
 }
 
 // src/systems/AbilitySystem.js
-var ABILITY_ORDER = ["telekinesis", "fire", "seal"];
+var ABILITY_ORDER = ["telekinesis", "fire", "seal", "ice"];
 var AbilitySystem = class {
   constructor(state, quests, bus2) {
     this.state = state;
@@ -2481,6 +2595,7 @@ var CombatManager = class {
     this.incomingMult = inc;
     this.manaRescue = this.amulets.map((a) => AMULETS[a].effect.manaRescue).find(Boolean) || null;
     this.manaRescueUsed = false;
+    this.heroChill = { left: 0, pct: 0 };
     this.cooldowns = Object.fromEntries(ABILITY_ORDER.map((id) => [id, 0]));
     const arena = ARENAS[this.def.arena] || ARENAS.glade;
     this.arena = arena;
@@ -2489,7 +2604,7 @@ var CombatManager = class {
     this.time = 0;
     this.result = null;
     this.queue = [];
-    this.stats = { abilityUses: { telekinesis: 0, fire: 0, seal: 0 }, interrupts: 0, damageTaken: 0, autoDamage: 0 };
+    this.stats = { abilityUses: { telekinesis: 0, fire: 0, seal: 0, ice: 0 }, interrupts: 0, damageTaken: 0, autoDamage: 0 };
   }
   emit(e) {
     this.queue.push(e);
@@ -2558,6 +2673,7 @@ var CombatManager = class {
     if (id === "telekinesis") this.castTelekinesis(s);
     else if (id === "fire") this.castFire(s);
     else if (id === "seal") this.castSeal(s);
+    else if (id === "ice") this.castIce(s);
     this.flushPhases();
     this.checkResult();
     this.commit();
@@ -2666,11 +2782,19 @@ var CombatManager = class {
     }
     if (!s.interruptsNormalCast) tags.shift();
     this.handleInterrupt(tags);
+    const br = this.enemy.consumeBrittle();
+    if (br) {
+      base *= 1 + br;
+      this.emit({ type: "status", status: "shatter", bonus: br });
+      if (tags.includes("telekinesis_heavy") && this.enemy.armorActive && this.enemy.breakArmor()) this.emit({ type: "armorBroken", sec: this.enemy.def.armor.disabledSec });
+    }
     const dmg = this.enemy.takeDamage(base, "telekinesis", this.hero.damageMult);
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "telekinesis", heavy: tags.includes("telekinesis_heavy") });
   }
   castFire(s) {
-    const dmg = this.enemy.takeDamage(s.damage, "fire", this.hero.damageMult);
+    const br = this.enemy.consumeBrittle();
+    if (br) this.emit({ type: "status", status: "shatter", bonus: br });
+    const dmg = this.enemy.takeDamage(s.damage * (1 + br), "fire", this.hero.damageMult);
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "fire" });
     this.enemy.applyBurn(s.burn.dps, s.burn.durationSec);
     this.emit({ type: "status", status: "burn", sec: s.burn.durationSec });
@@ -2683,7 +2807,9 @@ var CombatManager = class {
   }
   // v0.10.1: Астрал — чистый урон сквозь броню и кору; атаки врага не прерывает (это только Телекинез)
   castSeal(s) {
-    const dmg = this.enemy.takeDamage(s.damage, "seal", this.hero.damageMult);
+    const br = this.enemy.consumeBrittle();
+    if (br) this.emit({ type: "status", status: "shatter", bonus: br });
+    const dmg = this.enemy.takeDamage(s.damage * (1 + br), "seal", this.hero.damageMult);
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "seal" });
     if (s.flash && this.enemy.alive) {
       for (const e of this.enemy.flash(s.flash.sec, s.flash.vulnerability || 0)) {
@@ -2700,6 +2826,31 @@ var CombatManager = class {
     const gain = Math.min(this.hero.maxMana - this.hero.mana, Math.round(this.hero.maxMana * r.gainPct));
     this.hero.mana += gain;
     this.emit({ type: "manaRescue", mana: gain });
+  }
+  /**
+   * v0.18.0: Лёд — урон, замедление врага, со ступени II — Хрупкость. Ветка «Осколок»: удар по хрупкой цели раскалывает её
+   * (урон ×shatter.mult, Хрупкость снимается и в этот раз заново не накладывается — иначе каждый удар был бы усиленным).
+   */
+  castIce(s) {
+    let base = s.damage, shattered = false;
+    if (s.shatter && this.enemy.isBrittle) {
+      this.enemy.consumeBrittle();
+      base *= s.shatter.mult;
+      shattered = true;
+      this.emit({ type: "status", status: "shatter", bonus: s.shatter.mult - 1, ice: true });
+    }
+    const dmg = this.enemy.takeDamage(base, "ice", this.hero.damageMult);
+    this.emit({ type: "damage", target: "enemy", amount: dmg, school: "ice" });
+    if (!this.enemy.alive) return;
+    if (s.slow) {
+      this.enemy.applySlow(s.slow.pct, s.slow.sec);
+      this.emit({ type: "status", status: "slow", sec: s.slow.sec, pct: s.slow.pct });
+    }
+    if (s.brittle && !shattered) {
+      this.enemy.applyBrittle(s.brittle.bonus, s.brittle.sec);
+      this.emit({ type: "status", status: "brittle", sec: s.brittle.sec, bonus: s.brittle.bonus });
+    }
+    if (s.interruptsNormalCast) this.handleInterrupt(["ice"]);
   }
   handleInterrupt(tags) {
     const r = this.enemy.tryInterrupt(tags);
@@ -2729,10 +2880,19 @@ var CombatManager = class {
   tick(dt, { holdEnemy = false } = {}) {
     if (this.result) return;
     const h = this.hero;
-    h.mana = Math.min(h.maxMana, h.mana + h.regen * dt);
-    for (const id of ABILITY_ORDER) this.cooldowns[id] = Math.max(0, this.cooldowns[id] - dt);
+    let hdt = dt;
+    if (this.heroChill.left > 0) {
+      hdt = dt * (1 - this.heroChill.pct);
+      this.heroChill.left -= dt;
+      if (this.heroChill.left <= 0) {
+        this.heroChill = { left: 0, pct: 0 };
+        this.emit({ type: "chillEnd" });
+      }
+    }
+    h.mana = Math.min(h.maxMana, h.mana + h.regen * hdt);
+    for (const id of ABILITY_ORDER) this.cooldowns[id] = Math.max(0, this.cooldowns[id] - hdt);
     if (this.chain) {
-      this.chain.left -= dt;
+      this.chain.left -= hdt;
       if (this.chain.left <= 0) {
         this.cooldowns[this.chain.id] = Math.max(0, this.chain.cooldownSec - (this.chain.window ?? 0));
         this.chain = null;
@@ -2770,9 +2930,11 @@ var CombatManager = class {
       switch (a.type) {
         case "attack":
           this.hitHero(a.damage, false);
+          this.chillHero(a.chill);
           break;
         case "strongHit":
           this.hitHero(a.damage, true, a.name);
+          this.chillHero(a.chill);
           break;
         case "strongStart":
           this.emit({ type: "warning", name: a.name, prepSec: a.prepSec, hint: a.hint, needsHeavy: a.interruptBy.includes("telekinesis_heavy") && !a.interruptBy.includes("telekinesis") });
@@ -2790,6 +2952,14 @@ var CombatManager = class {
     this.flushPhases();
     this.checkResult();
     this.commit();
+  }
+  /** v0.18.0: холод врага ({ pct, sec }) — сильнейший действует, длительность обновляется. */
+  chillHero(c) {
+    if (!c || this.hero.hp <= 0) return;
+    const pct = c.pct * (this.chillResist ? 1 - this.chillResist : 1);
+    if (pct <= 0) return;
+    this.heroChill = { left: Math.max(this.heroChill.left, c.sec), pct: Math.max(this.heroChill.left > 0 ? this.heroChill.pct : 0, pct) };
+    this.emit({ type: "chill", sec: c.sec, pct });
   }
   hitHero(damage, strong, name) {
     damage = Math.max(1, Math.round(damage * this.incomingMult));

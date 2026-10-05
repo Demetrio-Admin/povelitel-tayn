@@ -562,9 +562,10 @@ console.log('\n[v0.8.2] Опыт до следующего уровня');
   state.addHeroXP(290); ok(state.data.heroLevel === 7 && state.heroStats().maxHp === 160, '940 — уровень 7: 160 HP');
   state.addHeroXP(359); ok(state.data.heroLevel === 7, '1299 — ещё 7');
   state.addHeroXP(1); ok(state.data.heroLevel === 8 && state.heroStats().maxMana === 140, '1300 — уровень 8: 140 маны');
-  state.addHeroXP(5000); x = xpProgress(state);
-  ok(x.level === 10 && x.max && x.progress === 1 && x.caption === 'Максимальный уровень', 'уровень 10 — максимальный');
-  ok(x.remaining === 0 && !/NaN|null|11/.test(x.caption), 'после максимума нет 11-го уровня, NaN и отрицательных чисел');
+  state.addHeroXP(1800); ok(state.data.heroLevel === 11 && state.heroStats().maxHp === 202, '3100 — уровень 11 (глава II): 202 HP');
+  state.addHeroXP(50000); x = xpProgress(state);
+  ok(x.level === 15 && x.max && x.progress === 1 && x.caption === 'Максимальный уровень' && state.heroStats().maxHp === 255, 'уровень 15 — максимальный (глава II): 255 HP');
+  ok(x.remaining === 0 && !/NaN|null|16/.test(x.caption), 'после максимума нет 16-го уровня, NaN и отрицательных чисел');
   state.data.heroLevel = 2; state.data.heroXP = 10; x = xpProgress(state);   // повреждённое сохранение: опыт меньше порога
   ok(x.progress === 0 && x.remaining === 140, 'опыт ниже порога уровня не даёт отрицательную полосу');
 }

@@ -24,7 +24,8 @@ export function createDefaultState(heroId = DEFAULT_HERO_ID) {
     telekinesisLevel: 0,
     fireLevel: 0,
     sealLevel: 0,
-    schoolXP: { telekinesis: 0, fire: 0, seal: 0 },
+    iceLevel: 0,   // v0.18.0
+    schoolXP: { telekinesis: 0, fire: 0, seal: 0, ice: 0 },
     unlockedAbilities: [],
     completedEvents: [],
     openedPaths: [],

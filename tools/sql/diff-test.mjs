@@ -221,7 +221,7 @@ for (let s = 0; s < SERIES + 1; s++) {
       if (op === 'quest_accept' || op === 'quest_turn_in') act.quest = pick([...QUEST_IDS, ...QUEST_IDS, 'nope', null, 5]);
       if (op === 'research_start') act.upgrade = pick([...RES_IDS, ...RES_IDS, 'nope', null, 5]);
       if (op === 'respec') { const [a, b] = pick(BRANCHES); Object.assign(act, pick([{ ability: a, branch: b }, { ability: a, branch: b }, { ability: 'fire', branch: 'x' }, { ability: null, branch: 5 }, { ability: 'nope' }])); }
-      if (op === 'build_set') { const G = ['telekinesis', 'fire', 'seal'], AM = ['amulet_focus', 'amulet_forest', 'amulet_lunar'];
+      if (op === 'build_set') { const G = ['telekinesis', 'fire', 'seal', 'ice'], AM = ['amulet_focus', 'amulet_forest', 'amulet_lunar'];
         if (rnd() < 0.7) act.slots = pick([[pick(G)], [pick(G), pick(G)], G, [], ['nope'], 'fire', null, [1], [...G, 'x'], [...G, ...G]]);
         if (rnd() < 0.6) act.amulets = pick([[pick(AM)], [pick(AM), pick(AM)], AM, [], ['nope'], 7, null]); }
       if (op === 'build_preset') { act.mode = pick(['save', 'load', 'load', 'save', 'x', null, 5]); if (rnd() < 0.5) act.slot = pick([1, 2, 3, 4, 0, 1.5, '2', null]); }
@@ -248,7 +248,7 @@ for (let s = 0; s < SERIES + 1; s++) {
     if (rnd() < 0.6) st.quests = arrOf(() => pick(rnd() < 0.5 ? CHAPTER_EVENTS : NEW_EVENTS), 4);
     if (rnd() < 0.3) st.enemies = arrOf(() => pick([...WORLD_ENEMIES, ...NEW_ENEMIES, 'forest_guardian_01']), 2);
     if (rnd() < 0.2) st.paths = ['gate_path'];
-    if (rnd() < 0.3) st.abilities = Object.fromEntries(['telekinesis', 'fire', 'seal'].filter(() => rnd() < 0.6).map(k => [k, { level: pick([1, 1, 2, 3]), unlocked: true }]));
+    if (rnd() < 0.3) st.abilities = Object.fromEntries(['telekinesis', 'fire', 'seal', 'ice'].filter(() => rnd() < 0.6).map(k => [k, { level: pick([1, 1, 2, 3]), unlocked: true }]));
     if (rnd() < 0.3) st.xp = pick([100, 600, 900, 1290, 2400, 4000]);
     if (rnd() < 0.15) st.sapphires = pick([1, 3, 10, 40]);   // v0.17.0
     if (rnd() < 0.3) st.school = Object.fromEntries(['telekinesis', 'fire', 'seal'].filter(() => rnd() < 0.6).map(k => [k, pick([40, 100, 200, 400])]));

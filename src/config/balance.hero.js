@@ -22,6 +22,12 @@ export const HERO_LEVELS = [
   { level: 8,  xp: 1300, maxHp: 170, maxMana: 140, manaRegen: 3, damageMult: 1.18, note: 'Дополнительный выход' },
   { level: 9,  xp: 1750, maxHp: 180, maxMana: 145, manaRegen: 3, damageMult: 1.21, note: 'Продолжение' },
   { level: 10, xp: 2350, maxHp: 190, maxMana: 155, manaRegen: 3, damageMult: 1.25, note: 'Продолжение' },
+  // v0.18.0: глава II (docs/design/chapter-2-balance-v0.1.md §2)
+  { level: 11, xp: 3100, maxHp: 202, maxMana: 165, manaRegen: 3, damageMult: 1.29, note: 'Лёд I' },
+  { level: 12, xp: 4000, maxHp: 214, maxMana: 175, manaRegen: 3, damageMult: 1.33, note: 'Лёд II' },
+  { level: 13, xp: 5100, maxHp: 226, maxMana: 185, manaRegen: 3, damageMult: 1.37, note: 'Лаборатория' },
+  { level: 14, xp: 6400, maxHp: 240, maxMana: 195, manaRegen: 3, damageMult: 1.42, note: 'Ковены' },
+  { level: 15, xp: 7900, maxHp: 255, maxMana: 205, manaRegen: 3, damageMult: 1.48, note: 'Финал главы II' },
 ];
 
 export const HERO_RECOVERY = {

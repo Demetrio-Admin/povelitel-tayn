@@ -143,7 +143,8 @@ export class LivingWorld {
     this.slow = fps && fps < LIFE.lowFps ? this.slow + 1 : 0;
     if (!this.lite && this.slow >= LIFE.lowFpsTicks) this.lite = true;
     // в доме Мирры тихо: зверьки, птицы и листья не появляются
-    this.calm = !!s.zone?.interior;
+    const hero = s.player;
+    this.calm = !!hero && this.interiors.some(z => hitRect(hero.x, hero.y, z, 0));
     this.updateSway(view);
     this.spawnRipple(view);
     this.updateLeaves();

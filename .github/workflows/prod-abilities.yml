@@ -1,0 +1,25 @@
+# Временно: кнопки даров в боевой (минифицированной) сборке
+name: Prod abilities
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: |
+          npx vite preview --host 127.0.0.1 --port 4173 --strictPort > preview.log 2>&1 &
+          sleep 6; cat preview.log
+          BASE=$(grep -o 'http://127.0.0.1:4173[^ ]*' preview.log | head -1)
+          echo "BASE=$BASE"
+          UI_BASE_URL="$BASE" node tests/e2e/abilities.mjs

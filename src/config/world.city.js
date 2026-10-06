@@ -1,6 +1,6 @@
 // v0.20.0 — глава II «Город под инеем»: дорога и город восточнее леса (docs/design/chapter-2-quests-v0.1.md).
 // Мир расширен на восток (WORLD.width 1800 → 3600). Лес и город не соединены пешком: лес закрыт деревьями по x 1700–1800,
-// переход — указатели (kind 'travel') на восточной тропе леса и в начале дороги, а также пункт «Город» в меню.
+// переход — v0.27.0: через карту мира у выходов (kind 'exit': восточная тропа леса и начало дороги), см. config/locations.js.
 // Здания — «разрезы», как дом Мирры: деревянные стены (kind 'wall') с проёмом двери и пол wooden_floor_01.
 // Здесь только данные; они подмешиваются в world.layout.js (ZONES, GROUND, COLLIDERS, KEEP_CLEAR) и world.content.js
 // (INTERACTIVES, ENEMY_SPAWNS, DECOR). Новые коллайдеры добавляются только в конец (id c<номер> в редакторе карты).
@@ -116,12 +116,9 @@ export const CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }, { x: 236
 
 // v0.20.0: квесты 1–5 главы II (chapter-2-quests-v0.1.md): дорога, площадь, след, Архив, Общество.
 export const CITY_INTERACTIVES = [
-  // переходы между лесом и городом
-  { id: 'travel_to_city', kind: 'travel', x: 1640, y: 3625, texture: 'signpost_01', radius: 110, target: CITY_START, requiresEvent: 'ch2_start',
-    hint: 'Дорога в город', lockedText: 'Восточная тропа уходит к большому миру. Сначала нужно закончить дела в лесу — и поговорить с Миррой.',
-    text: 'Тропа выводит из леса на большую дорогу. Впереди — город.' },
-  { id: 'travel_to_forest', kind: 'travel', x: 1880, y: 3625, texture: 'signpost_01', radius: 110, target: FOREST_RETURN,
-    hint: 'Тропа в лес', text: 'Знакомая тропа — домой, к Мирре.' },
+  // v0.27.0: выходы на карту мира (лес и город — разные локации, переход — только через карту у выхода)
+  { id: 'exit_forest', kind: 'exit', x: 1640, y: 3625, texture: 'signpost_01', radius: 110, hint: 'Карта мира' },
+  { id: 'exit_city', kind: 'exit', x: 1880, y: 3625, texture: 'signpost_01', radius: 110, hint: 'Карта мира' },
   // дорога: ресурсы
   { id: 'frostherb_r1', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 240, x: 2060, y: 3420, texture: 'moon_herb_01', radius: 90, requiresEvent: 'ch2_start' },
   { id: 'frostherb_r2', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 240, x: 2240, y: 3880, texture: 'moon_herb_01', radius: 90, requiresEvent: 'ch2_start' },

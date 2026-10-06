@@ -26,19 +26,24 @@ import { AlchemyObject } from '../objects/AlchemyObject.js';
 import { InspectObject } from '../objects/InspectObject.js';
 import { CONTENT_DECOR, AMBIENT } from '../config/world.content.js';
 import { POTIONS } from '../config/resources.js';
-import { HIGHLIGHT } from '../config/guidance.js';
+import { HIGHLIGHT, STEP_GUIDE } from '../config/guidance.js';
 import { UI } from '../config/ui.config.js';
 import { drawPlate } from '../ui/widgets.js';
 import {
-  applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject, TravelObject,
+  applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject, TravelObject, ExitObject,
 } from '../objects/InteractiveObject.js';
 import { ZONE_EVENTS } from '../config/world.city.js';
+import { LOCATIONS, locationAt, locationById, locationOpen, inLocation, touchesLocation } from '../config/locations.js';
+import { enemyDownNow } from '../state/enemyRep.js';
 import { IceObject } from '../objects/IceObject.js';
 import { BoardObject } from '../objects/BoardObject.js';
 import { GateObject, SealSigilObject, DustStashObject, ForestNodeObject } from '../objects/ChapterObjects.js';
 
+const ALL_TARGETS = new Map([...INTERACTIVES, ...ENEMY_SPAWNS].map(o => [o.id, o]));   // v0.27.0: id → место (для наведения через выход)
+
 const OBJECT_CLASSES = {
   travel: TravelObject,   // v0.20.0
+  exit: ExitObject,       // v0.27.0: выход на карту мира
   ice: IceObject,         // v0.21.0
   board: BoardObject,     // v0.23.0: доска поручений
   book: BookObject,
@@ -80,13 +85,24 @@ export class ExplorationScene extends Phaser.Scene {
     this.bus = bus;
     services.mode = 'exploration';
     this.random = rng(1337);
-    this.physics.world.setBounds(0, 0, WORLD.width, WORLD.height);
+    // v0.27.0: сцена перезапускается при переходе между локациями — временное состояние прошлого запуска сбрасывается
+    this.speech = null; this.traveling = false; this.navCache = null; this.terrainImages = []; this.waterZones = []; this.colliderObjects = [];
+    // v0.27.0: строится только текущая локация (глава или вылазка) — по положению героя; редактор карты (?edit) видит весь холст
+    let p = this.fixStartPosition(state.data.player);
+    this.loc = services.edit ? null : locationAt(p.x, p.y);
+    if (this.loc && !inLocation(p, this.loc)) { p = { ...this.loc.arrival }; state.data.player = { ...p }; }   // старое сохранение за краем локации
+    const R = this.loc ? this.loc.rect : { x: 0, y: 0, w: WORLD.width, h: WORLD.height };
+    const top = this.loc ? (this.loc.extraTop || 0) : EXTRA_TOP, bottom = this.loc ? (this.loc.extraBottom || 0) : EXTRA_BOTTOM;
+    this.bounds = R;
+    this.view = { x: R.x, y: R.y - top, w: R.w, h: R.h + top + bottom, top, bottom };
+    this.physics.world.setBounds(R.x, R.y, R.w, R.h);
     this.solids = this.physics.add.staticGroup();
 
     this.map = services.map;
     this.terrain = buildTerrain({ ROADS: this.map.roads, WATERS: this.map.waters });
-    this.interactiveCfgs = applyPos(INTERACTIVES, this.map.pos);
-    this.enemyCfgs = applyPos(ENEMY_SPAWNS, this.map.pos);
+    const here = (o) => inLocation(o, this.loc);
+    this.interactiveCfgs = applyPos(INTERACTIVES, this.map.pos).filter(here);
+    this.enemyCfgs = applyPos(ENEMY_SPAWNS, this.map.pos).filter(here);
     this.propViews = new Map();
 
     this.buildGround();
@@ -94,7 +110,6 @@ export class ExplorationScene extends Phaser.Scene {
     this.buildProps();
 
     this.interaction = new InteractionSystem(this, bus);
-    const p = this.fixStartPosition(state.data.player);
     this.player = new Player(this, p.x, p.y);
     this.physics.add.collider(this.player.sprite, this.solids);
 
@@ -108,7 +123,7 @@ export class ExplorationScene extends Phaser.Scene {
 
     // камера: героиня немного ниже центра (Blueprint §7)
     const cam = this.cameras.main;
-    cam.setBounds(0, -EXTRA_TOP, WORLD.width, WORLD.height + EXTRA_BOTTOM + EXTRA_TOP);
+    cam.setBounds(this.view.x, this.view.y, this.view.w, this.view.h);   // v0.27.0: камера — только своя локация
     this.followOffsetY = (CAMERA.heroScreenY - 0.5) * VIEW.height + PLAYER.displayHeight * 0.4;
     this.follow();
     cam.fadeIn(500);
@@ -131,12 +146,17 @@ export class ExplorationScene extends Phaser.Scene {
     bus.on(MSG.UNLOCK_GIFT, this.unlockGift, this);
     bus.on(MSG.CHAPTER_FINALE, this.chapterFinale, this);
     bus.on(MSG.DUEL_START, this.startDuel, this);   // v0.26.0
-    bus.on(MSG.TRAVEL, (t) => this.travelTo(t, t?.text), this);   // v0.20.0: «Город» в меню
+    bus.on(MSG.TRAVEL, (t) => this.travelTo(t, t?.text), this);   // v0.20.0
+    bus.on(MSG.MAP_TRAVEL, this.travelToLocation, this);           // v0.27.0: отправиться с карты мира
     bus.on(MSG.SIDE_QUEST, (id, what) => { this.refreshAll(); if (what === 'ready') services.audio.play('quest_update'); }, this);
     this.events.on('wake', this.onWake, this);
-    this.events.once('shutdown', () => bus.offContext(this));
-    window.addEventListener('beforeunload', () => this.savePosition());
-    document.addEventListener('visibilitychange', () => this.savePosition());
+    // v0.27.0: сцена перезапускается при переходе между локациями — подписки снимаются, чтобы не удваиваться
+    this.events.once('shutdown', () => { bus.offContext(this); this.events.off('wake', this.onWake, this); });
+    if (!ExplorationScene.pageHooks) {
+      ExplorationScene.pageHooks = true;
+      window.addEventListener('beforeunload', () => services.savePosition?.());
+      document.addEventListener('visibilitychange', () => services.savePosition?.());
+    }
 
     this.setProviders();
     this.registry.set('savePosition', () => this.savePosition());
@@ -182,8 +202,8 @@ export class ExplorationScene extends Phaser.Scene {
   fixStartPosition(p) {
     const st = services.state;
     if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y) || services.edit) return p;
-    const inWall = p.y >= 330 && p.y <= 440 && ((p.x >= 100 && p.x <= 640) || (p.x >= 1160 && p.x <= 1700) || (p.x > 640 && p.x < 1160 && !st.hasEvent('ancient_gate_open')));
-    const behind = p.y < 330 && !st.hasEvent('ancient_gate_open');
+    const inWall = p.x < 1800 && p.y >= 330 && p.y <= 440 && ((p.x >= 100 && p.x <= 640) || (p.x >= 1160 && p.x <= 1700) || (p.x > 640 && p.x < 1160 && !st.hasEvent('ancient_gate_open')));
+    const behind = p.y < 330 && p.x < 1800 && !st.hasEvent('ancient_gate_open');
     if (!inWall && !behind) return p;
     const fixed = { x: 900, y: 540 };
     st.data.player = fixed;
@@ -311,16 +331,19 @@ export class ExplorationScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------ мир
   buildGround() {
-    this.add.tileSprite(0, 0, WORLD.width, WORLD.height + EXTRA_BOTTOM, 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
+    const V = this.view, R = this.bounds;
+    this.add.tileSprite(R.x, R.y, R.w, R.h + V.bottom, 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
     this.paintTerrain();
-    for (const g of GROUND) this.add.tileSprite(g.x, g.y, g.w, g.h, g.tex).setOrigin(0).setDepth(DEPTH.path);
+    for (const g of GROUND) if (touchesLocation(g, this.loc)) this.add.tileSprite(g.x, g.y, g.w, g.h, g.tex).setOrigin(0).setDepth(DEPTH.path);
+    if (!V.top && !V.bottom) return;
     // тёмная подстилка под лесом ниже границы мира (деревья — в world.props.js)
-    this.add.rectangle(0, WORLD.height, WORLD.width, EXTRA_BOTTOM, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
+    if (V.bottom) this.add.rectangle(R.x, R.y + R.h, R.w, V.bottom, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
     // v0.10.0: тёмный лес над северной границей (только картинка, за край мира пройти нельзя)
-    this.add.rectangle(0, -EXTRA_TOP, WORLD.width, EXTRA_TOP, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
+    if (!V.top) return;
+    this.add.rectangle(R.x, R.y - V.top, R.w, V.top, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
     const r = rng(9001), keys = ['tree_dark_01', 'tree_dark_02', 'tree_autumn_01', 'tree_autumn_02'];
-    for (let y = -EXTRA_TOP + 90; y <= 0; y += 85) {
-      for (let x = -20; x < WORLD.width + 40; x += 70 + r() * 30) {
+    for (let y = R.y - V.top + 90; y <= R.y; y += 85) {
+      for (let x = R.x - 20; x < R.x + R.w + 40; x += 70 + r() * 30) {
         const k = keys[Math.floor(r() * keys.length)];
         const im = this.add.image(x + (r() - 0.5) * 20, y + (r() - 0.5) * 20, k).setOrigin(0.5, 1);
         applyDisplaySize(im, k);
@@ -332,7 +355,7 @@ export class ExplorationScene extends Phaser.Scene {
 
   /** Дороги и вода: кривые формы рисуются кусками 512×512 и кладутся поверх травы. */
   paintTerrain() {
-    const chunks = terrainChunks(this.terrain, WORLD.width, WORLD.height + EXTRA_BOTTOM);
+    const chunks = terrainChunks(this.terrain, WORLD.width, WORLD.height + EXTRA_BOTTOM).filter(c => touchesLocation(c, this.loc ? { rect: this.view } : null));
     const src = (k) => { try { return this.textures.get(k).getSourceImage(); } catch (e) { return null; } };
     const imgs = { dirt: src('dirt_path_01'), stone: src('stone_path_01'), water: src('swamp_water_01') };
     for (const im of this.terrainImages || []) im.destroy(); // перерисовка после правки в редакторе
@@ -377,6 +400,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.colliderObjects = [];
     const keep = (o) => { this.colliderObjects.push(o); return o; };
     for (const c of this.map.colliders) {
+      if (!touchesLocation(c, this.loc)) continue;   // v0.27.0: стены других локаций не строятся
       const z = this.add.zone(c.x + c.w / 2, c.y + c.h / 2, c.w, c.h);
       this.solids.add(z);
       keep(z);
@@ -409,7 +433,7 @@ export class ExplorationScene extends Phaser.Scene {
   /** Вода: форма кривая, а Arcade умеет только прямоугольники — вода режется на полосы. */
   buildWaterSolids() {
     for (const z of this.waterZones || []) z.destroy();
-    this.waterZones = this.terrain.waterRects.map(r => {
+    this.waterZones = this.terrain.waterRects.filter(r => touchesLocation(r, this.loc)).map(r => {
       const z = this.add.zone(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h);
       this.solids.add(z);
       return z;
@@ -418,7 +442,7 @@ export class ExplorationScene extends Phaser.Scene {
 
   /** Деревья, кусты, камни, грибы, цветы, фонари — всё из world.props.js (+ правки редактора). */
   buildProps() {
-    for (const p of this.map.props) this.addProp(p);
+    for (const p of this.map.props) if (inLocation(p, this.loc ? { rect: this.view } : null)) this.addProp(p);
   }
 
   /** Один объект расстановки: картинка, свечение, физический блок. Запись в propViews нужна редактору. */
@@ -460,6 +484,7 @@ export class ExplorationScene extends Phaser.Scene {
   /** Ковёр, пучки трав, горшок, костёр охотника и «живые мелочи» вроде пылинок в воздухе. */
   buildContentDecor() {
     for (const d of CONTENT_DECOR) {
+      if (!inLocation(d, this.loc)) continue;   // v0.27.0
       const img = this.add.image(d.x, d.y, d.k).setOrigin(0.5, 1);
       applyDisplaySize(img, d.k);
       if (d.flip) img.setFlipX(true);
@@ -476,6 +501,7 @@ export class ExplorationScene extends Phaser.Scene {
     }
     if (services.edit) return;
     for (const a of AMBIENT) {
+      if (!touchesLocation(a.rect, this.loc)) continue;
       this.add.particles(0, 0, 'fx_dot', {
         emitZone: { type: 'random', source: new Phaser.Geom.Rectangle(a.rect.x, a.rect.y, a.rect.w, a.rect.h) },
         speedY: { min: -9, max: -2 }, speedX: { min: -7, max: 7 }, scale: { start: 0.38, end: 0 }, alpha: { start: 0.85, end: 0 },
@@ -576,6 +602,53 @@ export class ExplorationScene extends Phaser.Scene {
     this.speech = null;
   }
 
+  /**
+   * v0.27.0: цель наведения с учётом локаций. Сначала — цели шага в этой локации; если цель шага в другой локации —
+   * ведём к выходу (указателю «Карта мира»).
+   */
+  guideTarget() {
+    const g = services.guidance;
+    const present = (x) => this.objects.some(o => o.id === x) || this.enemies.some(e => e.id === x);
+    const id = g.targetId((x) => !present(x) || this.targetDone(x));
+    if (id && present(id) && !this.targetDone(id)) return id;
+    if (this.loc) {
+      const ids = STEP_GUIDE[g.step().id]?.targets || [];
+      if (ids.some(x => !present(x) && ALL_TARGETS.has(x) && !inLocation(ALL_TARGETS.get(x), this.loc) && !this.targetDoneElsewhere(x))) return this.loc.exit;
+    }
+    return null;
+  }
+
+  /** v0.27.0: цель в другой локации уже выполнена (подобран предмет, побеждён враг) — к выходу не ведём. */
+  targetDoneElsewhere(id) {
+    const st = services.state, cfg = ALL_TARGETS.get(id);
+    if (!cfg) return true;
+    if (cfg.requiresEvent && !st.hasEvent(cfg.requiresEvent)) return true;
+    if (ENEMY_SPAWNS.includes(cfg)) return enemyDownNow(st, cfg);
+    const o = st.getObject(id);
+    return ['read', 'opened', 'collected', 'done', 'removed'].includes(o?.state);
+  }
+
+  /** v0.27.0: отправиться в другую локацию (с карты мира у выхода). Сцена перезапускается уже в новой локации. */
+  travelToLocation(id, at = null) {
+    const loc = locationById(id), st = services.state;
+    if (!loc || !this.loc || loc.id === this.loc.id || this.inTransition) return;
+    if (!locationOpen(loc, (k) => st.hasEvent(k))) { this.toast(loc.lockedText || 'Пока закрыто.', COLORS.danger); return; }
+    this.inTransition = true;
+    services.mode = 'transition';
+    this.player.stop();
+    const cam = this.cameras.main;
+    cam.fadeOut(420, 0, 0, 0);
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      const t = at || loc.arrival;
+      const a = { x: Math.round(t.x), y: Math.round(t.y) };
+      st.data.player = { ...a };
+      st.data.safePoint = { ...a };
+      st.save();
+      services.mode = 'exploration';
+      this.scene.restart();
+    });
+  }
+
   /** Цель выполнена или недоступна: пропускаем её и берём следующую из списка шага. */
   targetDone(id) {
     const o = this.objects.find(x => x.id === id);
@@ -619,7 +692,7 @@ export class ExplorationScene extends Phaser.Scene {
     if (h) { this.heroSay(h.hint, 6200); this.bus.emit(MSG.GUIDE_HINT, h.hint); }
 
     // подсветка цели и стрелка
-    const id = g.targetId((x) => this.targetDone(x));
+    const id = this.guideTarget();
     const pos = id ? this.targetPos(id) : null;
     const focused = this.interaction.focus && this.interaction.focus.id === id;
     if (pos && !focused) {
@@ -754,6 +827,12 @@ export class ExplorationScene extends Phaser.Scene {
       sig = (sig * 31 + Math.round(b.x * 3 + b.y * 7 + b.width * 11 + b.height * 13)) | 0;
     }
     sig = sig + ':' + solids.length;
+    if (this.loc) {   // v0.27.0: за краем локации пути нет — маршрут не уводит к соседям
+      const R = this.loc.rect, W = WORLD.width, H = WORLD.height;
+      for (const r of [{ x: 0, y: 0, w: R.x, h: H }, { x: R.x + R.w, y: 0, w: W - R.x - R.w, h: H }, { x: R.x, y: 0, w: R.w, h: R.y }, { x: R.x, y: R.y + R.h, w: R.w, h: H - R.y - R.h }]) {
+        if (r.w > 0 && r.h > 0) solids.push(r);
+      }
+    }
     if (this.navCache?.sig !== sig) {
       const dims = { width: WORLD.width, height: WORLD.height, solids };
       this.navCache = { sig, grids: [buildNav(dims), buildNav({ ...dims, pad: 0 })] }; // с запасом; без запаса — для узких проходов
@@ -942,6 +1021,11 @@ export class ExplorationScene extends Phaser.Scene {
   /** v0.20.0: переход между лесом и городом — затемнение, герой на новом месте, точка возрождения там же. */
   travelTo(target, text) {
     if (!target || this.traveling) return;
+    if (this.loc && !inLocation(target, this.loc)) {   // v0.27.0: в другую локацию — только через перезапуск сцены
+      const loc = locationAt(target.x, target.y);
+      if (loc) this.travelToLocation(loc.id, target);
+      return;
+    }
     this.traveling = true;
     const cam = this.cameras.main;
     cam.fadeOut(260, 0, 0, 0);

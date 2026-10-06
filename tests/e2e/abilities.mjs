@@ -79,6 +79,8 @@ try {
     await page.waitForFunction((id) => { const s = window.__game.scene.getScene('ExplorationScene'); return s?.loc?.id === id && window.__witch.mode === 'exploration'; }, id, { timeout: 20000 });
     await page.waitForTimeout(1500);
     console.log('после перехода в', id, JSON.stringify(await state()), JSON.stringify(await listeners()));
+    console.log('модальное окно:', JSON.stringify(await page.evaluate(() => { const m = window.__game.scene.getScene('UIScene').modal; return m ? { title: m.opts?.title, text: String(m.opts?.text || '').slice(0, 160), keys: Object.keys(m.opts || {}).join() } : null; })));
+    await shot('t-' + id);
     const b = await page.evaluate(() => ({ ...window.__exp, uses: window.__uses.length }));
     await click(274, 1164);
     const a = await page.evaluate(() => ({ ...window.__exp, uses: window.__uses.length }));

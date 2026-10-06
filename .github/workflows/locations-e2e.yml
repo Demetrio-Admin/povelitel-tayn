@@ -24,3 +24,11 @@ jobs:
         with:
           name: location-shots
           path: shots
+      - name: shots as annotations
+        if: always()
+        run: |
+          for f in shots/*.png; do
+            n=$(basename "$f" .png)
+            convert "$f" -resize 260x -quality 60 "/tmp/$n.jpg"
+            echo "::notice title=shot $n::$(base64 -w0 /tmp/$n.jpg)"
+          done

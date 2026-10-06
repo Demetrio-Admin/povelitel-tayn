@@ -839,6 +839,21 @@ console.log('\nv0.15.0. Прогресс закрыт для sync_player: игр
   ok(!bf.ok && bf.reason === 'missing', 'амулет, которого нет в сумке, сервер отклоняет');
   const bp = await actions.buildPreset('save');
   ok(bp.ok, 'пресет сохранён на сервере');
+
+  // v0.17.0: сапфиры — только сервер: приветствие, ускорение изучения, пресет и смена ветки; «Новая игра» кошелёк не трогает
+  const bw = await actions.bankWelcome();
+  ok(bw.ok && st.sapphires() === 3, 'приветственные 3 сапфира пришли с сервера');
+  ok((await actions.bankWelcome()).reason === 'already', 'второй раз приветствие не выдаётся');
+  await give(d, { sapphires: 40, research: { upgradeId: 'seal_2', startedAt: st.now(), durationMs: 1800000 } });
+  await settle();
+  const su = await actions.researchSpeedup(1);
+  ok(su.ok && su.price === 1 && st.data.research.durationMs === 900000 && st.sapphires() === 42, 'ускорение на 15 минут за 1 сапфир');
+  const pu = await actions.presetUnlock();
+  ok(pu.ok && st.buildData().presetSlots === 2 && st.sapphires() === 12, 'второй пресет открыт за 30 сапфиров');
+  ok((await actions.presetUnlock()).reason === 'sapphires', 'на третий не хватает');
+  r = await real();
+  ok(r.wallet.sapphires === 12 && r.objects.player_build.presetSlots === 2, 'сервер хранит баланс и открытый пресет');
+  await give(d, { research: null });
 }
 
 console.log('\n13–14. Старой «облачной» механики больше нет');

@@ -65,8 +65,12 @@ export class InteractiveObject {
     const s = this.state;
     if (this.cfg.requiresEvent && !s.hasEvent(this.cfg.requiresEvent)) return false;
     if (this.cfg.requiresEnemyDefeated && !s.isEnemyDefeated(this.cfg.requiresEnemyDefeated)) return false;
+    if (this.cfg.hideEvent && s.hasEvent(this.cfg.hideEvent)) return false;   // v0.22.0: персонаж ушёл по сюжету
     return true;
   }
+
+  /** v0.21.0: waitEvent — объект виден и мешает с самого начала, но поддаётся только после события (ледяная стена до волны холода). */
+  waiting() { return !!this.cfg.waitEvent && !this.state.hasEvent(this.cfg.waitEvent); }
 
   isDone() { return false; }
   isAvailable() { return !this.removed && !this.busy && this.requirementsMet() && !this.isDone(); }
@@ -396,3 +400,27 @@ export class FireCircleObject extends InteractiveObject {
 }
 
 // v0.10.0: Древние ворота — GateObject в objects/ChapterObjects.js (вместо SealObject прототипа).
+
+/**
+ * v0.20.0: переход между частями мира (лес ↔ дорога в город). Указатель виден всегда; если путь ещё закрыт (requiresEvent),
+ * герой слышит lockedText. Перемещение — на стороне клиента (позицию сохраняет обычная синхронизация), наград нет.
+ */
+export class TravelObject extends InteractiveObject {
+  get label() { return this.cfg.hint || 'Идти'; }
+  requirementsMet() { return true; }
+  isDone() { return false; }
+  interact() {
+    const need = this.cfg.requiresEvent;
+    if (need && !this.state.hasEvent(need)) { this.scene.toast(this.cfg.lockedText || 'Путь пока закрыт.'); return; }
+    const go = () => this.scene.travelTo?.(this.cfg.target, this.cfg.text);
+    // v0.24.0: вылазка — сначала описание места: какие дары взять (3 из 4), что внутри
+    if (this.cfg.brief && this.scene.dialog) {
+      this.scene.dialog({
+        title: this.cfg.brief.title, color: COLORS.gold, text: this.cfg.brief.text,
+        buttons: [{ label: 'Отправиться', primary: true, onClick: go }, { label: 'Дары', onClick: () => services.bus.emit(MSG.OPEN_GIFTS) }, { label: 'Не сейчас', cancel: true }],
+      });
+      return;
+    }
+    go();
+  }
+}

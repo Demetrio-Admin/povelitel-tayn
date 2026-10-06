@@ -6,10 +6,11 @@
 // В базе должна быть схема из supabase/schema.sql и заглушка Supabase Auth (tools/sql/auth-stub.sql).
 import { execFileSync } from 'child_process';
 import { randomUUID } from 'crypto';
-import { applyPatch, applyAction, combatApply, advanceVitals, fillDefaults, emptySnapshot, levelForXp } from '../../src/cloud/playerModel.js';
+import { applyPatch, applyAction, combatApply, advanceVitals, fillDefaults, emptySnapshot, levelForXp, walletOf } from '../../src/cloud/playerModel.js';
 import { HERO_LEVELS } from '../../src/config/balance.hero.js';
 
 import { serverRules } from '../../src/config/serverRules.js';
+import { DAILY_ORDER } from '../../src/config/daily.js';
 
 const SERIES = Number(process.argv[2]) || 60, STEPS = 14;
 const RULES = serverRules();
@@ -26,9 +27,10 @@ const NEW_EVENTS = [...new Set([...EVENT_KEYS, ...Object.values(RULES.events).fl
   ...Object.values(RULES.quests).flatMap(q => [q.start, q.done, ...(q.requires ? [q.requires] : []), ...q.objectives.filter(o => o.type === 'event').map(o => o.key)]),
   ...Object.values(RULES.research).flatMap(u => [u.event, u.startEvent, u.completeEvent].filter(Boolean)),
   ...Object.values(RULES.spawnStart).flatMap(x => [x.event, ...(x.requires ? [x.requires] : [])]),
-  ...Object.values(RULES.world).flatMap(w => w.events || [])])];
+  ...Object.values(RULES.world).flatMap(w => w.events || []), RULES.shop.requires, ...Object.values(RULES.recipes).flatMap(r => r.requires)])];
 const NEW_ITEMS = [...new Set([...Object.values(RULES.quests).flatMap(q => Object.keys(q.consume)), ...Object.values(RULES.quests).flatMap(q => q.objectives.filter(o => o.type === 'item').map(o => o.item)),
-  ...Object.values(RULES.research).flatMap(u => Object.keys(u.items)), ...RULES.build.amulets, 'coins'])];
+  ...Object.values(RULES.research).flatMap(u => Object.keys(u.items)), ...RULES.build.amulets, 'coins',
+  ...Object.values(RULES.recipes).flatMap(r => Object.keys(r.needs)), ...Object.keys(RULES.shop.buy), ...RULES.combatPotions])];
 const NEW_ENEMIES = [...new Set(Object.values(RULES.quests).flatMap(q => q.objectives.filter(o => o.type === 'enemy').map(o => o.id)))];
 let seed = 12345;
 const rnd = () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -40,7 +42,7 @@ const maybe = (p, f) => (rnd() < p ? f() : undefined);
 const arrOf = (f, n = 3) => Array.from({ length: Math.floor(rnd() * n) + 1 }, f);
 
 // ---- v0.15.0: «прогресс» задаётся мимо sync_player — напрямую в таблицы игрока и в JS-снимок
-const CLOSED = ['xp', 'school', 'inv', 'abilities', 'quests', 'paths', 'enemies', 'research'];
+const CLOSED = ['xp', 'school', 'inv', 'abilities', 'quests', 'paths', 'enemies', 'research', 'sapphires'];
 const splitSet = (st) => {
   if (!st || st.__action || st.__apply || st.__shift || st.__age || st.__mana !== undefined || st.__set || st.__rshift) return [st];
   const set = {}, rest = {};
@@ -56,6 +58,7 @@ function setSql(uid, st) {
   for (const [k, v] of Object.entries(st.abilities || {})) q.push(`insert into public.player_abilities (user_id, ability_id, level, unlocked) values (${U}, '${k}', ${v.level}, ${!!v.unlocked}) on conflict (user_id, ability_id) do update set level = greatest(public.player_abilities.level, excluded.level), unlocked = public.player_abilities.unlocked or excluded.unlocked;`);
   if (st.xp) q.push(`update public.player_progress set hero_xp = greatest(hero_xp, ${st.xp}), hero_level = greatest(hero_level, coalesce((select max(level) from public.game_hero_levels where xp <= greatest(hero_xp, ${st.xp})), 1)) where user_id = ${U};`);
   for (const [k, n] of Object.entries(st.school || {})) q.push(`update public.player_progress set school_xp = jsonb_set(school_xp, '{${k}}', to_jsonb(coalesce((school_xp ->> '${k}')::numeric, 0) + ${n})) where user_id = ${U};`);
+  if (st.sapphires) q.push(`insert into public.player_wallet (user_id, sapphires) values (${U}, ${st.sapphires}) on conflict (user_id) do update set sapphires = public.player_wallet.sapphires + ${st.sapphires};`);
   if ('research' in st) q.push(`update public.player_progress set research = ${st.research ? `'${q1(JSON.stringify(st.research))}'::jsonb` : 'null'} where user_id = ${U};`);
   for (const [k, v] of Object.entries(st.objects || {})) q.push(v === null ? `delete from public.player_world where user_id = ${U} and kind = 'object' and key = '${q1(k)}';`
     : `insert into public.player_world (user_id, kind, key, data) values (${U}, 'object', '${q1(k)}', '${q1(JSON.stringify(v))}'::jsonb) on conflict (user_id, kind, key) do update set data = excluded.data;`);
@@ -71,6 +74,7 @@ function applySet(m, st) {
   for (const [k, n] of Object.entries(st.school || {})) m.school[k] = (m.school[k] || 0) + n;
   if ('research' in st) m.research = st.research;
   for (const [k, v] of Object.entries(st.objects || {})) { if (v === null) delete m.objects[k]; else m.objects[k] = v; }
+  if (st.sapphires) m.wallet = { ...walletOf(m.wallet), sapphires: walletOf(m.wallet).sapphires + st.sapphires };
 }
 const SET = (st) => ({ __set: st });
 const RS = (sec) => ({ __rshift: sec });   // «прошло sec секунд» с начала изучения (отметка начала сдвигается в прошлое)
@@ -186,11 +190,51 @@ const SCRIPTED = [
   A('build_preset', { mode: 'load' }), A('build_preset', { mode: 'save' }), A('build_set', { slots: ['fire'], amulets: [] }), A('build_preset', { mode: 'load' }), A('build_preset', { mode: 'nope' }), A('build_preset', {}),
   A('respec', { ability: 'telekinesis', branch: 'breaker' }), A('build_preset', { mode: 'save' }),
   A('combat_start', { spawn: 'scavenger_01', enemy: 'forest_scavenger' }), A('build_set', { slots: ['fire'] }), A('build_preset', { mode: 'load' }), A('build_preset', { mode: 'save' }), A('combat_end', { outcome: 'retreat', mana: 1 }),
+  // v0.17.0: сапфиры — приветствие, ускорение изучения (шаги, предел, суточный лимит), смена ветки и пресеты за сапфиры
+  A('bank_welcome'), A('bank_welcome'), A('research_speedup', { chunks: 1 }), A('preset_unlock'), A('respec', { ability: 'telekinesis', branch: 'lord', pay: 'sapphires' }),
+  SET({ sapphires: 100 }), A('respec', { ability: 'telekinesis', branch: 'lord', pay: 'sapphires' }), A('respec', { ability: 'telekinesis', branch: 'breaker', pay: 'gold' }),
+  A('build_preset', { mode: 'save', slot: 2 }), A('preset_unlock'), A('build_preset', { mode: 'save', slot: 2 }), A('build_preset', { mode: 'load', slot: 2 }), A('build_preset', { mode: 'load', slot: 3 }),
+  A('build_preset', { mode: 'save', slot: 9 }), A('build_preset', { mode: 'save', slot: 1.5 }), A('build_preset', { mode: 'save', slot: '2' }), A('build_preset', { mode: 'save', slot: 1e20 }),
+  A('preset_unlock'), A('preset_unlock'),
+  SET({ school: { seal: 300 }, inv: { lunar_shard: 10 }, xp: 1400 }), A('research_start', { upgrade: 'seal_2' }),
+  A('research_speedup', { chunks: 0 }), A('research_speedup', { chunks: 'x' }), A('research_speedup', { chunks: 2.5 }), A('research_speedup', { chunks: 1e9 }), A('research_speedup', {}),
+  A('research_speedup', { chunks: 1 }), A('research_speedup', { chunks: 2 }), A('research_speedup', { chunks: 96 }), A('research_speedup', { chunks: 1 }), RS(600), A('research_finish'), A('research_speedup', { chunks: 1 }),
+  // v0.19.0: торговец, крафт с монетами (Амулет инея), улучшение амулета
+  A('shop_buy', { item: 'frost_herb', qty: 2 }), SET({ quests: ['city_merchant_open', 'ch2_quarter_cleared', 'ch2_nerys_met'], inv: { coins: 2000 } }),
+  A('shop_buy', { item: 'frost_herb', qty: 2 }), A('shop_buy', { item: 'ice_crystal', qty: 5 }), A('shop_buy', { item: 'frost_shard' }), A('shop_buy', { item: 'moon_herb', qty: 100 }),
+  A('shop_sell', { item: 'frost_herb', qty: 1 }), A('shop_sell', { item: 'ice_crystal', qty: 50 }), A('shop_sell', { item: 'cold_heart' }),
+  A('craft', { recipe: 'warm_potion' }), A('craft', { recipe: 'amulet_frost' }), SET({ inv: { frost_shard: 4, lunar_shard: 10, rune_dust: 10, tree_resin: 4 } }),
+  A('craft', { recipe: 'amulet_frost' }), A('craft', { recipe: 'amulet_frost' }), A('amulet_upgrade', { amulet: 'amulet_frost' }), A('amulet_upgrade', { amulet: 'amulet_frost' }),
+  A('amulet_upgrade', { amulet: 'amulet_frost' }), A('amulet_upgrade', { amulet: 'amulet_frost' }), A('amulet_upgrade', { amulet: 'amulet_lunar' }), A('amulet_upgrade', { amulet: 'nope' }),
   // магия в мире: опыт дара, события и пути выдаёт сам успех (камень, корни, ворота), повтор — «уже сделано»
   SET({ abilities: { telekinesis: { level: 3, unlocked: true }, fire: { level: 2, unlocked: true } }, objects: { glade_rock: null, heavy_boulder: null, corrupted_roots: null } }), MANA(100),
   W('glade_rock'), W('glade_rock'), MANA(100), W('heavy_boulder'), MANA(100), W('corrupted_roots'), W('corrupted_roots'), MANA(100), W('moon_plant'), MANA(100), W('ritual_torch'), W('ritual_torch'),
   A('combat_start', { spawn: 'scavenger_01', enemy: 'forest_scavenger' }), A('combat_end', { outcome: 'retreat', mana: 1 }),
   A('combat_start', { spawn: 'lunar_guard', enemy: 'x' }), A('combat_end', { outcome: 'retreat', mana: 1 }), A('combat_start', { spawn: 'forest_guardian_01', enemy: 'x' }),
+  // v0.21.0: ледяная стена ждёт волны холода (waitEvent), Лёд в мире (слот), сюжетный дар Нэрис, события квестов 6–10
+  A('combat_end', { outcome: 'retreat', mana: 1 }), MANA(100), W('frost_barrier'), SET({ quests: ['ch2_frost_wave'] }), W('frost_barrier'), W('frost_barrier'), W('ice_construct'),
+  A('event', { key: 'ch2_nerys_met' }), A('event', { key: 'unlock_ice_1' }), SET({ quests: ['ch2_rescue_door', 'ch2_rescue_cellar'] }), A('event', { key: 'ch2_rescue_done' }),
+  A('event', { key: 'unlock_ice_1' }), SET({ inv: { moon_herb: 2, frost_herb: 2, forest_mushroom: 2 } }), A('craft', { recipe: 'warm_potion' }), A('event', { key: 'unlock_ice_1' }), A('event', { key: 'unlock_ice_1' }),
+  MANA(100), W('fq_water'), A('build_set', { slots: ['ice', 'fire', 'telekinesis'] }), W('fq_water'), W('fq_water'), A('event', { key: 'ch2_ice_trained' }), A('event', { key: 'ch2_quarter_cleared' }),
+  A('event', { key: 'ch2_cargo_start' }), W('wh_cargo'), W('wh_equipment'), A('event', { key: 'ch2_cargo_reported' }),
+  // v0.22.0: события с ценой (consume), веткой дара (branch), сопутствующими событиями (marks), сапфирами и blockedBy
+  A('event', { key: 'ch2_stabilized' }), SET({ quests: ['ch2_vol_1', 'ch2_vol_2'] }), A('event', { key: 'ch2_stabilized' }), SET({ inv: { stabilizing_potion: 1 } }),
+  A('event', { key: 'ch2_stabilized' }), SET({ inv: { stabilizing_potion: 3 } }), A('event', { key: 'ch2_stabilized' }), A('event', { key: 'ch2_stabilized' }),
+  SET({ quests: ['ch2_lab_reported'] }), A('event', { key: 'ch2_view_market' }), A('event', { key: 'ch2_severin_confronted' }), A('event', { key: 'ch2_view_danger' }),
+  A('event', { key: 'ch2_ice3_frost' }), SET({ quests: ['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal'] }), A('event', { key: 'ch2_ice3_frost' }),
+  A('event', { key: 'ch2_ice3_shard' }), A('event', { key: 'ch2_ice3_frost' }), A('respec', { ability: 'ice', branch: 'shard' }),
+  A('event', { key: 'chapter_2_complete' }), SET({ quests: ['ch2_epilogue'] }), A('event', { key: 'chapter_2_complete' }), A('event', { key: 'chapter_2_complete' }),
+  W('lab_seal'), SET({ quests: ['ch2_lab_found'] }), MANA(100), W('lab_seal'), W('final_ward'), SET({ quests: ['ch2_final_start'] }), W('final_ward'), W('final_rift'), W('final_ice_wall'),
+  // v0.23.0: доска поручений — взять (только поручения дня, не больше трёх), сдать (принести / победы после того, как взято)
+  ...DAILY_ORDER.map(id => A('daily_take', { offer: id })), A('daily_take', { offer: 'nope' }), A('daily_take', {}),
+  SET({ quests: ['ch2_quarter_cleared'] }), ...DAILY_ORDER.map(id => A('daily_done', { offer: id })),
+  ...DAILY_ORDER.map(id => A('daily_take', { offer: id })),
+  SET({ inv: { frost_herb: 10, ice_crystal: 3, warm_potion: 2, tree_resin: 5, rune_dust: 5, elixir_life: 3, forest_mushroom: 5 } }),
+  SET({ objects: { 'rep:fq_critter': { wins: 4, at: 1 }, 'rep:wh_collector_1': { wins: 2, at: 1 }, 'rep:rootling_01': { wins: 'x' } } }),
+  ...DAILY_ORDER.map(id => A('daily_done', { offer: id })), ...DAILY_ORDER.map(id => A('daily_done', { offer: id })),
+  SET({ quests: ['ch2_lab_open'] }), ...DAILY_ORDER.map(id => A('daily_take', { offer: id })),
+  // v0.25.0: ковены — у JS-модели их нет; игрок без ковена (или база без миграции) получает то же 'no_coven'
+  A('coven_give', { item: 'ice_crystal', qty: 1 }), A('coven_give', { item: 'coins', qty: 5 }), A('coven_give', {}), A('coven_claim'),
 ];
 const SCRIPT = SCRIPTED.flatMap(splitSet);
 for (let s = 0; s < SERIES + 1; s++) {
@@ -203,17 +247,21 @@ for (let s = 0; s < SERIES + 1; s++) {
       actionIds.push(id);
       // v0.10: крафт, сюжетные предметы, миграция (вместе с неверными id)
       const op = pick(['heal', 'heal', 'starter_kit', 'bogus', 'craft', 'craft', 'craft', 'use', 'use', 'migrate_v10', 'drink', 'drink', 'combat_start', 'combat_end', 'combat_end', 'world', 'world', 'world', 'world', 'world', 'world',
-        'event', 'event', 'event', 'quest_accept', 'quest_turn_in', 'quest_turn_in', 'research_start', 'research_start', 'research_finish', 'research_finish', 'respec', 'respec', 'build_set', 'build_set', 'build_preset']);
+        'event', 'event', 'event', 'quest_accept', 'quest_turn_in', 'quest_turn_in', 'research_start', 'research_start', 'research_finish', 'research_finish', 'respec', 'respec', 'build_set', 'build_set', 'build_preset', 'research_speedup', 'research_speedup', 'preset_unlock', 'bank_welcome', 'shop_buy', 'shop_sell', 'amulet_upgrade', 'amulet_upgrade']);
       const act = { op, id };
       if (op === 'craft') act.recipe = pick([...RECIPE_IDS, 'nope', 5, null]);
       if (op === 'event') act.key = pick([...EVENT_KEYS, ...EVENT_KEYS, ...EVENT_KEYS, 'nope', null, 5, 'lunar_quest_complete']);
       if (op === 'quest_accept' || op === 'quest_turn_in') act.quest = pick([...QUEST_IDS, ...QUEST_IDS, 'nope', null, 5]);
       if (op === 'research_start') act.upgrade = pick([...RES_IDS, ...RES_IDS, 'nope', null, 5]);
       if (op === 'respec') { const [a, b] = pick(BRANCHES); Object.assign(act, pick([{ ability: a, branch: b }, { ability: a, branch: b }, { ability: 'fire', branch: 'x' }, { ability: null, branch: 5 }, { ability: 'nope' }])); }
-      if (op === 'build_set') { const G = ['telekinesis', 'fire', 'seal'], AM = ['amulet_focus', 'amulet_forest', 'amulet_lunar'];
+      if (op === 'build_set') { const G = ['telekinesis', 'fire', 'seal', 'ice'], AM = ['amulet_focus', 'amulet_forest', 'amulet_lunar'];
         if (rnd() < 0.7) act.slots = pick([[pick(G)], [pick(G), pick(G)], G, [], ['nope'], 'fire', null, [1], [...G, 'x'], [...G, ...G]]);
         if (rnd() < 0.6) act.amulets = pick([[pick(AM)], [pick(AM), pick(AM)], AM, [], ['nope'], 7, null]); }
-      if (op === 'build_preset') act.mode = pick(['save', 'load', 'load', 'save', 'x', null, 5]);
+      if (op === 'build_preset') { act.mode = pick(['save', 'load', 'load', 'save', 'x', null, 5]); if (rnd() < 0.5) act.slot = pick([1, 2, 3, 4, 0, 1.5, '2', null]); }
+      if (op === 'shop_buy' || op === 'shop_sell') { act.item = pick([...Object.keys(RULES.shop.buy), 'frost_shard', 'coins', 'nope', null, 5]); if (rnd() < 0.7) act.qty = pick([1, 2, 5, 99, 100, 0, 1.5, '2', null]); }
+      if (op === 'amulet_upgrade') act.amulet = pick([...RULES.build.amulets, ...RULES.build.amulets, 'nope', null, 3]);
+      if (op === 'research_speedup') act.chunks = pick([1, 1, 2, 4, 30, 96, 0, -1, 2.5, 'x', null, 1e12]);
+      if (op === 'respec' && rnd() < 0.4) act.pay = pick(['sapphires', 'sapphires', 'coins', 'x']);
       if (op === 'use') act.item = pick([...USE_IDS, 'elixir_life', 'nope', null]);
       if (op === 'world') act.obj = pick([...WORLD_IDS, ...WORLD_IDS, 'nope', null, 5, '__proto__', 'constructor']);
       if (op === 'drink') act.item = pick(['elixir_life', 'elixir_mana', 'elixir_life', 'resin_flask', 'nope', null, 5]);
@@ -227,7 +275,7 @@ for (let s = 0; s < SERIES + 1; s++) {
     if (rnd() < 0.08) return AGE(pick(WORLD_IDS), pick([10, 100, 150, 200, 500]));
     const p = randomPatch();   // в нём бывает и «прогресс» (xp, inv, quests…): сервер и модель обязаны одинаково его игнорировать
     if (rnd() < 0.2) p.inv = { ...(typeof p.inv === 'object' && !Array.isArray(p.inv) ? p.inv : {}), coins: pick([5, 20, 100]) };
-    if (rnd() < 0.3) p.objects = { ...(typeof p.objects === 'object' && !Array.isArray(p.objects) ? p.objects : {}), ...Object.fromEntries(arrOf(() => [pick([...WORLD_IDS, 'rep:rootling_02', 'rep:rootling_05', 'player_build']),
+    if (rnd() < 0.3) p.objects = { ...(typeof p.objects === 'object' && !Array.isArray(p.objects) ? p.objects : {}), ...Object.fromEntries(arrOf(() => [pick([...WORLD_IDS, 'rep:rootling_02', 'rep:rootling_05', 'player_build', 'daily']),
       pick([null, { state: 'picked', t: 1 }, { state: 'opened' }, { state: 'moved' }, { state: 'destroyed' }, { claimed: 1 }, { wins: 1, at: 1 }, { wins: 3, at: 1 }, { branches: { fire: 'x' } }])], 2)) };
     // настоящее состояние игрока задаёт __set (ингредиенты, события, побеждённые враги, дары, опыт, ветки, изучение) — чтобы операции реально срабатывали
     const st = {};
@@ -235,8 +283,9 @@ for (let s = 0; s < SERIES + 1; s++) {
     if (rnd() < 0.6) st.quests = arrOf(() => pick(rnd() < 0.5 ? CHAPTER_EVENTS : NEW_EVENTS), 4);
     if (rnd() < 0.3) st.enemies = arrOf(() => pick([...WORLD_ENEMIES, ...NEW_ENEMIES, 'forest_guardian_01']), 2);
     if (rnd() < 0.2) st.paths = ['gate_path'];
-    if (rnd() < 0.3) st.abilities = Object.fromEntries(['telekinesis', 'fire', 'seal'].filter(() => rnd() < 0.6).map(k => [k, { level: pick([1, 1, 2, 3]), unlocked: true }]));
+    if (rnd() < 0.3) st.abilities = Object.fromEntries(['telekinesis', 'fire', 'seal', 'ice'].filter(() => rnd() < 0.6).map(k => [k, { level: pick([1, 1, 2, 3]), unlocked: true }]));
     if (rnd() < 0.3) st.xp = pick([100, 600, 900, 1290, 2400, 4000]);
+    if (rnd() < 0.15) st.sapphires = pick([1, 3, 10, 40]);   // v0.17.0
     if (rnd() < 0.3) st.school = Object.fromEntries(['telekinesis', 'fire', 'seal'].filter(() => rnd() < 0.6).map(k => [k, pick([40, 100, 200, 400])]));
     if (rnd() < 0.15) st.research = pick([null, { upgradeId: pick(RES_IDS), startedAt: Date.now() - pick([0, 1000, 100000, 400000, 4000000]), durationMs: pick([60000, 300000, 1800000]) }, { upgradeId: 'bogus', startedAt: 1, durationMs: 1 }]);
     if (rnd() < 0.25) st.objects = Object.fromEntries(arrOf(() => [pick([...WORLD_IDS, 'rep:rootling_02', 'rep:rootling_05']),

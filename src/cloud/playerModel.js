@@ -28,10 +28,10 @@ const RULES = serverRules();
  * Ключи объектов мира, состояние которых пишет только сервер: всё, что есть в RULES.world (с v0.15.0 и магия — сервер ставит mark),
  * победы над врагами rep:* (по ним открываются запасы) и build — ветки даров (player_build).
  */
-export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build');
+export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build' || k === 'daily' || k === 'duel');   // v0.23.0: + доска поручений; v0.26.0: + Дуэль
 
-export const ABILITY_IDS = ['telekinesis', 'fire', 'seal'];
-export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal'];
+export const ABILITY_IDS = ['telekinesis', 'fire', 'seal', 'ice'];   // v0.18.0: + Лёд
+export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal', 'ice'];
 
 /** Пределы, которые сервер проверяет у каждого patch (защита от явных подделок; см. раздел «Доверие клиенту» в README). */
 export const LIMITS = {
@@ -73,6 +73,13 @@ const levelRow = (lvl) => HERO_LEVELS.find(r => r.level === lvl) || HERO_LEVELS[
 /** Максимум HP и маны уровня (как game_hero_levels.max_hp / max_mana на сервере). */
 export const maxVitals = (lvl) => ({ hp: levelRow(lvl).maxHp, mana: levelRow(lvl).maxMana });
 
+/** v0.17.0: кошелёк сапфиров в снимке: { sapphires, daily: { d: номер дня UTC, n: шагов ускорения за день }, welcome }. */
+export function walletOf(w) {
+  const o = isObj(w) ? w : {};
+  const daily = isObj(o.daily) && num(o.daily.d) && num(o.daily.n) ? { d: o.daily.d, n: o.daily.n } : {};
+  return { sapphires: num(o.sapphires) ? o.sapphires : 0, daily, welcome: o.welcome === true };
+}
+
 /** Снимок игрока по умолчанию (новый персонаж). */
 export function emptySnapshot() {
   return toSnapshot(createDefaultState());
@@ -92,6 +99,7 @@ export function toSnapshot(d) {
     enemies: uniq(d.defeatedEnemies || []),
     objects: JSON.parse(JSON.stringify(d.worldObjects || {})),
     research: d.research ? { ...d.research } : null,
+    wallet: walletOf(d.wallet),           // v0.17.0: сапфиры (пишет только сервер)
     pos: { x: d.player?.x ?? 0, y: d.player?.y ?? 0 },
     safe: { x: d.safePoint?.x ?? 0, y: d.safePoint?.y ?? 0 },
     hp: d.hp ?? null,
@@ -122,6 +130,7 @@ export function fromSnapshot(s, base = createDefaultState()) {
   d.defeatedEnemies = [...(s.enemies || [])];
   d.worldObjects = JSON.parse(JSON.stringify(s.objects || {}));
   d.research = s.research ? { ...s.research } : null;
+  d.wallet = walletOf(s.wallet);
   d.player = { x: s.pos.x, y: s.pos.y };
   d.safePoint = { x: s.safe.x, y: s.safe.y };
   d.hp = s.hp ?? null;
@@ -320,9 +329,16 @@ function eventAct(s, key) {
   const r = typeof key === 'string' && Object.hasOwn(RULES.events, key) ? RULES.events[key] : null;
   if (!r) return { ok: false, reason: 'unknown' };
   if (has(s, key)) return { ok: false, reason: 'already' };
+  if ((r.blockedBy || []).some(ev => has(s, ev))) return { ok: false, reason: 'done' };
   if (!r.requires.every(ev => has(s, ev))) return { ok: false, reason: 'locked' };
+  const consume = r.consume || {};
+  if (!Object.entries(consume).every(([k, v]) => (s.inventory[k] || 0) >= v)) return { ok: false, reason: 'missing' };
+  for (const [k, v] of Object.entries(consume)) addItem(s, k, -v);
   setEvent(s, key);
   for (const [id, lvl] of Object.entries(r.unlock)) unlockAbility(s, id, lvl);
+  for (const [id, br] of Object.entries(r.branch || {})) setBranch(s, id, br);
+  for (const ev of r.marks || []) setEvent(s, ev);
+  if (r.sapphires > 0) { const w = walletOf(s.wallet); s.wallet = { ...w, sapphires: w.sapphires + r.sapphires }; }
   return { ok: true, key };
 }
 
@@ -384,8 +400,170 @@ function researchFinish(s) {
   return { ok: true, upgrade: id, events: up.completeEvent ? [up.completeEvent] : [] };
 }
 
-/** Смена ветки дара за монеты (вне боя): ветка должна быть открыта уровнем дара и отличаться от текущей. */
-function respec(s, ability, branch) {
+// ---------- v0.17.0: сапфиры ----------
+const DAY_MS = 86_400_000;
+const spend = (s, n) => { s.wallet = { ...walletOf(s.wallet), sapphires: walletOf(s.wallet).sapphires - n }; };
+
+/**
+ * Ускорить идущее изучение (op 'research_speedup', chunks — сколько шагов по 15 минут): за каждый шаг — цена в сапфирах.
+ * До нуля нельзя: останется не меньше minLeftMs и не меньше (1 − maxCutPct) полного времени; за сутки (UTC) — не больше dailyChunks шагов.
+ * Платится только за реально снятое время (последний шаг может быть неполным — он всё равно стоит целиком).
+ */
+function researchSpeedup(s, chunks) {
+  const R = RULES.sapphires.speedup;
+  if (!Number.isInteger(chunks) || chunks < 1 || chunks > 96) return { ok: false, reason: 'bad' };
+  if (!isObj(s.research)) return { ok: false, reason: 'none' };
+  const now = num(s.vitalsAt) ? s.vitalsAt : 0;
+  const started = num(s.research.startedAt) ? s.research.startedAt : 0;
+  const up = typeof s.research.upgradeId === 'string' && Object.hasOwn(RULES.research, s.research.upgradeId) ? RULES.research[s.research.upgradeId] : null;
+  const dur = num(s.research.durationMs) ? s.research.durationMs : (up ? up.durationMs : 0);
+  const full = num(s.research.fullMs) ? s.research.fullMs : dur;
+  const minDur = Math.max(full - Math.floor(full * R.maxCutPct), now - started + R.minLeftMs);
+  const maxCut = dur - minDur;
+  if (maxCut <= 0) return { ok: false, reason: 'limit' };
+  const w = walletOf(s.wallet);
+  const day = Math.floor(now / DAY_MS);
+  const used = w.daily.d === day ? w.daily.n : 0;
+  const avail = R.dailyChunks - used;
+  if (avail <= 0) return { ok: false, reason: 'daily' };
+  const cut = Math.min(Math.min(chunks, avail) * R.chunkMs, maxCut);
+  const steps = Math.ceil(cut / R.chunkMs);
+  const price = steps * R.price;
+  if (w.sapphires < price) return { ok: false, reason: 'sapphires', need: price };
+  s.research = { ...s.research, durationMs: dur - cut, fullMs: full };
+  s.wallet = { ...w, sapphires: w.sapphires - price, daily: { d: day, n: used + steps } };
+  return { ok: true, cutMs: cut, price, leftMs: started + dur - cut - now };
+}
+
+/** Открыть ещё один пресет билда за сапфиры (op 'preset_unlock'): первый бесплатный, всего не больше presetMax. */
+function presetUnlock(s) {
+  const R = RULES.sapphires;
+  const o = buildObj(s);
+  const cur = presetSlotsOf(o);
+  if (cur >= R.presetMax) return { ok: false, reason: 'max' };
+  if (walletOf(s.wallet).sapphires < R.presetPrice) return { ok: false, reason: 'sapphires', need: R.presetPrice };
+  spend(s, R.presetPrice);
+  s.objects.player_build = { ...o, presetSlots: cur + 1 };
+  return { ok: true, slots: cur + 1, price: R.presetPrice };
+}
+
+// ---------- v0.19.0: торговец и улучшение амулетов ----------
+const qtyOf = (q) => (q == null ? 1 : q);
+/** Купить у торговца (op 'shop_buy', item, qty): лавка открыта событием, цена — RULES.shop.buy. */
+function shopBuy(s, item, qty) {
+  const S = RULES.shop, n = qtyOf(qty);
+  if (!Number.isInteger(n) || n < 1 || n > S.maxQty) return { ok: false, reason: 'bad' };
+  const price = typeof item === 'string' && Object.hasOwn(S.buy, item) ? S.buy[item] : null;
+  if (price == null) return { ok: false, reason: 'unknown' };
+  if (!has(s, S.requires)) return { ok: false, reason: 'locked' };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  const cost = price * n;
+  if ((s.inventory.coins || 0) < cost) return { ok: false, reason: 'coins', need: cost };
+  addItem(s, 'coins', -cost);
+  addItem(s, item, n);
+  return { ok: true, item, qty: n, cost };
+}
+/** Продать торговцу (op 'shop_sell', item, qty): только то, что он покупает, по цене RULES.shop.sell. */
+function shopSell(s, item, qty) {
+  const S = RULES.shop, n = qtyOf(qty);
+  if (!Number.isInteger(n) || n < 1 || n > S.maxQty) return { ok: false, reason: 'bad' };
+  const price = typeof item === 'string' && Object.hasOwn(S.sell, item) ? S.sell[item] : null;
+  if (price == null) return { ok: false, reason: 'unknown' };
+  if (!has(s, S.requires)) return { ok: false, reason: 'locked' };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  if ((s.inventory[item] || 0) < n) return { ok: false, reason: 'missing' };
+  addItem(s, item, -n);
+  addItem(s, 'coins', price * n);
+  return { ok: true, item, qty: n, gain: price * n };
+}
+/** Улучшить амулет на уровень (op 'amulet_upgrade', amulet): он должен быть в сумке; цена — RULES.build.amuletUpgrades[уровень]. */
+// ---------------------------------------------------------------- v0.23.0: доска поручений (config/daily.js)
+/** Поручения дня: то же частичное перемешивание, что dailyOffers в config/daily.js и _daily_offers в SQL. */
+export function dailyOffersOf(day) {
+  const D = RULES.daily, a = [...D.order];
+  let x = (((day % 2147483646) + 2147483646) % 2147483646) + 1;
+  for (let i = 0; i < Math.min(D.offers, a.length); i++) {
+    x = (x * 48271) % 2147483647;
+    const j = i + (x % (a.length - i));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, D.offers);
+}
+/** Состояние доски сегодня: { d, taken: { id: база }, done: [id] }; вчерашнее — пустое. */
+export function dailyStateOf(s, nowMs) {
+  const day = Math.floor(nowMs / RULES.daily.dayMs);
+  const o = isObj(s.objects.daily) ? s.objects.daily : null;
+  if (!o || o.d !== day) return { d: day, taken: {}, done: [] };
+  const taken = {};
+  if (isObj(o.taken)) for (const [k, v] of Object.entries(o.taken)) if (Object.hasOwn(RULES.daily.pool, k) && num(v)) taken[k] = v;
+  const done = Array.isArray(o.done) ? o.done.filter(k => typeof k === 'string' && Object.hasOwn(taken, k)) : [];
+  return { d: day, taken, done };
+}
+/** Сколько побед на этих возобновляемых местах (счётчики rep:<место>). */
+export function dailyWins(s, spawns) {
+  let n = 0;
+  for (const id of spawns) { const r = s.objects[`rep:${id}`]; if (isObj(r) && num(r.wins)) n += r.wins; }
+  return n;
+}
+function dailyTake(s, id, nowMs) {
+  const D = RULES.daily;
+  const offer = typeof id === 'string' && Object.hasOwn(D.pool, id) ? D.pool[id] : null;
+  if (!offer) return { ok: false, reason: 'unknown' };
+  if (!has(s, D.requires)) return { ok: false, reason: 'locked' };
+  const st = dailyStateOf(s, nowMs);
+  if (!dailyOffersOf(st.d).includes(id)) return { ok: false, reason: 'unknown' };
+  if (Object.hasOwn(st.taken, id)) return { ok: false, reason: 'already' };
+  if (Object.keys(st.taken).length >= D.picks) return { ok: false, reason: 'limit' };
+  if (offer.requires && !has(s, offer.requires)) return { ok: false, reason: 'locked' };
+  st.taken[id] = offer.goal.type === 'wins' ? dailyWins(s, offer.goal.spawns) : 0;
+  s.objects.daily = st;
+  return { ok: true, offer: id };
+}
+function dailyDone(s, id, nowMs) {
+  const D = RULES.daily;
+  const offer = typeof id === 'string' && Object.hasOwn(D.pool, id) ? D.pool[id] : null;
+  if (!offer) return { ok: false, reason: 'unknown' };
+  const st = dailyStateOf(s, nowMs);
+  if (!Object.hasOwn(st.taken, id)) return { ok: false, reason: 'not_taken' };
+  if (st.done.includes(id)) return { ok: false, reason: 'already' };
+  const g = offer.goal;
+  if (g.type === 'deliver') {
+    if (!Object.entries(g.items).every(([k, v]) => (s.inventory[k] || 0) >= v)) return { ok: false, reason: 'missing' };
+    for (const [k, v] of Object.entries(g.items)) addItem(s, k, -v);
+  } else if (dailyWins(s, g.spawns) - st.taken[id] < g.count) return { ok: false, reason: 'progress' };
+  st.done = [...st.done, id];
+  s.objects.daily = st;
+  grant(s, offer.reward);
+  return { ok: true, offer: id };
+}
+
+function amuletUpgrade(s, id) {
+  const B = RULES.build;
+  if (typeof id !== 'string' || !B.amulets.includes(id)) return { ok: false, reason: 'unknown' };
+  if ((s.inventory[id] || 0) < 1) return { ok: false, reason: 'locked' };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  const o = buildObj(s);
+  const levels = isObj(o.amuletLevels) ? o.amuletLevels : {};
+  const cur = Number.isInteger(levels[id]) && levels[id] > 0 ? Math.min(levels[id], B.amuletUpgrades.length) : 0;
+  if (cur >= B.amuletUpgrades.length) return { ok: false, reason: 'max' };
+  const cost = B.amuletUpgrades[cur];
+  const need = { coins: cost.coins, ...cost.items };
+  if (!Object.entries(need).every(([k, v]) => (s.inventory[k] || 0) >= v)) return { ok: false, reason: 'missing' };
+  for (const [k, v] of Object.entries(need)) addItem(s, k, -v);
+  s.objects.player_build = { ...o, amuletLevels: { ...levels, [id]: cur + 1 } };
+  return { ok: true, amulet: id, level: cur + 1 };
+}
+
+/** Приветственные сапфиры — один раз (op 'bank_welcome'). */
+function bankWelcome(s) {
+  const w = walletOf(s.wallet);
+  if (w.welcome) return { ok: false, reason: 'already' };
+  s.wallet = { ...w, sapphires: w.sapphires + RULES.sapphires.welcome, welcome: true };
+  return { ok: true, amount: RULES.sapphires.welcome };
+}
+
+/** Смена ветки дара за монеты или сапфиры (вне боя): ветка должна быть открыта уровнем дара и отличаться от текущей. */
+function respec(s, ability, branch, pay = 'coins') {
   const B = RULES.build;
   const opt = isId(ability) && isId(branch) ? B.branches[ability]?.[branch] : null;
   const lvl = s.abilities[ability]?.level || 0;
@@ -394,12 +572,22 @@ function respec(s, ability, branch) {
   if (!opt || !curOpt || lvl < curOpt.fromLevel || lvl < opt.fromLevel) return { ok: false, reason: 'unavailable' };
   if (s.combatSince != null) return { ok: false, reason: 'combat' };
   if (curId === branch) return { ok: false, reason: 'same' };
+  if (pay === 'sapphires') {   // v0.17.0
+    const price = RULES.sapphires.respec;
+    if (walletOf(s.wallet).sapphires < price) return { ok: false, reason: 'sapphires', need: price };
+    spend(s, price);
+    setBranch(s, ability, branch);
+    return { ok: true, price, currency: 'sapphires' };
+  }
   if ((s.inventory.coins || 0) < B.respecCoins) return { ok: false, reason: 'coins', need: B.respecCoins };
   addItem(s, 'coins', -B.respecCoins);
   setBranch(s, ability, branch);
   return { ok: true, price: B.respecCoins };
 }
 
+/** v0.17.0: сколько пресетов открыто (1 — только бесплатный) и ключ пресета в player_build: 1 → 'preset', 2 → 'preset2'… */
+export const presetSlotsOf = (o) => (Number.isInteger(o?.presetSlots) && o.presetSlots >= 1 ? Math.min(o.presetSlots, RULES.sapphires.presetMax) : 1);
+export const presetKey = (n) => (n === 1 ? 'preset' : `preset${n}`);
 const unlockedGifts = (s) => RULES.build.gifts.filter((g) => !!s.abilities?.[g]?.unlocked);
 const strIds = (a) => (Array.isArray(a) ? a.filter((x) => typeof x === 'string') : null);
 
@@ -419,17 +607,28 @@ function buildSet(s, action) {
   return { ok: true };
 }
 
+/** v0.18.0: дары, которые сейчас в слотах (как SQL _build_slots_now): настроенные — открытые и не больше слотов, иначе первые открытые по порядку. */
+function equippedNow(s) {
+  const un = unlockedGifts(s), n = slotCount(s.level, RULES.build.slots);
+  const cur = strIds(buildObj(s).slots);
+  return cur ? cur.filter((g) => un.includes(g)).slice(0, n) : defaultSlots(un, n, RULES.build.gifts);
+}
+
 /** v0.16.0: единственный бесплатный пресет (op 'build_preset', mode 'save' | 'load'): слоты и амулеты; ветки за монеты не трогает. */
-function buildPreset(s, mode) {
+function buildPreset(s, mode, slot = 1) {
   if (mode !== 'save' && mode !== 'load') return { ok: false, reason: 'bad' };
+  const n0 = slot == null ? 1 : slot;   // v0.17.0: номер пресета (1 — бесплатный, следующие открываются за сапфиры)
+  if (!Number.isInteger(n0) || n0 < 1 || n0 > RULES.sapphires.presetMax) return { ok: false, reason: 'bad' };
   if (s.combatSince != null) return { ok: false, reason: 'combat' };
   const o = { ...buildObj(s) };
+  if (n0 > presetSlotsOf(o)) return { ok: false, reason: 'locked' };
+  const key = presetKey(n0);
   if (mode === 'save') {
     const un = unlockedGifts(s), n = slotCount(s.level, RULES.build.slots);
     const cur = strIds(o.slots);
-    o.preset = { slots: cur ? cur.filter((g) => un.includes(g)).slice(0, n) : defaultSlots(un, n, RULES.build.gifts), amulets: (strIds(o.amulets) || []).filter((a) => RULES.build.amulets.includes(a)) };
+    o[key] = { slots: cur ? cur.filter((g) => un.includes(g)).slice(0, n) : defaultSlots(un, n, RULES.build.gifts), amulets: (strIds(o.amulets) || []).filter((a) => RULES.build.amulets.includes(a)) };
   } else {
-    const p = isObj(o.preset) ? o.preset : null;
+    const p = isObj(o[key]) ? o[key] : null;
     if (!p) return { ok: false, reason: 'empty' };
     o.slots = strIds(p.slots) || [];
     o.amulets = strIds(p.amulets) || [];
@@ -468,6 +667,8 @@ function worldAct(s, id) {
     || (r.parent && st(r.parent.id)?.state !== r.parent.state)
     || (r.ability && !((s.abilities[r.ability]?.unlocked) && (s.abilities[r.ability]?.level || 0) >= (r.minLevel || 1)));
   if (locked) return { ok: false, reason: 'locked' };
+  // v0.18.0: дар для действия должен стоять в слоте («3 из 4»: что взял с собой, тем и пользуешься)
+  if (r.ability && !equippedNow(s).includes(r.ability)) return { ok: false, reason: 'benched' };
   if ((r.blockedBy || []).some(ev => has(s, ev))) return { ok: false, reason: 'done' };
   let wins = 0;
   if ((r.kind === 'loot' || r.kind === 'cast') && r.mark && st(id)?.state === r.mark) return { ok: false, reason: 'done' };
@@ -511,7 +712,7 @@ function worldAct(s, id) {
 }
 
 /** Зелья, которые можно выпить в бою (как POTIONS в config/resources.js; их набор фиксирован серверной схемой). */
-export const COMBAT_POTIONS = ['elixir_life', 'elixir_mana', 'resin_flask'];
+export const COMBAT_POTIONS = [...RULES.combatPotions];   // v0.19.0: из конфига (все расходники POTIONS)
 
 /**
  * v0.14.0: что сервер запоминает о герое в начале боя — по этому состоянию он потом проигрывает запись боя.
@@ -530,6 +731,42 @@ export function combatCtxOf(s, spawn, enemy) {
     potions,
     build: s.objects?.player_build ?? null,
   };
+}
+
+// ---------------------------------------------------------------- v0.26.0: Магическая Дуэль (config/duel.js)
+/** Состояние Дуэли игрока сейчас: { season, rating, wins, losses, best, d, used }. Новый сезон — рейтинг сжимается к базовому наполовину. */
+export function duelStateOf(s, nowMs) {
+  const D = RULES.duel;
+  const season = Math.max(0, Math.floor((nowMs - D.seasonStartMs) / D.seasonMs));
+  const day = Math.floor(nowMs / D.dayMs);
+  const o = isObj(s.objects.duel) ? s.objects.duel : null;
+  const r0 = o && num(o.rating) ? o.rating : D.baseRating;
+  const st = o && o.season === season
+    ? { season, rating: r0, wins: int(o.wins), losses: int(o.losses), best: num(o.best) ? o.best : r0, d: o.d, used: int(o.used) }
+    : { season, rating: Math.round(D.baseRating + (r0 - D.baseRating) / 2), wins: 0, losses: 0, best: 0, d: day, used: 0 };
+  if (st.d !== day) { st.d = day; st.used = 0; }
+  if (!(st.best >= st.rating)) st.best = st.rating;
+  return st;
+}
+/** Слепок соперника из своего героя — «Тень дуэлянта» (когда других подходящих героев нет; в JS-модели — всегда). */
+export function duelGhostOf(s, rating) {
+  const abilities = {};
+  for (const id of ABILITY_IDS) { const a = s.abilities?.[id]; abilities[id] = { level: a?.level || 0, unlocked: !!a?.unlocked }; }
+  return { name: 'Тень дуэлянта', ghost: true, level: s.level, hero: null, abilities, build: s.objects?.player_build ?? null, rating };
+}
+/** Вызов на Дуэль: попытка списывается сразу; сервер запоминает героя и соперника (бой проверяется как обычный). */
+function duelStart(s, nowMs) {
+  const D = RULES.duel;
+  if (!has(s, D.requires)) return { ok: false, reason: 'locked' };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  const st = duelStateOf(s, nowMs);
+  if (st.used >= D.attemptsPerDay) return { ok: false, reason: 'attempts' };
+  st.used += 1;
+  s.objects.duel = st;
+  const opponent = duelGhostOf(s, st.rating);
+  s.combatSince = s.vitalsAt;
+  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), duel: { opponent, rating: st.rating, season: st.season } };
+  return { ok: true, opponent, rating: st.rating, left: D.attemptsPerDay - st.used };
 }
 
 /** Начало боя: HP и мана замирают, лечение и зелья из сумки закрыты. Повтор начало не сдвигает, но состояние героя запоминается заново. */
@@ -579,6 +816,27 @@ export function combatApply(snap, v, nowMs = null) {
   if (v.since !== s.combatSince || v.spawn !== ctx.spawn) return res({ ok: false, reason: 'stale' });
   const mx0 = maxVitals(s.level);
   const cur = num(s.hp) ? clamp(s.hp, 0, mx0.hp) : mx0.hp;
+  if (ctx.spawn === 'duel') {
+    // v0.26.0: Дуэль — арена: здоровье и мана после боя как до него; рейтинг, награда и выпитые зелья — по итогу
+    if (v.outcome !== 'retreat') {
+      for (const id of COMBAT_POTIONS) {
+        const used = int(v.potions?.[id]);
+        if (used > 0) s.inventory[id] = Math.min(s.inventory[id] || 0, Math.max(0, (ctx.potions[id] || 0) - used));
+      }
+      grant(s, v.reward || {});
+      const st = duelStateOf(s, num(nowMs) ? nowMs : s.vitalsAt);
+      const delta = clamp(int(isObj(v.duel) ? v.duel.delta : 0), -RULES.duel.k, RULES.duel.k);
+      st.rating = Math.max(0, st.rating + delta);
+      if (v.outcome === 'victory') st.wins += 1; else st.losses += 1;
+      if (st.rating > st.best) st.best = st.rating;
+      s.objects.duel = st;
+      if (isObj(v.entry)) s.combats = [...s.combats, v.entry].slice(-LIMITS.maxCombats);
+    }
+    s.hp = cur;
+    s.combatSince = null;
+    s.combatCtx = null;
+    return res({ ok: true, outcome: v.outcome });
+  }
   if (v.outcome !== 'retreat') {
     for (const id of COMBAT_POTIONS) {
       const used = int(v.potions?.[id]);
@@ -651,9 +909,21 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'quest_turn_in') return { snapshot: s, result: questTurnIn(s, action.quest) };
   if (op === 'research_start') return { snapshot: s, result: researchStart(s, action.upgrade) };
   if (op === 'research_finish') return { snapshot: s, result: researchFinish(s) };
-  if (op === 'respec') return { snapshot: s, result: respec(s, action.ability, action.branch) };
+  if (op === 'respec') return { snapshot: s, result: respec(s, action.ability, action.branch, action.pay === 'sapphires' ? 'sapphires' : 'coins') };
+  if (op === 'research_speedup') return { snapshot: s, result: researchSpeedup(s, action.chunks) };
+  if (op === 'preset_unlock') return { snapshot: s, result: presetUnlock(s) };
+  if (op === 'bank_welcome') return { snapshot: s, result: bankWelcome(s) };
+  if (op === 'shop_buy') return { snapshot: s, result: shopBuy(s, action.item, action.qty) };
+  if (op === 'shop_sell') return { snapshot: s, result: shopSell(s, action.item, action.qty) };
+  if (op === 'amulet_upgrade') return { snapshot: s, result: amuletUpgrade(s, action.amulet) };
+  // v0.25.0: Ковены живут в отдельных таблицах (миграция 20261007_covens.sql) — JS-зеркало о них не знает и отвечает как сервер
+  // игроку без ковена (или базе без миграции): 'no_coven'
+  if (op === 'duel_start') return { snapshot: s, result: duelStart(s, num(nowMs) ? nowMs : Date.now()) };   // v0.26.0
+  if (op === 'coven_give' || op === 'coven_claim') return { snapshot: s, result: { ok: false, reason: 'no_coven' } };
+  if (op === 'daily_take') return { snapshot: s, result: dailyTake(s, action.offer, num(nowMs) ? nowMs : Date.now()) };   // v0.23.0
+  if (op === 'daily_done') return { snapshot: s, result: dailyDone(s, action.offer, num(nowMs) ? nowMs : Date.now()) };
   if (op === 'build_set') return { snapshot: s, result: buildSet(s, action) };
-  if (op === 'build_preset') return { snapshot: s, result: buildPreset(s, action.mode) };
+  if (op === 'build_preset') return { snapshot: s, result: buildPreset(s, action.mode, action.slot) };
   if (op === 'heal') {
     const price = healPriceOf(s);
     if (s.combatSince != null) return { snapshot: s, result: { ok: false, reason: 'combat', price: 0 } };

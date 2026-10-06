@@ -182,6 +182,68 @@ console.log('\nБаза: слоты, амулеты и закрытые служ
   act(A, { op: 'combat_end', outcome: 'retreat', id: 'sec-build-00013' });
 }
 
+console.log('\nБаза: сапфиры (v0.17.0)');
+{
+  const act = (uid, o) => JSON.parse(q(`select public.player_action('${JSON.stringify(o)}'::jsonb);`, uid).out);
+  const bal = (uid) => Number(q(`select coalesce((select sapphires from public.player_wallet where user_id = '${uid}'), 0);`).out);
+  for (const as of ['anon', A]) ok(denied(q(`select public.admin_grant_sapphires('${A}', 1000, 'x', 'hack-${as}');`, as)), `${as === 'anon' ? 'гость' : 'игрок'} не может выдать себе сапфиры`);
+  for (const as of ['anon', A]) ok(denied(q(`select public._sapphire_add('${A}', 1000, 'admin', 'x', null);`, as)), `${as === 'anon' ? 'гость' : 'игрок'} не может вызвать _sapphire_add`);
+  ok(denied(q(`select * from public.player_wallet;`, A)) && denied(q(`update public.player_wallet set sapphires = 999;`, A)), 'кошелёк не читается и не правится напрямую');
+  ok(denied(q(`select * from public.sapphire_ledger;`, A)), 'журнал не читается напрямую');
+  const s0 = JSON.parse(q(`select public.sync_player('{"wallet":{"sapphires":999,"welcome":true}}'::jsonb);`, A).out);
+  ok(s0.wallet.sapphires === bal(A) && s0.wallet.sapphires < 999, 'sync_player не принимает кошелёк от клиента');
+  const w1 = act(A, { op: 'bank_welcome', id: 'sec-sapph-0001' });
+  const w2 = act(A, { op: 'bank_welcome', id: 'sec-sapph-0002' });
+  ok(w1.action.ok && w1.action.amount === 3 && w1.wallet.sapphires === 3 && w2.action.reason === 'already' && bal(A) === 3, 'приветственные 3 сапфира — один раз');
+  const g1 = q(`select public.admin_grant_sapphires('${A}', 50, 'тестер', 'grant-1');`, 'service').out;
+  const g2 = q(`select public.admin_grant_sapphires('${A}', 50, 'тестер', 'grant-1');`, 'service').out;
+  ok(Number(g1) === 53 && Number(g2) === 53 && bal(A) === 53, 'выдача сервисом: повтор с тем же ref не начисляет второй раз');
+  ok(/bad_amount/.test(q(`select public.admin_grant_sapphires('${A}', -5, 'x', 'grant-neg');`, 'service').err), 'отрицательная выдача отклонена');
+  // ускорение изучения
+  q(`update public.player_progress set research = jsonb_build_object('upgradeId', 'seal_2', 'startedAt', (extract(epoch from now()) * 1000)::bigint, 'durationMs', 1800000) where user_id = '${A}';`);
+  const sp = act(A, { op: 'research_speedup', chunks: 2, id: 'sec-sapph-0003' });
+  ok(sp.action.ok && sp.action.price === 2 && sp.action.cutMs === 1350000 && sp.research.durationMs === 450000, 'ускорение 30-минутного изучения: снято не больше 75% (22,5 мин), 2 шага — 2 сапфира');
+  ok(sp.research.fullMs === 1800000 && bal(A) === 51, 'полное время запомнено, сапфиры списаны');
+  const sp2 = act(A, { op: 'research_speedup', chunks: 96, id: 'sec-sapph-0004' });
+  ok(sp2.action.ok === false && sp2.action.reason === 'limit' && bal(A) === 51, 'дальше нельзя: до нуля таймер не сокращается, сапфиры целы');
+  const led = q(`select kind || ':' || delta || ':' || balance from public.sapphire_ledger where user_id = '${A}' order by id;`).out.split('\n');
+  ok(led.join(',') === 'welcome:3:3,admin:50:53,speedup:-2:51', `журнал: ${led.join(', ')}`);
+  // пресеты и смена ветки за сапфиры
+  const pu = act(A, { op: 'preset_unlock', id: 'sec-sapph-0005' });
+  ok(pu.action.ok && pu.action.slots === 2 && bal(A) === 21 && pu.objects.player_build.presetSlots === 2, 'второй пресет открыт за 30 сапфиров');
+  ok(act(A, { op: 'build_preset', mode: 'save', slot: 2, id: 'sec-sapph-0006' }).action.ok && act(A, { op: 'build_preset', mode: 'save', slot: 3, id: 'sec-sapph-0007' }).action.reason === 'locked', 'второй пресет сохраняется, третий закрыт');
+  const rs = act(A, { op: 'respec', ability: 'telekinesis', branch: 'lord', pay: 'sapphires', id: 'sec-sapph-0008' });
+  ok(rs.action.ok && rs.action.currency === 'sapphires' && rs.action.price === 5 && bal(A) === 16 && rs.objects.player_build.branches.telekinesis === 'lord', 'смена ветки за 5 сапфиров');
+  // «Новая игра» кошелёк не трогает
+  q(`select public.reset_player('witch');`, A);
+  ok(bal(A) === 16 && JSON.parse(q(`select public.get_player();`, A).out).wallet.sapphires === 16, '«Новая игра» не обнуляет сапфиры');
+  ok(act(A, { op: 'bank_welcome', id: 'sec-sapph-0009' }).action.reason === 'already', 'и приветствие после новой игры второй раз не выдаётся');
+}
+
+console.log('\nБаза: торговец и улучшение амулетов (v0.19.0)');
+{
+  const act = (uid, o) => JSON.parse(q(`select public.player_action('${JSON.stringify(o)}'::jsonb);`, uid).out);
+  const inv = (uid, k) => Number(q(`select coalesce((select quantity from public.player_inventory where user_id = '${uid}' and item_id = '${k}'), 0);`).out);
+  q(`insert into public.player_inventory (user_id, item_id, quantity) values ('${B}', 'coins', 300) on conflict (user_id, item_id) do update set quantity = 300;`);
+  ok(act(B, { op: 'shop_buy', item: 'moon_herb', qty: 2, id: 'sec-shop-00001' }).action.reason === 'locked', 'лавка закрыта, пока город не открыл её');
+  q(`insert into public.player_quests (user_id, quest_id) values ('${B}', 'city_merchant_open') on conflict do nothing;`);
+  const b1 = act(B, { op: 'shop_buy', item: 'moon_herb', qty: 2, id: 'sec-shop-00002' });
+  ok(b1.action.ok && b1.action.cost === 36 && inv(B, 'coins') === 264 && inv(B, 'moon_herb') >= 2, 'купить 2 лунные травы за 36 монет');
+  ok(act(B, { op: 'shop_buy', item: 'frost_shard', id: 'sec-shop-00003' }).action.reason === 'unknown', 'инеевый осколок не продаётся');
+  ok(act(B, { op: 'shop_buy', item: 'lunar_shard', qty: 99, id: 'sec-shop-00004' }).action.reason === 'coins' && inv(B, 'coins') === 264, 'без монет не купить, ничего не списано');
+  const s1 = act(B, { op: 'shop_sell', item: 'moon_herb', qty: 1, id: 'sec-shop-00005' });
+  ok(s1.action.ok && s1.action.gain === 5 && inv(B, 'coins') === 269, 'продажа: треть цены (18 → 5)');
+  ok(act(B, { op: 'shop_sell', item: 'moon_herb', qty: 50, id: 'sec-shop-00006' }).action.reason === 'missing', 'продать больше, чем есть, нельзя');
+  // улучшение амулета
+  ok(act(B, { op: 'amulet_upgrade', amulet: 'amulet_focus', id: 'sec-amup-00001' }).action.reason === 'locked', 'чужой (несуществующий в сумке) амулет не улучшить');
+  q(`insert into public.player_inventory (user_id, item_id, quantity) values ('${B}', 'amulet_focus', 1), ('${B}', 'tree_resin', 2), ('${B}', 'rune_dust', 1) on conflict (user_id, item_id) do update set quantity = excluded.quantity;`);
+  const u1 = act(B, { op: 'amulet_upgrade', amulet: 'amulet_focus', id: 'sec-amup-00002' });
+  ok(u1.action.ok && u1.action.level === 1 && u1.objects.player_build.amuletLevels.amulet_focus === 1 && inv(B, 'coins') === 149 && inv(B, 'tree_resin') === 0, 'улучшение до +1: 120 монет, 2 смолы, 1 пыль');
+  ok(act(B, { op: 'amulet_upgrade', amulet: 'amulet_focus', id: 'sec-amup-00003' }).action.reason === 'missing', 'на +2 материалов нет — отказ');
+  const forged = JSON.parse(q(`select public.sync_player('{"objects":{"player_build":{"amuletLevels":{"amulet_focus":3}}}}'::jsonb);`, B).out);
+  ok(forged.objects.player_build.amuletLevels.amulet_focus === 1, 'уровень амулета через sync_player не подделать');
+}
+
 console.log('\nБаза: новая игра');
 const r = JSON.parse(q(`select public.reset_player('witch');`, A).out);
 ok(r.level === 1 && !r.quests.length && !Object.keys(r.inventory).length && r.meta.nickname === NICK && r.meta.rev > a2.meta.rev, 'reset_player: прогресс с нуля, ник и аккаунт те же');

@@ -212,6 +212,7 @@ export class FakeSupabase {
     for (const [k, n] of Object.entries(st.school || {})) m.school[k] = (m.school[k] || 0) + n;
     if ('research' in st) m.research = st.research;
     for (const [k, v] of Object.entries(st.objects || {})) { if (v === null) delete m.objects[k]; else m.objects[k] = v; }
+    if (st.sapphires) m.wallet = { ...m.wallet, sapphires: (m.wallet?.sapphires || 0) + st.sapphires };
   }
 
   /** Тесты: «прошло sec секунд» для восстановления на сервере — записи сдвигаются в прошлое (в pg настоящее время не перематывается). */
@@ -266,7 +267,8 @@ export class FakeSupabase {
         if (!authed()) return err(403, '28000', 'not_authenticated');
         const pl = this.players.get(uid);
         const snap = { ...emptySnapshot(), vitalsAt: this.clock };
-        this.players.set(uid, { ...(pl || { nickname: null, norm: null, createdAt: this.clock, registeredAt: null, recent: [] }), snap: { ...snap, pos: null, safe: null }, hero: a.hero, rev: (pl?.rev || 0) + 1 });
+        // v0.17.0: кошелёк сапфиров «Новая игра» не трогает
+        this.players.set(uid, { ...(pl || { nickname: null, norm: null, createdAt: this.clock, registeredAt: null, recent: [] }), snap: { ...snap, pos: null, safe: null, wallet: pl?.snap?.wallet ?? snap.wallet }, hero: a.hero, rev: (pl?.rev || 0) + 1 });
         return this.reply(200, this.snapshot(uid));
       }
       case 'sync_player': {
@@ -372,6 +374,7 @@ export function grantPg(uid, st) {
   if (st.xp) q.push(`update public.player_progress set hero_xp = greatest(hero_xp, ${st.xp}), hero_level = greatest(hero_level, coalesce((select max(level) from public.game_hero_levels where xp <= greatest(hero_xp, ${st.xp})), 1)) where user_id = ${U};`);
   for (const [k, n] of Object.entries(st.school || {})) q.push(`update public.player_progress set school_xp = jsonb_set(school_xp, '{${k}}', to_jsonb(coalesce((school_xp ->> '${k}')::numeric, 0) + ${n})) where user_id = ${U};`);
   if ('research' in st) q.push(`update public.player_progress set research = ${st.research ? `'${q1(JSON.stringify(st.research))}'::jsonb` : 'null'} where user_id = ${U};`);
+  if (st.sapphires) q.push(`insert into public.player_wallet (user_id, sapphires) values (${U}, ${st.sapphires}) on conflict (user_id) do update set sapphires = public.player_wallet.sapphires + ${st.sapphires};`);
   for (const [k, v] of Object.entries(st.objects || {})) q.push(v === null ? `delete from public.player_world where user_id = ${U} and kind = 'object' and key = '${q1(k)}';`
     : `insert into public.player_world (user_id, kind, key, data) values (${U}, 'object', '${q1(k)}', '${q1(JSON.stringify(v))}'::jsonb) on conflict (user_id, kind, key) do update set data = excluded.data;`);
   pg(q.join(' '));

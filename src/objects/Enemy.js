@@ -18,6 +18,8 @@ export class Enemy {
     this.staggerLeft = 0;       // оглушение после прерывания / связывания
     this.burn = { left: 0, dps: 0, tick: 0 };
     this.puddle = { left: 0, dps: 0, tick: 0 };   // v0.16.0: лужа смолы (Огонь III) жжёт отдельно от горения
+    this.slow = { left: 0, pct: 0 };      // v0.18.0: Лёд — атаки и подготовка сильного удара идут медленнее
+    this.brittle = { left: 0, bonus: 0 }; // v0.18.0: Хрупкость — следующий удар Телекинеза/Огня/Астрала сильнее
     this.defenseDisabledLeft = 0;
     this.armorDisabledLeft = 0;
     this.vulnerable = { left: 0, bonus: 0 };
@@ -64,6 +66,8 @@ export class Enemy {
   get defenseActive() { return (this.def.defense || 0) > 0 && this.defenseDisabledLeft <= 0; }
   get burning() { return this.burn.left > 0; }
   get inPuddle() { return this.puddle.left > 0; }
+  get slowed() { return this.slow.left > 0; }
+  get isBrittle() { return this.brittle.left > 0; }
 
   /** Множитель входящего урона для школы ('auto' | 'telekinesis' | 'fire' | 'seal'). */
   incomingMultiplier(school) {
@@ -97,6 +101,26 @@ export class Enemy {
     this.burn.left = durationSec;
     this.burn.dps = dps;
     if (!wasBurning) this.burn.tick = 1;
+  }
+
+  /** v0.18.0: замедление Льдом. Не складывается: берётся сильнейшее, длительность — наибольшая. */
+  applySlow(pct, sec) {
+    if (this.slow.left > 0 && this.slow.pct > pct) { this.slow.left = Math.max(this.slow.left, sec); return; }
+    this.slow = { left: Math.max(sec, this.slow.pct === pct ? this.slow.left : 0), pct };
+  }
+
+  /** v0.18.0: Хрупкость. Новая заменяет старую, если сильнее или дольше. */
+  applyBrittle(bonus, sec) {
+    if (this.brittle.left > 0 && this.brittle.bonus > bonus) { this.brittle.left = Math.max(this.brittle.left, sec); return; }
+    this.brittle = { left: sec, bonus };
+  }
+
+  /** Снять Хрупкость ударом: возвращает бонус (0 — цель не хрупкая). */
+  consumeBrittle() {
+    if (this.brittle.left <= 0) return 0;
+    const b = this.brittle.bonus;
+    this.brittle = { left: 0, bonus: 0 };
+    return b;
   }
 
   /** v0.16.0: лужа смолы. Как и горение — не складывается, повторный Огонь обновляет длительность и силу. */
@@ -185,9 +209,18 @@ export class Enemy {
     if (this.defenseDisabledLeft > 0) { this.defenseDisabledLeft -= dt; if (this.defenseDisabledLeft <= 0) out.push({ type: 'defenseBack' }); }
     if (this.vulnerable.left > 0) { this.vulnerable.left -= dt; if (this.vulnerable.left <= 0) out.push({ type: 'vulnerableEnd' }); }
     if (this.weakened.left > 0) this.weakened.left -= dt;
+    if (this.brittle.left > 0) { this.brittle.left -= dt; if (this.brittle.left <= 0) { this.brittle = { left: 0, bonus: 0 }; out.push({ type: 'brittleEnd' }); } }
+    // v0.18.0: под замедлением ход врага (атаки, подготовка сильного удара) идёт медленнее; горение и статусы — в обычном времени
+    let tdt = dt;
+    if (this.slow.left > 0) {
+      tdt = dt * (1 - this.slow.pct);
+      this.slow.left -= dt;
+      if (this.slow.left <= 0) { this.slow = { left: 0, pct: 0 }; out.push({ type: 'slowEnd' }); }
+    }
     if (!this.alive) return out;
 
     if (this.staggerLeft > 0) { this.staggerLeft -= dt; return out; }
+    dt = tdt;
 
     const strong = this.def.strongAttack;
     if (this.isPreparing) {
@@ -196,7 +229,7 @@ export class Enemy {
         this.prepLeft = 0;
         this.strongCd = strong.cooldownSec;
         this.normalTimer = this.def.normalAttack.intervalSec;
-        out.push({ type: 'strongHit', damage: this.outgoingDamage(strong.damage), name: strong.name });
+        out.push({ type: 'strongHit', damage: this.outgoingDamage(strong.damage), name: strong.name, chill: strong.chill || null });
       }
       return out; // во время подготовки обычные атаки не идут
     }
@@ -213,7 +246,7 @@ export class Enemy {
     this.normalTimer -= dt;
     if (this.normalTimer <= 0) {
       this.normalTimer += this.def.normalAttack.intervalSec;
-      out.push({ type: 'attack', damage: this.outgoingDamage(this.def.normalAttack.damage) });
+      out.push({ type: 'attack', damage: this.outgoingDamage(this.def.normalAttack.damage), chill: this.def.normalAttack.chill || null });
     }
     return out;
   }

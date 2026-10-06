@@ -124,6 +124,30 @@ export const EVENT_REWARDS = {
   // v0.10.0: Селена открывает Печать I сюжетно — без уровня, платы и таймера. Учебный знак и ворота дают только
   // обычный школьный опыт мира (+6), отдельной награды «за обучение» нет.
   unlock_seal_1:           { heroXP: 60 },
+  // v0.20.0 — глава II, квесты 1–5 (chapter-2-balance-v0.1.md §4; опыт боёв — в наградах врагов)
+  ch2_city_arrived:        { heroXP: 220, coins: 60 },
+  ch2_met_ilaria:          { heroXP: 200, coins: 50, items: { frost_herb: 1 } },
+  ch2_trace_found:         { heroXP: 300, coins: 80, items: { frost_herb: 2, rune_dust: 1 } },
+  ch2_archive_read:        { heroXP: 320, coins: 90 },
+  ch2_met_severin:         { heroXP: 340, coins: 80, items: { warm_potion: 1 } },
+  // v0.21.0: квесты 6–10 (квест — минус опыт обязательных боёв, chapter-2-balance §4)
+  ch2_cargo_reported:      { heroXP: 270, coins: 120, items: { frost_herb: 2 } },
+  ch2_frost_wave:          { heroXP: 280, coins: 90 },
+  ch2_nerys_met:           { heroXP: 60 },
+  ch2_rescue_done:         { heroXP: 300, coins: 140, items: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 } },   // травы на первый Тёплый настой
+  unlock_ice_1:            { heroXP: 60 },
+  ch2_ice_trained:         { heroXP: 240, coins: 60 },
+  ch2_quarter_cleared:     { heroXP: 340, coins: 160, items: { ice_crystal: 2 } },
+  // v0.22.0: квесты 11–15
+  unlock_ice_2:            { heroXP: 60, items: { ice_crystal: 1, tree_resin: 1, rune_dust: 1 } },   // материалы на первый Флакон хрупкости
+  ch2_brittle_done:        { heroXP: 240, coins: 70 },
+  ch2_stabilized:          { heroXP: 120 },
+  ch2_lab_reported:        { heroXP: 300, coins: 180, items: { frost_shard: 1, lunar_shard: 2 } },
+  ch2_severin_confronted:  { heroXP: 380, coins: 80 },
+  ch2_coven_met:           { heroXP: 60 },
+  ch2_coven_ready:         { heroXP: 300, coins: 180, items: { ice_crystal: 2 } },
+  ch2_epilogue:            { heroXP: 250 },
+  chapter_2_complete:      { heroXP: 300, coins: 150, items: { frost_shard: 1 } },   // + 5 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
 };
 // lunar_quest_complete теперь выдаёт атомарная операция «применить Лунный фитиль» (storyItems.js STORY_USES.lunar_wick,
 // те же числа); запись выше осталась для старого пути QuestFlags.complete и тестов — алтарь его больше не вызывает.

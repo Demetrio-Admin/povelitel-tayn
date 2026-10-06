@@ -18,6 +18,7 @@ import { EnemyTrigger, encKey } from '../objects/EnemyTrigger.js';
 import * as vitals from '../state/vitals.js';
 import { advanceWorld, serverActionBusy } from '../systems/WorldClock.js';
 import { VITALS } from '../config/balance.hero.js';
+import { ABILITIES } from '../config/balance.abilities.js';
 import { STORY } from '../config/story.js';
 import { GatherObject } from '../objects/GatherObject.js';
 import { NpcObject } from '../objects/NpcObject.js';
@@ -29,11 +30,17 @@ import { HIGHLIGHT } from '../config/guidance.js';
 import { UI } from '../config/ui.config.js';
 import { drawPlate } from '../ui/widgets.js';
 import {
-  applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject,
+  applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject, TravelObject,
 } from '../objects/InteractiveObject.js';
+import { ZONE_EVENTS } from '../config/world.city.js';
+import { IceObject } from '../objects/IceObject.js';
+import { BoardObject } from '../objects/BoardObject.js';
 import { GateObject, SealSigilObject, DustStashObject, ForestNodeObject } from '../objects/ChapterObjects.js';
 
 const OBJECT_CLASSES = {
+  travel: TravelObject,   // v0.20.0
+  ice: IceObject,         // v0.21.0
+  board: BoardObject,     // v0.23.0: доска поручений
   book: BookObject,
   telekinesis: TelekinesisObject,
   fire: FireObject,
@@ -121,6 +128,10 @@ export class ExplorationScene extends Phaser.Scene {
     bus.on(MSG.CRAFTED, ({ result }) => this.objects.find(o => o instanceof AlchemyObject)?.celebrate(POTIONS[result]?.color), this);
     bus.on(MSG.HERO_SAY, (t, ms) => this.heroSay(t, ms), this);
     bus.on(MSG.UNLOCK_SEAL, this.unlockSeal, this);
+    bus.on(MSG.UNLOCK_GIFT, this.unlockGift, this);
+    bus.on(MSG.CHAPTER_FINALE, this.chapterFinale, this);
+    bus.on(MSG.DUEL_START, this.startDuel, this);   // v0.26.0
+    bus.on(MSG.TRAVEL, (t) => this.travelTo(t, t?.text), this);   // v0.20.0: «Город» в меню
     bus.on(MSG.SIDE_QUEST, (id, what) => { this.refreshAll(); if (what === 'ready') services.audio.play('quest_update'); }, this);
     this.events.on('wake', this.onWake, this);
     this.events.once('shutdown', () => bus.offContext(this));
@@ -200,6 +211,53 @@ export class ExplorationScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * v0.21.0: Нэрис открывает Лёд I (событие unlock_ice_1; дар выдаёт сервер, операция event). Даров становится четыре, а слотов — три:
+   * окно объясняет «3 из 4» и ведёт в «Дары». v0.22.0: 'ice:2' — Лёд II (unlock_ice_2), 'ice:3:frost' / 'ice:3:shard' — Лёд III
+   * с веткой (ch2_ice3_frost / ch2_ice3_shard). Повтор ничего не выдаёт.
+   */
+  unlockGift(spec) {
+    const [id, lvlS, branch] = String(spec).split(':');
+    const level = Number(lvlS) || 1;
+    if (id !== 'ice') return;
+    const GIFT = {
+      1: { event: 'unlock_ice_1', title: 'Лёд I', text: 'Лёд замораживает воду и нестабильную магию, а в бою замедляет врага: его удары и подготовка сильного удара идут медленнее.\n\n'
+        + 'Теперь даров четыре, а слотов — три. Работают только дары в слотах — и в бою, и в мире. Выберите, какой дар отложить.' },
+      2: { event: 'unlock_ice_2', title: 'Лёд II — Хрупкость', text: 'После удара Льдом враг становится хрупким: следующий удар Телекинеза, Огня или Астрала сильнее, '
+        + 'а тяжёлый камень по хрупкой цели ещё и разбивает броню.\n\nСначала Лёд — потом сильный удар.' },
+      3: { event: `ch2_ice3_${branch}`, title: `Лёд III — ${branch === 'shard' ? 'Осколок' : 'Мороз'}`, text: branch === 'shard'
+        ? 'Ветка Осколка: удар Льда по хрупкой цели раскалывает её (урон ×2,2), а Хрупкость от других даров сильнее. Замедление слабое.'
+        : 'Ветка Мороза: враг на 55% медленнее шесть секунд — больше времени, чтобы прервать удар. Сам удар Льда слабее.' },
+    }[level];
+    const { state, abilities, quests } = services;
+    if (!GIFT || state.hasEvent(GIFT.event) || (level === 3 && state.hasEvent('ch2_ice3'))) return;
+    abilities.unlock('ice', level);
+    if (level === 3) state.setBranch?.('ice', branch);
+    quests.complete(GIFT.event);
+    if (level === 3) state.markEvent('ch2_ice3');
+    this.burst(this.player.x, this.player.y - 60, COLORS.ice, 34);
+    this.toast(`Получен дар: ${GIFT.title}`, COLORS.ice);
+    this.dialog({
+      title: GIFT.title, color: COLORS.ice, text: GIFT.text,
+      buttons: [{ label: 'Выбрать дары', primary: true, onClick: () => services.bus.emit(MSG.OPEN_GIFTS) }, { label: 'Позже' }],
+    });
+  }
+
+  /** v0.22.0: итог главы II — награды (их уже выдал сервер вместе с событием chapter_2_complete) и что открыто дальше. */
+  chapterFinale(n) {
+    if (n !== 2) return;
+    this.burst(this.player.x, this.player.y - 60, COLORS.ice, 40);
+    services.audio.play('quest_update');
+    this.dialog({
+      title: 'Глава II «Город под инеем» завершена', color: COLORS.ice,
+      text: 'Город оттаял, Северин остановлен — но за ним стоит кто-то ещё, и его знак — тот самый, с Древних ворот.\n\n'
+        + 'Награда: опыт, монеты, инеевый осколок, 5 сапфиров и титул «Переживший иней». Сердце холода от Северина — в сумке: '
+        + 'из него однажды выйдут сильный амулет, редкий артефакт или следующая ступень Льда. Решать не нужно сейчас.\n\n'
+        + 'Дальше: поручения, Ковены, вылазки и Магическая Дуэль.',
+      buttons: [{ label: 'Отлично', primary: true }],
+    });
+  }
+
   scheduleStory() {
     let tries = 0;
     const tick = () => {
@@ -245,6 +303,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.registry.set('hudProvider', () => vitals.view(state));
     this.registry.set('abilityProvider', (id) => {
       if (!abilities.isUnlocked(id)) return { id, state: 'locked' };
+      if (!state.isEquipped(id)) return { id, state: 'benched' };   // v0.18.0
       const f = this.interaction.focus;
       return { id, state: 'ready', suggested: !!(f && f.ability === id && f.isAvailable()) };
     });
@@ -681,6 +740,7 @@ export class ExplorationScene extends Phaser.Scene {
       return;
     }
     if (!abilities.isUnlocked(id)) { this.toast('Этот дар ещё не изучен'); return; }
+    if (!services.state.isEquipped(id)) { this.toast(`Дар «${ABILITIES[id].name}» не в слоте — поставьте его в «Дарах» (Сумка → Дары).`); return; }   // v0.18.0
     this.interaction.act(id);
   }
 
@@ -762,6 +822,33 @@ export class ExplorationScene extends Phaser.Scene {
     });
   }
 
+  /** v0.26.0: Магическая Дуэль. Сервер подбирает соперника и запоминает его слепок; бой — обычный CombatScene с этим соперником. */
+  async startDuel() {
+    if (this.inTransition || services.mode !== 'exploration') return;
+    this.inTransition = true;
+    services.mode = 'transition';
+    this.player.stop();
+    this.interaction.clearFocus();
+    this.savePosition();
+    const r = await services.actions.duelStart();
+    if (!r?.ok) {
+      this.inTransition = false;
+      services.mode = 'exploration';
+      this.toast({ attempts: 'На сегодня попытки Дуэли закончились.', locked: 'Дуэль откроется после главы II.', combat: 'Сначала закончите бой.', network: 'Нет связи с сервером.' }[r?.reason] || 'Не удалось начать Дуэль.', COLORS.danger);
+      return;
+    }
+    const opp = r.opponent || {};
+    this.toast(`Соперник: ${opp.name}${opp.ghost ? '' : `, ${opp.level} уровень`}`, COLORS.gold);
+    services.audio.play('combat_start');
+    const cam = this.cameras.main;
+    cam.fadeOut(450, 0, 0, 0);
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.scene.sleep();
+      this.scene.run('CombatScene', { spawnId: 'duel', enemyType: 'duel_mage', duel: true });
+      this.scene.bringToTop('UIScene');
+    });
+  }
+
   /** Сервер не принял начало боя (нет связи, занят): бой не начинается, враг остаётся как был. */
   cancelCombat(trigger, prevEnc, r) {
     const st = services.state;
@@ -802,6 +889,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.bus.emit(MSG.HUD_REFRESH);
     this.bus.emit(MSG.QUEST_CHANGED);
     if (data.result === 'victory' && trig?.cfg.opensPath) this.time.delayedCall(450, () => this.panTo(trig.cfg.x, trig.cfg.y - 500));
+    if (data.duel) this.time.delayedCall(500, () => this.bus.emit(MSG.OPEN_DUEL));   // v0.26.0: после Дуэли — снова окно Дуэли
   }
 
   /** Враг, ждущий «Сразиться снова», становится объектом взаимодействия (кнопка действия, тап, клавиатура). */
@@ -846,6 +934,29 @@ export class ExplorationScene extends Phaser.Scene {
     this.zone = z;
     services.state.data.safePoint = { ...z.safePoint };
     this.bus.emit(MSG.ZONE_CHANGED, z);
+    // v0.20.0: события «пришёл в место» (например, первый вход в город); условия и награду проверяет сервер
+    const ze = ZONE_EVENTS[z.id];
+    if (ze && !services.state.hasEvent(ze.event) && (ze.requires || []).every(e => services.state.hasEvent(e))) services.quests.complete(ze.event);
+  }
+
+  /** v0.20.0: переход между лесом и городом — затемнение, герой на новом месте, точка возрождения там же. */
+  travelTo(target, text) {
+    if (!target || this.traveling) return;
+    this.traveling = true;
+    const cam = this.cameras.main;
+    cam.fadeOut(260, 0, 0, 0);
+    cam.once('camerafadeoutcomplete', () => {
+      this.player.setPosition(target.x, target.y);
+      const st = services.state;
+      st.data.player = { x: Math.round(target.x), y: Math.round(target.y) };
+      st.data.safePoint = { x: Math.round(target.x), y: Math.round(target.y) };
+      st.save();
+      this.zone = null;
+      this.updateZone();
+      cam.fadeIn(320);
+      this.traveling = false;
+      if (text) this.toast(text);
+    });
   }
 
   update(time, delta) {

@@ -19,6 +19,7 @@ import { ENEMY_SPAWNS } from '../config/world.layout.js';
 import { EVENT_REWARDS } from '../config/balance.progression.js';
 import { HERO_RECOVERY } from '../config/balance.hero.js';
 import { COMBAT_TUTORIAL } from '../config/story.js';
+import { DUEL, duelEnemyDef, ratingDelta } from '../config/duel.js';
 
 /** Сколько секунд боя можно «набрать» сверх реального времени с момента combat_start (часы клиента и сервера расходятся). */
 export const SLACK_SEC = 10;
@@ -61,6 +62,7 @@ export function verifyCombat(snap, rawLog, nowMs) {
   if (snap?.combatSince == null || !ctx) return fail('no_combat');
   const log = normalizeLog(rawLog);
   if (!log) return fail('bad_log');
+  if (ctx.spawn === 'duel') return verifyDuel(snap, ctx, log, nowMs);   // v0.26.0: Магическая Дуэль
   const spawn = spawnOf(ctx.spawn);
   if (!spawn || spawn.enemy !== ctx.enemy || !Object.hasOwn(ENEMIES, ctx.enemy)) return fail('bad_spawn');
   if (spawn.requiresEvent && !snap.quests.includes(spawn.requiresEvent)) return fail('locked');
@@ -113,6 +115,40 @@ export function verifyCombat(snap, rawLog, nowMs) {
   verdict.reward = reward;
   verdict.entry = {
     enemy: ctx.enemy, spawnId: spawn.id, result: outcome, timeSec: Math.round(cm.time * 10) / 10,
+    interrupts: cm.stats.interrupts, uses: { ...cm.stats.abilityUses },
+  };
+  return { ok: true, verdict };
+}
+
+/**
+ * v0.26.0: проверка Магической Дуэли. Соперник — профиль из слепка, запомненного сервером на старте (combatCtx.duel.opponent);
+ * та же запись боя проигрывается тем же движком. Итог: награда Дуэли (без штрафа монет), изменение рейтинга по Эло, история.
+ */
+function verifyDuel(snap, ctx, log, nowMs) {
+  const fail = (reason) => ({ ok: false, reason });
+  const d = ctx.duel;
+  if (ctx.enemy !== 'duel_mage' || !d || typeof d !== 'object' || !d.opponent || typeof d.opponent !== 'object') return fail('bad_spawn');
+  if (log.ticks * STEP > (nowMs - snap.combatSince) / 1000 + SLACK_SEC) return fail('too_fast');
+  const st = startState(ctx, nowMs);
+  const cm = new CombatManager({ enemyType: 'duel_mage', enemyDef: duelEnemyDef(d.opponent), state: st, abilities: new AbilitySystem(st, null, null) });
+  const run = replayCombat(cm, log);
+  if (run.held > 0) return fail('bad_log');
+  const outcome = cm.result || 'retreat';
+  const verdict = { outcome, since: snap.combatSince, spawn: 'duel', ticks: run.ticks, mana: cm.hero.mana };
+  if (outcome === 'retreat') return { ok: true, verdict };
+  verdict.potions = {};
+  for (const id of COMBAT_POTIONS) add(verdict.potions, id, (ctx.potions[id] || 0) - st.item(id));
+  const win = outcome === 'victory';
+  const reward = { heroXP: 0, schoolXP: {}, items: {} };
+  mergeReward(reward, { schoolXP: { ...st.data.schoolXP } });
+  const r = win ? DUEL.reward.victory : DUEL.reward.defeat;
+  mergeReward(reward, { heroXP: r.heroXP || 0, items: r.coins ? { coins: r.coins } : {} });
+  if (!reward.heroXP) delete reward.heroXP;
+  verdict.reward = reward;
+  const my = Number.isFinite(d.rating) ? d.rating : DUEL.baseRating, opp = Number.isFinite(d.opponent.rating) ? d.opponent.rating : DUEL.baseRating;
+  verdict.duel = { win, delta: ratingDelta(my, opp, win), opponent: String(d.opponent.name || '').slice(0, 40) };
+  verdict.entry = {
+    enemy: 'duel_mage', spawnId: 'duel', result: outcome, timeSec: Math.round(cm.time * 10) / 10,
     interrupts: cm.stats.interrupts, uses: { ...cm.stats.abilityUses },
   };
   return { ok: true, verdict };

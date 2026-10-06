@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { duelEnemyDef, leagueOf } from '../config/duel.js';
+import { duelStateOf } from '../cloud/playerModel.js';
 import { VIEW, COLORS, DEPTH } from '../config/game.config.js';
 import { ENEMY_SPAWNS } from '../config/world.layout.js';
 import { COMBAT } from '../config/balance.enemies.js';
@@ -24,7 +26,7 @@ import { addButton } from '../ui/widgets.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
-const SCHOOL_COLOR = { telekinesis: COLORS.telekinesis, fire: COLORS.fire, seal: COLORS.seal, auto: 0xf1e3c2 };
+const SCHOOL_COLOR = { telekinesis: COLORS.telekinesis, fire: COLORS.fire, seal: COLORS.seal, ice: COLORS.ice, auto: 0xf1e3c2 };
 const ENEMY_POS = { x: VIEW.width / 2, y: 560 };
 const HERO_POS = { x: VIEW.width / 2, y: 1040 };
 const hex = c => '#' + c.toString(16).padStart(6, '0');
@@ -37,6 +39,7 @@ export class CombatScene extends Phaser.Scene {
   constructor() { super('CombatScene'); }
 
   init(data) {
+    this.duel = !!data.duel;   // v0.26.0: Магическая Дуэль — соперник из слепка героя (combatCtx.duel)
     this.spawnId = data.spawnId;
     this.spawn = ENEMY_SPAWNS.find(s => s.id === data.spawnId) || {};
     this.enemyType = data.enemyType;
@@ -49,7 +52,8 @@ export class CombatScene extends Phaser.Scene {
     // Настоящее состояние игры (сумка, опыт, HP) бой не трогает: итог — HP, мана, зелья, награда — приходит в ответе сервера.
     const ctx = state.data.combatCtx;
     this.sim = ctx ? startState(ctx, state.now()) : Object.assign(new GameState(null, () => state.now()), { data: JSON.parse(JSON.stringify(state.data)) });
-    this.cm = new CombatManager({ enemyType: this.enemyType, state: this.sim, abilities: new AbilitySystem(this.sim, null, null) });
+    const duelDef = this.duel && ctx?.duel?.opponent ? duelEnemyDef(ctx.duel.opponent) : null;
+    this.cm = new CombatManager({ enemyType: this.enemyType, enemyDef: duelDef, state: this.sim, abilities: new AbilitySystem(this.sim, null, null) });
     this.rec = new CombatRecorder();   // действия игрока по номеру шага: их сервер проигрывает заново
     this.acc = 0;
     this.def = this.cm.def;
@@ -214,10 +218,15 @@ export class CombatScene extends Phaser.Scene {
   }
 
   refreshPotions() {
+    // v0.19.0: зелий стало семь — видимые раскладываются подряд слева, шаг сжимается, чтобы уместиться в ширину
+    const shown = [...this.potionViews.keys()].filter((id) => this.sim.item(id) > 0);
+    const step = Math.min(114, (VIEW.width - 120) / Math.max(1, shown.length - 1 || 1));
     for (const [id, v] of this.potionViews) {
       const n = this.sim.item(id);
       for (const o of [v.ring, v.icon, v.badge, v.hit]) o.setVisible(n > 0);
       v.badge.setText(String(n));
+      const i = shown.indexOf(id);
+      if (i >= 0) { const x = 68 + i * step; v.ring.x = x; v.icon.x = x; v.badge.x = x + 30; v.hit.x = x; }
     }
   }
 
@@ -322,6 +331,8 @@ export class CombatScene extends Phaser.Scene {
     if (e.hasArmor) st.push(e.armorActive ? `Броня −${Math.round(e.def.armor.value * 100)}%` : `Броня разбита ${e.armorDisabledLeft.toFixed(0)}с`);
     if (e.burning) st.push(`Горение ${e.burn.left.toFixed(0)}с`);
     if (e.inPuddle) st.push(`Лужа смолы ${e.puddle.left.toFixed(0)}с`);
+    if (e.slowed) st.push(`Замедлен ${e.slow.left.toFixed(0)}с`);
+    if (e.isBrittle) st.push(`Хрупкость ${e.brittle.left.toFixed(0)}с`);
     if (e.vulnerable.left > 0) st.push(`Уязвим +${Math.round(e.vulnerable.bonus * 100)}% ${e.vulnerable.left.toFixed(0)}с`);
     if (e.staggerLeft > 0) st.push('Оглушён');
     if (e.defenseActive) st.push(`Защита −${Math.round(e.def.defense * 100)}%`);
@@ -401,6 +412,9 @@ export class CombatScene extends Phaser.Scene {
         case 'chain':   // v0.11.1: Телекинез III — второй бросок без перезарядки
           this.floatText(ENEMY_POS.x - 120, ENEMY_POS.y + 40, 'ЕЩЁ БРОСОК!', COLORS.telekinesis, 28);
           break;
+        case 'chill':   // v0.18.0: холод врага — перезарядки и мана идут медленнее
+          this.toast(`Холод: перезарядка и мана медленнее на ${Math.round(ev.pct * 100)}% (${ev.sec} с)`, COLORS.ice);
+          break;
         case 'manaRescue':   // v0.16.0: Лунный амулет вернул ману
           this.floatText(ENEMY_POS.x + 120, ENEMY_POS.y + 80, `Лунный амулет: +${ev.mana} маны`, COLORS.mana, 26);
           break;
@@ -439,6 +453,9 @@ export class CombatScene extends Phaser.Scene {
           break;
         case 'status':
           if (ev.status === 'vulnerable') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Уязвим!', COLORS.fire, UI.type.combat);
+          if (ev.status === 'slow') this.floatText(ENEMY_POS.x + 80, ENEMY_POS.y + 30, 'Замедлен', COLORS.ice, UI.type.combat);
+          if (ev.status === 'brittle') this.floatText(ENEMY_POS.x - 80, ENEMY_POS.y - 30, 'Хрупкость', COLORS.ice, UI.type.combat);
+          if (ev.status === 'shatter') { this.floatText(ENEMY_POS.x, ENEMY_POS.y - 110, 'РАСКОЛ!', COLORS.ice, 30); this.burst(ENEMY_POS.x, ENEMY_POS.y - 100, COLORS.ice, 26); }
           if (ev.status === 'puddle') this.floatText(ENEMY_POS.x - 80, ENEMY_POS.y + 30, 'Лужа смолы', COLORS.fire, UI.type.combat);
           if (ev.status === 'defenseOff') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Защита снята', COLORS.fire, UI.type.combat);
           break;
@@ -495,6 +512,9 @@ export class CombatScene extends Phaser.Scene {
     } else if (ev.kind === 'mana') {
       this.floatText(HERO_POS.x - 60, HERO_POS.y - 150, `+${ev.amount}`, COLORS.mana, 36);
       this.burst(HERO_POS.x, HERO_POS.y - 70, COLORS.mana, 26);
+    } else if (ev.kind === 'warm' || ev.kind === 'guard') {   // v0.19.0: на себя — свечение вокруг героя
+      this.burst(HERO_POS.x, HERO_POS.y - 70, p.color, 30);
+      this.floatText(HERO_POS.x - 60, HERO_POS.y - 150, ev.kind === 'warm' ? 'Тепло' : `Защита ${ev.sec} с`, p.color, 30);
     } else {
       // бросок склянки: пламенный росчерк от героини к врагу
       for (let i = 0; i < 8; i++) {
@@ -666,6 +686,7 @@ export class CombatScene extends Phaser.Scene {
   /** Окно итога по ответу сервера r (см. PlayerActions.combatSubmit). */
   showOutcome(r, clientSecs) {
     const { state } = services;
+    if (this.duel) { this.showDuelOutcome(r, clientSecs); return; }
     const out = r?.ok ? r.verdict?.outcome : null;
     const secs = r?.verdict?.entry?.timeSec ?? clientSecs;
     const v = vitals.view(state);   // уже по ответу сервера
@@ -719,10 +740,39 @@ export class CombatScene extends Phaser.Scene {
     return { ok: false, reason: 'network' };
   }
 
+  /** v0.26.0: итог Дуэли — победа/поражение, изменение рейтинга и лига (по ответу сервера). */
+  showDuelOutcome(r, clientSecs) {
+    const out = r?.ok ? r.verdict?.outcome : null;
+    const d = r?.verdict?.duel;
+    const g = r?.verdict?.reward || {};
+    if (out === 'victory' || out === 'defeat') {
+      const st = duelStateOf({ objects: { duel: services.state.getObject('duel') } }, services.state.now());
+      const lines = [
+        out === 'victory' ? `Соперник «${d?.opponent || this.def.name}» повержен.` : `«${d?.opponent || this.def.name}» оказался сильнее.`,
+        '', `Рейтинг: ${st.rating} (${d?.delta > 0 ? '+' : ''}${d?.delta ?? 0})   ·   ${leagueOf(st.rating).name}`,
+        `Время боя: ${r?.verdict?.entry?.timeSec ?? clientSecs} сек`, '',
+      ];
+      if (g.heroXP) lines.push(`+${g.heroXP} опыта`);
+      if (g.items?.coins) lines.push(`+${g.items.coins} монет`);
+      lines.push('', 'Дуэль — арена: здоровье после боя не теряется.');
+      this.bus.emit(MSG.DIALOG, {
+        title: out === 'victory' ? 'Победа в Дуэли!' : 'Поражение в Дуэли', color: out === 'victory' ? COLORS.gold : COLORS.danger, text: lines.join('\n'),
+        buttons: [{ label: 'Продолжить', primary: true, onClick: () => this.exit(out) }],
+      });
+    } else {
+      services.actions?.combatEnd('retreat')?.catch(() => {});
+      this.bus.emit(MSG.DIALOG, {
+        title: 'Дуэль не засчитана', color: COLORS.danger,
+        text: `${r?.reason === 'network' ? 'Нет связи с сервером, итог не удалось подтвердить.' : 'Сервер не принял запись этого боя.'}\n\nРейтинг не изменился. Попытка потрачена.`,
+        buttons: [{ label: 'Вернуться', primary: true, onClick: () => this.exit('defeat') }],
+      });
+    }
+  }
+
   exit(result) {
     this.cameras.main.fadeOut(350, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      this.scene.wake('ExplorationScene', { result, spawnId: this.spawnId });
+      this.scene.wake('ExplorationScene', { result, spawnId: this.spawnId, duel: this.duel });
       this.scene.stop();
     });
   }

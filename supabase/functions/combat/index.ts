@@ -21,7 +21,13 @@ var HERO_LEVELS = [
   { level: 7, xp: 940, maxHp: 160, maxMana: 135, manaRegen: 3, damageMult: 1.15, note: "\u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0438\u0435 \u0433\u043B\u0430\u0432\u044B" },
   { level: 8, xp: 1300, maxHp: 170, maxMana: 140, manaRegen: 3, damageMult: 1.18, note: "\u0414\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u0432\u044B\u0445\u043E\u0434" },
   { level: 9, xp: 1750, maxHp: 180, maxMana: 145, manaRegen: 3, damageMult: 1.21, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" },
-  { level: 10, xp: 2350, maxHp: 190, maxMana: 155, manaRegen: 3, damageMult: 1.25, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" }
+  { level: 10, xp: 2350, maxHp: 190, maxMana: 155, manaRegen: 3, damageMult: 1.25, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" },
+  // v0.18.0: глава II (docs/design/chapter-2-balance-v0.1.md §2)
+  { level: 11, xp: 3100, maxHp: 202, maxMana: 165, manaRegen: 3, damageMult: 1.29, note: "\u041B\u0451\u0434 I" },
+  { level: 12, xp: 4e3, maxHp: 214, maxMana: 175, manaRegen: 3, damageMult: 1.33, note: "\u041B\u0451\u0434 II" },
+  { level: 13, xp: 5100, maxHp: 226, maxMana: 185, manaRegen: 3, damageMult: 1.37, note: "\u041B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F" },
+  { level: 14, xp: 6400, maxHp: 240, maxMana: 195, manaRegen: 3, damageMult: 1.42, note: "\u041A\u043E\u0432\u0435\u043D\u044B" },
+  { level: 15, xp: 7900, maxHp: 255, maxMana: 205, manaRegen: 3, damageMult: 1.48, note: "\u0424\u0438\u043D\u0430\u043B \u0433\u043B\u0430\u0432\u044B II" }
 ];
 var HERO_RECOVERY = {
   // Смерть не наказывает сильно (Combat Math §10).
@@ -54,7 +60,12 @@ var RESOURCES = {
   lunar_shard: { name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A", icon: "icon_shard", color: 10480127, hint: "\u0417\u0430\u0441\u0442\u044B\u0432\u0448\u0438\u0439 \u043B\u0443\u043D\u043D\u044B\u0439 \u0441\u0432\u0435\u0442. \u041D\u0443\u0436\u0435\u043D \u0434\u043B\u044F \u0438\u0437\u0443\u0447\u0435\u043D\u0438\u044F \u0434\u0430\u0440\u043E\u0432." },
   forest_mushroom: { name: "\u041B\u0435\u0441\u043D\u044B\u0435 \u0433\u0440\u0438\u0431\u044B", icon: "icon_mushroom", color: 14251082, hint: "\u0420\u0430\u0441\u0442\u0443\u0442 \u0432 \u0442\u0435\u043D\u0438 \u0441\u0442\u0430\u0440\u043E\u0433\u043E \u043B\u0435\u0441\u0430. \u041E\u0441\u043D\u043E\u0432\u0430 \u0446\u0435\u043B\u0435\u0431\u043D\u044B\u0445 \u043D\u0430\u0441\u0442\u043E\u0435\u0432." },
   tree_resin: { name: "\u0414\u0440\u0435\u0432\u0435\u0441\u043D\u0430\u044F \u0441\u043C\u043E\u043B\u0430", icon: "icon_resin", color: 15249482, hint: "\u041B\u0438\u043F\u043A\u0430\u044F \u0438 \u0433\u043E\u0440\u044E\u0447\u0430\u044F. \u0415\u0451 \u0441\u043E\u0431\u0438\u0440\u0430\u044E\u0442 \u0441 \u043A\u043E\u0440\u044B \u0438\u043B\u0438 \u0434\u043E\u0441\u0442\u0430\u044E\u0442 \u0438\u0437 \u0441\u043E\u0436\u0436\u0451\u043D\u043D\u044B\u0445 \u0437\u0430\u0440\u043E\u0441\u043B\u0435\u0439." },
-  rune_dust: { name: "\u0420\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C", icon: "icon_dust", color: 13214463, hint: "\u041E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043E\u0442 \u0434\u0440\u0435\u0432\u043D\u0438\u0445 \u0440\u0443\u043D. \u0411\u0435\u0437 \u043D\u0435\u0451 \u043C\u0430\u0433\u0438\u044F \u043D\u0435 \u0434\u0435\u0440\u0436\u0438\u0442\u0441\u044F \u0432 \u0437\u0435\u043B\u044C\u0435." }
+  rune_dust: { name: "\u0420\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C", icon: "icon_dust", color: 13214463, hint: "\u041E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043E\u0442 \u0434\u0440\u0435\u0432\u043D\u0438\u0445 \u0440\u0443\u043D. \u0411\u0435\u0437 \u043D\u0435\u0451 \u043C\u0430\u0433\u0438\u044F \u043D\u0435 \u0434\u0435\u0440\u0436\u0438\u0442\u0441\u044F \u0432 \u0437\u0435\u043B\u044C\u0435." },
+  // v0.19.0 — глава II (docs/design/chapter-2-balance-v0.1.md §16): четыре новых ресурса, не больше
+  frost_herb: { name: "\u041C\u043E\u0440\u043E\u0437\u043D\u0438\u043A", icon: "icon_frost_herb", color: 11069144, hint: "\u0420\u0430\u0441\u0442\u0435\u043D\u0438\u0435, \u0438\u0437\u043C\u0435\u043D\u0451\u043D\u043D\u043E\u0435 \u0445\u043E\u043B\u043E\u0434\u043D\u043E\u0439 \u043C\u0430\u0433\u0438\u0435\u0439. \u0420\u0430\u0441\u0442\u0451\u0442 \u0443 \u0433\u043E\u0440\u043E\u0434\u0430, \u043D\u0443\u0436\u0435\u043D \u0434\u043B\u044F \u0442\u0451\u043F\u043B\u044B\u0445 \u0438 \u0441\u0442\u0430\u0431\u0438\u043B\u0438\u0437\u0438\u0440\u0443\u044E\u0449\u0438\u0445 \u0441\u043E\u0441\u0442\u0430\u0432\u043E\u0432." },
+  ice_crystal: { name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B", icon: "icon_ice_crystal", color: 10479359, hint: "\u041D\u0435\u043E\u0431\u044B\u0447\u043D\u044B\u0439 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B \u0445\u043E\u043B\u043E\u0434\u0430: \u0432 \u043E\u0441\u043E\u0431\u044B\u0445 \u043C\u0435\u0441\u0442\u0430\u0445 \u0433\u043E\u0440\u043E\u0434\u0430 \u0438 \u0443 \u043C\u043E\u0440\u043E\u0437\u043D\u044B\u0445 \u043F\u0440\u043E\u0442\u0438\u0432\u043D\u0438\u043A\u043E\u0432." },
+  frost_shard: { name: "\u0418\u043D\u0435\u0435\u0432\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A", icon: "icon_frost_shard", color: 8370431, hint: "\u0420\u0435\u0434\u043A\u0438\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043E\u0442 \u0441\u0438\u043B\u044C\u043D\u044B\u0445 \u043C\u043E\u0440\u043E\u0437\u043D\u044B\u0445 \u0432\u0440\u0430\u0433\u043E\u0432. \u0412 \u043B\u0430\u0432\u043A\u0430\u0445 \u043D\u0435 \u043F\u0440\u043E\u0434\u0430\u0451\u0442\u0441\u044F." },
+  cold_heart: { name: "\u0421\u0435\u0440\u0434\u0446\u0435 \u0445\u043E\u043B\u043E\u0434\u0430", icon: "icon_cold_heart", color: 6279423, hint: "\u041E\u0447\u0435\u043D\u044C \u0440\u0435\u0434\u043A\u0438\u0439 \u043A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442 \u0441\u0438\u043B\u044C\u043D\u0435\u0439\u0448\u0438\u0445 \u043F\u0440\u043E\u0442\u0438\u0432\u043D\u0438\u043A\u043E\u0432. \u041F\u0440\u0438\u0433\u043E\u0434\u0438\u0442\u0441\u044F \u0434\u043B\u044F \u0431\u0443\u0434\u0443\u0449\u0438\u0445 \u0430\u043C\u0443\u043B\u0435\u0442\u043E\u0432 \u0438 \u0441\u0442\u0443\u043F\u0435\u043D\u0435\u0439 \u041B\u044C\u0434\u0430." }
 };
 var POTIONS = {
   elixir_life: {
@@ -79,11 +90,45 @@ var POTIONS = {
     color: 16747066,
     effect: { type: "damage", amount: 45, burn: { dps: 6, durationSec: 4 } },
     text: "\u0411\u0440\u043E\u0441\u043E\u043A \u0432\u043E \u0432\u0440\u0430\u0433\u0430: 45 \u0443\u0440\u043E\u043D\u0430 \u0438 \u0433\u043E\u0440\u0435\u043D\u0438\u0435. \u0422\u043E\u043B\u044C\u043A\u043E \u0432 \u0431\u043E\u044E."
+  },
+  // v0.19.0 — глава II (chapter-2-balance-v0.1.md §18)
+  warm_potion: {
+    name: "\u0422\u0451\u043F\u043B\u044B\u0439 \u043D\u0430\u0441\u0442\u043E\u0439",
+    icon: "icon_potion_warm",
+    color: 16757610,
+    effect: { type: "warm", resist: 0.6 },
+    text: "\u0414\u043E \u043A\u043E\u043D\u0446\u0430 \u0431\u043E\u044F \u0445\u043E\u043B\u043E\u0434 \u0432\u0440\u0430\u0433\u0430 \u0441\u043B\u0430\u0431\u0435\u0435 \u043D\u0430 60%, \u0430 \u043D\u044B\u043D\u0435\u0448\u043D\u0438\u0439 \u0445\u043E\u043B\u043E\u0434 \u0441\u043D\u0438\u043C\u0430\u0435\u0442\u0441\u044F. \u0422\u043E\u043B\u044C\u043A\u043E \u0432 \u0431\u043E\u044E."
+  },
+  stabilizing_potion: {
+    name: "\u0421\u0442\u0430\u0431\u0438\u043B\u0438\u0437\u0438\u0440\u0443\u044E\u0449\u0438\u0439 \u043D\u0430\u0441\u0442\u043E\u0439",
+    icon: "icon_potion_stable",
+    color: 11069144,
+    effect: { type: "cleanse", heal: 0.15 },
+    text: "\u0421\u043D\u0438\u043C\u0430\u0435\u0442 \u0445\u043E\u043B\u043E\u0434 \u0438 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 15% \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u044F. \u041D\u0443\u0436\u0435\u043D \u0438 \u043F\u043E \u0441\u044E\u0436\u0435\u0442\u0443 \u2014 \u043F\u043E\u043C\u043E\u0447\u044C \u043F\u043E\u0441\u0442\u0440\u0430\u0434\u0430\u0432\u0448\u0438\u043C."
+  },
+  brittle_flask: {
+    name: "\u0424\u043B\u0430\u043A\u043E\u043D \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u0438",
+    icon: "icon_potion_brittle",
+    color: 10479359,
+    effect: { type: "brittle", bonus: 0.4, sec: 5 },
+    text: "\u0414\u0435\u043B\u0430\u0435\u0442 \u0432\u0440\u0430\u0433\u0430 \u0445\u0440\u0443\u043F\u043A\u0438\u043C \u043D\u0430 5 \u0441: \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439 \u0443\u0434\u0430\u0440 \u0434\u0430\u0440\u043E\u0432 +40%. \u0422\u043E\u043B\u044C\u043A\u043E \u0432 \u0431\u043E\u044E."
+  },
+  crystal_guard: {
+    name: "\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u044C\u043D\u0430\u044F \u0437\u0430\u0449\u0438\u0442\u0430",
+    icon: "icon_potion_guard",
+    color: 8370431,
+    effect: { type: "guard", incoming: 0.75, sec: 12 },
+    text: "\u0414\u0432\u0435\u043D\u0430\u0434\u0446\u0430\u0442\u044C \u0441\u0435\u043A\u0443\u043D\u0434 \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u043C\u044B\u0439 \u0443\u0440\u043E\u043D \u221225%. \u0422\u043E\u043B\u044C\u043A\u043E \u0432 \u0431\u043E\u044E."
   }
+};
+var CRAFT_ITEMS = {
+  reinforced_resin: { name: "\u0423\u0441\u0438\u043B\u0435\u043D\u043D\u0430\u044F \u0441\u043C\u043E\u043B\u0430", icon: "icon_reinforced_resin", color: 15245386, text: "\u041A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442 \u0434\u043B\u044F \u0441\u0438\u043B\u044C\u043D\u044B\u0445 \u043F\u0440\u0435\u0434\u043C\u0435\u0442\u043E\u0432 \u0438 \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F \u0430\u043C\u0443\u043B\u0435\u0442\u043E\u0432." },
+  astral_lens: { name: "\u0410\u0441\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043B\u0438\u043D\u0437\u0430", icon: "icon_astral_lens", color: 10466559, text: "\u041D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0437\u0430\u0440\u044F\u0434\u043E\u0432: \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442 \u0442\u0430\u0439\u043D\u0438\u043A\u0438 \u0438 \u0441\u043A\u0440\u044B\u0442\u044B\u0435 \u043C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u0441\u043B\u0435\u0434\u044B (\u0432 \u0433\u043E\u0440\u043E\u0434\u0435 \u0438 \u0432\u044B\u043B\u0430\u0437\u043A\u0430\u0445)." }
 };
 var RESOURCE_ITEMS = {
   ...Object.fromEntries(Object.entries(RESOURCES).map(([id, r]) => [id, { name: r.name, icon: r.icon }])),
-  ...Object.fromEntries(Object.entries(POTIONS).map(([id, r]) => [id, { name: r.name, icon: r.icon }]))
+  ...Object.fromEntries(Object.entries(POTIONS).map(([id, r]) => [id, { name: r.name, icon: r.icon }])),
+  ...Object.fromEntries(Object.entries(CRAFT_ITEMS).map(([id, r]) => [id, { name: r.name, icon: r.icon }]))
 };
 var POTION_BATTLE_LIMIT = 4;
 
@@ -139,34 +184,65 @@ var MIGRATION_V10 = {
 };
 
 // src/config/build.js
-var GIFT_IDS = ["telekinesis", "fire", "seal"];
-var SLOT_RULES = { base: 3, extraAtLevel: 10 };
+var GIFT_IDS = ["telekinesis", "fire", "seal", "ice"];
+var SLOT_RULES = { base: 3, extraAtLevel: null };
 var AMULET_SLOTS = 2;
 var AMULETS = {
   amulet_focus: {
     name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0421\u043E\u0441\u0440\u0435\u0434\u043E\u0442\u043E\u0447\u0435\u043D\u0438\u044F",
-    icon: "icon_core",
+    icon: "icon_amulet_focus",
+    rarity: "common",
     text: "\u0423\u0440\u043E\u043D \u0434\u0430\u0440\u043E\u0432 \u0438 \u0430\u0432\u0442\u043E\u0430\u0442\u0430\u043A\u0438 +12%.",
     tradeoff: "\u041D\u0435\u0442 \u0437\u0430\u0449\u0438\u0442\u044B: \u0432\u0440\u0430\u0433 \u0431\u044C\u0451\u0442 \u043A\u0430\u043A \u043E\u0431\u044B\u0447\u043D\u043E.",
     effect: { damageMult: 1.12 }
   },
   amulet_forest: {
     name: "\u041B\u0435\u0441\u043D\u043E\u0439 \u0430\u043C\u0443\u043B\u0435\u0442",
-    icon: "icon_ember",
+    icon: "icon_amulet_forest",
+    rarity: "common",
     text: "\u041F\u043E\u043B\u0443\u0447\u0430\u0435\u043C\u044B\u0439 \u0443\u0440\u043E\u043D \u221220%.",
     tradeoff: "\u0423\u0440\u043E\u043D \u0433\u0435\u0440\u043E\u044F \u22128%.",
     effect: { incomingMult: 0.8, damageMult: 0.92 }
   },
   amulet_lunar: {
     name: "\u041B\u0443\u043D\u043D\u044B\u0439 \u0430\u043C\u0443\u043B\u0435\u0442",
-    icon: "icon_shard",
+    icon: "icon_amulet_lunar",
+    rarity: "rare",
     text: "\u041E\u0434\u0438\u043D \u0440\u0430\u0437 \u0437\u0430 \u0431\u043E\u0439, \u043A\u043E\u0433\u0434\u0430 \u043C\u0430\u043D\u044B \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u043C\u0435\u043D\u044C\u0448\u0435 20%, \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043F\u043E\u043B\u043E\u0432\u0438\u043D\u0443 \u0437\u0430\u043F\u0430\u0441\u0430.",
     tradeoff: "\u0421\u0430\u043C \u043F\u043E \u0441\u0435\u0431\u0435 \u0441\u0438\u043B\u0443 \u043D\u0435 \u0434\u043E\u0431\u0430\u0432\u043B\u044F\u0435\u0442.",
     effect: { manaRescue: { below: 0.2, gainPct: 0.5 } }
+  },
+  // v0.19.0: первый амулет Льда (рецепт главы II, chapter-2-balance-v0.1.md §18)
+  amulet_frost: {
+    name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0438\u043D\u0435\u044F",
+    icon: "icon_amulet_frost",
+    rarity: "rare",
+    text: "\u0423\u0434\u0430\u0440 \u041B\u044C\u0434\u0430 +10%, \u0437\u0430\u043C\u0435\u0434\u043B\u0435\u043D\u0438\u0435 \u041B\u044C\u0434\u043E\u043C \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u043D\u0430 5%.",
+    tradeoff: "\u0411\u0435\u0437 \u041B\u044C\u0434\u0430 \u0432 \u0431\u0438\u043B\u0434\u0435 \u043F\u043E\u0447\u0442\u0438 \u0431\u0435\u0441\u043F\u043E\u043B\u0435\u0437\u0435\u043D.",
+    effect: { iceMult: 1.1, slowBonus: 0.05 }
   }
 };
 var AMULET_IDS = Object.keys(AMULETS);
-var slotCount = (level, rules = SLOT_RULES) => rules.base + ((level || 0) >= rules.extraAtLevel ? 1 : 0);
+var AMULET_UPGRADES = [
+  { coins: 120, items: { tree_resin: 2, rune_dust: 1 } },
+  { coins: 220, items: { ice_crystal: 2, rune_dust: 2 } },
+  { coins: 400, items: { frost_shard: 2, lunar_shard: 3 } }
+];
+var AMULET_LEVEL_STEP = 0.25;
+function amuletEffect(id, level = 0) {
+  const e = AMULETS[id]?.effect;
+  if (!e) return {};
+  const k = 1 + AMULET_LEVEL_STEP * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length));
+  const r = (v) => Math.round(v * 1e3) / 1e3;
+  const out = { ...e };
+  if (e.damageMult && e.damageMult > 1) out.damageMult = r(1 + (e.damageMult - 1) * k);
+  if (e.incomingMult) out.incomingMult = r(1 - (1 - e.incomingMult) * k);
+  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: r(Math.min(0.9, e.manaRescue.gainPct * k)) };
+  if (e.iceMult) out.iceMult = r(1 + (e.iceMult - 1) * k);
+  if (e.slowBonus) out.slowBonus = r(e.slowBonus * k);
+  return out;
+}
+var slotCount = (level, rules = SLOT_RULES) => rules.base + (rules.extraAtLevel != null && (level || 0) >= rules.extraAtLevel ? 1 : 0);
 var defaultSlots = (unlocked, count, gifts = GIFT_IDS) => gifts.filter((g) => unlocked.includes(g)).slice(0, count);
 var isStrArr = (a) => Array.isArray(a) && a.length <= 8 && a.every((x) => typeof x === "string");
 var hasDup = (a) => new Set(a).size !== a.length;
@@ -193,7 +269,13 @@ function checkBuild(c, want, rules) {
   return { ok: true };
 }
 function buildSlotRules() {
-  return { slots: { ...SLOT_RULES }, amuletSlots: AMULET_SLOTS, amulets: [...AMULET_IDS], gifts: [...GIFT_IDS] };
+  return {
+    slots: { ...SLOT_RULES },
+    amuletSlots: AMULET_SLOTS,
+    amulets: [...AMULET_IDS],
+    gifts: [...GIFT_IDS],
+    amuletUpgrades: AMULET_UPGRADES.map((u) => ({ coins: u.coins, items: { ...u.items } }))
+  };
 }
 
 // src/config/balance.progression.js
@@ -331,7 +413,34 @@ var EVENT_REWARDS = {
   fire_gate_open: { heroXP: 20, schoolXP: { fire: 20 } },
   // v0.10.0: Селена открывает Печать I сюжетно — без уровня, платы и таймера. Учебный знак и ворота дают только
   // обычный школьный опыт мира (+6), отдельной награды «за обучение» нет.
-  unlock_seal_1: { heroXP: 60 }
+  unlock_seal_1: { heroXP: 60 },
+  // v0.20.0 — глава II, квесты 1–5 (chapter-2-balance-v0.1.md §4; опыт боёв — в наградах врагов)
+  ch2_city_arrived: { heroXP: 220, coins: 60 },
+  ch2_met_ilaria: { heroXP: 200, coins: 50, items: { frost_herb: 1 } },
+  ch2_trace_found: { heroXP: 300, coins: 80, items: { frost_herb: 2, rune_dust: 1 } },
+  ch2_archive_read: { heroXP: 320, coins: 90 },
+  ch2_met_severin: { heroXP: 340, coins: 80, items: { warm_potion: 1 } },
+  // v0.21.0: квесты 6–10 (квест — минус опыт обязательных боёв, chapter-2-balance §4)
+  ch2_cargo_reported: { heroXP: 270, coins: 120, items: { frost_herb: 2 } },
+  ch2_frost_wave: { heroXP: 280, coins: 90 },
+  ch2_nerys_met: { heroXP: 60 },
+  ch2_rescue_done: { heroXP: 300, coins: 140, items: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 } },
+  // травы на первый Тёплый настой
+  unlock_ice_1: { heroXP: 60 },
+  ch2_ice_trained: { heroXP: 240, coins: 60 },
+  ch2_quarter_cleared: { heroXP: 340, coins: 160, items: { ice_crystal: 2 } },
+  // v0.22.0: квесты 11–15
+  unlock_ice_2: { heroXP: 60, items: { ice_crystal: 1, tree_resin: 1, rune_dust: 1 } },
+  // материалы на первый Флакон хрупкости
+  ch2_brittle_done: { heroXP: 240, coins: 70 },
+  ch2_stabilized: { heroXP: 120 },
+  ch2_lab_reported: { heroXP: 300, coins: 180, items: { frost_shard: 1, lunar_shard: 2 } },
+  ch2_severin_confronted: { heroXP: 380, coins: 80 },
+  ch2_coven_met: { heroXP: 60 },
+  ch2_coven_ready: { heroXP: 300, coins: 180, items: { ice_crystal: 2 } },
+  ch2_epilogue: { heroXP: 250 },
+  chapter_2_complete: { heroXP: 300, coins: 150, items: { frost_shard: 1 } }
+  // + 5 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
 };
 
 // src/config/balance.abilities.js
@@ -523,6 +632,62 @@ var ABILITIES = {
         set: { flash: { sec: 1 } }
       }
     }
+  },
+  // v0.18.0 — Лёд, четвёртый дар (глава II, docs/design/chapter-2-story-v0.1.md §19–22, §33). Внутренний id — 'ice'.
+  // В бою: замедление врага (его атаки и подготовка сильного удара идут медленнее — больше времени на прерывание);
+  // со ступени II — «Хрупкость»: следующий удар Телекинеза, Огня или Астрала сильнее, а тяжёлый бросок по хрупкой цели
+  // ещё и разбивает броню. Ступени I–III открывает сюжет (обучение у Нэрис), без долгих таймеров.
+  ice: {
+    name: "\u041B\u0451\u0434",
+    color: "ice",
+    levels: {
+      1: {
+        label: "\u041B\u0451\u0434 I",
+        damage: 14,
+        manaCost: 18,
+        cooldownSec: 7,
+        castSec: 0.3,
+        slow: { pct: 0.35, sec: 4 },
+        interruptsNormalCast: false
+      },
+      2: {
+        label: "\u041B\u0451\u0434 II",
+        damage: 16,
+        manaCost: 20,
+        cooldownSec: 7,
+        castSec: 0.3,
+        slow: { pct: 0.35, sec: 4 },
+        brittle: { sec: 5, bonus: 0.4 },
+        interruptsNormalCast: false
+      },
+      3: {
+        label: "\u041B\u0451\u0434 III",
+        damage: 18,
+        manaCost: 22,
+        cooldownSec: 7,
+        castSec: 0.3,
+        slow: { pct: 0.4, sec: 5 },
+        brittle: { sec: 5, bonus: 0.4 },
+        interruptsNormalCast: false
+      }
+    },
+    branches: {
+      frost: {
+        name: "\u041C\u043E\u0440\u043E\u0437",
+        fromLevel: 3,
+        text: "\u041A\u043E\u043D\u0442\u0440\u043E\u043B\u044C: \u0437\u0430\u043C\u0435\u0434\u043B\u0435\u043D\u0438\u0435 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 \u0438 \u0434\u043E\u043B\u044C\u0448\u0435 \u2014 \u0432\u0440\u0430\u0433 \u043D\u0430 55% \u043C\u0435\u0434\u043B\u0435\u043D\u043D\u0435\u0435 \u0448\u0435\u0441\u0442\u044C \u0441\u0435\u043A\u0443\u043D\u0434.",
+        tradeoff: "\u0421\u0430\u043C \u0443\u0434\u0430\u0440 \u0441\u043B\u0430\u0431\u0435\u0435 \u043D\u0430 15%.",
+        mul: { damage: 0.85 },
+        set: { slow: { pct: 0.55, sec: 6 } }
+      },
+      shard: {
+        name: "\u041E\u0441\u043A\u043E\u043B\u043E\u043A",
+        fromLevel: 3,
+        text: "\u0423\u0440\u043E\u043D \u0447\u0435\u0440\u0435\u0437 \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u044C: \u0443\u0434\u0430\u0440 \u041B\u044C\u0434\u0430 \u043F\u043E \u0445\u0440\u0443\u043F\u043A\u043E\u0439 \u0446\u0435\u043B\u0438 \u0440\u0430\u0441\u043A\u0430\u043B\u044B\u0432\u0430\u0435\u0442 \u0435\u0451 \u2014 \u0443\u0440\u043E\u043D \xD72,2, \u0430 \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u044C \u043E\u0442 \u0434\u0440\u0443\u0433\u0438\u0445 \u0434\u0430\u0440\u043E\u0432 \u0441\u0438\u043B\u044C\u043D\u0435\u0435 (+70%).",
+        tradeoff: "\u0417\u0430\u043C\u0435\u0434\u043B\u0435\u043D\u0438\u0435 \u0441\u043B\u0430\u0431\u043E\u0435: 20% \u043D\u0430 \u0442\u0440\u0438 \u0441\u0435\u043A\u0443\u043D\u0434\u044B.",
+        set: { slow: { pct: 0.2, sec: 3 }, brittle: { sec: 5, bonus: 0.7 }, shatter: { mult: 2.2 } }
+      }
+    }
   }
 };
 var WORLD_MANA_COST = {
@@ -534,12 +699,14 @@ var WORLD_MANA_COST = {
   // сдвинуть камень по весу
   fire: 16,
   // Огонь по препятствию, корням, кусту, факелу
-  seal: 20
+  seal: 20,
   // v0.10.1: значимое применение Астрала (учебный камень, ворота, сердце рощи)
+  ice: 14
+  // v0.18.0: заморозить воду, механизм, нестабильный предмет
 };
 var SCHOOL_XP_PER_USE = {
-  exploration: { telekinesis: 6, fire: 6, seal: 6 },
-  combat: { telekinesis: 5, fire: 5, seal: 5 }
+  exploration: { telekinesis: 6, fire: 6, seal: 6, ice: 6 },
+  combat: { telekinesis: 5, fire: 5, seal: 5, ice: 5 }
 };
 
 // src/config/heroes.js
@@ -564,6 +731,618 @@ var BY_ID = new Map(HEROES.map((h) => [h.id, h]));
 
 // src/state/hero.js
 var fm = (female, male) => ({ female, male });
+
+// src/config/world.city.js
+var CITY_START = { x: 1960, y: 3625 };
+var FOREST_RETURN = { x: 1600, y: 3625 };
+var CITY_ZONES = [
+  { id: "R", name: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0431\u043E\u043B\u044C\u0448\u043E\u0439 \u043C\u0438\u0440", x: 1800, y: 3300, w: 560, h: 650, safePoint: { x: 1960, y: 3625 } },
+  { id: "AR", name: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", x: 2440, y: 2560, w: 420, h: 480, safePoint: { x: 2650, y: 3150 } },
+  { id: "SO", name: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", x: 2960, y: 2560, w: 500, h: 480, safePoint: { x: 3210, y: 3150 } },
+  { id: "LB", name: "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", x: 1840, y: 4060, w: 480, h: 700, safePoint: { x: 2070, y: 3800 } },
+  { id: "DU", name: "\u0417\u0430\u043B \u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u043E\u0439 \u0414\u0443\u044D\u043B\u0438", x: 2420, y: 4100, w: 440, h: 360, safePoint: { x: 2640, y: 4020 } },
+  { id: "CV", name: "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", x: 2960, y: 4100, w: 500, h: 360, safePoint: { x: 3210, y: 4020 } },
+  { id: "WH", name: "\u0421\u043A\u043B\u0430\u0434\u0441\u043A\u043E\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 4500, w: 1140, h: 500, safePoint: { x: 2910, y: 4050 } },
+  { id: "FQ", name: "\u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 1500, w: 1160, h: 1e3, safePoint: { x: 2910, y: 3150 } },
+  { id: "P", name: "\u0426\u0435\u043D\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C", x: 2360, y: 1500, w: 1240, h: 3500, safePoint: { x: 2600, y: 3625 } }
+];
+var CITY_GROUND = [
+  { tex: "stone_path_01", x: 2360, y: 1500, w: 1240, h: 3540 },
+  { tex: "wooden_floor_01", x: 2440, y: 2560, w: 420, h: 480 },
+  { tex: "wooden_floor_01", x: 2960, y: 2560, w: 500, h: 480 },
+  // v0.22.0: Дуэльный зал и Дом Ковенов открыты (полы), тайная лаборатория к югу от дороги и проход к ней
+  { tex: "wooden_floor_01", x: 2420, y: 4100, w: 440, h: 360 },
+  { tex: "wooden_floor_01", x: 2960, y: 4100, w: 500, h: 360 },
+  { tex: "stone_path_01", x: 2020, y: 3950, w: 100, h: 120 },
+  { tex: "stone_path_01", x: 1840, y: 4060, w: 480, h: 700 }
+];
+function buildingTop(x, y, w, h, doorX) {
+  const t = 30;
+  return [
+    { kind: "wall", x, y, w: doorX - x, h: t },
+    { kind: "wall", x: doorX + 100, y, w: x + w - doorX - 100, h: t },
+    { kind: "wall", x, y, w: t, h },
+    { kind: "wall", x: x + w - t, y, w: t, h },
+    { kind: "wall", x, y: y + h - t, w, h: t }
+  ];
+}
+function building(x, y, w, h, doorX = null) {
+  const t = 30, out = [
+    { kind: "wall", x, y, w, h: t },
+    { kind: "wall", x, y, w: t, h },
+    { kind: "wall", x: x + w - t, y, w: t, h }
+  ];
+  if (doorX == null) out.push({ kind: "wall", x, y: y + h - t, w, h: t });
+  else out.push({ kind: "wall", x, y: y + h - t, w: doorX - x, h: t }, { kind: "wall", x: doorX + 100, y: y + h - t, w: x + w - doorX - 100, h: t });
+  return out;
+}
+var CITY_COLLIDERS = [
+  // ---- всё, что вне дороги и города, — лес (тёмная заливка, деревья — украшения ниже)
+  { kind: "trees", x: 1800, y: 0, w: 560, h: 3300 },
+  { kind: "trees", x: 1800, y: 3950, w: 220, h: 110 },
+  // v0.22.0: к югу от дороги — проход к тайной лаборатории (x 2020–2120)
+  { kind: "trees", x: 2360, y: 0, w: 1240, h: 1460 },
+  // v0.21.0: город вырос на север (Замёрзший квартал)
+  { kind: "trees", x: 2360, y: 5040, w: 1240, h: 360 },
+  // ---- городская стена (камень); ворота — проём в западной стене на y 3555–3700
+  { kind: "ruin", x: 2360, y: 1460, w: 40, h: 2095 },
+  { kind: "ruin", x: 2360, y: 3700, w: 40, h: 1340 },
+  { kind: "ruin", x: 2400, y: 1460, w: 1200, h: 40 },
+  { kind: "ruin", x: 2400, y: 5e3, w: 1200, h: 40 },
+  { kind: "ruin", x: 3560, y: 1500, w: 40, h: 3500 },
+  // ---- Архив и Общество Преображения (разрезы с дверью). v0.22.0: Дуэльный зал и Дом Ковенов — с дверью на площадь
+  //      (дверь зала закрыта астральным барьером final_ward до финала главы)
+  ...building(2440, 2560, 420, 480, 2600),
+  ...building(2960, 2560, 500, 480, 3160),
+  ...buildingTop(2420, 4100, 440, 360, 2590),
+  ...buildingTop(2960, 4100, 500, 360, 3160),
+  // ---- Замёрзший квартал: вход — улица между Архивом и Обществом (её закрывает ледяная стена frost_barrier, квест 7).
+  // v0.21.0: внутри квартал делит каменная ограда (y 1960–2000) с затопленным проломом fq_water — его замораживают Льдом (квест 9).
+  { kind: "ruin", x: 2400, y: 1960, w: 460, h: 40 },
+  { kind: "ruin", x: 2400, y: 2500, w: 40, h: 60 },
+  { kind: "ruin", x: 2440, y: 2500, w: 420, h: 60 },
+  { kind: "ruin", x: 2960, y: 2500, w: 600, h: 60 },
+  // ---- предметы с картинкой (низ спрайта на нижней кромке)
+  { kind: "furniture", x: 2700, y: 3520, w: 180, h: 60, tex: "fountain_frozen" },
+  { kind: "furniture", x: 3240, y: 3360, w: 220, h: 50, tex: "market_stall_01" },
+  { kind: "furniture", x: 2470, y: 2600, w: 140, h: 40, tex: "bookshelf_01" },
+  { kind: "furniture", x: 2650, y: 2600, w: 140, h: 40, tex: "bookshelf_01" },
+  { kind: "furniture", x: 2560, y: 2820, w: 110, h: 40, tex: "table_01" },
+  { kind: "furniture", x: 3e3, y: 2600, w: 140, h: 40, tex: "bookshelf_01" },
+  { kind: "furniture", x: 3300, y: 2620, w: 90, h: 40, tex: "cauldron_01" },
+  { kind: "furniture", x: 3060, y: 2840, w: 110, h: 40, tex: "table_01" },
+  { kind: "furniture", x: 3330, y: 3770, w: 110, h: 40, tex: "table_01" },
+  { kind: "furniture", x: 2480, y: 4620, w: 100, h: 40, tex: "crate_01" },
+  { kind: "furniture", x: 2640, y: 4700, w: 70, h: 40, tex: "barrel_01" },
+  { kind: "furniture", x: 3120, y: 4640, w: 100, h: 40, tex: "crate_01" },
+  { kind: "furniture", x: 3380, y: 4800, w: 100, h: 40, tex: "crate_01" },
+  // v0.21.0 (добавлено в конец): вторая половина ограды Замёрзшего квартала
+  { kind: "ruin", x: 2960, y: 1960, w: 600, h: 40 },
+  // v0.22.0 (добавлено в конец): лес вокруг тайной лаборатории и её каменные стены (вход — пролом x 2020–2120, его держит печать lab_seal)
+  { kind: "trees", x: 2120, y: 3950, w: 240, h: 110 },
+  { kind: "trees", x: 1800, y: 4060, w: 40, h: 1340 },
+  { kind: "trees", x: 2320, y: 4060, w: 40, h: 1340 },
+  { kind: "trees", x: 1840, y: 4760, w: 480, h: 640 },
+  { kind: "ruin", x: 1840, y: 4060, w: 180, h: 40 },
+  { kind: "ruin", x: 2120, y: 4060, w: 200, h: 40 },
+  { kind: "ruin", x: 1840, y: 4720, w: 480, h: 40 },
+  { kind: "furniture", x: 1880, y: 4400, w: 110, h: 40, tex: "table_01" },
+  { kind: "furniture", x: 2180, y: 4120, w: 140, h: 40, tex: "bookshelf_01" },
+  { kind: "furniture", x: 3020, y: 4140, w: 140, h: 40, tex: "bookshelf_01" }
+];
+var CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }, { x: 2360, y: 1460, w: 1240, h: 1840 }, { x: 1800, y: 3950, w: 560, h: 1450 }];
+var CITY_INTERACTIVES = [
+  // переходы между лесом и городом
+  {
+    id: "travel_to_city",
+    kind: "travel",
+    x: 1640,
+    y: 3625,
+    texture: "signpost_01",
+    radius: 110,
+    target: CITY_START,
+    requiresEvent: "ch2_start",
+    hint: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0433\u043E\u0440\u043E\u0434",
+    lockedText: "\u0412\u043E\u0441\u0442\u043E\u0447\u043D\u0430\u044F \u0442\u0440\u043E\u043F\u0430 \u0443\u0445\u043E\u0434\u0438\u0442 \u043A \u0431\u043E\u043B\u044C\u0448\u043E\u043C\u0443 \u043C\u0438\u0440\u0443. \u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u043D\u0443\u0436\u043D\u043E \u0437\u0430\u043A\u043E\u043D\u0447\u0438\u0442\u044C \u0434\u0435\u043B\u0430 \u0432 \u043B\u0435\u0441\u0443 \u2014 \u0438 \u043F\u043E\u0433\u043E\u0432\u043E\u0440\u0438\u0442\u044C \u0441 \u041C\u0438\u0440\u0440\u043E\u0439.",
+    text: "\u0422\u0440\u043E\u043F\u0430 \u0432\u044B\u0432\u043E\u0434\u0438\u0442 \u0438\u0437 \u043B\u0435\u0441\u0430 \u043D\u0430 \u0431\u043E\u043B\u044C\u0448\u0443\u044E \u0434\u043E\u0440\u043E\u0433\u0443. \u0412\u043F\u0435\u0440\u0435\u0434\u0438 \u2014 \u0433\u043E\u0440\u043E\u0434."
+  },
+  {
+    id: "travel_to_forest",
+    kind: "travel",
+    x: 1880,
+    y: 3625,
+    texture: "signpost_01",
+    radius: 110,
+    target: FOREST_RETURN,
+    hint: "\u0422\u0440\u043E\u043F\u0430 \u0432 \u043B\u0435\u0441",
+    text: "\u0417\u043D\u0430\u043A\u043E\u043C\u0430\u044F \u0442\u0440\u043E\u043F\u0430 \u2014 \u0434\u043E\u043C\u043E\u0439, \u043A \u041C\u0438\u0440\u0440\u0435."
+  },
+  // дорога: ресурсы
+  { id: "frostherb_r1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2060, y: 3420, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_start" },
+  { id: "frostherb_r2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2240, y: 3880, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_start" },
+  { id: "resin_r1", kind: "gather", res: "tree_resin", amount: 1, respawnSec: 240, x: 1920, y: 3860, texture: "resin_log_01", radius: 90 },
+  // площадь. v0.23.0: доска поручений (5 поручений дня, взять 3) — открывается после квеста 10
+  { id: "city_board", kind: "board", x: 2480, y: 3420, texture: "notice_board_01", collide: { w: 80, h: 20 }, radius: 120, hint: "\u0414\u043E\u0441\u043A\u0430 \u043F\u043E\u0440\u0443\u0447\u0435\u043D\u0438\u0439" },
+  { id: "npc_ilaria", kind: "npc", npc: "ilaria", x: 2560, y: 3260, texture: "npc_ilaria", collide: { w: 50, h: 24 }, radius: 140 },
+  { id: "npc_merchant", kind: "npc", npc: "merchant", x: 3350, y: 3500, texture: "npc_merchant", collide: { w: 50, h: 24 }, radius: 140 },
+  { id: "npc_banker", kind: "npc", npc: "banker", x: 3380, y: 3880, texture: "npc_banker", collide: { w: 50, h: 24 }, radius: 140 },
+  { id: "npc_duelist", kind: "npc", npc: "duelist", x: 2640, y: 4040, texture: "npc_duelist", collide: { w: 50, h: 24 }, radius: 140 },
+  {
+    id: "plaza_trace",
+    kind: "seal_sigil",
+    x: 2860,
+    y: 3720,
+    texture: "seal_sigil_dim",
+    litTexture: "seal_sigil_lit",
+    radius: 120,
+    requiresEvent: "ch2_met_ilaria",
+    doneEvent: "ch2_trace_astral",
+    hint: "\u0418\u043D\u0435\u0439 \u043D\u0430 \u043A\u0430\u043C\u043D\u044F\u0445",
+    lockedText: "\u0418\u043D\u0435\u0439 \u043B\u0451\u0433 \u0443\u0437\u043E\u0440\u043E\u043C \u2014 \u0431\u0443\u0434\u0442\u043E \u043A\u0442\u043E-\u0442\u043E \u0432\u044B\u0436\u0435\u0433 \u0435\u0433\u043E \u043C\u0430\u0433\u0438\u0435\u0439. \u0411\u0435\u0437 \u0410\u0441\u0442\u0440\u0430\u043B\u0430 \u043D\u0435 \u0440\u0430\u0437\u043E\u0431\u0440\u0430\u0442\u044C.",
+    doneTitle: "\u0421\u043B\u0435\u0434 \u043F\u0440\u043E\u044F\u0432\u0438\u043B\u0441\u044F",
+    doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u043F\u0440\u043E\u044F\u0432\u0438\u043B \u043F\u043E\u0434 \u0438\u043D\u0435\u0435\u043C \u0437\u043D\u0430\u043A\u0438: \u0440\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C, \u0441\u043B\u0435\u0434\u044B \u043B\u0443\u043D\u043D\u044B\u0445 \u043E\u0441\u043A\u043E\u043B\u043A\u043E\u0432 \u2014 \u0438 \u043A\u043B\u0435\u0439\u043C\u043E \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u043E\u0439, \u043A\u043E\u0442\u043E\u0440\u043E\u0433\u043E \u0432\u044B \u043D\u0438\u043A\u043E\u0433\u0434\u0430 \u043D\u0435 \u0432\u0438\u0434\u0435\u043B\u0438.",
+    doneButton: "\u0414\u0430\u043B\u044C\u0448\u0435"
+  },
+  {
+    id: "plaza_debris",
+    kind: "telekinesis",
+    mode: "push",
+    weight: "light",
+    x: 2960,
+    y: 3420,
+    texture: "crate_01",
+    collide: { w: 70, h: 30 },
+    target: { x: 3040, y: 3380 },
+    radius: 120,
+    requiresEvent: "ch2_met_ilaria",
+    doneEvent: "ch2_trace_debris",
+    hint: "\u0420\u0430\u0437\u0431\u0438\u0442\u044B\u0439 \u044F\u0449\u0438\u043A",
+    hiddenReward: { spawnPickup: { item: "frost_herb", amount: 2 } }
+  },
+  // Архив: старый документ, который читает Астрал
+  {
+    id: "archive_document",
+    kind: "seal_sigil",
+    x: 2615,
+    y: 2880,
+    texture: "magic_book_01",
+    litTexture: "magic_book_01",
+    radius: 110,
+    requiresEvent: "ch2_trace_found",
+    doneEvent: "ch2_archive_read",
+    hint: "\u0421\u0442\u0430\u0440\u044B\u0439 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442",
+    lockedText: "\u041F\u044B\u043B\u044C\u043D\u044B\u0435 \u043F\u0430\u043F\u043A\u0438 \u043E \u0445\u043E\u043B\u043E\u0434\u043D\u043E\u0439 \u043C\u0430\u0433\u0438\u0438. \u0418\u043B\u0430\u0440\u0438\u044F \u0441\u043A\u0430\u0436\u0435\u0442, \u0447\u0442\u043E \u0438\u0441\u043A\u0430\u0442\u044C.",
+    doneTitle: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F",
+    doneText: "\u041F\u043E\u0434 \u0410\u0441\u0442\u0440\u0430\u043B\u043E\u043C \u0432\u044B\u0446\u0432\u0435\u0442\u0448\u0438\u0435 \u0441\u0442\u0440\u043E\u043A\u0438 \u043F\u0440\u043E\u0441\u0442\u0443\u043F\u0438\u043B\u0438 \u0441\u043D\u043E\u0432\u0430. \u041B\u0435\u0434\u044F\u043D\u0430\u044F \u043C\u0430\u0433\u0438\u044F \u0432 \u044D\u0442\u0438\u0445 \u043A\u0440\u0430\u044F\u0445 \u0440\u0435\u0434\u043A\u0430 \u2014 \u0430 \u043D\u0435\u0434\u0430\u0432\u043D\u043E \u0432\u0441\u0435 \u0437\u0430\u043F\u0438\u0441\u0438 \u043E \u043D\u0435\u0439 \u0437\u0430\u0431\u0440\u0430\u043B \u0438\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u0442\u0435\u043B\u044C \u041E\u0431\u0449\u0435\u0441\u0442\u0432\u0430 \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F. \u041F\u043E\u0434\u043F\u0438\u0441\u044C: \u0421\u0435\u0432\u0435\u0440\u0438\u043D \u0412\u0435\u0439\u0440.",
+    doneButton: "\u041A \u041E\u0431\u0449\u0435\u0441\u0442\u0432\u0443"
+  },
+  // Общество Преображения
+  { id: "npc_severin", kind: "npc", npc: "severin", x: 3210, y: 2760, texture: "npc_severin", collide: { w: 50, h: 24 }, radius: 140, hideEvent: "ch2_final_start" },
+  // ---- v0.21.0: квест 6 «Пропавший груз» — Складской квартал (после боя со сборщиками)
+  {
+    id: "wh_cargo",
+    kind: "telekinesis",
+    mode: "push",
+    weight: "medium",
+    x: 3250,
+    y: 4930,
+    texture: "crate_01",
+    collide: { w: 70, h: 30 },
+    target: { x: 3330, y: 4900 },
+    radius: 120,
+    requiresEnemyDefeated: "wh_elite",
+    doneEvent: "ch2_cargo_found",
+    hint: "\u042F\u0449\u0438\u043A\u0438 \u0441 \u0433\u0440\u0443\u0437\u043E\u043C",
+    hiddenReward: { spawnPickup: { item: "ice_crystal", amount: 1 } }
+  },
+  {
+    id: "wh_equipment",
+    kind: "seal_sigil",
+    x: 2700,
+    y: 4930,
+    texture: "trunk_01",
+    litTexture: "trunk_01",
+    radius: 110,
+    requiresEvent: "ch2_cargo_found",
+    doneEvent: "ch2_serials_read",
+    hint: "\u041E\u0431\u043E\u0440\u0443\u0434\u043E\u0432\u0430\u043D\u0438\u0435 \u0441 \u043A\u043B\u0435\u0439\u043C\u043E\u043C",
+    lockedText: "\u042F\u0449\u0438\u043A \u0441 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430\u043C\u0438 \u043F\u043E\u0434 \u0438\u043D\u0435\u0435\u043C. \u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0440\u0430\u0437\u0431\u0435\u0440\u0438\u0442\u0435\u0441\u044C \u0441\u043E \u0441\u0431\u043E\u0440\u0449\u0438\u043A\u0430\u043C\u0438.",
+    doneTitle: "\u0421\u043F\u0438\u0441\u0430\u043D\u043D\u043E\u0435 \u043E\u0431\u043E\u0440\u0443\u0434\u043E\u0432\u0430\u043D\u0438\u0435",
+    doneText: "\u041F\u043E\u0434 \u0410\u0441\u0442\u0440\u0430\u043B\u043E\u043C \u043F\u0440\u043E\u0441\u0442\u0443\u043F\u0438\u043B\u0438 \u0441\u0435\u0440\u0438\u0439\u043D\u044B\u0435 \u043D\u043E\u043C\u0435\u0440\u0430 \u0438 \u043A\u043B\u0435\u0439\u043C\u043E \u041E\u0431\u0449\u0435\u0441\u0442\u0432\u0430 \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F. \u0420\u044F\u0434\u043E\u043C \u2014 \u043F\u0435\u0447\u0430\u0442\u044C: \xAB\u0421\u043F\u0438\u0441\u0430\u043D\u043E\xBB. \u041F\u043E\u043B\u0433\u043E\u0434\u0430 \u043D\u0430\u0437\u0430\u0434. \u041A\u0442\u043E-\u0442\u043E \u043F\u043E\u043B\u044C\u0437\u0443\u0435\u0442\u0441\u044F \u043E\u0431\u043E\u0440\u0443\u0434\u043E\u0432\u0430\u043D\u0438\u0435\u043C, \u043A\u043E\u0442\u043E\u0440\u043E\u0433\u043E \u043E\u0444\u0438\u0446\u0438\u0430\u043B\u044C\u043D\u043E \u043D\u0435\u0442.",
+    doneButton: "\u041A \u0418\u043B\u0430\u0440\u0438\u0438"
+  },
+  // ---- квест 7 «Чужими руками» → квест 8: ледяная стена на улице к Замёрзшему кварталу. Видна всегда, растапливается Огнём после волны холода.
+  {
+    id: "frost_barrier",
+    kind: "fire",
+    x: 2910,
+    y: 2560,
+    texture: "ice_wall_01",
+    collide: { w: 100, h: 60 },
+    radius: 130,
+    waitEvent: "ch2_frost_wave",
+    destroyEvent: "ch2_quarter_open",
+    burnSec: 1.6,
+    hint: "\u041B\u0435\u0434\u044F\u043D\u0430\u044F \u0441\u0442\u0435\u043D\u0430",
+    lockedText: "\u0423\u043B\u0438\u0446\u0443 \u043A \u0441\u0435\u0432\u0435\u0440\u043D\u043E\u043C\u0443 \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0443 \u043F\u0435\u0440\u0435\u0433\u043E\u0440\u043E\u0434\u0438\u043B\u0430 \u0441\u0442\u0435\u043D\u0430 \u043B\u044C\u0434\u0430. \u0413\u043E\u0440\u043E\u0434 \u0437\u0430\u043F\u0440\u0435\u0442\u0438\u043B \u0442\u0443\u0434\u0430 \u0445\u043E\u0434\u0438\u0442\u044C \u2014 \u043F\u043E\u043A\u0430.",
+    doneText: "\u041B\u0451\u0434 \u043F\u043E\u043F\u043B\u044B\u043B \u0438 \u043E\u0441\u0435\u043B. \u041F\u0443\u0442\u044C \u0432 \u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B \u043E\u0442\u043A\u0440\u044B\u0442."
+  },
+  // ---- квест 8 «То, что нельзя сжечь» — южная часть квартала
+  {
+    id: "ice_construct",
+    kind: "fire",
+    x: 2700,
+    y: 2330,
+    texture: "ice_construct_01",
+    collide: { w: 90, h: 30 },
+    radius: 130,
+    requiresEvent: "ch2_quarter_open",
+    destroyEvent: "ch2_construct_unstable",
+    burnSec: 1.4,
+    hint: "\u041B\u0435\u0434\u044F\u043D\u0430\u044F \u043A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F",
+    doneText: "\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F \u0442\u0440\u0435\u0441\u043D\u0443\u043B\u0430 \u2014 \u0438 \u0445\u043E\u043B\u043E\u0434 \u0440\u0432\u0430\u043D\u0443\u043B\u0441\u044F \u043D\u0430\u0440\u0443\u0436\u0443! \u041A\u0442\u043E-\u0442\u043E \u0432 \u0441\u0438\u043D\u0435\u043C \u043F\u043B\u0430\u0449\u0435 \u0432\u0441\u0442\u0430\u043B \u043C\u0435\u0436\u0434\u0443 \u0432\u0430\u043C\u0438 \u0438 \u0432\u0441\u043F\u044B\u0448\u043A\u043E\u0439."
+  },
+  { id: "npc_nerys", kind: "npc", npc: "nerys", x: 2800, y: 2230, texture: "npc_nerys", radius: 140, requiresEvent: "ch2_construct_unstable", hideEvent: "ch2_final_start" },
+  {
+    id: "fq_door",
+    kind: "seal_sigil",
+    x: 3420,
+    y: 2140,
+    texture: "frozen_door_01",
+    litTexture: "frozen_door_01",
+    radius: 120,
+    requiresEnemyDefeated: "fq_collector",
+    doneEvent: "ch2_rescue_door",
+    hint: "\u041E\u0431\u043B\u0435\u0434\u0435\u043D\u0435\u0432\u0448\u0430\u044F \u0434\u0432\u0435\u0440\u044C",
+    lockedText: "\u0417\u0430 \u0434\u0432\u0435\u0440\u044C\u044E \u043A\u0442\u043E-\u0442\u043E \u0441\u0442\u0443\u0447\u0438\u0442. \u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u2014 \u0441\u0431\u043E\u0440\u0449\u0438\u043A \u0440\u044F\u0434\u043E\u043C.",
+    doneTitle: "\u041B\u044E\u0434\u0438 \u0437\u0430 \u0434\u0432\u0435\u0440\u044C\u044E",
+    doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u043F\u043E\u043A\u0430\u0437\u0430\u043B \u0443\u0437\u043B\u044B, \u043D\u0430 \u043A\u043E\u0442\u043E\u0440\u044B\u0445 \u0434\u0435\u0440\u0436\u0438\u0442\u0441\u044F \u043B\u0451\u0434. \u041D\u044D\u0440\u0438\u0441 \u0440\u0430\u0437\u0431\u0438\u043B\u0430 \u0438\u0445 \u043E\u0434\u043D\u0438\u043C \u043A\u0430\u0441\u0430\u043D\u0438\u0435\u043C \u2014 \u0438 \u0434\u0432\u043E\u0435 \u0436\u0438\u0442\u0435\u043B\u0435\u0439 \u0432\u044B\u0448\u043B\u0438 \u043D\u0430\u0440\u0443\u0436\u0443, \u0434\u0440\u043E\u0436\u0430 \u043E\u0442 \u0445\u043E\u043B\u043E\u0434\u0430.",
+    doneButton: "\u0414\u0430\u043B\u044C\u0448\u0435"
+  },
+  {
+    id: "fq_cellar",
+    kind: "telekinesis",
+    mode: "push",
+    weight: "medium",
+    x: 2500,
+    y: 2190,
+    texture: "crate_01",
+    collide: { w: 70, h: 30 },
+    target: { x: 2470, y: 2120 },
+    radius: 120,
+    requiresEnemyDefeated: "fq_critter",
+    doneEvent: "ch2_rescue_cellar",
+    hint: "\u042F\u0449\u0438\u043A\u0438 \u043D\u0430\u0434 \u043F\u043E\u0433\u0440\u0435\u0431\u043E\u043C",
+    hiddenReward: { spawnPickup: { item: "frost_herb", amount: 1 } }
+  },
+  { id: "fq_cauldron", kind: "alchemy", x: 3080, y: 2160, texture: "cauldron_01", collide: { w: 66, h: 26 }, radius: 120, requiresEvent: "ch2_nerys_met" },
+  // ---- квест 9 «Холодная наука»: затопленный пролом в ограде замораживают Льдом — за ним тренировочный двор
+  {
+    id: "fq_water",
+    kind: "ice",
+    x: 2910,
+    y: 2010,
+    texture: "water_patch_01",
+    frozenTexture: "ice_floor_01",
+    walkable: true,
+    collide: { w: 100, h: 50 },
+    radius: 130,
+    doneEvent: "ch2_water_frozen",
+    hint: "\u0417\u0430\u0442\u043E\u043F\u043B\u0435\u043D\u043D\u044B\u0439 \u043F\u0440\u043E\u043B\u043E\u043C",
+    lockedText: "\u0412\u043E\u0434\u0430 \u0438\u0437 \u043B\u043E\u043F\u043D\u0443\u0432\u0448\u0435\u0439 \u0442\u0440\u0443\u0431\u044B \u0437\u0430\u043B\u0438\u043B\u0430 \u043F\u0440\u043E\u043B\u043E\u043C \u0432 \u043E\u0433\u0440\u0430\u0434\u0435. \u0417\u0434\u0435\u0441\u044C \u043F\u0440\u0438\u0433\u043E\u0434\u0438\u043B\u0441\u044F \u0431\u044B \u041B\u0451\u0434.",
+    doneText: "\u0412\u043E\u0434\u0430 \u0441\u0445\u0432\u0430\u0442\u0438\u043B\u0430\u0441\u044C \u043B\u044C\u0434\u043E\u043C \u2014 \u043C\u043E\u0436\u043D\u043E \u043F\u0440\u043E\u0439\u0442\u0438."
+  },
+  // ---- v0.22.0, квест 12 «Добровольцы»: тайная лаборатория к югу от дороги. Вход держит нестабильная печать — её успокаивает Лёд.
+  {
+    id: "lab_seal",
+    kind: "ice",
+    x: 2070,
+    y: 4100,
+    texture: "lab_seal_01",
+    frozenTexture: "lab_seal_frozen_01",
+    walkable: true,
+    collide: { w: 100, h: 40 },
+    radius: 130,
+    waitEvent: "ch2_lab_found",
+    doneEvent: "ch2_lab_open",
+    hint: "\u041D\u0435\u0441\u0442\u0430\u0431\u0438\u043B\u044C\u043D\u0430\u044F \u043F\u0435\u0447\u0430\u0442\u044C",
+    lockedText: "\u0421\u0442\u0430\u0440\u0430\u044F \u0434\u0432\u0435\u0440\u044C \u0432 \u0441\u043A\u043B\u043E\u043D\u0435 \u0445\u043E\u043B\u043C\u0430, \u043D\u0430 \u043D\u0435\u0439 \u0434\u0440\u043E\u0436\u0438\u0442 \u0447\u0443\u0436\u0430\u044F \u043F\u0435\u0447\u0430\u0442\u044C. \u0427\u0442\u043E \u0437\u0430 \u043D\u0435\u0439 \u2014 \u043F\u043E\u043A\u0430 \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E.",
+    doneText: "\u041B\u0451\u0434 \u0443\u0441\u043F\u043E\u043A\u043E\u0438\u043B \u043F\u0435\u0447\u0430\u0442\u044C \u2014 \u043C\u0430\u0433\u0438\u044F \u0437\u0430\u043C\u0435\u0440\u043B\u0430, \u0438 \u0434\u0432\u0435\u0440\u044C \u043F\u043E\u0434\u0430\u043B\u0430\u0441\u044C."
+  },
+  { id: "lab_herb_1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 1900, y: 4230, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_lab_open" },
+  { id: "lab_herb_2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2270, y: 4300, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_lab_open" },
+  {
+    id: "lab_chest",
+    kind: "chest",
+    x: 1910,
+    y: 4680,
+    texture: "trunk_01",
+    radius: 110,
+    requiresEvent: "ch2_lab_open",
+    reward: { items: { rune_dust: 2, lunar_shard: 2, frost_herb: 2 } }
+  },
+  { id: "lab_cauldron", kind: "alchemy", x: 2260, y: 4690, texture: "cauldron_01", collide: { w: 66, h: 26 }, radius: 120, requiresEvent: "ch2_lab_open" },
+  { id: "npc_tikhon", kind: "npc", npc: "tikhon", x: 1950, y: 4560, texture: "npc_tikhon", radius: 130, requiresEvent: "ch2_vol_1" },
+  {
+    id: "lab_journal",
+    kind: "seal_sigil",
+    x: 2160,
+    y: 4600,
+    texture: "magic_book_01",
+    litTexture: "magic_book_01",
+    radius: 110,
+    requiresEnemyDefeated: "lab_construct",
+    doneEvent: "ch2_lab_journal",
+    hint: "\u041B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u043D\u044B\u0439 \u0436\u0443\u0440\u043D\u0430\u043B",
+    doneTitle: "\u0416\u0443\u0440\u043D\u0430\u043B \u043E\u043F\u044B\u0442\u043E\u0432",
+    doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u043F\u0440\u043E\u044F\u0432\u0438\u043B \u0441\u0442\u0451\u0440\u0442\u044B\u0435 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u044B. \xAB\u0418\u0441\u043F\u044B\u0442\u0443\u0435\u043C\u044B\u0439 \u21164 \u2014 \u043F\u0440\u0438\u0448\u0451\u043B \u0441\u0430\u043C, \u0445\u043E\u0447\u0435\u0442 \u0437\u0430\u0449\u0438\u0449\u0430\u0442\u044C \u0441\u0435\u043C\u044C\u044E\xBB. \xAB\u0414\u043E\u0437\u0430 \u0441\u043D\u0438\u0436\u0435\u043D\u0430 \u043F\u043E \u0443\u043A\u0430\u0437\u0430\u043D\u0438\u044E \u0421. \u0412.\xBB. \u041F\u043E\u0434\u043F\u0438\u0441\u044C \u043F\u043E\u0434 \u043E\u0442\u0447\u0451\u0442\u043E\u043C \u2014 \u0421\u0435\u0432\u0435\u0440\u0438\u043D \u0412\u0435\u0439\u0440. \u041E\u043D \u0437\u043D\u0430\u043B.",
+    doneButton: "\u041A \u0418\u043B\u0430\u0440\u0438\u0438"
+  },
+  // ---- квест 15 «Город под инеем»: экзамен по четырём дарам на площади (даров — три из четырёх, слоты можно менять)
+  {
+    id: "final_debris",
+    kind: "telekinesis",
+    mode: "push",
+    weight: "heavy",
+    x: 2760,
+    y: 3960,
+    texture: "crate_01",
+    collide: { w: 70, h: 30 },
+    target: { x: 2820, y: 3900 },
+    radius: 120,
+    requiresEvent: "ch2_final_start",
+    doneEvent: "ch2_fin_tk",
+    hint: "\u0417\u0430\u0432\u0430\u043B \u0443 \u0414\u0443\u044D\u043B\u044C\u043D\u043E\u0433\u043E \u0437\u0430\u043B\u0430"
+  },
+  {
+    id: "final_ice_wall",
+    kind: "fire",
+    x: 3100,
+    y: 3700,
+    texture: "ice_wall_01",
+    radius: 130,
+    requiresEvent: "ch2_final_start",
+    destroyEvent: "ch2_fin_fire",
+    burnSec: 1.4,
+    hint: "\u041B\u0435\u0434\u044F\u043D\u0430\u044F \u043F\u0440\u0435\u0433\u0440\u0430\u0434\u0430",
+    doneText: "\u041F\u0440\u0435\u0433\u0440\u0430\u0434\u0430 \u0440\u0430\u0441\u0442\u0430\u044F\u043B\u0430 \u2014 \u0443\u043B\u0438\u0446\u0430 \u043A \u0440\u044B\u043D\u043A\u0443 \u0441\u0432\u043E\u0431\u043E\u0434\u043D\u0430."
+  },
+  {
+    id: "final_rift",
+    kind: "ice",
+    x: 2520,
+    y: 3880,
+    texture: "rift_01",
+    frozenTexture: "rift_frozen_01",
+    radius: 130,
+    requiresEvent: "ch2_final_start",
+    doneEvent: "ch2_fin_ice",
+    hint: "\u041D\u0435\u0441\u0442\u0430\u0431\u0438\u043B\u044C\u043D\u044B\u0439 \u0440\u0430\u0437\u043B\u043E\u043C",
+    lockedText: "\u0420\u0430\u0437\u043B\u043E\u043C \u0434\u0440\u043E\u0436\u0438\u0442 \u0438 \u0432\u044B\u043F\u043B\u0451\u0432\u044B\u0432\u0430\u0435\u0442 \u0445\u043E\u043B\u043E\u0434. \u0415\u0433\u043E \u0443\u0441\u043F\u043E\u043A\u043E\u0438\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u041B\u0451\u0434.",
+    doneText: "\u0420\u0430\u0437\u043B\u043E\u043C \u0441\u0445\u0432\u0430\u0442\u0438\u043B\u0441\u044F \u0440\u043E\u0432\u043D\u044B\u043C \u043B\u044C\u0434\u043E\u043C \u0438 \u0437\u0430\u0442\u0438\u0445."
+  },
+  {
+    id: "final_ward",
+    kind: "seal_sigil",
+    x: 2640,
+    y: 4130,
+    texture: "astral_ward_01",
+    litTexture: "astral_ward_01",
+    collide: { w: 100, h: 30 },
+    opens: true,
+    radius: 130,
+    requiresEvent: "ch2_final_start",
+    doneEvent: "ch2_fin_seal",
+    hint: "\u0410\u0441\u0442\u0440\u0430\u043B\u044C\u043D\u044B\u0439 \u0431\u0430\u0440\u044C\u0435\u0440",
+    lockedText: "\u0414\u0443\u044D\u043B\u044C\u043D\u044B\u0439 \u0437\u0430\u043B \u0437\u0430\u043A\u0440\u044B\u0442.",
+    doneTitle: "\u0411\u0430\u0440\u044C\u0435\u0440 \u0441\u043D\u044F\u0442",
+    doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u043D\u0430\u0448\u0451\u043B \u0448\u0432\u044B \u0431\u0430\u0440\u044C\u0435\u0440\u0430 \u2014 \u0438 \u0437\u0430\u0432\u0435\u0441\u0430 \u0440\u0430\u0441\u0441\u044B\u043F\u0430\u043B\u0430\u0441\u044C \u0438\u0441\u043A\u0440\u0430\u043C\u0438. \u0418\u0437\u043D\u0443\u0442\u0440\u0438 \u0442\u044F\u043D\u0435\u0442 \u0445\u043E\u043B\u043E\u0434\u043E\u043C \u0438 \u0433\u043E\u043B\u043E\u0441\u043E\u043C \u0421\u0435\u0432\u0435\u0440\u0438\u043D\u0430.",
+    doneButton: "\u0414\u0430\u043B\u044C\u0448\u0435"
+  },
+  { id: "npc_nerys_final", kind: "npc", npc: "nerys", x: 2800, y: 4040, texture: "npc_nerys", radius: 140, requiresEvent: "ch2_final_start" },
+  {
+    id: "final_letters",
+    kind: "seal_sigil",
+    x: 2510,
+    y: 4280,
+    texture: "magic_book_01",
+    litTexture: "magic_book_01",
+    radius: 110,
+    requiresEnemyDefeated: "final_severin",
+    doneEvent: "ch2_letters_read",
+    hint: "\u0417\u0430\u0448\u0438\u0444\u0440\u043E\u0432\u0430\u043D\u043D\u044B\u0435 \u043F\u0438\u0441\u044C\u043C\u0430",
+    doneTitle: "\u0427\u0443\u0436\u0430\u044F \u0440\u0443\u043A\u0430",
+    doneText: "\u041F\u043E\u0434 \u0410\u0441\u0442\u0440\u0430\u043B\u043E\u043C \u0448\u0438\u0444\u0440 \u043F\u043E\u043F\u043B\u044B\u043B. \u0414\u0435\u043D\u044C\u0433\u0438, \u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B\u044B, \u0441\u0442\u0430\u0440\u044B\u0435 \u0441\u0445\u0435\u043C\u044B \u2014 \u0432\u0441\u0451 \u044D\u0442\u043E \u0421\u0435\u0432\u0435\u0440\u0438\u043D\u0443 \u043F\u0435\u0440\u0435\u0434\u0430\u0432\u0430\u043B \u043A\u0442\u043E-\u0442\u043E \u0434\u0440\u0443\u0433\u043E\u0439. \u041F\u043E\u0434\u043F\u0438\u0441\u0438 \u043D\u0435\u0442. \u0422\u043E\u043B\u044C\u043A\u043E \u0437\u043D\u0430\u043A \u2014 \u0442\u043E\u0442 \u0441\u0430\u043C\u044B\u0439 \u0441\u0442\u0451\u0440\u0442\u044B\u0439 \u0443\u0437\u043E\u0440 \u0441 \u0414\u0440\u0435\u0432\u043D\u0438\u0445 \u0432\u043E\u0440\u043E\u0442 \u0432 \u043B\u0435\u0441\u0443 \u041C\u0438\u0440\u0440\u044B.",
+    doneButton: "\u041A \u0418\u043B\u0430\u0440\u0438\u0438"
+  },
+  { id: "npc_severin_after", kind: "npc", npc: "severin", x: 2780, y: 4380, texture: "npc_severin", radius: 130, requiresEvent: "ch2_severin_defeated" },
+  // ---- квест 14 «Не в одиночку»: Дом Ковенов
+  { id: "npc_rowena", kind: "npc", npc: "rowena", x: 3240, y: 4300, texture: "npc_rowena", collide: { w: 50, h: 24 }, radius: 140 }
+];
+var CITY_ENEMIES = [
+  // морозная вспышка на площади (квест 2): появляется, когда герой пришёл в город
+  { id: "plaza_critter", enemy: "frost_critter", x: 2780, y: 3800, radius: 130, requiresEvent: "ch2_city_arrived", defeatEvent: "ch2_plaza_cleared" },
+  // знакомый противник на дороге (квест 1, необязательный)
+  { id: "road_scavenger", enemy: "young_scavenger", x: 2120, y: 3640, radius: 110, requiresEvent: "ch2_start" },
+  // v0.21.0 — квест 6: Складской квартал
+  { id: "wh_collector_1", enemy: "frost_collector", x: 2560, y: 4800, radius: 120, requiresEvent: "ch2_cargo_start", repeatSec: 600 },
+  { id: "wh_collector_2", enemy: "frost_collector", x: 3240, y: 4720, radius: 120, requiresEvent: "ch2_cargo_start", repeatSec: 600 },
+  { id: "wh_elite", enemy: "frost_collector_elite", x: 2930, y: 4880, radius: 130, requiresEvent: "ch2_cargo_start", defeatEvent: "ch2_wh_boss" },
+  // квест 7: зверь, сбежавший из закрытой лаборатории, — у дверей Общества
+  { id: "lab_critter", enemy: "frost_critter", x: 3210, y: 3240, radius: 120, requiresEvent: "ch2_severin_asked", defeatEvent: "ch2_lab_critter" },
+  // квест 8: Замёрзший квартал (появляются после знакомства с Нэрис)
+  { id: "fq_critter", enemy: "frost_critter", x: 2560, y: 2400, radius: 120, requiresEvent: "ch2_nerys_met", repeatSec: 480 },
+  { id: "fq_collector", enemy: "frost_collector", x: 3300, y: 2300, radius: 120, requiresEvent: "ch2_nerys_met" },
+  // квест 9: тренировочный двор за проломом
+  { id: "fq_training", enemy: "frost_critter", x: 2910, y: 1830, radius: 110, requiresEvent: "unlock_ice_1", defeatEvent: "ch2_training_done" },
+  // квест 10 «Выбор»: глубина квартала
+  { id: "fq_deep_1", enemy: "frost_collector", x: 2600, y: 1740, radius: 120, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_deep_1", repeatSec: 600 },
+  { id: "fq_deep_2", enemy: "frost_collector", x: 3240, y: 1740, radius: 120, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_deep_2", repeatSec: 600 },
+  { id: "fq_guardian", enemy: "ice_guardian", x: 2910, y: 1690, radius: 140, requiresEvent: "ch2_choice_start", defeatEvent: "ch2_ice_guardian_defeated", repeatSec: 1200 },
+  // v0.22.0 — квест 11 «Хрупкость»: учебные бои во дворе
+  { id: "yard_brittle_1", enemy: "frost_collector", x: 2480, y: 1880, radius: 110, requiresEvent: "unlock_ice_2", defeatEvent: "ch2_brittle_1" },
+  { id: "yard_brittle_2", enemy: "frost_collector", x: 3400, y: 1880, radius: 110, requiresEvent: "unlock_ice_2", defeatEvent: "ch2_brittle_2" },
+  // квест 12: добровольцы и конструкт в лаборатории
+  { id: "vol_1", enemy: "volunteer", x: 1970, y: 4320, radius: 110, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_vol_1" },
+  { id: "vol_2", enemy: "volunteer", x: 2200, y: 4420, radius: 110, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_vol_2" },
+  { id: "lab_construct", enemy: "experimental_construct", x: 2080, y: 4600, radius: 120, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_lab_construct", repeatSec: 900 },
+  // квест 14: нестабильные конструкции в городе
+  { id: "unstable_1", enemy: "frost_collector", x: 3e3, y: 3980, radius: 110, requiresEvent: "ch2_coven_met", defeatEvent: "ch2_unstable_1" },
+  { id: "unstable_2", enemy: "frost_collector", x: 2720, y: 4660, radius: 110, requiresEvent: "ch2_coven_met", defeatEvent: "ch2_unstable_2" },
+  // квест 15: город во льду и Северин в Дуэльном зале
+  { id: "final_critter", enemy: "frost_critter", x: 2900, y: 3420, radius: 110, requiresEvent: "ch2_final_start" },
+  { id: "final_collector", enemy: "frost_collector", x: 3240, y: 3620, radius: 110, requiresEvent: "ch2_final_start" },
+  { id: "final_construct", enemy: "experimental_construct", x: 2480, y: 3560, radius: 120, requiresEvent: "ch2_final_start" },
+  { id: "final_severin", enemy: "severin_boss", x: 2640, y: 4320, radius: 130, requiresEvent: "ch2_ice3", defeatEvent: "ch2_severin_defeated" }
+];
+var CITY_DECOR = [
+  ...[3330, 3420, 3510, 3990, 4080, 4170].map((y, i) => ({ id: `ct_tree_${i}`, k: i % 2 ? "tree_dark_02" : "tree_dark_01", x: i === 4 ? 2250 : 1840 + i % 3 * 170, y: y < 3600 ? 3300 : 4030 })),
+  // v0.22.0: проход к лаборатории свободен
+  ...[1900, 2050, 2200, 2330].map((x, i) => ({ id: `ct_treeN_${i}`, k: "tree_dark_01", x, y: 3290 })),
+  ...[1880, 1960, 2200, 2330].map((x, i) => ({ id: `ct_treeS_${i}`, k: "tree_dark_02", x, y: 4060 })),
+  ...[[2440, 3530], [2440, 3800], [3040, 3240], [3040, 4e3], [2900, 4300], [2900, 2470]].map(([x, y], i) => ({ id: `ct_lamp_${i}`, k: "city_lamp_01", x, y })),
+  { id: "ct_frost_1", k: "frost_patch_01", x: 2760, y: 3700, floor: true },
+  { id: "ct_frost_2", k: "frost_patch_01", x: 2980, y: 3860, floor: true },
+  { id: "ct_frost_3", k: "frost_patch_01", x: 2620, y: 3560, floor: true },
+  { id: "ct_candles", k: "candle_group_01", x: 2780, y: 2650 },
+  // v0.21.0: Замёрзший квартал — иней на мостовой и фонари
+  ...[[2560, 2300], [3180, 2420], [2680, 2080], [3360, 2060], [2560, 1660], [3240, 1640], [2700, 1880], [3420, 1860]].map(([x, y], i) => ({ id: `fq_frost_${i}`, k: "frost_patch_01", x, y, floor: true })),
+  ...[[2440, 2470], [3520, 2470], [2440, 1940], [3520, 1940], [2440, 1540], [3520, 1540]].map(([x, y], i) => ({ id: `fq_lamp_${i}`, k: "city_lamp_01", x, y }))
+];
+
+// src/config/world.expeditions.js
+var FROSTWOOD_START = { x: 3820, y: 2380 };
+var GRAVEYARD_START = { x: 3820, y: 5060 };
+var CITY_EAST_POINT = { x: 3470, y: 3220 };
+var OPEN = "chapter_2_complete";
+var EXP_ZONES = [
+  { id: "FW", name: "\u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441", x: 3700, y: 300, w: 1600, h: 2200, safePoint: FROSTWOOD_START },
+  { id: "GY", name: "\u0421\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435", x: 3700, y: 2800, w: 1600, h: 2400, safePoint: GRAVEYARD_START }
+];
+var EXP_GROUND = [
+  { tex: "snow_ground_01", x: 3700, y: 300, w: 1600, h: 2200 },
+  { tex: "grave_ground_01", x: 3700, y: 2800, w: 1600, h: 2400 }
+];
+var EXP_COLLIDERS = [
+  // лес вокруг участков и между ними
+  { kind: "trees", x: 3600, y: 0, w: 100, h: 5400 },
+  { kind: "trees", x: 3700, y: 0, w: 1700, h: 300 },
+  { kind: "trees", x: 3700, y: 2500, w: 1700, h: 300 },
+  { kind: "trees", x: 3700, y: 5200, w: 1700, h: 200 },
+  { kind: "trees", x: 5300, y: 0, w: 100, h: 5400 },
+  // Морозный лес: чащи, между которыми вьётся тропа на север
+  { kind: "trees", x: 3700, y: 1900, w: 700, h: 180 },
+  { kind: "trees", x: 4600, y: 1900, w: 700, h: 180 },
+  { kind: "trees", x: 4150, y: 1300, w: 1150, h: 160 },
+  { kind: "trees", x: 3700, y: 760, w: 1050, h: 160 },
+  // Старое кладбище: ограды рядов и склеп
+  { kind: "ruin", x: 3700, y: 4500, w: 650, h: 40 },
+  { kind: "ruin", x: 4550, y: 4500, w: 750, h: 40 },
+  { kind: "ruin", x: 3700, y: 3700, w: 900, h: 40 },
+  { kind: "ruin", x: 4800, y: 3700, w: 500, h: 40 },
+  { kind: "furniture", x: 4400, y: 3040, w: 200, h: 50, tex: "crypt_01" }
+];
+var EXP_KEEP_CLEAR = [{ x: 3600, y: 0, w: 1800, h: 5400 }];
+var EXP_OBJECT_LIST = [
+  // указатели: из города — в вылазки (с описанием места), из вылазок — в город
+  {
+    id: "travel_frostwood",
+    kind: "travel",
+    x: 3500,
+    y: 3150,
+    texture: "signpost_01",
+    radius: 110,
+    target: FROSTWOOD_START,
+    requiresEvent: OPEN,
+    hint: "\u0412\u044B\u043B\u0430\u0437\u043A\u0430: \u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441",
+    lockedText: "\u0421\u0435\u0432\u0435\u0440\u043D\u0430\u044F \u0434\u043E\u0440\u043E\u0433\u0430 \u0432\u0435\u0434\u0451\u0442 \u0432 \u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441. \u0422\u0443\u0434\u0430 \u0445\u043E\u0434\u044F\u0442 \u0442\u0435, \u043A\u0442\u043E \u0443\u0436\u0435 \u043F\u0435\u0440\u0435\u0436\u0438\u043B \u0438\u043D\u0435\u0439 (\u043F\u043E\u0441\u043B\u0435 \u0433\u043B\u0430\u0432\u044B II).",
+    brief: { title: "\u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441", text: "\u0412\u043E\u043B\u043A\u0438 \u0438 \u0432\u043E\u0436\u0430\u043A \u043C\u0435\u0442\u0435\u043B\u0438. \u0425\u043E\u043B\u043E\u0434 \u0438\u043C \u043D\u0435 \u0441\u0442\u0440\u0430\u0448\u0435\u043D \u2014 \u041B\u0451\u0434 \u0431\u044C\u0451\u0442 \u0441\u043B\u0430\u0431\u0435\u0435, \u0430 \u0432\u043E\u0442 \u041E\u0433\u043E\u043D\u044C \u043E\u043D\u0438 \u043D\u0435 \u043B\u044E\u0431\u044F\u0442.\n\n\u0412\u043D\u0443\u0442\u0440\u0438: \u043C\u043E\u0440\u043E\u0437\u043D\u0438\u043A \u0438 \u043B\u0435\u0434\u044F\u043D\u044B\u0435 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u044B, \u0447\u0435\u0442\u044B\u0440\u0435 \u0432\u043E\u043B\u0447\u0438\u0446\u044B, \u0412\u043E\u0436\u0430\u043A \u043C\u0435\u0442\u0435\u043B\u0438 \u0438 \u0435\u0433\u043E \u0437\u0430\u043F\u0430\u0441 (\u0438\u043D\u0435\u0435\u0432\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A). \u0417\u0432\u0435\u0440\u0438 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u044E\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 10 \u043C\u0438\u043D\u0443\u0442, \u0432\u043E\u0436\u0430\u043A \u2014 \u0447\u0435\u0440\u0435\u0437 \u0447\u0430\u0441." },
+    text: "\u0421\u0435\u0432\u0435\u0440\u043D\u0430\u044F \u0434\u043E\u0440\u043E\u0433\u0430 \u0432\u044B\u0432\u043E\u0434\u0438\u0442 \u0432 \u0437\u0430\u0441\u043D\u0435\u0436\u0435\u043D\u043D\u044B\u0439 \u043B\u0435\u0441."
+  },
+  {
+    id: "travel_graveyard",
+    kind: "travel",
+    x: 3500,
+    y: 3300,
+    texture: "signpost_01",
+    radius: 110,
+    target: GRAVEYARD_START,
+    requiresEvent: OPEN,
+    hint: "\u0412\u044B\u043B\u0430\u0437\u043A\u0430: \u0421\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435",
+    lockedText: "\u0421\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435 \u0437\u0430 \u0432\u043E\u0441\u0442\u043E\u0447\u043D\u044B\u043C\u0438 \u0432\u043E\u0440\u043E\u0442\u0430\u043C\u0438. \u0422\u0443\u0434\u0430 \u0445\u043E\u0434\u044F\u0442 \u0442\u0435, \u043A\u0442\u043E \u0443\u0436\u0435 \u043F\u0435\u0440\u0435\u0436\u0438\u043B \u0438\u043D\u0435\u0439 (\u043F\u043E\u0441\u043B\u0435 \u0433\u043B\u0430\u0432\u044B II).",
+    brief: { title: "\u0421\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435", text: "\u041C\u043E\u0433\u0438\u043B\u044C\u043D\u044B\u0435 \u043E\u0433\u043E\u043D\u044C\u043A\u0438, \u043F\u0441\u044B \u0438 \u0421\u0442\u0440\u0430\u0436 \u043A\u0443\u0440\u0433\u0430\u043D\u0430. \u041E\u0433\u043E\u043D\u044C \u0437\u0434\u0435\u0441\u044C \u043F\u043E\u0447\u0442\u0438 \u0431\u0435\u0441\u043F\u043E\u043B\u0435\u0437\u0435\u043D; \u0410\u0441\u0442\u0440\u0430\u043B \u043F\u0440\u043E\u0431\u0438\u0432\u0430\u0435\u0442 \u0438 \u0437\u0430\u0449\u0438\u0442\u0443 \u043E\u0433\u043E\u043D\u044C\u043A\u043E\u0432, \u0438 \u0431\u0440\u043E\u043D\u044E \u0441\u0442\u0440\u0430\u0436\u0430. \u041F\u0441\u0430\u043C \u043D\u0438\u043F\u043E\u0447\u0451\u043C \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437.\n\n\u0412\u043D\u0443\u0442\u0440\u0438: \u0440\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C, \u0433\u0440\u0438\u0431\u044B \u0438 \u043B\u0443\u043D\u043D\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A, \u0447\u0435\u0442\u0432\u0435\u0440\u043E \u043F\u0440\u043E\u0442\u0438\u0432\u043D\u0438\u043A\u043E\u0432, \u0421\u0442\u0440\u0430\u0436 \u043A\u0443\u0440\u0433\u0430\u043D\u0430 \u0438 \u0435\u0433\u043E \u0437\u0430\u043F\u0430\u0441. \u041F\u0440\u043E\u0442\u0438\u0432\u043D\u0438\u043A\u0438 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u044E\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 10 \u043C\u0438\u043D\u0443\u0442, \u0441\u0442\u0440\u0430\u0436 \u2014 \u0447\u0435\u0440\u0435\u0437 \u0447\u0430\u0441." },
+    text: "\u0417\u0430 \u0432\u043E\u0440\u043E\u0442\u0430\u043C\u0438 \u2014 \u0442\u0438\u0445\u043E\u0435 \u0441\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435. \u0421\u043B\u0438\u0448\u043A\u043E\u043C \u0442\u0438\u0445\u043E\u0435."
+  },
+  { id: "travel_fw_back", kind: "travel", x: 3760, y: 2440, texture: "signpost_01", radius: 110, target: CITY_EAST_POINT, hint: "\u0412 \u0433\u043E\u0440\u043E\u0434", text: "\u041D\u0430\u0437\u0430\u0434, \u0432 \u0433\u043E\u0440\u043E\u0434." },
+  { id: "travel_gy_back", kind: "travel", x: 3760, y: 5120, texture: "signpost_01", radius: 110, target: CITY_EAST_POINT, hint: "\u0412 \u0433\u043E\u0440\u043E\u0434", text: "\u041D\u0430\u0437\u0430\u0434, \u0432 \u0433\u043E\u0440\u043E\u0434." },
+  // Морозный лес: сбор
+  { id: "fw_herb_1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 4500, y: 2300, texture: "moon_herb_01", radius: 90 },
+  { id: "fw_herb_2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 3900, y: 1650, texture: "moon_herb_01", radius: 90 },
+  { id: "fw_herb_3", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 5100, y: 1100, texture: "moon_herb_01", radius: 90 },
+  { id: "fw_crystal_1", kind: "gather", res: "ice_crystal", amount: 1, respawnSec: 900, x: 5150, y: 2250, texture: "ice_crystal_node_01", radius: 90 },
+  { id: "fw_crystal_2", kind: "gather", res: "ice_crystal", amount: 1, respawnSec: 900, x: 3850, y: 600, texture: "ice_crystal_node_01", radius: 90 },
+  {
+    id: "fw_cache",
+    kind: "stash",
+    guard: "fw_alpha",
+    x: 4500,
+    y: 450,
+    texture: "trunk_01",
+    emptyTexture: "trunk_01",
+    radius: 110,
+    items: { frost_shard: 1, ice_crystal: 1 },
+    hint: "\u041B\u043E\u0433\u043E\u0432\u043E \u0432\u043E\u0436\u0430\u043A\u0430",
+    label: "\u0417\u0430\u0431\u0440\u0430\u0442\u044C \u0434\u043E\u0431\u044B\u0447\u0443",
+    guardText: "\u041B\u043E\u0433\u043E\u0432\u043E \u0441\u0442\u0435\u0440\u0435\u0436\u0451\u0442 \u0412\u043E\u0436\u0430\u043A \u043C\u0435\u0442\u0435\u043B\u0438."
+  },
+  // Старое кладбище: сбор
+  { id: "gy_dust_1", kind: "gather", res: "rune_dust", amount: 1, respawnSec: 300, x: 4100, y: 4800, texture: "rune_sigil_01", radius: 90 },
+  { id: "gy_dust_2", kind: "gather", res: "rune_dust", amount: 1, respawnSec: 300, x: 5100, y: 3950, texture: "rune_sigil_01", radius: 90 },
+  { id: "gy_mush_1", kind: "gather", res: "forest_mushroom", amount: 1, respawnSec: 300, x: 5050, y: 4900, texture: "mushrooms_brown_01", radius: 90 },
+  { id: "gy_mush_2", kind: "gather", res: "forest_mushroom", amount: 1, respawnSec: 300, x: 3900, y: 4100, texture: "mushrooms_brown_01", radius: 90 },
+  { id: "gy_shard_1", kind: "gather", res: "lunar_shard", amount: 1, respawnSec: 900, x: 3900, y: 3300, texture: "field_crystal", radius: 90 },
+  {
+    id: "gy_cache",
+    kind: "stash",
+    guard: "gy_warden",
+    x: 4800,
+    y: 3050,
+    texture: "trunk_01",
+    emptyTexture: "trunk_01",
+    radius: 110,
+    items: { frost_shard: 1, lunar_shard: 2 },
+    hint: "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u0435 \u043A\u0443\u0440\u0433\u0430\u043D\u0430",
+    label: "\u0417\u0430\u0431\u0440\u0430\u0442\u044C \u0434\u043E\u0431\u044B\u0447\u0443",
+    guardText: "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u0435 \u0441\u0442\u0435\u0440\u0435\u0436\u0451\u0442 \u0421\u0442\u0440\u0430\u0436 \u043A\u0443\u0440\u0433\u0430\u043D\u0430."
+  }
+];
+var EXP_INTERACTIVES = EXP_OBJECT_LIST.map((o) => o.kind === "travel" ? o : { ...o, requiresEvent: OPEN });
+var EXP_ENEMY_LIST = [
+  { id: "fw_wolf_1", enemy: "frost_wolf", x: 4150, y: 2250, radius: 120, repeatSec: 600 },
+  { id: "fw_wolf_2", enemy: "frost_wolf", x: 4800, y: 1650, radius: 120, repeatSec: 600 },
+  { id: "fw_wolf_3", enemy: "frost_wolf", x: 4e3, y: 1150, radius: 120, repeatSec: 600 },
+  { id: "fw_wolf_4", enemy: "frost_wolf", x: 4950, y: 900, radius: 120, repeatSec: 600 },
+  { id: "fw_alpha", enemy: "frost_alpha", x: 4500, y: 620, radius: 140, repeatSec: 3600 },
+  { id: "gy_wisp_1", enemy: "grave_wisp", x: 4300, y: 4850, radius: 120, repeatSec: 600 },
+  { id: "gy_hound_1", enemy: "grave_hound", x: 4900, y: 4700, radius: 120, repeatSec: 600 },
+  { id: "gy_wisp_2", enemy: "grave_wisp", x: 4300, y: 4100, radius: 120, repeatSec: 600 },
+  { id: "gy_hound_2", enemy: "grave_hound", x: 4950, y: 4150, radius: 120, repeatSec: 600 },
+  { id: "gy_warden", enemy: "barrow_warden", x: 4500, y: 3300, radius: 140, repeatSec: 3600 }
+];
+var EXP_ENEMIES = EXP_ENEMY_LIST.map((e) => ({ ...e, requiresEvent: OPEN }));
+var EXP_DECOR = [
+  // заснеженные ели вдоль чащ и по краям
+  ...[[3760, 520], [3990, 470], [5240, 520], [5240, 1500], [3760, 1450], [5240, 2350], [4700, 2440], [4380, 1720], [4740, 1180], [4250, 640]].map(([x, y], i) => ({ id: `fw_tree_${i}`, k: i % 2 ? "tree_frost_02" : "tree_frost_01", x, y })),
+  ...[[4300, 1980], [4900, 1600], [4100, 1500], [4700, 800], [5e3, 2200], [3900, 900]].map(([x, y], i) => ({ id: `fw_frost_${i}`, k: "frost_patch_01", x, y, floor: true })),
+  // надгробия рядами, сухие деревья, свечи у склепа
+  ...[3850, 4e3, 4150, 4700, 4850, 5e3, 5150].flatMap((x, i) => [
+    { id: `gy_stone_a${i}`, k: i % 2 ? "gravestone_02" : "gravestone_01", x, y: 4650 },
+    { id: `gy_stone_b${i}`, k: i % 2 ? "gravestone_01" : "gravestone_02", x: x + 30, y: 3880 }
+  ]),
+  ...[[3760, 3050], [5240, 3100], [5240, 4350], [3760, 4350], [4650, 5150]].map(([x, y], i) => ({ id: `gy_dead_${i}`, k: "dead_tree_grey_01", x, y })),
+  { id: "gy_candles_1", k: "candle_group_01", x: 4380, y: 3110 },
+  { id: "gy_candles_2", k: "candle_group_01", x: 4640, y: 3110 }
+];
 
 // src/config/world.content.js
 var CONTENT_INTERACTIVES = [
@@ -810,10 +1589,22 @@ var CACHE_RESOURCE_REWARDS = {
   trail_cache: { forest_mushroom: 1 },
   west_chest: { rune_dust: 1 }
 };
+var CONTENT_DECOR = [
+  { id: "dc_rug", k: "rug_01", x: 905, y: 5222, floor: true },
+  { id: "dc_herbs_l", k: "herb_bundle_01", x: 866, y: 4918 },
+  { id: "dc_herbs_r", k: "herb_bundle_01", x: 936, y: 4918, flip: true },
+  { id: "dc_plant", k: "plant_pot_01", x: 1108, y: 5250 },
+  { id: "dc_campfire", k: "campfire_01", x: 1462, y: 3978, fire: true },
+  ...CITY_DECOR,
+  // v0.20.0: город
+  ...EXP_DECOR
+  // v0.24.0: вылазки
+];
 
 // src/config/world.layout.js
 var WORLD = {
-  width: 1800,
+  width: 5400,
+  // v0.20.0: восточнее леса — дорога и город (world.city.js); v0.24.0: ещё восточнее — вылазки (world.expeditions.js)
   height: 5400,
   playerStart: { x: 900, y: 5200 },
   defaultSafePoint: { x: 900, y: 4820 }
@@ -827,7 +1618,88 @@ var ZONES = [
   { id: "H", name: "\u0414\u0440\u0435\u0432\u043D\u0438\u0439 \u043A\u0440\u0443\u0433 \u041E\u0433\u043D\u044F", x: 820, y: 1100, w: 880, h: 780, safePoint: { x: 1250, y: 1760 } },
   { id: "J", name: "\u041D\u043E\u0432\u0430\u044F \u0447\u0430\u0441\u0442\u044C \u043B\u0435\u0441\u0430", x: 100, y: 1640, w: 600, h: 2460, safePoint: { x: 400, y: 3900 } },
   { id: "K", name: "\u041F\u043E\u043B\u044F\u043D\u0430 \u041B\u0435\u0441\u043D\u043E\u0433\u043E \u0421\u0442\u0440\u0430\u0436\u0430", x: 100, y: 1100, w: 600, h: 540, safePoint: { x: 400, y: 1760 } },
-  { id: "L", name: "\u0414\u0440\u0435\u0432\u043D\u0438\u0435 \u0432\u043E\u0440\u043E\u0442\u0430", x: 0, y: 0, w: 1800, h: 1100, safePoint: { x: 900, y: 820 } }
+  { id: "L", name: "\u0414\u0440\u0435\u0432\u043D\u0438\u0435 \u0432\u043E\u0440\u043E\u0442\u0430", x: 0, y: 0, w: 1800, h: 1100, safePoint: { x: 900, y: 820 } },
+  ...CITY_ZONES,
+  // v0.20.0: глава II
+  ...EXP_ZONES
+  // v0.24.0: вылазки
+];
+var GROUND = [
+  { tex: "wooden_floor_01", x: 640, y: 4880, w: 520, h: 420 },
+  ...CITY_GROUND,
+  ...EXP_GROUND
+];
+var KEEP_CLEAR = [
+  { x: 300, y: 3990, w: 200, h: 200 },
+  // проём корней
+  { x: 1120, y: 1860, w: 260, h: 200 },
+  // проход под глыбу
+  { x: 250, y: 1260, w: 300, h: 240 },
+  // проход Стража
+  { x: 820, y: 330, w: 160, h: 220 },
+  // ворота
+  { x: 700, y: 125, w: 960, h: 210 },
+  // v0.10.0: поляна узла за воротами (то же, что CLEARINGS в world.content.js)
+  ...CITY_KEEP_CLEAR,
+  ...EXP_KEEP_CLEAR
+];
+var COLLIDERS = [
+  // границы мира (лес)
+  { kind: "trees", x: 0, y: 0, w: 100, h: 4880 },
+  { kind: "trees", x: 1700, y: 0, w: 100, h: 3550 },
+  { kind: "trees", x: 1700, y: 3700, w: 100, h: 1180 },
+  { kind: "trees", x: 1760, y: 3550, w: 40, h: 150 },
+  { kind: "trees", x: 100, y: 0, w: 1600, h: 110 },
+  // A — дом ведьмы
+  { kind: "wall", x: 640, y: 4880, w: 220, h: 30 },
+  { kind: "wall", x: 940, y: 4880, w: 220, h: 30 },
+  { kind: "wall", x: 640, y: 4880, w: 30, h: 420 },
+  { kind: "wall", x: 1130, y: 4880, w: 30, h: 420 },
+  { kind: "wall", x: 640, y: 5270, w: 520, h: 30 },
+  // v0.8: tex — картинка мебели (вместо прямоугольника с подписью); размер на экране — DISPLAY_SIZE
+  { kind: "furniture", x: 690, y: 5150, w: 90, h: 100, label: "\u043A\u0440\u043E\u0432\u0430\u0442\u044C", tex: "bed_01" },
+  { kind: "furniture", x: 1010, y: 4960, w: 100, h: 60, label: "\u0441\u0442\u043E\u043B", tex: "table_01" },
+  { kind: "furniture", x: 690, y: 4910, w: 150, h: 34, label: "\u043F\u043E\u043B\u043A\u0438", tex: "bookshelf_01" },
+  { kind: "furniture", x: 960, y: 4910, w: 140, h: 34, label: "\u043F\u043E\u043B\u043A\u0438", tex: "bookshelf_01" },
+  { kind: "trees", x: 100, y: 4880, w: 540, h: 520 },
+  { kind: "trees", x: 1160, y: 4880, w: 640, h: 520 },
+  // B — стартовая поляна: вход в западный лес закрыт корнями (проем 300–500)
+  { kind: "trees", x: 100, y: 4030, w: 200, h: 110 },
+  { kind: "trees", x: 500, y: 4030, w: 200, h: 110 },
+  // C — лесная тропа
+  { kind: "trees", x: 820, y: 3300, w: 130, h: 800 },
+  { kind: "trees", x: 1550, y: 3300, w: 150, h: 250 },
+  { kind: "trees", x: 1550, y: 3700, w: 150, h: 400 },
+  // D — первая боевая поляна (коридор мимо врага)
+  { kind: "trees", x: 820, y: 2900, w: 280, h: 220 },
+  { kind: "trees", x: 1400, y: 2900, w: 300, h: 220 },
+  // E — лунный алтарь
+  { kind: "ruin", x: 1180, y: 2170, w: 140, h: 50, label: "\u0430\u043B\u0442\u0430\u0440\u044C" },
+  { kind: "trees", x: 1560, y: 2360, w: 80, h: 50, single: true },
+  // G — тяжёлый проход (проем 1150–1350 закрыт глыбой)
+  { kind: "ruin", x: 820, y: 1900, w: 330, h: 120 },
+  { kind: "ruin", x: 1350, y: 1900, w: 350, h: 120 },
+  // H — круг Огня (тупик)
+  { kind: "trees", x: 820, y: 1250, w: 880, h: 50 },
+  // J — новая часть леса (извилистая тропа)
+  { kind: "trees", x: 100, y: 3600, w: 230, h: 120 },
+  { kind: "trees", x: 470, y: 3200, w: 230, h: 120 },
+  { kind: "trees", x: 100, y: 2700, w: 240, h: 120 },
+  { kind: "trees", x: 460, y: 2250, w: 240, h: 120 },
+  // K — поляна Стража (проем 280–520 закрыт Стражем)
+  { kind: "ruin", x: 100, y: 1300, w: 180, h: 160 },
+  { kind: "ruin", x: 520, y: 1300, w: 180, h: 160 },
+  // L — древние ворота
+  { kind: "ruin", x: 640, y: 330, w: 120, h: 110 },
+  { kind: "ruin", x: 1040, y: 330, w: 120, h: 110 },
+  // v0.10.0: древняя стена по обе стороны ворот — за ворота можно попасть только через них (Печать открывает проход).
+  // Новые стены — в конце списка: базовые c0… сохраняют свои номера для правок редактора.
+  { kind: "ruin", x: 100, y: 330, w: 540, h: 110 },
+  { kind: "ruin", x: 1160, y: 330, w: 540, h: 110 },
+  // v0.20.0: дорога и город (только в конец — id коллайдеров c<номер>)
+  ...CITY_COLLIDERS,
+  ...EXP_COLLIDERS
+  // v0.24.0: после городских (номера коллайдеров города не сдвигаются)
 ];
 var BASE_INTERACTIVES = [
   // A
@@ -967,7 +1839,7 @@ for (const o of BASE_INTERACTIVES) {
   const extra = CACHE_RESOURCE_REWARDS[o.id];
   if (extra) o.reward = { ...o.reward, items: { ...o.reward.items || {}, ...extra } };
 }
-var INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES];
+var INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES, ...EXP_INTERACTIVES];
 var BASE_ENEMY_SPAWNS = [
   { id: "scavenger_01", enemy: "forest_scavenger", x: 1250, y: 3010, radius: 180, startEvent: "combat_intro_01" },
   {
@@ -992,7 +1864,7 @@ var BASE_ENEMY_SPAWNS = [
     scale: 1.5
   }
 ];
-var ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES];
+var ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES, ...CITY_ENEMIES, ...EXP_ENEMIES];
 
 // src/config/game.config.js
 var SAVE = {
@@ -1028,6 +1900,29 @@ function materialize(state) {
   setMana(state, mana(state));
 }
 
+// src/config/sapphires.js
+var SAPPHIRES = {
+  // ускорение изучения: за price сапфиров таймер короче на chunkMin минут; совсем до нуля нельзя (остаётся не меньше minLeftSec
+  // и не меньше (1 − maxCutPct) полного времени); за сутки (UTC) — не больше dailyChunks таких шагов
+  speedup: { chunkMin: 15, price: 1, maxCutPct: 0.75, minLeftSec: 60, dailyChunks: 24 },
+  respec: 5,
+  // смена ветки вместо монет (BRANCH_RESPEC.coins)
+  preset: { price: 30, max: 3 },
+  // первый пресет бесплатный, следующие — за сапфиры, всего не больше max
+  welcome: 3
+  // один раз — за открытие кошелька (в главе II — «Банк»)
+};
+function sapphireRules() {
+  const s = SAPPHIRES.speedup;
+  return {
+    speedup: { chunkMs: s.chunkMin * 6e4, price: s.price, maxCutPct: s.maxCutPct, minLeftMs: s.minLeftSec * 1e3, dailyChunks: s.dailyChunks },
+    respec: SAPPHIRES.respec,
+    presetPrice: SAPPHIRES.preset.price,
+    presetMax: SAPPHIRES.preset.max,
+    welcome: SAPPHIRES.welcome
+  };
+}
+
 // src/state/GameState.js
 var SAVE_VERSION = 1;
 function createDefaultState(heroId = DEFAULT_HERO_ID) {
@@ -1041,7 +1936,9 @@ function createDefaultState(heroId = DEFAULT_HERO_ID) {
     telekinesisLevel: 0,
     fireLevel: 0,
     sealLevel: 0,
-    schoolXP: { telekinesis: 0, fire: 0, seal: 0 },
+    iceLevel: 0,
+    // v0.18.0
+    schoolXP: { telekinesis: 0, fire: 0, seal: 0, ice: 0 },
     unlockedAbilities: [],
     completedEvents: [],
     openedPaths: [],
@@ -1050,7 +1947,9 @@ function createDefaultState(heroId = DEFAULT_HERO_ID) {
     // состояние отдельных объектов мира: { [id]: { state, x, y } }
     worldObjects: {},
     research: null,
-    // { upgradeId, startedAt, durationMs }
+    // { upgradeId, startedAt, durationMs, fullMs? } (fullMs — полное время до ускорений за сапфиры)
+    wallet: { sapphires: 0, daily: {}, welcome: false },
+    // v0.17.0: кошелёк сапфиров — только от сервера
     player: { x: WORLD.playerStart.x, y: WORLD.playerStart.y },
     safePoint: { ...WORLD.defaultSafePoint },
     hp: null,
@@ -1319,7 +2218,15 @@ var GameState = class {
       slots: ids(o.slots),
       // null — слоты не настраивались: действуют первые открытые дары
       amulets: ids(o.amulets) || [],
-      preset: o.preset && typeof o.preset === "object" ? { slots: ids(o.preset.slots) || [], amulets: ids(o.preset.amulets) || [] } : null
+      // v0.19.0: уровни улучшения амулетов { амулет: 1…3 }
+      amuletLevels: Object.fromEntries(Object.entries(o.amuletLevels && typeof o.amuletLevels === "object" ? o.amuletLevels : {}).filter(([k, v]) => AMULETS[k] && Number.isInteger(v) && v > 0).map(([k, v]) => [k, Math.min(v, AMULET_UPGRADES.length)])),
+      preset: o.preset && typeof o.preset === "object" ? { slots: ids(o.preset.slots) || [], amulets: ids(o.preset.amulets) || [] } : null,
+      // v0.17.0: пресеты по номерам (1 — бесплатный, 2… — открытые за сапфиры) и сколько их открыто
+      presetSlots: Number.isInteger(o.presetSlots) && o.presetSlots >= 1 ? Math.min(o.presetSlots, SAPPHIRES.preset.max) : 1,
+      presets: Object.fromEntries(Array.from({ length: SAPPHIRES.preset.max }, (_, i) => {
+        const p = o[i === 0 ? "preset" : `preset${i + 1}`];
+        return [i + 1, p && typeof p === "object" ? { slots: ids(p.slots) || [], amulets: ids(p.amulets) || [] } : null];
+      }))
     };
   }
   /** Выбранная ветка дара или null. Ветка действует, только пока она есть в данных дара и ступень её достигла. */
@@ -1332,6 +2239,16 @@ var GameState = class {
     const raw = this.getObject("player_build");
     const o = raw && typeof raw === "object" ? raw : {};
     this.setObject("player_build", { ...o, branches: { ...o.branches && typeof o.branches === "object" ? o.branches : {}, [abilityId]: branchId } });
+  }
+  // ---------- v0.17.0: сапфиры (баланс — только от сервера) ----------
+  sapphires() {
+    return Number(this.data.wallet?.sapphires) || 0;
+  }
+  /** Сколько шагов ускорения изучения ещё можно сегодня (сутки UTC). */
+  speedupStepsLeftToday() {
+    const d = this.data.wallet?.daily || {};
+    const day = Math.floor(this.now() / 864e5);
+    return SAPPHIRES.speedup.dailyChunks - (d.d === day ? d.n || 0 : 0);
   }
   // ---------- слоты даров, пресет и амулеты (v0.16.0, config/build.js) ----------
   /** Сколько слотов даров у героини. */
@@ -1370,17 +2287,21 @@ var GameState = class {
     return { ok: true };
   }
   /** Единственный бесплатный пресет: сохранить текущие слоты и амулеты / применить сохранённые. */
-  buildPreset(mode, inCombat = false) {
+  buildPreset(mode, inCombat = false, slot = 1) {
+    if (mode !== "save" && mode !== "load") return { ok: false, reason: "bad" };
+    if (!Number.isInteger(slot) || slot < 1 || slot > SAPPHIRES.preset.max) return { ok: false, reason: "bad" };
     if (inCombat) return { ok: false, reason: "combat" };
+    if (slot > this.buildData().presetSlots) return { ok: false, reason: "locked" };
+    const key = slot === 1 ? "preset" : `preset${slot}`;
     const raw = this.getObject("player_build");
     const o = raw && typeof raw === "object" ? { ...raw } : {};
     if (mode === "save") {
-      o.preset = { slots: this.equippedGifts(), amulets: this.equippedAmulets() };
+      o[key] = { slots: this.equippedGifts(), amulets: this.equippedAmulets() };
       this.setObject("player_build", o);
       return { ok: true };
     }
     if (mode === "load") {
-      const p = this.buildData().preset;
+      const p = this.buildData().presets[slot];
       if (!p) return { ok: false, reason: "empty" };
       o.slots = [...p.slots];
       o.amulets = [...p.amulets];
@@ -1460,7 +2381,90 @@ var RECIPES = {
     learn: "\u0420\u0435\u0446\u0435\u043F\u0442 \u0441\u0442\u0430\u043D\u0435\u0442 \u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D, \u043A\u043E\u0433\u0434\u0430 \u0430\u043B\u0442\u0430\u0440\u044C \u0441\u043D\u043E\u0432\u0430 \u0437\u0430\u0441\u0432\u0435\u0442\u0438\u0442\u0441\u044F."
   }
 };
-var RECIPE_ORDER = ["elixir_life", "elixir_mana", "resin_flask", "lunar_wick", "revealing_compound", "restoration_bundle"];
+Object.assign(RECIPES, {
+  warm_potion: {
+    kind: "potion",
+    chapter: 2,
+    result: "warm_potion",
+    amount: 1,
+    needs: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 },
+    requires: ["ch2_nerys_met"],
+    crafted: "warm_potion_crafted",
+    note: "\u041C\u043E\u0440\u043E\u0437\u043D\u0438\u043A, \u043F\u0440\u043E\u0433\u0440\u0435\u0442\u044B\u0439 \u043B\u0443\u043D\u043D\u043E\u0439 \u0442\u0440\u0430\u0432\u043E\u0439, \u2014 \u0442\u0435\u043F\u043B\u043E \u0438\u0437\u043D\u0443\u0442\u0440\u0438."
+  },
+  stabilizing_potion: {
+    kind: "potion",
+    chapter: 2,
+    result: "stabilizing_potion",
+    amount: 1,
+    needs: { frost_herb: 2, rune_dust: 1, lunar_shard: 1 },
+    requires: ["ch2_lab_open"],
+    note: "\u0423\u0441\u043F\u043E\u043A\u0430\u0438\u0432\u0430\u0435\u0442 \u043D\u0435\u0441\u0442\u0430\u0431\u0438\u043B\u044C\u043D\u0443\u044E \u043C\u0430\u0433\u0438\u044E \u0432 \u0442\u0435\u043B\u0435."
+  },
+  brittle_flask: {
+    kind: "potion",
+    chapter: 2,
+    result: "brittle_flask",
+    amount: 1,
+    needs: { ice_crystal: 1, tree_resin: 1, rune_dust: 1 },
+    requires: ["unlock_ice_2"],
+    crafted: "brittle_flask_crafted",
+    note: "\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u043B \u0445\u043E\u043B\u043E\u0434\u0430 \u0432 \u0441\u043C\u043E\u043B\u0435: \u0440\u0430\u0437\u0431\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u043E \u0446\u0435\u043B\u044C \u0438 \u0434\u0435\u043B\u0430\u0435\u0442 \u0435\u0451 \u0445\u0440\u0443\u043F\u043A\u043E\u0439."
+  },
+  crystal_guard: {
+    kind: "potion",
+    chapter: 2,
+    result: "crystal_guard",
+    amount: 1,
+    needs: { ice_crystal: 1, forest_mushroom: 1, tree_resin: 1 },
+    requires: ["ch2_quarter_cleared"],
+    note: "\u0422\u043E\u043D\u043A\u0430\u044F \u043B\u0435\u0434\u044F\u043D\u0430\u044F \u043A\u043E\u0440\u043A\u0430 \u043F\u043E\u0432\u0435\u0440\u0445 \u043A\u043E\u0436\u0438 \u2014 \u043D\u0430 \u043E\u0434\u0438\u043D \u0441\u0435\u0440\u044C\u0451\u0437\u043D\u044B\u0439 \u0431\u043E\u0439."
+  },
+  reinforced_resin: {
+    kind: "component",
+    chapter: 2,
+    result: "reinforced_resin",
+    amount: 1,
+    needs: { tree_resin: 2, crimson_ember: 1, frost_herb: 1 },
+    requires: ["ch2_cargo_found"],
+    note: "\u0421\u043C\u043E\u043B\u0430, \u0437\u0430\u043A\u0430\u043B\u0451\u043D\u043D\u0430\u044F \u0443\u0433\u043B\u0451\u043C \u0438 \u0445\u043E\u043B\u043E\u0434\u043E\u043C."
+  },
+  astral_lens: {
+    kind: "tool",
+    chapter: 2,
+    result: "astral_lens",
+    amount: 1,
+    needs: { rune_dust: 2, lunar_shard: 1, ice_crystal: 1 },
+    requires: ["ch2_cargo_reported"],
+    note: "\u041B\u0438\u043D\u0437\u0430 \u0438\u0437 \u043B\u044C\u0434\u0430 \u0438 \u043B\u0443\u043D\u043D\u043E\u0433\u043E \u043E\u0441\u043A\u043E\u043B\u043A\u0430."
+  },
+  amulet_frost: {
+    kind: "amulet",
+    chapter: 2,
+    result: "amulet_frost",
+    amount: 1,
+    needs: { lunar_shard: 4, rune_dust: 4, ice_crystal: 3, frost_shard: 1, coins: 250 },
+    requires: ["ch2_quarter_cleared"],
+    blockedBy: ["amulet_frost_crafted"],
+    crafted: "amulet_frost_crafted",
+    note: "\u041F\u0435\u0440\u0432\u044B\u0439 \u0430\u043C\u0443\u043B\u0435\u0442 \u041B\u044C\u0434\u0430. \u041D\u0443\u0436\u0435\u043D \u043E\u0434\u0438\u043D: \u0434\u0430\u043B\u044C\u0448\u0435 \u0435\u0433\u043E \u0443\u043B\u0443\u0447\u0448\u0430\u044E\u0442."
+  }
+});
+var RECIPE_ORDER = [
+  "elixir_life",
+  "elixir_mana",
+  "resin_flask",
+  "warm_potion",
+  "stabilizing_potion",
+  "brittle_flask",
+  "crystal_guard",
+  "lunar_wick",
+  "revealing_compound",
+  "restoration_bundle",
+  "reinforced_resin",
+  "astral_lens",
+  "amulet_frost"
+];
 var POTION_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "potion");
 var STORY_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "story");
 
@@ -1502,6 +2506,252 @@ var SIDE_QUESTS = {
 var SIDE_QUEST_ORDER = ["sq_herbs", "sq_hunter", "sq_dust"];
 var questEvent = (id, kind) => `${id}_${kind}`;
 
+// src/config/shop.js
+var SHOP = {
+  requires: "city_merchant_open",
+  buy: {
+    moon_herb: 18,
+    forest_mushroom: 20,
+    tree_resin: 16,
+    rune_dust: 28,
+    lunar_shard: 45,
+    frost_herb: 22,
+    ice_crystal: 55
+  },
+  sellPct: 0.33,
+  maxQty: 99
+};
+var sellPrice = (id) => SHOP.buy[id] ? Math.floor(SHOP.buy[id] * SHOP.sellPct) : 0;
+function shopRules() {
+  return { requires: SHOP.requires, buy: { ...SHOP.buy }, sell: Object.fromEntries(Object.keys(SHOP.buy).map((k) => [k, sellPrice(k)])), maxQty: SHOP.maxQty };
+}
+
+// src/config/daily.js
+var DAILY = {
+  requires: "ch2_quarter_cleared",
+  // доска открывается во второй половине главы II (после квеста 10)
+  offers: 5,
+  picks: 3,
+  dayMs: 864e5
+};
+var DAILY_POOL = {
+  herbs_alchemist: {
+    giver: "\u0411\u043E\u0440\u0438\u0441, \u043B\u0430\u0432\u043A\u0430",
+    title: "\u041C\u043E\u0440\u043E\u0437\u043D\u0438\u043A \u0434\u043B\u044F \u043D\u0430\u0441\u0442\u043E\u0435\u043A",
+    text: "\u0410\u043B\u0445\u0438\u043C\u0438\u043A\u0443 \u0441 \u0440\u044B\u043D\u043A\u0430 \u043D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442 \u043C\u043E\u0440\u043E\u0437\u043D\u0438\u043A\u0430 \u2014 \u043F\u043E\u043A\u0443\u043F\u0430\u0442\u0435\u043B\u0438 \u0433\u0440\u0435\u044E\u0442\u0441\u044F \u043D\u0430\u0441\u0442\u043E\u0439\u043A\u0430\u043C\u0438.",
+    goal: { type: "deliver", items: { frost_herb: 4 } },
+    reward: { heroXP: 40, coins: 30, items: { moon_herb: 1 } }
+  },
+  archive_crystal: {
+    giver: "\u0418\u043B\u0430\u0440\u0438\u044F, \u0410\u0440\u0445\u0438\u0432",
+    title: "\u041E\u0431\u0440\u0430\u0437\u0435\u0446 \u0434\u043B\u044F \u0410\u0440\u0445\u0438\u0432\u0430",
+    text: "\u0410\u0440\u0445\u0438\u0432\u0443 \u043D\u0443\u0436\u0435\u043D \u043E\u0431\u0440\u0430\u0437\u0435\u0446 \u043B\u0435\u0434\u044F\u043D\u043E\u0433\u043E \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u0430 \u2014 \u0441\u0440\u0430\u0432\u043D\u0438\u0442\u044C \u0441 \u0437\u0430\u043F\u0438\u0441\u044F\u043C\u0438 \u043E \u043F\u0440\u043E\u0448\u043B\u044B\u0445 \u0432\u0441\u043F\u044B\u0448\u043A\u0430\u0445.",
+    goal: { type: "deliver", items: { ice_crystal: 1 } },
+    reward: { heroXP: 50, coins: 25, items: { rune_dust: 1 } }
+  },
+  warm_test: {
+    giver: "\u041D\u044D\u0440\u0438\u0441",
+    title: "\u0418\u0441\u043F\u044B\u0442\u0430\u0442\u044C \u0442\u0451\u043F\u043B\u044B\u0439 \u043D\u0430\u0441\u0442\u043E\u0439",
+    text: "\u041D\u044D\u0440\u0438\u0441 \u043F\u0440\u043E\u0441\u0438\u0442 \u0442\u0451\u043F\u043B\u044B\u0439 \u043D\u0430\u0441\u0442\u043E\u0439 \u2014 \u043F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u043D\u043E\u0432\u0443\u044E \u0437\u0430\u043A\u0432\u0430\u0441\u043A\u0443 \u043C\u043E\u0440\u043E\u0437\u043D\u0438\u043A\u0430.",
+    goal: { type: "deliver", items: { warm_potion: 1 } },
+    reward: { heroXP: 45, coins: 35, items: { ice_crystal: 1 } }
+  },
+  guard_resin: {
+    giver: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u0430\u044F \u0441\u0442\u0440\u0430\u0436\u0430",
+    title: "\u0421\u043C\u043E\u043B\u0430 \u0434\u043B\u044F \u0444\u0430\u043A\u0435\u043B\u043E\u0432",
+    text: "\u041D\u043E\u0447\u043D\u044B\u0435 \u043F\u0430\u0442\u0440\u0443\u043B\u0438 \u0436\u0433\u0443\u0442 \u0444\u0430\u043A\u0435\u043B\u044B \u0432\u0442\u0440\u043E\u0435 \u0447\u0430\u0449\u0435. \u041D\u0443\u0436\u043D\u0430 \u0441\u043C\u043E\u043B\u0430.",
+    goal: { type: "deliver", items: { tree_resin: 3 } },
+    reward: { heroXP: 35, coins: 25, items: { forest_mushroom: 1 } }
+  },
+  society_dust: {
+    giver: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F",
+    title: "\u041F\u044B\u043B\u044C \u0434\u043B\u044F \u043F\u0440\u0438\u0431\u043E\u0440\u043E\u0432",
+    text: "\u0427\u0435\u0441\u0442\u043D\u0430\u044F \u0447\u0430\u0441\u0442\u044C \u041E\u0431\u0449\u0435\u0441\u0442\u0432\u0430 \u0447\u0438\u043D\u0438\u0442 \u0441\u0432\u043E\u0438 \u043F\u0440\u0438\u0431\u043E\u0440\u044B \u2014 \u0438\u043C \u043D\u0443\u0436\u043D\u0430 \u0440\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C.",
+    goal: { type: "deliver", items: { rune_dust: 2 } },
+    reward: { heroXP: 40, coins: 30, items: { lunar_shard: 1 } }
+  },
+  healer_elixirs: {
+    giver: "\u041B\u0435\u043A\u0430\u0440\u044C \u0443 \u0444\u043E\u043D\u0442\u0430\u043D\u0430",
+    title: "\u041D\u0430\u0441\u0442\u043E\u0438 \u0434\u043B\u044F \u043E\u0431\u043C\u043E\u0440\u043E\u0436\u0435\u043D\u043D\u044B\u0445",
+    text: "\u041F\u043E\u0441\u043B\u0435 \u0432\u043E\u043B\u043D\u044B \u0445\u043E\u043B\u043E\u0434\u0430 \u0443 \u043B\u0435\u043A\u0430\u0440\u044F \u043E\u0447\u0435\u0440\u0435\u0434\u044C. \u0414\u0432\u0430 \u043D\u0430\u0441\u0442\u043E\u044F \u0436\u0438\u0437\u043D\u0438 \u0441\u043F\u0430\u0441\u0443\u0442 \u0447\u0435\u0439-\u0442\u043E \u0432\u0435\u0447\u0435\u0440.",
+    goal: { type: "deliver", items: { elixir_life: 2 } },
+    reward: { heroXP: 50, coins: 40 }
+  },
+  coven_mushrooms: {
+    giver: "\u0420\u043E\u0432\u0435\u043D\u0430, \u041A\u043E\u0432\u0435\u043D",
+    title: "\u0413\u0440\u0438\u0431\u044B \u0434\u043B\u044F \u043E\u0431\u0435\u0440\u0435\u0433\u043E\u0432",
+    text: "\u041A\u043E\u0432\u0435\u043D \u043F\u043B\u0435\u0442\u0451\u0442 \u043E\u0431\u0435\u0440\u0435\u0433\u0438 \u0434\u043B\u044F \u0441\u0442\u0435\u043D. \u041D\u0443\u0436\u043D\u044B \u043B\u0435\u0441\u043D\u044B\u0435 \u0433\u0440\u0438\u0431\u044B.",
+    goal: { type: "deliver", items: { forest_mushroom: 3 } },
+    reward: { heroXP: 35, coins: 25, items: { frost_herb: 1 } }
+  },
+  hunt_collectors: {
+    giver: "\u0421\u043A\u043B\u0430\u0434\u0441\u043A\u043E\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B",
+    title: "\u0421\u0431\u043E\u0440\u0449\u0438\u043A\u0438 \u0432\u0435\u0440\u043D\u0443\u043B\u0438\u0441\u044C",
+    text: "\u041D\u0430 \u0441\u043A\u043B\u0430\u0434\u0430\u0445 \u0438 \u0432 \u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0435\u043C \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0435 \u0441\u043D\u043E\u0432\u0430 \u0431\u0440\u043E\u0434\u044F\u0442 \u043C\u043E\u0440\u043E\u0437\u043D\u044B\u0435 \u0441\u0431\u043E\u0440\u0449\u0438\u043A\u0438. \u041E\u0442\u0433\u043E\u043D\u0438\u0442\u0435 \u0434\u0432\u043E\u0438\u0445.",
+    goal: { type: "wins", spawns: ["wh_collector_1", "wh_collector_2", "fq_deep_1", "fq_deep_2"], count: 2 },
+    reward: { heroXP: 60, coins: 40, items: { ice_crystal: 1 } }
+  },
+  hunt_critter: {
+    giver: "\u0416\u0438\u0442\u0435\u043B\u0438 \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0430",
+    title: "\u0417\u0432\u0435\u0440\u0451\u043A \u0443 \u043F\u043E\u0433\u0440\u0435\u0431\u0430",
+    text: "\u0418\u043D\u0435\u0435\u0432\u044B\u0439 \u0437\u0432\u0435\u0440\u0451\u043A \u0441\u043D\u043E\u0432\u0430 \u0441\u043A\u0440\u0435\u0431\u0451\u0442\u0441\u044F \u0443 \u043F\u043E\u0433\u0440\u0435\u0431\u0430 \u043D\u0430 \u0437\u0430\u043F\u0430\u0434\u0435 \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0430.",
+    goal: { type: "wins", spawns: ["fq_critter"], count: 1 },
+    reward: { heroXP: 40, coins: 25, items: { frost_herb: 2 } }
+  },
+  hunt_rootlings: {
+    giver: "\u041C\u0438\u0440\u0440\u0430",
+    title: "\u041A\u043E\u0440\u043D\u0435\u0432\u0438\u043A\u0438 \u0443 \u0442\u0440\u043E\u043F\u044B",
+    text: "\u041C\u0438\u0440\u0440\u0430 \u043F\u0438\u0448\u0435\u0442: \u043A\u043E\u0440\u043D\u0435\u0432\u0438\u043A\u0438 \u0432 \u0441\u0442\u0430\u0440\u043E\u043C \u043B\u0435\u0441\u0443 \u0441\u043D\u043E\u0432\u0430 \u043E\u0436\u0438\u0432\u0438\u043B\u0438\u0441\u044C. \u0414\u0432\u043E\u0438\u0445 \u0445\u0432\u0430\u0442\u0438\u0442, \u0447\u0442\u043E\u0431\u044B \u043E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0435 \u043F\u0440\u0438\u0442\u0438\u0445\u043B\u0438.",
+    goal: { type: "wins", spawns: ["rootling_01", "rootling_02", "rootling_03"], count: 2 },
+    reward: { heroXP: 45, coins: 30, items: { tree_resin: 2 } }
+  },
+  construct_test: {
+    giver: "\u041D\u044D\u0440\u0438\u0441",
+    title: "\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442 \u0432 \u043F\u043E\u0433\u0440\u0435\u0431\u0435",
+    text: "\u0412 \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u0438 \u0441\u043D\u043E\u0432\u0430 \u0441\u043E\u0431\u0440\u0430\u043B\u0441\u044F \u043A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442. \u0420\u0430\u0437\u0431\u0435\u0440\u0438\u0442\u0435 \u0435\u0433\u043E \u2014 \u041D\u044D\u0440\u0438\u0441 \u0438\u0437\u0443\u0447\u0438\u0442 \u043E\u0431\u043B\u043E\u043C\u043A\u0438.",
+    goal: { type: "wins", spawns: ["lab_construct"], count: 1 },
+    requires: "ch2_lab_open",
+    reward: { heroXP: 60, coins: 40, items: { ice_crystal: 2 } }
+  },
+  guardian_hunt: {
+    giver: "\u0421\u0442\u0440\u0430\u0436\u0430 \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0430",
+    title: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0441\u0442\u0440\u0430\u0436",
+    text: "\u0412 \u0433\u043B\u0443\u0431\u0438\u043D\u0435 \u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0435\u0433\u043E \u043A\u0432\u0430\u0440\u0442\u0430\u043B\u0430 \u0441\u043D\u043E\u0432\u0430 \u0441\u0442\u043E\u0438\u0442 \u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0441\u0442\u0440\u0430\u0436. \u041F\u0440\u043E\u0439\u0434\u0438\u0442\u0435 \u043C\u0438\u043C\u043E \u043D\u0435\u0433\u043E \u2014 \u0447\u0435\u0440\u0435\u0437 \u043D\u0435\u0433\u043E.",
+    goal: { type: "wins", spawns: ["fq_guardian"], count: 1 },
+    reward: { heroXP: 60, coins: 40, items: { ice_crystal: 1 } }
+  },
+  // v0.24.0: охота в вылазках (после главы II)
+  hunt_wolves: {
+    giver: "\u041E\u0445\u043E\u0442\u043D\u0438\u043A\u0438 \u0443 \u0441\u0435\u0432\u0435\u0440\u043D\u043E\u0439 \u0434\u043E\u0440\u043E\u0433\u0438",
+    title: "\u0412\u043E\u043B\u0447\u0438\u0446\u044B \u043C\u0435\u0442\u0435\u043B\u0438",
+    text: "\u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0435 \u0432\u043E\u043B\u0447\u0438\u0446\u044B \u043F\u043E\u0434\u0445\u043E\u0434\u044F\u0442 \u043A \u0441\u0435\u0432\u0435\u0440\u043D\u043E\u0439 \u0434\u043E\u0440\u043E\u0433\u0435 \u0432\u0441\u0451 \u0431\u043B\u0438\u0436\u0435. \u041E\u0442\u0433\u043E\u043D\u0438\u0442\u0435 \u0442\u0440\u043E\u0438\u0445.",
+    goal: { type: "wins", spawns: ["fw_wolf_1", "fw_wolf_2", "fw_wolf_3", "fw_wolf_4"], count: 3 },
+    requires: "chapter_2_complete",
+    reward: { heroXP: 60, coins: 40, items: { ice_crystal: 1 } }
+  },
+  hunt_wisps: {
+    giver: "\u0421\u0442\u043E\u0440\u043E\u0436 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0430",
+    title: "\u041E\u0433\u043E\u043D\u044C\u043A\u0438 \u043D\u0430 \u043F\u043E\u0433\u043E\u0441\u0442\u0435",
+    text: "\u041F\u043E \u043D\u043E\u0447\u0430\u043C \u043D\u0430\u0434 \u043C\u043E\u0433\u0438\u043B\u0430\u043C\u0438 \u0441\u043D\u043E\u0432\u0430 \u0431\u0440\u043E\u0434\u044F\u0442 \u043E\u0433\u043E\u043D\u044C\u043A\u0438. \u0421\u0442\u043E\u0440\u043E\u0436 \u043F\u0440\u043E\u0441\u0438\u0442 \u0440\u0430\u0437\u0432\u0435\u044F\u0442\u044C \u0434\u0432\u043E\u0438\u0445.",
+    goal: { type: "wins", spawns: ["gy_wisp_1", "gy_wisp_2"], count: 2 },
+    requires: "chapter_2_complete",
+    reward: { heroXP: 55, coins: 35, items: { rune_dust: 2 } }
+  }
+};
+var DAILY_ORDER = Object.keys(DAILY_POOL);
+function dailyRules() {
+  return {
+    requires: DAILY.requires,
+    offers: DAILY.offers,
+    picks: DAILY.picks,
+    dayMs: DAILY.dayMs,
+    order: DAILY_ORDER,
+    pool: Object.fromEntries(Object.entries(DAILY_POOL).map(([id, o]) => [id, { goal: o.goal, reward: o.reward, requires: o.requires || null }]))
+  };
+}
+
+// src/config/covens.js
+var COVENS = {
+  requires: "ch2_coven_ready",
+  // знакомство с Ковенами — квест 14 «Не в одиночку»
+  maxMembers: 20,
+  goal: 400,
+  // очков ковена за неделю
+  minGiven: 20,
+  // личный вклад, чтобы забрать награду недели
+  dailyPoints: 10,
+  // за каждое выполненное поручение доски
+  maxGive: 99,
+  // очки за единицу материала
+  points: { moon_herb: 1, forest_mushroom: 1, tree_resin: 1, frost_herb: 2, rune_dust: 2, lunar_shard: 3, ice_crystal: 5 },
+  reward: { coins: 120, items: { ice_crystal: 2, frost_shard: 1 } }
+};
+function covenRules() {
+  return {
+    requires: COVENS.requires,
+    maxMembers: COVENS.maxMembers,
+    goal: COVENS.goal,
+    minGiven: COVENS.minGiven,
+    dailyPoints: COVENS.dailyPoints,
+    maxGive: COVENS.maxGive,
+    points: COVENS.points,
+    reward: COVENS.reward
+  };
+}
+
+// src/config/duel.js
+var DUEL = {
+  requires: "chapter_2_complete",
+  attemptsPerDay: 8,
+  // 5–10 значимых боёв в день (§31)
+  baseRating: 1e3,
+  k: 32,
+  // Эло: изменение за бой — до 32 очков
+  dayMs: 864e5,
+  // Сезон 0 — тестовый, 4 недели (§33); следующие идут подряд той же длины. При смене сезона рейтинг сжимается к базовому наполовину.
+  season: { startMs: Date.UTC(2026, 9, 5), lengthDays: 28 },
+  matchWindow: 200,
+  // соперник ищется в этом окне рейтинга, дальше — ближайший
+  reward: { victory: { coins: 30, heroXP: 20 }, defeat: { coins: 10 } }
+};
+function ratingDelta(my, opp, win) {
+  const expected = 1 / (1 + 10 ** ((opp - my) / 400));
+  return Math.round(DUEL.k * ((win ? 1 : 0) - expected));
+}
+var levelRow = (lvl) => HERO_LEVELS[Math.max(1, Math.min(HERO_LEVELS.length, Math.floor(lvl) || 1)) - 1];
+function duelSlots(opp) {
+  const open = GIFT_IDS.filter((g) => opp.abilities?.[g]?.unlocked && (opp.abilities[g].level || 0) > 0);
+  const slots = Array.isArray(opp.build?.slots) ? opp.build.slots.filter((g) => open.includes(g)) : [];
+  return (slots.length ? slots : open).slice(0, SLOT_RULES.base);
+}
+var SIGNATURE = {
+  fire: { name: "\u041E\u0433\u043D\u0435\u043D\u043D\u044B\u0439 \u0448\u0430\u0440", damage: 26, prepSec: 2, cooldownSec: 9, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
+  ice: { name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0435 \u043A\u043E\u043F\u044C\u0451", damage: 24, prepSec: 2.2, cooldownSec: 10, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
+  seal: { name: "\u0410\u0441\u0442\u0440\u0430\u043B\u044C\u043D\u044B\u0439 \u0443\u0434\u0430\u0440", damage: 28, prepSec: 2.4, cooldownSec: 10, interruptBy: ["telekinesis_heavy"], hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!" },
+  telekinesis: { name: "\u041A\u0430\u043C\u0435\u043D\u043D\u044B\u0439 \u0433\u0440\u0430\u0434", damage: 25, prepSec: 2, cooldownSec: 9, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" }
+};
+var PRIORITY = ["fire", "ice", "seal", "telekinesis"];
+function duelEnemyDef(opp) {
+  const lv = levelRow(opp.level), mult = lv.damageMult;
+  const slots = duelSlots(opp);
+  const amulets = Array.isArray(opp.build?.amulets) ? opp.build.amulets.slice(0, 2) : [];
+  const main = [...slots].sort((a, b) => (opp.abilities[b]?.level || 0) - (opp.abilities[a]?.level || 0) || PRIORITY.indexOf(a) - PRIORITY.indexOf(b))[0] || "telekinesis";
+  const sig = SIGNATURE[main];
+  const weaknesses = {};
+  for (const g of GIFT_IDS) if (!slots.includes(g)) weaknesses[g] = 0.25;
+  const hero = HEROES.find((h) => h.id === opp.hero) || HEROES.find((h) => h.id === DEFAULT_HERO_ID);
+  return {
+    name: opp.name || "\u0422\u0435\u043D\u044C \u0434\u0443\u044D\u043B\u044F\u043D\u0442\u0430",
+    texture: hero.textures.down,
+    tier: "strong",
+    hp: Math.round(lv.maxHp * 4.2 * (1 + 0.05 * amulets.length)),
+    normalAttack: { damage: Math.round(9 * mult), intervalSec: 2.8, ...slots.includes("ice") ? { chill: { pct: 0.3, sec: 2.5 } } : {} },
+    strongAttack: { ...sig, damage: Math.round(sig.damage * mult), firstDelaySec: 5 },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: slots.includes("seal") ? 0.2 : 0,
+    ...slots.includes("seal") ? { onFireHit: { disableDefenseSec: 4 } } : {},
+    ...(opp.abilities?.telekinesis?.level || 0) >= 3 && slots.includes("telekinesis") ? { armor: { value: 0.35, source: "crystal", disabledSec: 8 } } : {},
+    weaknesses,
+    rewards: {},
+    arena: "duel",
+    duel: { slots, main }
+  };
+}
+function duelRules() {
+  return {
+    requires: DUEL.requires,
+    attemptsPerDay: DUEL.attemptsPerDay,
+    baseRating: DUEL.baseRating,
+    k: DUEL.k,
+    dayMs: DUEL.dayMs,
+    seasonStartMs: DUEL.season.startMs,
+    seasonMs: DUEL.season.lengthDays * DUEL.dayMs,
+    matchWindow: DUEL.matchWindow,
+    reward: DUEL.reward
+  };
+}
+
 // src/config/serverRules.js
 function grantOf(r = {}) {
   const g = {};
@@ -1526,12 +2776,52 @@ var EVENT_ACTIONS = {
   unlock_telekinesis_1: { unlock: { telekinesis: 1 } },
   lunar_quest_start: { requires: ["unlock_telekinesis_1"] },
   unlock_fire_1: { requires: ["heavy_path_open"], unlock: { fire: 1 } },
-  unlock_seal_1: { requires: ["gate_marks_revealed"], unlock: { seal: 1 } }
+  unlock_seal_1: { requires: ["gate_marks_revealed"], unlock: { seal: 1 } },
+  // v0.20.0 — глава II, квесты 1–5 (диалоги Мирры, Иларии, Северина, торговца; первый вход на площадь)
+  ch2_start: { requires: ["chapter_1_complete"] },
+  ch2_city_arrived: { requires: ["ch2_start"] },
+  ch2_met_ilaria: { requires: ["ch2_plaza_cleared"] },
+  ch2_trace_found: { requires: ["ch2_trace_astral", "ch2_trace_debris"] },
+  ch2_met_severin: { requires: ["ch2_archive_read"] },
+  city_merchant_open: { requires: ["ch2_city_arrived"] },
+  // v0.21.0 — квесты 6–10 (торговец, Илария, Северин, Нэрис)
+  ch2_cargo_start: { requires: ["ch2_met_severin"] },
+  ch2_cargo_reported: { requires: ["ch2_cargo_found", "ch2_serials_read"] },
+  ch2_severin_asked: { requires: ["ch2_cargo_reported"] },
+  ch2_frost_wave: { requires: ["ch2_lab_critter"] },
+  ch2_nerys_met: { requires: ["ch2_construct_unstable"] },
+  ch2_rescue_done: { requires: ["ch2_rescue_door", "ch2_rescue_cellar"] },
+  unlock_ice_1: { requires: ["ch2_rescue_done", "warm_potion_crafted"], unlock: { ice: 1 } },
+  ch2_ice_trained: { requires: ["ch2_training_done"] },
+  ch2_choice_start: { requires: ["ch2_ice_trained"] },
+  ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"] },
+  // v0.22.0 — квесты 11–15 (Нэрис, Тихон, Илария, Северин, Ровена, Мирра)
+  unlock_ice_2: { requires: ["ch2_quarter_cleared"], unlock: { ice: 2 } },
+  ch2_brittle_done: { requires: ["ch2_brittle_1", "ch2_brittle_2", "brittle_flask_crafted"] },
+  ch2_lab_found: { requires: ["ch2_brittle_done"] },
+  ch2_stabilized: { requires: ["ch2_vol_1", "ch2_vol_2"], consume: { stabilizing_potion: 2 } },
+  ch2_lab_reported: { requires: ["ch2_stabilized", "ch2_lab_journal"] },
+  // ответ героя Северину — без ветвления сюжета, только отношение (его вспомнит Мирра)
+  ch2_view_danger: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
+  ch2_view_methods: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
+  ch2_view_market: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
+  ch2_view_unsure: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
+  ch2_severin_confronted: { requires: ["ch2_lab_reported"] },
+  ch2_coven_met: { requires: ["ch2_severin_confronted"] },
+  ch2_coven_supplies: { requires: ["ch2_coven_met"], consume: { crystal_guard: 1, frost_herb: 2 } },
+  ch2_coven_ready: { requires: ["ch2_unstable_1", "ch2_unstable_2", "ch2_coven_supplies"] },
+  ch2_final_start: { requires: ["ch2_coven_ready"] },
+  // Лёд III перед боем: ветка выбирается один раз (ch2_ice3 — общая отметка, по ней появляется Северин)
+  ch2_ice3_frost: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], unlock: { ice: 3 }, branch: { ice: "frost" }, marks: ["ch2_ice3"] },
+  ch2_ice3_shard: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], unlock: { ice: 3 }, branch: { ice: "shard" }, marks: ["ch2_ice3"] },
+  ch2_epilogue: { requires: ["ch2_letters_read"] },
+  chapter_2_complete: { requires: ["ch2_epilogue"], marks: ["title_frost_survivor"], sapphires: 5 }
 };
 function worldRules() {
   const world = {};
   const base = (o) => ({
-    requires: o.requiresEvent ? [o.requiresEvent] : [],
+    requires: [o.requiresEvent, o.waitEvent].filter(Boolean),
+    // v0.21.0: waitEvent — объект виден, но поддаётся после события
     requiresEnemy: o.requiresEnemyDefeated ? [o.requiresEnemyDefeated] : []
   });
   const itemReward = (item, amount) => item === "coins" ? { coins: amount } : { items: { [item]: amount } };
@@ -1589,6 +2879,19 @@ function worldRules() {
           ...base(o)
         };
         pickupAfter(o, o.reveal?.spawnPickup, "destroyed");
+        break;
+      case "ice":
+        world[o.id] = {
+          kind: "cast",
+          mark: "frozen",
+          mana: WORLD_MANA_COST.ice,
+          ability: "ice",
+          minLevel: o.minLevel || 1,
+          blockedBy: [],
+          school: school("ice"),
+          ...effects(o),
+          ...base(o)
+        };
         break;
       case "gate":
         world[o.id] = {
@@ -1680,7 +2983,17 @@ function serverRules() {
     staleCombatSec: VITALS.staleCombatSec
   };
   const potions = Object.fromEntries(Object.entries(POTIONS).filter(([, p]) => p.outside && (p.effect.type === "heal" || p.effect.type === "mana")).map(([id, p]) => [id, { kind: p.effect.type, amount: p.effect.amount }]));
-  const events = Object.fromEntries(Object.entries(EVENT_ACTIONS).map(([k, e]) => [k, { requires: e.requires || [], unlock: e.unlock || {} }]));
+  const events = Object.fromEntries(Object.entries(EVENT_ACTIONS).map(([k, e]) => [k, {
+    requires: e.requires || [],
+    unlock: e.unlock || {},
+    // v0.22.0: blockedBy — событие уже не нужно; consume — что забирает (предметы); branch — ветка дара вместе с открытием;
+    // marks — ещё события вместе с этим (с их наградами); sapphires — сапфиры в награду (журнал сапфиров, один раз)
+    blockedBy: e.blockedBy || [],
+    consume: e.consume || {},
+    branch: e.branch || {},
+    marks: e.marks || [],
+    sapphires: e.sapphires || 0
+  }]));
   const eventRewards = Object.fromEntries(Object.entries(EVENT_REWARDS).map(([k, r]) => [k, grantOf(r)]));
   return {
     recipes,
@@ -1695,15 +3008,34 @@ function serverRules() {
     quests: questRules(),
     research: researchRules(),
     build: buildRules(),
-    spawnStart: spawnStartRules()
+    spawnStart: spawnStartRules(),
+    sapphires: sapphireRules(),
+    // v0.17.0
+    shop: shopRules(),
+    // v0.19.0: торговец
+    daily: dailyRules(),
+    // v0.23.0: доска поручений
+    covens: covenRules(),
+    // v0.25.0: Ковены (недельная цель)
+    duel: duelRules(),
+    // v0.26.0: Магическая Дуэль
+    combatPotions: Object.keys(POTIONS)
+    // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
   };
 }
 
 // src/cloud/playerModel.js
 var RULES = serverRules();
-var ABILITY_IDS = ["telekinesis", "fire", "seal"];
-var SCHOOL_IDS = ["telekinesis", "fire", "seal"];
+var ABILITY_IDS = ["telekinesis", "fire", "seal", "ice"];
+var SCHOOL_IDS = ["telekinesis", "fire", "seal", "ice"];
+var num = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 1e15;
+var isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var uniq = (a) => [...new Set(a)];
+function walletOf(w) {
+  const o = isObj(w) ? w : {};
+  const daily = isObj(o.daily) && num(o.daily.d) && num(o.daily.n) ? { d: o.daily.d, n: o.daily.n } : {};
+  return { sapphires: num(o.sapphires) ? o.sapphires : 0, daily, welcome: o.welcome === true };
+}
 function emptySnapshot() {
   return toSnapshot(createDefaultState());
 }
@@ -1721,6 +3053,8 @@ function toSnapshot(d) {
     enemies: uniq(d.defeatedEnemies || []),
     objects: JSON.parse(JSON.stringify(d.worldObjects || {})),
     research: d.research ? { ...d.research } : null,
+    wallet: walletOf(d.wallet),
+    // v0.17.0: сапфиры (пишет только сервер)
     pos: { x: d.player?.x ?? 0, y: d.player?.y ?? 0 },
     safe: { x: d.safePoint?.x ?? 0, y: d.safePoint?.y ?? 0 },
     hp: d.hp ?? null,
@@ -1753,6 +3087,7 @@ function fromSnapshot(s, base = createDefaultState()) {
   d.defeatedEnemies = [...s.enemies || []];
   d.worldObjects = JSON.parse(JSON.stringify(s.objects || {}));
   d.research = s.research ? { ...s.research } : null;
+  d.wallet = walletOf(s.wallet);
   d.player = { x: s.pos.x, y: s.pos.y };
   d.safePoint = { x: s.safe.x, y: s.safe.y };
   d.hp = s.hp ?? null;
@@ -1764,7 +3099,7 @@ function fromSnapshot(s, base = createDefaultState()) {
   d.tutorial = [...s.tutorial || []];
   return d;
 }
-var COMBAT_POTIONS = ["elixir_life", "elixir_mana", "resin_flask"];
+var COMBAT_POTIONS = [...RULES.combatPotions];
 function fillDefaults(raw) {
   const def = emptySnapshot();
   const { meta, action, ...s } = raw;
@@ -1835,6 +3170,288 @@ var ENEMIES = {
     defense: 0,
     rewards: { heroXP: 40, schoolXP: { telekinesis: 30 }, items: { lunar_shard: 1 }, coins: 10 },
     arena: "glade_small"
+  },
+  // v0.20.0 — глава II (chapter-2-balance-v0.1.md §9). Инеевый зверёк: быстрые удары с холодом (замедляют героя),
+  // ледяной рывок прерывается Телекинезом, слабость к Огню. Бой ~20–25 с у героя 8–9 уровня.
+  frost_critter: {
+    name: "\u0418\u043D\u0435\u0435\u0432\u044B\u0439 \u0437\u0432\u0435\u0440\u0451\u043A",
+    texture: "enemy_frost_critter",
+    tier: "normal",
+    hp: 440,
+    normalAttack: { damage: 11, intervalSec: 2.5, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: {
+      name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0440\u044B\u0432\u043E\u043A",
+      damage: 26,
+      prepSec: 1.8,
+      cooldownSec: 9,
+      firstDelaySec: 5,
+      interruptBy: ["telekinesis"],
+      hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!"
+    },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: 0,
+    weaknesses: { fire: 0.3 },
+    rewards: { heroXP: 80, schoolXP: { fire: 20, telekinesis: 20 }, items: { frost_herb: 1 }, coins: 20 },
+    repeatRewards: { heroXP: 14, schoolXP: { fire: 3 }, coins: 5 },
+    arena: "city"
+  },
+  // v0.21.0 — Морозный сборщик (квест 6 «Пропавший груз», chapter-2-balance §9): магический конструкт. Защитная корка
+  // гасит 35% урона — Астрал её пробивает, Огонь растапливает на 5 с. Дальний ледяной залп замедляет перезарядки;
+  // «Ледяной таран» прерывается Телекинезом. Бой ≈30–40 с у героя 9–10 уровня.
+  frost_collector: {
+    name: "\u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u0441\u0431\u043E\u0440\u0449\u0438\u043A",
+    texture: "enemy_frost_collector",
+    tier: "normal",
+    hp: 520,
+    normalAttack: { damage: 11, intervalSec: 2.8, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: {
+      name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0442\u0430\u0440\u0430\u043D",
+      damage: 28,
+      prepSec: 2,
+      cooldownSec: 10,
+      firstDelaySec: 6,
+      interruptBy: ["telekinesis"],
+      hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!"
+    },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: 0.35,
+    onFireHit: { disableDefenseSec: 5 },
+    rewards: { heroXP: 70, schoolXP: { seal: 20, telekinesis: 15 }, items: { frost_herb: 1 }, coins: 25 },
+    repeatRewards: { heroXP: 28, schoolXP: { seal: 3 }, coins: 9 },
+    arena: "city"
+  },
+  // Усиленный сборщик — босс склада (квест 6). Корка толще, таран тяжелее; без Астрала и Огня бой заметно дольше.
+  frost_collector_elite: {
+    name: "\u0423\u0441\u0438\u043B\u0435\u043D\u043D\u044B\u0439 \u0441\u0431\u043E\u0440\u0449\u0438\u043A",
+    texture: "enemy_frost_collector_elite",
+    tier: "strong",
+    hp: 760,
+    normalAttack: { damage: 12, intervalSec: 3, chill: { pct: 0.35, sec: 3 } },
+    strongAttack: {
+      name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0442\u0430\u0440\u0430\u043D",
+      damage: 32,
+      prepSec: 2.2,
+      cooldownSec: 10,
+      firstDelaySec: 6,
+      interruptBy: ["telekinesis"],
+      hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!"
+    },
+    staggerSec: 1.1,
+    interruptedCooldownSec: 7,
+    defense: 0.4,
+    onFireHit: { disableDefenseSec: 5 },
+    rewards: { heroXP: 70, schoolXP: { seal: 30, telekinesis: 20, fire: 20 }, items: { ice_crystal: 1, rune_dust: 1 }, coins: 35 },
+    arena: "city"
+  },
+  // v0.21.0 — Ледяной страж (квест 10 «Выбор»): первый серьёзный билд-чек главы II (55–75 с). Кристальная броня −45%
+  // (Телекинез разбивает кристалл, Астрал пробивает), Огонь бьёт на 25% сильнее; тяжёлый удар — только тяжёлым камнем,
+  // а Лёд замедляет его подготовку. Обычный удар холодит. Без Телекинеза бой проходим — просто дольше и с зельями.
+  ice_guardian: {
+    name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0441\u0442\u0440\u0430\u0436",
+    texture: "enemy_ice_guardian",
+    tier: "strong",
+    hp: 780,
+    normalAttack: { damage: 12, intervalSec: 3.8, chill: { pct: 0.35, sec: 3 } },
+    strongAttack: {
+      name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u043C\u043E\u043B\u043E\u0442",
+      damage: 32,
+      prepSec: 2.6,
+      cooldownSec: 11,
+      firstDelaySec: 7,
+      interruptBy: ["telekinesis_heavy"],
+      hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!"
+    },
+    staggerSec: 1.2,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    armor: { value: 0.45, source: "crystal", disabledSec: 8 },
+    weaknesses: { fire: 0.25 },
+    rewards: { heroXP: 140, schoolXP: { telekinesis: 40, fire: 40, seal: 40, ice: 40 }, items: { ice_crystal: 2, frost_shard: 1 }, coins: 60 },
+    repeatRewards: { heroXP: 55, schoolXP: { ice: 5 }, items: { ice_crystal: 1 }, coins: 16 },
+    arena: "frost"
+  },
+  // v0.22.0 — Доброволец, потерявший контроль (квест 12, chapter-2-balance §10). Не монстр: победа — «обезвредить»,
+  // повторно не появляется (место не возобновляется). Нестабильная магия: холодные удары, «Выброс» прерывает Телекинез.
+  volunteer: {
+    name: "\u0414\u043E\u0431\u0440\u043E\u0432\u043E\u043B\u0435\u0446 \u0431\u0435\u0437 \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u044F",
+    texture: "enemy_volunteer",
+    tier: "normal",
+    hp: 600,
+    normalAttack: { damage: 13, intervalSec: 2.7, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: {
+      name: "\u0412\u044B\u0431\u0440\u043E\u0441 \u0445\u043E\u043B\u043E\u0434\u0430",
+      damage: 30,
+      prepSec: 2,
+      cooldownSec: 9,
+      firstDelaySec: 5,
+      interruptBy: ["telekinesis"],
+      hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!"
+    },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: 0.2,
+    weaknesses: { seal: 0.3 },
+    rewards: { heroXP: 90, schoolXP: { seal: 15, ice: 15 }, coins: 20 },
+    arena: "lab"
+  },
+  // Экспериментальный конструкт (квест 12 и дальше, §9): 60–80 с. Кристальная броня и защитная корка; Огонь растапливает корку.
+  experimental_construct: {
+    name: "\u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442\u0430\u043B\u044C\u043D\u044B\u0439 \u043A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442",
+    texture: "enemy_experimental_construct",
+    tier: "strong",
+    hp: 850,
+    normalAttack: { damage: 12, intervalSec: 3.4, chill: { pct: 0.35, sec: 3 } },
+    strongAttack: {
+      name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0439 \u0440\u0430\u0437\u0440\u044F\u0434",
+      damage: 34,
+      prepSec: 2.4,
+      cooldownSec: 10,
+      firstDelaySec: 6,
+      interruptBy: ["telekinesis_heavy"],
+      hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!"
+    },
+    staggerSec: 1.1,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    armor: { value: 0.4, source: "crystal", disabledSec: 8 },
+    weaknesses: { fire: 0.2 },
+    rewards: { heroXP: 100, schoolXP: { telekinesis: 30, fire: 30, seal: 30, ice: 30 }, items: { ice_crystal: 1, frost_shard: 1 }, coins: 40 },
+    repeatRewards: { heroXP: 65, schoolXP: { ice: 5 }, items: { ice_crystal: 1 }, coins: 18 },
+    arena: "lab"
+  },
+  // v0.22.0 — финальный босс главы II: Северин Вейр (квест 15, §11). Первый бой «маг против мага», 120–180 с, три фазы.
+  // 1 «Дуэль» — защитный барьер (−25%, Астрал пробивает, Огонь снимает на 5 с), Ледяное копьё прерывает Телекинез.
+  // 2 «Перегрузка» — кристальная броня эксперимента (тяжёлый камень разбивает кристалл), удар сильнее, Огонь +30%.
+  // 3 «Предел» — магия рвётся: защита 40%, только Астрал и Лёд бьют в полную силу; тяжёлый удар — тяжёлым камнем.
+  severin_boss: {
+    name: "\u0421\u0435\u0432\u0435\u0440\u0438\u043D \u0412\u0435\u0439\u0440",
+    texture: "enemy_severin",
+    tier: "strong",
+    hp: 1500,
+    normalAttack: { damage: 11, intervalSec: 3.4, chill: { pct: 0.3, sec: 3 } },
+    strongAttack: {
+      name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0435 \u043A\u043E\u043F\u044C\u0451",
+      damage: 28,
+      prepSec: 2.2,
+      cooldownSec: 11,
+      firstDelaySec: 6,
+      interruptBy: ["telekinesis"],
+      hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!"
+    },
+    staggerSec: 1.1,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    phases: [
+      {
+        above: 1e3,
+        set: { defense: 0.25, armor: null, weaknesses: null, onFireHit: { disableDefenseSec: 5 } },
+        message: "\u0411\u0430\u0440\u044C\u0435\u0440 \u0421\u0435\u0432\u0435\u0440\u0438\u043D\u0430 \u0433\u0430\u0441\u0438\u0442 \u0443\u0434\u0430\u0440\u044B. \u0410\u0441\u0442\u0440\u0430\u043B \u043F\u0440\u043E\u0431\u0438\u0432\u0430\u0435\u0442 \u0435\u0433\u043E, \u041E\u0433\u043E\u043D\u044C \u0441\u043D\u0438\u043C\u0430\u0435\u0442 \u043D\u0430 5 \u0441\u0435\u043A\u0443\u043D\u0434."
+      },
+      {
+        above: 480,
+        set: {
+          defense: 0,
+          armor: { value: 0.45, source: "crystal", disabledSec: 8 },
+          weaknesses: { fire: 0.3 },
+          onFireHit: null,
+          normalAttack: { damage: 12, intervalSec: 3.2, chill: { pct: 0.35, sec: 3 } }
+        },
+        strongAttack: { name: "\u041F\u0435\u0440\u0435\u0433\u0440\u0443\u0437\u043A\u0430", damage: 32, interruptBy: ["telekinesis_heavy"], hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!" },
+        message: "\xAB\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u0434\u0435\u0440\u0436\u0438\u0442!\xBB \u042D\u043A\u0441\u043F\u0435\u0440\u0438\u043C\u0435\u043D\u0442 \u0434\u0430\u0451\u0442 \u0421\u0435\u0432\u0435\u0440\u0438\u043D\u0443 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u044C\u043D\u0443\u044E \u0431\u0440\u043E\u043D\u044E. \u0420\u0430\u0437\u0431\u0435\u0439\u0442\u0435 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B \u0442\u044F\u0436\u0451\u043B\u044B\u043C \u043A\u0430\u043C\u043D\u0435\u043C.",
+        tint: 11068671
+      },
+      {
+        above: 0,
+        set: { defense: 0.4, armor: null, weaknesses: { seal: 0.4, ice: 0.4 }, onFireHit: null },
+        strongAttack: { name: "\u041F\u0440\u0435\u0434\u0435\u043B", damage: 34, prepSec: 2.6, interruptBy: ["telekinesis_heavy"], hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!" },
+        message: "\xAB\u042F \u043D\u0435 \u043C\u043E\u0433\u0443 \u0435\u0451 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C\u2026\xBB \u041C\u0430\u0433\u0438\u044F \u0440\u0432\u0451\u0442\u0441\u044F \u043D\u0430\u0440\u0443\u0436\u0443: \u0432 \u043F\u043E\u043B\u043D\u0443\u044E \u0441\u0438\u043B\u0443 \u0431\u044C\u044E\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u0410\u0441\u0442\u0440\u0430\u043B \u0438 \u041B\u0451\u0434.",
+        tint: 13805823
+      }
+    ],
+    rewards: { heroXP: 350, schoolXP: { telekinesis: 40, fire: 40, seal: 40, ice: 60 }, items: { cold_heart: 1 }, coins: 150 },
+    arena: "duel"
+  },
+  // v0.24.0 — вылазки (stage-2-design-pack §24–25). Отрицательная «слабость» — сопротивление: этот дар бьёт слабее.
+  // Морозный лес: звери не боятся холода (Лёд −40…50%), зато горят (Огонь +30…40%).
+  frost_wolf: {
+    name: "\u041C\u043E\u0440\u043E\u0437\u043D\u0430\u044F \u0432\u043E\u043B\u0447\u0438\u0446\u0430",
+    texture: "enemy_frost_wolf",
+    tier: "normal",
+    hp: 650,
+    normalAttack: { damage: 14, intervalSec: 2.4, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: { name: "\u041F\u0440\u044B\u0436\u043E\u043A \u0438\u0437 \u043C\u0435\u0442\u0435\u043B\u0438", damage: 30, prepSec: 1.9, cooldownSec: 9, firstDelaySec: 5, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: 0,
+    weaknesses: { fire: 0.4, ice: -0.4 },
+    rewards: { heroXP: 50, schoolXP: { fire: 10 }, items: { frost_herb: 1 }, coins: 15 },
+    repeatRewards: { heroXP: 25, schoolXP: { fire: 3 }, items: { frost_herb: 1 }, coins: 8 },
+    arena: "frostwood"
+  },
+  frost_alpha: {
+    name: "\u0412\u043E\u0436\u0430\u043A \u043C\u0435\u0442\u0435\u043B\u0438",
+    texture: "enemy_frost_alpha",
+    tier: "strong",
+    hp: 1300,
+    normalAttack: { damage: 13, intervalSec: 3, chill: { pct: 0.4, sec: 3 } },
+    strongAttack: { name: "\u0412\u043E\u0439 \u0441\u0442\u0430\u0438", damage: 34, prepSec: 2.4, cooldownSec: 10, firstDelaySec: 6, interruptBy: ["telekinesis_heavy"], hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!" },
+    staggerSec: 1.2,
+    interruptedCooldownSec: 7,
+    defense: 0.2,
+    onFireHit: { disableDefenseSec: 6 },
+    weaknesses: { fire: 0.3, ice: -0.5 },
+    rewards: { heroXP: 150, schoolXP: { fire: 30, telekinesis: 20 }, items: { ice_crystal: 2 }, coins: 60 },
+    repeatRewards: { heroXP: 70, schoolXP: { fire: 5 }, items: { ice_crystal: 1 }, coins: 25 },
+    arena: "frostwood"
+  },
+  // Старое кладбище: огоньки и стражи кургана — плотная защита, Огонь их почти не берёт, Астрал пробивает.
+  grave_wisp: {
+    name: "\u041C\u043E\u0433\u0438\u043B\u044C\u043D\u044B\u0439 \u043E\u0433\u043E\u043D\u0451\u043A",
+    texture: "enemy_grave_wisp",
+    tier: "normal",
+    hp: 560,
+    normalAttack: { damage: 13, intervalSec: 2.6 },
+    strongAttack: { name: "\u0425\u043E\u043B\u043E\u0434\u043D\u044B\u0439 \u0448\u0451\u043F\u043E\u0442", damage: 28, prepSec: 2, cooldownSec: 9, firstDelaySec: 5, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: 0.45,
+    weaknesses: { seal: 0.5, fire: -0.3 },
+    rewards: { heroXP: 50, schoolXP: { seal: 10 }, items: { rune_dust: 1 }, coins: 15 },
+    repeatRewards: { heroXP: 25, schoolXP: { seal: 3 }, items: { rune_dust: 1 }, coins: 8 },
+    arena: "graveyard"
+  },
+  grave_hound: {
+    name: "\u041C\u043E\u0433\u0438\u043B\u044C\u043D\u044B\u0439 \u043F\u0451\u0441",
+    texture: "enemy_grave_hound",
+    tier: "normal",
+    hp: 700,
+    normalAttack: { damage: 15, intervalSec: 2.5 },
+    strongAttack: { name: "\u041C\u0451\u0440\u0442\u0432\u0430\u044F \u0445\u0432\u0430\u0442\u043A\u0430", damage: 32, prepSec: 2, cooldownSec: 9, firstDelaySec: 5, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
+    staggerSec: 1,
+    interruptedCooldownSec: 6,
+    defense: 0,
+    weaknesses: { fire: 0.3, telekinesis: -0.3 },
+    rewards: { heroXP: 50, schoolXP: { fire: 10 }, items: { forest_mushroom: 1 }, coins: 15 },
+    repeatRewards: { heroXP: 25, schoolXP: { fire: 3 }, items: { forest_mushroom: 1 }, coins: 8 },
+    arena: "graveyard"
+  },
+  barrow_warden: {
+    name: "\u0421\u0442\u0440\u0430\u0436 \u043A\u0443\u0440\u0433\u0430\u043D\u0430",
+    texture: "enemy_barrow_warden",
+    tier: "strong",
+    hp: 1400,
+    normalAttack: { damage: 13, intervalSec: 3.4 },
+    strongAttack: { name: "\u0423\u0434\u0430\u0440 \u043A\u0443\u0440\u0433\u0430\u043D\u0430", damage: 36, prepSec: 2.6, cooldownSec: 11, firstDelaySec: 7, interruptBy: ["telekinesis_heavy"], hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!" },
+    staggerSec: 1.2,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    armor: { value: 0.45, source: "crystal", disabledSec: 8 },
+    weaknesses: { seal: 0.4, fire: -0.4 },
+    rewards: { heroXP: 150, schoolXP: { seal: 30, telekinesis: 20 }, items: { lunar_shard: 2, rune_dust: 2 }, coins: 60 },
+    repeatRewards: { heroXP: 70, schoolXP: { seal: 5 }, items: { lunar_shard: 1 }, coins: 25 },
+    arena: "graveyard"
   },
   // Враг со слабостью из Combat Math §7. v0.10.0: пять Корневиков в старом лесу (world.layout.js, rootling_01…05).
   // Защита 20%, Огонь +50% и снимает защиту на 6 с. Первая победа на месте — rewards; повторная (возобновляемые места) — repeatRewards.
@@ -1936,6 +3553,43 @@ var FIELD_OBJECTS = {
   crystal: { name: "\u0417\u0430\u0449\u0438\u0442\u043D\u044B\u0439 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B", texture: "field_crystal", weight: "medium", throwable: false, breaksArmor: true, respawnAfterArmorSec: 10 }
 };
 var ARENAS = {
+  // v0.20.0: городская мостовая — обломки ящиков вместо камней
+  city: {
+    ground: 2763827,
+    objects: [
+      { id: "rock_a", type: "light_rock", x: 190, y: 720 },
+      { id: "heavy_a", type: "heavy_rock", x: 540, y: 710 }
+    ]
+  },
+  // v0.24.0: вылазки
+  frostwood: { ground: 3819090, objects: [{ id: "crystal_a", type: "crystal", x: 590, y: 640 }, { id: "heavy_a", type: "heavy_rock", x: 150, y: 760 }, { id: "rock_a", type: "light_rock", x: 420, y: 800 }] },
+  graveyard: { ground: 2369578, objects: [{ id: "crystal_a", type: "crystal", x: 590, y: 640 }, { id: "heavy_a", type: "heavy_rock", x: 150, y: 760 }, { id: "rock_a", type: "light_rock", x: 420, y: 800 }] },
+  // v0.22.0: тайная лаборатория и Дуэльный зал (финал главы II)
+  lab: {
+    ground: 2762291,
+    objects: [
+      { id: "crystal_a", type: "crystal", x: 590, y: 640 },
+      { id: "heavy_a", type: "heavy_rock", x: 150, y: 760 },
+      { id: "rock_a", type: "light_rock", x: 420, y: 800 }
+    ]
+  },
+  duel: {
+    ground: 2828856,
+    objects: [
+      { id: "crystal_a", type: "crystal", x: 590, y: 640 },
+      { id: "heavy_a", type: "heavy_rock", x: 150, y: 760 },
+      { id: "rock_a", type: "light_rock", x: 420, y: 800 }
+    ]
+  },
+  // v0.21.0: Замёрзший квартал — кристалл стража и тяжёлый камень
+  frost: {
+    ground: 2502970,
+    objects: [
+      { id: "crystal_a", type: "crystal", x: 590, y: 640 },
+      { id: "heavy_a", type: "heavy_rock", x: 150, y: 760 },
+      { id: "rock_a", type: "light_rock", x: 420, y: 800 }
+    ]
+  },
   glade: {
     ground: 2898468,
     objects: [
@@ -1984,6 +3638,8 @@ var Enemy = class {
     this.staggerLeft = 0;
     this.burn = { left: 0, dps: 0, tick: 0 };
     this.puddle = { left: 0, dps: 0, tick: 0 };
+    this.slow = { left: 0, pct: 0 };
+    this.brittle = { left: 0, bonus: 0 };
     this.defenseDisabledLeft = 0;
     this.armorDisabledLeft = 0;
     this.vulnerable = { left: 0, bonus: 0 };
@@ -2045,6 +3701,12 @@ var Enemy = class {
   get inPuddle() {
     return this.puddle.left > 0;
   }
+  get slowed() {
+    return this.slow.left > 0;
+  }
+  get isBrittle() {
+    return this.brittle.left > 0;
+  }
   /** Множитель входящего урона для школы ('auto' | 'telekinesis' | 'fire' | 'seal'). */
   incomingMultiplier(school) {
     let m = 1;
@@ -2072,6 +3734,29 @@ var Enemy = class {
     this.burn.left = durationSec;
     this.burn.dps = dps;
     if (!wasBurning) this.burn.tick = 1;
+  }
+  /** v0.18.0: замедление Льдом. Не складывается: берётся сильнейшее, длительность — наибольшая. */
+  applySlow(pct, sec) {
+    if (this.slow.left > 0 && this.slow.pct > pct) {
+      this.slow.left = Math.max(this.slow.left, sec);
+      return;
+    }
+    this.slow = { left: Math.max(sec, this.slow.pct === pct ? this.slow.left : 0), pct };
+  }
+  /** v0.18.0: Хрупкость. Новая заменяет старую, если сильнее или дольше. */
+  applyBrittle(bonus, sec) {
+    if (this.brittle.left > 0 && this.brittle.bonus > bonus) {
+      this.brittle.left = Math.max(this.brittle.left, sec);
+      return;
+    }
+    this.brittle = { left: sec, bonus };
+  }
+  /** Снять Хрупкость ударом: возвращает бонус (0 — цель не хрупкая). */
+  consumeBrittle() {
+    if (this.brittle.left <= 0) return 0;
+    const b = this.brittle.bonus;
+    this.brittle = { left: 0, bonus: 0 };
+    return b;
   }
   /** v0.16.0: лужа смолы. Как и горение — не складывается, повторный Огонь обновляет длительность и силу. */
   applyPuddle(dps, durationSec) {
@@ -2170,11 +3855,28 @@ var Enemy = class {
       if (this.vulnerable.left <= 0) out.push({ type: "vulnerableEnd" });
     }
     if (this.weakened.left > 0) this.weakened.left -= dt;
+    if (this.brittle.left > 0) {
+      this.brittle.left -= dt;
+      if (this.brittle.left <= 0) {
+        this.brittle = { left: 0, bonus: 0 };
+        out.push({ type: "brittleEnd" });
+      }
+    }
+    let tdt = dt;
+    if (this.slow.left > 0) {
+      tdt = dt * (1 - this.slow.pct);
+      this.slow.left -= dt;
+      if (this.slow.left <= 0) {
+        this.slow = { left: 0, pct: 0 };
+        out.push({ type: "slowEnd" });
+      }
+    }
     if (!this.alive) return out;
     if (this.staggerLeft > 0) {
       this.staggerLeft -= dt;
       return out;
     }
+    dt = tdt;
     const strong = this.def.strongAttack;
     if (this.isPreparing) {
       this.prepLeft -= dt;
@@ -2182,7 +3884,7 @@ var Enemy = class {
         this.prepLeft = 0;
         this.strongCd = strong.cooldownSec;
         this.normalTimer = this.def.normalAttack.intervalSec;
-        out.push({ type: "strongHit", damage: this.outgoingDamage(strong.damage), name: strong.name });
+        out.push({ type: "strongHit", damage: this.outgoingDamage(strong.damage), name: strong.name, chill: strong.chill || null });
       }
       return out;
     }
@@ -2197,7 +3899,7 @@ var Enemy = class {
     this.normalTimer -= dt;
     if (this.normalTimer <= 0) {
       this.normalTimer += this.def.normalAttack.intervalSec;
-      out.push({ type: "attack", damage: this.outgoingDamage(this.def.normalAttack.damage) });
+      out.push({ type: "attack", damage: this.outgoingDamage(this.def.normalAttack.damage), chill: this.def.normalAttack.chill || null });
     }
     return out;
   }
@@ -2259,7 +3961,24 @@ var MSG = {
   FINAL_SCREEN: "ui:final",
   // v0.10.0: ({ outcome, reward }) — финал первой главы
   UNLOCK_SEAL: "story:unlock-seal",
-  // v0.10.0: Селена открывает Печать I (после закрытия диалога)
+  CHAPTER_FINALE: "story:chapter-finale",
+  // v0.22.0: (номер главы) — итоговое окно главы
+  UNLOCK_GIFT: "story:unlock-gift",
+  // v0.21.0: (id) — сюжетный дар из диалога (Лёд I у Нэрис)
+  TRAVEL: "world:travel",
+  // v0.20.0: переход между лесом и городом ({ x, y, text })
+  OPEN_SHOP: "ui:open-shop",
+  // v0.20.0: лавка торговца (из диалога)
+  OPEN_DAILY: "ui:open-daily",
+  // v0.23.0: доска поручений
+  OPEN_COVENS: "ui:open-covens",
+  // v0.25.0: окно Ковенов
+  OPEN_DUEL: "ui:open-duel",
+  // v0.26.0: окно Магической Дуэли
+  DUEL_START: "story:duel-start",
+  // v0.26.0: вызов на Дуэль (ExplorationScene)
+  OPEN_WALLET: "ui:open-wallet",
+  // v0.20.0: кошелёк / банк (из диалога и меню)   // v0.10.0: Селена открывает Печать I (после закрытия диалога)
   ZONE_CHANGED: "world:zone",
   // (zone)
   TUTORIAL: "ui:tutorial",
@@ -2314,7 +4033,7 @@ function statsFor(id, level, branchId = null) {
 }
 
 // src/systems/AbilitySystem.js
-var ABILITY_ORDER = ["telekinesis", "fire", "seal"];
+var ABILITY_ORDER = ["telekinesis", "fire", "seal", "ice"];
 var AbilitySystem = class {
   constructor(state, quests, bus2) {
     this.state = state;
@@ -2397,10 +4116,10 @@ var CombatManager = class {
    * @param {import('../state/GameState.js').GameState} o.state
    * @param {import('./AbilitySystem.js').AbilitySystem} o.abilities
    */
-  constructor({ enemyType, state, abilities }) {
+  constructor({ enemyType, enemyDef = null, state, abilities }) {
     this.state = state;
     this.abilities = abilities;
-    this.def = ENEMIES[enemyType];
+    this.def = enemyDef || ENEMIES[enemyType];
     if (!this.def) throw new Error(`Unknown enemy type ${enemyType}`);
     this.enemy = new Enemy(enemyType, this.def);
     const hs = state.heroStats();
@@ -2414,16 +4133,22 @@ var CombatManager = class {
       autoTimer: HERO_BASE.autoAttack.intervalSec
     };
     this.amulets = state.equippedAmulets ? state.equippedAmulets() : [];
-    let dm = 1, inc = 1;
-    for (const a of this.amulets) {
-      const e = AMULETS[a].effect;
+    const lv = state.buildData ? state.buildData().amuletLevels || {} : {};
+    const effs = this.amulets.map((a) => amuletEffect(a, lv[a] || 0));
+    let dm = 1, inc = 1, im = 1, sb = 0;
+    for (const e of effs) {
       if (e.damageMult) dm *= e.damageMult;
       if (e.incomingMult) inc *= e.incomingMult;
+      if (e.iceMult) im *= e.iceMult;
+      if (e.slowBonus) sb += e.slowBonus;
     }
     this.hero.damageMult = Math.round(this.hero.damageMult * dm * 1e3) / 1e3;
     this.incomingMult = inc;
-    this.manaRescue = this.amulets.map((a) => AMULETS[a].effect.manaRescue).find(Boolean) || null;
+    this.iceMult = im;
+    this.slowBonus = sb;
+    this.manaRescue = effs.map((e) => e.manaRescue).find(Boolean) || null;
     this.manaRescueUsed = false;
+    this.heroChill = { left: 0, pct: 0 };
     this.cooldowns = Object.fromEntries(ABILITY_ORDER.map((id) => [id, 0]));
     const arena = ARENAS[this.def.arena] || ARENAS.glade;
     this.arena = arena;
@@ -2432,7 +4157,7 @@ var CombatManager = class {
     this.time = 0;
     this.result = null;
     this.queue = [];
-    this.stats = { abilityUses: { telekinesis: 0, fire: 0, seal: 0 }, interrupts: 0, damageTaken: 0, autoDamage: 0 };
+    this.stats = { abilityUses: { telekinesis: 0, fire: 0, seal: 0, ice: 0 }, interrupts: 0, damageTaken: 0, autoDamage: 0 };
   }
   emit(e) {
     this.queue.push(e);
@@ -2501,6 +4226,7 @@ var CombatManager = class {
     if (id === "telekinesis") this.castTelekinesis(s);
     else if (id === "fire") this.castFire(s);
     else if (id === "seal") this.castSeal(s);
+    else if (id === "ice") this.castIce(s);
     this.flushPhases();
     this.checkResult();
     this.commit();
@@ -2568,6 +4294,24 @@ var CombatManager = class {
         this.enemy.applyBurn(e.burn.dps, e.burn.durationSec);
         this.emit({ type: "status", status: "burn", sec: e.burn.durationSec });
       }
+    } else if (e.type === "warm") {
+      if (this.chillResist >= e.resist) return { ok: false, reason: "full" };
+      this.chillResist = e.resist;
+      this.heroChill = { left: 0, pct: 0 };
+      this.emit({ type: "potion", id, kind: "warm" });
+    } else if (e.type === "cleanse") {
+      const gain = Math.min(h.maxHp - h.hp, Math.round(h.maxHp * e.heal));
+      if (gain <= 0 && !(this.heroChill.left > 0)) return { ok: false, reason: "full" };
+      h.hp += gain;
+      this.heroChill = { left: 0, pct: 0 };
+      this.emit({ type: "potion", id, kind: "heal", amount: gain });
+    } else if (e.type === "brittle") {
+      this.enemy.applyBrittle(e.bonus, e.sec);
+      this.emit({ type: "potion", id, kind: "brittle" });
+      this.emit({ type: "status", status: "brittle", sec: e.sec, bonus: e.bonus });
+    } else if (e.type === "guard") {
+      this.guard = { left: e.sec, mult: e.incoming };
+      this.emit({ type: "potion", id, kind: "guard", sec: e.sec });
     } else return { ok: false, reason: "unknown" };
     this.state.removeItem(id, 1);
     this.stats.potions = (this.stats.potions || 0) + 1;
@@ -2609,11 +4353,19 @@ var CombatManager = class {
     }
     if (!s.interruptsNormalCast) tags.shift();
     this.handleInterrupt(tags);
+    const br = this.enemy.consumeBrittle();
+    if (br) {
+      base *= 1 + br;
+      this.emit({ type: "status", status: "shatter", bonus: br });
+      if (tags.includes("telekinesis_heavy") && this.enemy.armorActive && this.enemy.breakArmor()) this.emit({ type: "armorBroken", sec: this.enemy.def.armor.disabledSec });
+    }
     const dmg = this.enemy.takeDamage(base, "telekinesis", this.hero.damageMult);
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "telekinesis", heavy: tags.includes("telekinesis_heavy") });
   }
   castFire(s) {
-    const dmg = this.enemy.takeDamage(s.damage, "fire", this.hero.damageMult);
+    const br = this.enemy.consumeBrittle();
+    if (br) this.emit({ type: "status", status: "shatter", bonus: br });
+    const dmg = this.enemy.takeDamage(s.damage * (1 + br), "fire", this.hero.damageMult);
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "fire" });
     this.enemy.applyBurn(s.burn.dps, s.burn.durationSec);
     this.emit({ type: "status", status: "burn", sec: s.burn.durationSec });
@@ -2626,7 +4378,9 @@ var CombatManager = class {
   }
   // v0.10.1: Астрал — чистый урон сквозь броню и кору; атаки врага не прерывает (это только Телекинез)
   castSeal(s) {
-    const dmg = this.enemy.takeDamage(s.damage, "seal", this.hero.damageMult);
+    const br = this.enemy.consumeBrittle();
+    if (br) this.emit({ type: "status", status: "shatter", bonus: br });
+    const dmg = this.enemy.takeDamage(s.damage * (1 + br), "seal", this.hero.damageMult);
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "seal" });
     if (s.flash && this.enemy.alive) {
       for (const e of this.enemy.flash(s.flash.sec, s.flash.vulnerability || 0)) {
@@ -2643,6 +4397,32 @@ var CombatManager = class {
     const gain = Math.min(this.hero.maxMana - this.hero.mana, Math.round(this.hero.maxMana * r.gainPct));
     this.hero.mana += gain;
     this.emit({ type: "manaRescue", mana: gain });
+  }
+  /**
+   * v0.18.0: Лёд — урон, замедление врага, со ступени II — Хрупкость. Ветка «Осколок»: удар по хрупкой цели раскалывает её
+   * (урон ×shatter.mult, Хрупкость снимается и в этот раз заново не накладывается — иначе каждый удар был бы усиленным).
+   */
+  castIce(s) {
+    let base = s.damage, shattered = false;
+    if (s.shatter && this.enemy.isBrittle) {
+      this.enemy.consumeBrittle();
+      base *= s.shatter.mult;
+      shattered = true;
+      this.emit({ type: "status", status: "shatter", bonus: s.shatter.mult - 1, ice: true });
+    }
+    const dmg = this.enemy.takeDamage(base * this.iceMult, "ice", this.hero.damageMult);
+    this.emit({ type: "damage", target: "enemy", amount: dmg, school: "ice" });
+    if (!this.enemy.alive) return;
+    if (s.slow) {
+      const pct = Math.min(0.8, Math.round((s.slow.pct + this.slowBonus) * 1e3) / 1e3);
+      this.enemy.applySlow(pct, s.slow.sec);
+      this.emit({ type: "status", status: "slow", sec: s.slow.sec, pct });
+    }
+    if (s.brittle && !shattered) {
+      this.enemy.applyBrittle(s.brittle.bonus, s.brittle.sec);
+      this.emit({ type: "status", status: "brittle", sec: s.brittle.sec, bonus: s.brittle.bonus });
+    }
+    if (s.interruptsNormalCast) this.handleInterrupt(["ice"]);
   }
   handleInterrupt(tags) {
     const r = this.enemy.tryInterrupt(tags);
@@ -2672,10 +4452,26 @@ var CombatManager = class {
   tick(dt, { holdEnemy = false } = {}) {
     if (this.result) return;
     const h = this.hero;
-    h.mana = Math.min(h.maxMana, h.mana + h.regen * dt);
-    for (const id of ABILITY_ORDER) this.cooldowns[id] = Math.max(0, this.cooldowns[id] - dt);
+    let hdt = dt;
+    if (this.heroChill.left > 0) {
+      hdt = dt * (1 - this.heroChill.pct);
+      this.heroChill.left -= dt;
+      if (this.heroChill.left <= 0) {
+        this.heroChill = { left: 0, pct: 0 };
+        this.emit({ type: "chillEnd" });
+      }
+    }
+    h.mana = Math.min(h.maxMana, h.mana + h.regen * hdt);
+    if (this.guard?.left > 0) {
+      this.guard.left -= dt;
+      if (this.guard.left <= 0) {
+        this.guard = null;
+        this.emit({ type: "guardEnd" });
+      }
+    }
+    for (const id of ABILITY_ORDER) this.cooldowns[id] = Math.max(0, this.cooldowns[id] - hdt);
     if (this.chain) {
-      this.chain.left -= dt;
+      this.chain.left -= hdt;
       if (this.chain.left <= 0) {
         this.cooldowns[this.chain.id] = Math.max(0, this.chain.cooldownSec - (this.chain.window ?? 0));
         this.chain = null;
@@ -2713,9 +4509,11 @@ var CombatManager = class {
       switch (a.type) {
         case "attack":
           this.hitHero(a.damage, false);
+          this.chillHero(a.chill);
           break;
         case "strongHit":
           this.hitHero(a.damage, true, a.name);
+          this.chillHero(a.chill);
           break;
         case "strongStart":
           this.emit({ type: "warning", name: a.name, prepSec: a.prepSec, hint: a.hint, needsHeavy: a.interruptBy.includes("telekinesis_heavy") && !a.interruptBy.includes("telekinesis") });
@@ -2734,8 +4532,16 @@ var CombatManager = class {
     this.checkResult();
     this.commit();
   }
+  /** v0.18.0: холод врага ({ pct, sec }) — сильнейший действует, длительность обновляется. */
+  chillHero(c) {
+    if (!c || this.hero.hp <= 0) return;
+    const pct = c.pct * (this.chillResist ? 1 - this.chillResist : 1);
+    if (pct <= 0) return;
+    this.heroChill = { left: Math.max(this.heroChill.left, c.sec), pct: Math.max(this.heroChill.left > 0 ? this.heroChill.pct : 0, pct) };
+    this.emit({ type: "chill", sec: c.sec, pct });
+  }
   hitHero(damage, strong, name) {
-    damage = Math.max(1, Math.round(damage * this.incomingMult));
+    damage = Math.max(1, Math.round(damage * this.incomingMult * (this.guard?.left > 0 ? this.guard.mult : 1)));
     this.hero.hp = Math.max(0, this.hero.hp - damage);
     this.stats.damageTaken += damage;
     this.emit({ type: "damage", target: "hero", amount: damage, strong, name });
@@ -2890,6 +4696,7 @@ function verifyCombat(snap, rawLog, nowMs) {
   if (snap?.combatSince == null || !ctx) return fail2("no_combat");
   const log = normalizeLog(rawLog);
   if (!log) return fail2("bad_log");
+  if (ctx.spawn === "duel") return verifyDuel(snap, ctx, log, nowMs);
   const spawn = spawnOf(ctx.spawn);
   if (!spawn || spawn.enemy !== ctx.enemy || !Object.hasOwn(ENEMIES, ctx.enemy)) return fail2("bad_spawn");
   if (spawn.requiresEvent && !snap.quests.includes(spawn.requiresEvent)) return fail2("locked");
@@ -2937,6 +4744,39 @@ function verifyCombat(snap, rawLog, nowMs) {
   verdict.entry = {
     enemy: ctx.enemy,
     spawnId: spawn.id,
+    result: outcome,
+    timeSec: Math.round(cm.time * 10) / 10,
+    interrupts: cm.stats.interrupts,
+    uses: { ...cm.stats.abilityUses }
+  };
+  return { ok: true, verdict };
+}
+function verifyDuel(snap, ctx, log, nowMs) {
+  const fail2 = (reason) => ({ ok: false, reason });
+  const d = ctx.duel;
+  if (ctx.enemy !== "duel_mage" || !d || typeof d !== "object" || !d.opponent || typeof d.opponent !== "object") return fail2("bad_spawn");
+  if (log.ticks * STEP > (nowMs - snap.combatSince) / 1e3 + SLACK_SEC) return fail2("too_fast");
+  const st = startState(ctx, nowMs);
+  const cm = new CombatManager({ enemyType: "duel_mage", enemyDef: duelEnemyDef(d.opponent), state: st, abilities: new AbilitySystem(st, null, null) });
+  const run = replayCombat(cm, log);
+  if (run.held > 0) return fail2("bad_log");
+  const outcome = cm.result || "retreat";
+  const verdict = { outcome, since: snap.combatSince, spawn: "duel", ticks: run.ticks, mana: cm.hero.mana };
+  if (outcome === "retreat") return { ok: true, verdict };
+  verdict.potions = {};
+  for (const id of COMBAT_POTIONS) add(verdict.potions, id, (ctx.potions[id] || 0) - st.item(id));
+  const win = outcome === "victory";
+  const reward = { heroXP: 0, schoolXP: {}, items: {} };
+  mergeReward(reward, { schoolXP: { ...st.data.schoolXP } });
+  const r = win ? DUEL.reward.victory : DUEL.reward.defeat;
+  mergeReward(reward, { heroXP: r.heroXP || 0, items: r.coins ? { coins: r.coins } : {} });
+  if (!reward.heroXP) delete reward.heroXP;
+  verdict.reward = reward;
+  const my = Number.isFinite(d.rating) ? d.rating : DUEL.baseRating, opp = Number.isFinite(d.opponent.rating) ? d.opponent.rating : DUEL.baseRating;
+  verdict.duel = { win, delta: ratingDelta(my, opp, win), opponent: String(d.opponent.name || "").slice(0, 40) };
+  verdict.entry = {
+    enemy: "duel_mage",
+    spawnId: "duel",
     result: outcome,
     timeSec: Math.round(cm.time * 10) / 10,
     interrupts: cm.stats.interrupts,

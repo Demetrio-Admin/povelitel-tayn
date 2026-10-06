@@ -8,10 +8,12 @@
 //   → H Круг Огня → (возврат) I Корни у поляны → J Новая часть леса → K Страж → L Ворота
 
 import { CONTENT_INTERACTIVES, CONTENT_ENEMIES, CACHE_RESOURCE_REWARDS } from './world.content.js';
+import { CITY_ZONES, CITY_GROUND, CITY_COLLIDERS, CITY_KEEP_CLEAR, CITY_INTERACTIVES, CITY_ENEMIES } from './world.city.js';
+import { EXP_ZONES, EXP_GROUND, EXP_COLLIDERS, EXP_KEEP_CLEAR, EXP_INTERACTIVES, EXP_ENEMIES } from './world.expeditions.js';
 export { CLEARINGS } from './world.content.js';
 
 export const WORLD = {
-  width: 1800,
+  width: 5400,   // v0.20.0: восточнее леса — дорога и город (world.city.js); v0.24.0: ещё восточнее — вылазки (world.expeditions.js)
   height: 5400,
   playerStart: { x: 900, y: 5200 },
   defaultSafePoint: { x: 900, y: 4820 },
@@ -27,12 +29,16 @@ export const ZONES = [
   { id: 'J', name: 'Новая часть леса',     x: 100, y: 1640, w: 600,  h: 2460, safePoint: { x: 400, y: 3900 } },
   { id: 'K', name: 'Поляна Лесного Стража', x: 100, y: 1100, w: 600, h: 540, safePoint: { x: 400, y: 1760 } },
   { id: 'L', name: 'Древние ворота',        x: 0,   y: 0,    w: 1800, h: 1100, safePoint: { x: 900, y: 820 } },
+  ...CITY_ZONES,   // v0.20.0: глава II
+  ...EXP_ZONES,    // v0.24.0: вылазки
 ];
 
 // Поверхности (Layer 1 — Ground). Базовая трава кладётся на весь мир автоматически.
 // Дороги и вода — кривые формы, они описаны в world.terrain.js. Здесь остался только пол дома.
 export const GROUND = [
   { tex: 'wooden_floor_01', x: 640,  y: 4880, w: 520, h: 420 },
+  ...CITY_GROUND,
+  ...EXP_GROUND,
 ];
 
 // Места, где генератор не ставит случайный декор: проёмы между блоками, проходы к воротам.
@@ -42,6 +48,8 @@ export const KEEP_CLEAR = [
   { x: 250,  y: 1260, w: 300, h: 240 },  // проход Стража
   { x: 820,  y: 330,  w: 160, h: 220 },  // ворота
   { x: 700,  y: 125,  w: 960, h: 210 },  // v0.10.0: поляна узла за воротами (то же, что CLEARINGS в world.content.js)
+  ...CITY_KEEP_CLEAR,
+  ...EXP_KEEP_CLEAR,
 ];
 
 // Коллизии (Blueprint §6): крупные деревья, здания, вода, камни, стены руин.
@@ -100,6 +108,9 @@ export const COLLIDERS = [
   // Новые стены — в конце списка: базовые c0… сохраняют свои номера для правок редактора.
   { kind: 'ruin',  x: 100,  y: 330,  w: 540, h: 110 },
   { kind: 'ruin',  x: 1160, y: 330,  w: 540, h: 110 },
+  // v0.20.0: дорога и город (только в конец — id коллайдеров c<номер>)
+  ...CITY_COLLIDERS,
+  ...EXP_COLLIDERS,   // v0.24.0: после городских (номера коллайдеров города не сдвигаются)
 ];
 
 // ИСТОЧНИК для генератора карты (tools/world/bake.mjs). Игра читает готовый список из world.props.js,
@@ -183,7 +194,7 @@ for (const o of BASE_INTERACTIVES) {
   const extra = CACHE_RESOURCE_REWARDS[o.id];
   if (extra) o.reward = { ...o.reward, items: { ...(o.reward.items || {}), ...extra } };
 }
-export const INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES];
+export const INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES, ...EXP_INTERACTIVES];
 
 // Враги-триггеры на карте. Бой начинается при входе в радиус.
 const BASE_ENEMY_SPAWNS = [
@@ -193,4 +204,4 @@ const BASE_ENEMY_SPAWNS = [
   { id: 'forest_guardian_01', enemy: 'forest_guardian', x: 400, y: 1400, radius: 230, collide: { w: 240, h: 80 },
     startEvent: 'forest_guardian_01', defeatEvent: 'guardian_defeated', opensPath: 'gate_path', scale: 1.5 },
 ];
-export const ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES];
+export const ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES, ...CITY_ENEMIES, ...EXP_ENEMIES];

@@ -386,7 +386,7 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
   const { GuidanceSystem } = await import('../src/systems/GuidanceSystem.js');
   const { SIDE_QUESTS, SIDE_QUEST_ORDER } = await import('../src/config/quests.js');
   const { RECIPES, RECIPE_ORDER } = await import('../src/config/recipes.js');
-  const { RESOURCES, POTIONS } = await import('../src/config/resources.js');
+  const { RESOURCES, POTIONS, BASE_RESOURCES } = await import('../src/config/resources.js');
   const { NPCS } = await import('../src/config/npcs.js');
   const { DIALOGUES } = await import('../src/config/dialogues.js');
   const { STEP_GUIDE, HERO_LINES } = await import('../src/config/guidance.js');
@@ -403,16 +403,16 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
   };
 
   // --- данные
-  ok(Object.keys(RESOURCES).length === 5, '5 видов ресурсов');
+  ok(Object.keys(RESOURCES).length === 9 && BASE_RESOURCES.length === 5, '5 видов ресурсов главы I (+4 главы II с v0.19.0)');
   ok(Object.keys(RESOURCES).every(k => ITEMS[k]), 'каждый ресурс есть в ITEMS (имя, иконка)');
   ok(Object.values(RECIPES).every(r => Object.keys(r.needs).every(k => ITEMS[k]) && ITEMS[r.result]), 'рецепты ссылаются на существующие предметы');
-  ok(Object.keys(RECIPES).length === 6 && RECIPE_ORDER.length === 6 && RECIPE_ORDER.filter(id => RECIPES[id].kind === 'story').length === 3, 'алхимия: шесть рецептов, три сюжетных');
+  ok(RECIPE_ORDER.filter(id => !RECIPES[id].chapter).length === 6 && RECIPE_ORDER.filter(id => RECIPES[id].kind === 'story').length === 3 && RECIPE_ORDER.length === Object.keys(RECIPES).length, 'алхимия главы I: шесть рецептов, три сюжетных (рецепты главы II — отдельно)');
   ok(Object.keys(NPCS).length >= 4 && Object.keys(NPCS).every(id => DIALOGUES[id]), 'NPC ≥ 4, у каждого есть диалоги');
   ok(SIDE_QUEST_ORDER.length >= 2 && SIDE_QUEST_ORDER.length <= 3, 'побочных заданий 2–3');
   const dialogOk = Object.values(DIALOGUES).every(vs => vs.every(v => Object.values(v.nodes).every(n => n.lines.length >= 1 && n.lines.length <= 5 && (n.choices || []).every(c => !c.next || v.nodes[c.next]))));
   ok(dialogOk, 'диалоги: 1–5 реплик в узле, ветки ведут в существующие узлы');
   const gatherSrc = new Set(CONTENT_INTERACTIVES.filter(o => o.kind === 'gather').map(o => o.res));
-  ok(Object.keys(RESOURCES).every(k => gatherSrc.has(k) || CONTENT_INTERACTIVES.some(o => JSON.stringify(o).includes(k))), 'каждый ресурс можно получить в мире');
+  ok(BASE_RESOURCES.every(k => gatherSrc.has(k) || CONTENT_INTERACTIVES.some(o => JSON.stringify(o).includes(k))), 'каждый ресурс главы I можно получить в мире');
   const ids = new Set(CONTENT_INTERACTIVES.map(o => o.id));
   ok(ids.size === CONTENT_INTERACTIVES.length, 'id объектов v0.8 уникальны');
   ok(QUEST_STEPS.every(s => s.id === 'end' || STEP_GUIDE[s.id]), 'для каждого шага основного маршрута есть подсказки');
@@ -562,9 +562,10 @@ console.log('\n[v0.8.2] Опыт до следующего уровня');
   state.addHeroXP(290); ok(state.data.heroLevel === 7 && state.heroStats().maxHp === 160, '940 — уровень 7: 160 HP');
   state.addHeroXP(359); ok(state.data.heroLevel === 7, '1299 — ещё 7');
   state.addHeroXP(1); ok(state.data.heroLevel === 8 && state.heroStats().maxMana === 140, '1300 — уровень 8: 140 маны');
-  state.addHeroXP(5000); x = xpProgress(state);
-  ok(x.level === 10 && x.max && x.progress === 1 && x.caption === 'Максимальный уровень', 'уровень 10 — максимальный');
-  ok(x.remaining === 0 && !/NaN|null|11/.test(x.caption), 'после максимума нет 11-го уровня, NaN и отрицательных чисел');
+  state.addHeroXP(1800); ok(state.data.heroLevel === 11 && state.heroStats().maxHp === 202, '3100 — уровень 11 (глава II): 202 HP');
+  state.addHeroXP(50000); x = xpProgress(state);
+  ok(x.level === 15 && x.max && x.progress === 1 && x.caption === 'Максимальный уровень' && state.heroStats().maxHp === 255, 'уровень 15 — максимальный (глава II): 255 HP');
+  ok(x.remaining === 0 && !/NaN|null|16/.test(x.caption), 'после максимума нет 16-го уровня, NaN и отрицательных чисел');
   state.data.heroLevel = 2; state.data.heroXP = 10; x = xpProgress(state);   // повреждённое сохранение: опыт меньше порога
   ok(x.progress === 0 && x.remaining === 140, 'опыт ниже порога уровня не даёт отрицательную полосу');
 }

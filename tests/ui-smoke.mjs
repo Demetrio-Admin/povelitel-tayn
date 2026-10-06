@@ -87,6 +87,16 @@ await mute(async () => {
     ui.openJournal(); ui.update(8000, 16); ui.closeModal(null);
     ui.openAlchemy(); ui.craftRecipe('elixir_life'); ui.craftRecipe('resin_flask'); ui.update(8100, 16); ui.closeModal(null);
     ui.openBag(); ui.closeModal(null);
+    // v0.23.0: доска поручений — закрытая и открытая (взять поручение, сдать)
+    ui.openDaily(); ui.closeModal(null);
+    st.markEvent('ch2_quarter_cleared'); st.addItem('frost_herb', 10); st.addItem('ice_crystal', 3); st.addItem('elixir_life', 3);
+    ui.openDaily(); ui.update(8200, 16);
+    { const { dailyView } = await import('../src/systems/dailyModel.js'); const id = dailyView(st).rows[0].id; await ui.dailyAct('take', id); await ui.dailyAct('done', id); }
+    ui.closeModal(null);
+    // v0.26.0: окно Магической Дуэли (закрыто до главы II, потом — рейтинг, лига и попытки)
+    ui.openDuel();
+    st.markEvent('chapter_2_complete');
+    ui.openDuel(); ui.update(8300, 16); ui.closeModal(null);
     // v0.9.2: окно диалога обоими героями — ни одна надпись (реплика или кнопка ответа) не «[object Object]»
     const { setHeroSource } = await import('../src/state/hero.js');
     const { heroIdNow } = await import('../src/services.js');
@@ -233,7 +243,7 @@ await mute(async () => {
     h.openMenu(); h.modal.items.find(x => x.item.id === 'chat').hit.emit('pointerdown');
     ok(chatOpened && !h.modal && !sv.modalOpen, 'пункт Чат закрывает меню и вызывает настоящий интерфейс');
     h.openChat = originalChat;
-    for (const id of ['city', 'bank', 'rating', 'forum']) {
+    for (const id of ['city', 'rating', 'forum']) {   // v0.20.0: «Банк» — уже не заглушка (кошелёк), «Город» — заглушка до главы II
       const before = snap();
       h.openMenu();
       const it = h.modal.items.find(x => x.item.id === id);
@@ -367,6 +377,18 @@ await mute(async () => {
       cs.warn.setVisible(true); cs.warnTitle.setText('⚠ Удар'); cs.warnBar.width = 200;
       for (let i = 0; i < 20; i++) cs.update(i * 16, 16);
       ok(cs.enemyHpBar.frac > 0.99, `бой (${enemyType}): полоса врага полная в начале боя`);
+    }
+    // v0.26.0: Дуэль — соперник из слепка героя (combatCtx.duel), облик — его герой
+    {
+      const { services: sv } = await import('../src/services.js');
+      const { combatCtxOf, toSnapshot, duelGhostOf } = await import('../src/cloud/playerModel.js');
+      const snap = toSnapshot(sv.state.data);
+      sv.state.data.combatCtx = { ...combatCtxOf(snap, 'duel', 'duel_mage'), duel: { opponent: { ...duelGhostOf(snap, 1000), name: 'Мирон', hero: 'warlock' }, rating: 1000, season: 0 } };
+      const cs = new CombatScene(); cs.init({ spawnId: 'duel', enemyType: 'duel_mage', duel: true }); cs.create(); cs.started = true; cs.updateHud();
+      for (let i = 0; i < 20; i++) cs.update(i * 16, 16);
+      ok(cs.def.name === 'Мирон' && cs.def.texture === 'warlock_down' && cs.enemyHpBar.frac > 0.99, 'Дуэль: соперник из слепка, его облик и полоса здоровья');
+      cs.showDuelOutcome({ ok: true, verdict: { outcome: 'victory', duel: { delta: 16, opponent: 'Мирон' }, reward: { items: { coins: 30 } }, entry: { timeSec: 50 } } }, 50);
+      sv.state.data.combatCtx = null;
     }
   } catch (e) { err = e; }
   ok(!err, 'бой: сцена и HUD врага строятся и обновляются' + (err ? ': ' + err.stack.split('\n').slice(0, 3).join(' | ') : ''));

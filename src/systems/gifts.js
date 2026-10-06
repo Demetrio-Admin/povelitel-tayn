@@ -2,10 +2,11 @@
 // Данные берутся из конфигов баланса и из GameState; окно (ui/windows11.js) только рисует.
 import { ABILITIES } from '../config/balance.abilities.js';
 import { UPGRADES, ITEMS, TIMER_MODE, BRANCH_RESPEC } from '../config/balance.progression.js';
+import { SAPPHIRES } from '../config/sapphires.js';
 import { statsFor } from './abilityStats.js';
-import { AMULETS, AMULET_IDS, AMULET_SLOTS, GIFT_IDS } from '../config/build.js';
+import { AMULETS, AMULET_IDS, AMULET_SLOTS, GIFT_IDS, AMULET_UPGRADES, RARITY, amuletEffect } from '../config/build.js';
 
-export const GIFT_ORDER = ['telekinesis', 'fire', 'seal'];
+export const GIFT_ORDER = ['telekinesis', 'fire', 'seal', 'ice'];
 const WEIGHT_RU = { light: 'лёгкие', medium: 'лёгкие и средние', heavy: 'любые, включая тяжёлые' };
 const pct = (v) => `${Math.round(v * 100)}%`;
 const num = (v) => String(Math.round(v * 10) / 10).replace('.', ',');
@@ -26,6 +27,10 @@ export function statLines(id, level, branchId = null) {
   } else if (id === 'seal') {
     if (s.ignoresDefense) out.push('Пробивает броню и кору');
     if (s.flash) out.push(`Вспышка: броня и кора выключены на ${num(s.flash.sec)} с${s.flash.vulnerability ? `, враг уязвим +${pct(s.flash.vulnerability)}` : ''}`);
+  } else if (id === 'ice') {   // v0.18.0
+    if (s.slow) out.push(`Замедление: враг на ${pct(s.slow.pct)} медленнее ${num(s.slow.sec)} с — больше времени на прерывание`);
+    if (s.brittle) out.push(`Хрупкость ${num(s.brittle.sec)} с: следующий удар Телекинеза, Огня или Астрала +${pct(s.brittle.bonus)}, тяжёлый бросок разбивает броню`);
+    if (s.shatter) out.push(`Удар Льда по хрупкой цели: урон ×${num(s.shatter.mult)}`);
   }
   return out;
 }
@@ -79,7 +84,8 @@ export function respecOptions(state, id) {
   const cur = state.branchOf(id);
   if (!cur) return [];
   return Object.entries(ABILITIES[id].branches || {}).filter(([k]) => k !== cur)
-    .map(([k, b]) => ({ id: k, name: b.name, price: BRANCH_RESPEC.coins, canPay: state.item('coins') >= BRANCH_RESPEC.coins }));
+    .map(([k, b]) => ({ id: k, name: b.name, price: BRANCH_RESPEC.coins, canPay: state.item('coins') >= BRANCH_RESPEC.coins,
+      sapphires: SAPPHIRES.respec, canPaySapphires: state.sapphires() >= SAPPHIRES.respec }));
 }
 
 const pickBranch = (id, b) => { const x = ABILITIES[id].branches[b]; return { name: x.name, text: x.text, tradeoff: x.tradeoff }; };
@@ -115,9 +121,34 @@ export function buildView(state) {
     slotsUsed: equipped.length,
     slots: GIFT_IDS.filter((id) => state.isUnlocked(id)).map((id) => ({ id, name: ABILITIES[id].name, equipped: equipped.includes(id) })),
     amuletSlots: AMULET_SLOTS,
-    amulets: AMULET_IDS.filter((id) => state.item(id) >= 1).map((id) => ({ id, name: AMULETS[id].name, text: AMULETS[id].text, tradeoff: AMULETS[id].tradeoff, equipped: worn.includes(id) })),
+    amulets: AMULET_IDS.filter((id) => state.item(id) >= 1).map((id) => {
+      const level = state.buildData().amuletLevels[id] || 0;
+      const up = AMULET_UPGRADES[level] || null;   // v0.19.0: следующее улучшение (null — максимум)
+      const need = up ? [{ id: 'coins', name: ITEMS.coins.name, have: state.item('coins'), need: up.coins },
+        ...Object.entries(up.items).map(([k, n]) => ({ id: k, name: ITEMS[k]?.name || k, have: state.item(k), need: n }))].map((n) => ({ ...n, ok: n.have >= n.need })) : [];
+      return { id, name: AMULETS[id].name, text: AMULETS[id].text, tradeoff: AMULETS[id].tradeoff, equipped: worn.includes(id),
+        rarity: AMULETS[id].rarity, rarityName: RARITY[AMULETS[id].rarity]?.name, rarityColor: RARITY[AMULETS[id].rarity]?.color,
+        level, maxLevel: AMULET_UPGRADES.length, effect: amuletEffect(id, level), next: up ? { level: level + 1, need, canPay: need.every((n) => n.ok) } : null };
+    }),
     hasPreset: !!state.buildData().preset,
+    // v0.17.0: пресеты по номерам и следующий, который можно открыть за сапфиры
+    presets: Array.from({ length: state.buildData().presetSlots }, (_, i) => ({ n: i + 1, saved: !!state.buildData().presets[i + 1] })),
+    nextPreset: state.buildData().presetSlots < SAPPHIRES.preset.max
+      ? { n: state.buildData().presetSlots + 1, price: SAPPHIRES.preset.price, canPay: state.sapphires() >= SAPPHIRES.preset.price } : null,
   };
+}
+
+/** v0.19.0: числа амулета (с учётом уровня) одной строкой. */
+export function amuletLine(e) {
+  const p = (v) => `${Math.round(v * 100)}%`;
+  const out = [];
+  if (e.damageMult > 1) out.push(`урон +${p(e.damageMult - 1)}`);
+  if (e.damageMult && e.damageMult < 1) out.push(`урон −${p(1 - e.damageMult)}`);
+  if (e.incomingMult) out.push(`получаемый урон −${p(1 - e.incomingMult)}`);
+  if (e.manaRescue) out.push(`раз за бой при мане ниже ${p(e.manaRescue.below)} возвращает ${p(e.manaRescue.gainPct)}`);
+  if (e.iceMult) out.push(`удар Льда +${p(e.iceMult - 1)}`);
+  if (e.slowBonus) out.push(`замедление Льдом +${p(e.slowBonus)}`);
+  return out.join(', ');
 }
 
 /** Что получится, если нажать на дар в слотах: новый набор или причина отказа ('none' — последний дар, 'full' — все слоты заняты). */

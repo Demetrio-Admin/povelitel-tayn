@@ -91,6 +91,9 @@ function overlay(card, { onClose, dismissable = true, top = false } = {}) {
   return { ov, close, get closed() { return closed; } };
 }
 
+/** v0.25.0: те же окна для других HTML-панелей (Ковены). */
+export { el as domEl, overlay as domOverlay };
+
 /** Открыто ли сейчас какое-нибудь окно аккаунта (игра в это время не принимает ввод). */
 export const anyOpen = () => stack.length > 0;
 

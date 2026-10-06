@@ -46,6 +46,252 @@ export const ENEMIES = {
     arena: 'glade_small',
   },
 
+  // v0.20.0 — глава II (chapter-2-balance-v0.1.md §9). Инеевый зверёк: быстрые удары с холодом (замедляют героя),
+  // ледяной рывок прерывается Телекинезом, слабость к Огню. Бой ~20–25 с у героя 8–9 уровня.
+  frost_critter: {
+    name: 'Инеевый зверёк',
+    texture: 'enemy_frost_critter',
+    tier: 'normal',
+    hp: 440,
+    normalAttack: { damage: 11, intervalSec: 2.5, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: {
+      name: 'Ледяной рывок', damage: 26, prepSec: 1.8, cooldownSec: 9, firstDelaySec: 5,
+      interruptBy: ['telekinesis'],
+      hint: 'Прервите Телекинезом!',
+    },
+    staggerSec: 1.0,
+    interruptedCooldownSec: 6,
+    defense: 0,
+    weaknesses: { fire: 0.3 },
+    rewards: { heroXP: 80, schoolXP: { fire: 20, telekinesis: 20 }, items: { frost_herb: 1 }, coins: 20 },
+    repeatRewards: { heroXP: 14, schoolXP: { fire: 3 }, coins: 5 },
+    arena: 'city',
+  },
+
+  // v0.21.0 — Морозный сборщик (квест 6 «Пропавший груз», chapter-2-balance §9): магический конструкт. Защитная корка
+  // гасит 35% урона — Астрал её пробивает, Огонь растапливает на 5 с. Дальний ледяной залп замедляет перезарядки;
+  // «Ледяной таран» прерывается Телекинезом. Бой ≈30–40 с у героя 9–10 уровня.
+  frost_collector: {
+    name: 'Морозный сборщик',
+    texture: 'enemy_frost_collector',
+    tier: 'normal',
+    hp: 520,
+    normalAttack: { damage: 11, intervalSec: 2.8, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: {
+      name: 'Ледяной таран', damage: 28, prepSec: 2.0, cooldownSec: 10, firstDelaySec: 6,
+      interruptBy: ['telekinesis'],
+      hint: 'Прервите Телекинезом!',
+    },
+    staggerSec: 1.0,
+    interruptedCooldownSec: 6,
+    defense: 0.35,
+    onFireHit: { disableDefenseSec: 5 },
+    rewards: { heroXP: 70, schoolXP: { seal: 20, telekinesis: 15 }, items: { frost_herb: 1 }, coins: 25 },
+    repeatRewards: { heroXP: 28, schoolXP: { seal: 3 }, coins: 9 },
+    arena: 'city',
+  },
+
+  // Усиленный сборщик — босс склада (квест 6). Корка толще, таран тяжелее; без Астрала и Огня бой заметно дольше.
+  frost_collector_elite: {
+    name: 'Усиленный сборщик',
+    texture: 'enemy_frost_collector_elite',
+    tier: 'strong',
+    hp: 760,
+    normalAttack: { damage: 12, intervalSec: 3.0, chill: { pct: 0.35, sec: 3 } },
+    strongAttack: {
+      name: 'Ледяной таран', damage: 32, prepSec: 2.2, cooldownSec: 10, firstDelaySec: 6,
+      interruptBy: ['telekinesis'],
+      hint: 'Прервите Телекинезом!',
+    },
+    staggerSec: 1.1,
+    interruptedCooldownSec: 7,
+    defense: 0.4,
+    onFireHit: { disableDefenseSec: 5 },
+    rewards: { heroXP: 70, schoolXP: { seal: 30, telekinesis: 20, fire: 20 }, items: { ice_crystal: 1, rune_dust: 1 }, coins: 35 },
+    arena: 'city',
+  },
+
+  // v0.21.0 — Ледяной страж (квест 10 «Выбор»): первый серьёзный билд-чек главы II (55–75 с). Кристальная броня −45%
+  // (Телекинез разбивает кристалл, Астрал пробивает), Огонь бьёт на 25% сильнее; тяжёлый удар — только тяжёлым камнем,
+  // а Лёд замедляет его подготовку. Обычный удар холодит. Без Телекинеза бой проходим — просто дольше и с зельями.
+  ice_guardian: {
+    name: 'Ледяной страж',
+    texture: 'enemy_ice_guardian',
+    tier: 'strong',
+    hp: 780,
+    normalAttack: { damage: 12, intervalSec: 3.8, chill: { pct: 0.35, sec: 3 } },
+    strongAttack: {
+      name: 'Ледяной молот', damage: 32, prepSec: 2.6, cooldownSec: 11, firstDelaySec: 7,
+      interruptBy: ['telekinesis_heavy'],
+      hint: 'Бросьте тяжёлый камень!',
+    },
+    staggerSec: 1.2,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    armor: { value: 0.45, source: 'crystal', disabledSec: 8 },
+    weaknesses: { fire: 0.25 },
+    rewards: { heroXP: 140, schoolXP: { telekinesis: 40, fire: 40, seal: 40, ice: 40 }, items: { ice_crystal: 2, frost_shard: 1 }, coins: 60 },
+    repeatRewards: { heroXP: 55, schoolXP: { ice: 5 }, items: { ice_crystal: 1 }, coins: 16 },
+    arena: 'frost',
+  },
+
+  // v0.22.0 — Доброволец, потерявший контроль (квест 12, chapter-2-balance §10). Не монстр: победа — «обезвредить»,
+  // повторно не появляется (место не возобновляется). Нестабильная магия: холодные удары, «Выброс» прерывает Телекинез.
+  volunteer: {
+    name: 'Доброволец без контроля',
+    texture: 'enemy_volunteer',
+    tier: 'normal',
+    hp: 600,
+    normalAttack: { damage: 13, intervalSec: 2.7, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: {
+      name: 'Выброс холода', damage: 30, prepSec: 2.0, cooldownSec: 9, firstDelaySec: 5,
+      interruptBy: ['telekinesis'],
+      hint: 'Прервите Телекинезом!',
+    },
+    staggerSec: 1.0,
+    interruptedCooldownSec: 6,
+    defense: 0.2,
+    weaknesses: { seal: 0.3 },
+    rewards: { heroXP: 90, schoolXP: { seal: 15, ice: 15 }, coins: 20 },
+    arena: 'lab',
+  },
+
+  // Экспериментальный конструкт (квест 12 и дальше, §9): 60–80 с. Кристальная броня и защитная корка; Огонь растапливает корку.
+  experimental_construct: {
+    name: 'Экспериментальный конструкт',
+    texture: 'enemy_experimental_construct',
+    tier: 'strong',
+    hp: 850,
+    normalAttack: { damage: 12, intervalSec: 3.4, chill: { pct: 0.35, sec: 3 } },
+    strongAttack: {
+      name: 'Ледяной разряд', damage: 34, prepSec: 2.4, cooldownSec: 10, firstDelaySec: 6,
+      interruptBy: ['telekinesis_heavy'],
+      hint: 'Бросьте тяжёлый камень!',
+    },
+    staggerSec: 1.1,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    armor: { value: 0.4, source: 'crystal', disabledSec: 8 },
+    weaknesses: { fire: 0.2 },
+    rewards: { heroXP: 100, schoolXP: { telekinesis: 30, fire: 30, seal: 30, ice: 30 }, items: { ice_crystal: 1, frost_shard: 1 }, coins: 40 },
+    repeatRewards: { heroXP: 65, schoolXP: { ice: 5 }, items: { ice_crystal: 1 }, coins: 18 },
+    arena: 'lab',
+  },
+
+  // v0.22.0 — финальный босс главы II: Северин Вейр (квест 15, §11). Первый бой «маг против мага», 120–180 с, три фазы.
+  // 1 «Дуэль» — защитный барьер (−25%, Астрал пробивает, Огонь снимает на 5 с), Ледяное копьё прерывает Телекинез.
+  // 2 «Перегрузка» — кристальная броня эксперимента (тяжёлый камень разбивает кристалл), удар сильнее, Огонь +30%.
+  // 3 «Предел» — магия рвётся: защита 40%, только Астрал и Лёд бьют в полную силу; тяжёлый удар — тяжёлым камнем.
+  severin_boss: {
+    name: 'Северин Вейр',
+    texture: 'enemy_severin',
+    tier: 'strong',
+    hp: 1500,
+    normalAttack: { damage: 11, intervalSec: 3.4, chill: { pct: 0.3, sec: 3 } },
+    strongAttack: {
+      name: 'Ледяное копьё', damage: 28, prepSec: 2.2, cooldownSec: 11, firstDelaySec: 6,
+      interruptBy: ['telekinesis'],
+      hint: 'Прервите Телекинезом!',
+    },
+    staggerSec: 1.1,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    phases: [
+      { above: 1000, set: { defense: 0.25, armor: null, weaknesses: null, onFireHit: { disableDefenseSec: 5 } },
+        message: 'Барьер Северина гасит удары. Астрал пробивает его, Огонь снимает на 5 секунд.' },
+      { above: 480, set: { defense: 0, armor: { value: 0.45, source: 'crystal', disabledSec: 8 }, weaknesses: { fire: 0.3 }, onFireHit: null,
+        normalAttack: { damage: 12, intervalSec: 3.2, chill: { pct: 0.35, sec: 3 } } },
+        strongAttack: { name: 'Перегрузка', damage: 32, interruptBy: ['telekinesis_heavy'], hint: 'Бросьте тяжёлый камень!' },
+        message: '«Система держит!» Эксперимент даёт Северину кристальную броню. Разбейте кристалл тяжёлым камнем.', tint: 0xa8e4ff },
+      { above: 0, set: { defense: 0.4, armor: null, weaknesses: { seal: 0.4, ice: 0.4 }, onFireHit: null },
+        strongAttack: { name: 'Предел', damage: 34, prepSec: 2.6, interruptBy: ['telekinesis_heavy'], hint: 'Бросьте тяжёлый камень!' },
+        message: '«Я не могу её остановить…» Магия рвётся наружу: в полную силу бьют только Астрал и Лёд.', tint: 0xd2a8ff },
+    ],
+    rewards: { heroXP: 350, schoolXP: { telekinesis: 40, fire: 40, seal: 40, ice: 60 }, items: { cold_heart: 1 }, coins: 150 },
+    arena: 'duel',
+  },
+
+  // v0.24.0 — вылазки (stage-2-design-pack §24–25). Отрицательная «слабость» — сопротивление: этот дар бьёт слабее.
+  // Морозный лес: звери не боятся холода (Лёд −40…50%), зато горят (Огонь +30…40%).
+  frost_wolf: {
+    name: 'Морозная волчица',
+    texture: 'enemy_frost_wolf',
+    tier: 'normal',
+    hp: 650,
+    normalAttack: { damage: 14, intervalSec: 2.4, chill: { pct: 0.3, sec: 2.5 } },
+    strongAttack: { name: 'Прыжок из метели', damage: 30, prepSec: 1.9, cooldownSec: 9, firstDelaySec: 5, interruptBy: ['telekinesis'], hint: 'Прервите Телекинезом!' },
+    staggerSec: 1.0,
+    interruptedCooldownSec: 6,
+    defense: 0,
+    weaknesses: { fire: 0.4, ice: -0.4 },
+    rewards: { heroXP: 50, schoolXP: { fire: 10 }, items: { frost_herb: 1 }, coins: 15 },
+    repeatRewards: { heroXP: 25, schoolXP: { fire: 3 }, items: { frost_herb: 1 }, coins: 8 },
+    arena: 'frostwood',
+  },
+  frost_alpha: {
+    name: 'Вожак метели',
+    texture: 'enemy_frost_alpha',
+    tier: 'strong',
+    hp: 1300,
+    normalAttack: { damage: 13, intervalSec: 3.0, chill: { pct: 0.4, sec: 3 } },
+    strongAttack: { name: 'Вой стаи', damage: 34, prepSec: 2.4, cooldownSec: 10, firstDelaySec: 6, interruptBy: ['telekinesis_heavy'], hint: 'Бросьте тяжёлый камень!' },
+    staggerSec: 1.2,
+    interruptedCooldownSec: 7,
+    defense: 0.2,
+    onFireHit: { disableDefenseSec: 6 },
+    weaknesses: { fire: 0.3, ice: -0.5 },
+    rewards: { heroXP: 150, schoolXP: { fire: 30, telekinesis: 20 }, items: { ice_crystal: 2 }, coins: 60 },
+    repeatRewards: { heroXP: 70, schoolXP: { fire: 5 }, items: { ice_crystal: 1 }, coins: 25 },
+    arena: 'frostwood',
+  },
+  // Старое кладбище: огоньки и стражи кургана — плотная защита, Огонь их почти не берёт, Астрал пробивает.
+  grave_wisp: {
+    name: 'Могильный огонёк',
+    texture: 'enemy_grave_wisp',
+    tier: 'normal',
+    hp: 560,
+    normalAttack: { damage: 13, intervalSec: 2.6 },
+    strongAttack: { name: 'Холодный шёпот', damage: 28, prepSec: 2.0, cooldownSec: 9, firstDelaySec: 5, interruptBy: ['telekinesis'], hint: 'Прервите Телекинезом!' },
+    staggerSec: 1.0,
+    interruptedCooldownSec: 6,
+    defense: 0.45,
+    weaknesses: { seal: 0.5, fire: -0.3 },
+    rewards: { heroXP: 50, schoolXP: { seal: 10 }, items: { rune_dust: 1 }, coins: 15 },
+    repeatRewards: { heroXP: 25, schoolXP: { seal: 3 }, items: { rune_dust: 1 }, coins: 8 },
+    arena: 'graveyard',
+  },
+  grave_hound: {
+    name: 'Могильный пёс',
+    texture: 'enemy_grave_hound',
+    tier: 'normal',
+    hp: 700,
+    normalAttack: { damage: 15, intervalSec: 2.5 },
+    strongAttack: { name: 'Мёртвая хватка', damage: 32, prepSec: 2.0, cooldownSec: 9, firstDelaySec: 5, interruptBy: ['telekinesis'], hint: 'Прервите Телекинезом!' },
+    staggerSec: 1.0,
+    interruptedCooldownSec: 6,
+    defense: 0,
+    weaknesses: { fire: 0.3, telekinesis: -0.3 },
+    rewards: { heroXP: 50, schoolXP: { fire: 10 }, items: { forest_mushroom: 1 }, coins: 15 },
+    repeatRewards: { heroXP: 25, schoolXP: { fire: 3 }, items: { forest_mushroom: 1 }, coins: 8 },
+    arena: 'graveyard',
+  },
+  barrow_warden: {
+    name: 'Страж кургана',
+    texture: 'enemy_barrow_warden',
+    tier: 'strong',
+    hp: 1400,
+    normalAttack: { damage: 13, intervalSec: 3.4 },
+    strongAttack: { name: 'Удар кургана', damage: 36, prepSec: 2.6, cooldownSec: 11, firstDelaySec: 7, interruptBy: ['telekinesis_heavy'], hint: 'Бросьте тяжёлый камень!' },
+    staggerSec: 1.2,
+    interruptedCooldownSec: 7,
+    defense: 0,
+    armor: { value: 0.45, source: 'crystal', disabledSec: 8 },
+    weaknesses: { seal: 0.4, fire: -0.4 },
+    rewards: { heroXP: 150, schoolXP: { seal: 30, telekinesis: 20 }, items: { lunar_shard: 2, rune_dust: 2 }, coins: 60 },
+    repeatRewards: { heroXP: 70, schoolXP: { seal: 5 }, items: { lunar_shard: 1 }, coins: 25 },
+    arena: 'graveyard',
+  },
+
   // Враг со слабостью из Combat Math §7. v0.10.0: пять Корневиков в старом лесу (world.layout.js, rootling_01…05).
   // Защита 20%, Огонь +50% и снимает защиту на 6 с. Первая победа на месте — rewards; повторная (возобновляемые места) — repeatRewards.
   rootling: {
@@ -132,6 +378,43 @@ export const FIELD_OBJECTS = {
 
 // Расстановка объектов поля по аренам (координаты в viewport 720×1280).
 export const ARENAS = {
+  // v0.20.0: городская мостовая — обломки ящиков вместо камней
+  city: {
+    ground: 0x2a2c33,
+    objects: [
+      { id: 'rock_a', type: 'light_rock', x: 190, y: 720 },
+      { id: 'heavy_a', type: 'heavy_rock', x: 540, y: 710 },
+    ],
+  },
+  // v0.24.0: вылазки
+  frostwood: { ground: 0x3a4652, objects: [{ id: 'crystal_a', type: 'crystal', x: 590, y: 640 }, { id: 'heavy_a', type: 'heavy_rock', x: 150, y: 760 }, { id: 'rock_a', type: 'light_rock', x: 420, y: 800 }] },
+  graveyard: { ground: 0x24282a, objects: [{ id: 'crystal_a', type: 'crystal', x: 590, y: 640 }, { id: 'heavy_a', type: 'heavy_rock', x: 150, y: 760 }, { id: 'rock_a', type: 'light_rock', x: 420, y: 800 }] },
+  // v0.22.0: тайная лаборатория и Дуэльный зал (финал главы II)
+  lab: {
+    ground: 0x2a2633,
+    objects: [
+      { id: 'crystal_a', type: 'crystal', x: 590, y: 640 },
+      { id: 'heavy_a', type: 'heavy_rock', x: 150, y: 760 },
+      { id: 'rock_a', type: 'light_rock', x: 420, y: 800 },
+    ],
+  },
+  duel: {
+    ground: 0x2b2a38,
+    objects: [
+      { id: 'crystal_a', type: 'crystal', x: 590, y: 640 },
+      { id: 'heavy_a', type: 'heavy_rock', x: 150, y: 760 },
+      { id: 'rock_a', type: 'light_rock', x: 420, y: 800 },
+    ],
+  },
+  // v0.21.0: Замёрзший квартал — кристалл стража и тяжёлый камень
+  frost: {
+    ground: 0x26313a,
+    objects: [
+      { id: 'crystal_a', type: 'crystal', x: 590, y: 640 },
+      { id: 'heavy_a', type: 'heavy_rock', x: 150, y: 760 },
+      { id: 'rock_a', type: 'light_rock', x: 420, y: 800 },
+    ],
+  },
   glade: {
     ground: 0x2c3a24,
     objects: [

@@ -1,3 +1,4 @@
+import fs from 'fs';
 // v0.11.0 — глубина даров: Огонь II, Астрал II, источник углей, одна очередь изучения, модель экрана «Дары».
 import { GameState } from '../src/state/GameState.js';
 import { QuestFlags } from '../src/state/QuestFlags.js';
@@ -94,7 +95,7 @@ console.log('\n[v0.11] Модель экрана «Дары»');
 {
   const w = world();
   let cards = giftCards(w.state);
-  ok(cards.length === 3 && cards.every(c => !c.open), 'в начале все три дара закрыты, показывать нечего');
+  ok(cards.length === 4 && cards.every(c => !c.open) && cards[3].id === 'ice', 'в начале все дары закрыты (с v0.18.0 их четыре — и Лёд), показывать нечего');
   ready(w);
   cards = giftCards(w.state);
   const fire = cards.find(c => c.id === 'fire');
@@ -279,8 +280,9 @@ console.log('\n[v0.16.0] Слоты даров, пресет, амулеты');
 {
   const { checkBuild, slotCount, buildSlotRules, AMULETS, AMULET_SLOTS, SLOT_RULES } = await import('../src/config/build.js');
   const { applyAction } = await import('../src/cloud/playerModel.js');
-  ok(slotCount(1) === 3 && slotCount(9) === 3 && slotCount(10) === 4 && SLOT_RULES.base === 3, 'слотов даров три, четвёртый — с 10 уровня героя');
-  ok(AMULET_SLOTS === 2 && Object.keys(AMULETS).join() === 'amulet_focus,amulet_forest,amulet_lunar', 'два слота амулетов, три амулета');
+  ok(slotCount(1) === 3 && slotCount(10) === 3 && slotCount(15) === 3 && SLOT_RULES.base === 3, 'слотов даров три на любом уровне: с Льдом в главе II — выбор «3 из 4»');
+  ok(slotCount(16, { base: 3, extraAtLevel: 16 }) === 4 && slotCount(15, { base: 3, extraAtLevel: 16 }) === 3, 'если позже дать 4-й слот уровнем, правило работает');
+  ok(AMULET_SLOTS === 2 && Object.keys(AMULETS).join() === 'amulet_focus,amulet_forest,amulet_lunar,amulet_frost', 'два слота амулетов, четыре амулета (с v0.19.0 — и Амулет инея)');
   for (const [id, a] of Object.entries(AMULETS)) ok(a.text && a.tradeoff && ITEMS[id]?.name === a.name, `${id}: есть описание, цена и предмет в сумке`);
   const rules = buildSlotRules();
   const ctx = (o = {}) => ({ level: 3, unlocked: ['telekinesis', 'fire'], owns: (id) => id === 'amulet_focus', combat: false, ...o });
@@ -365,6 +367,156 @@ console.log('\n[v0.16.0] Бой: слоты и амулеты');
   const w = ready(world()); w.abilities.unlock('fire', 2);
   w.state.setBuild({ slots: ['fire'] });
   ok(giftCards(w.state).find(c => c.id === 'telekinesis').equipped === false && giftCards(w.state).find(c => c.id === 'fire').equipped === true, 'карточки даров знают, какой дар в слоте');
+}
+
+console.log('\n[v0.17.0] Сапфиры: модель окон');
+{
+  const { sapphireWord, speedupOptions, walletView, sapphireFailText } = await import('../src/systems/wallet.js');
+  const { SAPPHIRES } = await import('../src/config/sapphires.js');
+  ok([1, 2, 5, 11, 21, 22, 25, 111].map(sapphireWord).join() === 'сапфир,сапфира,сапфиров,сапфиров,сапфир,сапфира,сапфиров,сапфиров', 'склонение: 1 сапфир, 2 сапфира, 5 сапфиров, 11 сапфиров, 21 сапфир');
+  const w = ready(world());
+  ok(w.state.sapphires() === 0 && walletView(w.state).welcome === SAPPHIRES.welcome, 'новый герой: 0 сапфиров, доступен подарок');
+  w.state.data.wallet = { sapphires: 1, daily: {}, welcome: true };
+  w.clock.t = 1_000_000;
+  w.state.data.research = { upgradeId: 'seal_2', startedAt: 1_000_000, durationMs: 30 * 60_000 };
+  let o = speedupOptions(w.state);
+  ok(o.length === 2 && o[0].can && o[0].price === 1 && !o[1].can && o[1].why === 'sapphires' && o[1].price === 2 && o[1].label === '−23 мин · 2 сапфира', `ускорение: −15 мин за 1 доступно; второй вариант честно показывает, сколько снимется и за сколько (${o[1].label})`);
+  w.state.data.wallet.daily = { d: Math.floor(w.clock.t / 86_400_000), n: SAPPHIRES.speedup.dailyChunks };
+  ok(speedupOptions(w.state)[0].why === 'daily' && w.state.speedupStepsLeftToday() === 0, 'суточный лимит ускорений');
+  w.state.data.wallet.daily = {};
+  w.state.data.research.durationMs = Math.ceil(30 * 60_000 * 0.25);
+  w.state.data.research.fullMs = 30 * 60_000;
+  ok(speedupOptions(w.state)[0].why === 'limit', 'больше 75% таймера не снять');
+  ok(sapphireFailText({ reason: 'sapphires', need: 5 }) === 'Не хватает сапфиров: нужно 5 сапфиров.', 'понятный текст отказа');
+  // пресеты по номерам
+  w.state.data.wallet.sapphires = 100;
+  ok(buildView(w.state).presets.length === 1 && buildView(w.state).nextPreset.n === 2 && buildView(w.state).nextPreset.canPay, 'один пресет, второй можно открыть');
+  ok(w.state.buildPreset('save', false, 2).reason === 'locked', 'второй пресет закрыт, пока не открыт за сапфиры');
+  w.state.setObject('player_build', { ...(w.state.getObject('player_build') || {}), presetSlots: 2 });
+  w.state.setBuild({ slots: ['seal'] });
+  ok(w.state.buildPreset('save', false, 2).ok && w.state.setBuild({ slots: ['telekinesis'] }).ok && w.state.buildPreset('load', false, 2).ok && w.state.equippedGifts().join() === 'seal', 'второй пресет сохраняется и возвращается отдельно от первого');
+  ok(buildView(w.state).presets.map(p => p.saved).join() === 'false,true', 'окно знает, какие пресеты сохранены');
+  const card = giftCards(w.state).find(c => c.id === 'telekinesis');
+  ok(!card.respec.length || card.respec[0].sapphires === SAPPHIRES.respec, 'смена ветки предлагается и за сапфиры');
+}
+
+console.log('\n[v0.18.0] Лёд: замедление, Хрупкость, ветки Мороз и Осколок, холод врага');
+{
+  const mk = (lvl, branch, enemy = 'forest_scavenger', slots = null) => {
+    const w = ready(world());
+    w.abilities.unlock('ice', lvl); if (branch) w.state.setBranch('ice', branch);
+    if (slots !== false) w.state.setBuild({ slots: slots || ['ice', 'telekinesis', 'fire'] });
+    const cm = new CombatManager({ enemyType: enemy, state: w.state, abilities: w.abilities });
+    cm.hero.mana = cm.hero.maxMana; cm.hero.hp = cm.hero.maxHp;
+    return cm;
+  };
+  const i1 = ABILITIES.ice.levels[1], i2 = ABILITIES.ice.levels[2];
+  ok(i1.slow && !i1.brittle && i2.brittle && Object.keys(ABILITIES.ice.branches).join() === 'frost,shard', 'Лёд I — замедление, II — Хрупкость, III — ветки Мороз и Осколок');
+  // замедление: подготовка сильного удара идёт дольше
+  const prepTime = (useIce) => {
+    const cm = mk(1);
+    let t = 0;
+    while (!cm.enemy.isPreparing && t < 600) { cm.tick(1 / 60); t++; }
+    if (useIce) cm.useAbility('ice');
+    let n = 0;
+    while (cm.enemy.isPreparing && n < 1000) { cm.tick(1 / 60); n++; }
+    return n / 60;
+  };
+  const p0 = prepTime(false), p1 = prepTime(true);
+  ok(p1 > p0 * 1.25, `под Льдом на прерывание больше времени: подготовка удара ${p0.toFixed(1)} с → ${p1.toFixed(1)} с`);
+  // Хрупкость
+  const c2 = mk(2, null, 'rootling'); c2.enemy.def = { ...c2.enemy.def, defense: 0, weaknesses: null };
+  c2.useAbility('ice');
+  ok(c2.enemy.isBrittle && c2.enemy.slowed, 'Лёд II: враг замедлен и хрупок');
+  const h0 = c2.enemy.hp; c2.useAbility('fire');
+  const plain = mk(2, null, 'rootling'); plain.enemy.def = { ...plain.enemy.def, defense: 0, weaknesses: null };
+  const h1 = plain.enemy.hp; plain.useAbility('fire');
+  ok(h0 - c2.enemy.hp > (h1 - plain.enemy.hp) * 1.3 && !c2.enemy.isBrittle, `Хрупкость: Огонь сильнее (${h0 - c2.enemy.hp} против ${h1 - plain.enemy.hp}) и снимает её`);
+  // тяжёлый бросок по хрупкому Стражу разбивает броню
+  const g = mk(2, null, 'forest_guardian'); g.abilities.unlock('telekinesis', 2);
+  g.useAbility('ice');
+  const heavy = g.fieldObjects.find(o => o.def.weight === 'heavy');
+  g.selectObject(heavy.id); g.useAbility('telekinesis');
+  ok(!g.enemy.armorActive && g.drainEvents().some(e => e.type === 'armorBroken'), 'тяжёлый бросок по хрупкой цели разбивает броню');
+  // ветки
+  const frost = mk(3, 'frost').abilities.stats('ice'), shard = mk(3, 'shard').abilities.stats('ice');
+  ok(frost.slow.pct > 0.5 && frost.slow.sec >= 6 && frost.damage < ABILITIES.ice.levels[3].damage, 'Мороз: сильнее и дольше замедление, удар слабее');
+  const cs = mk(3, 'shard', 'rootling'); cs.enemy.def = { ...cs.enemy.def, defense: 0, weaknesses: null };
+  const a0 = cs.enemy.hp; cs.useAbility('ice'); const d1 = a0 - cs.enemy.hp;
+  cs.cooldowns.ice = 0; const a1 = cs.enemy.hp; cs.useAbility('ice'); const d2 = a1 - cs.enemy.hp;
+  ok(d2 > d1 * 2 && !cs.enemy.isBrittle && shard.shatter.mult > 2, `Осколок: удар по хрупкой цели раскалывает её (${d1} → ${d2}), Хрупкость снята`);
+  cs.cooldowns.ice = 0; cs.useAbility('ice');
+  ok(cs.enemy.isBrittle, 'после раскола следующий удар Льда снова делает цель хрупкой');
+  // холод врага: перезарядки и мана героя медленнее
+  const ch = mk(1);
+  ch.cooldowns.ice = 4; ch.hero.mana = 10;
+  ch.chillHero({ pct: 0.5, sec: 2 });
+  for (let i = 0; i < 60; i++) ch.tick(1 / 60);
+  ok(Math.abs(ch.cooldowns.ice - 3.5) < 0.02 && ch.drainEvents().some(e => e.type === 'chill'), `холод: за 1 с перезарядка сократилась на 0,5 с (осталось ${ch.cooldowns.ice.toFixed(2)})`);
+  for (let i = 0; i < 90; i++) ch.tick(1 / 60);
+  ok(ch.heroChill.left === 0, 'холод проходит');
+  // Лёд в «3 из 4»: вне слота не применяется
+  const b = mk(1, null, 'forest_scavenger', ['telekinesis', 'fire', 'seal']);
+  ok(b.abilityState('ice').state === 'benched' && b.state.equippedGifts().length === 3, 'четыре дара — три слота: Лёд вне слота в бою недоступен');
+  const d = mk(1, null, 'forest_scavenger', false);
+  ok(d.state.equippedGifts().join() === 'telekinesis,fire,seal', 'по умолчанию в слотах первые три дара по порядку — Лёд надо поставить самому');
+  ok(statLines('ice', 3, 'shard').some(l => l.includes('×2,2')) && statLines('ice', 2).some(l => l.startsWith('Хрупкость')), 'экран «Дары» показывает числа Льда');
+}
+
+console.log('\n[v0.19.0] Экономика главы II: зелья, амулеты +1…+3, торговец, рецепты');
+{
+  const { amuletEffect, AMULET_UPGRADES, AMULETS } = await import('../src/config/build.js');
+  const { POTIONS, RESOURCES, CRAFT_ITEMS } = await import('../src/config/resources.js');
+  const { RECIPES, RECIPE_ORDER } = await import('../src/config/recipes.js');
+  const { SHOP, sellPrice } = await import('../src/config/shop.js');
+  const { shopView } = await import('../src/systems/shopModel.js');
+  const { ASSETS } = await import('../src/config/assets.manifest.js').catch(() => ({}));
+  const { Alchemy } = await import('../src/systems/Alchemy.js');
+  ok(['frost_herb', 'ice_crystal', 'frost_shard', 'cold_heart'].every((k) => RESOURCES[k]) && Object.keys(RESOURCES).length === 9, 'четыре новых ресурса главы II (всего девять)');
+  ok(['warm_potion', 'stabilizing_potion', 'brittle_flask', 'crystal_guard', 'reinforced_resin', 'astral_lens', 'amulet_frost'].every((k) => RECIPES[k] && RECIPE_ORDER.includes(k)), 'семь новых рецептов');
+  ok(RECIPES.amulet_frost.needs.coins === 250 && RECIPES.amulet_frost.needs.frost_shard === 1, 'Амулет инея: 250 монет и инеевый осколок');
+  for (const k of [...Object.keys(RESOURCES), ...Object.keys(POTIONS), ...Object.keys(CRAFT_ITEMS), ...Object.values(AMULETS).map(a => a.icon)]) {
+    const icon = RESOURCES[k]?.icon || POTIONS[k]?.icon || CRAFT_ITEMS[k]?.icon || k;
+    if (!fs.existsSync(new URL(`../public/assets/sprites/${icon}.png`, import.meta.url))) ok(false, `иконка ${icon} нарисована`);
+  }
+  ok(true, 'у всех новых предметов есть нарисованные иконки');
+  // амулет: уровни
+  ok(amuletEffect('amulet_focus', 0).damageMult === 1.12 && amuletEffect('amulet_focus', 3).damageMult === 1.21, 'Сосредоточение: +12% → +21% на +3');
+  ok(amuletEffect('amulet_forest', 2).incomingMult === 0.7 && amuletEffect('amulet_forest', 2).damageMult === 0.92, 'Лесной +2: урон по герою −30%, цена (−8% урона) прежняя');
+  ok(amuletEffect('amulet_frost', 3).iceMult === 1.175 && amuletEffect('amulet_lunar', 9).manaRescue.gainPct === 0.875, 'Инея +3: Лёд +17,5%; уровень не выше максимума');
+  ok(AMULET_UPGRADES.map(u => u.coins).join() === '120,220,400', 'цены улучшения: 120 / 220 / 400 монет + материалы');
+  // бой: уровень амулета работает, Амулет инея усиливает Лёд
+  const w = ready(world()); w.abilities.unlock('ice', 1);
+  w.state.addItem('amulet_frost', 1); w.state.setBuild({ slots: ['ice', 'telekinesis', 'fire'], amulets: ['amulet_frost'] });
+  w.state.setObject('player_build', { ...w.state.getObject('player_build'), amuletLevels: { amulet_frost: 2 } });
+  const cm = new CombatManager({ enemyType: 'forest_scavenger', state: w.state, abilities: w.abilities });
+  ok(cm.iceMult === 1.15 && cm.slowBonus === 0.075, `Амулет инея +2 в бою: Лёд ×${cm.iceMult}, замедление +${cm.slowBonus}`);
+  cm.hero.mana = cm.hero.maxMana; cm.useAbility('ice');
+  ok(Math.abs(cm.enemy.slow.pct - 0.425) < 1e-9, 'замедление Льдом с амулетом сильнее (35% → 42,5%)');
+  // зелья главы II в бою
+  const pw = ready(world());
+  for (const id of ['warm_potion', 'stabilizing_potion', 'brittle_flask', 'crystal_guard']) pw.state.addItem(id, 1);
+  const pc = new CombatManager({ enemyType: 'forest_scavenger', state: pw.state, abilities: pw.abilities });
+  pc.chillHero({ pct: 0.5, sec: 5 });
+  ok(pc.usePotion('warm_potion').ok && pc.heroChill.left === 0 && pc.chillResist === 0.6, 'Тёплый настой: холод снят, дальше слабее на 60%');
+  pc.chillHero({ pct: 0.5, sec: 5 });
+  ok(Math.abs(pc.heroChill.pct - 0.2) < 1e-9, 'под Тёплым настоем холод 50% → 20%');
+  pc.hero.hp = 50;
+  ok(pc.usePotion('stabilizing_potion').ok && pc.hero.hp > 50 && pc.heroChill.left === 0, 'Стабилизирующий настой: холод снят, немного здоровья');
+  ok(pc.usePotion('brittle_flask').ok && pc.enemy.isBrittle, 'Флакон Хрупкости: враг хрупок без Льда в билде');
+  ok(pc.usePotion('crystal_guard').ok, 'Кристальная защита выпита');
+  const hp0 = pc.hero.hp; pc.hitHero(20, false);
+  ok(hp0 - pc.hero.hp === 15, 'под Кристальной защитой удар 20 → 15');
+  // торговец
+  ok(sellPrice('lunar_shard') === 14 && sellPrice('frost_shard') === 0 && !SHOP.buy.frost_shard && !SHOP.buy.cold_heart, 'продажа — треть цены; осколок и сердце холода не торгуются');
+  const sw = ready(world()); sw.state.addItem('coins', 30);
+  ok(!shopView(sw.state).open, 'лавка закрыта до города');
+  sw.state.markEvent('city_merchant_open');
+  const sv = shopView(sw.state);
+  ok(sv.open && sv.rows.find(r => r.id === 'moon_herb').canBuy && !sv.rows.find(r => r.id === 'ice_crystal').canBuy, 'в лавке видно, что по карману');
+  // котёл: рецепты главы II не показываются, пока неизвестны
+  const al = new Alchemy(sw.state);
+  ok(al.status('warm_potion').state === 'locked' && al.status('elixir_life').state !== 'locked', 'рецепты главы II закрыты, пока сюжет их не откроет');
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты даров пройдены');

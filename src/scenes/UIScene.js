@@ -9,6 +9,8 @@ import { CHAPTER_1_FINAL } from '../config/events.js';
 import { services, resetProgress, reloadToMenu } from '../services.js';
 import { showProfile } from '../ui/accountUI.js';
 import { showChat } from '../ui/ChatWindow.js';
+import { showCovens } from '../ui/covenUI.js';
+import { CovenService } from '../cloud/CovenService.js';
 import { ChatService } from '../cloud/ChatService.js';
 import { InputController } from '../systems/InputController.js';
 import { ABILITY_ORDER } from '../systems/AbilitySystem.js';
@@ -21,6 +23,10 @@ import { windows08 } from '../ui/windows08.js';
 import { hud082 } from '../ui/hud082.js';
 import { windows09 } from '../ui/windows09.js';
 import { windows11 } from '../ui/windows11.js';
+import { windows17 } from '../ui/windows17.js';
+import { windows19 } from '../ui/windows19.js';
+import { windows23 } from '../ui/windows23.js';
+import { windows26 } from '../ui/windows26.js';
 import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from '../ui/noticeClose.js';
 import { addCraftMedallion, setCraftMedallion } from '../ui/witchcraftUI.js';
@@ -82,6 +88,11 @@ export class UIScene extends Phaser.Scene {
     bus.on(MSG.UI_MODE, this.setMode, this);
     bus.on(MSG.OPEN_UPGRADE, this.openUpgrade, this);
     bus.on(MSG.OPEN_BAG, this.openBag, this);
+    bus.on(MSG.OPEN_SHOP, () => this.openShop('Лавка Бориса'), this);   // v0.20.0
+    bus.on(MSG.OPEN_WALLET, () => this.openWallet(), this);
+    bus.on(MSG.OPEN_DAILY, () => this.openDaily(), this);   // v0.23.0: доска поручений
+    bus.on(MSG.OPEN_COVENS, () => this.openCovens(), this);   // v0.25.0: Ковены
+    bus.on(MSG.OPEN_DUEL, () => this.openDuel(), this);       // v0.26.0: Магическая Дуэль
     bus.on(MSG.OPEN_GIFTS, this.openGifts, this);
     this.input.keyboard?.on('keydown-G', () => { if (!this.modal && this.mode === 'exploration') this.openGifts(); });
     bus.on(MSG.REWARD, this.onReward, this);
@@ -142,8 +153,43 @@ export class UIScene extends Phaser.Scene {
   buildBottomBar() {
     const xs = UI.dock.centers;
     this.buttons = {};
-    ABILITY_ORDER.forEach((id, i) => { this.buttons[id] = this.makeButton(xs[i], BTN_Y, `icon_${id}`, ABILITIES[id].name, COLORS[ABILITIES[id].color], () => this.bus.emit(MSG.ABILITY_USE, id)); });
+    // v0.18.0: три кнопки — три слота даров. Даров может быть больше (Лёд — четвёртый), в кнопках — те, что в слотах
+    this.dock = [0, 1, 2].map((i) => {
+      const slot = { id: null };
+      slot.btn = this.makeButton(xs[i], BTN_Y, `icon_${ABILITY_ORDER[i]}`, ABILITIES[ABILITY_ORDER[i]].name, COLORS[ABILITIES[ABILITY_ORDER[i]].color], () => { if (slot.id) this.bus.emit(MSG.ABILITY_USE, slot.id); });
+      return slot;
+    });
+    this.refreshDock();
     this.buttons.bag = this.makeButton(xs[3], BTN_Y, 'icon_bag', 'Сумка', COLORS.gold, () => this.bus.emit(MSG.OPEN_BAG));
+  }
+
+  /** Какие дары в кнопках: сначала стоящие в слотах, потом открытые вне слотов (серые), потом ещё закрытые (с замком). */
+  dockIds() {
+    const st = services.state;
+    const eq = st.equippedGifts();
+    const benched = ABILITY_ORDER.filter((id) => st.isUnlocked(id) && !eq.includes(id));
+    const locked = ABILITY_ORDER.filter((id) => !st.isUnlocked(id));
+    return [...eq, ...benched, ...locked].slice(0, this.dock.length);
+  }
+
+  /** Перестроить кнопки даров, если набор в слотах поменялся (иконка, подпись, цвет; this.buttons[id] — для подсказок обучения). */
+  refreshDock() {
+    const ids = this.dockIds();
+    const key = ids.join();
+    if (key === this.dockKey) return;
+    this.dockKey = key;
+    for (const id of ABILITY_ORDER) delete this.buttons[id];
+    ids.forEach((id, i) => {
+      const s = this.dock[i], b = s.btn;
+      s.id = id;
+      b.icon.setTexture(`icon_${id}`);
+      b.baseIconScale = UI.dock.icon / Math.max(b.icon.width, b.icon.height, 1);
+      b.icon.setScale(b.baseIconScale);
+      b.color = COLORS[ABILITIES[id].color];
+      b.glow.setTint(b.color);
+      b.text.setText(ABILITIES[id].name);
+      this.buttons[id] = b;
+    });
   }
 
   makeButton(x, y, iconKey, label, color, onPress) {
@@ -330,8 +376,8 @@ export class UIScene extends Phaser.Scene {
 
     // кнопки даров
     const prov = this.registry.get('abilityProvider');
-    for (const id of ABILITY_ORDER) {
-      const b = this.buttons[id];
+    this.refreshDock();
+    for (const { id, btn: b } of this.dock) {
       const st = prov ? prov(id) : { state: 'locked' };
       const locked = st.state === 'locked';
       b.lock.setVisible(locked);
@@ -558,6 +604,32 @@ export class UIScene extends Phaser.Scene {
     });
   }
 
+  /** v0.25.0: окно Ковенов (HTML). Нужен онлайн-аккаунт; материалы и награда недели — через сервер (player_action). */
+  openCovens() {
+    if (this.modal || this.mode === 'combat') return;
+    const ses = services.session;
+    if (!ses?.signedIn) { this.toast('Ковены доступны в онлайн-аккаунте.'); return; }
+    const svc = services.covens || (services.covens = new CovenService(ses));
+    this.modal = { covens: true };
+    services.modalOpen = true; this.resetJoystick();
+    const keyboard = this.input.keyboard, enabled = keyboard.enabled;
+    keyboard.enabled = false;
+    this.bus.emit(MSG.MODAL_OPEN);
+    showCovens(svc, {
+      item: (id) => services.state.item(id),
+      give: (item, qty) => services.actions.covenGive(item, qty),
+      claim: () => services.actions.covenClaim(),
+      onChange: () => this.refreshHud?.(),
+    }, {
+      onClose: () => {
+        this.modal = null; services.modalOpen = false;
+        keyboard.resetKeys(); keyboard.enabled = enabled;
+        this.bus.emit(MSG.MODAL_CLOSED);
+        if (!this.shuttingDown && this.mode === 'exploration' && this.modalQueue.length) this.openModal(this.modalQueue.shift());
+      },
+    });
+  }
+
   openChat() {
     if (this.modal || this.mode === 'combat') return;
     const chat = services.chat || (services.chat = new ChatService(services.session));
@@ -688,7 +760,7 @@ export class UIScene extends Phaser.Scene {
       `Время игры: ${fmtTime(d.stats.playTimeMs)}`,
       T(fm(`Уровень героини: ${d.heroLevel}`, `Уровень героя: ${d.heroLevel}`)),
       `Побед: ${wins.length}`, '',
-      'Город — следующая глава. А пока можно собирать травы, варить зелья и возвращаться к Корневикам старого леса. Мирра ждёт рассказа.',
+      'Мирра ждёт рассказа — поговорите с ней, и начнётся глава II «Город под инеем».',
     ];
     this.openModal({
       final: true, title: 'Глава I завершена\nЛес, который забыл нас', color: 0x7be2c8, text: lines.join('\n'),
@@ -697,4 +769,4 @@ export class UIScene extends Phaser.Scene {
   }
 }
 
-Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11);
+Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11, windows17, windows19, windows23, windows26);

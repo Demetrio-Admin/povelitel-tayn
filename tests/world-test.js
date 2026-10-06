@@ -1,4 +1,6 @@
 // Тесты мира: форма дорог и воды, таблица коллизий, проходимость маршрута. node tests/world-test.js
+import { CITY_START, EAST_X } from '../src/config/world.city.js';
+import { regionStart, FROSTWOOD_START, GRAVEYARD_START } from '../src/config/world.expeditions.js';
 import { WORLD, COLLIDERS, INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
 import { ROADS, WATERS } from '../src/config/world.terrain.js';
 import { ASSET_FILES } from '../src/config/assets.manifest.js';
@@ -80,7 +82,7 @@ console.log('\nМир: таблица коллизий');
 console.log('\nМир: проходимость');
 {
   const W = WORLD.width, H = WORLD.height;
-  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial'];
+  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', 'frost_barrier', 'fq_water', 'lab_seal', 'final_ward'];
   const objById = Object.fromEntries([...INTERACTIVES, ...ENEMY_SPAWNS].map(o => [o.id, o]));
   const near = (grid, seen, id, r) => { const o = objById[id]; return reachableNear(grid, seen, o.x, o.y, r ?? Math.min(o.radius || 100, 120)); };
 
@@ -95,10 +97,19 @@ console.log('\nМир: проходимость');
 
   const open = buildWalkGrid({ width: W, height: H, solids: solidsFor(GATES) });
   const seenO = floodFrom(open, WORLD.playerStart.x, WORLD.playerStart.y);
+  // v0.20.0: восточная часть мира (дорога и город) — отдельный участок, туда переходят по указателю; её места проверяются от CITY_START
+  const seenE = floodFrom(open, CITY_START.x, CITY_START.y);
+  // v0.24.0: участки вылазок — тоже отдельные (указатели из города)
+  const seenFW = floodFrom(open, FROSTWOOD_START.x, FROSTWOOD_START.y), seenGY = floodFrom(open, GRAVEYARD_START.x, GRAVEYARD_START.y);
+  const seenOf = (o) => { const p = regionStart(o, WORLD.playerStart, CITY_START, EAST_X); return p === CITY_START ? seenE : p === FROSTWOOD_START ? seenFW : p === GRAVEYARD_START ? seenGY : seenO; };
   for (const o of [...INTERACTIVES, ...ENEMY_SPAWNS]) {
     if (['flame_c'].includes(o.id)) continue;
-    ok(near(open, seenO, o.id), `ворота открыты: «${o.id}» достижим`);
+    ok(near(open, seenOf(o), o.id), `ворота открыты: «${o.id}» достижим`);
   }
+  ok(!near(open, seenE, 'fw_alpha') && !near(open, seenE, 'gy_warden') && !near(open, seenFW, 'gy_warden'), 'вылазки пешком из города не достичь: только указатели');
+  // лес и город пешком не соединены: из леса в город не пройти, только указателем
+  ok(!near(open, seenO, 'npc_ilaria'), 'из леса в город пешком не пройти (только указатель «Дорога в город» и меню)');
+  ok(near(open, seenO, 'travel_to_city') && near(open, seenE, 'travel_to_forest'), 'оба указателя перехода достижимы');
   // v0.10.0: Древние ворота — настоящая преграда (стена по бокам), а узел за ними стережёт испытание
   {
     const g1 = buildWalkGrid({ width: W, height: H, solids: solidsFor(['corrupted_roots', 'heavy_boulder', 'forest_guardian_01']) });
@@ -112,7 +123,7 @@ console.log('\nМир: проходимость');
     ok(reachableNear(g2, s2, t.x - t.radius, t.y, 60) && !near(g2, s2, 'forest_node', 60), 'ворота открыты: к испытанию подойти можно, к узлу мимо него — нет');
   }
   // каждая дорога достижима по всей длине (кроме мест за закрытыми воротами)
-  const roadOk = terrain.roads.every(r => { const mid = r.poly[Math.floor(r.poly.length / 4)]; return reachableNear(open, seenO, mid[0], mid[1], 60); });
+  const roadOk = terrain.roads.every(r => { const mid = r.poly[Math.floor(r.poly.length / 4)]; return reachableNear(open, seenOf({ x: mid[0], y: mid[1] }), mid[0], mid[1], 60); });
   ok(roadOk, 'все дороги достижимы, когда ворота открыты');
 }
 

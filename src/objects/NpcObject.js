@@ -57,8 +57,10 @@ export class NpcObject extends InteractiveObject {
   update(dt, player) {
     if (this.removed) return;
     const d = Math.hypot(player.x - this.x, player.y - this.baseY);
-    // имя показывается вблизи
-    const want = d < 300 ? 1 : 0;
+    // имя показывается вблизи (v0.22.0: и только если персонаж сейчас здесь по сюжету)
+    const here = this.requirementsMet();
+    this.shadow.setVisible(here);
+    const want = d < 300 && here ? 1 : 0;
     this.nameText.setAlpha(this.nameText.alpha + (want - this.nameText.alpha) * Math.min(1, dt * 6));
     // повернуться к героине
     if (d < 340) this.sprite.setFlipX(player.x < this.x);

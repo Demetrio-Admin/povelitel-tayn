@@ -6,6 +6,7 @@
 // Применение сюжетных предметов идёт через services.actions.use(item) — атомарно (сервер или JS-зеркало).
 import { COLORS } from '../config/game.config.js';
 import { WORLD_MANA_COST } from '../config/balance.abilities.js';
+import { ITEMS } from '../config/balance.progression.js';
 import { STORY_ITEMS } from '../config/storyItems.js';
 import { EV } from '../config/events.js';
 import { MSG } from '../state/EventBus.js';
@@ -165,8 +166,16 @@ export class SealSigilObject extends InteractiveObject {
   constructor(scene, cfg) {
     super(scene, cfg);
     this.ability = 'seal';
-    if (this.isDone()) this.light(false);
+    if (this.isDone()) { this.light(false); this.open(false); }
     else this.glow = scene.addGlow(cfg.x, cfg.y - 20, SEAL, 0.18, this, 1.0);
+  }
+
+  /** v0.22.0: opens — барьер (астральная завеса на двери): после Астрала исчезает вместе с преградой. */
+  open(animate) {
+    if (!this.cfg.opens) return;
+    if (this.blocker) { this.blocker.destroy(); this.blocker = null; }
+    if (!animate) { this.sprite.setVisible(false); for (const g of this.glows || []) g.setVisible(false); this.removed = true; return; }
+    this.scene.tweens.add({ targets: [this.sprite, ...(this.glows || [])], alpha: 0, duration: 700, onComplete: () => { this.sprite.setVisible(false); this.removed = true; } });
   }
   get markerIcon() { return 'icon_seal'; }
   get markerColor() { return SEAL; }
@@ -178,7 +187,7 @@ export class SealSigilObject extends InteractiveObject {
     if (!this.isAvailable()) return;
     if (this.rejectWrongAbility(abilityId)) return;
     if (!this.abilities.isUnlocked('seal')) {
-      this.scene.toast('Угасший камень. Селена знает, как вернуть ему свет.', SEAL);
+      this.scene.toast(this.cfg.lockedText || 'Угасший камень. Селена знает, как вернуть ему свет.', SEAL);
       return;
     }
     const r = await this.serverAct();   // v0.13.0: ману списывает сервер (операция world)
@@ -190,13 +199,14 @@ export class SealSigilObject extends InteractiveObject {
     sc.time.delayedCall(450, () => {
       this.busy = false;
       this.light(true);
+      this.open(true);
       services.audio.play('quest_update');
-      sc.dialog({
-        title: 'Камень ожил', color: SEAL,
-        text: 'Трещины затянулись, и камень засиял ровным холодным светом. Астрал не ломает и не жжёт — он видит скрытое и будит спящее.\n\n'
+      sc.dialog({   // v0.20.0: тексты можно задать в конфиге объекта (знаки главы II)
+        title: this.cfg.doneTitle || 'Камень ожил', color: SEAL,
+        text: this.cfg.doneText || ('Трещины затянулись, и камень засиял ровным холодным светом. Астрал не ломает и не жжёт — он видит скрытое и будит спящее.\n\n'
           + 'В бою он бьёт силой, которой не помеха ни броня, ни кора. Атаки врага Астрал не останавливает — их прерывает Телекинез.\n\n'
-          + 'Теперь — к Древним воротам.',
-        buttons: [{ label: 'К воротам', primary: true }],
+          + 'Теперь — к Древним воротам.'),
+        buttons: [{ label: this.cfg.doneButton || 'К воротам', primary: true }],
       });
     });
   }
@@ -228,7 +238,7 @@ export class DustStashObject extends InteractiveObject {
   }
   get markerIcon() { return 'icon_gather'; }
   get markerColor() { return 0xc9a2ff; }
-  get label() { return 'Забрать пыль'; }
+  get label() { return this.cfg.label || 'Забрать пыль'; }   // v0.24.0: запасы вылазок — свои подписи
   get title() { return this.cfg.hint; }
   /** Победный цикл охранника, за который запас ещё не взят. */
   get wins() { return this.state.getObject(repKey(this.cfg.guard))?.wins || (this.state.isEnemyDefeated(this.cfg.guard) ? 1 : 0); }
@@ -250,7 +260,7 @@ export class DustStashObject extends InteractiveObject {
 
   async interact() {
     if (!this.isAvailable()) {
-      if (this.guardAlive()) this.scene.toast('Запас стережёт Корневик.', COLORS.danger);
+      if (this.guardAlive()) this.scene.toast(this.cfg.guardText || 'Запас стережёт Корневик.', COLORS.danger);
       return;
     }
     // один победный цикл — одно разрешение: сервер отмечает claimed = номер цикла (операция world), перезаход второй выдачи не даёт
@@ -258,7 +268,7 @@ export class DustStashObject extends InteractiveObject {
     if (!r || this.removed || !this.sprite.active) return;
     services.audio.play('gather_done');
     this.scene.burst(this.x - 20, this.baseY - 14, 0xc9a2ff, 18);
-    for (const [k, v] of Object.entries(this.cfg.items)) this.scene.floatIcon?.(this.x, this.baseY - 60, 'icon_dust', `+${v} ${itemName(k)}`, 0xc9a2ff);
+    for (const [k, v] of Object.entries(this.cfg.items)) this.scene.floatIcon?.(this.x, this.baseY - 60, ITEMS[k]?.icon || 'icon_dust', `+${v} ${itemName(k)}`, 0xc9a2ff);
     this.applyVisual();
     services.bus.emit(MSG.GATHERED, { item: Object.keys(this.cfg.items)[0], amount: Object.values(this.cfg.items)[0], id: this.id });
     services.bus.emit(MSG.HUD_REFRESH);

@@ -1,4 +1,6 @@
 // Маршруты tap-to-move: обход препятствий, закрытые цели, узкие проходы, реальный мир. node tests/nav-test.mjs
+import { CITY_START, EAST_X } from '../src/config/world.city.js';
+import { regionStart } from '../src/config/world.expeditions.js';
 import { buildNav, findPath, lineClear, NAV } from '../src/world/nav.js';
 import { WORLD, INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
 import { buildTerrain } from '../src/world/terrain.js';
@@ -77,7 +79,7 @@ console.log('\nМаршруты: реальный мир (первая глав�
 {
   const LIVE = resolveMap({ storage: null, useDraft: false });
   const terrain = buildTerrain({ ROADS: LIVE.roads, WATERS: LIVE.waters });
-  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial'];
+  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', 'frost_barrier', 'fq_water', 'lab_seal', 'final_ward'];
   const solidsFor = (skip) => collectSolids({ colliders: LIVE.colliders, props: PROPS, interactives: INTERACTIVES, enemies: ENEMY_SPAWNS, waterRects: terrain.waterRects, skip: new Set(skip) });
   const dims = { width: WORLD.width, height: WORLD.height };
   const t0 = performance.now();
@@ -90,11 +92,12 @@ console.log('\nМаршруты: реальный мир (первая глав�
   let worst = 0, bad = [], unreachable = [];
   for (const o of [...INTERACTIVES, ...ENEMY_SPAWNS]) {
     if (o.id === 'flame_c') continue;
+    const from = regionStart(o, start, CITY_START, EAST_X);   // v0.20.0: город, v0.24.0: вылазки — отдельные участки (переход по указателю)
     const t = performance.now();
-    const r = findPath(gOpen, start, { x: o.x, y: o.y });
+    const r = findPath(gOpen, from, { x: o.x, y: o.y });
     worst = Math.max(worst, performance.now() - t);
     if (!r || r.points.length === 0) { unreachable.push(o.id); continue; }
-    if (!pathClear(gOpen[1], start, r.points)) bad.push(o.id);
+    if (!pathClear(gOpen[1], from, r.points)) bad.push(o.id);
     if (Math.hypot(r.end.x - o.x, r.end.y - o.y) > Math.max(o.radius || 100, 130)) unreachable.push(o.id + '(далеко)');
   }
   ok(bad.length === 0, 'пути ко всем объектам не задевают препятствия' + (bad.length ? ': ' + bad.join(',') : ''));

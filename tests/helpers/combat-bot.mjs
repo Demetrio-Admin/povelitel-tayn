@@ -4,6 +4,7 @@ import { CombatManager } from '../../src/systems/CombatManager.js';
 import { AbilitySystem, ABILITY_ORDER } from '../../src/systems/AbilitySystem.js';
 import { CombatRecorder, STEP } from '../../src/systems/combatReplay.js';
 import { startState } from '../../src/cloud/combatVerify.js';
+import { duelEnemyDef } from '../../src/config/duel.js';
 
 /**
  * @param ctx   combatCtx (то, что запомнил сервер)
@@ -12,7 +13,7 @@ import { startState } from '../../src/cloud/combatVerify.js';
  */
 export function playBot(ctx, opts = {}) {
   const st = startState(ctx, opts.nowMs ?? 1_700_000_000_000);
-  const cm = new CombatManager({ enemyType: ctx.enemy, state: st, abilities: new AbilitySystem(st, null, null) });
+  const cm = new CombatManager({ enemyType: ctx.enemy, enemyDef: ctx.duel ? duelEnemyDef(ctx.duel.opponent) : null, state: st, abilities: new AbilitySystem(st, null, null) });   // v0.26.0: Дуэль
   const rec = new CombatRecorder();
   let x = (opts.seed ?? 1) >>> 0 || 1;
   const rnd = () => { x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; return x / 4294967296; };
@@ -36,7 +37,8 @@ export function playBot(ctx, opts = {}) {
         if (rnd() < 0.15) { const o = cm.fieldObjects.filter(f => f.available && f.def.throwable)[0]; if (o) act('s', o.id); }
         if (cm.hero.hp < cm.hero.maxHp * 0.4 && opts.potions !== false && rnd() < 0.5) act('p', 'elixir_life');
         if (cm.hero.mana < cm.hero.maxMana * 0.2 && opts.potions !== false && rnd() < 0.5) act('p', 'elixir_mana');
-        const order = policy === 'smart' && e.isPreparing ? ['telekinesis', 'fire', 'seal'] : ['fire', 'seal', 'telekinesis'];
+        // v0.18.0: Лёд — первым, если враг готовит удар и Телекинез на перезарядке (замедление даёт время), иначе после Огня
+        const order = policy === 'smart' && e.isPreparing ? ['telekinesis', 'ice', 'fire', 'seal'] : ['ice', 'fire', 'seal', 'telekinesis'];
         if (policy === 'smart' || rnd() < 0.6) for (const id of order) if (cm.abilityState(id).state === 'ready' && (id !== 'telekinesis' || policy !== 'smart' || e.isPreparing || rnd() < 0.3)) { act('a', id); break; }
         if (rnd() < 0.03) act('c');
       }
@@ -52,7 +54,7 @@ export function playBot(ctx, opts = {}) {
 
 export const ctxFor = (over = {}) => ({
   spawn: 'scavenger_01', enemy: 'forest_scavenger', level: 1,
-  abilities: { telekinesis: { level: 1, unlocked: true }, fire: { level: 0, unlocked: false }, seal: { level: 0, unlocked: false }, ...(over.abilities || {}) },
+  abilities: { telekinesis: { level: 1, unlocked: true }, fire: { level: 0, unlocked: false }, seal: { level: 0, unlocked: false }, ice: { level: 0, unlocked: false }, ...(over.abilities || {}) },
   hp: 100, mana: 100, potions: { elixir_life: 0, elixir_mana: 0, resin_flask: 0 }, build: null,
   ...Object.fromEntries(Object.entries(over).filter(([k]) => k !== 'abilities')),
 });

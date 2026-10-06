@@ -412,7 +412,9 @@ export class ExitObject extends InteractiveObject {
   get title() { return this.cfg.hint || 'Карта мира'; }
   requirementsMet() { return true; }
   isDone() { return false; }
-  interact() {
+  interact(ability = null) {
+    // дары (Телекинез, Огонь, Астрал) указателю ни к чему: карту открывает только кнопка действия, а не случайное нажатие дара рядом
+    if (ability) { this.scene.toast('Указатель «Карта мира» открывается кнопкой действия.'); return; }
     this.react(COLORS.gold, 1.06);
     services.audio.play('modal_open');
     services.bus.emit(MSG.OPEN_MAP, { exit: this.id });

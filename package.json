@@ -21,7 +21,9 @@
     "test:progress": "node tests/e2e/server-progress.mjs",
     "balance:chapter": "node tools/balance/chapter-report.mjs",
     "test:heroes": "node tests/e2e/hero-online.mjs",
-    "test:locations": "node tests/e2e/locations.mjs"
+    "test:locations": "node tests/e2e/locations.mjs",
+    "test:abilities": "node tests/e2e/abilities.mjs",
+    "check:bundle": "node tools/check-bundle.mjs"
   },
   "dependencies": {
     "@fontsource/philosopher": "^5.2.8",

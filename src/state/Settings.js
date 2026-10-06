@@ -5,7 +5,7 @@ export const SETTINGS_KEY = 'witch_rpg_settings_v1';
 export const VOLUME_STEPS = [0, 0.25, 0.5, 0.75, 1];
 
 export function createDefaultSettings() {
-  return { sfx: 0.75, music: 0.5, vibration: true, hints: true };
+  return { sfx: 0.75, music: 0.5, vibration: true, hints: true, anim: true };
 }
 
 export class Settings {

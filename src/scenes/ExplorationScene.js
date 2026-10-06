@@ -25,6 +25,7 @@ import { NpcObject } from '../objects/NpcObject.js';
 import { AlchemyObject } from '../objects/AlchemyObject.js';
 import { InspectObject } from '../objects/InspectObject.js';
 import { CONTENT_DECOR, AMBIENT } from '../config/world.content.js';
+import { LivingWorld } from '../world/life.js';
 import { POTIONS } from '../config/resources.js';
 import { HIGHLIGHT, STEP_GUIDE } from '../config/guidance.js';
 import { UI } from '../config/ui.config.js';
@@ -118,6 +119,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.enemies = this.enemyCfgs.map(cfg => new EnemyTrigger(this, cfg));
     this.resumeEncounters();
     this.buildContentDecor();
+    this.setupLife();   // v0.28.0
     this.setupGuidance();
     this.refreshAll();
 
@@ -508,6 +510,22 @@ export class ExplorationScene extends Phaser.Scene {
         lifespan: 4200, frequency: a.frequency, quantity: a.quantity, tint: a.color, blendMode: 'ADD',
       }).setDepth(DEPTH.fx);
     }
+  }
+
+  /** v0.28.0: «живой мир» — рябь, качающиеся кроны, птицы, зверёк, листья (только лес Мирры, выключается в настройках). */
+  setupLife() {
+    this.life = null;
+    if (services.edit) return;
+    const settings = services.settings;
+    this.life = new LivingWorld(this);
+    this.life.start(settings);
+    if (!settings?.listeners) return;
+    const onChange = (key, value) => {
+      if (key !== 'anim' || !this.life) return;
+      if (value) this.life.start(settings); else this.life.stop();
+    };
+    settings.listeners.add(onChange);
+    this.events.once('shutdown', () => { settings.listeners.delete(onChange); this.life?.destroy(); this.life = null; });
   }
 
   /** Мерцающая искорка. */

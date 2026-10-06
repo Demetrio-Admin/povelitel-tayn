@@ -18,7 +18,7 @@ if (!process.env.UI_BASE_URL) {
   await server.listen();
 }
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined,
-  args: ['--no-sandbox', '--disable-dev-shm-usage', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+  args: ['--no-sandbox', '--disable-dev-shm-usage', ...(process.env.CI ? ['--enable-unsafe-swiftshader'] : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'])] });
 const ok = (m) => console.log('  ✓', m);
 let failed = false;
 try {

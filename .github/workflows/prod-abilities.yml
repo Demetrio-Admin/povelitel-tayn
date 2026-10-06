@@ -4,6 +4,7 @@ on:
   pull_request:
 permissions:
   contents: read
+  checks: write
 jobs:
   e2e:
     runs-on: ubuntu-latest
@@ -22,4 +23,17 @@ jobs:
           sleep 6; cat preview.log
           BASE=$(grep -o 'http://127.0.0.1:4173[^ ]*' preview.log | head -1)
           echo "BASE=$BASE"
-          UI_BASE_URL="$BASE" node tests/e2e/abilities.mjs
+          UI_BASE_URL="$BASE" node tests/e2e/abilities.mjs 2>&1 | tee out.txt; cat preview.log >> out.txt
+      - name: report
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 - <<'PY'
+          import os, json, subprocess
+          t = (open('out.txt').read() if os.path.exists('out.txt') else 'нет вывода')[-60000:]
+          body = {'name': 'log prod', 'head_sha': os.environ['SHA'], 'status': 'completed', 'conclusion': 'neutral', 'output': {'title': 'log', 'summary': 'x', 'text': t}}
+          open('/tmp/b.json', 'w').write(json.dumps(body))
+          subprocess.run(['gh', 'api', 'repos/${{ github.repository }}/check-runs', '--method', 'POST', '--input', '/tmp/b.json', '--silent'])
+          PY

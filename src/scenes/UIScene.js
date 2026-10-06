@@ -158,11 +158,20 @@ export class UIScene extends Phaser.Scene {
     // v0.18.0: три кнопки — три слота даров. Даров может быть больше (Лёд — четвёртый), в кнопках — те, что в слотах
     this.dock = [0, 1, 2].map((i) => {
       const slot = { id: null };
-      slot.btn = this.makeButton(xs[i], BTN_Y, `icon_${ABILITY_ORDER[i]}`, ABILITIES[ABILITY_ORDER[i]].name, COLORS[ABILITIES[ABILITY_ORDER[i]].color], () => { if (slot.id) this.bus.emit(MSG.ABILITY_USE, slot.id); });
+      slot.btn = this.makeButton(xs[i], BTN_Y, `icon_${ABILITY_ORDER[i]}`, ABILITIES[ABILITY_ORDER[i]].name, COLORS[ABILITIES[ABILITY_ORDER[i]].color], () => this.pressDock(i));
       return slot;
     });
     this.refreshDock();
     this.buttons.bag = this.makeButton(xs[3], BTN_Y, 'icon_bag', 'Сумка', COLORS.gold, () => this.bus.emit(MSG.OPEN_BAG));
+  }
+
+  /**
+   * Нажатие на кнопку дара. Слот читаем через this.dock (а не из замыкания на объект { id: null }): боевая сборка (Rollup) считала,
+   * что slot.id всегда null, и вырезала нажатие — кнопки молчали. Проверка готовой сборки — tools/check-bundle.mjs.
+   */
+  pressDock(i) {
+    const id = this.dock[i]?.id;
+    if (id) this.bus.emit(MSG.ABILITY_USE, id);
   }
 
   /** Какие дары в кнопках: сначала стоящие в слотах, потом открытые вне слотов (серые), потом ещё закрытые (с замком). */

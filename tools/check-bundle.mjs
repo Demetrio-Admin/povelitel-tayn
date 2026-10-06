@@ -1,0 +1,23 @@
+// Проверка готовой (боевой) сборки: сборщик не должен вырезать то, что игра делает по нажатию.
+// Однажды Rollup счёл slot.id всегда null и оставил у кнопок даров пустую функцию — в игре они молчали, а тесты на dev-сборке проходили.
+//   npm run build && node tools/check-bundle.mjs
+import fs from 'node:fs';
+import path from 'node:path';
+
+const dir = 'dist/assets';
+const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => /^index-.*\.js$/.test(f)) : [];
+let failed = 0;
+const ok = (c, m) => { if (c) console.log('  ✓', m); else { failed++; console.log('  ✗', m); } };
+ok(files.length > 0, 'есть собранный index-*.js (сначала npm run build)');
+const js = files.map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+
+// 1) кнопки даров: после сборки нажатие должно отправлять команду дара
+const i = js.indexOf('buildBottomBar(){');
+const seg = i >= 0 ? js.slice(i, js.indexOf('dockIds(){', i)) : '';
+ok(seg.length > 0 && !/\(\)=>\{\}\)/.test(seg), 'кнопки даров: в сборке у них не пустая функция нажатия');
+ok(/pressDock\([A-Za-z_$]+\)\{[^}]*ABILITY_USE/.test(js), 'нажатие дара (pressDock) отправляет ABILITY_USE');
+// 2) сумка и контекстная кнопка не вырезаны
+ok(/OPEN_BAG/.test(seg), 'кнопка «Сумка»: нажатие на месте');
+
+console.log(failed ? '\n✗ Сборка: провал' : '\n✓ Сборка: нажатия на месте');
+process.exit(failed ? 1 : 0);

@@ -43,7 +43,7 @@ export const ASSET_FILES = {
   icon_fight: 'assets/sprites/icon_fight.png', // v0.9: «Сразиться снова»
   icon_moon_herb: 'assets/sprites/icon_moon_herb.png?v=art-20261003',
   // v0.8.2: меню и HUD
-  icon_menu: 'assets/sprites/icon_menu.png', icon_close: 'assets/sprites/icon_close.png', icon_city: 'assets/sprites/icon_city.png', icon_bank: 'assets/sprites/icon_bank.png', icon_rating: 'assets/sprites/icon_rating.png', icon_chat: 'assets/sprites/icon_chat.png', icon_forum: 'assets/sprites/icon_forum.png', icon_settings: 'assets/sprites/icon_settings.png', icon_heart: 'assets/sprites/icon_heart.png', icon_drop: 'assets/sprites/icon_drop.png',
+  icon_menu: 'assets/sprites/icon_menu.png', icon_close: 'assets/sprites/icon_close.png', icon_city: 'assets/sprites/icon_city.png', icon_map: 'assets/sprites/icon_map.png', icon_bank: 'assets/sprites/icon_bank.png', icon_rating: 'assets/sprites/icon_rating.png', icon_chat: 'assets/sprites/icon_chat.png', icon_forum: 'assets/sprites/icon_forum.png', icon_settings: 'assets/sprites/icon_settings.png', icon_heart: 'assets/sprites/icon_heart.png', icon_drop: 'assets/sprites/icon_drop.png',
   // v0.10.0: сюжетные предметы первой главы (tools/art/v10_icons.py)
   icon_wick: 'assets/sprites/icon_wick.png', icon_compound: 'assets/sprites/icon_compound.png', icon_bundle: 'assets/sprites/icon_bundle.png',
   // v0.10.0: объекты мира первой главы (tools/art/v10_world.py)

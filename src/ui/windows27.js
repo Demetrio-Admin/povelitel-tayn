@@ -37,8 +37,15 @@ export const windows27 = {
           const ring = this.add.circle(px, py, loc.id === here.id ? 17 : 13, open ? (loc.id === here.id ? 0xffe08a : 0xc9a24a) : 0x8a8478)
             .setStrokeStyle(3, loc.id === sel.id ? 0xffffff : 0x3a2a1a);
           c.add(ring);
-          const label = loc.name + (loc.id === here.id ? ' · вы здесь' : '') + (open ? '' : ' 🔒');
-          const b = addButton(this, px, py + 34, Math.max(150, label.length * 11), 40, label, {
+          if (loc.id === here.id) {
+            const yh = this.add.text(px, py - 30, 'вы здесь', { fontFamily: FONT, fontSize: UI.type.small, color: '#5a3a14', fontStyle: 'bold' }).setOrigin(0.5);
+            c.add(yh);
+          }
+          const label = loc.name + (open ? '' : ' 🔒');
+          const probe = this.add.text(0, 0, label, { fontFamily: FONT, fontSize: `${UI.type.small}px` });
+          const bw = Math.ceil((probe.width + 44) / 20) * 20; probe.destroy();   // ширина по подписи (кратно 20 — меньше текстур)
+          const bx = Math.max(mx + bw / 2 + 4, Math.min(mx + mw - bw / 2 - 4, px));   // кнопка не вылезает за края карты
+          const b = addButton(this, bx, py + 34, bw, 40, label, {
             primary: loc.id === sel.id, accent: open ? COLORS.gold : null, fontSize: UI.type.small,
             onPress: () => { if (this.modal?.scroll?.canTap?.() === false) return; this.mapSel = loc.id; services.audio.play('ui_click'); this.closeModal(null); this.openMap(opts); },
           });

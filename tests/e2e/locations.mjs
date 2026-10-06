@@ -65,6 +65,11 @@ try {
   const t = await page.evaluate(() => window.__game.scene.getScene('UIScene').modal?.opts?.title);
   assert.equal(t, 'Карта мира');
   await shot('02-map-at-exit');
+  await page.evaluate(() => { const u = window.__game.scene.getScene('UIScene'); u.mapSel = 'city'; u.openMap({ exit: 'exit_forest' }); });
+  await page.waitForTimeout(500);
+  const go = await page.evaluate(() => window.__game.scene.getScene('UIScene').modal.buttons.length);
+  assert.equal(go, 2, 'у выхода, выбран город: «Отправиться» и «Остаться»');
+  await shot('02b-map-city-selected');
   await page.evaluate(() => window.__game.scene.getScene('UIScene').closeModal(null));
   ok('у выхода открывается карта мира');
 

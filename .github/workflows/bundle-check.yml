@@ -1,0 +1,46 @@
+# Временно: что вырезает сборка с переменными Supabase
+name: Bundle check
+on:
+  pull_request:
+permissions:
+  contents: read
+  checks: write
+jobs:
+  b:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: plain
+        run: |
+          npm run build
+          f=$(ls dist/assets/index-*.js | head -1); echo "plain: $f" | tee -a out.txt
+          grep -o 'buildBottomBar(){.\{0,330\}' $f | head -1 | tee -a out.txt
+          rm -rf dist
+      - name: with env
+        env:
+          VITE_SUPABASE_URL: https://abcdefgh.supabase.co
+          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiJ9.dummy.dummy
+          VITE_LOGIN_EMAIL_DOMAIN: example.com
+        run: |
+          npm run build
+          f=$(ls dist/assets/index-*.js | head -1); echo "env: $f" | tee -a out.txt
+          grep -o 'buildBottomBar(){.\{0,330\}' $f | head -1 | tee -a out.txt
+      - name: report
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 - <<'PY'
+          import os, json, subprocess
+          t = open('out.txt').read()
+          body = {'name': 'bundle', 'head_sha': os.environ['SHA'], 'status': 'completed', 'conclusion': 'neutral', 'output': {'title': 'b', 'summary': 'x', 'text': t}}
+          open('/tmp/b.json', 'w').write(json.dumps(body))
+          subprocess.run(['gh', 'api', 'repos/${{ github.repository }}/check-runs', '--method', 'POST', '--input', '/tmp/b.json', '--silent'])
+          PY

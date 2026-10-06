@@ -229,7 +229,8 @@ export class UIScene extends Phaser.Scene {
     this.ctx = this.add.container(x, y).setVisible(false);
     this.ctxGlow = this.add.image(0, 0, 'fx_glow').setBlendMode('ADD').setScale(1.4).setAlpha(0.6);
     this.ctxBg = addOrb(this, 0, 0, UI.orb.context, COLORS.gold);
-    this.ctxIcon = this.add.image(0, -4, 'icon_hand').setScale(0.95);
+    this.ctxIcon = this.add.image(0, -4, 'icon_hand');
+    this.ctxIcon.setScale(60 / Math.max(this.ctxIcon.width, this.ctxIcon.height, 1));
     this.ctxLabel = this.add.text(0, 70, '', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
     this.ctx.add([this.ctxGlow, this.ctxBg, this.ctxIcon, this.ctxLabel]);
     this.ctxBg.setInteractive({ useHandCursor: true });
@@ -315,8 +316,12 @@ export class UIScene extends Phaser.Scene {
     if (this.zoneName && this.zoneName !== zone.name) services.audio.play('zone');
     this.zoneName = zone.name;
     this.refreshQuest();
+    if (this.zoneBanner) { this.tweens.killTweensOf(this.zoneBanner); this.zoneBanner.destroy(); }
     const t = this.add.text(W / 2, 420, zone.name, { fontFamily: FONT, fontSize: UI.type.title, color: COLORS.textGold, stroke: '#000', strokeThickness: 7 }).setOrigin(0.5).setAlpha(0);
-    this.tweens.add({ targets: t, alpha: 1, duration: 300, yoyo: true, hold: 1200, onComplete: () => t.destroy() });
+    this.zoneBanner = t;
+    this.tweens.add({ targets: t, alpha: 1, duration: 300, yoyo: true, hold: 1200, onComplete: () => {
+      t.destroy(); if (this.zoneBanner === t) this.zoneBanner = null;
+    } });
   }
 
   /** Цель больше не висит на экране: при её смене — короткое уведомление (3–5 с), полный текст — в Журнале. */
@@ -344,6 +349,7 @@ export class UIScene extends Phaser.Scene {
     if (!info || this.mode !== 'exploration') { this.ctx.setVisible(false); return; }
     this.ctx.setVisible(true);
     this.ctxIcon.setTexture(info.icon);
+    this.ctxIcon.setScale(60 / Math.max(this.ctxIcon.width, this.ctxIcon.height, 1));
     setOrb(this.ctxBg, this, info.color, UI.orb.context, false);
     this.ctxGlow.setTint(info.color);
     this.ctxLabel.setText(info.label);

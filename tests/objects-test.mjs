@@ -114,6 +114,26 @@ const CLS = { gather: GatherObject, npc: NpcObject, alchemy: AlchemyObject, insp
 }
 
 // --- котёл
+// Source image size and changing action icons must never change world marker size.
+{
+  const { InteractionSystem } = await import('../src/systems/InteractionSystem.js');
+  const system = new InteractionSystem(mkScene(), bus);
+  const obj = { x: 200, y: 200, markerY: 80, markerIcon: 'icon_journal', markerColor: 0xffffff,
+    radius: 100, sprite: go(), isAvailable: () => true, onFocus() {} };
+  system.add(obj);
+  system.update(0.016, { x: 200, y: 450 });
+  const marker = system.markers.get(obj).m;
+  ok(marker.displayWidth === 40 && marker.displayHeight === 40, 'значок книги: размер мира 40px независимо от исходника');
+  system.update(0.016, { x: 200, y: 250 });
+  ok(marker.displayWidth >= 44 && marker.displayWidth <= 52, 'в фокусе значок слегка увеличивается, без масштаба исходной картинки');
+  obj.markerIcon = 'icon_fire';
+  system.update(0.016, { x: 200, y: 450 });
+  ok(marker.displayWidth === 40 && system.focus === null, 'смена значка и потеря фокуса сохраняют размер');
+  obj.removed = true; system.update(0.016, { x: 200, y: 450 });
+  ok(!marker.active && system.markers.size === 0, 'значок удалённого объекта очищается');
+}
+
+// --- котёл
 {
   const sc = mkScene(); let opened = 0; bus.on(MSG.OPEN_ALCHEMY, () => opened++);
   const c = new AlchemyObject(sc, CONTENT_INTERACTIVES.find(c => c.id === 'house_cauldron'));

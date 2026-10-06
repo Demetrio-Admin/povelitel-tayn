@@ -735,24 +735,26 @@ var fm = (female, male) => ({ female, male });
 // src/config/world.city.js
 var CITY_ZONES = [
   { id: "R", name: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0431\u043E\u043B\u044C\u0448\u043E\u0439 \u043C\u0438\u0440", x: 1800, y: 3300, w: 560, h: 650, safePoint: { x: 1960, y: 3625 } },
-  { id: "AR", name: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", x: 2440, y: 2560, w: 420, h: 480, safePoint: { x: 2650, y: 3150 } },
-  { id: "SO", name: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", x: 2960, y: 2560, w: 500, h: 480, safePoint: { x: 3210, y: 3150 } },
-  { id: "LB", name: "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", x: 1840, y: 4060, w: 480, h: 700, safePoint: { x: 2070, y: 3800 } },
-  { id: "DU", name: "\u0417\u0430\u043B \u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u043E\u0439 \u0414\u0443\u044D\u043B\u0438", x: 2420, y: 4100, w: 440, h: 360, safePoint: { x: 2640, y: 4020 } },
-  { id: "CV", name: "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", x: 2960, y: 4100, w: 500, h: 360, safePoint: { x: 3210, y: 4020 } },
+  { id: "AR", name: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", x: 2440, y: 2560, w: 420, h: 480, interior: true, safePoint: { x: 2650, y: 3150 } },
+  { id: "SO", name: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", x: 2960, y: 2560, w: 500, h: 480, interior: true, safePoint: { x: 3210, y: 3150 } },
+  { id: "LB", name: "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", x: 1840, y: 4060, w: 480, h: 700, interior: true, safePoint: { x: 2070, y: 3800 } },
+  { id: "DU", name: "\u0417\u0430\u043B \u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u043E\u0439 \u0414\u0443\u044D\u043B\u0438", x: 2420, y: 4100, w: 440, h: 360, interior: true, safePoint: { x: 2640, y: 4020 } },
+  { id: "CV", name: "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", x: 2960, y: 4100, w: 500, h: 360, interior: true, safePoint: { x: 3210, y: 4020 } },
+  { id: "BK", name: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", x: 3120, y: 3560, w: 400, h: 420, interior: true, safePoint: { x: 3320, y: 4030 } },
   { id: "WH", name: "\u0421\u043A\u043B\u0430\u0434\u0441\u043A\u043E\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 4500, w: 1140, h: 500, safePoint: { x: 2910, y: 4050 } },
   { id: "FQ", name: "\u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 1500, w: 1160, h: 1e3, safePoint: { x: 2910, y: 3150 } },
   { id: "P", name: "\u0426\u0435\u043D\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C", x: 2360, y: 1500, w: 1240, h: 3500, safePoint: { x: 2600, y: 3625 } }
 ];
 var CITY_GROUND = [
   { tex: "city_paving", x: 2360, y: 1500, w: 1240, h: 3540 },
-  { tex: "city_wood_floor", x: 2440, y: 2560, w: 420, h: 480 },
-  { tex: "city_wood_floor", x: 2960, y: 2560, w: 500, h: 480 },
+  { tex: "city_wood_floor", x: 2440, y: 2560, w: 420, h: 480, interior: true, tint: 15326404 },
+  { tex: "city_stone_floor", x: 2960, y: 2560, w: 500, h: 480, interior: true },
   // v0.22.0: Дуэльный зал и Дом Ковенов открыты (полы), тайная лаборатория к югу от дороги и проход к ней
-  { tex: "city_wood_floor", x: 2420, y: 4100, w: 440, h: 360 },
-  { tex: "city_wood_floor", x: 2960, y: 4100, w: 500, h: 360 },
+  { tex: "city_stone_floor", x: 2420, y: 4100, w: 440, h: 360, interior: true, tint: 13157563 },
+  { tex: "city_wood_floor", x: 2960, y: 4100, w: 500, h: 360, interior: true, tint: 13030587 },
   { tex: "stone_path_01", x: 2020, y: 3950, w: 100, h: 120 },
-  { tex: "city_paving", x: 1840, y: 4060, w: 480, h: 700 }
+  { tex: "city_stone_floor", x: 1840, y: 4060, w: 480, h: 700, interior: true, tint: 11912649 },
+  { tex: "city_wood_floor", x: 3120, y: 3560, w: 400, h: 420, interior: true, tint: 14009773 }
 ];
 function buildingTop(x, y, w, h, doorX) {
   const t = 30;
@@ -764,14 +766,14 @@ function buildingTop(x, y, w, h, doorX) {
     { kind: "wall", x, y: y + h - t, w, h: t }
   ];
 }
-function building(x, y, w, h, doorX = null) {
+function building(x, y, w, h, doorX = null, doorW = 100) {
   const t = 30, out = [
     { kind: "wall", x, y, w, h: t },
     { kind: "wall", x, y, w: t, h },
     { kind: "wall", x: x + w - t, y, w: t, h }
   ];
   if (doorX == null) out.push({ kind: "wall", x, y: y + h - t, w, h: t });
-  else out.push({ kind: "wall", x, y: y + h - t, w: doorX - x, h: t }, { kind: "wall", x: doorX + 100, y: y + h - t, w: x + w - doorX - 100, h: t });
+  else out.push({ kind: "wall", x, y: y + h - t, w: doorX - x, h: t }, { kind: "wall", x: doorX + doorW, y: y + h - t, w: x + w - doorX - doorW, h: t });
   return out;
 }
 var CITY_COLLIDERS = [
@@ -803,13 +805,13 @@ var CITY_COLLIDERS = [
   // ---- предметы с картинкой (низ спрайта на нижней кромке)
   { kind: "furniture", x: 2700, y: 3520, w: 180, h: 60, tex: "fountain_frozen" },
   { kind: "furniture", x: 3240, y: 3360, w: 220, h: 50, tex: "market_stall_01" },
-  { kind: "furniture", x: 2470, y: 2600, w: 140, h: 40, tex: "bookshelf_01" },
-  { kind: "furniture", x: 2650, y: 2600, w: 140, h: 40, tex: "bookshelf_01" },
-  { kind: "furniture", x: 2560, y: 2820, w: 110, h: 40, tex: "table_01" },
-  { kind: "furniture", x: 3e3, y: 2600, w: 140, h: 40, tex: "bookshelf_01" },
-  { kind: "furniture", x: 3300, y: 2620, w: 90, h: 40, tex: "cauldron_01" },
-  { kind: "furniture", x: 3060, y: 2840, w: 110, h: 40, tex: "table_01" },
-  { kind: "furniture", x: 3330, y: 3770, w: 110, h: 40, tex: "table_01" },
+  { kind: "furniture", x: 2470, y: 2730, w: 140, h: 40, tex: "city_archive_shelf" },
+  { kind: "furniture", x: 2660, y: 2730, w: 140, h: 40, tex: "city_archive_shelf" },
+  { kind: "furniture", x: 2525, y: 2865, w: 160, h: 35, tex: "city_archive_desk" },
+  { kind: "furniture", x: 3010, y: 2740, w: 190, h: 40, tex: "city_society_workbench" },
+  { kind: "furniture", x: 3310, y: 2740, w: 70, h: 40, tex: "city_coolant_stable" },
+  { kind: "furniture", x: 3010, y: 2910, w: 100, h: 30, tex: "city_equipment" },
+  { kind: "furniture", x: 3205, y: 3840, w: 230, h: 30, tex: "city_bank_counter" },
   { kind: "furniture", x: 2425, y: 4645, w: 300, h: 65, tex: "city_warehouse" },
   { kind: "furniture", x: 2640, y: 4700, w: 70, h: 40, tex: "city_barrel" },
   { kind: "furniture", x: 3225, y: 4645, w: 300, h: 65, tex: "city_warehouse" },
@@ -824,20 +826,35 @@ var CITY_COLLIDERS = [
   { kind: "ruin", x: 1840, y: 4060, w: 180, h: 40 },
   { kind: "ruin", x: 2120, y: 4060, w: 200, h: 40 },
   { kind: "ruin", x: 1840, y: 4720, w: 480, h: 40 },
-  { kind: "furniture", x: 1880, y: 4400, w: 110, h: 40, tex: "table_01" },
-  { kind: "furniture", x: 2180, y: 4120, w: 140, h: 40, tex: "bookshelf_01" },
-  { kind: "furniture", x: 3020, y: 4140, w: 140, h: 40, tex: "bookshelf_01" },
+  { kind: "furniture", x: 1885, y: 4430, w: 150, h: 35, tex: "city_society_workbench" },
+  { kind: "furniture", x: 2180, y: 4230, w: 100, h: 35, tex: "city_coven_cabinet" },
+  { kind: "furniture", x: 3010, y: 4275, w: 120, h: 35, tex: "city_coven_cabinet" },
   // Residential facades in the formerly empty northern edge; physical footprint matches their base.
   { kind: "furniture", x: 2415, y: 1510, w: 430, h: 90, tex: "city_house" },
   { kind: "furniture", x: 3125, y: 1510, w: 430, h: 90, tex: "city_house" },
-  { kind: "furniture", x: 3200, y: 2610, w: 120, h: 30, tex: "city_equipment" },
-  { kind: "furniture", x: 1845, y: 4125, w: 150, h: 35, tex: "city_lab_machine" },
-  { kind: "furniture", x: 2155, y: 4505, w: 150, h: 35, tex: "city_lab_machine" },
+  { kind: "furniture", x: 3280, y: 2910, w: 120, h: 30, tex: "city_equipment" },
+  { kind: "furniture", x: 1885, y: 4240, w: 150, h: 35, tex: "city_lab_machine" },
+  { kind: "furniture", x: 2125, y: 4505, w: 150, h: 35, tex: "city_lab_machine" },
   { kind: "furniture", x: 2e3, y: 4680, w: 100, h: 30, tex: "city_equipment" },
   { kind: "furniture", x: 2435, y: 4540, w: 50, h: 20, tex: "city_barrel" },
   { kind: "furniture", x: 3445, y: 4540, w: 50, h: 20, tex: "city_barrel" },
   { kind: "furniture", x: 2685, y: 4545, w: 70, h: 25, tex: "city_crate" },
   { kind: "furniture", x: 3335, y: 4575, w: 70, h: 25, tex: "city_crate" }
+];
+var CITY_EXTRA_COLLIDERS = [
+  ...building(3120, 3560, 400, 420, 3250, 140),
+  { kind: "furniture", x: 3380, y: 3720, w: 85, h: 35, tex: "city_bank_safe" },
+  { kind: "furniture", x: 3170, y: 3720, w: 80, h: 30, tex: "trunk_01" },
+  { kind: "furniture", x: 2690, y: 2935, w: 110, h: 30, tex: "city_archive_shelf" },
+  { kind: "furniture", x: 3320, y: 4380, w: 90, h: 30, tex: "trunk_01" },
+  { kind: "furniture", x: 3060, y: 4380, w: 170, h: 30, tex: "city_coven_table" },
+  { kind: "furniture", x: 2465, y: 4250, w: 80, h: 30, tex: "city_duel_rack" },
+  { kind: "furniture", x: 2730, y: 4250, w: 80, h: 30, tex: "city_duel_rack" },
+  { kind: "furniture", x: 2415, y: 2070, w: 430, h: 80, tex: "city_frozen_house" },
+  { kind: "furniture", x: 3125, y: 2050, w: 430, h: 80, tex: "city_frozen_house" },
+  { kind: "furniture", x: 2110, y: 4640, w: 140, h: 35, tex: "city_archive_desk" },
+  { kind: "furniture", x: 2205, y: 4400, w: 70, h: 30, tex: "bed_01" },
+  { kind: "furniture", x: 1885, y: 4530, w: 70, h: 30, tex: "bed_01" }
 ];
 var CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }, { x: 2360, y: 1460, w: 1240, h: 1840 }, { x: 1800, y: 3950, w: 560, h: 1450 }];
 var CITY_INTERACTIVES = [
@@ -853,7 +870,7 @@ var CITY_INTERACTIVES = [
   { id: "city_board", kind: "board", x: 2480, y: 3420, texture: "notice_board_01", collide: { w: 80, h: 20 }, radius: 120, hint: "\u0414\u043E\u0441\u043A\u0430 \u043F\u043E\u0440\u0443\u0447\u0435\u043D\u0438\u0439" },
   { id: "npc_ilaria", kind: "npc", npc: "ilaria", x: 2560, y: 3260, texture: "npc_ilaria", collide: { w: 50, h: 24 }, radius: 140 },
   { id: "npc_merchant", kind: "npc", npc: "merchant", x: 3350, y: 3500, texture: "npc_merchant", collide: { w: 50, h: 24 }, radius: 140 },
-  { id: "npc_banker", kind: "npc", npc: "banker", x: 3380, y: 3880, texture: "npc_banker", collide: { w: 50, h: 24 }, radius: 140 },
+  { id: "npc_banker", kind: "npc", npc: "banker", x: 3320, y: 3830, texture: "npc_banker", collide: { w: 50, h: 24 }, radius: 140 },
   { id: "npc_duelist", kind: "npc", npc: "duelist", x: 2640, y: 4040, texture: "npc_duelist", collide: { w: 50, h: 24 }, radius: 140 },
   {
     id: "plaza_trace",
@@ -892,8 +909,9 @@ var CITY_INTERACTIVES = [
   {
     id: "archive_document",
     kind: "seal_sigil",
-    x: 2615,
-    y: 2880,
+    x: 2605,
+    y: 2900,
+    elevated: 50,
     texture: "city_archive_document",
     litTexture: "city_archive_document",
     litTint: 15259391,
@@ -907,7 +925,7 @@ var CITY_INTERACTIVES = [
     doneButton: "\u041A \u041E\u0431\u0449\u0435\u0441\u0442\u0432\u0443"
   },
   // Общество Преображения
-  { id: "npc_severin", kind: "npc", npc: "severin", x: 3210, y: 2760, texture: "npc_severin", collide: { w: 50, h: 24 }, radius: 140, hideEvent: "ch2_final_start" },
+  { id: "npc_severin", kind: "npc", npc: "severin", x: 3210, y: 2890, texture: "npc_severin", collide: { w: 50, h: 24 }, radius: 140, hideEvent: "ch2_final_start" },
   // ---- v0.21.0: квест 6 «Пропавший груз» — Складской квартал (после боя со сборщиками)
   {
     id: "wh_cargo",
@@ -977,8 +995,8 @@ var CITY_INTERACTIVES = [
   {
     id: "fq_door",
     kind: "seal_sigil",
-    x: 3420,
-    y: 2140,
+    x: 3340,
+    y: 2150,
     texture: "frozen_door_01",
     litTexture: "city_door_open",
     radius: 120,
@@ -999,7 +1017,7 @@ var CITY_INTERACTIVES = [
     y: 2190,
     texture: "city_crate",
     collide: { w: 70, h: 30 },
-    target: { x: 2470, y: 2120 },
+    target: { x: 2440, y: 2260 },
     radius: 120,
     requiresEnemyDefeated: "fq_critter",
     doneEvent: "ch2_rescue_cellar",
@@ -1055,12 +1073,13 @@ var CITY_INTERACTIVES = [
     reward: { items: { rune_dust: 2, lunar_shard: 2, frost_herb: 2 } }
   },
   { id: "lab_cauldron", kind: "alchemy", x: 2260, y: 4690, texture: "cauldron_01", collide: { w: 66, h: 26 }, radius: 120, requiresEvent: "ch2_lab_open" },
-  { id: "npc_tikhon", kind: "npc", npc: "tikhon", x: 1950, y: 4560, texture: "npc_tikhon", radius: 130, requiresEvent: "ch2_vol_1" },
+  { id: "npc_tikhon", kind: "npc", npc: "tikhon", x: 1990, y: 4580, texture: "npc_tikhon", radius: 130, requiresEvent: "ch2_vol_1" },
   {
     id: "lab_journal",
     kind: "seal_sigil",
-    x: 2160,
-    y: 4600,
+    x: 2180,
+    y: 4675,
+    elevated: 50,
     texture: "city_lab_journal",
     litTexture: "city_lab_journal",
     litTint: 15259391,
@@ -1180,14 +1199,14 @@ var CITY_ENEMIES = [
   { id: "yard_brittle_2", enemy: "frost_collector", x: 3400, y: 1880, radius: 110, requiresEvent: "unlock_ice_2", defeatEvent: "ch2_brittle_2" },
   // квест 12: добровольцы и конструкт в лаборатории
   { id: "vol_1", enemy: "volunteer", x: 1970, y: 4320, radius: 110, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_vol_1" },
-  { id: "vol_2", enemy: "volunteer", texture: "enemy_volunteer_miron", x: 2200, y: 4420, radius: 110, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_vol_2" },
+  { id: "vol_2", enemy: "volunteer", texture: "enemy_volunteer_miron", x: 2150, y: 4400, radius: 110, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_vol_2" },
   { id: "lab_construct", enemy: "experimental_construct", x: 2080, y: 4600, radius: 120, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_lab_construct", repeatSec: 900 },
   // квест 14: нестабильные конструкции в городе
   { id: "unstable_1", enemy: "frost_collector", x: 3e3, y: 3980, radius: 110, requiresEvent: "ch2_coven_met", defeatEvent: "ch2_unstable_1" },
   { id: "unstable_2", enemy: "frost_collector", x: 2720, y: 4660, radius: 110, requiresEvent: "ch2_coven_met", defeatEvent: "ch2_unstable_2" },
   // квест 15: город во льду и Северин в Дуэльном зале
   { id: "final_critter", enemy: "frost_critter", x: 2900, y: 3420, radius: 110, requiresEvent: "ch2_final_start" },
-  { id: "final_collector", enemy: "frost_collector", x: 3240, y: 3620, radius: 110, requiresEvent: "ch2_final_start" },
+  { id: "final_collector", enemy: "frost_collector", x: 3010, y: 3620, radius: 110, requiresEvent: "ch2_final_start" },
   { id: "final_construct", enemy: "experimental_construct", x: 2480, y: 3560, radius: 120, requiresEvent: "ch2_final_start" },
   { id: "final_severin", enemy: "severin_boss", x: 2640, y: 4320, radius: 130, requiresEvent: "ch2_ice3", defeatEvent: "ch2_severin_defeated" }
 ];
@@ -1200,7 +1219,8 @@ var CITY_DECOR = [
   { id: "ct_frost_1", k: "frost_patch_01", x: 2760, y: 3700, floor: true },
   { id: "ct_frost_2", k: "frost_patch_01", x: 2980, y: 3860, floor: true },
   { id: "ct_frost_3", k: "frost_patch_01", x: 2620, y: 3560, floor: true },
-  { id: "ct_candles", k: "candle_group_01", x: 2780, y: 2650 },
+  { id: "bank_lamp_w", k: "city_lamp_01", x: 3170, y: 4030 },
+  { id: "bank_lamp_e", k: "city_lamp_01", x: 3470, y: 4030 },
   // v0.21.0: Замёрзший квартал — иней на мостовой и фонари
   ...[[2560, 2300], [3180, 2420], [2680, 2080], [3360, 2060], [2560, 1660], [3240, 1640], [2700, 1880], [3420, 1860]].map(([x, y], i) => ({ id: `fq_frost_${i}`, k: "frost_patch_01", x, y, floor: true })),
   ...[[2440, 2470], [3520, 2470], [2440, 1940], [3520, 1940], [2440, 1540], [3520, 1540]].map(([x, y], i) => ({ id: `fq_lamp_${i}`, k: "city_lamp_01", x, y }))
@@ -1665,8 +1685,9 @@ var COLLIDERS = [
   { kind: "ruin", x: 1160, y: 330, w: 540, h: 110 },
   // v0.20.0: дорога и город (только в конец — id коллайдеров c<номер>)
   ...CITY_COLLIDERS,
-  ...EXP_COLLIDERS
+  ...EXP_COLLIDERS,
   // v0.24.0: после городских (номера коллайдеров города не сдвигаются)
+  ...CITY_EXTRA_COLLIDERS
 ];
 var BASE_INTERACTIVES = [
   // A

@@ -8,7 +8,7 @@
 //   → H Круг Огня → (возврат) I Корни у поляны → J Новая часть леса → K Страж → L Ворота
 
 import { CONTENT_INTERACTIVES, CONTENT_ENEMIES, CACHE_RESOURCE_REWARDS } from './world.content.js';
-import { CITY_ZONES, CITY_GROUND, CITY_COLLIDERS, CITY_KEEP_CLEAR, CITY_INTERACTIVES, CITY_ENEMIES } from './world.city.js';
+import { CITY_ZONES, CITY_GROUND, CITY_COLLIDERS, CITY_EXTRA_COLLIDERS, CITY_KEEP_CLEAR, CITY_INTERACTIVES, CITY_ENEMIES } from './world.city.js';
 import { EXP_ZONES, EXP_GROUND, EXP_COLLIDERS, EXP_KEEP_CLEAR, EXP_INTERACTIVES, EXP_ENEMIES } from './world.expeditions.js';
 export { CLEARINGS } from './world.content.js';
 
@@ -111,6 +111,7 @@ export const COLLIDERS = [
   // v0.20.0: дорога и город (только в конец — id коллайдеров c<номер>)
   ...CITY_COLLIDERS,
   ...EXP_COLLIDERS,   // v0.24.0: после городских (номера коллайдеров города не сдвигаются)
+  ...CITY_EXTRA_COLLIDERS,
 ];
 
 // ИСТОЧНИК для генератора карты (tools/world/bake.mjs). Игра читает готовый список из world.props.js,

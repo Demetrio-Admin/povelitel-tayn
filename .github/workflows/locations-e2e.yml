@@ -1,0 +1,26 @@
+# Временная проверка v0.27.0 в настоящем Phaser (удаляется перед слиянием)
+name: Locations e2e
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:locations
+        env:
+          LOC_SHOTS_DIR: shots
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: location-shots
+          path: shots

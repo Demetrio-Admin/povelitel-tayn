@@ -221,7 +221,7 @@ await mute(async () => {
     // меню: шесть пунктов в порядке, без общей надписи «В разработке»
     h.menuBtn.hit.emit('pointerdown');
     ok(h.modal?.menu && sv.modalOpen, 'Меню открывается кнопкой, игра на паузе (modalOpen)');
-    ok(h.modal.items.map(i => i.item.label).join(',') === 'Город,Банк,Рейтинг,Чат,Форум,Настройки', 'меню: шесть пунктов 3×2 в порядке ' + h.modal.items.map(i => i.item.label).join(', '));
+    ok(h.modal.items.map(i => i.item.label).join(',') === 'Карта,Банк,Рейтинг,Чат,Форум,Настройки', 'меню: шесть пунктов 3×2 в порядке ' + h.modal.items.map(i => i.item.label).join(', '));
     ok(!texts(h.modal.container).some(t => /разработ/i.test(t)), 'меню: нет общей надписи «В разработке»');
     h.modal.overlay.emit('pointerdown');
     ok(!h.modal && !sv.modalOpen, 'касание вне панели закрывает меню и снимает паузу');
@@ -243,13 +243,45 @@ await mute(async () => {
     h.openMenu(); h.modal.items.find(x => x.item.id === 'chat').hit.emit('pointerdown');
     ok(chatOpened && !h.modal && !sv.modalOpen, 'пункт Чат закрывает меню и вызывает настоящий интерфейс');
     h.openChat = originalChat;
-    for (const id of ['city', 'rating', 'forum']) {   // v0.20.0: «Банк» — уже не заглушка (кошелёк), «Город» — заглушка до главы II
+    // v0.27.0: «Карта» — карта мира; из меню только посмотреть (отправиться — у выхода «Карта мира»)
+    {
+      const before = snap();
+      let travel = null; const onT = (id) => { travel = id; }; sv.bus.on(MSG.MAP_TRAVEL, onT);
+      h.openMenu(); h.modal.items.find(x => x.item.id === 'map').hit.emit('pointerdown');
+      let t = h.modal ? texts(h.modal.container).join(' | ') : '';
+      ok(h.modal?.opts?.title === 'Карта мира' && !h.modal?.menu && t.includes('Лес Мирры · вы здесь') && t.includes('Город 🔒') && t.includes('Морозный лес 🔒') && t.includes('Старое кладбище 🔒'),
+        'меню → «Карта»: карта мира, «вы здесь», закрытые локации под замком');
+      ok(h.modal.buttons.length === 1 && t.includes('Закрыть') && !t.includes('Отправиться'), 'из меню карта только для просмотра');
+      const flat = (o, out = []) => { out.push(o); (o.children || []).forEach(x => flat(x, out)); return out; };
+      const pick = (name) => { const all = flat(h.modal.container); const b = all.find(o => typeof o.text === 'string' && o.text.startsWith(name)); const hit = all.find(o => o !== b && o.handlers?.pointerup && Math.abs(o.x - b.x) < 2 && Math.abs(o.y - (b.y + 1)) < 3); const sc = h.modal.scroll; h.input.activePointer = { x: sc.x + 5, y: sc.y + 5 }; hit.emit('pointerdown'); hit.emit('pointerup'); };
+      pick('Город');
+      t = texts(h.modal.container).join(' | ');
+      ok(h.modal?.opts?.title === 'Карта мира' && t.includes('Город · Глава II') && t.includes('покажет Мирра'), 'точка на карте: описание локации и почему закрыта');
+      h.closeModal(h.modal.buttons[0]);
+      ok(!h.modal && !sv.modalOpen && travel === null && snap() === before, 'карта из меню закрывается без изменений в игре');
+      // у выхода «Карта мира»: открытая локация — можно отправиться
+      sv.state.markEvent('ch2_start');
+      sv.bus.emit(MSG.OPEN_MAP, { exit: 'exit_forest' });
+      pick('Город');
+      t = texts(h.modal.container).join(' | ');
+      ok(t.includes('Отправиться: Город') && !t.includes('Город 🔒'), 'у выхода: открытая локация — «Отправиться»');
+      h.closeModal(h.modal.buttons[0]);
+      ok(travel === 'city' && !h.modal && !sv.modalOpen, '«Отправиться» — событие перехода в выбранную локацию');
+      sv.bus.emit(MSG.OPEN_MAP, { exit: 'exit_forest' });
+      pick('Морозный лес');
+      t = texts(h.modal.container).join(' | ');
+      ok(!t.includes('Отправиться') && t.includes('после главы II'), 'у выхода: закрытая вылазка — отправиться нельзя');
+      h.closeModal(h.modal.buttons[0]);
+      sv.state.data.completedEvents = sv.state.data.completedEvents.filter(e => e !== 'ch2_start');
+      sv.bus.off(MSG.MAP_TRAVEL, onT);
+    }
+    for (const id of ['rating', 'forum']) {   // v0.20.0: «Банк» — уже не заглушка (кошелёк)
       const before = snap();
       h.openMenu();
       const it = h.modal.items.find(x => x.item.id === id);
       it.hit.emit('pointerdown');
       const t = h.modal ? texts(h.modal.container).join(' ') : '';
-      ok(h.modal?.opts?.stub === id && !h.modal?.menu && t.includes('Раздел в разработке') && (id !== 'city' || t.includes('магазины')), `заглушка «${it.item.label}»: меню закрыто, окно «Раздел в разработке»`);
+      ok(h.modal?.opts?.stub === id && !h.modal?.menu && t.includes('Раздел в разработке'), `заглушка «${it.item.label}»: меню закрыто, окно «Раздел в разработке»`);
       h.closeModal(h.modal.buttons[0]);
       ok(!h.modal && !sv.modalOpen && snap() === before, `заглушка «${it.item.label}»: закрытие без изменений в игре`);
     }
@@ -286,8 +318,8 @@ await mute(async () => {
     ok(h.modal?.settings && !ct.includes('Главное меню') && !ct.includes('Сбросить прогресс'), 'бой: настройки без выхода в меню и сброса');
     h.closeModal(null);
     const modeBefore = sv.mode;
-    h.openMenu(); h.modal.items.find(x => x.item.id === 'city').hit.emit('pointerdown'); h.closeModal(null);
-    ok(sv.mode === modeBefore && h.mode === 'combat' && !h.modal, 'бой: заглушка Города не выводит из боя');
+    h.openMenu(); h.modal.items.find(x => x.item.id === 'map').hit.emit('pointerdown'); h.closeModal(null);
+    ok(sv.mode === modeBefore && h.mode === 'combat' && !h.modal, 'бой: «Карта» не открывается и не выводит из боя');
     h.setMode('exploration');
     sv.bus.offContext(h);
   }

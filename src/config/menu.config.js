@@ -2,7 +2,7 @@
 // stub: true — раздел в разработке: нажатие показывает понятное окно и ничего не меняет в игре.
 // Настройки — рабочий раздел (окно из ui/SettingsPanel.js).
 export const MENU_ITEMS = [
-  { id: 'city', label: 'Город', icon: 'icon_city', stub: true, note: 'Здесь появятся магазины и другие городские возможности.' },
+  { id: 'map', label: 'Карта', icon: 'icon_city' },   // v0.27.0: карта мира (отправиться можно только у выхода из локации)
   { id: 'bank', label: 'Банк', icon: 'icon_bank' },   // v0.20.0: окно кошелька (сапфиры)
   { id: 'rating', label: 'Рейтинг', icon: 'icon_rating', stub: true },
   { id: 'chat', label: 'Чат', icon: 'icon_chat' },

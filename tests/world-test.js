@@ -108,8 +108,8 @@ console.log('\nМир: проходимость');
   }
   ok(!near(open, seenE, 'fw_alpha') && !near(open, seenE, 'gy_warden') && !near(open, seenFW, 'gy_warden'), 'вылазки пешком из города не достичь: только указатели');
   // лес и город пешком не соединены: из леса в город не пройти, только указателем
-  ok(!near(open, seenO, 'npc_ilaria'), 'из леса в город пешком не пройти (только указатель «Дорога в город» и меню)');
-  ok(near(open, seenO, 'travel_to_city') && near(open, seenE, 'travel_to_forest'), 'оба указателя перехода достижимы');
+  ok(!near(open, seenO, 'npc_ilaria'), 'из леса в город пешком не пройти (только через карту мира у выхода)');
+  ok(near(open, seenO, 'exit_forest') && near(open, seenE, 'exit_city') && near(open, seenFW, 'exit_frostwood') && near(open, seenGY, 'exit_graveyard'), 'выходы «Карта мира» достижимы во всех локациях');
   // v0.10.0: Древние ворота — настоящая преграда (стена по бокам), а узел за ними стережёт испытание
   {
     const g1 = buildWalkGrid({ width: W, height: H, solids: solidsFor(['corrupted_roots', 'heavy_boulder', 'forest_guardian_01']) });

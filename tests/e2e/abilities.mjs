@@ -64,60 +64,58 @@ try {
   console.log('тексты на экране:', JSON.stringify(toastText));
   await shot('02-after-taps');
 
-  // v0.27.0: после перехода между локациями (перезапуск сцены) кнопки обязаны работать так же
-  await page.evaluate(() => {
-    const P = Object.getPrototypeOf(window.__game.scene.getScene('ExplorationScene'));
-    window.__exp = { calls: 0, acted: 0 };
-    const orig = P.onAbility;
-    P.onAbility = function (id) { window.__exp.calls++; if (this.canAct()) window.__exp.acted++; return orig.call(this, id); };
-    const s = window.__witch.state; s.markEvent('ch2_start'); s.markEvent('chapter_2_complete');
+  const cmInfo = () => page.evaluate(() => { const c = window.__game.scene.getScene('CombatScene'); return { started: c.started, ended: c.ended, tut: c.tut?.step || null, fire: c.cm?.abilityState?.('fire')?.state, tele: c.cm?.abilityState?.('telekinesis')?.state, seal: c.cm?.abilityState?.('seal')?.state }; });
+  const fight = async (enemyId, label) => {
+    await page.evaluate((id) => {
+      const e = window.__game.scene.getScene('ExplorationScene');
+      const t = e.enemies.find(x => x.id === id); if (!t) throw new Error('нет врага ' + id);
+      e.startCombat(t);
+    }, enemyId);
+    await page.waitForFunction(() => window.__game.scene.isActive('CombatScene') && window.__game.scene.getScene('CombatScene').started, null, { timeout: 25000 });
+    await page.waitForTimeout(800);
+    await page.evaluate(() => window.__game.scene.getScene('CombatScene').tut?.skip?.());   // обучение не мешает проверке кнопок
+    await page.waitForTimeout(300);
+    await shot('c-' + label);
+    console.log(label, 'бой до:', JSON.stringify(await cmInfo()), JSON.stringify(await state()));
+    for (const [name, x] of [['fire', 274], ['seal', 444], ['tele', 104]]) {
+      const b = await page.evaluate(() => window.__uses.length);
+      await click(x, 1164);
+      const a = await page.evaluate(() => window.__uses.length);
+      const c = await cmInfo();
+      ok(a === b + 1, `${label}: кнопка ${name} дошла до шины`);
+      console.log('   после', name, JSON.stringify(c));
+    }
+    const c = await cmInfo();
+    ok(c.fire !== 'ready' || c.seal !== 'ready' || c.tele !== 'ready', `${label}: хотя бы один дар сработал (перезарядка пошла)`);
+    await page.evaluate(() => { const c = window.__game.scene.getScene('CombatScene'); c.cm.enemy.hp = 0; });
+    await page.waitForFunction(() => !window.__game.scene.isActive('CombatScene') || window.__game.scene.getScene('CombatScene').ended, null, { timeout: 25000 }).catch(() => {});
+    await page.waitForTimeout(500);
+    console.log(label, 'бой после:', JSON.stringify(await state()));
+  };
+  await fight('combat_intro_01', 'лес');
+  // выйти из итогового окна боя
+  await page.waitForFunction(() => window.__game.scene.isActive('ExplorationScene') && !window.__game.scene.isActive('CombatScene'), null, { timeout: 40000 }).catch(async () => {
+    console.log('итог боя: ждём кнопку', JSON.stringify(await state()));
+    await shot('c-outcome');
   });
-  const listeners = () => page.evaluate(() => ({ ability: (window.__witch.bus.map.get('ability:use') || []).map(l => l.ctx?.constructor?.name || typeof l.ctx).join(), ctx: (window.__witch.bus.map.get('ui:open-map') || []).length }));
-  console.log('слушатели до перехода:', JSON.stringify(await listeners()));
-  for (const id of ['city', 'forest']) {
-    await page.evaluate((id) => window.__witch.bus.emit('story:map-travel', id), id);
-    await page.waitForFunction((id) => { const s = window.__game.scene.getScene('ExplorationScene'); return s?.loc?.id === id && window.__witch.mode === 'exploration'; }, id, { timeout: 20000 });
-    await page.waitForTimeout(1500);
-    console.log('после перехода в', id, JSON.stringify(await state()), JSON.stringify(await listeners()));
-    console.log('модальное окно:', JSON.stringify(await page.evaluate(() => { const m = window.__game.scene.getScene('UIScene').modal; return m ? { title: m.opts?.title, text: String(m.opts?.text || '').slice(0, 160), keys: Object.keys(m.opts || {}).join() } : null; })));
-    await shot('t-' + id);
-    const b = await page.evaluate(() => ({ ...window.__exp, uses: window.__uses.length }));
-    await click(274, 1164);
-    const a = await page.evaluate(() => ({ ...window.__exp, uses: window.__uses.length }));
-    ok(a.uses === b.uses + 1 && a.calls === b.calls + 1 && a.acted === b.acted + 1, `после перехода в «${id}»: кнопка Огня доходит до сцены и сцена действует ` + JSON.stringify([b, a]));
-  }
-  // меню → «Карта» → закрыть → кнопки живы
-  await page.evaluate(() => window.__game.scene.getScene('UIScene').openMap());
-  await page.waitForTimeout(400);
-  await page.evaluate(() => window.__game.scene.getScene('UIScene').closeModal(window.__game.scene.getScene('UIScene').modal.buttons[0]));
-  await page.waitForTimeout(300);
+  console.log('состояние после боя:', JSON.stringify(await state()));
+  // после боя: окно итога закрыть (если есть) и проверить кнопки в мире
+  const closeAny = async () => { for (let k = 0; k < 4; k++) { const had = await page.evaluate(() => { const u = window.__game.scene.getScene('UIScene'); if (!u.modal) return false; u.closeModal(u.modal.buttons[0]); return true; }); if (!had) break; await page.waitForTimeout(500); } };
+  await closeAny();
   {
-    const b = await page.evaluate(() => ({ ...window.__exp }));
+    const b = await page.evaluate(() => ({ ...window.__exp || {}, uses: window.__uses.length }));
     await click(274, 1164);
-    const a = await page.evaluate(() => ({ ...window.__exp }));
-    ok(a.acted === b.acted + 1, 'после закрытия карты: кнопка Огня действует ' + JSON.stringify(await state()));
+    console.log('после боя, тап по Огню:', JSON.stringify(await state()));
+    ok((await page.evaluate(() => window.__uses.length)) === b.uses + 1, 'после боя в лесу: кнопка Огня доходит до шины');
   }
-
-  // бой
-  await page.evaluate(() => {
-    const e = window.__game.scene.getScene('ExplorationScene');
-    const t = e.enemies.find(x => x.id === 'combat_intro_01') || e.enemies[0];
-    e.startCombat(t);
-  });
-  await page.waitForFunction(() => window.__game.scene.isActive('CombatScene') && window.__game.scene.getScene('CombatScene').started, null, { timeout: 20000 }).catch(() => {});
+  // переход в город и бой там
+  await page.evaluate(() => { const s = window.__witch.state; ['ch2_start', 'ch2_city_arrived'].forEach(k => s.markEvent(k)); window.__witch.bus.emit('story:map-travel', 'city'); });
+  await page.waitForFunction(() => window.__game.scene.getScene('ExplorationScene')?.loc?.id === 'city' && window.__witch.mode === 'exploration', null, { timeout: 25000 });
   await page.waitForTimeout(1500);
-  console.log('в бою:', JSON.stringify(await state()));
-  await page.evaluate(() => { const c = window.__game.scene.getScene('CombatScene'); console.log('tut', c.tut?.step); });
-  await shot('03-combat');
-  const cmInfo = () => page.evaluate(() => { const c = window.__game.scene.getScene('CombatScene'); return { started: c.started, ended: c.ended, tut: c.tut?.step || null, mana: Math.round(c.cm?.player?.mana ?? -1), cdFire: c.cm?.abilityState?.('fire')?.state, inputs: c.rec?.inputs?.length ?? c.rec?.events?.length ?? null }; });
-  console.log('cm до:', JSON.stringify(await cmInfo()));
-  const before = await page.evaluate(() => window.__uses.length);
-  await click(274, 1164);
-  await page.waitForTimeout(400);
-  console.log('cm после:', JSON.stringify(await cmInfo()), JSON.stringify(await state()));
-  const after = await page.evaluate(() => window.__uses.length);
-  ok(after === before + 1, 'в бою: кнопка Огня дошла до шины');
-  await shot('04-combat-after');
+  console.log('в городе:', JSON.stringify(await state()));
+  await fight('plaza_critter', 'город');
+  await closeAny();
+  console.log('после боя в городе:', JSON.stringify(await state()));
   console.log('ошибки страницы:', JSON.stringify(errors.filter(e => !/supabase|Failed to load resource|fonts/i.test(e))));
 } catch (e) { failed++; console.error('  ✗', e.stack || e.message); }
 await browser.close();

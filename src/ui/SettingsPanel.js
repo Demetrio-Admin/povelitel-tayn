@@ -17,7 +17,7 @@ export function buildSettingsPanel(scene, { onDone, depth = 10000, extra = [] } 
   const { settings, audio } = services;
   const W = VIEW.width, H = VIEW.height;
   const extraH = extra.length ? 112 : 0;
-  const pw = 648, ph = 700 + extraH;
+  const pw = 648, ph = 800 + extraH;
   const left = (W - pw) / 2, top = (H - ph) / 2 - 40;
   const c = scene.add.container(0, 0).setDepth(depth);
   const overlay = scene.add.rectangle(0, 0, W, H, 0x000000, 0.66).setOrigin(0).setInteractive();
@@ -38,7 +38,7 @@ export function buildSettingsPanel(scene, { onDone, depth = 10000, extra = [] } 
   let y = top + 140;
   const rowLabel = (text) => c.add(scene.add.text(left + 40, y, text, { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, shadow: SH }).setOrigin(0, 0.5));
 
-  for (let i = 0; i < 4; i++) c.add(addPanel(scene, left + 28, top + 140 + i * 100 - 38, pw - 56, 76, { variant: 'inset' }));
+  for (let i = 0; i < 5; i++) c.add(addPanel(scene, left + 28, top + 140 + i * 100 - 38, pw - 56, 76, { variant: 'inset' }));
 
   // громкости
   for (const [key, label] of [['sfx', 'Звуки'], ['music', 'Музыка']]) {
@@ -51,7 +51,7 @@ export function buildSettingsPanel(scene, { onDone, depth = 10000, extra = [] } 
   }
 
   // переключатели
-  for (const [key, label] of [['vibration', 'Вибрация'], ['hints', 'Подсказки']]) {
+  for (const [key, label] of [['vibration', 'Вибрация'], ['hints', 'Подсказки'], ['anim', 'Живой мир']]) {
     rowLabel(label);
     const b = smallBtn(left + 460, y, 180, onOff(settings.get(key)), () => {
       const v = settings.toggle(key);

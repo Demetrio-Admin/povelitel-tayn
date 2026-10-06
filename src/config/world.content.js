@@ -126,5 +126,8 @@ export const CONTENT_DECOR = [
 export const AMBIENT = [
   { id: 'house_motes', kind: 'motes', rect: { x: 680, y: 4930, w: 440, h: 330 }, color: 0xffe9b0, quantity: 1, frequency: 700 },
   { id: 'glade_fireflies', kind: 'motes', rect: { x: 380, y: 4280, w: 420, h: 360 }, color: 0xbff7ff, quantity: 1, frequency: 900 },
+  // v0.28.0: светлячки у ручья
+  { id: 'creek_fireflies_n', kind: 'motes', rect: { x: 640, y: 1500, w: 300, h: 520 }, color: 0xbff7ff, quantity: 1, frequency: 1100 },
+  { id: 'creek_fireflies_s', kind: 'motes', rect: { x: 640, y: 3250, w: 300, h: 520 }, color: 0xbff7ff, quantity: 1, frequency: 1100 },
   { id: 'altar_sparks', kind: 'motes', rect: { x: 1100, y: 2150, w: 340, h: 260 }, color: 0x9fe9ff, quantity: 1, frequency: 800 },
 ];

@@ -34,6 +34,7 @@ try {
     const s = window.__game.scene.getScene('ExplorationScene'), L = s.life;
     return { running: !!L?.running, lite: !!L?.lite, sway: L?.swaying.size ?? 0, ripples: L ? L.ripples.filter(r => r.visible).length : 0, pool: L?.ripples.length ?? 0,
       flyers: L?.flyers.size ?? 0, leaves: !!L?.leaves, objs: s.children.list.length, tweens: s.tweens.getTweens().length,
+      view: (() => { const v = s.cameras.main.worldView; return [Math.round(v.x), Math.round(v.y), Math.round(v.width), Math.round(v.height)]; })(), hero: [Math.round(s.player.x), Math.round(s.player.y)], waters: s.terrain.waterRects.length,
       angles: L ? [...L.swaying.values()].every(v => Math.abs(v.img.angle) <= 3.1) : true };
   });
 
@@ -43,7 +44,7 @@ try {
   let a = await info();
   assert.ok(a.running && !a.lite, 'менеджер запущен: ' + JSON.stringify(a));
   assert.ok(a.sway >= 1 && a.sway <= 14 && a.angles, 'качаются от 1 до 14 деревьев: ' + a.sway);
-  assert.ok(a.ripples >= 1 && a.pool <= 8, 'у ручья есть рябь: ' + a.ripples + ' из пула ' + a.pool);
+  assert.ok(a.ripples >= 1 && a.pool <= 8, 'у ручья есть рябь: ' + a.ripples + ' из пула ' + a.pool + ' ' + JSON.stringify(a));
   assert.ok(a.leaves, 'листья идут');
   ok(`у ручья: качается ${a.sway} деревьев, рябь ${a.ripples}/${a.pool}, листья идут`);
   await page.screenshot({ path: path.join(out, '01-creek.png') });

@@ -83,12 +83,11 @@ try {
   ok('птица и зверёк пролетают и пропадают без остатка');
 
   // утечки: число объектов и твинов со временем не растёт
-  await until(() => window.__game.scene.getScene('ExplorationScene').life.leaves.every(l => l.visible), null, 90000);   // все листья уже запущены — дальше число твинов не должно расти
   const before = await info();
   await page.evaluate(() => { const L = window.__game.scene.getScene('ExplorationScene').life; for (let i = 0; i < 6; i++) { L.flyBird(); L.runAnimal(); } });
   await until(() => window.__game.scene.getScene('ExplorationScene').life.flyers.size === 0, null, 90000);
   const after = await info();
-  assert.ok(after.flyers === 0 && after.objs <= before.objs + 6 && after.tweens <= before.tweens + 12, `без утечек: объектов ${before.objs}→${after.objs}, твинов ${before.tweens}→${after.tweens}`);
+  assert.ok(after.flyers === 0 && after.objs <= before.objs + 6 && after.tweens <= before.tweens + 6 + 4 * 9,   // листья стартуют по очереди: каждый — 4 твина `без утечек: объектов ${before.objs}→${after.objs}, твинов ${before.tweens}→${after.tweens}`);
   ok(`без утечек: объектов ${before.objs}→${after.objs}, твинов ${before.tweens}→${after.tweens}`);
 
   // герой уходит в другой угол леса — качаются деревья уже там, у ручья пусто

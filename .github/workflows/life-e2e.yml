@@ -17,7 +17,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:life
+      - run: npm run test:life 2>&1 | tee out.txt; exit ${PIPESTATUS[0]}
+        shell: bash
         env:
           LIFE_SHOTS_DIR: shots
       - uses: actions/upload-artifact@v4
@@ -25,6 +26,19 @@ jobs:
         with:
           name: life-shots
           path: shots
+      - name: report as check run
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess
+          t = open('out.txt').read()[-30000:] if os.path.exists('out.txt') else 'нет вывода'
+          body = {'name': 'report life', 'head_sha': os.environ['SHA'], 'status': 'completed', 'conclusion': 'neutral', 'output': {'title': 'report', 'summary': 'log', 'text': '```\n' + t + '\n```'}}
+          open('/tmp/r.json', 'w').write(json.dumps(body))
+          subprocess.run(['gh', 'api', 'repos/${{ github.repository }}/check-runs', '--method', 'POST', '--input', '/tmp/r.json', '--silent'], check=False)
+          PY
       - name: shots as check runs
         if: always()
         env:

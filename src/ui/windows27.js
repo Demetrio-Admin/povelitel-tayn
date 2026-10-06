@@ -38,7 +38,7 @@ export const windows27 = {
             .setStrokeStyle(3, loc.id === sel.id ? 0xffffff : 0x3a2a1a);
           c.add(ring);
           if (loc.id === here.id) {
-            const yh = this.add.text(px, py - 30, 'вы здесь', { fontFamily: FONT, fontSize: UI.type.small, color: '#5a3a14', fontStyle: 'bold' }).setOrigin(0.5);
+            const yh = this.add.text(px, py - 36, 'вы здесь', { fontFamily: FONT, fontSize: UI.type.small, color: '#5a3a14', fontStyle: 'bold', stroke: '#f3e6c4', strokeThickness: 5 }).setOrigin(0.5);
             c.add(yh);
           }
           const label = loc.name + (open ? '' : ' 🔒');

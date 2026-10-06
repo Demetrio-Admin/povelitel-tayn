@@ -99,7 +99,8 @@ try {
 
   // в доме Мирры: ни листьев, ни птиц, ни зверька
   await page.evaluate(() => { const s = window.__game.scene.getScene('ExplorationScene'); s.player.sprite.setPosition(900, 5150); s.cameras.main.centerOn(900, 4950); });
-  await until(() => { const sc = window.__game.scene.getScene('ExplorationScene'); return sc.life.calm && !sc.life.leavesOn; });
+  try { await until(() => { const sc = window.__game.scene.getScene('ExplorationScene'); return sc.life.calm && !sc.life.leavesOn; }, null, 25000); }
+  catch (e) { throw new Error('дом: ' + JSON.stringify(await page.evaluate(() => { const sc = window.__game.scene.getScene('ExplorationScene'), L = sc.life; return { zone: sc.zone?.id, interior: sc.zone?.interior, hero: [Math.round(sc.player.x), Math.round(sc.player.y)], calm: L.calm, on: L.leavesOn, lite: L.lite, running: L.running, canAct: sc.canAct?.() }; }))); }
   a = await info();
   assert.ok(a.calm && !a.leaves, 'в доме тихо: листья выключены');
   const visibleLeaves = await page.evaluate(() => window.__game.scene.getScene('ExplorationScene').life.leaves.filter(l => l.visible).length);

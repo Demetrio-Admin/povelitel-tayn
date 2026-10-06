@@ -4,6 +4,7 @@ on:
   pull_request:
 permissions:
   contents: read
+  checks: write
 jobs:
   e2e:
     runs-on: ubuntu-latest
@@ -24,15 +25,25 @@ jobs:
         with:
           name: location-shots
           path: shots
-      - name: shots as annotations
+      - name: shots as check runs
         if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           pip install -q pillow
           python3 - <<'PY'
-          import glob, io, base64, os
+          import glob, io, base64, os, json, subprocess
           from PIL import Image
           for f in sorted(glob.glob('shots/*.png')):
-              im = Image.open(f).convert('RGB'); im.thumbnail((300, 650))
-              b = io.BytesIO(); im.save(b, 'JPEG', quality=62)
-              print('::notice title=shot %s::%s' % (os.path.basename(f)[:-4], base64.b64encode(b.getvalue()).decode()))
+              im = Image.open(f).convert('RGB'); im.thumbnail((390, 844))
+              q = 70
+              while True:
+                  b = io.BytesIO(); im.save(b, 'JPEG', quality=q); t = base64.b64encode(b.getvalue()).decode()
+                  if len(t) < 64000 or q < 20: break
+                  q -= 10
+              body = {'name': 'shot ' + os.path.basename(f)[:-4], 'head_sha': os.environ['SHA'], 'status': 'completed', 'conclusion': 'neutral',
+                      'output': {'title': 'shot', 'summary': 'jpeg base64', 'text': t}}
+              open('/tmp/b.json', 'w').write(json.dumps(body))
+              subprocess.run(['gh', 'api', 'repos/${{ github.repository }}/check-runs', '--method', 'POST', '--input', '/tmp/b.json', '--silent'], check=False)
           PY

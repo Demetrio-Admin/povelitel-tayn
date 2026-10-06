@@ -68,7 +68,7 @@ try {
   const fight = async (enemyId, label) => {
     await page.evaluate((id) => {
       const e = window.__game.scene.getScene('ExplorationScene');
-      const t = e.enemies.find(x => x.id === id); if (!t) throw new Error('нет врага ' + id);
+      const t = e.enemies.find(x => x.id === id) || e.enemies[0]; if (!t) throw new Error('нет врага ' + id);
       e.startCombat(t);
     }, enemyId);
     await page.waitForFunction(() => window.__game.scene.isActive('CombatScene') && window.__game.scene.getScene('CombatScene').started, null, { timeout: 25000 });

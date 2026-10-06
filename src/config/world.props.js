@@ -628,7 +628,6 @@ export const PROPS = [
   {"id":"d02","k":"candle_group_01","x":720,"y":4945,"light":100},
   {"id":"d03","k":"lantern_01","x":830,"y":4850,"light":170},
   {"id":"d04","k":"lantern_01","x":1000,"y":4250,"light":170},
-  {"id":"d05","k":"signpost_01","x":1100,"y":4200},
   {"id":"d06","k":"wooden_bridge_01","x":1435,"y":3770,"l":"back"},
   {"id":"d07","k":"lantern_02","x":1150,"y":3650,"light":160},
   {"id":"d08","k":"lantern_02","x":1116,"y":3350,"light":160},

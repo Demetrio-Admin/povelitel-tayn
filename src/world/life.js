@@ -5,6 +5,7 @@
 // зверёк добегает до ближайшего дерева или куста и скрывается за ним; в доме Мирры ни зверька, ни птиц, ни листьев.
 import { DEPTH } from '../config/game.config.js';
 import { ZONES } from '../config/world.layout.js';
+import { DISPLAY_SIZE } from '../config/assets.manifest.js';
 
 export const LIFE = {
   tickMs: 600,
@@ -14,7 +15,9 @@ export const LIFE = {
   swayKeep: 320,           // за этим запасом качание плавно затухает (гистерезис — без дёрганья на границе)
   birdEveryMs: [14000, 32000], birdFirstMs: 5000,
   animalEveryMs: [30000, 60000], animalFirstMs: 14000,
+  animalRetryMs: 5000,
   lowFps: 30, lowFpsTicks: 5,   // столько тиков подряд с FPS ниже порога — и включается «лёгкий» режим
+  recoverFps: 45, recoverTicks: 10,
   leafCount: 9,
   hopMs: 300,
 };
@@ -83,6 +86,8 @@ export class LivingWorld {
     this.lite = false;
     this.calm = false;          // героиня в доме: зверьки, птицы и листья не нужны
     this.slow = 0;
+    this.fast = 0;
+    this.nextAnimal = this.rnd() < 0.5 ? 'life_rabbit_' : 'life_squirrel_';
     this.swaying = new Map();   // propId -> { item, tween }
     this.ripples = [];
     this.leaves = [];
@@ -142,6 +147,9 @@ export class LivingWorld {
     const fps = s.game.loop.actualFps;
     this.slow = fps && fps < LIFE.lowFps ? this.slow + 1 : 0;
     if (!this.lite && this.slow >= LIFE.lowFpsTicks) this.lite = true;
+    // Краткое падение FPS при загрузке не должно навсегда убирать зверей.
+    this.fast = fps >= LIFE.recoverFps ? this.fast + 1 : 0;
+    if (this.lite && this.fast >= LIFE.recoverTicks) this.lite = false;
     // в доме Мирры тихо: зверьки, птицы и листья не появляются
     const hero = s.player;
     this.calm = !!hero && this.interiors.some(z => hitRect(hero.x, hero.y, z, 0));
@@ -255,20 +263,23 @@ export class LivingWorld {
   }
 
   flyBird() {
-    const s = this.scene, v = s.cameras.main.worldView;
+    const s = this.scene, cam = s.cameras.main;
     const dir = this.rnd() < 0.5 ? 1 : -1;
-    const x0 = dir > 0 ? v.x - 50 : v.right + 50, x1 = dir > 0 ? v.right + 50 : v.x - 50;
-    const y = v.y + v.height * (0.08 + this.rnd() * 0.3);
+    // Полёт привязан к экрану: движение героя/камеры не сдвигает край,
+    // у которого птица исчезнет. Весь спрайт выходит за противоположный край.
+    const x0 = dir > 0 ? -50 : cam.width + 50, x1 = dir > 0 ? cam.width + 50 : -50;
+    const y = cam.height * (0.2 + this.rnd() * 0.25);
     const n = this.rnd() < 0.4 ? 2 : 1;   // иногда парой
     const seq = ['life_bird_1', 'life_bird_2', 'life_bird_3', 'life_bird_2'];
     for (let i = 0; i < n; i++) {
-      const img = s.add.image(x0 - dir * i * 46, y + i * 22, 'life_bird_1').setOrigin(0.5).setFlipX(dir < 0).setDepth(DEPTH.fx - 5);
+      const img = s.add.image(x0 - dir * i * 46, y + i * 22, 'life_bird_1').setOrigin(0.5).setScrollFactor(0)
+        .setDisplaySize(...DISPLAY_SIZE.life_bird_1).setFlipX(dir < 0).setDepth(DEPTH.fx - 5);
       const f = new Flyer(this, img);
       const dur = 7000 + this.rnd() * 2500;
       let step = i;
-      f.tweens.push(s.tweens.add({ targets: img, x: x1 - dir * i * 46, duration: dur, ease: 'Linear', onComplete: () => f.kill() }));
+      f.tweens.push(s.tweens.add({ targets: img, x: x1, duration: dur + i * 400, ease: 'Linear', onComplete: () => f.kill() }));
       f.tweens.push(s.tweens.add({ targets: img, y: img.y - 16, duration: 900 + this.rnd() * 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }));
-      f.timer = s.time.addEvent({ delay: 110, loop: true, callback: () => img.setTexture(seq[++step % 4]) });
+      f.timer = s.time.addEvent({ delay: 110, loop: true, callback: () => img.setTexture(seq[++step % 4]).setDisplaySize(...DISPLAY_SIZE.life_bird_1) });
       this.flyers.add(f);
     }
   }
@@ -276,8 +287,10 @@ export class LivingWorld {
   // ------------------------------------------------------------------ зверёк: выбегает и скрывается за ближайшим деревом или кустом
   animalLoop() {
     if (!this.running) return;
-    if (!this.lite && !this.calm) this.runAnimal();
-    this.timers.push(this.scene.time.delayedCall(this.range(LIFE.animalEveryMs), () => this.animalLoop()));
+    const ran = !this.lite && !this.calm && this.runAnimal();
+    // Нет чистого пути на этом экране — пробуем ещё, а не пропускаем целую минуту.
+    const delay = ran ? this.range(LIFE.animalEveryMs) : LIFE.animalRetryMs;
+    this.timers.push(this.scene.time.delayedCall(delay, () => this.animalLoop()));
   }
 
   /** Подбирает дерево/куст на экране и чистый путь к нему; null, если подходящего нет. */
@@ -285,15 +298,17 @@ export class LivingWorld {
     const R = this.scene.bounds;
     const hideouts = this.items.filter(it => isHideout(it.k) && it.x > view.x + 40 && it.x < view.right - 40 && it.y > view.y + 120 && it.y < view.bottom - 80 && it.x > R.x + 30 && it.x < R.x + R.w - 30);
     const env = { water: this.scene.terrain.waterRects, solids: this.solidRects, avoid: this.interiors, hero };
-    for (let tries = 0; tries < 12 && hideouts.length; tries++) {
-      const target = hideouts[Math.floor(this.rnd() * hideouts.length)];
-      const dir = this.rnd() < 0.5 ? 1 : -1;
-      const len = 240 + this.rnd() * 200;
-      const a = { x: target.x - dir * len, y: target.y + (this.rnd() - 0.5) * 100 };
-      const b = { x: target.x - dir * 8, y: target.y + 2 };    // прячется у основания, чуть позади ствола
-      if (a.x < R.x + 20 || a.x > R.x + R.w - 20 || a.x < view.x - 70 || a.x > view.right + 70) continue;
-      if (!pathClear(a, b, env)) continue;
-      return { a, b, target, dir: Math.sign(b.x - a.x) || 1 };
+    const offset = Math.floor(this.rnd() * hideouts.length);
+    for (let tries = 0; tries < Math.min(24, hideouts.length); tries++) {
+      const target = hideouts[(offset + tries) % hideouts.length];
+      const firstDir = this.rnd() < 0.5 ? 1 : -1;
+      for (const len of [280, 210, 150]) for (const dir of [firstDir, -firstDir]) {
+        const a = { x: target.x - dir * len, y: target.y + (this.rnd() - 0.5) * 80 };
+        const b = { x: target.x - dir * 8, y: target.y + 2 };
+        if (a.x < R.x + 20 || a.x > R.x + R.w - 20 || a.x < view.x + 20 || a.x > view.right - 20) continue;
+        if (!pathClear(a, b, env)) continue;
+        return { a, b, target, dir: Math.sign(b.x - a.x) || 1 };
+      }
     }
     return null;
   }
@@ -301,11 +316,13 @@ export class LivingWorld {
   runAnimal() {
     const s = this.scene, v = s.cameras.main.worldView, p = s.player;
     const run = this.pickRun(v, p ? { x: p.x, y: p.y } : null);
-    if (!run) return;
-    const kind = this.rnd() < 0.5 ? 'life_squirrel_' : 'life_rabbit_';
+    if (!run) return null;
+    const kind = this.nextAnimal;
+    this.nextAnimal = kind === 'life_rabbit_' ? 'life_squirrel_' : 'life_rabbit_';
     const { a, b, target } = run;
-    const img = s.add.image(a.x, a.y, kind + '1').setOrigin(0.5, 1).setFlipX(run.dir < 0).setDepth(DEPTH.mainBase + a.y);
-    const shadow = s.add.image(a.x, a.y, 'fx_glow').setTint(0x000000).setAlpha(0.3).setDisplaySize(40, 12).setDepth(DEPTH.mainBase + a.y - 1);
+    const size = DISPLAY_SIZE[kind + '1'];
+    const img = s.add.image(a.x, a.y, kind + '1').setOrigin(0.5, 1).setDisplaySize(...size).setFlipX(run.dir < 0).setDepth(DEPTH.mainBase + a.y);
+    const shadow = s.add.image(a.x, a.y, 'fx_glow').setTint(0x000000).setAlpha(0.22).setDisplaySize(22, 7).setDepth(DEPTH.mainBase + a.y - 1);
     const f = new Flyer(this, img, [shadow]);
     const dist = Math.hypot(b.x - a.x, b.y - a.y), speed = kind === 'life_rabbit_' ? 250 : 220;
     const dur = dist / speed * 1000;
@@ -314,19 +331,20 @@ export class LivingWorld {
       from: 0, to: 1, duration: dur, ease: 'Linear',
       onUpdate: (tw) => {
         const t = tw.getValue(), ph = (t * dur / LIFE.hopMs) % 1;
-        const x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t, hop = Math.sin(Math.min(1, ph / 0.8) * Math.PI) * 15 * (ph < 0.8 ? 1 : 0);
+        const x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t, hop = Math.sin(Math.min(1, ph / 0.8) * Math.PI) * 9 * (ph < 0.8 ? 1 : 0);
         img.setPosition(x, y - hop).setDepth(DEPTH.mainBase + y);
-        shadow.setPosition(x, y).setDepth(DEPTH.mainBase + y - 1).setAlpha(0.3 - hop * 0.008);
+        shadow.setPosition(x, y).setDepth(DEPTH.mainBase + y - 1).setAlpha(0.22 - hop * 0.008);
         const fr = ph < 0.18 ? 1 : ph < 0.7 ? 2 : 3;
-        if (fr !== frame) { frame = fr; img.setTexture(kind + fr); }
+        if (fr !== frame) { frame = fr; img.setTexture(kind + fr).setDisplaySize(...size); }
       },
       onComplete: () => {
         // добежал: прячется за деревом (рисуется позади его ствола) и тает
-        img.setPosition(b.x, b.y).setDepth(DEPTH.mainBase + target.y - 3).setTexture(kind + 1);
+        img.setPosition(b.x, b.y).setDepth(DEPTH.mainBase + target.y - 3).setTexture(kind + 1).setDisplaySize(...size);
         f.tweens.push(s.tweens.add({ targets: [img, shadow], alpha: 0, duration: 260, onComplete: () => f.kill() }));
       },
     }));
     this.flyers.add(f);
+    return f;
   }
 }
 

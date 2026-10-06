@@ -7,7 +7,7 @@
 
 /** Куда попадает герой, идя из леса; и куда — возвращаясь в лес. */
 export const CITY_START = { x: 1960, y: 3625 };
-export const FOREST_RETURN = { x: 1600, y: 3625 };
+export const FOREST_RETURN = { x: 1200, y: 4416 };
 /** Где начинается восточная часть мира (для проверки проходимости: её места проверяются от CITY_START). */
 export const EAST_X = 1800;
 
@@ -128,7 +128,8 @@ export const CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }, { x: 236
 // v0.20.0: квесты 1–5 главы II (chapter-2-quests-v0.1.md): дорога, площадь, след, Архив, Общество.
 export const CITY_INTERACTIVES = [
   // v0.27.0: выходы на карту мира (лес и город — разные локации, переход — только через карту у выхода)
-  { id: 'exit_forest', kind: 'exit', x: 1640, y: 3625, texture: 'signpost_01', radius: 110, hint: 'Карта мира' },
+  // Прежний декоративный указатель d05 у перекрёстка теперь открывает карту.
+  { id: 'exit_forest', kind: 'exit', x: 1104, y: 4416, texture: 'signpost_01', radius: 110, collide: { w: 24, h: 10 }, hint: 'Карта мира' },
   { id: 'exit_city', kind: 'exit', x: 1880, y: 3625, texture: 'signpost_01', radius: 110, hint: 'Карта мира' },
   // дорога: ресурсы
   { id: 'frostherb_r1', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 240, x: 2060, y: 3420, texture: 'city_frost_herb', radius: 90, requiresEvent: 'ch2_start' },

@@ -25,6 +25,7 @@
     "test:chapter2-art": "node tests/e2e/chapter2-art.mjs",
     "test:abilities": "node tests/e2e/abilities.mjs",
     "test:life": "node tests/e2e/life.mjs",
+    "test:forest-art": "node tests/e2e/forest-art.mjs",
     "check:bundle": "node tools/check-bundle.mjs"
   },
   "dependencies": {

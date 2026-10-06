@@ -1,17 +1,22 @@
 // «Живой мир» (v0.28.0): дешёвые анимации леса Мирры — рябь на воде, покачивание крон, птицы, зверёк, падающие листья.
 // Ничего не считается каждый кадр: один таймер раз в 0.6 с и пара твинов. Объекты берутся из маленьких пулов,
 // качаются только деревья рядом с камерой, а при низком FPS всё лишнее выключается само.
+// v0.28.1: качание включается и выключается плавно (без рывков), листья — экранные, плавно появляются и тают,
+// зверёк добегает до ближайшего дерева или куста и скрывается за ним; в доме Мирры ни зверька, ни птиц, ни листьев.
 import { DEPTH } from '../config/game.config.js';
+import { ZONES } from '../config/world.layout.js';
 
 export const LIFE = {
   tickMs: 600,
   maxRipples: 8,
-  maxSwayers: 14,          // одновременно качающихся деревьев
-  swayMargin: 160,         // запас вокруг камеры, чтобы крона не «застывала» у самого края
+  maxSwayers: 22,          // одновременно качающихся деревьев
+  swayMargin: 160,         // запас вокруг камеры, где деревья начинают качаться
+  swayKeep: 320,           // за этим запасом качание плавно затухает (гистерезис — без дёрганья на границе)
   birdEveryMs: [14000, 32000], birdFirstMs: 5000,
   animalEveryMs: [30000, 60000], animalFirstMs: 14000,
   lowFps: 30, lowFpsTicks: 5,   // столько тиков подряд с FPS ниже порога — и включается «лёгкий» режим
-  leafEveryMs: 1100,
+  leafCount: 9,
+  hopMs: 300,
 };
 
 /** Качаются деревья, камыш и кусты. Значение — размах угла в градусах. */
@@ -22,12 +27,16 @@ export function swayAmplitude(key) {
   return 0;
 }
 
+/** Куда зверёк может убежать: дерево, берёза или куст. */
+export function isHideout(key) { return /^(tree_|birch_|bush_|dead_tree)/.test(key); }
+
+const within = (it, rect, m) => it.x >= rect.x - m && it.x <= rect.x + rect.width + m && it.y >= rect.y - m && it.y <= rect.y + rect.height + m + 120;
+
 /** Ближайшие к центру камеры качающиеся объекты не дальше margin от экрана, не больше limit. */
 export function pickSwayers(items, rect, limit, margin = LIFE.swayMargin) {
   const cx = rect.x + rect.width / 2, cy = rect.y + rect.height / 2;
-  const x0 = rect.x - margin, x1 = rect.x + rect.width + margin, y0 = rect.y - margin, y1 = rect.y + rect.height + margin + 120;
   const near = [];
-  for (const it of items) if (it.x >= x0 && it.x <= x1 && it.y >= y0 && it.y <= y1) near.push(it);
+  for (const it of items) if (within(it, rect, margin)) near.push(it);
   near.sort((a, b) => (Math.hypot(a.x - cx, a.y - cy) - Math.hypot(b.x - cx, b.y - cy)));
   return near.slice(0, limit);
 }
@@ -46,19 +55,43 @@ export function pickWaterSpot(waterRects, rect, rnd, margin = 20) {
   return { x: h.ax + rnd() * (h.bx - h.ax), y: h.ay + rnd() * (h.by - h.ay) };
 }
 
+const hitRect = (x, y, r, pad) => x >= r.x - pad && x <= r.x + r.w + pad && y >= r.y - pad && y <= r.y + r.h + pad;
+
+/**
+ * Чист ли путь зверька от a до b: ни воды, ни камней и деревьев (solids), ни дома, ни героини рядом.
+ * Возле самой цели (дерево, куда он бежит) препятствия не считаются — там у дерева свой блок.
+ */
+export function pathClear(a, b, { water = [], solids = [], avoid = [], hero = null, endFree = 52, step = 16 } = {}) {
+  const len = Math.hypot(b.x - a.x, b.y - a.y);
+  const n = Math.max(2, Math.ceil(len / step));
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t;
+    if (hero && Math.hypot(hero.x - x, hero.y - y) < 90) return false;
+    for (const r of avoid) if (hitRect(x, y, r, 40)) return false;
+    for (const r of water) if (hitRect(x, y, r, 14)) return false;
+    if (Math.hypot(b.x - x, b.y - y) < endFree) continue;
+    for (const r of solids) if (hitRect(x, y, r, 14)) return false;
+  }
+  return true;
+}
+
 export class LivingWorld {
   constructor(scene) {
     this.scene = scene;
     this.rnd = scene.random || Math.random;   // детерминированный генератор сцены, если он есть
     this.running = false;
     this.lite = false;
+    this.calm = false;          // героиня в доме: зверьки, птицы и листья не нужны
     this.slow = 0;
-    this.swaying = new Map();   // propId -> { tween, img }
+    this.swaying = new Map();   // propId -> { item, tween }
     this.ripples = [];
-    this.leaves = null;
+    this.leaves = [];
+    this.leavesOn = false;
     this.timers = [];
     this.flyers = new Set();
     this.items = null;
+    this.solidRects = [];
+    this.interiors = ZONES.filter(z => z.interior);
   }
 
   /** Запуск. В редакторе и вне леса Мирры не включается. */
@@ -68,29 +101,33 @@ export class LivingWorld {
     if (settings && settings.get('anim') === false) return;
     this.running = true;
     this.items = [];
+    this.solidRects = [];
     for (const v of s.propViews.values()) {
       const a = swayAmplitude(v.p.k);
-      if (a) this.items.push({ id: v.p.id, x: v.p.x, y: v.p.y, a, img: v.img });
+      if (a) this.items.push({ id: v.p.id, k: v.p.k, x: v.p.x, y: v.p.y, a, img: v.img });
+      if (/rock|boulder/.test(v.p.k)) this.solidRects.push({ x: v.p.x - v.img.displayWidth / 2, y: v.p.y - v.img.displayHeight, w: v.img.displayWidth, h: v.img.displayHeight });
     }
+    for (const z of s.solids?.getChildren?.() || []) this.solidRects.push({ x: z.x - z.width / 2, y: z.y - z.height / 2, w: z.width, h: z.height });
     this.timers.push(s.time.addEvent({ delay: LIFE.tickMs, loop: true, callback: () => this.tick() }));
     this.timers.push(s.time.delayedCall(LIFE.birdFirstMs, () => this.birdLoop()));
     this.timers.push(s.time.delayedCall(LIFE.animalFirstMs, () => this.animalLoop()));
-    this.startLeaves();
     this.tick();
   }
 
   stop() {
     if (!this.running) return;
     this.running = false;
+    const tw = this.scene.tweens;
     for (const t of this.timers) t.remove(false);
     this.timers = [];
-    for (const { tween, img } of this.swaying.values()) { tween.stop(); img.setAngle(0); }
+    for (const { item, tween } of this.swaying.values()) { tween?.stop(); tw.killTweensOf(item.img); item.img.setAngle(0); }
     this.swaying.clear();
-    for (const r of this.ripples) { this.scene.tweens.killTweensOf(r); r.destroy(); }
+    for (const r of this.ripples) { tw.killTweensOf(r); r.destroy(); }
     this.ripples = [];
-    for (const f of this.flyers) f.kill();
+    for (const f of [...this.flyers]) f.kill();
     this.flyers.clear();
-    this.leaves?.destroy(); this.leaves = null;
+    for (const l of this.leaves) { tw.killTweensOf(l); l.destroy(); }
+    this.leaves = []; this.leavesOn = false;
   }
 
   destroy() { this.stop(); }
@@ -104,33 +141,47 @@ export class LivingWorld {
     // слабое устройство: несколько тиков подряд FPS ниже порога — выключаем птиц, зверька, листья
     const fps = s.game.loop.actualFps;
     this.slow = fps && fps < LIFE.lowFps ? this.slow + 1 : 0;
-    if (!this.lite && this.slow >= LIFE.lowFpsTicks) {
-      this.lite = true;
-      this.leaves?.destroy(); this.leaves = null;
-    }
+    if (!this.lite && this.slow >= LIFE.lowFpsTicks) this.lite = true;
+    // в доме Мирры тихо: зверьки, птицы и листья не появляются
+    this.calm = !!s.zone?.interior;
     this.updateSway(view);
     this.spawnRipple(view);
-    if (this.leaves) this.leaves.setPosition(view.centerX, view.centerY);
+    this.updateLeaves();
   }
 
-  // ------------------------------------------------------------------ крона качается только рядом с камерой
+  // ------------------------------------------------------------------ крона качается плавно, только рядом с камерой
   updateSway(view) {
-    const limit = this.lite ? 5 : LIFE.maxSwayers;
-    const want = pickSwayers(this.items, view, limit);
-    const keep = new Set(want.map(w => w.id));
+    const cap = this.lite ? 6 : LIFE.maxSwayers;
     for (const [id, rec] of this.swaying) {
-      if (keep.has(id)) continue;
-      rec.tween.stop(); rec.img.setAngle(0); this.swaying.delete(id);
+      if (within(rec.item, view, LIFE.swayKeep)) continue;
+      this.calmDown(rec.item, rec.tween);
+      this.swaying.delete(id);
     }
-    for (const it of want) {
-      if (this.swaying.has(it.id)) continue;
-      it.img.setAngle(-it.a);
-      const tween = this.scene.tweens.add({
-        targets: it.img, angle: it.a, duration: 2000 + this.rnd() * 1800, delay: this.rnd() * 900,
-        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-      });
-      this.swaying.set(it.id, { tween, img: it.img });
-    }
+    if (this.swaying.size >= cap) return;
+    const fresh = this.items.filter(it => !this.swaying.has(it.id));
+    for (const it of pickSwayers(fresh, view, cap - this.swaying.size)) this.beginSway(it);
+  }
+
+  beginSway(it) {
+    const tw = this.scene.tweens;
+    tw.killTweensOf(it.img);
+    const rec = { item: it, tween: null };
+    // сначала плавно наклоняемся из текущего положения, потом покачиваемся туда-обратно
+    rec.tween = tw.add({
+      targets: it.img, angle: -it.a, duration: 500 + this.rnd() * 500, ease: 'Sine.easeInOut', delay: this.rnd() * 500,
+      onComplete: () => {
+        rec.tween = tw.add({ targets: it.img, angle: it.a, duration: 2000 + this.rnd() * 1800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      },
+    });
+    this.swaying.set(it.id, rec);
+  }
+
+  /** Дерево вышло из зоны качания — не замирает рывком, а плавно возвращается в прямое положение. */
+  calmDown(it, tween) {
+    const tw = this.scene.tweens;
+    tween?.stop();
+    tw.killTweensOf(it.img);
+    tw.add({ targets: it.img, angle: 0, duration: 700, ease: 'Sine.easeOut' });
   }
 
   // ------------------------------------------------------------------ рябь: кольцо расходится и гаснет
@@ -146,31 +197,59 @@ export class LivingWorld {
       this.ripples.push(r);
     }
     const w = 14 + this.rnd() * 10;
-    r.setPosition(spot.x, spot.y).setTint(this.rnd() < 0.5 ? 0xd8f1f7 : 0xb9dfe9).setDisplaySize(w, w * 0.42).setAlpha(0.6).setVisible(true);
-    const k = 3.4 + this.rnd() * 1.4;
+    r.setPosition(spot.x, spot.y).setTint(this.rnd() < 0.5 ? 0xd8f1f7 : 0xb9dfe9).setDisplaySize(w, w * 0.42).setAlpha(0).setVisible(true);
+    const k = 3.4 + this.rnd() * 1.4, dur = 1700 + this.rnd() * 700;
+    s.tweens.add({ targets: r, alpha: 0.6, duration: dur * 0.18, ease: 'Sine.easeOut' });
     s.tweens.add({
-      targets: r, scaleX: r.scaleX * k, scaleY: r.scaleY * k, alpha: 0, duration: 1700 + this.rnd() * 700, ease: 'Sine.easeOut',
+      targets: r, scaleX: r.scaleX * k, scaleY: r.scaleY * k, duration: dur, ease: 'Sine.easeOut',
       onComplete: () => r.setVisible(false),
     });
+    s.tweens.add({ targets: r, alpha: 0, duration: dur * 0.8, delay: dur * 0.2, ease: 'Sine.easeIn' });
   }
 
-  // ------------------------------------------------------------------ листья
-  startLeaves() {
+  // ------------------------------------------------------------------ листья: лёгкие экранные спрайты, плавно появляются и тают
+  updateLeaves() {
+    const want = !this.lite && !this.calm && this.scene.textures.exists('life_leaf');
+    if (want === this.leavesOn) return;
+    this.leavesOn = want;
     const s = this.scene;
-    if (this.lite || !s.textures.exists('life_leaf')) return;
-    this.leaves = s.add.particles(0, 0, 'life_leaf', {
-      x: { min: -380, max: 380 }, y: { min: -620, max: 120 },
-      speedX: { min: -14, max: 34 }, speedY: { min: 26, max: 48 },
-      rotate: { start: 0, end: 340 }, scale: { min: 0.7, max: 1.1 }, alpha: { start: 0.9, end: 0 },
-      lifespan: 9000, frequency: LIFE.leafEveryMs, quantity: 1, maxAliveParticles: 12,
-      tint: [0xd9822b, 0xb85a1e, 0xe0b040, 0x8a9a3a],
-    }).setDepth(DEPTH.fx - 3);
+    if (want) {
+      if (!this.leaves.length) {
+        for (let i = 0; i < LIFE.leafCount; i++) {
+          this.leaves.push(s.add.image(0, 0, 'life_leaf').setScrollFactor(0).setDepth(DEPTH.fx - 3).setVisible(false).setAlpha(0));
+        }
+      }
+      this.leaves.forEach((l, i) => s.time.delayedCall(i * 1100 + this.rnd() * 800, () => this.dropLeaf(l)));
+    } else {
+      for (const l of this.leaves) {
+        s.tweens.killTweensOf(l);
+        if (!l.visible) continue;
+        s.tweens.add({ targets: l, alpha: 0, duration: 700, onComplete: () => l.setVisible(false) });
+      }
+    }
+  }
+
+  dropLeaf(l) {
+    const s = this.scene;
+    if (!this.running || !this.leavesOn || !l.scene) return;
+    s.tweens.killTweensOf(l);
+    const cam = s.cameras.main, W = cam.width, H = cam.height;
+    const k = 0.8 + this.rnd() * 0.5;
+    const x0 = 30 + this.rnd() * (W - 60), dx = (this.rnd() < 0.5 ? -1 : 1) * (40 + this.rnd() * 60);
+    const dur = 10000 + this.rnd() * 4000;
+    l.setPosition(x0, -24).setDisplaySize(18 * k, 12 * k).setAngle(this.rnd() * 360).setAlpha(0).setVisible(true)
+      .setTint([0xd9822b, 0xb85a1e, 0xe0b040, 0x9aa83e][Math.floor(this.rnd() * 4)]);
+    s.tweens.add({ targets: l, y: H * (0.55 + this.rnd() * 0.4), duration: dur, ease: 'Sine.easeInOut',
+      onComplete: () => { l.setVisible(false); s.time.delayedCall(this.rnd() * 3000, () => this.dropLeaf(l)); } });
+    s.tweens.add({ targets: l, x: x0 + dx, duration: 2200 + this.rnd() * 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    s.tweens.add({ targets: l, angle: l.angle + (this.rnd() < 0.5 ? -1 : 1) * (120 + this.rnd() * 160), duration: dur, ease: 'Sine.easeInOut' });
+    s.tweens.add({ targets: l, alpha: 0.9, duration: dur / 2, yoyo: true, ease: 'Sine.easeInOut' });   // плавно появился — плавно растаял
   }
 
   // ------------------------------------------------------------------ птицы: пролетают через экран
   birdLoop() {
     if (!this.running) return;
-    if (!this.lite) this.flyBird();
+    if (!this.lite && !this.calm) this.flyBird();
     this.timers.push(this.scene.time.delayedCall(this.range(LIFE.birdEveryMs), () => this.birdLoop()));
   }
 
@@ -180,61 +259,87 @@ export class LivingWorld {
     const x0 = dir > 0 ? v.x - 50 : v.right + 50, x1 = dir > 0 ? v.right + 50 : v.x - 50;
     const y = v.y + v.height * (0.08 + this.rnd() * 0.3);
     const n = this.rnd() < 0.4 ? 2 : 1;   // иногда парой
+    const seq = ['life_bird_1', 'life_bird_2', 'life_bird_3', 'life_bird_2'];
     for (let i = 0; i < n; i++) {
       const img = s.add.image(x0 - dir * i * 46, y + i * 22, 'life_bird_1').setOrigin(0.5).setFlipX(dir < 0).setDepth(DEPTH.fx - 5);
       const f = new Flyer(this, img);
       const dur = 7000 + this.rnd() * 2500;
+      let step = i;
       f.tweens.push(s.tweens.add({ targets: img, x: x1 - dir * i * 46, duration: dur, ease: 'Linear', onComplete: () => f.kill() }));
       f.tweens.push(s.tweens.add({ targets: img, y: img.y - 16, duration: 900 + this.rnd() * 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }));
-      f.timer = s.time.addEvent({ delay: 130, loop: true, callback: () => img.setTexture(img.texture.key === 'life_bird_1' ? 'life_bird_2' : 'life_bird_1') });
+      f.timer = s.time.addEvent({ delay: 110, loop: true, callback: () => img.setTexture(seq[++step % 4]) });
       this.flyers.add(f);
     }
   }
 
-  // ------------------------------------------------------------------ зверёк: пробегает по экрану и исчезает
+  // ------------------------------------------------------------------ зверёк: выбегает и скрывается за ближайшим деревом или кустом
   animalLoop() {
     if (!this.running) return;
-    if (!this.lite) this.runAnimal();
+    if (!this.lite && !this.calm) this.runAnimal();
     this.timers.push(this.scene.time.delayedCall(this.range(LIFE.animalEveryMs), () => this.animalLoop()));
+  }
+
+  /** Подбирает дерево/куст на экране и чистый путь к нему; null, если подходящего нет. */
+  pickRun(view, hero) {
+    const R = this.scene.bounds;
+    const hideouts = this.items.filter(it => isHideout(it.k) && it.x > view.x + 40 && it.x < view.right - 40 && it.y > view.y + 120 && it.y < view.bottom - 80 && it.x > R.x + 30 && it.x < R.x + R.w - 30);
+    const env = { water: this.scene.terrain.waterRects, solids: this.solidRects, avoid: this.interiors, hero };
+    for (let tries = 0; tries < 12 && hideouts.length; tries++) {
+      const target = hideouts[Math.floor(this.rnd() * hideouts.length)];
+      const dir = this.rnd() < 0.5 ? 1 : -1;
+      const len = 240 + this.rnd() * 200;
+      const a = { x: target.x - dir * len, y: target.y + (this.rnd() - 0.5) * 100 };
+      const b = { x: target.x - dir * 8, y: target.y + 2 };    // прячется у основания, чуть позади ствола
+      if (a.x < R.x + 20 || a.x > R.x + R.w - 20 || a.x < view.x - 70 || a.x > view.right + 70) continue;
+      if (!pathClear(a, b, env)) continue;
+      return { a, b, target, dir: Math.sign(b.x - a.x) || 1 };
+    }
+    return null;
   }
 
   runAnimal() {
     const s = this.scene, v = s.cameras.main.worldView, p = s.player;
-    for (let tries = 0; tries < 8; tries++) {
-      const dir = this.rnd() < 0.5 ? 1 : -1;
-      const len = 300 + this.rnd() * 140;
-      const x0 = v.x + v.width * (dir > 0 ? 0.04 : 0.96), y = v.y + v.height * (0.36 + this.rnd() * 0.4);
-      const x1 = x0 + dir * len;
-      const bad = [0, 0.5, 1].some(t => this.onWater(x0 + (x1 - x0) * t, y)) || (p && Math.hypot(p.x - (x0 + x1) / 2, p.y - y) < 130);
-      if (bad) continue;
-      const kind = this.rnd() < 0.5 ? 'life_squirrel_' : 'life_rabbit_';
-      const img = s.add.image(x0, y, kind + '1').setOrigin(0.5, 1).setFlipX(dir < 0).setDepth(DEPTH.mainBase + y);
-      const f = new Flyer(this, img);
-      const dur = 2200 + this.rnd() * 600;
-      f.tweens.push(s.tweens.add({ targets: img, x: x1, duration: dur, ease: 'Linear',
-        onComplete: () => { f.tweens.push(s.tweens.add({ targets: img, alpha: 0, duration: 260, onComplete: () => f.kill() })); } }));
-      f.tweens.push(s.tweens.add({ targets: img, y: y - 14, duration: 150, yoyo: true, repeat: -1, ease: 'Sine.easeOut' }));
-      f.timer = s.time.addEvent({ delay: 150, loop: true, callback: () => img.setTexture(img.texture.key.endsWith('1') ? kind + '2' : kind + '1') });
-      this.flyers.add(f);
-      return;
-    }
-  }
-
-  onWater(x, y) {
-    for (const r of this.scene.terrain.waterRects) if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return true;
-    return false;
+    const run = this.pickRun(v, p ? { x: p.x, y: p.y } : null);
+    if (!run) return;
+    const kind = this.rnd() < 0.5 ? 'life_squirrel_' : 'life_rabbit_';
+    const { a, b, target } = run;
+    const img = s.add.image(a.x, a.y, kind + '1').setOrigin(0.5, 1).setFlipX(run.dir < 0).setDepth(DEPTH.mainBase + a.y);
+    const shadow = s.add.image(a.x, a.y, 'fx_glow').setTint(0x000000).setAlpha(0.3).setDisplaySize(40, 12).setDepth(DEPTH.mainBase + a.y - 1);
+    const f = new Flyer(this, img, [shadow]);
+    const dist = Math.hypot(b.x - a.x, b.y - a.y), speed = kind === 'life_rabbit_' ? 250 : 220;
+    const dur = dist / speed * 1000;
+    let frame = 1;
+    f.tweens.push(s.tweens.addCounter({
+      from: 0, to: 1, duration: dur, ease: 'Linear',
+      onUpdate: (tw) => {
+        const t = tw.getValue(), ph = (t * dur / LIFE.hopMs) % 1;
+        const x = a.x + (b.x - a.x) * t, y = a.y + (b.y - a.y) * t, hop = Math.sin(Math.min(1, ph / 0.8) * Math.PI) * 15 * (ph < 0.8 ? 1 : 0);
+        img.setPosition(x, y - hop).setDepth(DEPTH.mainBase + y);
+        shadow.setPosition(x, y).setDepth(DEPTH.mainBase + y - 1).setAlpha(0.3 - hop * 0.008);
+        const fr = ph < 0.18 ? 1 : ph < 0.7 ? 2 : 3;
+        if (fr !== frame) { frame = fr; img.setTexture(kind + fr); }
+      },
+      onComplete: () => {
+        // добежал: прячется за деревом (рисуется позади его ствола) и тает
+        img.setPosition(b.x, b.y).setDepth(DEPTH.mainBase + target.y - 3).setTexture(kind + 1);
+        f.tweens.push(s.tweens.add({ targets: [img, shadow], alpha: 0, duration: 260, onComplete: () => f.kill() }));
+      },
+    }));
+    this.flyers.add(f);
   }
 }
 
-/** Один пролетающий спрайт: его твины, таймер кадров; kill() убирает всё без остатка. */
+/** Один пролетающий или пробегающий спрайт: его твины, таймер кадров, тень; kill() убирает всё без остатка. */
 class Flyer {
-  constructor(life, img) { this.life = life; this.img = img; this.tweens = []; this.timer = null; this.dead = false; }
+  constructor(life, img, extra = []) { this.life = life; this.img = img; this.extra = extra; this.tweens = []; this.timer = null; this.dead = false; }
   kill() {
     if (this.dead) return;
     this.dead = true;
     for (const t of this.tweens) t.stop();
     this.timer?.remove(false);
+    this.life.scene.tweens.killTweensOf([this.img, ...this.extra]);
     this.img.destroy();
+    for (const e of this.extra) e.destroy();
     this.life.flyers.delete(this);
   }
 }

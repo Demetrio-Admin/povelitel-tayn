@@ -63,7 +63,8 @@ export class NpcObject extends InteractiveObject {
     const want = d < 300 && here ? 1 : 0;
     this.nameText.setAlpha(this.nameText.alpha + (want - this.nameText.alpha) * Math.min(1, dt * 6));
     // повернуться к героине
-    if (d < 340) this.sprite.setFlipX(player.x < this.x);
+    if (this.cfg.editorStyle?.f != null) this.sprite.setFlipX(!!this.cfg.editorStyle.f);
+    else if (d < 340) this.sprite.setFlipX(player.x < this.x);
     // приветствие: один подскок при приближении
     if (d < 210 && !this.greeted && !this.talking) { this.greeted = true; this.hop(); }
     if (d > 380) this.greeted = false;
@@ -82,7 +83,7 @@ export class NpcObject extends InteractiveObject {
     this.busy = true;
     const p = this.scene.player;
     p.face(this.x - p.x, this.baseY - p.y);
-    this.sprite.setFlipX(p.x < this.x);
+    this.sprite.setFlipX(this.cfg.editorStyle?.f != null ? !!this.cfg.editorStyle.f : p.x < this.x);
     this.hop();
     this.react(this.npc.color, 1.06);
     services.dialogue.start(this.npc.id);

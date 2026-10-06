@@ -3,13 +3,15 @@ import { WORLD, INTERACTIVES, ENEMY_SPAWNS } from '../config/world.layout.js';
 import { services } from '../services.js';
 import { buildEditorPanel } from '../ui/editorPanel.js';
 import { History, pickAt, snapValue, nextId, clamp } from '../world/editorCore.js';
-import { diffEdits, diffPos, diffTerrain, saveDraft, clearDraft, exportEditsFile } from '../world/mapData.js';
+import { diffEdits, diffPos, diffTerrain, saveDraft, clearDraft, exportEditsFile, parseEditsFile } from '../world/mapData.js';
 import { buildRoad, buildWater } from '../world/terrain.js';
 import * as TE from '../world/terrainEdit.js';
 import { collectSolids, propSolid, baseSolid } from '../world/solids.js';
 import { checkWalkability } from '../world/check.js';
-import { propName } from '../world/propDefs.js';
-import { applyDisplaySize } from '../objects/InteractiveObject.js';
+import { PROP_DEFS } from '../world/propDefs.js';
+import { assetName, assetGroup, ASSET_CATALOG, defaultAssetSolid } from '../world/assetCatalog.js';
+import { LOCATIONS } from '../config/locations.js';
+import { ENEMIES } from '../config/balance.enemies.js';
 
 const SNAPS = [0, 8, 16, 32];
 const clone = (v) => JSON.parse(JSON.stringify(v));
@@ -39,11 +41,13 @@ export class MapEditor {
     this.pos = { ...(services.map.pos || {}) };
     this.resetArmed = false;
     this.mode = 'props';
+    this.entityFilter = 'all';
     // рабочие копии дорог, воды и стен: меняются в редакторе, а сцена получает из них новые копии при каждой правке
     this.roads = clone(services.map.roads);
     this.waters = clone(services.map.waters);
     this.cols = clone(services.map.colliders);
-    this.applied = { terrain: this.terrainKey(), cols: JSON.stringify(this.cols) };
+    this.grounds = clone(services.map.grounds || []);
+    this.applied = { terrain: this.terrainKey(), cols: JSON.stringify(this.cols), grounds: JSON.stringify(this.grounds) };
     this.tsel = null;     // выбранное в режиме дорог: { kind: 'road'|'water', id, i (точка) | null, seg (отрезок) | null }
     this.csel = null;     // id выбранной стены
     this.tdrag = null;
@@ -67,8 +71,13 @@ export class MapEditor {
       delete: () => this.remove(),
       snap: () => this.cycleSnap(), colliders: () => this.toggleColliders(),
       fit: () => this.fit(), hero: () => this.cam.centerOn(scene.player.x, scene.player.y),
-      add: (key) => this.addProp(key),
+      add: (key,placement) => this.addAsset(key,placement), replace: key => this.replaceTexture(key),
+      property: (key,value) => this.setProperty(key,value),
+      select_entity: id => {this.select(id); const e=this.selected;if(e)this.cam.centerOn(e.x,e.y);},
+      entity_filter: filter => {this.entityFilter=filter;this.select(null);},
+      location: id => {const l=LOCATIONS.find(l=>l.id===id);if(l){this.cam.setZoom(0.65);this.cam.centerOn(l.rect.x+l.rect.w/2,l.arrival.y);}},
       check: () => this.check(),
+      import: file=>this.importFile(file),
       play: () => this.play(), copy: () => this.copy(), download: () => this.download(),
       reset: () => this.reset(), exit: () => this.exit(),
       mode_props: () => this.setMode('props'), mode_terrain: () => this.setMode('terrain'), mode_walls: () => this.setMode('walls'),
@@ -101,15 +110,19 @@ export class MapEditor {
   freezeWorld() {
     const s = this.scene;
     for (const o of s.objects) {
+      if(o._editorDeleted)continue;
       s.tweens.killTweensOf(o.sprite);
       o.sprite.setVisible(true).setAlpha(1);
       if (o.baseScale) o.sprite.setScale(o.baseScale.x, o.baseScale.y).setAngle(0);
       for (const g of o.glows || []) g.setVisible(true);
       o.onFreeze?.();
+      s.styleEntity(o);
     }
     for (const e of s.enemies) {
+      if(e._editorDeleted)continue;
       e.idle?.stop();
       [e.sprite, e.nameText, e.ring].forEach(x => x && x.setVisible(true).setAlpha(1));
+      s.styleEntity(e);
     }
   }
 
@@ -117,15 +130,24 @@ export class MapEditor {
   propViews() { return [...this.scene.propViews.values()]; }
 
   entities() {
-    const s = this.scene, out = [];
-    const sprite = (spr) => () => ({ x0: spr.x - spr.displayWidth / 2, y0: spr.y - spr.displayHeight, x1: spr.x + spr.displayWidth / 2, y1: spr.y });
-    for (const v of this.propViews()) {
-      out.push({ id: v.p.id, kind: 'prop', ref: v, get x() { return v.p.x; }, get y() { return v.p.y; }, bounds: sprite(v.img) });
-    }
-    for (const o of s.objects) out.push({ id: o.id, kind: 'obj', ref: o, get x() { return o.x; }, get y() { return o.baseY; }, bounds: sprite(o.sprite) });
-    for (const e of s.enemies) out.push({ id: e.id, kind: 'enemy', ref: e, get x() { return e.cfg.x; }, get y() { return e.cfg.y; }, bounds: sprite(e.sprite) });
+    const s=this.scene,out=[];
+    const sprite=spr=>()=>{
+      const b=spr.getBounds?.();
+      if(b&&Number.isFinite(b.x))return{x0:b.x,y0:b.y,x1:b.right,y1:b.bottom};
+      return{x0:spr.x-spr.displayWidth/2,y0:spr.y-spr.displayHeight,x1:spr.x+spr.displayWidth/2,y1:spr.y};
+    };
+    for(const v of this.propViews())out.push({id:v.p.id,kind:'prop',ref:v,img:v.img,get x(){return v.p.x;},get y(){return v.p.y;},bounds:sprite(v.img)});
+    for(const o of s.objects.filter(o=>!o._editorDeleted&&!o.removed))out.push({id:o.id,kind:'obj',ref:o,img:o.sprite,get x(){return o.x;},get y(){return o.baseY;},bounds:sprite(o.sprite)});
+    for(const e of s.enemies.filter(e=>!e._editorDeleted))out.push({id:e.id,kind:'enemy',ref:e,img:e.sprite,get x(){return e.cfg.x;},get y(){return e.cfg.y;},bounds:sprite(e.sprite)});
+    for(const c of this.cols){const v=s.colliderViews?.get(c.id);if(v)out.push({id:c.id,kind:'col',ref:c,img:v.img,get x(){return c.x+c.w/2;},get y(){return c.y+c.h;},bounds:sprite(v.img)});}
+    for(const g of this.grounds){const v=s.groundViews?.get(g.id);if(v)out.push({id:g.id,kind:'ground',ref:g,img:v.img,get x(){return g.x;},get y(){return g.y;},bounds:sprite(v.img)});}
     return out;
   }
+
+  pickEntities(){return this.entities().filter(e=>this.entityFilter==='all'?e.kind!=='ground'&&!e.ref.cfg?.ghost:e.kind===this.entityFilter);}
+  textureOf(e){return e.kind==='prop'?e.ref.p.k:e.kind==='col'||e.kind==='ground'?e.ref.tex:e.ref.cfg.texture||e.img.texture?.key;}
+  styleOf(e){return e.kind==='prop'?e.ref.p:e.kind==='col'?e.ref.editorStyle||{}:e.kind==='ground'?e.ref:e.ref.cfg.editorStyle||{};}
+  entityName(e){return `${assetName(this.textureOf(e)||e.id)} · ${e.id}`;}
 
   find(id) { return this.entities().find(e => e.id === id) || null; }
   get selected() { return this.selectedId ? this.find(this.selectedId) : null; }
@@ -136,6 +158,8 @@ export class MapEditor {
       v.p.x = x; v.p.y = y;
       this.scene.placePropView(v);
       this.syncGlow(v);
+    } else if(e.kind==='col'||e.kind==='ground'){
+      const dx=x-e.x,dy=y-e.y;e.ref.x+=dx;e.ref.y+=dy;e.img.setPosition(e.img.x+dx,e.img.y+dy);
     } else if (e.kind === 'obj') {
       const o = e.ref, dx = x - o.x, dy = y - o.baseY;
       o.cfg.x = x; o.cfg.y = y;
@@ -145,16 +169,18 @@ export class MapEditor {
       o.baseY = y;
       for (const g of o.glows || []) g.setPosition(g.x + dx, g.y + dy);
       o.relocate?.(dx, dy);
+      this.scene.styleEntity(o);
       if (o.blocker) { o.blocker.setPosition(x, y - o.cfg.collide.h / 2); o.blocker.body.updateFromGameObject(); }
-      this.pos[o.id] = { x, y };
+      this.pos[o.id] = { ...(this.pos[o.id] || {}), x, y };
     } else {
       const t = e.ref;
       t.cfg.x = x; t.cfg.y = y;
       t.sprite.setPosition(x, y).setDepth(DEPTH.mainBase + y);
       t.nameText.setPosition(x, y - t.sprite.displayHeight - 14);
       t.ring.setPosition(x, y);
+      this.scene.styleEntity(t);
       if (t.blocker) { t.blocker.setPosition(x, y - t.cfg.collide.h / 2); t.blocker.body.updateFromGameObject(); }
-      this.pos[t.id] = { x, y };
+      this.pos[t.id] = { ...(this.pos[t.id] || {}), x, y };
     }
   }
 
@@ -162,14 +188,7 @@ export class MapEditor {
     if (v.glow) v.glow.setPosition(v.p.x, v.p.y - v.img.displayHeight + 12);
   }
 
-  restyle(v) {
-    const { p, img } = v;
-    applyDisplaySize(img, p.k);
-    if (p.s) img.setScale(img.scaleX * p.s, img.scaleY * p.s);
-    img.setFlipX(!!p.f);
-    this.scene.placePropView(v);
-    this.syncGlow(v);
-  }
+  restyle(v) {this.scene.placePropView(v);this.syncGlow(v);}
 
   // ------------------------------------------------------------------ ввод
   worldPoint(pointer) { return this.cam.getWorldPoint(pointer.x, pointer.y); }
@@ -181,7 +200,7 @@ export class MapEditor {
     this.moved = false;
     if (this.mode === 'terrain') { this.downTerrain(pointer, wp); return; }
     if (this.mode === 'walls') { this.downWalls(pointer, wp); return; }
-    const hit = pickAt(this.entities(), wp.x, wp.y, 8 / this.cam.zoom);
+    const hit = pickAt(this.pickEntities(), wp.x, wp.y, 8 / this.cam.zoom);
     if (hit) {
       this.select(hit.id);
       this.drag = { id: hit.id, dx: hit.x - wp.x, dy: hit.y - wp.y, fromX: hit.x, fromY: hit.y };
@@ -203,7 +222,7 @@ export class MapEditor {
       if (!e) return;
       const wp = this.worldPoint(pointer);
       const x = clamp(snapValue(wp.x + this.drag.dx, this.snap), 0, WORLD.width);
-      const y = clamp(snapValue(wp.y + this.drag.dy, this.snap), 0, WORLD.height + 500);
+      const y = clamp(snapValue(wp.y + this.drag.dy, this.snap), -340, WORLD.height + 500);
       if (x !== e.x || y !== e.y) { this.moveEntity(e, x, y); this.moved = true; this.drawSelection(); this.refreshInfo(); if (this.showColliders) this.drawColliders(); }
     } else if (this.pan) {
       const dx = pointer.x - this.pan.sx, dy = pointer.y - this.pan.sy;
@@ -228,6 +247,7 @@ export class MapEditor {
           undo: () => this.applyMove(d.id, d.fromX, d.fromY),
           redo: () => this.applyMove(d.id, to.x, to.y),
         });
+        this.applyLive();
         this.changed();
       }
     } else if (this.pan) {
@@ -266,6 +286,7 @@ export class MapEditor {
   }
 
   onKey(e) {
+    if(/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName||''))return;
     const k = e.key;
     const ctrl = e.ctrlKey || e.metaKey;
     const sel = this.selected;
@@ -292,12 +313,12 @@ export class MapEditor {
     this.moveEntity(e, fx + dx, fy + dy);
     const to = { x: fx + dx, y: fy + dy };
     this.history.push({ label: 'nudge', undo: () => this.applyMove(id, fx, fy), redo: () => this.applyMove(id, to.x, to.y) });
-    this.drawSelection(); this.refreshInfo(); this.changed();
+    this.applyLive();this.drawSelection(); this.refreshInfo(); this.changed();
   }
 
   applyMove(id, x, y) {
     const e = this.find(id);
-    if (e) { this.moveEntity(e, x, y); this.select(id); }
+    if (e) { this.moveEntity(e, x, y); this.applyLive();this.select(id); }
     if (this.showColliders) this.drawColliders();
     this.changed(false);
   }
@@ -314,13 +335,14 @@ export class MapEditor {
 
   addProp(key) {
     const v = this.cam.worldView;
-    const taken = new Set(this.propViews().map(x => x.p.id));
+    const taken = new Set([...services.map.base.map(p=>p.id),...this.propViews().map(x=>x.p.id)]);
     const p = { id: nextId(taken), k: key, x: Math.round(snapValue(v.centerX, this.snap)), y: Math.round(snapValue(v.centerY + 40, this.snap)) };
     this.createProp(p, true);
   }
 
   createProp(p, select = false) {
     this.scene.addProp(p);
+    if(select&&this.entityFilter!=='all')this.entityFilter='prop';
     const id = p.id;
     this.history.push({
       label: 'add',
@@ -334,54 +356,123 @@ export class MapEditor {
   destroyProp(id) {
     const v = this.scene.propViews.get(id);
     if (!v) return;
-    v.img.destroy(); v.glow?.destroy(); v.blocker?.destroy();
+    v.img.destroy(); v.glow?.destroy(); v.blocker?.destroy();for(const effect of v.effects||[])effect.destroy();
     this.scene.propViews.delete(id);
   }
 
+  addAsset(key,placement='prop') {
+    if(!ASSET_CATALOG.some(a=>a.key===key)){this.say('Рисунок отсутствует в каталоге',true);return;}
+    if(placement==='ground'){
+      const v=this.cam.worldView;
+      const id=nextId(new Set(this.grounds.map(g=>g.id)),'gr');
+      this.mutate(()=>{this.grounds.push({id,tex:key,x:Math.round(v.centerX-128),y:Math.round(v.centerY-128),w:256,h:256,interior:true});});
+      this.entityFilter='ground';this.select(id);return;
+    }
+    const v=this.cam.worldView,taken=new Set([...services.map.base.map(p=>p.id),...this.propViews().map(x=>x.p.id)]);
+    const p={id:nextId(taken),k:key,x:snapValue(v.centerX,this.snap),y:snapValue(v.centerY+40,this.snap)};
+    if(!PROP_DEFS[key]&&['furniture','town'].includes(assetGroup(key))){
+      const size=ASSET_CATALOG.find(a=>a.key===key).size;
+      p.solid={w:Math.max(12,Math.round(size[0]*0.8)),h:Math.max(8,Math.min(35,Math.round(size[1]*0.18)))};
+    }
+    this.createProp(p,true);
+  }
+
   duplicate() {
-    const e = this.selected;
-    if (!e || e.kind !== 'prop') { this.say('Копировать можно только декор (деревья, кусты, камни…)'); return; }
-    const taken = new Set(this.propViews().map(x => x.p.id));
-    const g = this.snap || 8;
-    this.createProp({ ...e.ref.p, id: nextId(taken), x: e.x + g * 3, y: e.y + g * 2 }, true);
+    const e=this.selected;if(!e)return;
+    if(e.kind==='col'||e.kind==='ground'){
+      const list=e.kind==='col'?this.cols:this.grounds;
+      const id=nextId(new Set(list.map(v=>v.id)),e.kind==='col'?'cw':'gr');
+      const data=clone(e.ref);data.id=id;data.x+=24;data.y+=16;
+      this.mutate(()=>list.push(data));this.select(id);return;
+    }
+    const g=this.snap||8,taken=new Set([...services.map.base.map(p=>p.id),...this.propViews().map(x=>x.p.id)]);
+    const p=e.kind==='prop'?clone(e.ref.p):{k:this.textureOf(e),...clone(this.styleOf(e)),solid:clone(e.ref.cfg.collide||null)};
+    // A copied character/monster image is decoration, without duplicate quest rewards.
+    delete p.requires;delete p.fire;
+    this.createProp({...p,id:nextId(taken),x:e.x+g*3,y:e.y+g*2},true);
+  }
+
+  hideEntity(e,hidden) {
+    const o=e.ref;o._editorDeleted=hidden;
+    for(const key of ['sprite','nameText','badge','shadow','ring'])o[key]?.setVisible(!hidden);
+    for(const g of o.glows||[])g.setVisible(!hidden);
+    if(o.blocker?.body)o.blocker.body.enable=!hidden;
+    const mk=this.scene.interaction?.markers.get(o);mk?.m.setVisible(false);mk?.glow.setVisible(false);
   }
 
   remove() {
-    const e = this.selected;
-    if (!e) return;
-    if (e.kind !== 'prop') { this.say('Интерактивные объекты и врагов удалять нельзя — только двигать'); return; }
-    const p = { ...e.ref.p };
-    this.destroyProp(p.id);
-    this.select(null);
-    this.history.push({
-      label: 'delete',
-      undo: () => { this.scene.addProp(p); this.select(p.id); },
-      redo: () => { this.destroyProp(p.id); this.select(null); },
+    const e=this.selected;if(!e)return;
+    if(e.kind==='col'||e.kind==='ground'){
+      this.mutate(()=>{const list=e.kind==='col'?this.cols:this.grounds;list.splice(list.findIndex(v=>v.id===e.id),1);});this.select(null);return;
+    }
+    if(e.kind==='prop'){
+      const p=clone(e.ref.p);this.destroyProp(p.id);this.select(null);
+      this.history.push({label:'delete',undo:()=>{this.scene.addProp(clone(p));this.select(p.id);},redo:()=>{this.destroyProp(p.id);this.select(null);}});
+    }else{
+      const before=this.pos[e.id]===undefined?undefined:clone(this.pos[e.id]);
+      const set=hidden=>{this.hideEntity(e,hidden);if(hidden)this.pos[e.id]=null;else if(before===undefined)delete this.pos[e.id];else this.pos[e.id]=clone(before);this.select(hidden?null:e.id);};
+      set(true);this.history.push({label:'delete',undo:()=>set(false),redo:()=>set(true)});
+    }
+    this.changed();
+  }
+
+  editSelected(change) {
+    const e=this.selected;if(!e)return;
+    const before=clone(e.kind==='prop'?e.ref.p:e.kind==='col'||e.kind==='ground'?e.ref:e.ref.cfg);
+    const after=clone(before);change(after,e);
+    if(JSON.stringify(before)===JSON.stringify(after))return;
+    const set=data=>{
+      if(e.kind==='prop'){const v=this.scene.propViews.get(e.id);if(v){v.p=clone(data);this.restyle(v);}}
+      else if(e.kind==='col'||e.kind==='ground'){
+        const list=e.kind==='col'?this.cols:this.grounds;const i=list.findIndex(v=>v.id===e.id);if(i>=0)list[i]=clone(data);this.applyLive();
+      }else{
+        const o=e.ref;
+        this.moveEntity(this.find(e.id),data.x,data.y);o.cfg=clone(data);o.sprite.setTexture(data.texture||ENEMIES[data.enemy]?.texture||'fx_dot');
+        o.relocate?.(0,0);this.scene.styleEntity(o,true);
+        this.pos[e.id]={x:data.x,y:data.y,...(data.texture?{texture:data.texture}:{}),editorStyle:clone(data.editorStyle||{})};
+      }
+      this.select(e.id);
+    };
+    set(after);this.history.push({label:'property',undo:()=>set(before),redo:()=>set(after)});this.changed();
+  }
+
+  replaceTexture(key) {
+    if(!ASSET_CATALOG.some(a=>a.key===key))return;
+    this.editSelected((data,e)=>{
+      if(e.kind==='prop'){data.k=key;delete data.w;delete data.h;}
+      else if(e.kind==='col'||e.kind==='ground')data.tex=key;
+      else{data.texture=key;(data.editorStyle||={}).texture=key;}
     });
-    this.changed();
   }
 
-  flip() {
-    const e = this.selected;
-    if (!e || e.kind !== 'prop') return;
-    const v = e.ref, id = e.id;
-    const set = (f) => { const vv = this.scene.propViews.get(id); if (vv) { if (f) vv.p.f = 1; else delete vv.p.f; this.restyle(vv); } };
-    const before = v.p.f ? 1 : 0;
-    set(!before);
-    this.history.push({ label: 'flip', undo: () => set(before), redo: () => set(!before) });
-    this.refreshInfo(); this.changed();
+  setProperty(key,value) {
+    if(['x','y'].includes(key)){
+      const e=this.selected;if(!e||!Number.isFinite(Number(value)))return;
+      this.nudge(e,key==='x'?Number(value)-e.x:0,key==='y'?Number(value)-e.y:0);return;
+    }
+    this.editSelected((data,e)=>{
+      const st=e.kind==='prop'||e.kind==='ground'?data:(data.editorStyle||={});
+      const n=Number(value);
+      if(['s','w','h','a','alpha','tileScale'].includes(key)){
+        if(!Number.isFinite(n))return;
+        const nativeScale=e.kind==='obj'||e.kind==='enemy'?data.scale||1:1;
+        st[key]=key==='s'?clamp(n,0.05,10):key==='alpha'?clamp(n,0,1):key==='a'?n%360:key==='tileScale'?clamp(n,0.05,8):clamp(n,1,8000)/((st.s||1)*nativeScale);
+      }else if(key==='f')st.f=!!value?1:0;
+      else if(key==='l')st.l=value;
+      else if(key==='collision'){
+        if(e.kind!=='prop')return;
+        if(value==='none')data.solid=null;
+        else if(value==='auto'){data.solid='auto';data.fill=0;}
+        else{data.solid=clone(defaultAssetSolid(data.k)||{w:40,h:20});data.fill=0;}
+      }else if(key==='solid_w'||key==='solid_h'){
+        if(!Number.isFinite(n))return;
+        if(e.kind==='prop'){data.fill=0;data.solid=clone(typeof data.solid==='object'&&data.solid?data.solid:defaultAssetSolid(data.k)||{w:40,h:20});data.solid[key==='solid_w'?'w':'h']=clamp(n,1,8000);}
+        else if(e.kind==='col')data[key==='solid_w'?'w':'h']=clamp(n,1,8000);
+      }
+    });
   }
-
-  rescale(factor) {
-    const e = this.selected;
-    if (!e || e.kind !== 'prop') return;
-    const id = e.id, before = e.ref.p.s || 1, after = Math.round(clamp(before * factor, 0.4, 2.6) * 100) / 100;
-    if (after === before) return;
-    const set = (s) => { const vv = this.scene.propViews.get(id); if (vv) { if (Math.abs(s - 1) < 0.005) delete vv.p.s; else vv.p.s = s; this.restyle(vv); this.drawSelection(); this.refreshInfo(); } };
-    set(after);
-    this.history.push({ label: 'scale', undo: () => set(before), redo: () => set(after) });
-    this.changed();
-  }
+  flip(){const e=this.selected;if(e)this.setProperty('f',!this.styleOf(e).f);}
+  rescale(factor){const e=this.selected;if(e?.kind==='ground')this.editSelected(d=>{d.w=Math.round(d.w*factor);d.h=Math.round(d.h*factor);});else if(e)this.setProperty('s',Math.round((this.styleOf(e).s||1)*factor*100)/100);}
 
   cycleSnap() {
     this.snapIdx = (this.snapIdx + 1) % SNAPS.length;
@@ -413,14 +504,14 @@ export class MapEditor {
     g.lineStyle(2 / z, col, 1).strokeRect(b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0);
     // точка основания и «след» коллизии
     g.lineStyle(2 / z, 0xffffff, 0.9).strokeCircle(e.x, e.y, 5 / z);
-    const s = e.kind === 'prop' ? propSolid(e.ref.p) : baseSolid(e.ref.cfg);
+    const s = e.kind === 'prop' ? propSolid(e.ref.p) : e.kind==='col'?e.ref:e.kind==='ground'?null:baseSolid(e.ref.cfg);
     if (s) { g.fillStyle(0xff3b2f, 0.3).fillRect(s.x, s.y, s.w, s.h); g.lineStyle(1.5 / z, 0xff3b2f, 1).strokeRect(s.x, s.y, s.w, s.h); }
   }
 
   currentLists() {
     const props = this.propViews().map(v => v.p);
-    const interactives = this.scene.objects.map(o => o.cfg);
-    const enemies = this.scene.enemies.map(e => e.cfg);
+    const interactives = this.scene.objects.filter(o=>!o._editorDeleted).map(o => o.cfg);
+    const enemies = this.scene.enemies.filter(o=>!o._editorDeleted).map(e => e.cfg);
     return { props, interactives, enemies };
   }
 
@@ -457,19 +548,17 @@ export class MapEditor {
     if (this.mode === 'terrain') { this.panel.setInfo(this.infoTerrain()); return; }
     if (this.mode === 'walls') { this.panel.setInfo(this.infoWall()); return; }
     const e = this.selected;
-    if (!e) { this.panel.setInfo('Коснитесь объекта, чтобы выбрать. Тяните — переместить. Пустое место — двигать карту.'); return; }
-    if (e.kind === 'prop') {
-      const p = e.ref.p;
-      this.panel.setInfo(`${propName(p.k)} · ${p.id}${p.fill ? ' · лес (заполнитель)' : ''}\nx ${p.x}  y ${p.y}  масштаб ${p.s || 1}${p.f ? '  зеркало' : ''}`);
-    } else {
-      this.panel.setInfo(`${e.kind === 'obj' ? 'Объект' : 'Враг'} «${e.id}»\nx ${e.x}  y ${e.y}`);
-    }
+    if (!e) { this.panel.setInspector?.(null);this.panel.setInfo('Выберите объект на карте или в списке. Пустое место — двигать карту.'); return; }
+    this.panel.setInfo(`${this.entityName(e)}\nx ${Math.round(e.x)}  y ${Math.round(e.y)}${e.kind==='obj'||e.kind==='enemy'?' · сюжетный объект':''}`);
+    this.panel.setInspector?.(e,{...this.styleOf(e),x:e.x,y:e.y,w:e.img.displayWidth,h:e.img.displayHeight,
+      solid:e.kind==='prop'?e.ref.p.solid===undefined||e.ref.p.solid==='auto'?defaultAssetSolid(e.ref.p.k):e.ref.p.solid:e.kind==='col'?{w:e.ref.w,h:e.ref.h}:null});
   }
 
   refreshPanel() {
-    const p = this.panel, e = this.selected, isProp = !!e && e.kind === 'prop';
+    const p = this.panel, e = this.selected, isProp = !!e;
     p.setEnabled('undo', this.history.canUndo); p.setEnabled('redo', this.history.canRedo);
-    p.setEnabled('dup', isProp); p.setEnabled('flip', isProp); p.setEnabled('bigger', isProp); p.setEnabled('smaller', isProp); p.setEnabled('delete', isProp);
+    p.setEnabled('replace',isProp);p.setEnabled('dup', isProp); p.setEnabled('flip', isProp); p.setEnabled('bigger', isProp); p.setEnabled('smaller', isProp); p.setEnabled('delete', isProp);
+    p.setEntities?.(this.pickEntities().map(e=>({id:e.id,name:this.entityName(e)})),this.selectedId,this.entityFilter);
     p.setToggle('snap', this.snap > 0, `Сетка: ${this.snap || 'нет'}`);
     p.setToggle('colliders', this.showColliders);
     p.setToggle('magnet', this.magnetOn);
@@ -488,7 +577,7 @@ export class MapEditor {
 
   // ------------------------------------------------------------------ режимы: дороги, река, стены
   terrainKey() { return JSON.stringify([this.roads, this.waters]); }
-  snapshot() { return JSON.stringify({ roads: this.roads, waters: this.waters, cols: this.cols }); }
+  snapshot() { return JSON.stringify({ roads: this.roads, waters: this.waters, cols: this.cols,grounds:this.grounds }); }
 
   tick() {
     if (this.cam.zoom !== this.lastZoom) { this.lastZoom = this.cam.zoom; this.drawOverlay(); if (this.mode === 'props') this.drawSelection(); }
@@ -514,6 +603,8 @@ export class MapEditor {
   applyLive() {
     const t = this.terrainKey();
     if (t !== this.applied.terrain) { this.applied.terrain = t; this.scene.rebuildTerrain(clone(this.roads), clone(this.waters)); }
+    const g=JSON.stringify(this.grounds);
+    if(g!==this.applied.grounds){this.applied.grounds=g;this.scene.rebuildGrounds(clone(this.grounds));}
     const c = JSON.stringify(this.cols);
     if (c !== this.applied.cols) { this.applied.cols = c; this.scene.rebuildColliders(clone(this.cols)); }
   }
@@ -530,7 +621,7 @@ export class MapEditor {
 
   restoreSnapshot(str) {
     const d = JSON.parse(str);
-    this.roads = d.roads; this.waters = d.waters; this.cols = d.cols;
+    this.roads = d.roads; this.waters = d.waters; this.cols = d.cols;this.grounds=d.grounds||[];
     this.applyLive();
     if (this.tsel && !this.shapeOf(this.tsel)) this.tsel = null;
     if (this.csel && !this.cols.find(c => c.id === this.csel)) this.csel = null;
@@ -894,12 +985,12 @@ export class MapEditor {
   // ------------------------------------------------------------------ данные
   buildEdits() {
     const { props } = this.currentLists();
-    return { ...diffEdits(services.map.base, props, diffPos([...INTERACTIVES, ...ENEMY_SPAWNS], this.pos)), ...diffTerrain({ roads: this.roads, waters: this.waters, colliders: this.cols }) };
+    return { ...diffEdits(services.map.base, props, diffPos([...INTERACTIVES, ...ENEMY_SPAWNS], this.pos)), ...diffTerrain({ roads: this.roads, waters: this.waters, colliders: this.cols,grounds:this.grounds }) };
   }
 
   countEdits() {
     const e = this.buildEdits();
-    return Object.keys(e.props).length + e.add.length + Object.keys(e.pos).length + Object.keys(e.roads || {}).length + Object.keys(e.waters || {}).length + Object.keys(e.cols || {}).length;
+    return Object.keys(e.props).length + e.add.length + Object.keys(e.pos).length + Object.keys(e.roads || {}).length + Object.keys(e.waters || {}).length + Object.keys(e.cols || {}).length+Object.keys(e.grounds||{}).length;
   }
 
   changed(push = true) {
@@ -914,7 +1005,8 @@ export class MapEditor {
 
   check() {
     const { props, interactives, enemies } = this.currentLists();
-    const problems = checkWalkability({ colliders: this.cols, props, interactives, enemies, terrain: this.scene.terrain });
+    const removed=[...INTERACTIVES,...ENEMY_SPAWNS].filter(o=>this.pos[o.id]===null).map(o=>({id:o.id,text:`Сюжетный объект «${o.id}» удалён: связанные задания могут стать недоступны`}));
+    const problems = [...removed,...checkWalkability({ colliders: this.cols, props, interactives, enemies, terrain: this.scene.terrain })];
     if (!problems.length) { this.say('✓ Проходимость в порядке: до всех мест можно дойти, закрытые проходы остаются закрытыми.'); return; }
     this.say('Проблемы:\n' + problems.slice(0, 5).map(p => '• ' + p.text).join('\n') + (problems.length > 5 ? `\n…и ещё ${problems.length - 5}` : ''), true);
     const first = this.find(problems[0].id);
@@ -933,6 +1025,15 @@ export class MapEditor {
       ta.remove();
       this.say(done ? 'Правки скопированы.' : 'Не удалось скопировать — воспользуйтесь «Скачать».', !done);
     }
+  }
+
+  async importFile(file) {
+    if(!file)return;
+    try{
+      const edits=parseEditsFile(await file.text());
+      if(!saveDraft(window.localStorage,edits))throw new Error('Не удалось сохранить черновик.');
+      window.location.href=`${window.location.pathname}?edit`;
+    }catch(e){this.say(`Не удалось загрузить правки: ${e.message}`,true);}
   }
 
   download() {

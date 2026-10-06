@@ -64,6 +64,38 @@ try {
   console.log('тексты на экране:', JSON.stringify(toastText));
   await shot('02-after-taps');
 
+  // v0.27.0: после перехода между локациями (перезапуск сцены) кнопки обязаны работать так же
+  await page.evaluate(() => {
+    const P = Object.getPrototypeOf(window.__game.scene.getScene('ExplorationScene'));
+    window.__exp = { calls: 0, acted: 0 };
+    const orig = P.onAbility;
+    P.onAbility = function (id) { window.__exp.calls++; if (this.canAct()) window.__exp.acted++; return orig.call(this, id); };
+    const s = window.__witch.state; s.markEvent('ch2_start'); s.markEvent('chapter_2_complete');
+  });
+  const listeners = () => page.evaluate(() => ({ ability: (window.__witch.bus.map.get('ability:use') || []).map(l => l.ctx?.constructor?.name || typeof l.ctx).join(), ctx: (window.__witch.bus.map.get('ui:open-map') || []).length }));
+  console.log('слушатели до перехода:', JSON.stringify(await listeners()));
+  for (const id of ['city', 'forest']) {
+    await page.evaluate((id) => window.__witch.bus.emit('story:map-travel', id), id);
+    await page.waitForFunction((id) => { const s = window.__game.scene.getScene('ExplorationScene'); return s?.loc?.id === id && window.__witch.mode === 'exploration'; }, id, { timeout: 20000 });
+    await page.waitForTimeout(1500);
+    console.log('после перехода в', id, JSON.stringify(await state()), JSON.stringify(await listeners()));
+    const b = await page.evaluate(() => ({ ...window.__exp, uses: window.__uses.length }));
+    await click(274, 1164);
+    const a = await page.evaluate(() => ({ ...window.__exp, uses: window.__uses.length }));
+    ok(a.uses === b.uses + 1 && a.calls === b.calls + 1 && a.acted === b.acted + 1, `после перехода в «${id}»: кнопка Огня доходит до сцены и сцена действует ` + JSON.stringify([b, a]));
+  }
+  // меню → «Карта» → закрыть → кнопки живы
+  await page.evaluate(() => window.__game.scene.getScene('UIScene').openMap());
+  await page.waitForTimeout(400);
+  await page.evaluate(() => window.__game.scene.getScene('UIScene').closeModal(window.__game.scene.getScene('UIScene').modal.buttons[0]));
+  await page.waitForTimeout(300);
+  {
+    const b = await page.evaluate(() => ({ ...window.__exp }));
+    await click(274, 1164);
+    const a = await page.evaluate(() => ({ ...window.__exp }));
+    ok(a.acted === b.acted + 1, 'после закрытия карты: кнопка Огня действует ' + JSON.stringify(await state()));
+  }
+
   // бой
   await page.evaluate(() => {
     const e = window.__game.scene.getScene('ExplorationScene');

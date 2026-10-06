@@ -4,6 +4,7 @@ import { ENEMIES } from '../src/config/balance.enemies.js';
 import { INTERACTIVES, ENEMY_SPAWNS, ZONES, WORLD } from '../src/config/world.layout.js';
 import { EXP_X, FROSTWOOD_START, GRAVEYARD_START } from '../src/config/world.expeditions.js';
 import { DISPLAY_SIZE } from '../src/config/assets.manifest.js';
+import { LOCATIONS } from '../src/config/locations.js';
 import { applyAction, emptySnapshot, combatApply } from '../src/cloud/playerModel.js';
 import { verifyCombat } from '../src/cloud/combatVerify.js';
 import { playBot, ctxFor } from './helpers/combat-bot.mjs';
@@ -18,7 +19,7 @@ console.log('\nВылазки: данные');
   ok(WORLD.width === 5400 && ZONES.some(z => z.id === 'FW') && ZONES.some(z => z.id === 'GY'), 'мир шире: Морозный лес и Старое кладбище к востоку от города');
   const exp = [...INTERACTIVES, ...ENEMY_SPAWNS].filter(o => o.x >= EXP_X);
   ok(exp.length >= 24 && exp.every(o => o.x < WORLD.width && o.y < WORLD.height), `в вылазках ${exp.length} объектов, все внутри мира`);
-  ok(exp.filter(o => o.kind !== 'travel').every(o => o.requiresEvent === 'chapter_2_complete'), 'всё внутри открывается после главы II');
+  ok(exp.filter(o => o.kind !== 'exit').every(o => o.requiresEvent === 'chapter_2_complete'), 'всё внутри открывается после главы II');
   const spawns = ENEMY_SPAWNS.filter(o => o.x >= EXP_X);
   ok(spawns.length === 10 && spawns.every(s => s.repeatSec >= 600), 'десять мест боя, все возобновляются (звери — 10 мин, вожак и страж — час)');
   for (const id of ['frost_wolf', 'frost_alpha', 'grave_wisp', 'grave_hound', 'barrow_warden']) {
@@ -29,8 +30,9 @@ console.log('\nВылазки: данные');
     'в лесу Лёд слабее, а Огонь сильнее; на кладбище наоборот Огонь слабее, Астрал сильнее');
   const caches = INTERACTIVES.filter(o => o.kind === 'stash' && o.x >= EXP_X);
   ok(caches.length === 2 && caches.every(c => c.items.frost_shard === 1 && spawns.some(s => s.id === c.guard && s.repeatSec === 3600)), 'запасы вожака и стража: инеевый осколок за каждую победу (раз в час)');
-  const t = INTERACTIVES.filter(o => o.kind === 'travel' && o.brief);
-  ok(t.length === 2 && t.every(o => o.target === FROSTWOOD_START || o.target === GRAVEYARD_START), 'указатели из города: описание места перед отправкой');
+  // v0.27.0: вылазки — отдельные точки на карте мира, с описанием места; открываются после главы II
+  const L = LOCATIONS.filter(l => l.expedition);
+  ok(L.length === 2 && L.every(l => l.text.includes('Внутри') && l.requires === 'chapter_2_complete') && L.some(l => l.arrival === FROSTWOOD_START) && L.some(l => l.arrival === GRAVEYARD_START), 'вылазки на карте мира: описание места перед отправкой, открыты после главы II');
 }
 
 console.log('\nВылазки: сервер (JS-зеркало)');

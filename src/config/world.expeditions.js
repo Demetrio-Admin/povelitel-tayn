@@ -1,6 +1,5 @@
 // v0.24.0 — вылазки (stage-2-design-pack §24–25): настоящие опасные места к востоку от города (мир шире: 3600 → 5400).
-// Морозный лес (север) и Старое кладбище (юг) — отдельные участки, туда ведут указатели у восточной стены города; путь назад — указатель
-// у входа. Внутри: сбор, несколько боёв, сильный противник в конце и его запас (одна выдача за победный цикл, как запас у Корневика).
+// Морозный лес (север) и Старое кладбище (юг) — отдельные локации (v0.27.0: config/locations.js), переход — через карту мира у выхода. Внутри: сбор, несколько боёв, сильный противник в конце и его запас (одна выдача за победный цикл, как запас у Корневика).
 // Места возобновляются (repeatSec): одна вылазка — 10–15 минут; звери возвращаются через 10 минут, вожак и страж — через час.
 // Разные районы — разные дары: в лесу звери горят, но не боятся холода; на кладбище Огонь почти бесполезен, а Астрал пробивает защиту.
 // Открываются после главы II (chapter_2_complete).
@@ -8,7 +7,6 @@
 export const EXP_X = 3700;   // восточнее — участки вылазок (проходимость проверяется от их точек входа)
 export const FROSTWOOD_START = { x: 3820, y: 2380 };
 export const GRAVEYARD_START = { x: 3820, y: 5060 };
-export const CITY_EAST_POINT = { x: 3470, y: 3220 };     // куда возвращает указатель (площадь у восточной стены)
 const OPEN = 'chapter_2_complete';
 
 export const EXP_ZONES = [
@@ -44,19 +42,9 @@ export const EXP_COLLIDERS = [
 export const EXP_KEEP_CLEAR = [{ x: 3600, y: 0, w: 1800, h: 5400 }];
 
 const EXP_OBJECT_LIST = [
-  // указатели: из города — в вылазки (с описанием места), из вылазок — в город
-  { id: 'travel_frostwood', kind: 'travel', x: 3500, y: 3150, texture: 'signpost_01', radius: 110, target: FROSTWOOD_START, requiresEvent: OPEN,
-    hint: 'Вылазка: Морозный лес', lockedText: 'Северная дорога ведёт в Морозный лес. Туда ходят те, кто уже пережил иней (после главы II).',
-    brief: { title: 'Морозный лес', text: 'Волки и вожак метели. Холод им не страшен — Лёд бьёт слабее, а вот Огонь они не любят.\n\n'
-      + 'Внутри: морозник и ледяные кристаллы, четыре волчицы, Вожак метели и его запас (инеевый осколок). Звери возвращаются через 10 минут, вожак — через час.' },
-    text: 'Северная дорога выводит в заснеженный лес.' },
-  { id: 'travel_graveyard', kind: 'travel', x: 3500, y: 3300, texture: 'signpost_01', radius: 110, target: GRAVEYARD_START, requiresEvent: OPEN,
-    hint: 'Вылазка: Старое кладбище', lockedText: 'Старое кладбище за восточными воротами. Туда ходят те, кто уже пережил иней (после главы II).',
-    brief: { title: 'Старое кладбище', text: 'Могильные огоньки, псы и Страж кургана. Огонь здесь почти бесполезен; Астрал пробивает и защиту огоньков, и броню стража. Псам нипочём Телекинез.\n\n'
-      + 'Внутри: руническая пыль, грибы и лунный осколок, четверо противников, Страж кургана и его запас. Противники возвращаются через 10 минут, страж — через час.' },
-    text: 'За воротами — тихое старое кладбище. Слишком тихое.' },
-  { id: 'travel_fw_back', kind: 'travel', x: 3760, y: 2440, texture: 'signpost_01', radius: 110, target: CITY_EAST_POINT, hint: 'В город', text: 'Назад, в город.' },
-  { id: 'travel_gy_back', kind: 'travel', x: 3760, y: 5120, texture: 'signpost_01', radius: 110, target: CITY_EAST_POINT, hint: 'В город', text: 'Назад, в город.' },
+  // v0.27.0: выходы на карту мира (вылазки — отдельные локации; описание места — на карте, config/locations.js)
+  { id: 'exit_frostwood', kind: 'exit', x: 3760, y: 2440, texture: 'signpost_01', radius: 110, hint: 'Карта мира' },
+  { id: 'exit_graveyard', kind: 'exit', x: 3760, y: 5120, texture: 'signpost_01', radius: 110, hint: 'Карта мира' },
   // Морозный лес: сбор
   { id: 'fw_herb_1', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 300, x: 4500, y: 2300, texture: 'moon_herb_01', radius: 90 },
   { id: 'fw_herb_2', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 300, x: 3900, y: 1650, texture: 'moon_herb_01', radius: 90 },
@@ -74,7 +62,7 @@ const EXP_OBJECT_LIST = [
   { id: 'gy_cache', kind: 'stash', guard: 'gy_warden', x: 4800, y: 3050, texture: 'trunk_01', emptyTexture: 'trunk_01', radius: 110,
     items: { frost_shard: 1, lunar_shard: 2 }, hint: 'Сокровище кургана', label: 'Забрать добычу', guardText: 'Сокровище стережёт Страж кургана.' },
 ];
-export const EXP_INTERACTIVES = EXP_OBJECT_LIST.map(o => (o.kind === 'travel' ? o : { ...o, requiresEvent: OPEN }));
+export const EXP_INTERACTIVES = EXP_OBJECT_LIST.map(o => (o.kind === 'exit' ? o : { ...o, requiresEvent: OPEN }));
 
 const EXP_ENEMY_LIST = [
   { id: 'fw_wolf_1', enemy: 'frost_wolf', x: 4150, y: 2250, radius: 120, repeatSec: 600 },

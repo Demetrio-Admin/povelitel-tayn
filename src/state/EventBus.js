@@ -51,6 +51,8 @@ export const MSG = {
   OPEN_SHOP: 'ui:open-shop',         // v0.20.0: лавка торговца (из диалога)
   OPEN_DAILY: 'ui:open-daily',       // v0.23.0: доска поручений
   OPEN_COVENS: 'ui:open-covens',     // v0.25.0: окно Ковенов
+  OPEN_MAP: 'ui:open-map',           // v0.27.0: карта мира ({ exit } — открыта у выхода, можно отправиться; без exit — только посмотреть)
+  MAP_TRAVEL: 'story:map-travel',    // v0.27.0: (id локации) — отправиться с карты мира
   OPEN_DUEL: 'ui:open-duel',         // v0.26.0: окно Магической Дуэли
   DUEL_START: 'story:duel-start',    // v0.26.0: вызов на Дуэль (ExplorationScene)
   OPEN_WALLET: 'ui:open-wallet',     // v0.20.0: кошелёк / банк (из диалога и меню)   // v0.10.0: Селена открывает Печать I (после закрытия диалога)

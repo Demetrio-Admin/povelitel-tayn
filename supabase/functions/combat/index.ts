@@ -733,8 +733,6 @@ var BY_ID = new Map(HEROES.map((h) => [h.id, h]));
 var fm = (female, male) => ({ female, male });
 
 // src/config/world.city.js
-var CITY_START = { x: 1960, y: 3625 };
-var FOREST_RETURN = { x: 1600, y: 3625 };
 var CITY_ZONES = [
   { id: "R", name: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0431\u043E\u043B\u044C\u0448\u043E\u0439 \u043C\u0438\u0440", x: 1800, y: 3300, w: 560, h: 650, safePoint: { x: 1960, y: 3625 } },
   { id: "AR", name: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", x: 2440, y: 2560, w: 420, h: 480, safePoint: { x: 2650, y: 3150 } },
@@ -832,31 +830,9 @@ var CITY_COLLIDERS = [
 ];
 var CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }, { x: 2360, y: 1460, w: 1240, h: 1840 }, { x: 1800, y: 3950, w: 560, h: 1450 }];
 var CITY_INTERACTIVES = [
-  // переходы между лесом и городом
-  {
-    id: "travel_to_city",
-    kind: "travel",
-    x: 1640,
-    y: 3625,
-    texture: "signpost_01",
-    radius: 110,
-    target: CITY_START,
-    requiresEvent: "ch2_start",
-    hint: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0433\u043E\u0440\u043E\u0434",
-    lockedText: "\u0412\u043E\u0441\u0442\u043E\u0447\u043D\u0430\u044F \u0442\u0440\u043E\u043F\u0430 \u0443\u0445\u043E\u0434\u0438\u0442 \u043A \u0431\u043E\u043B\u044C\u0448\u043E\u043C\u0443 \u043C\u0438\u0440\u0443. \u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u043D\u0443\u0436\u043D\u043E \u0437\u0430\u043A\u043E\u043D\u0447\u0438\u0442\u044C \u0434\u0435\u043B\u0430 \u0432 \u043B\u0435\u0441\u0443 \u2014 \u0438 \u043F\u043E\u0433\u043E\u0432\u043E\u0440\u0438\u0442\u044C \u0441 \u041C\u0438\u0440\u0440\u043E\u0439.",
-    text: "\u0422\u0440\u043E\u043F\u0430 \u0432\u044B\u0432\u043E\u0434\u0438\u0442 \u0438\u0437 \u043B\u0435\u0441\u0430 \u043D\u0430 \u0431\u043E\u043B\u044C\u0448\u0443\u044E \u0434\u043E\u0440\u043E\u0433\u0443. \u0412\u043F\u0435\u0440\u0435\u0434\u0438 \u2014 \u0433\u043E\u0440\u043E\u0434."
-  },
-  {
-    id: "travel_to_forest",
-    kind: "travel",
-    x: 1880,
-    y: 3625,
-    texture: "signpost_01",
-    radius: 110,
-    target: FOREST_RETURN,
-    hint: "\u0422\u0440\u043E\u043F\u0430 \u0432 \u043B\u0435\u0441",
-    text: "\u0417\u043D\u0430\u043A\u043E\u043C\u0430\u044F \u0442\u0440\u043E\u043F\u0430 \u2014 \u0434\u043E\u043C\u043E\u0439, \u043A \u041C\u0438\u0440\u0440\u0435."
-  },
+  // v0.27.0: выходы на карту мира (лес и город — разные локации, переход — только через карту у выхода)
+  { id: "exit_forest", kind: "exit", x: 1640, y: 3625, texture: "signpost_01", radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
+  { id: "exit_city", kind: "exit", x: 1880, y: 3625, texture: "signpost_01", radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
   // дорога: ресурсы
   { id: "frostherb_r1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2060, y: 3420, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_start" },
   { id: "frostherb_r2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2240, y: 3880, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_start" },
@@ -1213,7 +1189,6 @@ var CITY_DECOR = [
 // src/config/world.expeditions.js
 var FROSTWOOD_START = { x: 3820, y: 2380 };
 var GRAVEYARD_START = { x: 3820, y: 5060 };
-var CITY_EAST_POINT = { x: 3470, y: 3220 };
 var OPEN = "chapter_2_complete";
 var EXP_ZONES = [
   { id: "FW", name: "\u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441", x: 3700, y: 300, w: 1600, h: 2200, safePoint: FROSTWOOD_START },
@@ -1244,37 +1219,9 @@ var EXP_COLLIDERS = [
 ];
 var EXP_KEEP_CLEAR = [{ x: 3600, y: 0, w: 1800, h: 5400 }];
 var EXP_OBJECT_LIST = [
-  // указатели: из города — в вылазки (с описанием места), из вылазок — в город
-  {
-    id: "travel_frostwood",
-    kind: "travel",
-    x: 3500,
-    y: 3150,
-    texture: "signpost_01",
-    radius: 110,
-    target: FROSTWOOD_START,
-    requiresEvent: OPEN,
-    hint: "\u0412\u044B\u043B\u0430\u0437\u043A\u0430: \u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441",
-    lockedText: "\u0421\u0435\u0432\u0435\u0440\u043D\u0430\u044F \u0434\u043E\u0440\u043E\u0433\u0430 \u0432\u0435\u0434\u0451\u0442 \u0432 \u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441. \u0422\u0443\u0434\u0430 \u0445\u043E\u0434\u044F\u0442 \u0442\u0435, \u043A\u0442\u043E \u0443\u0436\u0435 \u043F\u0435\u0440\u0435\u0436\u0438\u043B \u0438\u043D\u0435\u0439 (\u043F\u043E\u0441\u043B\u0435 \u0433\u043B\u0430\u0432\u044B II).",
-    brief: { title: "\u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441", text: "\u0412\u043E\u043B\u043A\u0438 \u0438 \u0432\u043E\u0436\u0430\u043A \u043C\u0435\u0442\u0435\u043B\u0438. \u0425\u043E\u043B\u043E\u0434 \u0438\u043C \u043D\u0435 \u0441\u0442\u0440\u0430\u0448\u0435\u043D \u2014 \u041B\u0451\u0434 \u0431\u044C\u0451\u0442 \u0441\u043B\u0430\u0431\u0435\u0435, \u0430 \u0432\u043E\u0442 \u041E\u0433\u043E\u043D\u044C \u043E\u043D\u0438 \u043D\u0435 \u043B\u044E\u0431\u044F\u0442.\n\n\u0412\u043D\u0443\u0442\u0440\u0438: \u043C\u043E\u0440\u043E\u0437\u043D\u0438\u043A \u0438 \u043B\u0435\u0434\u044F\u043D\u044B\u0435 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u044B, \u0447\u0435\u0442\u044B\u0440\u0435 \u0432\u043E\u043B\u0447\u0438\u0446\u044B, \u0412\u043E\u0436\u0430\u043A \u043C\u0435\u0442\u0435\u043B\u0438 \u0438 \u0435\u0433\u043E \u0437\u0430\u043F\u0430\u0441 (\u0438\u043D\u0435\u0435\u0432\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A). \u0417\u0432\u0435\u0440\u0438 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u044E\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 10 \u043C\u0438\u043D\u0443\u0442, \u0432\u043E\u0436\u0430\u043A \u2014 \u0447\u0435\u0440\u0435\u0437 \u0447\u0430\u0441." },
-    text: "\u0421\u0435\u0432\u0435\u0440\u043D\u0430\u044F \u0434\u043E\u0440\u043E\u0433\u0430 \u0432\u044B\u0432\u043E\u0434\u0438\u0442 \u0432 \u0437\u0430\u0441\u043D\u0435\u0436\u0435\u043D\u043D\u044B\u0439 \u043B\u0435\u0441."
-  },
-  {
-    id: "travel_graveyard",
-    kind: "travel",
-    x: 3500,
-    y: 3300,
-    texture: "signpost_01",
-    radius: 110,
-    target: GRAVEYARD_START,
-    requiresEvent: OPEN,
-    hint: "\u0412\u044B\u043B\u0430\u0437\u043A\u0430: \u0421\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435",
-    lockedText: "\u0421\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435 \u0437\u0430 \u0432\u043E\u0441\u0442\u043E\u0447\u043D\u044B\u043C\u0438 \u0432\u043E\u0440\u043E\u0442\u0430\u043C\u0438. \u0422\u0443\u0434\u0430 \u0445\u043E\u0434\u044F\u0442 \u0442\u0435, \u043A\u0442\u043E \u0443\u0436\u0435 \u043F\u0435\u0440\u0435\u0436\u0438\u043B \u0438\u043D\u0435\u0439 (\u043F\u043E\u0441\u043B\u0435 \u0433\u043B\u0430\u0432\u044B II).",
-    brief: { title: "\u0421\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435", text: "\u041C\u043E\u0433\u0438\u043B\u044C\u043D\u044B\u0435 \u043E\u0433\u043E\u043D\u044C\u043A\u0438, \u043F\u0441\u044B \u0438 \u0421\u0442\u0440\u0430\u0436 \u043A\u0443\u0440\u0433\u0430\u043D\u0430. \u041E\u0433\u043E\u043D\u044C \u0437\u0434\u0435\u0441\u044C \u043F\u043E\u0447\u0442\u0438 \u0431\u0435\u0441\u043F\u043E\u043B\u0435\u0437\u0435\u043D; \u0410\u0441\u0442\u0440\u0430\u043B \u043F\u0440\u043E\u0431\u0438\u0432\u0430\u0435\u0442 \u0438 \u0437\u0430\u0449\u0438\u0442\u0443 \u043E\u0433\u043E\u043D\u044C\u043A\u043E\u0432, \u0438 \u0431\u0440\u043E\u043D\u044E \u0441\u0442\u0440\u0430\u0436\u0430. \u041F\u0441\u0430\u043C \u043D\u0438\u043F\u043E\u0447\u0451\u043C \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437.\n\n\u0412\u043D\u0443\u0442\u0440\u0438: \u0440\u0443\u043D\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u043F\u044B\u043B\u044C, \u0433\u0440\u0438\u0431\u044B \u0438 \u043B\u0443\u043D\u043D\u044B\u0439 \u043E\u0441\u043A\u043E\u043B\u043E\u043A, \u0447\u0435\u0442\u0432\u0435\u0440\u043E \u043F\u0440\u043E\u0442\u0438\u0432\u043D\u0438\u043A\u043E\u0432, \u0421\u0442\u0440\u0430\u0436 \u043A\u0443\u0440\u0433\u0430\u043D\u0430 \u0438 \u0435\u0433\u043E \u0437\u0430\u043F\u0430\u0441. \u041F\u0440\u043E\u0442\u0438\u0432\u043D\u0438\u043A\u0438 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u044E\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 10 \u043C\u0438\u043D\u0443\u0442, \u0441\u0442\u0440\u0430\u0436 \u2014 \u0447\u0435\u0440\u0435\u0437 \u0447\u0430\u0441." },
-    text: "\u0417\u0430 \u0432\u043E\u0440\u043E\u0442\u0430\u043C\u0438 \u2014 \u0442\u0438\u0445\u043E\u0435 \u0441\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435. \u0421\u043B\u0438\u0448\u043A\u043E\u043C \u0442\u0438\u0445\u043E\u0435."
-  },
-  { id: "travel_fw_back", kind: "travel", x: 3760, y: 2440, texture: "signpost_01", radius: 110, target: CITY_EAST_POINT, hint: "\u0412 \u0433\u043E\u0440\u043E\u0434", text: "\u041D\u0430\u0437\u0430\u0434, \u0432 \u0433\u043E\u0440\u043E\u0434." },
-  { id: "travel_gy_back", kind: "travel", x: 3760, y: 5120, texture: "signpost_01", radius: 110, target: CITY_EAST_POINT, hint: "\u0412 \u0433\u043E\u0440\u043E\u0434", text: "\u041D\u0430\u0437\u0430\u0434, \u0432 \u0433\u043E\u0440\u043E\u0434." },
+  // v0.27.0: выходы на карту мира (вылазки — отдельные локации; описание места — на карте, config/locations.js)
+  { id: "exit_frostwood", kind: "exit", x: 3760, y: 2440, texture: "signpost_01", radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
+  { id: "exit_graveyard", kind: "exit", x: 3760, y: 5120, texture: "signpost_01", radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
   // Морозный лес: сбор
   { id: "fw_herb_1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 4500, y: 2300, texture: "moon_herb_01", radius: 90 },
   { id: "fw_herb_2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 3900, y: 1650, texture: "moon_herb_01", radius: 90 },
@@ -1316,7 +1263,7 @@ var EXP_OBJECT_LIST = [
     guardText: "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u0435 \u0441\u0442\u0435\u0440\u0435\u0436\u0451\u0442 \u0421\u0442\u0440\u0430\u0436 \u043A\u0443\u0440\u0433\u0430\u043D\u0430."
   }
 ];
-var EXP_INTERACTIVES = EXP_OBJECT_LIST.map((o) => o.kind === "travel" ? o : { ...o, requiresEvent: OPEN });
+var EXP_INTERACTIVES = EXP_OBJECT_LIST.map((o) => o.kind === "exit" ? o : { ...o, requiresEvent: OPEN });
 var EXP_ENEMY_LIST = [
   { id: "fw_wolf_1", enemy: "frost_wolf", x: 4150, y: 2250, radius: 120, repeatSec: 600 },
   { id: "fw_wolf_2", enemy: "frost_wolf", x: 4800, y: 1650, radius: 120, repeatSec: 600 },
@@ -3973,6 +3920,10 @@ var MSG = {
   // v0.23.0: доска поручений
   OPEN_COVENS: "ui:open-covens",
   // v0.25.0: окно Ковенов
+  OPEN_MAP: "ui:open-map",
+  // v0.27.0: карта мира ({ exit } — открыта у выхода, можно отправиться; без exit — только посмотреть)
+  MAP_TRAVEL: "story:map-travel",
+  // v0.27.0: (id локации) — отправиться с карты мира
   OPEN_DUEL: "ui:open-duel",
   // v0.26.0: окно Магической Дуэли
   DUEL_START: "story:duel-start",

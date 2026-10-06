@@ -402,6 +402,24 @@ export class FireCircleObject extends InteractiveObject {
 // v0.10.0: Древние ворота — GateObject в objects/ChapterObjects.js (вместо SealObject прототипа).
 
 /**
+ * v0.27.0: выход локации — указатель «Карта мира». Открывает карту мира, с которой можно отправиться в другую локацию
+ * (переход между локациями — только у выхода). Виден всегда.
+ */
+export class ExitObject extends InteractiveObject {
+  get label() { return 'Карта мира'; }
+  get markerIcon() { return 'icon_map'; }
+  get markerColor() { return COLORS.gold; }
+  get title() { return this.cfg.hint || 'Карта мира'; }
+  requirementsMet() { return true; }
+  isDone() { return false; }
+  interact() {
+    this.react(COLORS.gold, 1.06);
+    services.audio.play('modal_open');
+    services.bus.emit(MSG.OPEN_MAP, { exit: this.id });
+  }
+}
+
+/**
  * v0.20.0: переход между частями мира (лес ↔ дорога в город). Указатель виден всегда; если путь ещё закрыт (requiresEvent),
  * герой слышит lockedText. Перемещение — на стороне клиента (позицию сохраняет обычная синхронизация), наград нет.
  */

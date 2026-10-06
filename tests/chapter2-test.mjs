@@ -36,8 +36,8 @@ console.log('\nГлава II: данные');
   const city = [...INTERACTIVES, ...ENEMY_SPAWNS].filter(o => o.x >= EAST_X);
   ok(city.length >= 12 && city.every(o => o.x < WORLD.width && o.y < WORLD.height), `в городе и на дороге ${city.length} объектов, все внутри мира`);
   ok(ENEMIES.frost_critter && fs.existsSync('public/assets/sprites/enemy_frost_critter.png') && ENEMIES.frost_critter.normalAttack.chill, 'Инеевый зверёк: данные, спрайт, холод');
-  const t = INTERACTIVES.find(o => o.id === 'travel_to_city');
-  ok(t.target === CITY_START && t.x < EAST_X && INTERACTIVES.find(o => o.id === 'travel_to_forest').target === FOREST_RETURN, 'указатели перехода: лес → дорога, дорога → лес');
+  const ef = INTERACTIVES.find(o => o.id === 'exit_forest'), ec = INTERACTIVES.find(o => o.id === 'exit_city');   // v0.27.0: переход — через карту мира
+  ok(ef?.kind === 'exit' && ef.x < EAST_X && ec?.kind === 'exit' && ec.x >= EAST_X && STEP_GUIDE.ch2_road.targets[0] === 'exit_forest' && STEP_GUIDE.ch2_home.targets[0] === 'exit_city', 'выходы «Карта мира»: в лесу и в городе; наведение ведёт к ним');
   ok(ZONE_EVENTS.P.event === 'ch2_city_arrived', 'первый вход на площадь — событие «пришёл в город»');
   // v0.21.0
   ok(NPCS.nerys && DIALOGUES.nerys?.length >= 10 && fs.existsSync('public/assets/sprites/npc_nerys.png') && fs.existsSync('public/assets/sprites/portrait_nerys.png'), 'Нэрис: данные, диалоги, спрайт и портрет');

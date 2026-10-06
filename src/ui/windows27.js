@@ -41,15 +41,18 @@ export const windows27 = {
             const yh = this.add.text(px, py - 36, 'вы здесь', { fontFamily: FONT, fontSize: UI.type.small, color: '#5a3a14', fontStyle: 'bold', stroke: '#f3e6c4', strokeThickness: 5 }).setOrigin(0.5);
             c.add(yh);
           }
-          const label = loc.name + (open ? '' : ' 🔒');
+          const label = loc.name;
           const probe = this.add.text(0, 0, label, { fontFamily: FONT, fontSize: `${UI.type.small}px` });
-          const bw = Math.ceil((probe.width + 44) / 20) * 20; probe.destroy();   // ширина по подписи (кратно 20 — меньше текстур)
+          const bw = Math.ceil((probe.width + 44 + (open ? 0 : 24)) / 20) * 20; probe.destroy();   // место для настоящей иконки замка
           const bx = Math.max(mx + bw / 2 + 4, Math.min(mx + mw - bw / 2 - 4, px));   // кнопка не вылезает за края карты
           const b = addButton(this, bx, py + 34, bw, 40, label, {
             primary: loc.id === sel.id, accent: open ? COLORS.gold : null, fontSize: UI.type.small,
             onPress: () => { if (this.modal?.scroll?.canTap?.() === false) return; this.mapSel = loc.id; services.audio.play('ui_click'); this.closeModal(null); this.openMap(opts); },
           });
-          if (!open) b.text.setAlpha(0.65);
+          if (!open) {
+            b.text.setAlpha(0.75).setX(bx - 12);
+            b.parts.push(this.add.image(b.text.x + b.text.width / 2 + 14, py + 34, 'icon_lock').setDisplaySize(18, 22));
+          }
           c.add(b.parts);
         }
         let cy = y + mh + 14;

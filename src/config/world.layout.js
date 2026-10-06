@@ -121,7 +121,6 @@ export const DECOR = [
   { key: 'candle_group_01', x: 720,  y: 4945, layer: 'main', light: 100 },
   { key: 'lantern_01', x: 830,  y: 4850, layer: 'main', light: 170 },
   { key: 'lantern_01', x: 1000, y: 4250, layer: 'main', light: 170 },
-  { key: 'signpost_01', x: 1100, y: 4200, layer: 'main' },
   { key: 'wooden_bridge_01', x: 1435, y: 3770, layer: 'back' },
   { key: 'lantern_02', x: 1150, y: 3650, layer: 'main', light: 160 },
   { key: 'lantern_02', x: 1116, y: 3350, layer: 'main', light: 160 },

@@ -11,7 +11,7 @@ import { createServer } from 'vite';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const out = process.env.ART_SHOTS_DIR || '/tmp/chapter2-art';
 await fs.mkdir(out, { recursive: true });
-const server = process.env.UI_BASE_URL ? null : await createServer({ root, server: { host: '127.0.0.1', port: 5180, strictPort: true } });
+const server = process.env.UI_BASE_URL ? null : await createServer({ root, server: { host: '127.0.0.1', port: 5180, strictPort: true, hmr: false } });
 await server?.listen();
 const base = process.env.UI_BASE_URL || 'http://127.0.0.1:5180/';
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined,
@@ -107,7 +107,7 @@ try {
   await events(['ch2_cargo_start', 'ch2_severin_asked', 'ch2_frost_wave', 'ch2_quarter_open', 'ch2_construct_unstable', 'ch2_nerys_met', 'ch2_choice_start']);
   await shot('06-frozen-houses',2910,1820);
   const houses = await page.evaluate(() => window.__game.scene.getScene('ExplorationScene').colliderObjects.filter(o => o.texture?.key === 'city_frozen_house').map(o => [o.x,o.y,o.displayWidth,o.displayHeight]));
-  assert.equal(houses.length,2);
+  assert.equal(houses.length,4);
   await shot('07-rescue-quarter',3020,2350);
   await position(2910,2090); await clickWorld(2910,1980);
   await page.waitForFunction(() => window.__witch.state.getObject('fq_water')?.state === 'frozen',null,{timeout:8000}).catch(async error => {
@@ -129,7 +129,7 @@ try {
     s.enemies.filter(e=>['fq_collector','fq_critter'].includes(e.id)).forEach(e=>e.clear(false));
     s.refreshAll();
   });
-  await position(3360,2220); await clickWorld(3420,2140);
+  await position(3360,2220); await clickWorld(3340,2085);
   await page.waitForFunction(() => window.__witch.state.hasEvent('ch2_rescue_door'));
   await page.waitForTimeout(800);
   await page.evaluate(() => window.__game.scene.getScene('UIScene').closeModal(null));

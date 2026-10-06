@@ -124,6 +124,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.setupLife();   // v0.28.0
     this.setupGuidance();
     this.refreshAll();
+    this.recoverCityPosition();
 
     // камера: героиня немного ниже центра (Blueprint §7)
     const cam = this.cameras.main;
@@ -213,6 +214,21 @@ export class ExplorationScene extends Phaser.Scene {
     st.data.player = fixed;
     console.info('[v0.10] позиция из старого сохранения в новой стене / за закрытыми воротами → перед воротами', p, fixed);
     return fixed;
+  }
+
+  /** A saved city position may now intersect a relocated wall or furnishing. Move only blocked feet locally. */
+  recoverCityPosition() {
+    if (services.edit || this.loc?.id !== 'city') return;
+    const p = { x: this.player.x, y: this.player.y }, { w, h } = PLAYER.hitbox;
+    const blocked = this.colliderObjects.some(o => {
+      const b = o.body;
+      return b && p.x + w / 2 > b.x && p.x - w / 2 < b.x + b.width && p.y > b.y && p.y - h < b.y + b.height;
+    });
+    if (!blocked) return;
+    const route = findPath(this.navGrids(), p, p);
+    if (!route || Math.hypot(route.end.x - p.x, route.end.y - p.y) > 160) return;
+    this.player.setPosition(route.end.x, route.end.y);
+    services.state.data.player = { ...route.end };
   }
 
   /**
@@ -339,8 +355,10 @@ export class ExplorationScene extends Phaser.Scene {
     this.add.tileSprite(R.x, R.y, R.w, R.h + V.bottom, 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
     this.paintTerrain();
     for (const g of GROUND) if (touchesLocation(g, this.loc)) {
-      const im = this.add.tileSprite(g.x, g.y, g.w, g.h, g.tex).setOrigin(0).setDepth(DEPTH.path);
-      if (['city_paving', 'city_wood_floor', 'snow_ground_01', 'grave_ground_01'].includes(g.tex)) im.setTileScale(0.5);
+      const im = this.add.tileSprite(g.x, g.y, g.w, g.h, g.tex).setOrigin(0).setDepth(DEPTH.path + (g.interior ? 0.4 : 0));
+      if (g.tileScale != null) im.setTileScale(g.tileScale);
+      else if (['city_paving', 'city_wood_floor', 'city_stone_floor', 'snow_ground_01', 'grave_ground_01'].includes(g.tex)) im.setTileScale(0.5);
+      if (g.tint) im.setTint(g.tint);
     }
     if (!V.top && !V.bottom) return;
     // тёмная подстилка под лесом ниже границы мира (деревья — в world.props.js)
@@ -414,9 +432,16 @@ export class ExplorationScene extends Phaser.Scene {
       const bottomDepth = DEPTH.mainBase + c.y + c.h;
       switch (c.kind) {
         case 'trees': keep(this.add.rectangle(c.x, c.y, c.w, c.h, this.loc?.id === 'frostwood' ? 0x76938c : this.loc?.id === 'graveyard' ? 0x343d32 : 0x172114).setOrigin(0).setDepth(DEPTH.path - 1)); break;
-        case 'wall':
-          keep(this.add.tileSprite(c.x, c.y - 40, c.w, c.h + 40, this.loc?.id === 'city' ? 'city_timber' : 'wall_wood_01').setOrigin(0).setTileScale(this.loc?.id === 'city' ? 0.25 : 1).setDepth(bottomDepth));
+        case 'wall': {
+          const city = this.loc?.id === 'city';
+          const wall = keep(this.add.tileSprite(c.x, c.y - 40, c.w, c.h + 40, city ? 'city_timber' : 'wall_wood_01').setOrigin(0).setTileScale(city ? 0.25 : 1).setDepth(bottomDepth));
+          if (city) {
+            wall.setTint(0xa68a69);
+            keep(this.add.rectangle(c.x, c.y - 40, c.w, c.h + 40, 0x000000, 0).setOrigin(0)
+              .setStrokeStyle(3, 0x3c2b20, 0.9).setDepth(bottomDepth + 0.1));
+          }
           break;
+        }
         case 'furniture':
           if (c.tex) { // v0.8: мебель с картинкой — низ спрайта на нижней кромке коллизии
             const im = this.add.image(c.x + c.w / 2, c.y + c.h, c.tex).setOrigin(0.5, 1).setDepth(bottomDepth);

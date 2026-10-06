@@ -42,6 +42,15 @@ await mute(async () => {
   } catch (e) { err = e; }
   ok(!err, 'HUD: создаётся, обновляется, переключает режимы' + (err ? ': ' + err.stack.split('\n').slice(0, 3).join(' | ') : ''));
 
+  // Action button switches between exported icons with different source resolutions.
+  const journalTexture = Reg.textures.get('icon_journal');
+  Reg.textures.set('icon_journal', { width: 2048, height: 1024 });
+  ui.onFocus({ icon: 'icon_journal', color: COLORS.gold, label: 'Поручения' });
+  ok(ui.ctxIcon.displayWidth === 60 && ui.ctxIcon.displayHeight === 30, 'контекстная книга из 2048px умещается в кнопку 60px');
+  ui.onFocus({ icon: 'icon_talk', color: COLORS.gold, label: 'Говорить' });
+  ok(Math.max(ui.ctxIcon.displayWidth, ui.ctxIcon.displayHeight) === 60, 'смена книги на разговор сохраняет размер кнопки');
+  Reg.textures.set('icon_journal', journalTexture); ui.onFocus(null);
+
   // ---- полосы на крайних значениях
   err = null;
   try {

@@ -8,6 +8,7 @@
 // поэтому исходники можно делать крупнее (например 512×512).
 
 import { CHAPTER2_FILES, CHAPTER2_SIZES } from './chapter2.art.generated.js';
+import { CITY_INTERIOR_FILES, CITY_INTERIOR_SIZES } from './city.interiors.generated.js';
 
 export const ASSET_FILES = {
   // Одобренный рисованный UI: тонкие медальоны без общей нижней рамки и меню.
@@ -89,6 +90,8 @@ export const DISPLAY_SIZE = {
 // Production chapter II pack; approved chapter I files stay at their original keys.
 Object.assign(ASSET_FILES, CHAPTER2_FILES);
 Object.assign(DISPLAY_SIZE, CHAPTER2_SIZES);
+Object.assign(ASSET_FILES, CITY_INTERIOR_FILES);
+Object.assign(DISPLAY_SIZE, CITY_INTERIOR_SIZES);
 
 /** Рисунки-заглушки, не готовые к релизу. Оба героя используют финальные PNG. */
 export const TEMPORARY_ART = [];

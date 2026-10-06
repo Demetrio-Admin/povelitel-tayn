@@ -1,4 +1,4 @@
-import { CITY_COLLIDERS } from '../config/world.city.js';
+import { CITY_COLLIDERS, CITY_ROOM_DECOR } from '../config/world.city.js';
 import { EXP_COLLIDERS } from '../config/world.expeditions.js';
 import { COLORS, DEPTH } from '../config/game.config.js';
 import { applyDisplaySize } from '../objects/InteractiveObject.js';
@@ -61,26 +61,24 @@ export class CityPresentation {
         this.image('flower_white_01', x + (x < 3000 ? 16 : -16), y + 8, { scale: 0.65 });
       }
     }
-    for (const [x, y] of [[2500, 2970], [2800, 2970], [3020, 2990], [3390, 2990],
-      [2480, 4370], [2790, 4370], [3020, 4380], [3400, 4380]]) this.image('plant_pot_01', x, y);
-    for (const [x, y] of [[2625, 2870], [3210, 2860], [2640, 4290], [3200, 4320]]) {
-      this.image('rug_01', x, y, { ground: true });
-    }
-    // Furniture at existing room boundaries; all quest routes and doors stay open.
-    for (const [key, x, y] of [
-      ['herb_bundle_01', 3150, 4250], ['plant_pot_01', 2460, 3100],
-      ['plant_pot_01', 3440, 3100], ['plant_pot_01', 2470, 4010],
-      ['plant_pot_01', 3450, 4010], ['candle_group_01', 3000, 4420],
-      ['candle_group_01', 2810, 2670], ['candle_group_01', 3370, 2830],
-      ['candle_group_01', 2810, 4350], ['herb_bundle_01', 3370, 4250],
-      ['city_barrel', 3400, 3580], ['city_crate', 3440, 3630],
-      ['city_sign_archive', 2785, 2580], ['city_sign_society', 3380, 2580],
-      ['city_sign_duel', 2490, 4150], ['city_sign_coven', 3355, 4150],
-    ]) this.image(key, x, y);
+    for (const d of CITY_ROOM_DECOR) this.image(d.key, d.x, d.y, d);
+    // Market stock is against the stall, away from the bank's visitor area.
+    this.image('city_barrel', 3470, 3450);
+    this.image('city_crate', 3440, 3500);
+    // A clear training floor, with equipment along the sides instead of a living-room rug.
+    const mat = scene.add.graphics().setDepth(DEPTH.path + 0.6);
+    mat.fillStyle(0x695453, 0.22).fillRect(2570, 4230, 140, 150);
+    mat.lineStyle(2, 0xb79c67, 0.7).strokeRect(2570, 4230, 140, 150);
+    mat.strokeEllipse(2640, 4305, 100, 72);
+    this.images.push(mat);
+    const bankName = scene.add.text(3320, 3570, 'Городской Банк', {
+      fontFamily: 'Philosopher', fontSize: '25px', color: '#e7d6ad', stroke: '#251c14', strokeThickness: 5,
+    }).setOrigin(0.5, 1).setDepth(DEPTH.markers - 2);
+    this.images.push(bankName);
     this.image('city_cellar', 2500, 2190, { ground: true, requires: 'ch2_rescue_cellar' });
-    this.image('city_patient_miron', 2260, 4530, { requires: 'ch2_vol_2' });
-    this.image('city_resident_woman', 3320, 2180, { requires: 'ch2_rescue_door' });
-    this.image('city_resident_man', 3490, 2220, { requires: 'ch2_rescue_door' });
+    this.image('city_patient_miron', 2170, 4450, { requires: 'ch2_vol_2' });
+    this.image('city_resident_woman', 3410, 2280, { requires: 'ch2_rescue_door' });
+    this.image('city_resident_man', 3480, 2320, { requires: 'ch2_rescue_door' });
     this.refresh();
   }
 
@@ -88,9 +86,10 @@ export class CityPresentation {
     if (!this.scene.textures.exists(key)) return null;
     const im = this.scene.add.image(x, y, key).setOrigin(0.5, 1);
     applyDisplaySize(im, key);
-    im.setDepth(options.ground ? DEPTH.path + 0.3 : DEPTH.mainBase + y);
+    im.setDepth(options.ground ? DEPTH.path + 0.7 : DEPTH.mainBase + y);
     if (options.scale) im.setScale(im.scaleX * options.scale, im.scaleY * options.scale);
     if (options.flip) im.setFlipX(true);
+    if (options.tint) im.setTint(options.tint);
     this.images.push(im);
     if (options.requires) this.dynamic.push({ im, event: options.requires });
     return im;
@@ -106,7 +105,7 @@ export class CityPresentation {
     this.frostFloors[1].setVisible(finale || editor).setAlpha(0.65);
     for (const { im, event } of this.dynamic) im.setVisible(editor || state.hasEvent(event));
     for (const im of this.scene.colliderObjects?.filter(im => ['city_house', 'city_frozen_house'].includes(im.texture?.key)) || []) {
-      if (im.y < 2000 && this.scene.textures.exists('city_frozen_house')) {
+      if (im.y < 2500 && this.scene.textures.exists('city_frozen_house')) {
         im.setTexture(quarter && !thawed ? 'city_frozen_house' : 'city_house');
         applyDisplaySize(im, im.texture.key);
       }

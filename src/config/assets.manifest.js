@@ -15,6 +15,9 @@ export const ASSET_FILES = {
   hero_down: 'assets/sprites/hero_down.png', hero_up: 'assets/sprites/hero_up.png', hero_side: 'assets/sprites/hero_side.png', hero_shadow: null,
   // Колдун: финальные акварельные ракурсы, тот же холст 166×240 и масштаб, что у ведьмы.
   warlock_down: 'assets/sprites/warlock_down.png', warlock_up: 'assets/sprites/warlock_up.png', warlock_side: 'assets/sprites/warlock_side.png',
+  // v0.28.0: живой мир (птицы, белка, заяц, лист)
+  life_bird_1: 'assets/sprites/life_bird_1.png', life_bird_2: 'assets/sprites/life_bird_2.png', life_squirrel_1: 'assets/sprites/life_squirrel_1.png', life_squirrel_2: 'assets/sprites/life_squirrel_2.png',
+  life_rabbit_1: 'assets/sprites/life_rabbit_1.png', life_rabbit_2: 'assets/sprites/life_rabbit_2.png', life_leaf: 'assets/sprites/life_leaf.png',
   // деревья
   tree_autumn_01: 'assets/sprites/tree_autumn_01.png', tree_autumn_02: 'assets/sprites/tree_autumn_02.png', tree_dark_01: 'assets/sprites/tree_dark_01.png', tree_dark_02: 'assets/sprites/tree_dark_02.png', dead_tree_01: 'assets/sprites/dead_tree_01.png', birch_01: 'assets/sprites/birch_01.png',
   // камни
@@ -66,6 +69,7 @@ export const DISPLAY_SIZE = {
   heavy_boulder_01: [210, 150], rock_medium_01: [100, 77],
   ancient_gate_01: [300, 300], lunar_altar_01: [160, 110],
   enemy_guardian: [160, 210], enemy_ice_guardian: [170, 223], enemy_experimental_construct: [150, 197], enemy_severin: [124, 165], enemy_volunteer: [96, 140], enemy_scavenger: [116, 140],
+  life_bird_1: [44, 28], life_bird_2: [44, 28], life_squirrel_1: [60, 46], life_squirrel_2: [60, 46], life_rabbit_1: [60, 42], life_rabbit_2: [60, 42], life_leaf: [18, 12],
   // партия 2 (текстуры x2, размер на экране — по пропорциям арта)
   bush_01: [80, 68], bush_02: [80, 68], dry_bush_01: [84, 70], flower_white_01: [48, 46], flower_purple_01: [48, 46], mushroom_red_01: [52, 39], mushroom_blue_01: [46, 43],
   reeds_01: [64, 70], moon_plant_01: [60, 53], rock_small_01: [56, 47], lantern_01: [25, 90], lantern_02: [50, 100], signpost_01: [53, 90], torch_01: [36, 90],

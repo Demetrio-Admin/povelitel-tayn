@@ -18,6 +18,8 @@ ok(seg.length > 0 && !/\(\)=>\{\}\)/.test(seg), 'кнопки даров: в с�
 ok(/pressDock\([A-Za-z_$]+\)\{[^}]*ABILITY_USE/.test(js), 'нажатие дара (pressDock) отправляет ABILITY_USE');
 // 2) сумка и контекстная кнопка не вырезаны
 ok(/OPEN_BAG/.test(seg), 'кнопка «Сумка»: нажатие на месте');
+// 4) живой мир (v0.28.0): рябь, качание, птицы не вырезаны
+ok(/updateSway\(/.test(js) && /flyBird\(\)\{/.test(js) && /spawnRipple\(/.test(js) && /life_bird_1/.test(js), 'живой мир: качание, рябь и птицы остались в сборке');
 
 console.log(failed ? '\n✗ Сборка: провал' : '\n✓ Сборка: нажатия на месте');
 process.exit(failed ? 1 : 0);

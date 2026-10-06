@@ -960,7 +960,7 @@ export const DIALOGUES = {
       } },
     },
     {
-      id: 'nerys_lesson_ready', when: c => c.has('warm_potion_crafted') && !c.has('unlock_ice_1'),
+      id: 'nerys_lesson_ready', when: c => c.has('ch2_rescue_done') && c.has('warm_potion_crafted') && !c.has('unlock_ice_1'),
       nodes: {
         start: {
           lines: [

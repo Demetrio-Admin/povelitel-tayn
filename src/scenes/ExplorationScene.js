@@ -259,25 +259,37 @@ export class ExplorationScene extends Phaser.Scene {
    * окно объясняет «3 из 4» и ведёт в «Дары». v0.22.0: 'ice:2' — Лёд II (unlock_ice_2), 'ice:3:frost' / 'ice:3:shard' — Лёд III
    * с веткой (ch2_ice3_frost / ch2_ice3_shard). Повтор ничего не выдаёт.
    */
-  unlockGift(spec) {
+  async unlockGift(spec) {
     const [id, lvlS, branch] = String(spec).split(':');
     const level = Number(lvlS) || 1;
-    if (id !== 'ice') return;
+    if (id !== 'ice' || (level === 3 && !['frost', 'shard'].includes(branch))) return;
     const GIFT = {
       1: { event: 'unlock_ice_1', title: 'Лёд I', text: 'Лёд замораживает воду и нестабильную магию, а в бою замедляет врага: его удары и подготовка сильного удара идут медленнее.\n\n'
-        + 'Теперь даров четыре, а слотов — три. Работают только дары в слотах — и в бою, и в мире. Выберите, какой дар отложить.' },
+        + 'Теперь даров четыре, а слотов — три. Работают только дары в слотах — и в бою, и в мире. Поставьте Лёд в один из слотов, чтобы его кнопка появилась внизу.' },
       2: { event: 'unlock_ice_2', title: 'Лёд II — Хрупкость', text: 'После удара Льдом враг становится хрупким: следующий удар Телекинеза, Огня или Астрала сильнее, '
         + 'а тяжёлый камень по хрупкой цели ещё и разбивает броню.\n\nСначала Лёд — потом сильный удар.' },
       3: { event: `ch2_ice3_${branch}`, title: `Лёд III — ${branch === 'shard' ? 'Осколок' : 'Мороз'}`, text: branch === 'shard'
         ? 'Ветка Осколка: удар Льда по хрупкой цели раскалывает её (урон ×2,2), а Хрупкость от других даров сильнее. Замедление слабое.'
         : 'Ветка Мороза: враг на 55% медленнее шесть секунд — больше времени, чтобы прервать удар. Сам удар Льда слабее.' },
     }[level];
-    const { state, abilities, quests } = services;
-    if (!GIFT || state.hasEvent(GIFT.event) || (level === 3 && state.hasEvent('ch2_ice3'))) return;
-    abilities.unlock('ice', level);
-    if (level === 3) state.setBranch?.('ice', branch);
-    quests.complete(GIFT.event);
-    if (level === 3) state.markEvent('ch2_ice3');
+    const { state, actions } = services;
+    if (!GIFT || this.giftPending || state.hasEvent(GIFT.event) || (level === 3 && state.hasEvent('ch2_ice3'))) return;
+    // Нельзя показывать дар локально заранее: отказ сервера при следующем сохранении уберёт его из героя.
+    this.giftPending = true;
+    let r;
+    try { r = await actions.confirmEvent(GIFT.event); }
+    finally { this.giftPending = false; }
+    const granted = state.hasEvent(GIFT.event) && state.isUnlocked('ice') && state.abilityLevel('ice') >= level
+      && (level !== 3 || state.branchOf('ice') === branch);
+    if ((!r?.ok && r?.reason !== 'already') || !granted) {
+      const text = {
+        locked: 'Сначала завершите предыдущее задание и сдайте его Нэрис.',
+        network: 'Нет связи с сервером. Поговорите с Нэрис ещё раз, когда связь вернётся.',
+        session: 'Сессия завершилась. Войдите снова, чтобы получить дар.',
+      }[r?.reason] || 'Не удалось получить Лёд. Поговорите с Нэрис ещё раз.';
+      this.toast(text, COLORS.danger);
+      return;
+    }
     this.burst(this.player.x, this.player.y - 60, COLORS.ice, 34);
     this.toast(`Получен дар: ${GIFT.title}`, COLORS.ice);
     this.dialog({

@@ -22,6 +22,7 @@
     "balance:chapter": "node tools/balance/chapter-report.mjs",
     "test:heroes": "node tests/e2e/hero-online.mjs",
     "test:locations": "node tests/e2e/locations.mjs",
+    "test:chapter2-art": "node tests/e2e/chapter2-art.mjs",
     "test:abilities": "node tests/e2e/abilities.mjs",
     "test:life": "node tests/e2e/life.mjs",
     "check:bundle": "node tools/check-bundle.mjs"

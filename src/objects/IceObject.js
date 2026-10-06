@@ -48,7 +48,7 @@ export class IceObject extends InteractiveObject {
     }
     if (this.cfg.walkable) {
       if (this.blocker) { this.blocker.destroy(); this.blocker = null; }
-      this.sprite.setDepth(DEPTH.path + 1);   // лёд — на полу, герой идёт поверх
+      if (this.cfg.groundWhenFrozen !== false) this.sprite.setDepth(DEPTH.path + 1);
     }
     if (animate) {
       this.scene.burst(this.x, this.baseY - 20, COLORS.ice, 26);

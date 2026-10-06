@@ -11,6 +11,7 @@ import { MapEditor } from '../systems/MapEditor.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { Player } from '../objects/Player.js';
+import { CityPresentation, expeditionForestDecor } from '../world/CityPresentation.js';
 import { InteractionSystem } from '../systems/InteractionSystem.js';
 import { TelekinesisObject } from '../objects/TelekinesisObject.js';
 import { FireObject } from '../objects/FireObject.js';
@@ -119,6 +120,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.enemies = this.enemyCfgs.map(cfg => new EnemyTrigger(this, cfg));
     this.resumeEncounters();
     this.buildContentDecor();
+    this.cityPresentation = this.loc?.id === 'city' ? new CityPresentation(this) : null;
     this.setupLife();   // v0.28.0
     this.setupGuidance();
     this.refreshAll();
@@ -336,7 +338,10 @@ export class ExplorationScene extends Phaser.Scene {
     const V = this.view, R = this.bounds;
     this.add.tileSprite(R.x, R.y, R.w, R.h + V.bottom, 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
     this.paintTerrain();
-    for (const g of GROUND) if (touchesLocation(g, this.loc)) this.add.tileSprite(g.x, g.y, g.w, g.h, g.tex).setOrigin(0).setDepth(DEPTH.path);
+    for (const g of GROUND) if (touchesLocation(g, this.loc)) {
+      const im = this.add.tileSprite(g.x, g.y, g.w, g.h, g.tex).setOrigin(0).setDepth(DEPTH.path);
+      if (['city_paving', 'city_wood_floor', 'snow_ground_01', 'grave_ground_01'].includes(g.tex)) im.setTileScale(0.5);
+    }
     if (!V.top && !V.bottom) return;
     // тёмная подстилка под лесом ниже границы мира (деревья — в world.props.js)
     if (V.bottom) this.add.rectangle(R.x, R.y + R.h, R.w, V.bottom, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
@@ -408,9 +413,9 @@ export class ExplorationScene extends Phaser.Scene {
       keep(z);
       const bottomDepth = DEPTH.mainBase + c.y + c.h;
       switch (c.kind) {
-        case 'trees': keep(this.add.rectangle(c.x, c.y, c.w, c.h, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1)); break;
+        case 'trees': keep(this.add.rectangle(c.x, c.y, c.w, c.h, this.loc?.id === 'frostwood' ? 0x76938c : this.loc?.id === 'graveyard' ? 0x343d32 : 0x172114).setOrigin(0).setDepth(DEPTH.path - 1)); break;
         case 'wall':
-          keep(this.add.tileSprite(c.x, c.y - 40, c.w, c.h + 40, 'wall_wood_01').setOrigin(0).setDepth(bottomDepth));
+          keep(this.add.tileSprite(c.x, c.y - 40, c.w, c.h + 40, this.loc?.id === 'city' ? 'city_timber' : 'wall_wood_01').setOrigin(0).setTileScale(this.loc?.id === 'city' ? 0.25 : 1).setDepth(bottomDepth));
           break;
         case 'furniture':
           if (c.tex) { // v0.8: мебель с картинкой — низ спрайта на нижней кромке коллизии
@@ -423,7 +428,7 @@ export class ExplorationScene extends Phaser.Scene {
           if (c.label) keep(this.add.text(c.x + c.w / 2, c.y + c.h / 2 - 10, c.label, { fontSize: UI.type.small, color: COLORS.textDim }).setOrigin(0.5).setDepth(bottomDepth + 1));
           break;
         case 'ruin':
-          keep(this.add.tileSprite(c.x, c.y - 30, c.w, c.h + 30, 'wall_ruin_01').setOrigin(0).setTileScale(0.5).setDepth(bottomDepth));
+          keep(this.add.tileSprite(c.x, c.y - 30, c.w, c.h + 30, this.loc?.id === 'city' ? 'city_wall' : 'wall_ruin_01').setOrigin(0).setTileScale(this.loc?.id === 'city' ? 0.25 : 0.5).setDepth(bottomDepth));
           keep(this.add.rectangle(c.x, c.y - 30, c.w, c.h + 30).setOrigin(0).setStrokeStyle(3, 0x2f2d33).setDepth(bottomDepth + 1));
           break;
         default: break;
@@ -485,12 +490,16 @@ export class ExplorationScene extends Phaser.Scene {
   // ------------------------------------------------------------------ наполнение (v0.8)
   /** Ковёр, пучки трав, горшок, костёр охотника и «живые мелочи» вроде пылинок в воздухе. */
   buildContentDecor() {
-    for (const d of CONTENT_DECOR) {
+    this.cityLamps = [];
+    for (const d of [...CONTENT_DECOR, ...expeditionForestDecor(this.loc)]) {
       if (!inLocation(d, this.loc)) continue;   // v0.27.0
+      if (this.loc?.id === 'city' && d.k === 'frost_patch_01') continue;
       const img = this.add.image(d.x, d.y, d.k).setOrigin(0.5, 1);
       applyDisplaySize(img, d.k);
+      if (d.scale) img.setScale(img.scaleX*d.scale, img.scaleY*d.scale);
       if (d.flip) img.setFlipX(true);
       img.setDepth(d.floor ? DEPTH.path + 1 : DEPTH.mainBase + d.y);
+      if (d.k === 'city_lamp_01') this.cityLamps.push(img);
       if (d.fire && !services.edit) {
         const top = d.y - img.displayHeight * 0.55;
         const g = this.addGlow(d.x, top, 0xff8a3a, 0.55, null, 1.9);
@@ -768,6 +777,7 @@ export class ExplorationScene extends Phaser.Scene {
   refreshAll() {
     this.objects?.forEach(o => o.refresh());
     this.enemies?.forEach(e => e.refresh());
+    this.cityPresentation?.refresh();
   }
 
   // ------------------------------------------------------------------ FX и UI-хелперы

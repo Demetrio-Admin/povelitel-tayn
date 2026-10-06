@@ -227,8 +227,8 @@ export class ChestObject extends InteractiveObject {
   constructor(scene, cfg) {
     super(scene, cfg);
     if (this.isDone()) {
-      this.sprite.setTexture('chest_01_open');
-      applyDisplaySize(this.sprite, 'chest_01_open');
+      this.sprite.setTexture(cfg.openTexture || 'chest_01_open');
+      applyDisplaySize(this.sprite, cfg.openTexture || 'chest_01_open');
       this.baseScale = { x: this.sprite.scaleX, y: this.sprite.scaleY };
     }
   }
@@ -244,8 +244,8 @@ export class ChestObject extends InteractiveObject {
   async interact() {
     const r = await this.serverAct();
     if (!r || this.removed || !this.sprite.active) return;
-    this.sprite.setTexture('chest_01_open');
-    applyDisplaySize(this.sprite, 'chest_01_open');
+    this.sprite.setTexture(this.cfg.openTexture || 'chest_01_open');
+    applyDisplaySize(this.sprite, this.cfg.openTexture || 'chest_01_open');
     this.baseScale = { x: this.sprite.scaleX, y: this.sprite.scaleY };
     services.audio.play('chest');
     this.react(COLORS.gold, 1.22);

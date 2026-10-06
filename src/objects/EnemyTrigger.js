@@ -32,8 +32,9 @@ export class EnemyTrigger {
 
     this.ring = scene.add.ellipse(cfg.x, cfg.y, cfg.radius * 2, cfg.radius * 1.1)
       .setStrokeStyle(2, COLORS.danger, 0.35).setFillStyle(COLORS.danger, 0.05).setDepth(DEPTH.path + 1);
-    this.sprite = scene.add.image(cfg.x, cfg.y, this.def.texture).setOrigin(0.5, 1);
-    applyDisplaySize(this.sprite, this.def.texture);
+    this.texture = cfg.texture || this.def.texture;
+    this.sprite = scene.add.image(cfg.x, cfg.y, this.texture).setOrigin(0.5, 1);
+    applyDisplaySize(this.sprite, this.texture);
     if (this.def.tint) this.sprite.setTint(this.def.tint);
     if (cfg.scale) this.sprite.setScale(this.sprite.scaleX * cfg.scale, this.sprite.scaleY * cfg.scale);
     this.sprite.setDepth(DEPTH.mainBase + cfg.y);

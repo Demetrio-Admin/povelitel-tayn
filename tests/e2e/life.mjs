@@ -44,6 +44,8 @@ try {
   let a = await info();
   assert.ok(a.running && !a.lite, 'менеджер запущен: ' + JSON.stringify(a));
   assert.ok(a.sway >= 1 && a.sway <= 14 && a.angles, 'качаются от 1 до 14 деревьев: ' + a.sway);
+  a.dbg = await page.evaluate(() => { const L = window.__game.scene.getScene('ExplorationScene').life; const r = L.scene.terrain.waterRects; let err = null; try { L.spawnRipple(L.scene.cameras.main.worldView); L.spawnRipple(L.scene.cameras.main.worldView); L.spawnRipple(L.scene.cameras.main.worldView); } catch (e) { err = String(e.stack).slice(0, 300); } return { n: r.length, first: r[0], inView: r.filter(w => w.x < 1095 && w.x + w.w > 395 && w.y < 3000 && w.y + w.h > 1800).length, err, pool: L.ripples.length, rndType: typeof L.rnd, r: L.rnd() }; });
+  a.errors = errors.slice(0, 3);
   assert.ok(a.ripples >= 1 && a.pool <= 8, 'у ручья есть рябь: ' + a.ripples + ' из пула ' + a.pool + ' ' + JSON.stringify(a));
   assert.ok(a.leaves, 'листья идут');
   ok(`у ручья: качается ${a.sway} деревьев, рябь ${a.ripples}/${a.pool}, листья идут`);

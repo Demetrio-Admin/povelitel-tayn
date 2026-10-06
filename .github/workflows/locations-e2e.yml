@@ -27,8 +27,12 @@ jobs:
       - name: shots as annotations
         if: always()
         run: |
-          for f in shots/*.png; do
-            n=$(basename "$f" .png)
-            convert "$f" -resize 260x -quality 60 "/tmp/$n.jpg"
-            echo "::notice title=shot $n::$(base64 -w0 /tmp/$n.jpg)"
-          done
+          pip install -q pillow
+          python3 - <<'PY'
+          import glob, io, base64, os
+          from PIL import Image
+          for f in sorted(glob.glob('shots/*.png')):
+              im = Image.open(f).convert('RGB'); im.thumbnail((300, 650))
+              b = io.BytesIO(); im.save(b, 'JPEG', quality=62)
+              print('::notice title=shot %s::%s' % (os.path.basename(f)[:-4], base64.b64encode(b.getvalue()).decode()))
+          PY

@@ -313,5 +313,19 @@ console.log('\nПервая глава v0.10.0: алтарь, ворота, Ас
   offF?.();
 }
 
+
+// --- v0.27.0: указатель «Карта мира» — дар рядом с ним не открывает карту, кнопка действия открывает
+{
+  const { ExitObject } = await import('../src/objects/InteractiveObject.js');
+  const sc = mkScene(); const toasts = []; sc.toast = (t) => toasts.push(t);
+  const ex = new ExitObject(sc, { id: 'exit_forest', kind: 'exit', x: 1640, y: 3625, texture: 'signpost_01', radius: 110, hint: 'Карта мира' });
+  let opened = 0; const off = bus.on(MSG.OPEN_MAP, () => { opened++; });
+  ex.interact('fire'); ex.interact('telekinesis'); ex.interact('seal');
+  ok(opened === 0 && toasts.length === 3, 'указатель «Карта мира»: дары рядом с ним не открывают карту (подсказка вместо этого)');
+  ex.interact(null);
+  ok(opened === 1, 'указатель «Карта мира»: кнопка действия открывает карту');
+  off();
+}
+
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты объектов пройдены');
 process.exit(failures ? 1 : 0);

@@ -56,15 +56,19 @@ export class PlayerActions {
    * Возвращает ответ сервера. Если сервер отказал, его состояние уже заменило локальное — интерфейс обновляется.
    */
   mirror(action) {
-    const ses0 = this.getSession();
-    if (!ses0) return Promise.resolve(null);
-    const uid = ses0.userId;   // действие принадлежит этому игроку: после выхода или смены аккаунта оно не отправляется
+    if (!this.getSession()) return Promise.resolve(null);
+    return this.confirm(action);
+  }
+
+  /** Подтвердить действие до показа результата. Та же очередь и id при повторах; без сервера — правила applyAction. */
+  confirm(action) {
+    const uid = this.getSession()?.userId ?? null;   // после выхода или смены аккаунта действие не отправляется
     const act = { ...action, id: action.id || newId() };
     const job = async () => {
       let r = null;
       for (let i = 0; i < 20; i++) {
-        if (this.getSession()?.userId !== uid) return { ok: false, reason: 'session' };
         while (this.pending) await this.pending.catch(() => {});
+        if ((this.getSession()?.userId ?? null) !== uid) return { ok: false, reason: 'session' };
         r = await this.run(act);
         if (r.reason === 'busy') { await sleep(30); continue; }
         if (r.reason !== 'network') break;
@@ -152,6 +156,7 @@ export class PlayerActions {
 
   // v0.15.0: подтверждение локальных действий (см. mirror). Условия и награды определяет сервер (config/serverRules.js).
   event(key) { return this.mirror({ op: 'event', key }); }
+  confirmEvent(key) { return this.confirm({ op: 'event', key }); }
   questAccept(quest) { return this.mirror({ op: 'quest_accept', quest }); }
   questTurnIn(quest) { return this.mirror({ op: 'quest_turn_in', quest }); }
   researchStart(upgrade) { return this.mirror({ op: 'research_start', upgrade }); }

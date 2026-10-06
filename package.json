@@ -7,7 +7,7 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host",
-    "test": "node tests/run-tests.js && node tests/combat-replay-test.mjs && node tools/build-combat-function.mjs --check && node tests/world-test.js && node tests/editor-data-test.mjs && node tests/nav-test.mjs && node tests/city-layout-test.mjs && node --import ./tools/ui/register.mjs tests/editor-test.mjs && node tests/session-test.js && node tests/telemetry-test.mjs && node tests/gifts-test.mjs && node tests/chapter2-test.mjs && node tests/daily-test.mjs && node tests/expeditions-test.mjs && node tests/locations-test.mjs && node tests/life-test.mjs && node tests/covens-test.mjs && node tests/duel-test.mjs && node --import ./tools/ui/register.mjs tests/ui-smoke.mjs && node --import ./tools/ui/register.mjs tests/objects-test.mjs && node --import ./tools/ui/register.mjs tests/hero-test.mjs",
+    "test": "node tests/run-tests.js && node tests/combat-replay-test.mjs && node tools/build-combat-function.mjs --check && node tests/world-test.js && node tests/editor-data-test.mjs && node tests/nav-test.mjs && node tests/city-layout-test.mjs && node --import ./tools/ui/register.mjs tests/editor-test.mjs && node tests/session-test.js && node tests/telemetry-test.mjs && node tests/gifts-test.mjs && node tests/chapter2-test.mjs && node --import ./tools/ui/register.mjs tests/nerys-gift-test.mjs && node tests/daily-test.mjs && node tests/expeditions-test.mjs && node tests/locations-test.mjs && node tests/life-test.mjs && node tests/covens-test.mjs && node tests/duel-test.mjs && node --import ./tools/ui/register.mjs tests/ui-smoke.mjs && node --import ./tools/ui/register.mjs tests/objects-test.mjs && node --import ./tools/ui/register.mjs tests/hero-test.mjs",
     "ui:shots": "node --import ./tools/ui/register.mjs tools/ui/render-scenes.mjs",
     "e2e": "node tests/e2e/play.mjs",
     "test:db": "node tools/sql/security-test.mjs && node tools/sql/diff-test.mjs && node tools/sql/migration-test.mjs && node tools/sql/combat-test.mjs && node tools/sql/telemetry-test.mjs && node tools/sql/coven-test.mjs && node tools/sql/duel-test.mjs && BACKEND=pg node tests/session-test.js",
@@ -28,7 +28,8 @@
     "test:forest-art": "node tests/e2e/forest-art.mjs",
     "test:city-layout": "node tests/e2e/city-layout.mjs",
     "check:bundle": "node tools/check-bundle.mjs",
-    "test:editor": "node tests/e2e/editor-catalog.mjs"
+    "test:editor": "node tests/e2e/editor-catalog.mjs",
+    "test:ice": "node tests/e2e/nerys-ice.mjs"
   },
   "dependencies": {
     "@fontsource/philosopher": "^5.2.8",

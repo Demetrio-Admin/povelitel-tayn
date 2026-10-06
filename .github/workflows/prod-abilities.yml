@@ -17,13 +17,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run build
+      - run: npm run build && ls dist/assets | grep -i "^index" | tee out.txt
       - run: |
           npx vite preview --host 127.0.0.1 --port 4173 --strictPort > preview.log 2>&1 &
           sleep 6; cat preview.log
           BASE=$(grep -o 'http://127.0.0.1:4173[^ ]*' preview.log | head -1)
           echo "BASE=$BASE"
-          UI_BASE_URL="$BASE" node tests/e2e/abilities.mjs 2>&1 | tee out.txt; cat preview.log >> out.txt
+          UI_BASE_URL="$BASE" node tests/e2e/abilities.mjs 2>&1 | tee -a out.txt
       - name: report
         if: always()
         env:

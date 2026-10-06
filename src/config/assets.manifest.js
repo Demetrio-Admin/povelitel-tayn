@@ -7,6 +7,8 @@
 // Pivot всех объектов мира — нижний центр (origin 0.5, 1). Размер на экране задаётся DISPLAY_SIZE,
 // поэтому исходники можно делать крупнее (например 512×512).
 
+import { CHAPTER2_FILES, CHAPTER2_SIZES } from './chapter2.art.generated.js';
+
 export const ASSET_FILES = {
   // Одобренный рисованный UI: тонкие медальоны без общей нижней рамки и меню.
   ui_craft_medallion: 'assets/ui/craft-medallion-rounded.webp',
@@ -83,6 +85,10 @@ export const DISPLAY_SIZE = {
   npc_mirra: [84, 126], world_map_01: [584, 760], tree_frost_01: [150, 220], tree_frost_02: [140, 210], dead_tree_grey_01: [110, 170], gravestone_01: [62, 76], gravestone_02: [72, 64], crypt_01: [200, 183], ice_crystal_node_01: [70, 64], npc_tikhon: [90, 132], portrait_tikhon: [128, 128], npc_rowena: [80, 128], portrait_rowena: [128, 128], astral_ward_01: [130, 106], lab_seal_01: [120, 102], lab_seal_frozen_01: [120, 102], rift_01: [150, 112], rift_frozen_01: [150, 112], npc_nerys: [80, 120], portrait_nerys: [128, 128], ice_wall_01: [140, 128], ice_construct_01: [150, 150], water_patch_01: [150, 82], ice_floor_01: [150, 82], frozen_door_01: [104, 110], npc_ilaria: [80, 120], npc_severin: [88, 128], npc_merchant: [90, 132], npc_banker: [84, 126], npc_duelist: [88, 128], portrait_ilaria: [128, 128], portrait_severin: [128, 128], portrait_merchant: [128, 128], portrait_banker: [128, 128], portrait_duelist: [128, 128], fountain_frozen: [240, 200], crate_01: [84, 78], barrel_01: [56, 76], market_stall_01: [240, 204], notice_board_01: [110, 124], frost_patch_01: [220, 120], city_lamp_01: [36, 104], npc_veda: [80, 120], npc_goran: [90, 132], npc_selena: [80, 128], bed_01: [112, 120], table_01: [112, 86], bookshelf_01: [150, 128], cauldron_01: [88, 100], wardrobe_01: [84, 136], rug_01: [250, 150], herb_bundle_01: [34, 62], plant_pot_01: [48, 72], cat_01: [76, 54], trunk_01: [84, 58], moon_herb_01: [56, 50], mushrooms_brown_01: [60, 46], resin_log_01: [84, 66], rune_sigil_01: [90, 50], rune_slab_01: [96, 56], bramble_01: [96, 80], campfire_01: [64, 56], portrait_mirra: [128, 128], portrait_veda: [128, 128], portrait_goran: [128, 128], portrait_selena: [128, 128], icon_moon_herb: [64, 64], icon_mushroom: [64, 64], icon_resin: [64, 64], icon_dust: [64, 64], icon_potion_life: [64, 64], icon_potion_mana: [64, 64], icon_potion_fire: [64, 64], icon_talk: [64, 64], icon_gather: [64, 64], icon_alchemy: [64, 64], icon_inspect: [64, 64], icon_journal: [64, 64],
 
 };
+
+// Production chapter II pack; approved chapter I files stay at their original keys.
+Object.assign(ASSET_FILES, CHAPTER2_FILES);
+Object.assign(DISPLAY_SIZE, CHAPTER2_SIZES);
 
 /** Рисунки-заглушки, не готовые к релизу. Оба героя используют финальные PNG. */
 export const TEMPORARY_ART = [];

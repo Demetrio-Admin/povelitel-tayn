@@ -115,6 +115,11 @@ export class CombatScene extends Phaser.Scene {
   // ------------------------------------------------------------------ построение
   buildArena() {
     const { width, height } = VIEW;
+    const key = `arena_${this.duel ? 'duel' : this.def.arena}`;
+    if (this.textures.exists(key)) {
+      this.arenaArt = this.add.image(0, 0, key).setOrigin(0).setDisplaySize(width, height);
+      return;
+    }
     this.add.rectangle(0, 0, width, height, this.cm.arena.ground).setOrigin(0);
     this.add.ellipse(width / 2, 760, width * 1.1, 760, 0x384a2e, 0.55);
     this.add.ellipse(width / 2, 760, width * 0.8, 520, 0x41553a, 0.35);
@@ -130,9 +135,11 @@ export class CombatScene extends Phaser.Scene {
   }
 
   buildEnemy() {
-    const s = this.add.image(ENEMY_POS.x, ENEMY_POS.y, this.def.texture).setOrigin(0.5, 1);
-    applyDisplaySize(s, this.def.texture);
-    const mul = this.def.tier === 'strong' ? 1.5 : 1.7;
+    const texture = this.spawn.texture || this.def.texture;
+    const s = this.add.image(ENEMY_POS.x, ENEMY_POS.y, texture).setOrigin(0.5, 1);
+    applyDisplaySize(s, texture);
+    const human = this.duel || ['severin_boss', 'volunteer'].includes(this.enemyType);
+    const mul = human ? (this.duel ? 1.125 : 1.2) : this.def.tier === 'strong' ? 1.5 : 1.7;
     s.setScale(s.scaleX * mul, s.scaleY * mul).setDepth(ENEMY_POS.y);
     this.enemySprite = s;
     this.enemyTint = this.def.tint || null;   // v0.10.0: Страж узла отличается оттенком от Лесного Стража
@@ -146,7 +153,8 @@ export class CombatScene extends Phaser.Scene {
 
   buildHero() {
     this.heroShadow = this.add.image(HERO_POS.x, HERO_POS.y - 2, 'hero_shadow').setDepth(HERO_POS.y - 1);
-    this.heroSprite = this.add.image(HERO_POS.x, HERO_POS.y, currentHero().textures.up).setOrigin(0.5, 1);   // v0.9.2: выбранный герой this.heroSprite.setScale(144 / this.heroSprite.height); this.heroSprite.setDepth(HERO_POS.y);
+    this.heroSprite = this.add.image(HERO_POS.x, HERO_POS.y, currentHero().textures.up).setOrigin(0.5, 1);
+    this.heroSprite.setScale(144 / this.heroSprite.height).setDepth(HERO_POS.y);
     this.heroBaseScale = this.heroSprite.scaleX;
     this.heroAnim = new HeroAnimator();
   }
@@ -446,6 +454,9 @@ export class CombatScene extends Phaser.Scene {
           // сообщение — между врагом и героиней (не поверх врага и предупреждения сильного удара)
           this.showBanner(`Фаза ${ev.phase}\n${ev.message}`, ev.phase === 3 ? COLORS.seal : COLORS.fire, 2600, UI.type.combat);
           if (ev.tint) { this.enemyTint = ev.tint; this.enemySprite.setTint(ev.tint); }
+          if (this.enemyType === 'severin_boss' && this.arenaArt) {
+            this.arenaArt.setTint(ev.phase === 3 ? 0xe2d9ff : ev.phase === 2 ? 0xdceeff : 0xffffff);
+          }
           this.burst(ENEMY_POS.x, ENEMY_POS.y - this.enemySprite.displayHeight * 0.5, ev.tint || 0xffffff, 40);
           this.cameras.main.shake(260, 0.01);
           services.audio.play('armor_break');

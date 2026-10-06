@@ -45,9 +45,8 @@ try {
   // открыть дары героя и поставить в слоты
   await page.evaluate(() => {
     const s = window.__witch.state;
-    for (const g of ['telekinesis', 'fire', 'seal']) { s.data.abilities[g] = { ...(s.data.abilities[g] || {}), level: 1, unlocked: true }; }
+    for (const g of ['telekinesis', 'fire', 'seal']) s.unlockAbility(g, 1);
     ['prologue_seen', 'unlock_telekinesis_1', 'unlock_fire_1', 'unlock_seal_1'].forEach(k => s.markEvent(k));
-    s.data.build = { ...(s.data.build || {}), slots: ['telekinesis', 'fire', 'seal'] };
     window.__game.scene.getScene('UIScene').dockKey = null; window.__game.scene.getScene('UIScene').refreshDock();
   });
   await page.waitForTimeout(500);

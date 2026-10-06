@@ -2,15 +2,16 @@
 import { PROPS as RAW_PROPS } from '../config/world.props.js';
 import { EDITS } from '../config/world.edits.js';
 import { ROADS, WATERS } from '../config/world.terrain.js';
-import { COLLIDERS, CLEARINGS } from '../config/world.layout.js';
+import { COLLIDERS, CLEARINGS, GROUND } from '../config/world.layout.js';
 import { PROP_DEFS } from './propDefs.js';
+import { WORLD_DECOR } from './decorData.js';
 
 /**
  * v0.10.0: базовая расстановка без твёрдых объектов на полянах CLEARINGS (поляна узла за воротами).
  * Цветы и деревья-заполнители остаются; правки редактора (EDITS) накладываются уже на этот список.
  */
 const inClearing = (p) => CLEARINGS.some(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
-export const PROPS = RAW_PROPS.filter(p => !(inClearing(p) && !p.fill && PROP_DEFS[p.k]?.solid));
+export const PROPS = [...RAW_PROPS.filter(p => !(inClearing(p) && !p.fill && PROP_DEFS[p.k]?.solid)), ...WORLD_DECOR];
 
 export const DRAFT_KEY = 'witch_rpg_map_draft_v1';
 
@@ -49,6 +50,12 @@ export function diffEdits(base, current, pos = {}) {
     const n = norm(c);
     const patch = {};
     for (const k of ['x', 'y', 'f', 's']) if (Math.abs((n[k] ?? 0) - (b[k] ?? 0)) > (k === 's' ? 0.004 : 0.4)) patch[k] = n[k];
+    for (const k of ['k','a','l','solid','light','tint','alpha','w','h','fill']) {
+      // For collision, an absent override uses the asset's native footprint;
+      // explicit null means walkable and must survive export/reload.
+      const value=k==='solid'?n[k]:n[k]??null,original=k==='solid'?b[k]:b[k]??null;
+      if (JSON.stringify(value) !== JSON.stringify(original)) patch[k] = k==='solid'&&value===undefined?'auto':value??null;
+    }
     if (Object.keys(patch).length) props[c.id] = patch;
   }
   for (const id of byId.keys()) if (!seen.has(id)) props[id] = null;
@@ -57,12 +64,12 @@ export function diffEdits(base, current, pos = {}) {
 
 /** Сдвигает интерактивные объекты и врагов по pos { id: {x, y} }; связанные точки (target, panOnOpen) едут вместе. */
 export function applyPos(list, pos = {}) {
-  return list.map((cfg) => {
+  return list.filter(cfg => pos[cfg.id] !== null).map((cfg) => {
     const m = pos[cfg.id];
-    const dx = m ? m.x - cfg.x : 0, dy = m ? m.y - cfg.y : 0;
-    const out = { ...cfg };
+    const dx = m?.x != null ? m.x - cfg.x : 0, dy = m?.y != null ? m.y - cfg.y : 0;
+    const out = { ...cfg, ...(m || {}) };
     if (!m || (!dx && !dy)) return out; // всегда копия: редактор меняет cfg, а исходные данные трогать нельзя
-    out.x = m.x; out.y = m.y;
+    out.x = cfg.x + dx; out.y = cfg.y + dy;
     if (cfg.target) out.target = { x: cfg.target.x + dx, y: cfg.target.y + dy };
     if (cfg.panOnOpen) out.panOnOpen = { x: cfg.panOnOpen.x + dx, y: cfg.panOnOpen.y + dy };
     return out;
@@ -75,7 +82,14 @@ export function diffPos(list, current) {
   const base = new Map(list.map(c => [c.id, c]));
   for (const [id, m] of Object.entries(current)) {
     const b = base.get(id);
-    if (b && (Math.round(m.x) !== b.x || Math.round(m.y) !== b.y)) out[id] = { x: Math.round(m.x), y: Math.round(m.y) };
+    if (!b) continue;
+    if (m === null) { out[id] = null; continue; }
+    const patch = {};
+    for (const k of ['x','y','texture','editorStyle']) {
+      if(k==='editorStyle' && m[k] && !Object.keys(m[k]).length && !b[k])continue;
+      if (m[k] !== undefined && JSON.stringify(m[k]) !== JSON.stringify(b[k])) patch[k] = k === 'x' || k === 'y' ? Math.round(m[k]) : clone(m[k]);
+    }
+    if (Object.keys(patch).length) out[id] = patch;
   }
   return out;
 }
@@ -95,6 +109,9 @@ export function baseTerrain() {
     roads: ROADS.map((r, i) => ({ ...clone(r), n: i })),
     waters: WATERS.map((w, i) => ({ ...clone(w), n: i })),
     cols: COLLIDERS.map((c, i) => ({ ...clone(c), id: `c${i}` })),
+    grounds: [...GROUND.map((g, i) => ({ ...clone(g), id: `g${i}` })),
+      {id:'city_frost_quarter',x:2400,y:1500,w:1160,h:1000,tex:'city_paving_frost',tileScale:0.5,layerOffset:0.2},
+      {id:'city_frost_plaza',x:2400,y:3040,w:1160,h:1060,tex:'city_paving_frost',tileScale:0.5,layerOffset:0.2}],
   };
 }
 
@@ -118,6 +135,7 @@ export function applyTerrainEdits(edits) {
     roads: applyListEdits(b.roads, e.roads),
     waters: applyListEdits(b.waters, e.waters),
     colliders: applyListEdits(b.cols, e.cols),
+    grounds: applyListEdits(b.grounds, e.grounds),
   };
 }
 
@@ -138,13 +156,14 @@ export function diffList(base, current) {
 }
 
 /** Правки дорог, воды и стен для файла; пустые разделы не пишутся, чтобы файл не раздувался. */
-export function diffTerrain({ roads, waters, colliders }) {
+export function diffTerrain({ roads, waters, colliders, grounds }) {
   const b = baseTerrain();
   const out = {};
   const r = diffList(b.roads, roads), w = diffList(b.waters, waters), c = diffList(b.cols, colliders);
   if (Object.keys(r).length) out.roads = r;
   if (Object.keys(w).length) out.waters = w;
   if (Object.keys(c).length) out.cols = c;
+  if (grounds) { const g = diffList(b.grounds, grounds); if (Object.keys(g).length) out.grounds = g; }
   return out;
 }
 
@@ -165,8 +184,20 @@ export function clearDraft(storage) { try { storage?.removeItem(DRAFT_KEY); } ca
 
 /** Файл world.edits.js для вставки в репозиторий. */
 export function exportEditsFile(edits) {
-  const json = JSON.stringify(edits, null, 1).replace(/\n\s+/g, (m) => (m.length > 2 ? '\n ' : m));
-  return `// Правки карты, сделанные в редакторе (?edit → «Скачать»). Заменяйте файл целиком.\n// props: { id: { x, y, f, s } | null } — сдвиг/зеркало/масштаб, null — удалён; add — добавленные; pos — интерактивные объекты и враги.\n// roads / waters / cols: { id: полное описание | null } — дороги, вода и стены (коллизии), изменённые, новые или удалённые.\nexport const EDITS = ${JSON.stringify(edits)};\n`;
+  return `// Правки карты, сделанные в редакторе (?edit → «Скачать»). Заменяйте файл целиком.\n// props: параметры рисунков/размер/слой/коллизия или null (удалён); add — новые рисунки; pos — позиция/рисунок/стиль сюжетных объектов, null (удалён).\n// grounds — участки пола; roads / waters / cols: { id: полное описание | null } — дороги, вода и стены (коллизии), изменённые, новые или удалённые.\nexport const EDITS = ${JSON.stringify(edits)};\n`;
+}
+
+/** Import only the JSON assignment emitted by the editor; never execute uploaded JavaScript. */
+export function parseEditsFile(text) {
+  const source = text.trim();
+  const match = source.match(/export\s+const\s+EDITS\s*=\s*([\s\S]+?);?\s*$/);
+  const data = JSON.parse(match ? match[1].replace(/;\s*$/, '') : source);
+  if (!data || data.v !== 1 || typeof data !== 'object') throw new Error('Нужен файл правок карты версии 1.');
+  for (const key of ['props','pos','roads','waters','cols','grounds']) {
+    if (data[key] != null && (typeof data[key] !== 'object' || Array.isArray(data[key]))) throw new Error(`Неверный раздел ${key}.`);
+  }
+  if (data.add != null && !Array.isArray(data.add)) throw new Error('Неверный список добавленных объектов.');
+  return data;
 }
 
 /**

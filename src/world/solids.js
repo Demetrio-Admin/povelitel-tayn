@@ -1,11 +1,12 @@
 // Единый источник коллизий мира: прямоугольники блоков, объектов, воды и «следа» каждого объекта.
 // Сцена строит из этого списка физические тела, а тесты проходимости проверяют ровно его же.
 import { PROP_DEFS } from './propDefs.js';
+import { defaultAssetSolid } from './assetCatalog.js';
 
 /** Прямоугольник коллизии объекта-декора (x, y — верхний левый угол) или null. */
 export function propSolid(p) {
   if (p.fill) return null; // лес-заполнитель закрыт большим блоком
-  const s = PROP_DEFS[p.k]?.solid;
+  const s = p.solid === 'auto' ? defaultAssetSolid(p.k) : Object.hasOwn(p, 'solid') ? p.solid : PROP_DEFS[p.k]?.solid;
   if (!s) return null;
   const k = p.s || 1;
   const w = Math.round(s.w * k), h = Math.round(s.h * k);

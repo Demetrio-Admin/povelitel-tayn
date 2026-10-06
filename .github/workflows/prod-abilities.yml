@@ -37,3 +37,36 @@ jobs:
           open('/tmp/b.json', 'w').write(json.dumps(body))
           subprocess.run(['gh', 'api', 'repos/${{ github.repository }}/check-runs', '--method', 'POST', '--input', '/tmp/b.json', '--silent'])
           PY
+  hash:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      checks: write
+    strategy:
+      matrix:
+        ref: [e000cbaad1fe699624597594dd7f09002f84c538, 98304db, 57e930b176f618c69a668beb54bff5ec79873519]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build && ls dist/assets | grep -i "^index" | tee out.txt
+      - name: report
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          REF: ${{ matrix.ref }}
+        run: |
+          python3 - <<'PY'
+          import os, json, subprocess
+          t = open('out.txt').read()
+          body = {'name': 'hash ' + os.environ['REF'][:7], 'head_sha': os.environ['SHA'], 'status': 'completed', 'conclusion': 'neutral', 'output': {'title': 'h', 'summary': t, 'text': t}}
+          open('/tmp/b.json', 'w').write(json.dumps(body))
+          subprocess.run(['gh', 'api', 'repos/${{ github.repository }}/check-runs', '--method', 'POST', '--input', '/tmp/b.json', '--silent'])
+          PY

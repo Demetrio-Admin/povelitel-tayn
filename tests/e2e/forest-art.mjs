@@ -71,9 +71,9 @@ try {
 
     // New picture, same unlocking and travel rules.
     const cityLabel = await page.evaluate(() => {
-      const content = window.__game.scene.getScene('UIScene').modal.container.list.find(o => o.type === 'Container' && o.list.some(child => child.text === 'Город 🔒'));
-      const label = content.list.find(o => o.text === 'Город 🔒');
-      const hit = content.list.find(o => o.type === 'Zone' && Math.abs(o.x - label.x) < 2 && Math.abs(o.y - label.y - 1) < 3);
+      const content = window.__game.scene.getScene('UIScene').modal.container.list.find(o => o.type === 'Container' && o.list.some(child => child.text === 'Город'));
+      const label = content.list.find(o => o.text === 'Город');
+      const hit = content.list.find(o => o.type === 'Zone' && Math.abs(o.x - label.x) < 24 && Math.abs(o.y - label.y - 1) < 3);
       const p = hit.getWorldTransformMatrix().transformPoint(0, 0); return { x: p.x, y: p.y };
     });
     await tapGame(cityLabel.x, cityLabel.y);

@@ -142,6 +142,9 @@ export class PlayerActions {
   }
 
   craft(recipe) { return this.run({ op: 'craft', recipe }); }
+  bagExpand() { return this.confirm({ op: 'bag_expand' }); }
+  bagDiscard(item, qty, pending = false) { return this.confirm({ op: 'bag_discard', item, qty, pending }); }
+  bagClaim(item, qty) { return this.confirm({ op: 'bag_claim', item, qty }); }
   use(item) { return this.run({ op: 'use', item }); }
   migrateV10() { return this.run({ op: 'migrate_v10' }); }
 

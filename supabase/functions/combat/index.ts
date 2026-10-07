@@ -278,6 +278,33 @@ function buildSlotRules() {
   };
 }
 
+// src/config/bag.js
+var BAG = { initial: 100, increment: 50, price: 100, max: 1e9, version: 29 };
+var BAG_ITEMS = [...Object.keys(RESOURCES), ...Object.keys(POTIONS), ...Object.keys(CRAFT_ITEMS), "crimson_ember", "moonstone"];
+var counted = new Set(BAG_ITEMS);
+var takesBagSpace = (id) => counted.has(id);
+var bagUsed = (inventory) => BAG_ITEMS.reduce((n, id) => n + Math.max(0, Number(inventory?.[id]) || 0), 0);
+function bagData(objects) {
+  const raw = objects?.player_bag;
+  return {
+    capacity: Number.isInteger(raw?.capacity) && raw.capacity >= BAG.initial && raw.capacity <= BAG.max ? raw.capacity : BAG.initial,
+    pending: Object.fromEntries(Object.entries(raw?.pending || {}).filter(([id, n]) => counted.has(id) && Number.isInteger(n) && n > 0)),
+    version: raw?.version === BAG.version ? BAG.version : 0
+  };
+}
+var bagView = (state) => {
+  const b = bagData(state.data.worldObjects), used = bagUsed(state.data.inventory);
+  return { ...b, used, free: Math.max(0, b.capacity - used), price: BAG.price, increment: BAG.increment };
+};
+var bagRules = () => ({ ...BAG, items: BAG_ITEMS });
+var GIFT_PRICES = {
+  storyTelekinesis: { coins: 150, sapphires: 0 },
+  storyIce2: { coins: 500, sapphires: 0 },
+  storyIce3: { coins: 3e3, sapphires: 0 },
+  tier2: { coins: 2e3, sapphires: 200 },
+  tier3: { coins: 1e4, sapphires: 750 }
+};
+
 // src/config/balance.progression.js
 var ITEMS = {
   coins: { name: "\u041C\u043E\u043D\u0435\u0442\u044B", icon: "icon_coin" },
@@ -403,6 +430,9 @@ var UPGRADES = {
     doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u0431\u044C\u0451\u0442 \u0442\u0430\u043A, \u0447\u0442\u043E \u0437\u0430\u0449\u0438\u0442\u0430 \u043D\u0435 \u0443\u0441\u043F\u0435\u0432\u0430\u0435\u0442 \u0432\u0435\u0440\u043D\u0443\u0442\u044C\u0441\u044F."
   }
 };
+for (const [id, up] of Object.entries(UPGRADES)) {
+  Object.assign(up.cost, id === "telekinesis_2" ? GIFT_PRICES.storyTelekinesis : up.toLevel === 2 ? GIFT_PRICES.tier2 : GIFT_PRICES.tier3);
+}
 var BRANCH_RESPEC = { coins: 150 };
 var EVENT_REWARDS = {
   first_world_interaction: { heroXP: 10 },
@@ -1890,6 +1920,7 @@ function materialize(state) {
 
 // src/config/sapphires.js
 var SAPPHIRES = {
+  rublesPerSapphire: 1,
   // ускорение изучения: за price сапфиров таймер короче на chunkMin минут; совсем до нуля нельзя (остаётся не меньше minLeftSec
   // и не меньше (1 − maxCutPct) полного времени); за сутки (UTC) — не больше dailyChunks таких шагов
   speedup: { chunkMin: 15, price: 1, maxCutPct: 0.75, minLeftSec: 60, dailyChunks: 24 },
@@ -1933,7 +1964,7 @@ function createDefaultState(heroId = DEFAULT_HERO_ID) {
     defeatedEnemies: [],
     inventory: { coins: 0, lunar_shard: 0, lunar_flame: 0 },
     // состояние отдельных объектов мира: { [id]: { state, x, y } }
-    worldObjects: {},
+    worldObjects: { player_bag: { capacity: BAG.initial, pending: {}, version: BAG.version } },
     research: null,
     // { upgradeId, startedAt, durationMs, fullMs? } (fullMs — полное время до ускорений за сапфиры)
     wallet: { sapphires: 0, daily: {}, welcome: false },
@@ -2059,6 +2090,13 @@ var GameState = class {
   addItem(id, amount = 1) {
     this.data.inventory[id] = this.item(id) + amount;
   }
+  awardItem(id, amount = 1) {
+    const b = bagView(this);
+    if (amount > 0 && takesBagSpace(id) && amount > b.free) {
+      b.pending[id] = (b.pending[id] || 0) + amount;
+      this.setObject("player_bag", { capacity: b.capacity, pending: b.pending, version: BAG.version });
+    } else this.addItem(id, amount);
+  }
   removeItem(id, amount = 1) {
     if (this.item(id) < amount) return false;
     this.data.inventory[id] -= amount;
@@ -2116,9 +2154,9 @@ var GameState = class {
       this.addSchoolXP(k, v);
       granted.schoolXP[k] = v;
     }
-    if (reward.items) for (const [k, v] of Object.entries(reward.items)) {
+    if (reward.items) for (const [k, v] of Object.entries(reward.items).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
       if (v > 0) {
-        this.addItem(k, v);
+        this.awardItem(k, v);
         granted.items[k] = v;
       }
     }
@@ -2137,9 +2175,9 @@ var GameState = class {
         }
         for (const [k, v] of Object.entries(up.cost.items || {})) {
           if (up.cost.noTopUp?.includes(k)) continue;
-          const need = v - this.item(k);
+          const need = v - this.item(k) - (bagView(this).pending[k] || 0);
           if (need > 0) {
-            this.addItem(k, need);
+            this.awardItem(k, need);
             granted.items[k] = (granted.items[k] || 0) + need;
           }
         }
@@ -2161,6 +2199,8 @@ var GameState = class {
     if (this.data.research) return { ok: false, reason: this.data.research.upgradeId === upgradeId ? "in_progress" : "busy" };
     const r = up.requires || {};
     const checks = [];
+    checks.push({ label: "\u041C\u043E\u043D\u0435\u0442\u044B", item: "coins", have: this.item("coins"), need: up.cost.coins || 0 });
+    checks.push({ label: "\u0421\u0430\u043F\u0444\u0438\u0440\u044B", have: this.sapphires(), need: up.cost.sapphires || 0 });
     if (r.heroLevel) checks.push({ label: `\u0423\u0440\u043E\u0432\u0435\u043D\u044C ${r.heroLevel}`, have: this.data.heroLevel, need: r.heroLevel });
     if (r.abilityLevel) checks.push({ label: `${up.ability} ${r.abilityLevel}`, have: this.abilityLevel(up.ability), need: r.abilityLevel, hidden: true });
     checks.push({ label: "\u041E\u043F\u044B\u0442 \u0434\u0430\u0440\u0430", have: this.data.schoolXP[up.ability] || 0, need: up.cost.schoolXP });
@@ -2174,6 +2214,8 @@ var GameState = class {
     if (!st.ok) return false;
     const up = UPGRADES[upgradeId];
     this.data.schoolXP[up.ability] -= up.cost.schoolXP;
+    this.removeItem("coins", up.cost.coins || 0);
+    this.data.wallet.sapphires -= up.cost.sapphires || 0;
     for (const [k, v] of Object.entries(up.cost.items || {})) this.removeItem(k, v);
     this.data.research = { upgradeId, startedAt: this.now(), durationMs: up.timerSec[TIMER_MODE] * 1e3 };
     return true;
@@ -2784,7 +2826,7 @@ var EVENT_ACTIONS = {
   ch2_choice_start: { requires: ["ch2_ice_trained"] },
   ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"] },
   // v0.22.0 — квесты 11–15 (Нэрис, Тихон, Илария, Северин, Ровена, Мирра)
-  unlock_ice_2: { requires: ["ch2_quarter_cleared"], unlock: { ice: 2 } },
+  unlock_ice_2: { requires: ["ch2_quarter_cleared"], consume: { coins: GIFT_PRICES.storyIce2.coins }, unlock: { ice: 2 } },
   ch2_brittle_done: { requires: ["ch2_brittle_1", "ch2_brittle_2", "brittle_flask_crafted"] },
   ch2_lab_found: { requires: ["ch2_brittle_done"] },
   ch2_stabilized: { requires: ["ch2_vol_1", "ch2_vol_2"], consume: { stabilizing_potion: 2 } },
@@ -2800,8 +2842,8 @@ var EVENT_ACTIONS = {
   ch2_coven_ready: { requires: ["ch2_unstable_1", "ch2_unstable_2", "ch2_coven_supplies"] },
   ch2_final_start: { requires: ["ch2_coven_ready"] },
   // Лёд III перед боем: ветка выбирается один раз (ch2_ice3 — общая отметка, по ней появляется Северин)
-  ch2_ice3_frost: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], unlock: { ice: 3 }, branch: { ice: "frost" }, marks: ["ch2_ice3"] },
-  ch2_ice3_shard: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], unlock: { ice: 3 }, branch: { ice: "shard" }, marks: ["ch2_ice3"] },
+  ch2_ice3_frost: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], consume: { coins: GIFT_PRICES.storyIce3.coins }, unlock: { ice: 3 }, branch: { ice: "frost" }, marks: ["ch2_ice3"] },
+  ch2_ice3_shard: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], consume: { coins: GIFT_PRICES.storyIce3.coins }, unlock: { ice: 3 }, branch: { ice: "shard" }, marks: ["ch2_ice3"] },
   ch2_epilogue: { requires: ["ch2_letters_read"] },
   chapter_2_complete: { requires: ["ch2_epilogue"], marks: ["title_frost_survivor"], sapphires: 5 }
 };
@@ -2931,7 +2973,8 @@ function researchRules() {
       abilityLevel: r.abilityLevel || 0,
       event: r.event || null,
       schoolXP: up.cost.schoolXP,
-      items: { ...up.cost.items || {} },
+      items: { ...up.cost.items || {}, coins: up.cost.coins || 0 },
+      sapphires: up.cost.sapphires || 0,
       durationMs: up.timerSec[TIMER_MODE] * 1e3,
       startEvent: up.startEvent || null,
       completeEvent: up.completeEvent || null
@@ -2998,7 +3041,7 @@ function serverRules() {
     build: buildRules(),
     spawnStart: spawnStartRules(),
     sapphires: sapphireRules(),
-    // v0.17.0
+    bag: bagRules(),
     shop: shopRules(),
     // v0.19.0: торговец
     daily: dailyRules(),

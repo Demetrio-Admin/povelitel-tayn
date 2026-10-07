@@ -22,6 +22,7 @@ import { addScrollViewport } from '../ui/scrollViewport.js';
 import { windows08 } from '../ui/windows08.js';
 import { hud082 } from '../ui/hud082.js';
 import { windows09 } from '../ui/windows09.js';
+import { windowsBag } from '../ui/windowsBag.js';
 import { windows11 } from '../ui/windows11.js';
 import { windows17 } from '../ui/windows17.js';
 import { windows19 } from '../ui/windows19.js';
@@ -496,7 +497,8 @@ export class UIScene extends Phaser.Scene {
     const btnH = UI.touch.button;
     const vertical = !!opts.vertical;
     const btnBlock = vertical ? buttons.length * (btnH + 16) - 16 : btnH;
-    const headerH = 32 + title.height + 30, footerH = btnBlock + 70;
+    const tabBlock = opts.tabs?.length ? Math.ceil(opts.tabs.length / 2) * (btnH + 12) + 12 : 0;
+    const headerH = 32 + title.height + 30, footerH = btnBlock + 70 + tabBlock;
     const viewH = Math.min(contentH, H - 112 - headerH - footerH);
     const ph = headerH + viewH + footerH;
     const top = Math.max(56, (H - ph) / 2 - 24);
@@ -516,6 +518,15 @@ export class UIScene extends Phaser.Scene {
       });
       c.add(btn.parts); return { b, ...btn };
     });
+    if (opts.tabs?.length) {
+      const tw = (pw - 80) / 2, tabTop = top + ph - 24 - btnBlock - tabBlock;
+      opts.tabs.forEach((tab, i) => {
+        const bt = addButton(this, left + 36 + tw / 2 + (i % 2) * (tw + 8), tabTop + Math.floor(i / 2) * (btnH + 12) + btnH / 2, tw, btnH, tab.label, {
+          primary: !!tab.selected, accent: tab.selected ? color : null, fontSize: UI.type.body,
+          onPress: () => { this.closeModal({ onClick: tab.onClick }); },
+        }); c.add(bt.parts);
+      });
+    }
     c.setAlpha(0);
     this.tweens.add({ targets: c, alpha: 1, duration: 150 });
     this.modal = { container: c, buttons, views, scroll, top, height: ph, final: !!opts.final, tempKeys: [panel.texKey], opts };
@@ -583,7 +594,7 @@ export class UIScene extends Phaser.Scene {
       lines.push('', `Время изучения: ${fmtTime(up.timerSec[TIMER_MODE] * 1000)}${TIMER_MODE === 'prototype' ? ` (в live-версии ${fmtTime(up.timerSec.live * 1000)})` : ''}`);
       if (st.ok) {
         buttons = [
-          { label: 'Начать изучение', primary: true, onClick: () => { if (abilities.startResearch(upgradeId)) this.toast(`Изучение «${up.title}» началось`, COLORS.telekinesis); } },
+          { label: 'Начать изучение', primary: true, onClick: () => this.startGiftResearch(upgradeId) },
           { label: 'Позже' },
         ];
       }
@@ -786,4 +797,4 @@ export class UIScene extends Phaser.Scene {
   }
 }
 
-Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11, windows17, windows19, windows23, windows26, windows27);
+Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11, windows17, windows19, windows23, windows26, windows27, windowsBag);

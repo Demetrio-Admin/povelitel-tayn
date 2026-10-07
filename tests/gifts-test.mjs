@@ -22,7 +22,7 @@ const world = () => {
   const abilities = new AbilitySystem(state, quests, bus);
   return { clock, state, abilities };
 };
-const ready = (w, lvl = 7) => { w.abilities.unlock('telekinesis', 2); w.abilities.unlock('fire', 1); w.abilities.unlock('seal', 1); w.state.addHeroXP(1260); w.state.markEvent('lunar_quest_complete'); return w; };
+const ready = (w, lvl = 7) => { w.state.addItem('coins', 100000); w.state.data.wallet.sapphires = 10000; w.abilities.unlock('telekinesis', 2); w.abilities.unlock('fire', 1); w.abilities.unlock('seal', 1); w.state.addHeroXP(1260); w.state.markEvent('lunar_quest_complete'); return w; };
 
 console.log('\n[v0.11] Данные ступеней');
 {
@@ -127,6 +127,7 @@ console.log('\n[v0.11.1] Телекинез III: две ветки, выбор �
   ok(w.state.upgradeStatus('telekinesis_3_lord').reason === 'done', 'вторая ветка закрылась (ступень уже есть)');
   const s = w.abilities.stats('telekinesis');
   ok(Math.abs(s.throwDamageBonus - 0.65) < 1e-9 && s.manaCost === 18 && s.damage === 20 && s.doubleCast.windowSec === 2.5, 'Разрушитель: бонус бросков +65%, мана 18, два броска подряд');
+  w.state.data.inventory.coins = 0; // Explicitly exercise insufficient money after funded research.
   const card = giftCards(w.state).find(c => c.id === 'telekinesis');
   ok(card.branch.id === 'breaker' && card.respec.length === 1 && card.respec[0].id === 'lord', 'карточка показывает ветку и возможность сменить на «Повелителя»');
   ok(!card.respec[0].canPay && w.state.respecBranch('telekinesis', 'lord').reason === 'coins', 'без монет сменить ветку нельзя');
@@ -375,6 +376,7 @@ console.log('\n[v0.17.0] Сапфиры: модель окон');
   const { SAPPHIRES } = await import('../src/config/sapphires.js');
   ok([1, 2, 5, 11, 21, 22, 25, 111].map(sapphireWord).join() === 'сапфир,сапфира,сапфиров,сапфиров,сапфир,сапфира,сапфиров,сапфиров', 'склонение: 1 сапфир, 2 сапфира, 5 сапфиров, 11 сапфиров, 21 сапфир');
   const w = ready(world());
+  w.state.data.wallet.sapphires = 0;
   ok(w.state.sapphires() === 0 && walletView(w.state).welcome === SAPPHIRES.welcome, 'новый герой: 0 сапфиров, доступен подарок');
   w.state.data.wallet = { sapphires: 1, daily: {}, welcome: true };
   w.clock.t = 1_000_000;
@@ -509,7 +511,7 @@ console.log('\n[v0.19.0] Экономика главы II: зелья, амул�
   ok(hp0 - pc.hero.hp === 15, 'под Кристальной защитой удар 20 → 15');
   // торговец
   ok(sellPrice('lunar_shard') === 14 && sellPrice('frost_shard') === 0 && !SHOP.buy.frost_shard && !SHOP.buy.cold_heart, 'продажа — треть цены; осколок и сердце холода не торгуются');
-  const sw = ready(world()); sw.state.addItem('coins', 30);
+  const sw = ready(world()); sw.state.data.inventory.coins = 30;
   ok(!shopView(sw.state).open, 'лавка закрыта до города');
   sw.state.markEvent('city_merchant_open');
   const sv = shopView(sw.state);

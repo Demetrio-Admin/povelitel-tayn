@@ -233,6 +233,7 @@ console.log('\nГлава II, квесты 6–10: сервер (JS-зеркал
   ok(act({ op: 'world', obj: 'final_rift' }).ok && act({ op: 'world', obj: 'final_ward' }).ok, 'Лёд и Астрал в слотах: разлом и барьер');
   ok(act({ op: 'world', obj: 'final_ice_wall' }).reason === 'benched', 'Огня нет в слотах — преграда не тает');
   ok(act({ op: 'build_set', slots: ['fire', 'telekinesis', 'ice'] }).ok && act({ op: 'world', obj: 'final_ice_wall' }).ok && act({ op: 'world', obj: 'final_debris' }).ok, 'дары поменяны: Огонь и Телекинез');
+  give({ coins: 3000 }); // The story lesson now has a coin price.
   ok(act({ op: 'event', key: 'ch2_ice3_shard' }).ok && s.abilities.ice.level === 3 && s.objects.player_build.branches.ice === 'shard' && s.quests.includes('ch2_ice3'), 'Лёд III, ветка «Осколок»');
   ok(act({ op: 'event', key: 'ch2_ice3_frost' }).reason === 'done', 'вторую ветку бесплатно не взять');
   s.inventory.elixir_life = Math.max(s.inventory.elixir_life || 0, 5);

@@ -108,8 +108,9 @@ export const windows08 = {
 
   onGuidePointer(p) {
     if (!p || this.modal || this.mode !== 'exploration') { this.pointer.setVisible(false); return; }
-    const top = (this.questBottom || this.fieldTop()) + 46;
-    this.pointer.setVisible(true).setPosition(p.x, Math.max(top, p.y));
+    const at = this.viewport?.point(p) || p;
+    const top = (this.questBottom || this.fieldTop()) + 46 + (this.viewport?.cameras.center.scrollY || 0);
+    this.pointer.setVisible(true).setPosition(at.x, Math.max(top, at.y));
     this.pointerArrow.setRotation(p.angle);
     this.pointerArrow.setScale(1 + Math.sin(this.time.now / 220) * 0.08);
     this.pointerText.setText(`${Math.max(1, Math.round(p.dist / 10) * 10)}`);

@@ -1,4 +1,5 @@
 import { BAG } from '../config/bag.js';
+import { bindSceneViewport } from '../ui/viewport.js';
 import { T } from '../state/hero.js';
 import Phaser from 'phaser';
 import { VIEW, CAMERA, PLAYER, DEPTH, COLORS, SAVE } from '../config/game.config.js';
@@ -85,6 +86,7 @@ export class ExplorationScene extends Phaser.Scene {
   constructor() { super('ExplorationScene'); }
 
   create() {
+    this.viewport = bindSceneViewport(this, { world: true });
     const { state, bus } = services;
     this.bus = bus;
     services.mode = 'exploration';
@@ -133,7 +135,13 @@ export class ExplorationScene extends Phaser.Scene {
     // камера: героиня немного ниже центра (Blueprint §7)
     const cam = this.cameras.main;
     cam.setBounds(this.view.x, this.view.y, this.view.w, this.view.h);   // v0.27.0: камера — только своя локация
-    this.followOffsetY = (CAMERA.heroScreenY - 0.5) * VIEW.height + PLAYER.displayHeight * 0.4;
+    const followSize = () => {
+      this.followOffsetY = (CAMERA.heroScreenY - 0.5) * cam.height + PLAYER.displayHeight * 0.4;
+      this.follow();
+    };
+    this.scale.on?.('resize', followSize);
+    this.events.once('shutdown', () => this.scale.off?.('resize', followSize));
+    this.followOffsetY = (CAMERA.heroScreenY - 0.5) * cam.height + PLAYER.displayHeight * 0.4;
     this.follow();
     cam.fadeIn(500);
 
@@ -821,7 +829,7 @@ export class ExplorationScene extends Phaser.Scene {
   screenPointer(pos) {
     const cam = this.cameras.main, v = cam.worldView;
     const sx = (pos.x - v.x) * cam.zoom, sy = (pos.y - pos.h * 0.5 - v.y) * cam.zoom;
-    const W = VIEW.width, H = VIEW.height, m = 70;
+    const W = cam.width, H = cam.height, m = 70;
     if (sx > m && sx < W - m && sy > 170 && sy < H - 190) return null;
     const cx = W / 2, cy = H * 0.5;
     const dx = sx - cx, dy = sy - cy;

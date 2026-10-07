@@ -32,6 +32,7 @@ import { windows27 } from '../ui/windows27.js';
 import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from '../ui/noticeClose.js';
 import { addCraftMedallion, setCraftMedallion } from '../ui/witchcraftUI.js';
+import { bindSceneViewport } from '../ui/viewport.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -52,6 +53,7 @@ export class UIScene extends Phaser.Scene {
   constructor() { super('UIScene'); }
 
   create() {
+    this.viewport = bindSceneViewport(this, { hud: true });
     const { bus } = services;
     this.bus = bus;
     this.mode = 'exploration';
@@ -72,6 +74,19 @@ export class UIScene extends Phaser.Scene {
     this.buildTutorial();
     this.buildV08Hud();
     this.buildV09();
+
+    // Keep authored coordinates and masks intact; only their camera anchors move on resize.
+    if (this.viewport) {
+      const bottom = [this.bottomShade, this.ctx, ...Object.values(this.buttons).flatMap(b =>
+        [b.glow, b.orb, b.bg, b.icon, b.cd, b.cdText, b.lock, b.text])].filter(Boolean);
+      const top = [this.topShade, this.portraitGlow, this.portrait, this.portraitHit, this.syncDot,
+        this.levelText, this.xpCaption, this.coinIcon, this.coinText, this.shardIcon, this.shardText,
+        this.hpText, this.hpIcon, this.manaText, this.manaIcon, this.researchText,
+        this.journalBtn.c, this.menuBtn.c, this.hpGlow, this.manaGlow, this.hintPlate,
+        ...[this.xpBar, this.hpBar, this.manaBar].flatMap(b => [b.trough, b.fill, b.frame])].filter(Boolean);
+      bottom.forEach(o => this.viewport.assign(o, 'bottom'));
+      top.forEach(o => this.viewport.assign(o, 'top'));
+    }
 
     this.controls = new InputController(this, bus, services.input, {
       isModal: () => !!this.modal,
@@ -137,7 +152,8 @@ export class UIScene extends Phaser.Scene {
 
   // ================================================================== построение
   buildVignette() {
-    addScreenVignette(this, W, H, 0.55).setDepth(-5);
+    const vignette = addScreenVignette(this, W, H, 0.55).setDepth(-5);
+    this.viewport?.cover(vignette);
   }
 
   /** Строка таймера изучения под HP/маной (раньше жила в панели цели). */
@@ -247,7 +263,8 @@ export class UIScene extends Phaser.Scene {
   setupPointer() {
     const joy = services.input.joy;
     this.input.on('pointerdown', (p, over) => {
-      if (this.modal || over.length || this.mode !== 'exploration' || p.y > BAR_Y) return;
+      const point = this.viewport?.point(p, 'bottom') || p;
+      if (this.modal || over.length || this.mode !== 'exploration' || point.y > BAR_Y) return;
       this.touch = { id: p.id, x: p.x, y: p.y, t: this.time.now, moved: false };
     });
     this.input.on('pointermove', (p) => {
@@ -257,13 +274,15 @@ export class UIScene extends Phaser.Scene {
       const d = Math.hypot(dx, dy);
       if (!t.moved && d > CONTROLS.tapMaxMove) {
         t.moved = true;
-        this.joyBase.setPosition(t.x, t.y).setVisible(true);
+        const start = this.viewport?.point(t) || t;
+        this.joyBase.setPosition(start.x, start.y).setVisible(true);
         this.joyKnob.setVisible(true);
       }
       if (!t.moved) return;
       const r = CONTROLS.joystickRadius;
       const k = d > r ? r / d : 1;
-      this.joyKnob.setPosition(t.x + dx * k, t.y + dy * k);
+      const knob = this.viewport?.point({ x: t.x + dx * k, y: t.y + dy * k }) || { x: t.x + dx * k, y: t.y + dy * k };
+      this.joyKnob.setPosition(knob.x, knob.y);
       if (d < CONTROLS.joystickDeadzone) { joy.x = 0; joy.y = 0; } else {
         const m = Math.min(1, d / r), f = Math.pow(m, CONTROLS.joystickCurve) / m;   // кривая отклика: направление то же, величина мягче у центра
         joy.x = (dx * k) / r * f; joy.y = (dy * k) / r * f;
@@ -725,6 +744,7 @@ export class UIScene extends Phaser.Scene {
       return;
     }
     this.tutHint = h;
+    this.viewport?.assign(this.tut, h.target === 'context' || this.buttons[h.target] ? 'bottom' : 'center');
     this.tutText.setText(h.text);
     const width = Math.min(640, this.tutText.width + 120);
     drawPlate(this.tutBg, width, Math.max(72, this.tutText.height + 30), { accent: COLORS.telekinesis, fill: 0x0e1a1c, alpha: 0.94 });
@@ -769,6 +789,7 @@ export class UIScene extends Phaser.Scene {
 
   levelFx() {
     const r = this.add.image(UI.hud.portraitX, UI.hud.portraitY, 'fx_ring').setTint(COLORS.gold).setBlendMode('ADD').setScale(0.4).setDepth(8000);
+    this.viewport?.assign(r, 'top');
     this.tweens.add({ targets: r, scale: 3, alpha: 0, duration: 800, ease: 'Quad.easeOut', onComplete: () => r.destroy() });
     this.tweens.add({ targets: this.levelText, scale: { from: 1.6, to: 1 }, duration: 500, ease: 'Back.easeOut' });
   }

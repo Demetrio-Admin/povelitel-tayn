@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { duelEnemyDef, leagueOf } from '../config/duel.js';
 import { duelStateOf } from '../cloud/playerModel.js';
 import { VIEW, COLORS, DEPTH } from '../config/game.config.js';
+import { bindSceneViewport } from '../ui/viewport.js';
 import { ENEMY_SPAWNS } from '../config/world.layout.js';
 import { COMBAT } from '../config/balance.enemies.js';
 import { ABILITIES } from '../config/balance.abilities.js';
@@ -46,6 +47,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   create() {
+    this.viewport = bindSceneViewport(this);
     const { state, bus } = services;
     this.bus = bus;
     // v0.14.0: бой идёт на копии героя в том состоянии, которое сервер запомнил при старте боя (combatCtx), — оно же у проверки на сервере.
@@ -118,9 +120,11 @@ export class CombatScene extends Phaser.Scene {
     const key = `arena_${this.duel ? 'duel' : this.def.arena}`;
     if (this.textures.exists(key)) {
       this.arenaArt = this.add.image(0, 0, key).setOrigin(0).setDisplaySize(width, height);
+      this.viewport?.cover(this.arenaArt);
       return;
     }
-    this.add.rectangle(0, 0, width, height, this.cm.arena.ground).setOrigin(0);
+    const ground = this.add.rectangle(0, 0, width, height, this.cm.arena.ground).setOrigin(0);
+    this.viewport?.cover(ground);
     this.add.ellipse(width / 2, 760, width * 1.1, 760, 0x384a2e, 0.55);
     this.add.ellipse(width / 2, 760, width * 0.8, 520, 0x41553a, 0.35);
     const rand = new Phaser.Math.RandomDataGenerator([this.enemyType]);
@@ -256,13 +260,19 @@ export class CombatScene extends Phaser.Scene {
 
   // красная рамка по краям экрана (урон по героине / мало HP)
   buildHurtVignette() {
-    const { width: W, height: H } = VIEW;
     const g = this.add.graphics().setDepth(7600).setScrollFactor(0);
-    for (let i = 0; i < 10; i++) {
-      const t = 6 + i * 9;
-      g.fillStyle(COLORS.danger, 0.09 * (1 - i / 10));
-      g.fillRect(0, 0, W, t).fillRect(0, H - t, W, t).fillRect(0, 0, t, H).fillRect(W - t, 0, t, H);
-    }
+    const draw = () => {
+      const W = this.scale.width, H = this.scale.height;
+      g.clear();
+      for (let i = 0; i < 10; i++) {
+        const t = 6 + i * 9;
+        g.fillStyle(COLORS.danger, 0.09 * (1 - i / 10));
+        g.fillRect(0, 0, W, t).fillRect(0, H - t, W, t).fillRect(0, 0, t, H).fillRect(W - t, 0, t, H);
+      }
+    };
+    draw();
+    this.scale.on?.('resize', draw);
+    this.events.once('shutdown', () => this.scale.off?.('resize', draw));
     g.setAlpha(0);
     this.hurtVig = g;
     this.hurtFlash = 0;

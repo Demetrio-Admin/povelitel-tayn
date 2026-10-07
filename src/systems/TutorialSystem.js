@@ -10,7 +10,7 @@ export const HINTS = {
   telekinesis: { text: 'Бирюзовый знак — цель для Телекинеза.\nНажмите кнопку дара (1)', target: 'telekinesis', ttl: 9000 },
   combat_warning: { text: 'Сейчас! Прервите атаку Телекинезом', target: 'telekinesis', ttl: 0 },
   fire:        { text: 'Новый дар! Огонь сжигает корни и зажигает факелы (2)', target: 'fire', ttl: 9000 },
-  bag:         { text: 'В сумке — дары, предметы и история боёв (B)', target: 'bag', ttl: 6000 },
+  bag:         { text: 'В сумке — ресурсы, расходники, дары и амулеты (B)', target: 'bag', ttl: 6000 },
 };
 
 export class TutorialSystem {

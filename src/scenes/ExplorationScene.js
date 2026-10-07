@@ -1,3 +1,4 @@
+import { BAG } from '../config/bag.js';
 import { T } from '../state/hero.js';
 import Phaser from 'phaser';
 import { VIEW, CAMERA, PLAYER, DEPTH, COLORS, SAVE } from '../config/game.config.js';
@@ -274,6 +275,7 @@ export class ExplorationScene extends Phaser.Scene {
     }[level];
     const { state, actions } = services;
     if (!GIFT || this.giftPending || state.hasEvent(GIFT.event) || (level === 3 && state.hasEvent('ch2_ice3'))) return;
+    if (level > 1 && actions.online && state.getObject('player_bag')?.version !== BAG.version) { this.toast('Уроки временно недоступны. Попробуйте позже.', COLORS.danger); return; }
     // Нельзя показывать дар локально заранее: отказ сервера при следующем сохранении уберёт его из героя.
     this.giftPending = true;
     let r;
@@ -284,6 +286,7 @@ export class ExplorationScene extends Phaser.Scene {
     if ((!r?.ok && r?.reason !== 'already') || !granted) {
       const text = {
         locked: 'Сначала завершите предыдущее задание и сдайте его Нэрис.',
+        missing: 'Не хватает монет для урока Нэрис. Цена указана в диалоге.',
         network: 'Нет связи с сервером. Поговорите с Нэрис ещё раз, когда связь вернётся.',
         session: 'Сессия завершилась. Войдите снова, чтобы получить дар.',
       }[r?.reason] || 'Не удалось получить Лёд. Поговорите с Нэрис ещё раз.';
@@ -1039,7 +1042,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.cameras.main.fadeIn(300);
     this.inTransition = false;
     services.mode = 'exploration';
-    if (r.reason !== 'busy') this.toast(r.reason === 'network' ? 'Нет связи с сервером — бой не начался.' : 'Не удалось начать бой. Попробуйте ещё раз.', COLORS.danger);
+    if (r.reason !== 'busy') this.toast(r.reason === 'bag_pending' ? 'Заберите или выбросьте незабранные награды в сумке перед новым боем.' : r.reason === 'network' ? 'Нет связи с сервером — бой не начался.' : 'Не удалось начать бой. Попробуйте ещё раз.', COLORS.danger);
   }
 
   onWake(sys, data = {}) {

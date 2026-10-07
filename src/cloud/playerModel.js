@@ -1,3 +1,4 @@
+import { BAG, bagData, bagUsed, takesBagSpace } from '../config/bag.js';
 // Модель игрока на сервере и способ её менять. Без Phaser и DOM.
 //
 // Главное правило: клиент НЕ отправляет «весь сейв». Он считает, что изменилось с момента последнего ответа сервера (diff),
@@ -28,7 +29,7 @@ const RULES = serverRules();
  * Ключи объектов мира, состояние которых пишет только сервер: всё, что есть в RULES.world (с v0.15.0 и магия — сервер ставит mark),
  * победы над врагами rep:* (по ним открываются запасы) и build — ветки даров (player_build).
  */
-export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build' || k === 'daily' || k === 'duel');   // v0.23.0: + доска поручений; v0.26.0: + Дуэль
+export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build' || k === 'player_bag' || k === 'daily' || k === 'duel');   // v0.23.0: + доска поручений; v0.26.0: + Дуэль
 
 export const ABILITY_IDS = ['telekinesis', 'fire', 'seal', 'ice'];   // v0.18.0: + Лёд
 export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal', 'ice'];
@@ -246,7 +247,43 @@ export function healPriceOf(s) {
 // ---------------------------------------------------------------- v0.10.0: крафт, сюжетные предметы, миграция
 const has = (s, ev) => s.quests.includes(ev);
 const addEvent = (s, ev) => { if (!s.quests.includes(ev)) s.quests = [...s.quests, ev]; };
-const addItem = (s, id, n) => { s.inventory[id] = clamp((s.inventory[id] || 0) + n, 0, LIMITS.maxCounter); };
+class BagFull extends Error {}
+const bag = s => bagData(s.objects);
+const freeBag = s => Math.max(0, bag(s).capacity - bagUsed(s.inventory));
+const addItem = (s, id, n) => {
+  if (n > 0 && takesBagSpace(id) && n > freeBag(s)) throw new BagFull();
+  s.inventory[id] = clamp((s.inventory[id] || 0) + n, 0, LIMITS.maxCounter);
+};
+function awardItem(s, id, n) {
+  if (n > 0 && takesBagSpace(id) && n > freeBag(s)) {
+    const b = bag(s); b.pending[id] = Math.min(LIMITS.maxCounter, (b.pending[id] || 0) + n);
+    s.objects.player_bag = { ...b, version: BAG.version };
+  } else addItem(s, id, n);
+}
+function bagAction(s, action) {
+  const b = bag(s);
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  if (action.op === 'bag_expand') {
+    if (b.capacity > BAG.max - BAG.increment) return { ok: false, reason: 'max' };
+    if (walletOf(s.wallet).sapphires < BAG.price) return { ok: false, reason: 'sapphires', need: BAG.price };
+    spend(s, BAG.price); b.capacity += BAG.increment;
+    s.objects.player_bag = { ...b, version: BAG.version };
+    return { ok: true, capacity: b.capacity, price: BAG.price };
+  }
+  const { item, qty } = action;
+  if (!takesBagSpace(item) || !Number.isInteger(qty) || qty < 1 || qty > LIMITS.maxCounter) return { ok: false, reason: 'bad' };
+  if (action.op === 'bag_claim' || action.pending === true) {
+    if ((b.pending[item] || 0) < qty) return { ok: false, reason: 'missing' };
+    if (action.op === 'bag_claim') addItem(s, item, qty);
+    b.pending[item] -= qty; if (!b.pending[item]) delete b.pending[item];
+    s.objects.player_bag = { ...b, version: BAG.version };
+  } else {
+    if ((s.inventory[item] || 0) < qty) return { ok: false, reason: 'missing' };
+    addItem(s, item, -qty);
+  }
+  return { ok: true, item, qty };
+}
+
 
 /**
  * Разовая награда операции (зеркало SQL _grant): опыт героя (уровень растёт по таблице; перед повышением «полные» HP/мана
@@ -265,10 +302,10 @@ function grant(s, reward = {}) {
     s.level = lvl;
   }
   if (reward.coins) addItem(s, 'coins', reward.coins);
-  for (const [k, v] of Object.entries(reward.items || {})) addItem(s, k, v);
+  for (const [k, v] of Object.entries(reward.items || {}).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) awardItem(s, k, v);
   for (const [k, v] of Object.entries(reward.schoolXP || {})) s.school[k] = clamp((s.school[k] || 0) + v, 0, LIMITS.maxCounter);
   for (const [k, v] of Object.entries(reward.topUp?.school || {})) s.school[k] = Math.max(s.school[k] || 0, v);
-  for (const [k, v] of Object.entries(reward.topUp?.items || {})) s.inventory[k] = Math.max(s.inventory[k] || 0, v);
+  for (const [k, v] of Object.entries(reward.topUp?.items || {})) awardItem(s, k, Math.max(0, v - (s.inventory[k] || 0) - (bag(s).pending[k] || 0)));
 }
 
 /** Изготовление: рецепт известен, не уже сделан (сюжетный), ингредиентов хватает — иначе ничего не меняется. */
@@ -378,6 +415,9 @@ function researchStart(s, id) {
   const enough = s.level >= up.heroLevel && (s.abilities[up.ability]?.level || 0) >= up.abilityLevel
     && (s.school[up.ability] || 0) >= up.schoolXP && Object.entries(up.items).every(([k, n]) => (s.inventory[k] || 0) >= n);
   if (!enough) return { ok: false, reason: 'missing' };
+  if (walletOf(s.wallet).sapphires < up.sapphires) return { ok: false, reason: 'sapphires', need: up.sapphires };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  spend(s, up.sapphires);
   s.school[up.ability] = (s.school[up.ability] || 0) - up.schoolXP;
   for (const [k, n] of Object.entries(up.items)) addItem(s, k, -n);
   s.research = { upgradeId: id, startedAt: num(s.vitalsAt) ? s.vitalsAt : 0, durationMs: up.durationMs };
@@ -893,10 +933,12 @@ function migrateV10(s) {
  *   v0.16.0: { op: 'build_set', slots?, amulets? } — слоты даров и амулеты; { op: 'build_preset', mode: 'save' | 'load' } — один бесплатный пресет
  * nowMs — время сервера: перед любым действием HP и мана восстанавливаются до него (как player_action).
  */
-export function applyAction(snap, action = {}, nowMs = null) {
+function applyActionUnchecked(snap, action = {}, nowMs = null) {
   const s = JSON.parse(JSON.stringify(snap));
   if (num(nowMs)) advanceVitals(s, nowMs);
   const op = isObj(action) ? action.op : null;
+  if (['bag_expand', 'bag_discard', 'bag_claim'].includes(op)) return { snapshot: s, result: bagAction(s, action) };
+  if (op === 'combat_start' && Object.values(bag(s).pending).some(n => n > 0)) return { snapshot: s, result: { ok: false, reason: 'bag_pending' } };
   if (op === 'craft') return { snapshot: s, result: craft(s, action.recipe) };
   if (op === 'use') return { snapshot: s, result: useItem(s, action.item) };
   if (op === 'migrate_v10') return { snapshot: s, result: migrateV10(s) };
@@ -937,7 +979,7 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'starter_kit') {
     if (s.quests.includes(STARTER_KIT.event)) return { snapshot: s, result: { ok: false, reason: 'already' } };
     s.quests = [...s.quests, STARTER_KIT.event];
-    for (const [k, v] of Object.entries(STARTER_KIT.items)) s.inventory[k] = (s.inventory[k] || 0) + v;
+    for (const [k, v] of Object.entries(STARTER_KIT.items)) awardItem(s, k, v);
     return { snapshot: s, result: { ok: true } };
   }
   return { snapshot: s, result: { ok: false, reason: 'unknown' } };
@@ -960,4 +1002,13 @@ export function fillDefaults(raw) {
     meta: meta || {},
     action: action || null,
   };
+}
+
+/** Failed inventory actions roll back their mana, coins, ingredients and world marks. */
+export function applyAction(snap, action = {}, nowMs = null) {
+  try { return applyActionUnchecked(snap, action, nowMs); }
+  catch (error) {
+    if (!(error instanceof BagFull)) throw error;
+    return { snapshot: JSON.parse(JSON.stringify(snap)), result: { ok: false, reason: 'bag_full' } };
+  }
 }

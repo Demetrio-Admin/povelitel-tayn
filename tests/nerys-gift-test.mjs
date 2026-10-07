@@ -76,7 +76,7 @@ assert.equal(restoredState.hasEvent('unlock_ice_1'), true);
 console.log('✓ Диалог закрывается до выдачи; Лёд ждёт предыдущего события и ответа сервера, сохраняется после входа.');
 
 // II и III тоже получают уровень/ветку из ответа сервера.
-srv.grant(session.userId, { quests: ['ch2_quarter_cleared'] }); await session.flush({ force: true });
+srv.grant(session.userId, { inv: { coins: 3500 }, quests: ['ch2_quarter_cleared'] }); await session.flush({ force: true });
 await ex.unlockGift('ice:2');
 assert.equal(sv.state.abilityLevel('ice'), 2);
 srv.grant(session.userId, { quests: ['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal'] }); await session.flush({ force: true });

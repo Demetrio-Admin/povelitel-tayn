@@ -104,6 +104,7 @@ console.log('\n[1] Прогрессия по маршруту');
   const lacking = state.upgradeStatus('telekinesis_2');
   ok(!lacking.ok, 'v0.8: Телекинез II без лунной травы и рунической пыли недоступен');
   state.addItem('moon_herb', 2); state.addItem('rune_dust', 1);
+  state.addItem('coins', UPGRADES.telekinesis_2.cost.coins);
   const st = state.upgradeStatus('telekinesis_2');
   ok(st.ok, `Телекинез II доступен (TK XP ${state.data.schoolXP.telekinesis}, осколки ${state.item('lunar_shard')})`);
   ok(abilities.startResearch('telekinesis_2'), 'исследование запущено');

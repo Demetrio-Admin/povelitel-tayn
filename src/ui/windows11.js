@@ -4,8 +4,9 @@ import { VIEW, COLORS } from '../config/game.config.js';
 import { UI } from '../config/ui.config.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
-import { giftCards, buildView, toggleSlot, toggleAmulet, amuletLine } from '../systems/gifts.js';
+import { giftCards, toggleSlot, toggleAmulet } from '../systems/gifts.js';
 import { speedupOptions, sapphires, sapphireFailText } from '../systems/wallet.js';
+import { GIFT_PRICES } from '../config/bag.js';
 import { SAPPHIRES } from '../config/sapphires.js';
 import { ROMAN } from '../objects/InteractiveObject.js';
 import { UPGRADES } from '../config/balance.progression.js';
@@ -24,7 +25,7 @@ const STATUS_NOTE = {
 };
 
 export const windows11 = {
-  openGifts() {
+  openGiftDetails(id) {
     if (this.mode === 'combat' || this.modal) return;
     services.audio.play('journal');
     const { state } = services;
@@ -32,7 +33,7 @@ export const windows11 = {
       height: 0,
       build: (c, x, y, w) => {
         // данные читаются при каждой отрисовке: окно перерисовывается (reopenModal) после смены билда и начала изучения
-        const cards = giftCards(state);
+        const cards = giftCards(state).filter(g => g.id === id);
         const research = state.data.research;
         let cy = y;
         const text = (tx, ty, str, style = {}) => {
@@ -61,86 +62,6 @@ export const windows11 = {
             cy += n.height + 12;
           }
         }
-        // v0.16.0: билд — слоты даров, амулеты, пресет (над карточками даров)
-        {
-          const bv = buildView(state);
-          const top = cy, px = x + 14;
-          const plate = this.add.graphics();
-          c.add(plate); c.sendToBack(plate);
-          let iy = top + 12;
-          const th = text(px, iy, 'Билд', { fontSize: UI.type.heading, fontStyle: 'bold', color: COLORS.textGold });
-          iy += th.height + 4;
-          const sh = text(px, iy, `Слоты даров в бою: ${bv.slotsUsed} из ${bv.slotCount}`, { color: COLORS.text });
-          iy += sh.height + 6;
-          for (const sl of bv.slots) {
-            const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `${sl.equipped ? '✓' : '○'} ${sl.name} — ${sl.equipped ? 'в слоте' : 'в запасе'}`, {
-              primary: false, accent: sl.equipped ? COLORS[ABILITIES[sl.id].color] : null, fontSize: UI.type.small,
-              onPress: () => { if (this.modal?.scroll?.canTap()) this.changeSlot(sl.id); },
-            });
-            if (!sl.equipped) b.text.setAlpha(0.65);
-            c.add(b.parts);
-            iy += UI.touch.button + 8;
-          }
-          iy += 4;
-          const ah = text(px, iy, `Амулеты: надето ${bv.amulets.filter((a) => a.equipped).length} из ${bv.amuletSlots}`, { fontSize: UI.type.body, fontStyle: 'bold', color: COLORS.text });
-          iy += ah.height + 4;
-          if (!bv.amulets.length) {
-            const t = text(px, iy, 'Амулетов пока нет. Их дают за задания и сильных противников.', { color: COLORS.textDim });
-            iy += t.height + 6;
-          }
-          for (const am of bv.amulets) {
-            const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `${am.equipped ? '✓' : '○'} ${am.name}${am.level ? ` +${am.level}` : ''}`, {
-              primary: false, accent: am.equipped ? COLORS.gold : null, fontSize: UI.type.small,
-              onPress: () => { if (this.modal?.scroll?.canTap()) this.changeAmulet(am.id); },
-            });
-            if (!am.equipped) b.text.setAlpha(0.65);
-            c.add(b.parts);
-            iy += UI.touch.button + 4;
-            const rr = text(px, iy, `${am.rarityName || ''}${am.level ? ` · улучшен до +${am.level}` : ''}`, { color: hex(am.rarityColor || 0xd9cbb0) }); iy += rr.height + 1;
-            const d = text(px, iy, am.level ? `Сейчас: ${amuletLine(am.effect)}.` : am.text, { color: COLORS.text }); iy += d.height + 1;
-            const t2 = text(px, iy, `Цена: ${am.tradeoff}`, { color: hex(0xe0a07a) }); iy += t2.height + 4;
-            // v0.19.0: улучшение +1…+3 (монеты и материалы; решает сервер)
-            if (am.next) {
-              const nn = text(px + 6, iy, `До +${am.next.level}: ${am.next.need.map((n) => `${n.ok ? '✓' : '✗'} ${n.name} ${Math.min(n.have, n.need)}/${n.need}`).join(' · ')}`, { color: COLORS.textDim }); iy += nn.height + 4;
-              const ub = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `Улучшить до +${am.next.level}`, {
-                primary: false, accent: am.next.canPay ? COLORS.gold : null, fontSize: UI.type.small,
-                onPress: () => { if (this.modal?.scroll?.canTap()) this.upgradeAmulet(am.id, am.next.level); },
-              });
-              if (!am.next.canPay) ub.text.setAlpha(0.6);
-              c.add(ub.parts);
-              iy += UI.touch.button + 8;
-            } else { const mx = text(px + 6, iy, 'Улучшен до предела.', { color: COLORS.textDim }); iy += mx.height + 8; }
-          }
-          const half = (w - 60) / 2;
-          // v0.17.0: пресеты по номерам; первый бесплатный, следующий открывается за сапфиры
-          for (const p of bv.presets) {
-            if (bv.presets.length > 1) { const pt = text(px, iy, `Пресет ${p.n}${p.n === 1 ? ' (бесплатный)' : ''}`, { color: COLORS.textGold }); iy += pt.height + 4; }
-            for (const [i, [label, mode, can]] of [['Запомнить билд', 'save', true], ['Вернуть билд', 'load', p.saved]].entries()) {
-              const b = addButton(this, x + 24 + half / 2 + i * (half + 12), iy + UI.touch.button / 2 + 2, half, UI.touch.button, label, {
-                primary: false, accent: can ? COLORS.gold : null, fontSize: UI.type.small,
-                onPress: () => { if (this.modal?.scroll?.canTap()) this.changePreset(mode, p.n); },
-              });
-              if (!can) b.text.setAlpha(0.6);
-              c.add(b.parts);
-            }
-            iy += UI.touch.button + 8;
-          }
-          if (bv.nextPreset) {
-            const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `Открыть пресет ${bv.nextPreset.n} — ◆ ${sapphires(bv.nextPreset.price)}`, {
-              primary: false, accent: 0x6fa8ff, fontSize: UI.type.small,
-              onPress: () => { if (this.modal?.scroll?.canTap()) this.unlockPreset(); },
-            });
-            if (!bv.nextPreset.canPay) b.text.setAlpha(0.6);
-            c.add(b.parts);
-            iy += UI.touch.button + 8;
-          }
-          const note = text(px, iy, 'Пресет запоминает слоты и амулеты (ветки меняются отдельно). Менять билд можно только вне боя.', { color: COLORS.textDim });
-          iy += note.height + 4;
-          const h = iy - top + 12;
-          drawPlate(plate, w, h, { accent: COLORS.gold, fill: 0x18121a, alpha: 0.85, radius: 12 });
-          plate.setPosition(x + w / 2, top + h / 2);
-          cy = top + h + 14;
-        }
         for (const g of cards) {
           const color = COLORS[ABILITIES[g.id].color];
           const top = cy;
@@ -149,8 +70,9 @@ export const windows11 = {
           const px = x + 14;
           let iy = top + 12;
           const title = text(px, iy, `${g.name} ${g.open ? ROMAN[g.level] : '— не открыт'}${g.branch ? ` · ${g.branch.name}` : ''}`, { fontSize: UI.type.heading, fontStyle: 'bold', color: g.open ? hex(color) : COLORS.textDim });
-          if (g.open) text(x + w - 14, iy + 4, `опыт дара ${g.xp}`, { color: COLORS.textDim, wordWrap: { width: 220 } }).setOrigin(1, 0);
+
           iy += title.height + 6;
+          if (g.open) { const xp = text(px, iy, `Опыт дара: ${g.xp}`, { color: COLORS.textDim }); iy += xp.height + 8; }
           if (!g.open) {
             const t = text(px, iy, 'Дар откроется по ходу истории.', { color: COLORS.textDim });
             iy += t.height + 4;
@@ -161,7 +83,7 @@ export const windows11 = {
               const bt = text(px, iy, `Ветка: ${g.branch.name}`, { fontSize: UI.type.body, fontStyle: 'bold', color: hex(0x9fe9ff) });
               iy += bt.height + 2;
               const bd = text(px, iy, g.branch.text, { color: COLORS.text }); iy += bd.height + 2;
-              const bc = text(px, iy, `Цена ветки: ${g.branch.tradeoff}`, { color: hex(0xe0a07a) }); iy += bc.height + 4;
+              const bc = text(px, iy, `Особенность ветки: ${g.branch.tradeoff}`, { color: hex(0xe0a07a) }); iy += bc.height + 4;
               for (const o of g.respec) {
                 const b = addButton(this, x + w / 2, iy + UI.touch.button / 2 + 2, w - 48, UI.touch.button, `Сменить на «${o.name}» — ${o.price} монет`, {
                   primary: false, accent: o.canPay ? color : null, fontSize: UI.type.small,
@@ -193,7 +115,7 @@ export const windows11 = {
                 const bn = text(px, iy, n.branchName, { fontSize: UI.type.body, fontStyle: 'bold', color: hex(0x9fe9ff) });
                 iy += bn.height + 2;
                 const bd = text(px, iy, n.branchText, { color: COLORS.text }); iy += bd.height + 2;
-                const bc = text(px, iy, `Цена ветки: ${n.branchTradeoff}`, { color: hex(0xe0a07a) }); iy += bc.height + 4;
+                const bc = text(px, iy, `Особенность ветки: ${n.branchTradeoff}`, { color: hex(0xe0a07a) }); iy += bc.height + 4;
               } else {
                 const h = text(px, iy, `Дальше: ${n.title}`, { fontSize: UI.type.body, fontStyle: 'bold', color: COLORS.textGold });
                 iy += h.height + 2;
@@ -222,7 +144,11 @@ export const windows11 = {
                 iy += UI.touch.button + 12;
               }
             }
-            if (!g.choices.length && g.maxed) {
+            if (g.id === 'ice' && g.level < 3) {
+              const price = g.level === 1 ? GIFT_PRICES.storyIce2.coins : GIFT_PRICES.storyIce3.coins;
+              const t = text(px, iy, `Следующая ступень — у Нэрис после её заданий. Цена: ${price} монет. Сапфиры не нужны.`, { color: COLORS.textGold }); iy += t.height + 12;
+            }
+            if (!g.choices.length && g.maxed && !(g.id === 'ice' && g.level < 3)) {
               const t = text(px, iy, 'Высшая ступень из доступных. Новые ступени и ветки — в следующих обновлениях.', { color: COLORS.textDim });
               iy += t.height + 4;
             }
@@ -236,8 +162,8 @@ export const windows11 = {
       },
     };
     this.openModal({
-      title: 'Дары', color: COLORS.gold, text: '', content,
-      buttons: [{ label: 'Закрыть', primary: true }, { label: 'Сумка', onClick: () => this.openBag() }],
+      title: ABILITIES[id].name, color: COLORS[ABILITIES[id].color], text: '', content,
+      buttons: [{ label: 'Закрыть', primary: true }, { label: 'К дарам', onClick: () => this.openBag('gifts') }],
     });
   },
 
@@ -280,7 +206,7 @@ export const windows11 = {
     const r = state.setBuild(want, this.mode === 'combat');
     if (!r.ok) {
       services.audio.play('locked');
-      this.toast({ combat: 'Билд меняется только вне боя.', missing: 'Такого амулета нет в сумке.', locked: 'Этот дар ещё не открыт.', too_many: 'Все места заняты.' }[r.reason] || 'Так выбрать нельзя.');
+      this.toast({ combat: 'Боевой набор меняется только вне боя.', missing: 'Такого амулета нет в сумке.', locked: 'Этот дар ещё не открыт.', too_many: 'Все места заняты.' }[r.reason] || 'Так выбрать нельзя.');
     } else {
       actions.buildSet(want);
       state.save();
@@ -312,13 +238,13 @@ export const windows11 = {
     const r = state.buildPreset(mode, this.mode === 'combat', slot);
     if (!r.ok) {
       services.audio.play('locked');
-      this.toast(r.reason === 'empty' ? 'Билд ещё не сохранён.' : r.reason === 'combat' ? 'Билд меняется только вне боя.' : 'Не получилось.');
+      this.toast(r.reason === 'empty' ? 'Боевой набор ещё не сохранён.' : r.reason === 'combat' ? 'Боевой набор меняется только вне боя.' : 'Не получилось.');
       return;
     }
     actions.buildPreset(mode, slot);
     state.save();
     services.audio.play('unlock_magic');
-    this.toast(mode === 'save' ? 'Билд запомнен' : 'Билд возвращён', COLORS.gold);
+    this.toast(mode === 'save' ? 'Боевой набор сохранён' : 'Боевой набор выбран', COLORS.gold);
     this.reopenModal();
   },
 
@@ -347,21 +273,29 @@ export const windows11 = {
   async unlockPreset() {
     const r = await services.actions.presetUnlock();
     if (!r?.ok) { services.audio.play('locked'); this.toast(sapphireFailText(r)); }
-    else { services.audio.play('unlock_magic'); this.toast(`Открыт пресет ${r.slots}`, 0x6fa8ff); }
+    else { services.audio.play('unlock_magic'); this.toast(`Открыт набор ${r.slots}`, 0x6fa8ff); }
     if (this.modal) this.reopenModal();
   },
 
   startGiftResearch(upgradeId) {
-    const { abilities } = services;
     const up = UPGRADES[upgradeId];
-    if (!abilities.startResearch(upgradeId)) {
-      services.audio.play('locked');
-      this.toast('Пока не хватает требований для изучения.');
-      return;
+    if (!services.state.upgradeStatus(upgradeId).ok) { this.toast('Не хватает требований для улучшения.'); return; }
+    this.closeModal(null);
+    this.openModal({
+      title: `Изучить ${up.title}?`, color: COLORS[ABILITIES[up.ability].color],
+      text: `Цена: ${up.cost.coins || 0} монет${up.cost.sapphires ? ` и ${up.cost.sapphires} сапфиров` : ''}.\n\nМатериалы и опыт дара будут потрачены. Время изучения: ${fmtSec(up.timerSec.live)}.`,
+      buttons: [{ label: 'Изучить', primary: true, onClick: () => this.beginGiftResearch(upgradeId) }, { label: 'Отмена', onClick: () => this.openGiftDetails(up.ability) }],
+    });
+  },
+  async beginGiftResearch(upgradeId) {
+    const up = UPGRADES[upgradeId];
+    if (services.actions.online && !services.state.getObject('player_bag')?.version) {
+      this.toast('Улучшения временно недоступны. Попробуйте позже.'); this.openGiftDetails(up.ability); return;
     }
-    services.audio.play('unlock_magic');
-    this.toast(`Изучение «${up.title}» началось`, COLORS[ABILITIES[up.ability].color]);
+    const r = await services.actions.confirm({ op: 'research_start', upgrade: upgradeId });
+    if (!r?.ok) { services.audio.play('locked'); this.toast(r?.reason === 'sapphires' ? sapphireFailText(r) : 'Улучшение не началось. Проверьте требования и связь.'); }
+    else { services.audio.play('unlock_magic'); this.toast(`Изучение «${up.title}» началось`, COLORS[ABILITIES[up.ability].color]); }
     this.refreshHud();
-    this.reopenModal();   // карточки перерисовываются: кнопка пропадает, сверху — таймер
+    if (!this.modal) this.openGiftDetails(up.ability);
   },
 };

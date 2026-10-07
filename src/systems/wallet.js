@@ -52,7 +52,7 @@ export function walletView(state) {
     uses: [
       `Ускорить изучение дара: −${SAPPHIRES.speedup.chunkMin} мин за ${sapphires(SAPPHIRES.speedup.price)} (не больше ${SAPPHIRES.speedup.dailyChunks} раз в сутки и не больше ${Math.round(SAPPHIRES.speedup.maxCutPct * 100)}% таймера)`,
       `Сменить ветку дара: ${sapphires(SAPPHIRES.respec)} вместо монет`,
-      `Ещё один пресет билда: ${sapphires(SAPPHIRES.preset.price)} (всего до ${SAPPHIRES.preset.max})`,
+      `Ещё один боевой набор: ${sapphires(SAPPHIRES.preset.price)} (всего до ${SAPPHIRES.preset.max})`,
     ],
   };
 }
@@ -64,7 +64,7 @@ export function sapphireFailText(r) {
     case 'limit': return 'Это изучение уже ускорено до предела — остаток дождитесь.';
     case 'daily': return 'Ускорения на сегодня закончились — завтра будут снова.';
     case 'none': return 'Сейчас ничего не изучается.';
-    case 'max': return 'Все пресеты уже открыты.';
+    case 'max': return 'Все боевые наборы уже открыты.';
     case 'already': return 'Приветственные сапфиры уже получены.';
     case 'network': return 'Нет связи с сервером — попробуйте ещё раз.';
     default: return 'Не получилось.';

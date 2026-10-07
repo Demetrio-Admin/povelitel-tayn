@@ -796,7 +796,7 @@ console.log('\nv0.15.0. Прогресс закрыт для sync_player: игр
   ok(!t4.ok && t4.reason === 'unknown', 'выдуманное задание — unknown');
 
   // изучение: цена и условия — на сервере, время — по часам сервера
-  await give(d, { xp: 1260, school: { telekinesis: 150 }, inv: { lunar_shard: 5, moon_herb: 2, rune_dust: 1 }, quests: ['lunar_quest_complete'] });
+  await give(d, { xp: 1260, school: { telekinesis: 150 }, inv: { coins: 150, lunar_shard: 5, moon_herb: 2, rune_dust: 1 }, quests: ['lunar_quest_complete'] });
   abilities.startResearch('telekinesis_2');
   ok(!!st.data.research, 'изучение началось сразу у игрока');
   await settle();

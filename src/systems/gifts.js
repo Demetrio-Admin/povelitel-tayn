@@ -51,6 +51,8 @@ function stepCard(state, id, up) {
   if (r.heroLevel) need.push({ label: `Уровень героя ${r.heroLevel}`, have: state.data.heroLevel, need: r.heroLevel });
   if (r.event && !state.hasEvent(r.event)) need.push({ label: 'Пробудить Лунный алтарь', have: 0, need: 1 });
   need.push({ label: 'Опыт дара', have: state.data.schoolXP[id] || 0, need: up.cost.schoolXP });
+  if (up.cost.coins) need.push({ label: 'Монеты', item: 'coins', have: state.item('coins'), need: up.cost.coins });
+  if (up.cost.sapphires) need.push({ label: 'Сапфиры', have: state.sapphires(), need: up.cost.sapphires });
   for (const [k, v] of Object.entries(up.cost.items || {})) need.push({ label: ITEMS[k]?.name || k, item: k, have: state.item(k), need: v });
   const branch = up.branch ? ABILITIES[id].branches?.[up.branch] : null;
   return {

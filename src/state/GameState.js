@@ -10,6 +10,7 @@ import { materialize } from './vitals.js';
 import { DEFAULT_HERO_ID } from '../config/heroes.js';
 import { GIFT_IDS, AMULETS, AMULET_UPGRADES, slotCount, defaultSlots, checkBuild, buildSlotRules } from '../config/build.js';
 import { SAPPHIRES } from '../config/sapphires.js';
+import { BAG, bagView, takesBagSpace } from '../config/bag.js';
 
 const SAVE_VERSION = 1;
 
@@ -32,7 +33,7 @@ export function createDefaultState(heroId = DEFAULT_HERO_ID) {
     defeatedEnemies: [],
     inventory: { coins: 0, lunar_shard: 0, lunar_flame: 0 },
     // состояние отдельных объектов мира: { [id]: { state, x, y } }
-    worldObjects: {},
+    worldObjects: { player_bag: { capacity: BAG.initial, pending: {}, version: BAG.version } },
     research: null, // { upgradeId, startedAt, durationMs, fullMs? } (fullMs — полное время до ускорений за сапфиры)
     wallet: { sapphires: 0, daily: {}, welcome: false },   // v0.17.0: кошелёк сапфиров — только от сервера
     player: { x: WORLD.playerStart.x, y: WORLD.playerStart.y },
@@ -131,6 +132,13 @@ export class GameState {
   // ---------- inventory ----------
   item(id) { return this.data.inventory[id] || 0; }
   addItem(id, amount = 1) { this.data.inventory[id] = this.item(id) + amount; }
+  awardItem(id, amount = 1) {
+    const b = bagView(this);
+    if (amount > 0 && takesBagSpace(id) && amount > b.free) {
+      b.pending[id] = (b.pending[id] || 0) + amount;
+      this.setObject('player_bag', { capacity: b.capacity, pending: b.pending, version: BAG.version });
+    } else this.addItem(id, amount);
+  }
   removeItem(id, amount = 1) {
     if (this.item(id) < amount) return false;
     this.data.inventory[id] -= amount;
@@ -184,7 +192,7 @@ export class GameState {
   applyReward(reward = {}) {
     const granted = { heroXP: 0, schoolXP: {}, items: {} };
     if (reward.schoolXP) for (const [k, v] of Object.entries(reward.schoolXP)) { this.addSchoolXP(k, v); granted.schoolXP[k] = v; }
-    if (reward.items) for (const [k, v] of Object.entries(reward.items)) { if (v > 0) { this.addItem(k, v); granted.items[k] = v; } }
+    if (reward.items) for (const [k, v] of Object.entries(reward.items).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) { if (v > 0) { this.awardItem(k, v); granted.items[k] = v; } }
     if (reward.coins) { this.addItem('coins', reward.coins); granted.items.coins = (granted.items.coins || 0) + reward.coins; }
     if (reward.topUpFor) {
       const up = UPGRADES[reward.topUpFor];
@@ -194,8 +202,8 @@ export class GameState {
         if (needXP > 0) { this.addSchoolXP(school, needXP); granted.schoolXP[school] = (granted.schoolXP[school] || 0) + needXP; }
         for (const [k, v] of Object.entries(up.cost.items || {})) {
           if (up.cost.noTopUp?.includes(k)) continue; // ресурсы, которые игрок добывает сам
-          const need = v - this.item(k);
-          if (need > 0) { this.addItem(k, need); granted.items[k] = (granted.items[k] || 0) + need; }
+          const need = v - this.item(k) - (bagView(this).pending[k] || 0);
+          if (need > 0) { this.awardItem(k, need); granted.items[k] = (granted.items[k] || 0) + need; }
         }
       }
     }
@@ -213,6 +221,8 @@ export class GameState {
     if (this.data.research) return { ok: false, reason: this.data.research.upgradeId === upgradeId ? 'in_progress' : 'busy' };
     const r = up.requires || {};
     const checks = [];
+    checks.push({ label: 'Монеты', item: 'coins', have: this.item('coins'), need: up.cost.coins || 0 });
+    checks.push({ label: 'Сапфиры', have: this.sapphires(), need: up.cost.sapphires || 0 });
     if (r.heroLevel) checks.push({ label: `Уровень ${r.heroLevel}`, have: this.data.heroLevel, need: r.heroLevel });
     if (r.abilityLevel) checks.push({ label: `${up.ability} ${r.abilityLevel}`, have: this.abilityLevel(up.ability), need: r.abilityLevel, hidden: true });
     checks.push({ label: 'Опыт дара', have: this.data.schoolXP[up.ability] || 0, need: up.cost.schoolXP });
@@ -227,6 +237,8 @@ export class GameState {
     if (!st.ok) return false;
     const up = UPGRADES[upgradeId];
     this.data.schoolXP[up.ability] -= up.cost.schoolXP;
+    this.removeItem('coins', up.cost.coins || 0);
+    this.data.wallet.sapphires -= up.cost.sapphires || 0;
     for (const [k, v] of Object.entries(up.cost.items || {})) this.removeItem(k, v);
     this.data.research = { upgradeId, startedAt: this.now(), durationMs: up.timerSec[TIMER_MODE] * 1000 };
     return true;

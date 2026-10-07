@@ -3,6 +3,7 @@
 import { RESOURCE_ITEMS } from './resources.js';
 import { STORY_ITEMS } from './storyItems.js';
 import { AMULETS } from './build.js';
+import { GIFT_PRICES } from './bag.js';
 
 export const ITEMS = {
   coins:        { name: 'Монеты',          icon: 'icon_coin' },
@@ -109,7 +110,11 @@ export const UPGRADES = {
   },
 };
 
-// Смена ветки: мгновенно, вне боя, за монеты (позже — и за сапфиры). Не продаёт силу, а даёт свободу пробовать.
+for (const [id, up] of Object.entries(UPGRADES)) {
+  Object.assign(up.cost, id === 'telekinesis_2' ? GIFT_PRICES.storyTelekinesis : up.toLevel === 2 ? GIFT_PRICES.tier2 : GIFT_PRICES.tier3);
+}
+
+// Смена ветки: мгновенно, вне боя.
 export const BRANCH_RESPEC = { coins: 150 };
 
 // Награды за события мира. topUpFor — гарантировать ресурсы на улучшение

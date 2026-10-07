@@ -135,7 +135,7 @@ export class InteractiveObject {
   /** Что выдал сервер (outcome ответа) — тосты опыта и предметов, окно нового уровня. */
   announce(r, title = null) {
     const o = r?.outcome || {};
-    services.bus.emit(MSG.REWARD, { title, granted: { heroXP: o.heroXP || 0, schoolXP: {}, items: o.items || {} }, levelUps: o.levelUps || [] });
+    services.bus.emit(MSG.REWARD, { title, granted: { heroXP: o.heroXP || 0, sapphires: o.sapphires || 0, schoolXP: {}, items: o.items || {} }, levelUps: o.levelUps || [] });
     services.bus.emit(MSG.HUD_REFRESH);
   }
 

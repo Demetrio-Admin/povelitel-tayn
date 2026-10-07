@@ -22,7 +22,7 @@ export const STORY_USES = {
   lunar_wick: {
     requires: ['lunar_quest_start'], blockedBy: ['lunar_quest_complete'], events: ['lunar_quest_complete'],
     // прежняя разовая награда алтаря + гарантия цены Телекинеза II по школьному опыту и осколкам (трава и пыль — сами)
-    reward: { heroXP: 50, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUp: { school: { telekinesis: 150 }, items: { lunar_shard: 5 } } },
+    reward: { heroXP: 50, coins: 100, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUp: { school: { telekinesis: 150 }, items: { lunar_shard: 5, coins: 195 } } },
   },
   revealing_compound: {
     requires: ['guardian_defeated'], blockedBy: ['gate_marks_revealed'], events: ['gate_marks_revealed'],
@@ -30,7 +30,7 @@ export const STORY_USES = {
   },
   restoration_bundle: {
     requires: ['chapter_trial_defeated', 'unlock_seal_1'], blockedBy: ['chapter_1_complete'], mana: 20, events: ['chapter_1_complete'],
-    reward: { heroXP: 100, coins: 30, schoolXP: { seal: 40 } },
+    reward: { heroXP: 100, coins: 60, schoolXP: { seal: 40 } },
   },
 };
 

@@ -21,7 +21,7 @@ export const bagRules = () => ({ ...BAG, items: BAG_ITEMS });
 export const GIFT_PRICES = {
   storyTelekinesis: { coins: 150, sapphires: 0 },
   storyIce2: { coins: 500, sapphires: 0 },
-  storyIce3: { coins: 3000, sapphires: 0 },
+  storyIce3: { coins: 1500, sapphires: 0 },
   tier2: { coins: 2000, sapphires: 200 },
   tier3: { coins: 10000, sapphires: 750 },
 };

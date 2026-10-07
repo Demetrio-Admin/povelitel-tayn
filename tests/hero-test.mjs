@@ -152,8 +152,8 @@ console.log('\nСохранения без сервера');
   store.setItem(SAVE.key, JSON.stringify(old));
   store.setItem('witch_rpg_settings_v1', JSON.stringify({ hints: false, music: 0.3 }));
   const s1 = new GameState(store); ok(s1.load(), 'старое сохранение загружается');
-  ok(s1.data.heroId === 'witch' && s1.data.heroLevel === 3 && s1.item('coins') === 42 && s1.item('moon_herb') === 3 && s1.hasEvent('combat_intro_01') && s1.data.hp === 77 && s1.data.mana === 31,
-    'старое сохранение без heroId — ведьма; уровень, ресурсы, события, HP и мана сохранены');
+  ok(s1.data.heroId === 'witch' && s1.data.heroLevel === 3 && s1.item('coins') === 92 && s1.item('moon_herb') === 3 && s1.hasEvent('combat_intro_01') && s1.data.hp === 77 && s1.data.mana === 31,
+    'старое сохранение без heroId — ведьма; уровень, предметы, события, HP и мана сохранены; добавлено 50 монет нового баланса');
   ok(store.getItem('witch_rpg_settings_v1') === JSON.stringify({ hints: false, music: 0.3 }), 'настройки не тронуты');
   // новая игра колдуном: выбор переживает перезагрузку
   s1.reset('warlock'); s1.save();

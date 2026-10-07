@@ -17,17 +17,17 @@ var HERO_LEVELS = [
   { level: 3, xp: 150, maxHp: 132, maxMana: 110, manaRegen: 3, damageMult: 1.05, note: "\u0414\u043E\u0441\u0442\u0443\u043F \u043A \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u0443 II" },
   { level: 4, xp: 270, maxHp: 138, maxMana: 115, manaRegen: 3, damageMult: 1.08, note: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 II, \u043F\u0443\u0442\u044C \u043A \u041E\u0433\u043D\u044E" },
   { level: 5, xp: 430, maxHp: 144, maxMana: 120, manaRegen: 3, damageMult: 1.1, note: "\u0421\u0442\u0430\u0440\u044B\u0439 \u043B\u0435\u0441" },
-  { level: 6, xp: 650, maxHp: 152, maxMana: 125, manaRegen: 3, damageMult: 1.12, note: "\u0410\u0441\u0442\u0440\u0430\u043B \u0438 \u0438\u0441\u043F\u044B\u0442\u0430\u043D\u0438\u0435" },
-  { level: 7, xp: 940, maxHp: 160, maxMana: 135, manaRegen: 3, damageMult: 1.15, note: "\u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0438\u0435 \u0433\u043B\u0430\u0432\u044B" },
-  { level: 8, xp: 1300, maxHp: 170, maxMana: 140, manaRegen: 3, damageMult: 1.18, note: "\u0414\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u0432\u044B\u0445\u043E\u0434" },
-  { level: 9, xp: 1750, maxHp: 180, maxMana: 145, manaRegen: 3, damageMult: 1.21, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" },
-  { level: 10, xp: 2350, maxHp: 190, maxMana: 155, manaRegen: 3, damageMult: 1.25, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" },
+  { level: 6, xp: 650, maxHp: 152, maxMana: 125, manaRegen: 3.2, damageMult: 1.12, note: "\u0410\u0441\u0442\u0440\u0430\u043B \u0438 \u0438\u0441\u043F\u044B\u0442\u0430\u043D\u0438\u0435" },
+  { level: 7, xp: 940, maxHp: 160, maxMana: 135, manaRegen: 3.2, damageMult: 1.15, note: "\u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0438\u0435 \u0433\u043B\u0430\u0432\u044B" },
+  { level: 8, xp: 1300, maxHp: 170, maxMana: 140, manaRegen: 3.2, damageMult: 1.18, note: "\u0414\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u0432\u044B\u0445\u043E\u0434" },
+  { level: 9, xp: 1750, maxHp: 180, maxMana: 145, manaRegen: 3.2, damageMult: 1.21, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" },
+  { level: 10, xp: 2350, maxHp: 190, maxMana: 155, manaRegen: 3.2, damageMult: 1.25, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" },
   // v0.18.0: глава II (docs/design/chapter-2-balance-v0.1.md §2)
-  { level: 11, xp: 3100, maxHp: 202, maxMana: 165, manaRegen: 3, damageMult: 1.29, note: "\u041B\u0451\u0434 I" },
-  { level: 12, xp: 4e3, maxHp: 214, maxMana: 175, manaRegen: 3, damageMult: 1.33, note: "\u041B\u0451\u0434 II" },
-  { level: 13, xp: 5100, maxHp: 226, maxMana: 185, manaRegen: 3, damageMult: 1.37, note: "\u041B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F" },
-  { level: 14, xp: 6400, maxHp: 240, maxMana: 195, manaRegen: 3, damageMult: 1.42, note: "\u041A\u043E\u0432\u0435\u043D\u044B" },
-  { level: 15, xp: 7900, maxHp: 255, maxMana: 205, manaRegen: 3, damageMult: 1.48, note: "\u0424\u0438\u043D\u0430\u043B \u0433\u043B\u0430\u0432\u044B II" }
+  { level: 11, xp: 3100, maxHp: 202, maxMana: 165, manaRegen: 3.5, damageMult: 1.29, note: "\u041B\u0451\u0434 I" },
+  { level: 12, xp: 4e3, maxHp: 214, maxMana: 175, manaRegen: 3.5, damageMult: 1.33, note: "\u041B\u0451\u0434 II" },
+  { level: 13, xp: 5100, maxHp: 226, maxMana: 185, manaRegen: 3.5, damageMult: 1.37, note: "\u041B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F" },
+  { level: 14, xp: 6400, maxHp: 240, maxMana: 195, manaRegen: 3.8, damageMult: 1.42, note: "\u041A\u043E\u0432\u0435\u043D\u044B" },
+  { level: 15, xp: 7900, maxHp: 255, maxMana: 205, manaRegen: 3.8, damageMult: 1.48, note: "\u0424\u0438\u043D\u0430\u043B \u0433\u043B\u0430\u0432\u044B II" }
 ];
 var HERO_RECOVERY = {
   // Смерть не наказывает сильно (Combat Math §10).
@@ -159,7 +159,7 @@ var STORY_USES = {
     blockedBy: ["lunar_quest_complete"],
     events: ["lunar_quest_complete"],
     // прежняя разовая награда алтаря + гарантия цены Телекинеза II по школьному опыту и осколкам (трава и пыль — сами)
-    reward: { heroXP: 50, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUp: { school: { telekinesis: 150 }, items: { lunar_shard: 5 } } }
+    reward: { heroXP: 50, coins: 100, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUp: { school: { telekinesis: 150 }, items: { lunar_shard: 5, coins: 195 } } }
   },
   revealing_compound: {
     requires: ["guardian_defeated"],
@@ -172,7 +172,7 @@ var STORY_USES = {
     blockedBy: ["chapter_1_complete"],
     mana: 20,
     events: ["chapter_1_complete"],
-    reward: { heroXP: 100, coins: 30, schoolXP: { seal: 40 } }
+    reward: { heroXP: 100, coins: 60, schoolXP: { seal: 40 } }
   }
 };
 var FIRST_CRAFT = { event: "first_craft_complete", reward: { heroXP: 15 } };
@@ -229,7 +229,7 @@ var AMULET_UPGRADES = [
   { coins: 400, items: { frost_shard: 2, lunar_shard: 3 } }
 ];
 var AMULET_LEVEL_STEP = 0.25;
-function amuletEffect(id, level = 0) {
+function amuletEffect(id, level = 0, legacy = false) {
   const e = AMULETS[id]?.effect;
   if (!e) return {};
   const k = 1 + AMULET_LEVEL_STEP * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length));
@@ -237,7 +237,7 @@ function amuletEffect(id, level = 0) {
   const out = { ...e };
   if (e.damageMult && e.damageMult > 1) out.damageMult = r(1 + (e.damageMult - 1) * k);
   if (e.incomingMult) out.incomingMult = r(1 - (1 - e.incomingMult) * k);
-  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: r(Math.min(0.9, e.manaRescue.gainPct * k)) };
+  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: legacy ? r(e.manaRescue.gainPct * k) : r(e.manaRescue.gainPct + 0.1 * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length))) };
   if (e.iceMult) out.iceMult = r(1 + (e.iceMult - 1) * k);
   if (e.slowBonus) out.slowBonus = r(e.slowBonus * k);
   return out;
@@ -300,7 +300,7 @@ var bagRules = () => ({ ...BAG, items: BAG_ITEMS });
 var GIFT_PRICES = {
   storyTelekinesis: { coins: 150, sapphires: 0 },
   storyIce2: { coins: 500, sapphires: 0 },
-  storyIce3: { coins: 3e3, sapphires: 0 },
+  storyIce3: { coins: 1500, sapphires: 0 },
   tier2: { coins: 2e3, sapphires: 200 },
   tier3: { coins: 1e4, sapphires: 750 }
 };
@@ -435,8 +435,9 @@ for (const [id, up] of Object.entries(UPGRADES)) {
 }
 var BRANCH_RESPEC = { coins: 150 };
 var EVENT_REWARDS = {
+  unlock_telekinesis_1: { coins: 50 },
   first_world_interaction: { heroXP: 10 },
-  lunar_quest_complete: { heroXP: 50, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUpFor: "telekinesis_2" },
+  lunar_quest_complete: { heroXP: 50, coins: 100, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUpFor: "telekinesis_2" },
   telekinesis_2_complete: { heroXP: 30 },
   heavy_path_open: { heroXP: 20 },
   unlock_fire_1: { heroXP: 30 },
@@ -445,32 +446,56 @@ var EVENT_REWARDS = {
   // обычный школьный опыт мира (+6), отдельной награды «за обучение» нет.
   unlock_seal_1: { heroXP: 60 },
   // v0.20.0 — глава II, квесты 1–5 (chapter-2-balance-v0.1.md §4; опыт боёв — в наградах врагов)
-  ch2_city_arrived: { heroXP: 220, coins: 60 },
-  ch2_met_ilaria: { heroXP: 200, coins: 50, items: { frost_herb: 1 } },
-  ch2_trace_found: { heroXP: 300, coins: 80, items: { frost_herb: 2, rune_dust: 1 } },
-  ch2_archive_read: { heroXP: 320, coins: 90 },
-  ch2_met_severin: { heroXP: 340, coins: 80, items: { warm_potion: 1 } },
+  ch2_city_arrived: { heroXP: 220, coins: 80 },
+  ch2_met_ilaria: { heroXP: 200, coins: 90, items: { frost_herb: 1 } },
+  ch2_trace_found: { heroXP: 300, coins: 100, items: { frost_herb: 2, rune_dust: 1 } },
+  ch2_archive_read: { heroXP: 320, coins: 110 },
+  ch2_met_severin: { heroXP: 340, coins: 100, items: { warm_potion: 1 } },
   // v0.21.0: квесты 6–10 (квест — минус опыт обязательных боёв, chapter-2-balance §4)
-  ch2_cargo_reported: { heroXP: 270, coins: 120, items: { frost_herb: 2 } },
-  ch2_frost_wave: { heroXP: 280, coins: 90 },
+  ch2_cargo_reported: { heroXP: 270, coins: 150, items: { frost_herb: 2 } },
+  ch2_frost_wave: { heroXP: 280, coins: 120 },
   ch2_nerys_met: { heroXP: 60 },
-  ch2_rescue_done: { heroXP: 300, coins: 140, items: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 } },
+  ch2_rescue_done: { heroXP: 300, coins: 180, items: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 } },
   // травы на первый Тёплый настой
   unlock_ice_1: { heroXP: 60 },
-  ch2_ice_trained: { heroXP: 240, coins: 60 },
-  ch2_quarter_cleared: { heroXP: 340, coins: 160, items: { ice_crystal: 2 } },
+  ch2_ice_trained: { heroXP: 240, coins: 100 },
+  ch2_quarter_cleared: { heroXP: 340, coins: 200, items: { ice_crystal: 2 } },
   // v0.22.0: квесты 11–15
   unlock_ice_2: { heroXP: 60, items: { ice_crystal: 1, tree_resin: 1, rune_dust: 1 } },
   // материалы на первый Флакон хрупкости
-  ch2_brittle_done: { heroXP: 240, coins: 70 },
+  ch2_brittle_done: { heroXP: 240, coins: 100 },
   ch2_stabilized: { heroXP: 120 },
-  ch2_lab_reported: { heroXP: 300, coins: 180, items: { frost_shard: 1, lunar_shard: 2 } },
-  ch2_severin_confronted: { heroXP: 380, coins: 80 },
+  ch2_lab_reported: { heroXP: 300, coins: 220, items: { frost_shard: 1, lunar_shard: 2 } },
+  ch2_severin_confronted: { heroXP: 380, coins: 100 },
   ch2_coven_met: { heroXP: 60 },
-  ch2_coven_ready: { heroXP: 300, coins: 180, items: { ice_crystal: 2 } },
+  ch2_coven_ready: { heroXP: 300, coins: 220, items: { ice_crystal: 2 } },
   ch2_epilogue: { heroXP: 250 },
-  chapter_2_complete: { heroXP: 300, coins: 150, items: { frost_shard: 1 } }
+  chapter_2_complete: { heroXP: 300, coins: 330, topUp: { heroXP: 7900 }, items: { frost_shard: 1 } }
   // + 5 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
+};
+var BALANCE_MIGRATION = {
+  event: "balance_v30_applied",
+  coins: {
+    unlock_telekinesis_1: 50,
+    lunar_quest_complete: 100,
+    chapter_1_complete: 30,
+    ch2_city_arrived: EVENT_REWARDS.ch2_city_arrived.coins - 60,
+    ch2_met_ilaria: EVENT_REWARDS.ch2_met_ilaria.coins - 50,
+    ch2_trace_found: EVENT_REWARDS.ch2_trace_found.coins - 80,
+    ch2_archive_read: EVENT_REWARDS.ch2_archive_read.coins - 90,
+    ch2_met_severin: EVENT_REWARDS.ch2_met_severin.coins - 80,
+    ch2_cargo_reported: EVENT_REWARDS.ch2_cargo_reported.coins - 120,
+    ch2_frost_wave: EVENT_REWARDS.ch2_frost_wave.coins - 90,
+    ch2_rescue_done: EVENT_REWARDS.ch2_rescue_done.coins - 140,
+    ch2_ice_trained: EVENT_REWARDS.ch2_ice_trained.coins - 60,
+    ch2_quarter_cleared: EVENT_REWARDS.ch2_quarter_cleared.coins - 160,
+    ch2_brittle_done: EVENT_REWARDS.ch2_brittle_done.coins - 70,
+    ch2_lab_reported: EVENT_REWARDS.ch2_lab_reported.coins - 180,
+    ch2_severin_confronted: EVENT_REWARDS.ch2_severin_confronted.coins - 80,
+    ch2_coven_ready: EVENT_REWARDS.ch2_coven_ready.coins - 180,
+    chapter_2_complete: EVENT_REWARDS.chapter_2_complete.coins - 150
+  },
+  sapphires: { ch2_quarter_cleared: 1, ch2_coven_ready: 1 }
 };
 
 // src/config/balance.abilities.js
@@ -888,6 +913,30 @@ var CITY_EXTRA_COLLIDERS = [
 ];
 var CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }, { x: 2360, y: 1460, w: 1240, h: 1840 }, { x: 1800, y: 3950, w: 560, h: 1450 }];
 var CITY_INTERACTIVES = [
+  {
+    id: "sapphire_city_cache_1",
+    kind: "chest",
+    x: 2730,
+    y: 3480,
+    texture: "chest_01",
+    radius: 100,
+    collide: { w: 50, h: 24 },
+    requiresEvent: "ch2_city_arrived",
+    reward: { sapphires: 1 },
+    hint: "\u0422\u0430\u0439\u043D\u0438\u043A \u0443 \u043F\u043B\u043E\u0449\u0430\u0434\u0438"
+  },
+  {
+    id: "sapphire_city_cache_2",
+    kind: "chest",
+    x: 2910,
+    y: 3960,
+    texture: "chest_01",
+    radius: 100,
+    collide: { w: 50, h: 24 },
+    requiresEvent: "ch2_quarter_cleared",
+    reward: { sapphires: 1 },
+    hint: "\u0422\u0430\u0439\u043D\u0438\u043A \u0443 \u0441\u0442\u0430\u0440\u043E\u0439 \u043E\u0433\u0440\u0430\u0434\u044B"
+  },
   // v0.27.0: выходы на карту мира (лес и город — разные локации, переход — только через карту у выхода)
   // Прежний декоративный указатель d05 у перекрёстка теперь открывает карту.
   { id: "exit_forest", kind: "exit", x: 1104, y: 4416, texture: "signpost_01", radius: 110, collide: { w: 24, h: 10 }, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
@@ -1363,6 +1412,31 @@ var EXP_DECOR = [
 
 // src/config/world.content.js
 var CONTENT_INTERACTIVES = [
+  // Rare one-time discoveries. Sapphire rewards never go through gather or repeat enemies.
+  {
+    id: "sapphire_trail_cache",
+    kind: "chest",
+    x: 1200,
+    y: 3900,
+    texture: "chest_01",
+    radius: 100,
+    collide: { w: 50, h: 24 },
+    requiresEvent: "unlock_telekinesis_1",
+    reward: { sapphires: 1 },
+    hint: "\u0422\u0430\u0439\u043D\u0438\u043A \u0443 \u0434\u043E\u0440\u043E\u0433\u0438"
+  },
+  {
+    id: "sapphire_oldwood_cache",
+    kind: "chest",
+    x: 520,
+    y: 1750,
+    texture: "chest_01",
+    radius: 100,
+    collide: { w: 50, h: 24 },
+    requiresEvent: "guardian_defeated",
+    reward: { sapphires: 1 },
+    hint: "\u0422\u0430\u0439\u043D\u0438\u043A \u0421\u0442\u0430\u0440\u043E\u0433\u043E \u043B\u0435\u0441\u0430"
+  },
   // ================================================================== ДОМ ВЕДЬМЫ (зона A)
   {
     id: "house_cauldron",
@@ -1928,7 +2002,8 @@ var SAPPHIRES = {
   // смена ветки вместо монет (BRANCH_RESPEC.coins)
   preset: { price: 30, max: 3 },
   // первый пресет бесплатный, следующие — за сапфиры, всего не больше max
-  welcome: 3
+  welcome: 3,
+  welcomeEvent: "ch2_city_arrived"
   // один раз — за открытие кошелька (в главе II — «Банк»)
 };
 function sapphireRules() {
@@ -1938,7 +2013,8 @@ function sapphireRules() {
     respec: SAPPHIRES.respec,
     presetPrice: SAPPHIRES.preset.price,
     presetMax: SAPPHIRES.preset.max,
-    welcome: SAPPHIRES.welcome
+    welcome: SAPPHIRES.welcome,
+    welcomeEvent: SAPPHIRES.welcomeEvent
   };
 }
 
@@ -1959,7 +2035,7 @@ function createDefaultState(heroId = DEFAULT_HERO_ID) {
     // v0.18.0
     schoolXP: { telekinesis: 0, fire: 0, seal: 0, ice: 0 },
     unlockedAbilities: [],
-    completedEvents: [],
+    completedEvents: [BALANCE_MIGRATION.event],
     openedPaths: [],
     defeatedEnemies: [],
     inventory: { coins: 0, lunar_shard: 0, lunar_flame: 0 },
@@ -2011,6 +2087,14 @@ var GameState = class {
       const parsed = JSON.parse(raw);
       if (parsed.version !== SAVE_VERSION) return false;
       this.data = { ...createDefaultState(), ...parsed };
+      if (!this.hasEvent(BALANCE_MIGRATION.event)) {
+        for (const [ev, n] of Object.entries(BALANCE_MIGRATION.coins)) if (this.hasEvent(ev)) this.addItem("coins", n);
+        for (const [ev, n] of Object.entries(BALANCE_MIGRATION.sapphires)) if (this.hasEvent(ev)) this.data.wallet.sapphires += n;
+        if (this.hasEvent("lunar_quest_complete") && this.data.telekinesisLevel < 2) this.addItem("coins", Math.max(0, 195 - this.item("coins")));
+        if (this.hasEvent("chapter_2_complete")) this.addHeroXP(Math.max(0, 7900 - this.data.heroXP));
+        this.markEvent(BALANCE_MIGRATION.event);
+        this.save();
+      }
       return true;
     } catch (e) {
       console.warn("[GameState] load failed", e);
@@ -2160,6 +2244,10 @@ var GameState = class {
         granted.items[k] = v;
       }
     }
+    if (reward.sapphires) {
+      this.data.wallet.sapphires += reward.sapphires;
+      granted.sapphires = reward.sapphires;
+    }
     if (reward.coins) {
       this.addItem("coins", reward.coins);
       granted.items.coins = (granted.items.coins || 0) + reward.coins;
@@ -2184,9 +2272,10 @@ var GameState = class {
       }
     }
     let levelUps = [];
-    if (reward.heroXP) {
-      levelUps = this.addHeroXP(reward.heroXP);
-      granted.heroXP = reward.heroXP;
+    const xp = Math.max(reward.heroXP || 0, (reward.topUp?.heroXP || 0) - this.data.heroXP);
+    if (xp) {
+      levelUps = this.addHeroXP(xp);
+      granted.heroXP = xp;
     }
     return { levelUps, granted };
   }
@@ -2510,6 +2599,43 @@ var SIDE_QUESTS = {
     reward: { heroXP: 15, coins: 25, items: { elixir_life: 1 } },
     rewardText: "\u041D\u0430\u0441\u0442\u043E\u0439 \u0436\u0438\u0437\u043D\u0438, 25 \u043C\u043E\u043D\u0435\u0442, 15 \u043E\u043F\u044B\u0442\u0430"
   },
+  sq_mushrooms: {
+    title: "\u0413\u0440\u0438\u0431\u044B \u0434\u043B\u044F \u0441\u0443\u0448\u0438\u043B\u043A\u0438",
+    giver: "veda",
+    place: "\u0421\u0442\u0430\u0440\u0442\u043E\u0432\u0430\u044F \u043F\u043E\u043B\u044F\u043D\u0430",
+    summary: "\u0412\u0435\u0434\u0435 \u043D\u0443\u0436\u043D\u044B \u0434\u0432\u0430 \u043B\u0435\u0441\u043D\u044B\u0445 \u0433\u0440\u0438\u0431\u0430. \u0421\u043E\u0431\u0435\u0440\u0438\u0442\u0435 \u0438\u0445 \u0432 \u0421\u0442\u0430\u0440\u043E\u043C \u043B\u0435\u0441\u0443 \u0434\u043B\u044F \u0441\u0443\u0448\u0438\u043B\u043A\u0438 \u0442\u0440\u0430\u0432\u043D\u0438\u0446\u044B.",
+    requires: { event: "sq_herbs_done", events: ["fire_gate_open"] },
+    objectives: [{ type: "item", item: "forest_mushroom", count: 2, text: "\u041B\u0435\u0441\u043D\u044B\u0435 \u0433\u0440\u0438\u0431\u044B" }],
+    turnIn: { npc: "veda", consume: { forest_mushroom: 2 } },
+    reward: { coins: 35, heroXP: 15, items: { elixir_mana: 1 } },
+    rewardText: "\u041B\u0443\u043D\u043D\u044B\u0439 \u044D\u043B\u0438\u043A\u0441\u0438\u0440, 35 \u043C\u043E\u043D\u0435\u0442, 15 \u043E\u043F\u044B\u0442\u0430"
+  },
+  sq_resin: {
+    title: "\u0421\u043C\u043E\u043B\u0430 \u0434\u043B\u044F \u043C\u0430\u0437\u0438",
+    giver: "veda",
+    place: "\u0421\u0442\u0430\u0440\u0442\u043E\u0432\u0430\u044F \u043F\u043E\u043B\u044F\u043D\u0430",
+    summary: "\u041F\u0440\u0438\u043D\u0435\u0441\u0438\u0442\u0435 \u0412\u0435\u0434\u0435 \u0442\u0440\u0438 \u043A\u0443\u0441\u043E\u0447\u043A\u0430 \u0434\u0440\u0435\u0432\u0435\u0441\u043D\u043E\u0439 \u0441\u043C\u043E\u043B\u044B \u0434\u043B\u044F \u043B\u0435\u0447\u0435\u0431\u043D\u043E\u0439 \u043C\u0430\u0437\u0438.",
+    requires: { event: "sq_mushrooms_done" },
+    objectives: [{ type: "item", item: "tree_resin", count: 3, text: "\u0414\u0440\u0435\u0432\u0435\u0441\u043D\u0430\u044F \u0441\u043C\u043E\u043B\u0430" }],
+    turnIn: { npc: "veda", consume: { tree_resin: 3 } },
+    reward: { coins: 45, heroXP: 15, items: { elixir_life: 1 } },
+    rewardText: "\u041D\u0430\u0441\u0442\u043E\u0439 \u0436\u0438\u0437\u043D\u0438, 45 \u043C\u043E\u043D\u0435\u0442, 15 \u043E\u043F\u044B\u0442\u0430"
+  },
+  sq_veda_stock: {
+    title: "\u0417\u0430\u043F\u0430\u0441 \u0442\u0440\u0430\u0432\u043D\u0438\u0446\u044B",
+    giver: "veda",
+    place: "\u0421\u0442\u0430\u0440\u0442\u043E\u0432\u0430\u044F \u043F\u043E\u043B\u044F\u043D\u0430",
+    summary: "\u041B\u0435\u0441 \u043E\u0436\u0438\u043B. \u041F\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435 \u0437\u0430\u043F\u0430\u0441\u044B \u0412\u0435\u0434\u044B: \u043E\u0434\u043D\u0430 \u043B\u0443\u043D\u043D\u0430\u044F \u0442\u0440\u0430\u0432\u0430, \u043E\u0434\u0438\u043D \u0433\u0440\u0438\u0431 \u0438 \u0434\u0432\u0430 \u043A\u0443\u0441\u043E\u0447\u043A\u0430 \u0441\u043C\u043E\u043B\u044B.",
+    requires: { event: "sq_resin_done", events: ["chapter_1_complete"] },
+    objectives: [
+      { type: "item", item: "moon_herb", count: 1, text: "\u041B\u0443\u043D\u043D\u0430\u044F \u0442\u0440\u0430\u0432\u0430" },
+      { type: "item", item: "forest_mushroom", count: 1, text: "\u041B\u0435\u0441\u043D\u044B\u0435 \u0433\u0440\u0438\u0431\u044B" },
+      { type: "item", item: "tree_resin", count: 2, text: "\u0414\u0440\u0435\u0432\u0435\u0441\u043D\u0430\u044F \u0441\u043C\u043E\u043B\u0430" }
+    ],
+    turnIn: { npc: "veda", consume: { moon_herb: 1, forest_mushroom: 1, tree_resin: 2 } },
+    reward: { coins: 65, heroXP: 20, sapphires: 1 },
+    rewardText: "65 \u043C\u043E\u043D\u0435\u0442, 1 \u0441\u0430\u043F\u0444\u0438\u0440, 20 \u043E\u043F\u044B\u0442\u0430"
+  },
   sq_dust: {
     title: "\u041F\u044B\u043B\u044C \u0434\u0440\u0435\u0432\u043D\u0438\u0445 \u0440\u0443\u043D",
     giver: "selena",
@@ -2533,7 +2659,7 @@ var SIDE_QUESTS = {
     rewardText: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0421\u043E\u0441\u0440\u0435\u0434\u043E\u0442\u043E\u0447\u0435\u043D\u0438\u044F, \u0441\u043C\u043E\u043B\u044F\u043D\u0430\u044F \u0441\u043A\u043B\u044F\u043D\u043A\u0430, 2 \u0441\u043C\u043E\u043B\u044B, 40 \u043C\u043E\u043D\u0435\u0442, 25 \u043E\u043F\u044B\u0442\u0430"
   }
 };
-var SIDE_QUEST_ORDER = ["sq_herbs", "sq_hunter", "sq_dust"];
+var SIDE_QUEST_ORDER = ["sq_herbs", "sq_mushrooms", "sq_resin", "sq_veda_stock", "sq_hunter", "sq_dust"];
 var questEvent = (id, kind) => `${id}_${kind}`;
 
 // src/config/shop.js
@@ -2785,6 +2911,7 @@ function duelRules() {
 // src/config/serverRules.js
 function grantOf(r = {}) {
   const g = {};
+  if (r.topUp) g.topUp = structuredClone(r.topUp);
   if (r.heroXP) g.heroXP = r.heroXP;
   if (r.coins) g.coins = r.coins;
   if (r.items && Object.keys(r.items).length) g.items = { ...r.items };
@@ -2824,7 +2951,7 @@ var EVENT_ACTIONS = {
   unlock_ice_1: { requires: ["ch2_rescue_done", "warm_potion_crafted"], unlock: { ice: 1 } },
   ch2_ice_trained: { requires: ["ch2_training_done"] },
   ch2_choice_start: { requires: ["ch2_ice_trained"] },
-  ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"] },
+  ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"], sapphires: 1 },
   // v0.22.0 — квесты 11–15 (Нэрис, Тихон, Илария, Северин, Ровена, Мирра)
   unlock_ice_2: { requires: ["ch2_quarter_cleared"], consume: { coins: GIFT_PRICES.storyIce2.coins }, unlock: { ice: 2 } },
   ch2_brittle_done: { requires: ["ch2_brittle_1", "ch2_brittle_2", "brittle_flask_crafted"] },
@@ -2839,7 +2966,7 @@ var EVENT_ACTIONS = {
   ch2_severin_confronted: { requires: ["ch2_lab_reported"] },
   ch2_coven_met: { requires: ["ch2_severin_confronted"] },
   ch2_coven_supplies: { requires: ["ch2_coven_met"], consume: { crystal_guard: 1, frost_herb: 2 } },
-  ch2_coven_ready: { requires: ["ch2_unstable_1", "ch2_unstable_2", "ch2_coven_supplies"] },
+  ch2_coven_ready: { requires: ["ch2_unstable_1", "ch2_unstable_2", "ch2_coven_supplies"], sapphires: 1 },
   ch2_final_start: { requires: ["ch2_coven_ready"] },
   // Лёд III перед боем: ветка выбирается один раз (ch2_ice3 — общая отметка, по ней появляется Северин)
   ch2_ice3_frost: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], consume: { coins: GIFT_PRICES.storyIce3.coins }, unlock: { ice: 3 }, branch: { ice: "frost" }, marks: ["ch2_ice3"] },
@@ -2953,6 +3080,8 @@ function questRules() {
       start: questEvent(id, "start"),
       done: questEvent(id, "done"),
       requires: q.requires?.event || null,
+      requiresAll: q.requires?.events || [],
+      sapphires: q.reward?.sapphires || 0,
       objectives: q.objectives.map((o) => o.type === "item" ? { type: "item", item: o.item, count: o.count } : o.type === "enemy" ? { type: "enemy", id: o.id } : { type: "event", key: o.key }),
       consume: { ...q.turnIn?.consume || {} },
       reward: grantOf(q.reward)
@@ -3027,6 +3156,7 @@ function serverRules() {
   }]));
   const eventRewards = Object.fromEntries(Object.entries(EVENT_REWARDS).map(([k, r]) => [k, grantOf(r)]));
   return {
+    balanceMigration: BALANCE_MIGRATION,
     recipes,
     uses: STORY_USES,
     firstCraft: FIRST_CRAFT,
@@ -4158,18 +4288,19 @@ var CombatManager = class {
     if (!this.def) throw new Error(`Unknown enemy type ${enemyType}`);
     this.enemy = new Enemy(enemyType, this.def);
     const hs = state.heroStats();
+    const legacy = state.data.combatCtx?.balanceVersion === 29;
     this.hero = {
       maxHp: hs.maxHp,
       hp: hp(state),
       maxMana: hs.maxMana,
       mana: mana(state),
-      regen: hs.manaRegen,
+      regen: legacy ? 3 : hs.manaRegen,
       damageMult: hs.damageMult,
       autoTimer: HERO_BASE.autoAttack.intervalSec
     };
     this.amulets = state.equippedAmulets ? state.equippedAmulets() : [];
     const lv = state.buildData ? state.buildData().amuletLevels || {} : {};
-    const effs = this.amulets.map((a) => amuletEffect(a, lv[a] || 0));
+    const effs = this.amulets.map((a) => amuletEffect(a, lv[a] || 0, legacy));
     let dm = 1, inc = 1, im = 1, sb = 0;
     for (const e of effs) {
       if (e.damageMult) dm *= e.damageMult;
@@ -4717,6 +4848,7 @@ function startState(ctx, nowMs = Date.now()) {
   snap.inventory = { ...ctx.potions };
   snap.hp = ctx.hp;
   snap.mana = ctx.mana;
+  snap.combatCtx = { ...ctx, balanceVersion: ctx.balanceVersion === 30 ? 30 : 29 };
   snap.objects = ctx.build ? { player_build: JSON.parse(JSON.stringify(ctx.build)) } : {};
   const st = new GameState(null, () => nowMs);
   st.setData(fromSnapshot(snap));

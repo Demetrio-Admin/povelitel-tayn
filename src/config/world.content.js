@@ -13,6 +13,11 @@ import { CITY_DECOR } from './world.city.js';
 import { EXP_DECOR } from './world.expeditions.js';   // v0.9.2: реплики героя с вариантами для ведьмы / колдуна (разрешает heroSay)
 
 export const CONTENT_INTERACTIVES = [
+  // Rare one-time discoveries. Sapphire rewards never go through gather or repeat enemies.
+  { id: 'sapphire_trail_cache', kind: 'chest', x: 1200, y: 3900, texture: 'chest_01', radius: 100,
+    collide: { w: 50, h: 24 }, requiresEvent: 'unlock_telekinesis_1', reward: { sapphires: 1 }, hint: 'Тайник у дороги' },
+  { id: 'sapphire_oldwood_cache', kind: 'chest', x: 520, y: 1750, texture: 'chest_01', radius: 100,
+    collide: { w: 50, h: 24 }, requiresEvent: 'guardian_defeated', reward: { sapphires: 1 }, hint: 'Тайник Старого леса' },
   // ================================================================== ДОМ ВЕДЬМЫ (зона A)
   { id: 'house_cauldron', kind: 'alchemy', x: 1075, y: 5135, texture: 'cauldron_01', collide: { w: 66, h: 26 }, radius: 120,
     hint: 'Котёл Мирры' },

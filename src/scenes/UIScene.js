@@ -455,6 +455,7 @@ export class UIScene extends Phaser.Scene {
 
   onReward({ granted, levelUps = [] }) {
     if (granted) {
+      if (granted.sapphires) this.toast(`+${granted.sapphires} сапфир`, 0x6fa8ff);
       if (granted.heroXP) this.toast(`+${granted.heroXP} опыта`, COLORS.gold);
       for (const [k, v] of Object.entries(granted.items || {})) this.toast(`+${v} ${itemName(k)}`, COLORS.gold);
     }

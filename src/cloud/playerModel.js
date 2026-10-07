@@ -290,9 +290,9 @@ function bagAction(s, action) {
  * фиксируются числом, как GameState.addHeroXP), монеты, предметы, опыт школ, topUp — «не меньше» (гарантия цены изучения).
  */
 function grant(s, reward = {}) {
-  if (reward.heroXP) {
+  if (reward.heroXP || reward.topUp?.heroXP) {
     const before = s.level;
-    s.xp = clamp(s.xp + reward.heroXP, 0, LIMITS.maxXp);
+    s.xp = clamp(Math.max(s.xp + (reward.heroXP || 0), reward.topUp?.heroXP || 0), 0, LIMITS.maxXp);
     const lvl = Math.max(s.level, levelForXp(s.xp));
     if (lvl > before) {
       const mx = maxVitals(before);
@@ -385,7 +385,7 @@ function questAccept(s, id) {
   const q = questRule(id);
   if (!q) return { ok: false, reason: 'unknown' };
   if (has(s, q.done) || has(s, q.start)) return { ok: false, reason: 'already' };
-  if (q.requires && !has(s, q.requires)) return { ok: false, reason: 'locked' };
+  if ((q.requires && !has(s, q.requires)) || (q.requiresAll || []).some(e => !has(s, e))) return { ok: false, reason: 'locked' };
   addEvent(s, q.start);
   return { ok: true, id };
 }
@@ -401,6 +401,7 @@ function questTurnIn(s, id) {
   for (const [k, n] of Object.entries(q.consume)) addItem(s, k, -n);
   addEvent(s, q.done);
   grant(s, q.reward);
+  if (q.sapphires > 0) s.wallet = { ...walletOf(s.wallet), sapphires: walletOf(s.wallet).sapphires + q.sapphires };
   return { ok: true, id };
 }
 
@@ -596,6 +597,7 @@ function amuletUpgrade(s, id) {
 
 /** Приветственные сапфиры — один раз (op 'bank_welcome'). */
 function bankWelcome(s) {
+  if (!has(s, RULES.sapphires.welcomeEvent)) return { ok: false, reason: 'locked' };
   const w = walletOf(s.wallet);
   if (w.welcome) return { ok: false, reason: 'already' };
   s.wallet = { ...w, sapphires: w.sapphires + RULES.sapphires.welcome, welcome: true };
@@ -737,6 +739,7 @@ function worldAct(s, id) {
     s.objects[id] = { state: 'picked', t: now };
   } else if (r.kind === 'loot') {
     grant(s, r.reward);
+    if (r.reward?.sapphires > 0) s.wallet = { ...walletOf(s.wallet), sapphires: walletOf(s.wallet).sapphires + r.reward.sapphires };
     s.objects[id] = { state: r.mark };
   } else if (r.kind === 'stash') {
     grant(s, { items: r.items });
@@ -795,7 +798,7 @@ export function duelGhostOf(s, rating) {
   return { name: 'Тень дуэлянта', ghost: true, level: s.level, hero: null, abilities, build: s.objects?.player_build ?? null, rating };
 }
 /** Вызов на Дуэль: попытка списывается сразу; сервер запоминает героя и соперника (бой проверяется как обычный). */
-function duelStart(s, nowMs) {
+function duelStart(s, nowMs, balanceVersion) {
   const D = RULES.duel;
   if (!has(s, D.requires)) return { ok: false, reason: 'locked' };
   if (s.combatSince != null) return { ok: false, reason: 'combat' };
@@ -805,7 +808,7 @@ function duelStart(s, nowMs) {
   s.objects.duel = st;
   const opponent = duelGhostOf(s, st.rating);
   s.combatSince = s.vitalsAt;
-  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), duel: { opponent, rating: st.rating, season: st.season } };
+  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), balanceVersion: balanceVersion === 30 ? 30 : 29, duel: { opponent, rating: st.rating, season: st.season } };
   return { ok: true, opponent, rating: st.rating, left: D.attemptsPerDay - st.used };
 }
 
@@ -813,7 +816,7 @@ function duelStart(s, nowMs) {
 function combatStart(s, action = {}) {
   if (!isId(action.spawn) || !isId(action.enemy)) return { ok: false, reason: 'bad_spawn' };
   if (s.combatSince == null) s.combatSince = s.vitalsAt;
-  s.combatCtx = combatCtxOf(s, action.spawn, action.enemy);
+  s.combatCtx = { ...combatCtxOf(s, action.spawn, action.enemy), balanceVersion: action.balanceVersion === 30 ? 30 : 29 };
   // v0.15.0: событие «встреча началась» (combat_intro_01 и др.) ставит сервер, если место боя уже открыто
   const ss = Object.hasOwn(RULES.spawnStart, action.spawn) ? RULES.spawnStart[action.spawn] : null;
   if (ss && (!ss.requires || has(s, ss.requires))) setEvent(s, ss.event);
@@ -960,7 +963,7 @@ function applyActionUnchecked(snap, action = {}, nowMs = null) {
   if (op === 'amulet_upgrade') return { snapshot: s, result: amuletUpgrade(s, action.amulet) };
   // v0.25.0: Ковены живут в отдельных таблицах (миграция 20261007_covens.sql) — JS-зеркало о них не знает и отвечает как сервер
   // игроку без ковена (или базе без миграции): 'no_coven'
-  if (op === 'duel_start') return { snapshot: s, result: duelStart(s, num(nowMs) ? nowMs : Date.now()) };   // v0.26.0
+  if (op === 'duel_start') return { snapshot: s, result: duelStart(s, num(nowMs) ? nowMs : Date.now(), action.balanceVersion) };   // v0.26.0
   if (op === 'coven_give' || op === 'coven_claim') return { snapshot: s, result: { ok: false, reason: 'no_coven' } };
   if (op === 'daily_take') return { snapshot: s, result: dailyTake(s, action.offer, num(nowMs) ? nowMs : Date.now()) };   // v0.23.0
   if (op === 'daily_done') return { snapshot: s, result: dailyDone(s, action.offer, num(nowMs) ? nowMs : Date.now()) };

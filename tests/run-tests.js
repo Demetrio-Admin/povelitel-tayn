@@ -409,7 +409,7 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
   ok(Object.values(RECIPES).every(r => Object.keys(r.needs).every(k => ITEMS[k]) && ITEMS[r.result]), 'рецепты ссылаются на существующие предметы');
   ok(RECIPE_ORDER.filter(id => !RECIPES[id].chapter).length === 6 && RECIPE_ORDER.filter(id => RECIPES[id].kind === 'story').length === 3 && RECIPE_ORDER.length === Object.keys(RECIPES).length, 'алхимия главы I: шесть рецептов, три сюжетных (рецепты главы II — отдельно)');
   ok(Object.keys(NPCS).length >= 4 && Object.keys(NPCS).every(id => DIALOGUES[id]), 'NPC ≥ 4, у каждого есть диалоги');
-  ok(SIDE_QUEST_ORDER.length >= 2 && SIDE_QUEST_ORDER.length <= 3, 'побочных заданий 2–3');
+  ok(SIDE_QUEST_ORDER.length === 6, 'шесть побочных заданий, включая цепочку Веды');
   const dialogOk = Object.values(DIALOGUES).every(vs => vs.every(v => Object.values(v.nodes).every(n => n.lines.length >= 1 && n.lines.length <= 5 && (n.choices || []).every(c => !c.next || v.nodes[c.next]))));
   ok(dialogOk, 'диалоги: 1–5 реплик в узле, ветки ведут в существующие узлы');
   const gatherSrc = new Set(CONTENT_INTERACTIVES.filter(o => o.kind === 'gather').map(o => o.res));

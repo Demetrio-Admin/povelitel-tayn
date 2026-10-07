@@ -120,8 +120,9 @@ export const BRANCH_RESPEC = { coins: 150 };
 // Награды за события мира. topUpFor — гарантировать ресурсы на улучшение
 // (Blueprint, зона E: «игрок получает достаточно ресурсов для Телекинеза II»).
 export const EVENT_REWARDS = {
+  unlock_telekinesis_1:    { coins: 50 },
   first_world_interaction: { heroXP: 10 },
-  lunar_quest_complete:    { heroXP: 50, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUpFor: 'telekinesis_2' },
+  lunar_quest_complete:    { heroXP: 50, coins: 100, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUpFor: 'telekinesis_2' },
   telekinesis_2_complete:  { heroXP: 30 },
   heavy_path_open:         { heroXP: 20 },
   unlock_fire_1:           { heroXP: 30 },
@@ -130,31 +131,54 @@ export const EVENT_REWARDS = {
   // обычный школьный опыт мира (+6), отдельной награды «за обучение» нет.
   unlock_seal_1:           { heroXP: 60 },
   // v0.20.0 — глава II, квесты 1–5 (chapter-2-balance-v0.1.md §4; опыт боёв — в наградах врагов)
-  ch2_city_arrived:        { heroXP: 220, coins: 60 },
-  ch2_met_ilaria:          { heroXP: 200, coins: 50, items: { frost_herb: 1 } },
-  ch2_trace_found:         { heroXP: 300, coins: 80, items: { frost_herb: 2, rune_dust: 1 } },
-  ch2_archive_read:        { heroXP: 320, coins: 90 },
-  ch2_met_severin:         { heroXP: 340, coins: 80, items: { warm_potion: 1 } },
+  ch2_city_arrived:        { heroXP: 220, coins: 80 },
+  ch2_met_ilaria:          { heroXP: 200, coins: 90, items: { frost_herb: 1 } },
+  ch2_trace_found:         { heroXP: 300, coins: 100, items: { frost_herb: 2, rune_dust: 1 } },
+  ch2_archive_read:        { heroXP: 320, coins: 110 },
+  ch2_met_severin:         { heroXP: 340, coins: 100, items: { warm_potion: 1 } },
   // v0.21.0: квесты 6–10 (квест — минус опыт обязательных боёв, chapter-2-balance §4)
-  ch2_cargo_reported:      { heroXP: 270, coins: 120, items: { frost_herb: 2 } },
-  ch2_frost_wave:          { heroXP: 280, coins: 90 },
+  ch2_cargo_reported:      { heroXP: 270, coins: 150, items: { frost_herb: 2 } },
+  ch2_frost_wave:          { heroXP: 280, coins: 120 },
   ch2_nerys_met:           { heroXP: 60 },
-  ch2_rescue_done:         { heroXP: 300, coins: 140, items: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 } },   // травы на первый Тёплый настой
+  ch2_rescue_done:         { heroXP: 300, coins: 180, items: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 } },   // травы на первый Тёплый настой
   unlock_ice_1:            { heroXP: 60 },
-  ch2_ice_trained:         { heroXP: 240, coins: 60 },
-  ch2_quarter_cleared:     { heroXP: 340, coins: 160, items: { ice_crystal: 2 } },
+  ch2_ice_trained:         { heroXP: 240, coins: 100 },
+  ch2_quarter_cleared:     { heroXP: 340, coins: 200, items: { ice_crystal: 2 } },
   // v0.22.0: квесты 11–15
   unlock_ice_2:            { heroXP: 60, items: { ice_crystal: 1, tree_resin: 1, rune_dust: 1 } },   // материалы на первый Флакон хрупкости
-  ch2_brittle_done:        { heroXP: 240, coins: 70 },
+  ch2_brittle_done:        { heroXP: 240, coins: 100 },
   ch2_stabilized:          { heroXP: 120 },
-  ch2_lab_reported:        { heroXP: 300, coins: 180, items: { frost_shard: 1, lunar_shard: 2 } },
-  ch2_severin_confronted:  { heroXP: 380, coins: 80 },
+  ch2_lab_reported:        { heroXP: 300, coins: 220, items: { frost_shard: 1, lunar_shard: 2 } },
+  ch2_severin_confronted:  { heroXP: 380, coins: 100 },
   ch2_coven_met:           { heroXP: 60 },
-  ch2_coven_ready:         { heroXP: 300, coins: 180, items: { ice_crystal: 2 } },
+  ch2_coven_ready:         { heroXP: 300, coins: 220, items: { ice_crystal: 2 } },
   ch2_epilogue:            { heroXP: 250 },
-  chapter_2_complete:      { heroXP: 300, coins: 150, items: { frost_shard: 1 } },   // + 5 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
+  chapter_2_complete:      { heroXP: 300, coins: 330, topUp: { heroXP: 7900 }, items: { frost_shard: 1 } },   // + 5 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
 };
 // lunar_quest_complete теперь выдаёт атомарная операция «применить Лунный фитиль» (storyItems.js STORY_USES.lunar_wick,
 // те же числа); запись выше осталась для старого пути QuestFlags.complete и тестов — алтарь его больше не вызывает.
 
 export const LUNAR_QUEST = { flamesRequired: 3 };
+
+// One-time differences for saves created before v0.30. New saves carry the event from creation.
+export const BALANCE_MIGRATION = {
+  event: 'balance_v30_applied',
+  coins: { unlock_telekinesis_1: 50, lunar_quest_complete: 100, chapter_1_complete: 30,
+    ch2_city_arrived: EVENT_REWARDS.ch2_city_arrived.coins - 60,
+    ch2_met_ilaria: EVENT_REWARDS.ch2_met_ilaria.coins - 50,
+    ch2_trace_found: EVENT_REWARDS.ch2_trace_found.coins - 80,
+    ch2_archive_read: EVENT_REWARDS.ch2_archive_read.coins - 90,
+    ch2_met_severin: EVENT_REWARDS.ch2_met_severin.coins - 80,
+    ch2_cargo_reported: EVENT_REWARDS.ch2_cargo_reported.coins - 120,
+    ch2_frost_wave: EVENT_REWARDS.ch2_frost_wave.coins - 90,
+    ch2_rescue_done: EVENT_REWARDS.ch2_rescue_done.coins - 140,
+    ch2_ice_trained: EVENT_REWARDS.ch2_ice_trained.coins - 60,
+    ch2_quarter_cleared: EVENT_REWARDS.ch2_quarter_cleared.coins - 160,
+    ch2_brittle_done: EVENT_REWARDS.ch2_brittle_done.coins - 70,
+    ch2_lab_reported: EVENT_REWARDS.ch2_lab_reported.coins - 180,
+    ch2_severin_confronted: EVENT_REWARDS.ch2_severin_confronted.coins - 80,
+    ch2_coven_ready: EVENT_REWARDS.ch2_coven_ready.coins - 180,
+    chapter_2_complete: EVENT_REWARDS.chapter_2_complete.coins - 150,
+  },
+  sapphires: { ch2_quarter_cleared: 1, ch2_coven_ready: 1 },
+};

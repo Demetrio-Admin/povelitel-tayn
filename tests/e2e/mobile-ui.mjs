@@ -436,8 +436,8 @@ try {
     });
     await page.waitForFunction(()=>!window.__game.scene.getScene('MenuScene').cameras.main.fadeEffect.isRunning);
     await shot('menu');
-    const saved = await page.evaluate(()=>({ hero: window.__witch.state.data.heroId, events: window.__witch.state.data.completedEvents.length, tex: window.__game.scene.getScene('MenuScene').picker.image.texture.key, toggles: window.__game.scene.getScene('MenuScene').picker.toggles.length }));
-    assert.equal(saved.tex, `${saved.hero === 'warlock' ? 'warlock' : 'hero'}_down`, 'меню с сохранением: в предпросмотре герой сохранения');
+    const saved = await page.evaluate(()=>({ hero: window.__witch.state.data.heroId, events: window.__witch.state.data.completedEvents.length, selectedHero: window.__game.scene.getScene('MenuScene').hero, toggles: window.__game.scene.getScene('MenuScene').picker.toggles.length }));
+    assert.equal(saved.selectedHero, saved.hero, 'меню с сохранением использует героя сохранения');
     assert.equal(saved.toggles, 0, 'с сохранением переключателя нет');
     assert.deepEqual(await menuLayout(), [], 'меню с сохранением: раскладка');
     await page.evaluate(()=>window.__game.scene.getScene('MenuScene').confirmNew()); await shot('menu-confirm-new');
@@ -449,9 +449,9 @@ try {
     for (const id of ['warlock', 'witch', 'warlock']) {
       const t = await page.evaluate((id)=>{const b=window.__game.scene.getScene('MenuScene').picker.toggles.find(t=>t.heroId===id);return {x:b.hit.x,y:b.hit.y};}, id);
       await tap(t.x, t.y);
-      const st = await page.evaluate(()=>{const m=window.__game.scene.getScene('MenuScene');return { id:m.hero, tex:m.picker.image.texture.key, labels:m.children.list.filter(o=>o.type==='Text').map(o=>o.text) };});
-      assert.equal(st.id, id); assert.equal(st.tex, `${id === 'witch' ? 'hero' : id}_down`);
-      assert.ok(st.labels.includes(id === 'witch' ? 'Ученица лесной ведьмы' : 'Ученик лесной ведьмы'), 'роль под предпросмотром');
+      const st = await page.evaluate(()=>{const m=window.__game.scene.getScene('MenuScene');return { id:m.hero, selected:m.picker.toggles.filter(t=>t.selected).map(t=>t.heroId), labels:m.children.list.filter(o=>o.type==='Text').map(o=>o.text) };});
+      assert.equal(st.id, id); assert.deepEqual(st.selected, [id]);
+      assert.ok(!st.labels.some(t=>/Ученица|Ученик|Дары и характеристики/.test(t)), 'повторные описания убраны');
       await shot(`start-${id}`);
       assert.deepEqual(await menuLayout(), [], `стартовый экран (${id}): раскладка`);
     }

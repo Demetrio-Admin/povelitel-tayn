@@ -4,6 +4,8 @@
 import { CloudError, errorText } from '../cloud/api.js';
 import { NICK_MIN, NICK_MAX, PASSWORD_MIN } from '../cloud/nickname.js';
 import { bindGameOverlay } from './gameOverlay.js';
+import { heroById } from '../config/heroes.js';
+import { ASSET_FILES } from '../config/assets.manifest.js';
 
 const CSS = `
 .acc-ov{position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;display:flex;align-items:center;justify-content:center;padding:12px;
@@ -56,6 +58,31 @@ const CSS = `
 .acc-cross{width:16px;height:16px;mask-image:url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"%3E%3Cpath d="m6 6 12 12M6 18 18 6"/%3E%3C/svg%3E');-webkit-mask-image:url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"%3E%3Cpath d="m6 6 12 12M6 18 18 6"/%3E%3C/svg%3E')}
 @container (max-width:330px){.acc-card{padding:24px 16px 14px}.acc-card h2{font-size:23px}.acc-sub{font-size:14px}.acc-field small{font-size:12px}}
 @keyframes accspin{to{transform:rotate(360deg)}}
+.acc-auth{background:#100b1640;padding:18px;container-type:size}
+.acc-auth .acc-shell{width:min(400px,90%);box-shadow:0 14px 40px #0009}
+.acc-auth .acc-card{padding:20px 24px 14px}
+.acc-auth-portrait{width:76px;height:76px;border-radius:50%;border:2px solid #d9b45a;outline:1px solid #f6e3a155;outline-offset:3px;
+  margin:0 auto 16px;overflow:hidden;background:#24171f;box-shadow:0 4px 10px #0007}
+.acc-auth-portrait img{display:block;width:100%;height:auto;pointer-events:none}
+.acc-auth .acc-card h2{font-size:clamp(24px,7.1cqw,30px);padding:0;border:0;background:none;margin-bottom:6px}
+.acc-auth .acc-sub{margin-bottom:21px;font-size:16px;color:#e2cba1}
+.acc-auth .acc-field{margin-bottom:15px}
+.acc-auth .acc-field>span{font-size:16px;color:#f1e3c2;margin-bottom:6px}
+.acc-auth .acc-field input{background:#120f12a6;border-color:#a68a59;min-height:48px}
+.acc-auth .acc-field small{font-size:13px;color:#bcab8b}
+.acc-auth .acc-row{margin-top:16px}
+.acc-auth .acc-row>.primary{font-size:20px;min-height:52px}
+.acc-auth .acc-center .link{font-size:16px;min-height:44px}
+.acc-access{font-size:14px;border-top:1px solid #b8923c55;border-bottom:1px solid #b8923c55;margin:18px 0 0;color:#decaad}
+.acc-access summary{min-height:44px;padding:11px 0;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.acc-access summary::-webkit-details-marker{display:none}
+.acc-access summary::after{content:'';width:14px;height:14px;flex:none;background:currentColor;
+  mask:center/contain no-repeat url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="m6 9 6 6 6-6"/%3E%3C/svg%3E')}
+.acc-access[open] summary::after{transform:rotate(180deg)}
+.acc-access .acc-note{background:none;border:0;padding:0 0 12px;margin:0;font-size:13px}
+@container (max-height:560px){.acc-auth .acc-auth-portrait{width:48px;height:48px;margin-bottom:10px}.acc-auth .acc-card{padding-top:17px}.acc-auth .acc-sub{margin-bottom:14px}}
+@container (max-width:330px){.acc-auth .acc-shell{width:100%}.acc-auth .acc-card{padding-left:18px;padding-right:18px}.acc-auth .acc-card h2{font-size:23px}}
+@media (prefers-reduced-motion:reduce){.acc-spin{animation:none}}
 `;
 
 function ensureCss() {
@@ -95,11 +122,11 @@ function onKey(e) {
 }
 const KEY_EVENTS = ['keydown', 'keyup', 'keypress'];
 
-function overlay(card, { onClose, dismissable = true, top = false, label } = {}) {
+function overlay(card, { onClose, dismissable = true, top = false, label, theme } = {}) {
   ensureCss();
   card.setAttribute('tabindex', '-1');
   const shell = el('div', { class: 'acc-shell' }, card);
-  const ov = el('div', { class: 'acc-ov' + (top ? ' top' : ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': label || card.querySelector?.('h2')?.textContent || 'Игровое окно' }, shell);
+  const ov = el('div', { class: 'acc-ov' + (top ? ' top' : '') + (theme === 'auth' ? ' acc-auth' : ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': label || card.querySelector?.('h2')?.textContent || 'Игровое окно' }, shell);
   let closed = false;
   const previousFocus = document.activeElement;
   let unbind = () => {};
@@ -141,7 +168,15 @@ function passwordInput(placeholder, autocomplete) {
   } }, el('span', { class: 'acc-icon acc-eye', 'aria-hidden': 'true' }));
   return { input, box: el('div', { class: 'acc-pw' }, input, eye) };
 }
-const nickInput = (autocomplete) => el('input', { type: 'text', autocomplete, autocapitalize: 'off', spellcheck: 'false', maxlength: String(NICK_MAX + 4), placeholder: 'Например, Дмитрий', 'aria-label': 'Никнейм' });
+const nickInput = (autocomplete) => el('input', { type: 'text', autocomplete, autocapitalize: 'off', spellcheck: 'false', maxlength: String(NICK_MAX + 4), placeholder: 'Имя персонажа', 'aria-label': 'Никнейм' });
+
+function accountHeader(title, subtitle, hero) {
+  const texture = heroById(hero).textures.down;
+  const base = import.meta.env?.BASE_URL || '/';
+  return [el('div', { class: 'acc-auth-portrait', 'aria-hidden': 'true' },
+    el('img', { src: base + ASSET_FILES[texture], alt: '', draggable: false })),
+    el('h2', { text: title }), subtitle ? el('p', { class: 'acc-sub', text: subtitle }) : null];
+}
 
 /** Кнопка с «занятым» состоянием: нельзя нажать десять раз подряд. */
 function busyButton(btn, idleText, busyText) {
@@ -181,25 +216,25 @@ export function showNotice({ title, text, button = 'Понятно', onClose } =
  */
 export function showRegister(session, { mode = 'new', hero, onDone, onCancel } = {}) {
   const nick = nickInput('username');
-  const pw = passwordInput(`от ${PASSWORD_MIN} символов`, 'new-password');
-  const pw2 = passwordInput('ещё раз', 'new-password');
+  const pw = passwordInput(`От ${PASSWORD_MIN} символов`, 'new-password');
+  const pw2 = passwordInput('Ещё раз', 'new-password');
   const err = el('div', { class: 'acc-err', role: 'alert' });
   const submit = el('button', { class: 'primary', type: 'submit', text: 'Создать аккаунт' });
   const busy = busyButton(submit, 'Создать аккаунт', 'Создаём аккаунт…');
   let done = false;
   const form = el('form', { novalidate: true },
-    el('label', { class: 'acc-field' }, el('span', { text: 'Никнейм' }), nick, el('small', { text: `${NICK_MIN}–${NICK_MAX} символов: буквы (латиница или кириллица), цифры и _. Это и имя в игре, и логин.` })),
+    el('label', { class: 'acc-field' }, el('span', { text: 'Никнейм' }), nick, el('small', { text: `${NICK_MIN}–${NICK_MAX} символов` })),
     el('label', { class: 'acc-field' }, el('span', { text: 'Пароль' }), pw.box),
     el('label', { class: 'acc-field' }, el('span', { text: 'Повторите пароль' }), pw2.box),
-    el('p', { class: 'acc-note', text: 'Если вы забудете пароль, восстановить доступ к аккаунту может быть невозможно: почту игра не спрашивает.' }),
+    el('details', { class: 'acc-access' }, el('summary', { text: 'Как сохранить доступ' }),
+      el('p', { class: 'acc-note', text: 'Никнейм — ваше имя в игре и логин. Используйте буквы одного алфавита, цифры или _. Сохраните пароль: если забыть его, восстановить доступ может быть невозможно.' })),
     err,
     el('div', { class: 'acc-row' }, submit));
   const card = el('div', { class: 'acc-card' },
-    el('h2', { text: 'Создание аккаунта' }),
-    el('p', { class: 'acc-sub', text: mode === 'guest' ? 'Ваш персонаж и весь прогресс останутся с вами.' : 'Под этим ником вы будете входить с любого устройства.' }),
+    accountHeader('Создать аккаунт', mode === 'guest' ? 'Ваш персонаж и прогресс сохранятся' : 'Ваше имя в мире магии', hero || session?.hero),
     form,
     el('div', { class: 'acc-center' }, el('button', { class: 'link', type: 'button', text: 'Назад', onclick: () => h.close() })));
-  const h = overlay(card, { onClose: () => { if (!done) onCancel?.(); } });
+  const h = overlay(card, { theme: 'auth', onClose: () => { if (!done) onCancel?.(); } });
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
     if (submit.disabled) return;
@@ -231,9 +266,9 @@ export function showLogin(session, { onDone, onCancel, guestWarning = false } = 
     guestWarning ? el('p', { class: 'acc-note', text: 'Сейчас вы играете гостем. После входа в аккаунт гостевой персонаж станет недоступен. Чтобы сохранить его, закройте окно и создайте аккаунт в профиле.' }) : null,
     err,
     el('div', { class: 'acc-row' }, submit));
-  const card = el('div', { class: 'acc-card' }, el('h2', { text: 'Вход' }), form,
+  const card = el('div', { class: 'acc-card' }, accountHeader('С возвращением', null, session?.hero), form,
     el('div', { class: 'acc-center' }, el('button', { class: 'link', type: 'button', text: 'Назад', onclick: () => h.close() })));
-  const h = overlay(card, { onClose: () => { if (!done) onCancel?.(); } });
+  const h = overlay(card, { theme: 'auth', onClose: () => { if (!done) onCancel?.(); } });
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
     if (submit.disabled) return;

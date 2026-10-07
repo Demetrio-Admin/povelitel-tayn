@@ -22,7 +22,7 @@ export function bindGameOverlay(root, panel, content) {
     const ctx = surface.getContext?.('2d');
     if (!ctx) return;
     ctx.scale(scale * unit, scale * unit);
-    paintPanel(ctx, width / unit, height / unit, { variant: 'wood', ornaments: true, alpha: 1 });
+    paintPanel(ctx, width / unit, height / unit, { variant: root.classList?.contains('acc-auth') ? 'dark' : 'wood', ornaments: true, alpha: 1 });
     panel.style.borderRadius = `${UI.radius * unit}px`;
     panel.style.backgroundImage = `url(${surface.toDataURL()})`;
     paintedSize = size;

@@ -360,17 +360,16 @@ await mute(async () => {
     // все тексты сцены, включая вложенные в контейнеры (заглушка Phaser хранит объекты в scene._list)
     const labels = (scene) => { const out = []; const walk = (o) => { if (typeof o.text === 'string') out.push(o.text); (o.children || []).forEach(walk); }; scene._list.forEach(walk); return out; };
     const m1 = new MenuScene(); m1.create();
-    // v0.9.2: выбор героя — прямо на стартовом экране (переключатель «Ведьма | Колдун» и один предпросмотр)
-    ok(m1.accountButton?.text.text === 'Войти' && labels(m1).includes('Начать игру') && labels(m1).includes('✓ Ведьма') && labels(m1).includes('Колдун') && labels(m1).includes('Дары и характеристики одинаковые'),
-      'старт без входа: «Ведьма | Колдун», «Начать игру», «Войти», «Дары и характеристики одинаковые»');
-    ok(m1.picker.image.texture.key === 'hero_down' && labels(m1).includes('Ученица лесной ведьмы'), 'по умолчанию — ведьма: рисунок и роль');
+    ok(m1.accountButton?.text.text === 'Уже играли? Войти' && labels(m1).includes('Начать приключение') && labels(m1).includes('Ведьма') && labels(m1).includes('Колдун') && !labels(m1).includes('Дары и характеристики одинаковые'),
+      'старт: выбор героя, одно главное действие и вход; описания механики убраны');
+    ok(m1.hero === 'witch' && m1.picker.toggles.find(t => t.selected)?.heroId === 'witch', 'по умолчанию выбрана ведьма');
     m1.picker.toggles.find(t => t.heroId === 'warlock').hit.emit('pointerdown'); m1.picker.toggles.find(t => t.heroId === 'warlock').hit.emit('pointerup');
-    ok(m1.hero === 'warlock' && m1.picker.image.texture.key === 'warlock_down' && labels(m1).includes('✓ Колдун') && labels(m1).includes('Ученик лесной ведьмы') && !labels(m1).some(t => /Временный\s+рисунок/.test(t)),
-      'нажатие «Колдун»: сразу меняются рисунок, имя и роль; пометки временной графики нет');
+    ok(m1.hero === 'warlock' && m1.picker.toggles.filter(t => t.selected).length === 1 && m1.picker.toggles.find(t => t.selected)?.heroId === 'warlock',
+      'нажатие Колдун меняет выбранного героя; активный вариант один');
     ok(!ses.signedIn && !srv.calls.length, 'переключение предпросмотра не создаёт профиль и не обращается к серверу');
     m1.startNew();
     const choice = labels(m1);
-    ok(['Играть как гость', 'Создать аккаунт', 'У меня уже есть аккаунт'].every(t => choice.includes(t)), '«Начать игру» → «Как продолжить?» с тремя вариантами');
+    ok(['Играть как гость', 'Создать аккаунт', 'Уже играли? Войти'].every(t => choice.includes(t)), '«Начать игру» → «Как продолжить?» с тремя вариантами');
     m1.back();
     ok(!m1.choice && m1.hero === 'warlock', '«Назад» из «Как продолжить?» — выбор героя сохранён');
     await ses.playAsGuest(m1.hero);
@@ -407,7 +406,7 @@ await mute(async () => {
     ok(labels(m3).some(t => String(t).startsWith('Нюта_Лесная · уровень')), 'стартовый экран игрока: ник и уровень');
     services.session = null;
     const m4 = new MenuScene(); m4.create();
-    ok(labels(m4).some(t => String(t).startsWith('Режим разработки')), 'без сервера меню честно пишет «Режим разработки»');
+    ok(!labels(m4).some(t => /Режим разработки|Глава I|v0\./.test(t)), 'на стартовом экране нет технического текста');
   } catch (e) { err = e; }
   ok(!err, 'аккаунт: меню, выбор героя, HUD и пауза строятся' + (err ? ': ' + err.stack.split('\n').slice(0, 3).join(' | ') : ''));
 

@@ -11,6 +11,8 @@ import { CHAPTER2_FILES, CHAPTER2_SIZES } from './chapter2.art.generated.js';
 import { CITY_INTERIOR_FILES, CITY_INTERIOR_SIZES } from './city.interiors.generated.js';
 
 export const ASSET_FILES = {
+  welcome_cover: 'assets/ui/welcome-cover-v1.webp',
+  welcome_settings: 'assets/ui/welcome-settings.svg',
   // Одобренный рисованный UI: тонкие медальоны без общей нижней рамки и меню.
   ui_craft_medallion: 'assets/ui/craft-medallion-rounded.webp',
   ui_craft_menu: 'assets/ui/craft-menu.webp', ui_craft_portrait: 'assets/ui/craft-portrait.webp',

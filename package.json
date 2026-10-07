@@ -33,7 +33,8 @@
     "test:bag": "node tests/bag-economy-test.mjs",
     "test:balance": "node tests/balance-v30-test.mjs",
     "balance:story": "node tools/balance/story-pass.mjs",
-    "test:balance:browser": "node tests/e2e/balance-v30.mjs"
+    "test:balance:browser": "node tests/e2e/balance-v30.mjs",
+    "test:viewport": "node tests/e2e/viewport.mjs"
   },
   "dependencies": {
     "@fontsource/philosopher": "^5.2.8",

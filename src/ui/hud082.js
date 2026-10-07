@@ -176,6 +176,7 @@ export const hud082 = {
       if (this.goalBanner === c) this.goalBanner = null;
       c.destroy();
     }, { x: w / 2 - 34, y: -h / 2 + 34 });
+    this.viewport?.assign(c, 'top');
     this.tweens.add({ targets: c, alpha: 1, y: { from: top + h / 2 - 10, to: top + h / 2 }, duration: 220 });
     this.time.delayedCall(UI.banner.ms, () => {
       if (this.goalBanner !== c) return;

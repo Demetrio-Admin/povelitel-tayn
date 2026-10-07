@@ -13,7 +13,8 @@ export function bindGameOverlay(root, panel, content) {
     const rect = panel.getBoundingClientRect?.();
     if (!rect?.width || !rect?.height) return;
     const width = Math.round(rect.width), height = Math.round(rect.height);
-    const unit = Math.min(1, (canvas?.getBoundingClientRect().width || root.getBoundingClientRect?.().width || VIEW.width) / VIEW.width);
+    const logicalWidth = window.__game?.scale?.width || VIEW.width;
+    const unit = Math.min(1, (canvas?.getBoundingClientRect().width || root.getBoundingClientRect?.().width || logicalWidth) / logicalWidth);
     const size = `${width}x${height}:${unit}`;
     if (size === paintedSize) return;
     const surface = document.createElement('canvas');

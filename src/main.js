@@ -20,6 +20,7 @@ import { UIScene } from './scenes/UIScene.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { loadUIFont } from './ui/fonts.js';
 import { showLoadingScreen } from './ui/loadingScreen.js';
+import { bindBrowserViewport, viewportScaleMode } from './ui/viewport.js';
 
 const debug = new URLSearchParams(window.location.search).has('debug');
 document.title = GAME_TITLE;
@@ -29,12 +30,13 @@ const config = {
   type: Phaser.AUTO,
   parent: 'game',
   backgroundColor: VIEW.background,
-  // Portrait 9:16. FIT сохраняет пропорции; на ПК вокруг игры виден фон страницы.
+  // Portrait screens show more map instead of letterboxing; wide screens retain the portrait frame.
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: viewportScaleMode(document.getElementById('game')),
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: VIEW.width,
     height: VIEW.height,
+    expandParent: false,
   },
   physics: {
     default: 'arcade',
@@ -47,4 +49,8 @@ const config = {
 
 // Шрифт интерфейса грузится до старта игры (макс. 2 с), иначе Canvas нарисует текст запасным шрифтом навсегда.
 showLoadingScreen();
-loadUIFont().then(() => { window.__game = new Phaser.Game(config); });
+loadUIFont().then(() => {
+  const game = new Phaser.Game(config);
+  window.__game = game;
+  game.events.once(Phaser.Core.Events.READY, () => bindBrowserViewport(game, document.getElementById('game')));
+});

@@ -11,6 +11,7 @@ import { buildHeroPicker } from '../ui/heroPicker.js';
 import { DEFAULT_HERO_ID } from '../config/heroes.js';
 import { UI } from '../config/ui.config.js';
 import { addPanel, addDivider, addButton } from '../ui/widgets.js';
+import { bindSceneViewport } from '../ui/viewport.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -39,6 +40,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create() {
+    this.viewport = bindSceneViewport(this);
     const { audio } = services;
     const session = services.session;
     this.overlay = null;
@@ -132,7 +134,8 @@ export class MenuScene extends Phaser.Scene {
   }
 
   buildBackground() {
-    this.add.image(W / 2, H / 2, 'welcome_cover').setDisplaySize(W, H);
+    const cover = this.add.image(W / 2, H / 2, 'welcome_cover').setDisplaySize(W, H);
+    this.viewport?.cover(cover);
     if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
     this.add.particles(0, 0, 'fx_dot', {
       x: { min: 70, max: W - 70 }, y: { min: 350, max: 860 }, lifespan: 5000,

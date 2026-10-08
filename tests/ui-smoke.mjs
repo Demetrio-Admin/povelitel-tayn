@@ -275,7 +275,7 @@ await mute(async () => {
       sv.state.data.completedEvents = sv.state.data.completedEvents.filter(e => e !== 'ch2_start');
       sv.bus.off(MSG.MAP_TRAVEL, onT);
     }
-    for (const id of ['rating', 'forum']) {   // v0.20.0: «Банк» — уже не заглушка (кошелёк)
+    for (const id of ['forum']) {   // v0.20.0: «Банк» — уже не заглушка (кошелёк)
       const before = snap();
       h.openMenu();
       const it = h.modal.items.find(x => x.item.id === id);
@@ -284,6 +284,53 @@ await mute(async () => {
       ok(h.modal?.opts?.stub === id && !h.modal?.menu && t.includes('Раздел в разработке'), `заглушка «${it.item.label}»: меню закрыто, окно «Раздел в разработке»`);
       h.closeModal(h.modal.buttons[0]);
       ok(!h.modal && !sv.modalOpen && snap() === before, `заглушка «${it.item.label}»: закрытие без изменений в игре`);
+    }
+
+    // v0.29.0: «Рейтинг» — не заглушка: четыре вкладки; без сервера — только свои результаты; с сервером — таблицы и «Онлайн»
+    {
+      const flatR = (o, out = []) => { out.push(o); (o.children || []).forEach(x => flatR(x, out)); return out; };
+      const tapTab = (name) => { const all = flatR(h.modal.container); const b = all.find(o => typeof o.text === 'string' && o.text === name); const hit = all.find(o => o !== b && o.handlers?.pointerup && Math.abs(o.x - b.x) < 2 && Math.abs(o.y - (b.y + 1)) < 3); const sc = h.modal.scroll; h.input.activePointer = { x: sc.x + 5, y: sc.y + 5 }; hit.emit('pointerdown'); hit.emit('pointerup'); };
+      h.openMenu(); h.modal.items.find(x => x.item.id === 'rating').hit.emit('pointerdown');
+      let t = h.modal ? texts(h.modal.container).join(' | ') : '';
+      ok(h.modal?.opts?.title === 'Рейтинг' && !h.modal?.menu && !t.includes('Раздел в разработке') && ['Уровень', 'Монстры', 'Арена', 'Онлайн'].every(x => t.includes(x)), 'меню → «Рейтинг»: окно с вкладками Уровень, Монстры, Арена, Онлайн');
+      ok(t.includes('Уровень героя: ') && t.includes('Лучшая победа:') && t.includes('онлайн-аккаунте'), 'без сервера: только свои результаты и подсказка про онлайн-аккаунт');
+      h.closeModal(h.modal.buttons[h.modal.buttons.length - 1]);
+      ok(!h.modal && !sv.modalOpen, 'рейтинг закрывается без следов');
+      const realSession = sv.session;
+      const calls = [];
+      const BOARD = {
+        level: { top: [{ rank: 1, nickname: 'Лира', hero: 'witch', level: 15, xp: 7900 }, { rank: 2, nickname: 'Тень', hero: 'warlock', level: 9, xp: 1000, me: true }], me: { rank: 2, level: 9, xp: 1000 } },
+        monster: { top: [{ rank: 1, nickname: 'Лира', enemy: 'frost_alpha', level: 12 }], me: null },
+        arena: { season: 0, endsAt: '2026-11-02T00:00:00Z', top: [{ rank: 1, nickname: 'Лира', rating: 1500, wins: 3, losses: 1 }], me: { rank: 1, rating: 1500, wins: 3, losses: 1 } },
+      };
+      const ONLINE = { count: 3, guests: 1, players: [{ nickname: 'Лира', hero: 'witch', level: 15, fighting: true }, { nickname: 'Тень', hero: 'warlock', level: 9, me: true }] };
+      sv.session = { signedIn: true, registered: true, _authed: async (fn) => fn('token'), api: { ratingsBoard: async () => { calls.push('board'); return BOARD; }, onlinePlayers: async () => { calls.push('online'); return ONLINE; } } };
+      h.ratingCache = null; h.ratingTab = null;
+      h.openRating();
+      await new Promise((r) => setTimeout(r, 20));
+      t = texts(h.modal.container).join(' | ');
+      ok(calls.join() === 'board' && t.includes('Ваше место: 2') && t.includes('1. Лира — уровень 15') && t.includes('2. Тень — уровень 9'), 'вкладка «Уровень»: место игрока и таблица с сервера');
+      tapTab('Монстры'); await new Promise((r) => setTimeout(r, 20));
+      t = texts(h.modal.container).join(' | ');
+      ok(calls.join() === 'board' && t.includes('1. Лира — Вожак метели (ур. 12)') && t.includes('Победите монстра'), 'вкладка «Монстры»: лучшая победа и уровень монстра (тот же ответ, без нового запроса)');
+      tapTab('Арена'); await new Promise((r) => setTimeout(r, 20));
+      t = texts(h.modal.container).join(' | ');
+      ok(t.includes('Сезон 0') && t.includes('Ваше место: 1 · 1500 · Платина') && t.includes('1. Лира — 1500 · Платина · 3/1'), 'вкладка «Арена»: сезон, лига и рейтинг');
+      tapTab('Онлайн'); await new Promise((r) => setTimeout(r, 20));
+      t = texts(h.modal.container).join(' | ');
+      ok(calls.join() === 'board,online' && t.includes('Сейчас в игре: 3 (из них без ника: 1)') && t.includes('Лира — Ведьма, уровень 15 · в бою') && t.includes('Тень (вы) — Колдун, уровень 9'), 'вкладка «Онлайн»: сколько играет, ники, герой, уровень, «в бою»');
+      h.closeModal(h.modal.buttons[h.modal.buttons.length - 1]);
+      // «Обновить» просит свежие данные; ошибка сети не ломает окно
+      h.openRating('level'); await new Promise((r) => setTimeout(r, 20));
+      h.closeModal(h.modal.buttons[0]); await new Promise((r) => setTimeout(r, 20));
+      ok(calls.filter((x) => x === 'board').length === 2 && h.modal?.opts?.title === 'Рейтинг', '«Обновить»: таблица запрошена заново, окно открыто');
+      h.closeModal(h.modal.buttons[h.modal.buttons.length - 1]);
+      h.ratingCache = null; sv.session.api.ratingsBoard = async () => { throw new Error('offline'); };
+      h.openRating('level'); await new Promise((r) => setTimeout(r, 20));
+      t = texts(h.modal.container).join(' | ');
+      ok(t.includes('Не удалось загрузить'), 'нет связи: понятное сообщение, окно не падает');
+      h.closeModal(h.modal.buttons[h.modal.buttons.length - 1]);
+      sv.session = realSession; h.ratingCache = null; h.ratingTab = null;
     }
 
     // настройки работают: меню → настройки → изменение → «Готово» → значение сохранено

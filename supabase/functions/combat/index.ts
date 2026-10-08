@@ -2699,378 +2699,6 @@ function duelRules() {
   };
 }
 
-// src/config/serverRules.js
-function grantOf(r = {}) {
-  const g = {};
-  if (r.heroXP) g.heroXP = r.heroXP;
-  if (r.coins) g.coins = r.coins;
-  if (r.items && Object.keys(r.items).length) g.items = { ...r.items };
-  if (r.schoolXP && Object.keys(r.schoolXP).length) g.schoolXP = { ...r.schoolXP };
-  const up = r.topUpFor ? UPGRADES[r.topUpFor] : null;
-  if (up) {
-    const items = {};
-    for (const [k, v] of Object.entries(up.cost.items || {})) if (!up.cost.noTopUp?.includes(k)) items[k] = v;
-    g.topUp = { school: { [up.ability]: up.cost.schoolXP }, items };
-  }
-  return g;
-}
-var EVENT_ACTIONS = {
-  prologue_seen: {},
-  mirra_taught_alchemy: {},
-  // подсказки «здесь нужен дар / сила»: отмечаются при первом взгляде на закрытый объект, наград нет
-  fire_required_01: {},
-  heavy_blocked_01: {},
-  unlock_telekinesis_1: { unlock: { telekinesis: 1 } },
-  lunar_quest_start: { requires: ["unlock_telekinesis_1"] },
-  unlock_fire_1: { requires: ["heavy_path_open"], unlock: { fire: 1 } },
-  unlock_seal_1: { requires: ["gate_marks_revealed"], unlock: { seal: 1 } },
-  // v0.20.0 — глава II, квесты 1–5 (диалоги Мирры, Иларии, Северина, торговца; первый вход на площадь)
-  ch2_start: { requires: ["chapter_1_complete"] },
-  ch2_city_arrived: { requires: ["ch2_start"] },
-  ch2_met_ilaria: { requires: ["ch2_plaza_cleared"] },
-  ch2_trace_found: { requires: ["ch2_trace_astral", "ch2_trace_debris"] },
-  ch2_met_severin: { requires: ["ch2_archive_read"] },
-  city_merchant_open: { requires: ["ch2_city_arrived"] },
-  // v0.21.0 — квесты 6–10 (торговец, Илария, Северин, Нэрис)
-  ch2_cargo_start: { requires: ["ch2_met_severin"] },
-  ch2_cargo_reported: { requires: ["ch2_cargo_found", "ch2_serials_read"] },
-  ch2_severin_asked: { requires: ["ch2_cargo_reported"] },
-  ch2_frost_wave: { requires: ["ch2_lab_critter"] },
-  ch2_nerys_met: { requires: ["ch2_construct_unstable"] },
-  ch2_rescue_done: { requires: ["ch2_rescue_door", "ch2_rescue_cellar"] },
-  unlock_ice_1: { requires: ["ch2_rescue_done", "warm_potion_crafted"], unlock: { ice: 1 } },
-  ch2_ice_trained: { requires: ["ch2_training_done"] },
-  ch2_choice_start: { requires: ["ch2_ice_trained"] },
-  ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"] },
-  // v0.22.0 — квесты 11–15 (Нэрис, Тихон, Илария, Северин, Ровена, Мирра)
-  unlock_ice_2: { requires: ["ch2_quarter_cleared"], unlock: { ice: 2 } },
-  ch2_brittle_done: { requires: ["ch2_brittle_1", "ch2_brittle_2", "brittle_flask_crafted"] },
-  ch2_lab_found: { requires: ["ch2_brittle_done"] },
-  ch2_stabilized: { requires: ["ch2_vol_1", "ch2_vol_2"], consume: { stabilizing_potion: 2 } },
-  ch2_lab_reported: { requires: ["ch2_stabilized", "ch2_lab_journal"] },
-  // ответ героя Северину — без ветвления сюжета, только отношение (его вспомнит Мирра)
-  ch2_view_danger: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
-  ch2_view_methods: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
-  ch2_view_market: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
-  ch2_view_unsure: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
-  ch2_severin_confronted: { requires: ["ch2_lab_reported"] },
-  ch2_coven_met: { requires: ["ch2_severin_confronted"] },
-  ch2_coven_supplies: { requires: ["ch2_coven_met"], consume: { crystal_guard: 1, frost_herb: 2 } },
-  ch2_coven_ready: { requires: ["ch2_unstable_1", "ch2_unstable_2", "ch2_coven_supplies"] },
-  ch2_final_start: { requires: ["ch2_coven_ready"] },
-  // Лёд III перед боем: ветка выбирается один раз (ch2_ice3 — общая отметка, по ней появляется Северин)
-  ch2_ice3_frost: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], unlock: { ice: 3 }, branch: { ice: "frost" }, marks: ["ch2_ice3"] },
-  ch2_ice3_shard: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], unlock: { ice: 3 }, branch: { ice: "shard" }, marks: ["ch2_ice3"] },
-  ch2_epilogue: { requires: ["ch2_letters_read"] },
-  chapter_2_complete: { requires: ["ch2_epilogue"], marks: ["title_frost_survivor"], sapphires: 5 }
-};
-function worldRules() {
-  const world = {};
-  const base = (o) => ({
-    requires: [o.requiresEvent, o.waitEvent].filter(Boolean),
-    // v0.21.0: waitEvent — объект виден, но поддаётся после события
-    requiresEnemy: o.requiresEnemyDefeated ? [o.requiresEnemyDefeated] : []
-  });
-  const itemReward = (item, amount) => item === "coins" ? { coins: amount } : { items: { [item]: amount } };
-  const tkLevel = (weight) => {
-    for (const [lvl, st] of Object.entries(ABILITIES.telekinesis.levels)) if (WEIGHT_CLASSES.indexOf(weight) <= WEIGHT_CLASSES.indexOf(st.maxWeight)) return Number(lvl);
-    return 99;
-  };
-  const pickupAfter = (o, spawn, parentState) => {
-    if (spawn) world[`${o.id}_reward`] = { kind: "loot", mark: "collected", reward: itemReward(spawn.item, spawn.amount || 1), parent: { id: o.id, state: parentState } };
-  };
-  const school = (ability) => ({ [ability]: SCHOOL_XP_PER_USE.exploration[ability] || 0 });
-  const effects = (o) => {
-    const events = [];
-    if (o.countsAsFirstInteraction) events.push("first_world_interaction");
-    for (const k of [o.doneEvent, o.openEvent, o.destroyEvent]) if (k) events.push(k);
-    const out = { events };
-    if (o.opensPath) out.path = o.opensPath;
-    return out;
-  };
-  for (const o of INTERACTIVES) {
-    switch (o.kind) {
-      case "gather":
-        world[o.id] = { kind: "gather", item: o.res, amount: o.amount || 1, respawnSec: o.respawnSec ?? 180, mana: WORLD_MANA_COST.gather, ...base(o) };
-        break;
-      case "chest":
-        world[o.id] = { kind: "loot", mark: "opened", reward: o.reward, ...base(o) };
-        break;
-      case "pickup":
-        world[o.id] = { kind: "loot", mark: "collected", reward: itemReward(o.item, o.amount || 1), ...base(o) };
-        break;
-      case "inspect":
-        if (o.first) world[o.id] = { kind: "loot", mark: "looted", reward: { items: o.first.items }, ...base(o) };
-        break;
-      case "stash":
-        world[o.id] = { kind: "stash", guard: o.guard, items: o.items, ...base(o) };
-        break;
-      case "telekinesis": {
-        const weight = o.weight || "light";
-        const mana2 = o.mode === "pull" ? WORLD_MANA_COST.pull : WORLD_MANA_COST.push[weight] ?? WORLD_MANA_COST.push.light;
-        if (o.mode === "pull") world[o.id] = { kind: "loot", mark: "collected", reward: o.reward || {}, mana: mana2, ability: "telekinesis", minLevel: tkLevel(weight), school: school("telekinesis"), ...effects(o), ...base(o) };
-        else world[o.id] = { kind: "cast", mark: "moved", mana: mana2, ability: "telekinesis", minLevel: tkLevel(weight), blockedBy: [], school: school("telekinesis"), ...effects(o), ...base(o) };
-        pickupAfter(o, o.hiddenReward?.spawnPickup, "moved");
-        break;
-      }
-      case "fire":
-        world[o.id] = {
-          kind: "cast",
-          mark: o.persistent ? "burning" : "destroyed",
-          mana: WORLD_MANA_COST.fire,
-          ability: "fire",
-          minLevel: 1,
-          blockedBy: [],
-          school: school("fire"),
-          ...effects(o),
-          ...base(o)
-        };
-        pickupAfter(o, o.reveal?.spawnPickup, "destroyed");
-        break;
-      case "ice":
-        world[o.id] = {
-          kind: "cast",
-          mark: "frozen",
-          mana: WORLD_MANA_COST.ice,
-          ability: "ice",
-          minLevel: o.minLevel || 1,
-          blockedBy: [],
-          school: school("ice"),
-          ...effects(o),
-          ...base(o)
-        };
-        break;
-      case "gate":
-        world[o.id] = {
-          kind: "cast",
-          mana: WORLD_MANA_COST.seal,
-          ability: "seal",
-          minLevel: 1,
-          blockedBy: [o.openEvent],
-          school: school("seal"),
-          ...effects(o),
-          requires: ["guardian_defeated", "gate_marks_revealed", "unlock_seal_1", "seal_training_complete"],
-          requiresEnemy: []
-        };
-        break;
-      case "seal_sigil":
-        world[o.id] = { kind: "cast", mana: WORLD_MANA_COST.seal, ability: "seal", minLevel: 1, blockedBy: [o.doneEvent], school: school("seal"), ...effects(o), ...base(o) };
-        break;
-      default:
-        break;
-    }
-  }
-  return world;
-}
-function questRules() {
-  const out = {};
-  for (const id of SIDE_QUEST_ORDER) {
-    const q = SIDE_QUESTS[id];
-    out[id] = {
-      start: questEvent(id, "start"),
-      done: questEvent(id, "done"),
-      requires: q.requires?.event || null,
-      objectives: q.objectives.map((o) => o.type === "item" ? { type: "item", item: o.item, count: o.count } : o.type === "enemy" ? { type: "enemy", id: o.id } : { type: "event", key: o.key }),
-      consume: { ...q.turnIn?.consume || {} },
-      reward: grantOf(q.reward)
-    };
-  }
-  return out;
-}
-function researchRules() {
-  const out = {};
-  for (const [id, up] of Object.entries(UPGRADES)) {
-    const r = up.requires || {};
-    out[id] = {
-      ability: up.ability,
-      toLevel: up.toLevel,
-      branch: up.branch || null,
-      locked: !!up.locked,
-      heroLevel: r.heroLevel || 0,
-      abilityLevel: r.abilityLevel || 0,
-      event: r.event || null,
-      schoolXP: up.cost.schoolXP,
-      items: { ...up.cost.items || {} },
-      durationMs: up.timerSec[TIMER_MODE] * 1e3,
-      startEvent: up.startEvent || null,
-      completeEvent: up.completeEvent || null
-    };
-  }
-  return out;
-}
-function buildRules() {
-  const branches = {};
-  for (const [id, a] of Object.entries(ABILITIES)) {
-    if (!a.branches) continue;
-    branches[id] = Object.fromEntries(Object.entries(a.branches).map(([b, v]) => [b, { fromLevel: v.fromLevel || 1 }]));
-  }
-  return { respecCoins: BRANCH_RESPEC.coins, branches, ...buildSlotRules() };
-}
-function spawnStartRules() {
-  const out = {};
-  for (const s of ENEMY_SPAWNS) if (s.startEvent) out[s.id] = { event: s.startEvent, requires: s.requiresEvent || null };
-  return out;
-}
-function serverRules() {
-  const recipes = Object.fromEntries(Object.entries(RECIPES).map(([id, r]) => [id, {
-    result: r.result,
-    amount: r.amount,
-    needs: r.needs,
-    requires: r.requires || [],
-    crafted: r.crafted || null,
-    blockedBy: r.blockedBy || []
-  }]));
-  const house = ZONES.find((z) => z.id === VITALS.houseZone);
-  const vitals = {
-    hpRegenPerSec: VITALS.hpRegenPerSec,
-    manaRegenWorld: VITALS.manaRegenWorld,
-    manaRegenHouse: VITALS.manaRegenHouse,
-    house: { x: house.x, y: house.y, w: house.w, h: house.h },
-    defeatHpFraction: HERO_RECOVERY.defeatHpFraction,
-    staleCombatSec: VITALS.staleCombatSec
-  };
-  const potions = Object.fromEntries(Object.entries(POTIONS).filter(([, p]) => p.outside && (p.effect.type === "heal" || p.effect.type === "mana")).map(([id, p]) => [id, { kind: p.effect.type, amount: p.effect.amount }]));
-  const events = Object.fromEntries(Object.entries(EVENT_ACTIONS).map(([k, e]) => [k, {
-    requires: e.requires || [],
-    unlock: e.unlock || {},
-    // v0.22.0: blockedBy — событие уже не нужно; consume — что забирает (предметы); branch — ветка дара вместе с открытием;
-    // marks — ещё события вместе с этим (с их наградами); sapphires — сапфиры в награду (журнал сапфиров, один раз)
-    blockedBy: e.blockedBy || [],
-    consume: e.consume || {},
-    branch: e.branch || {},
-    marks: e.marks || [],
-    sapphires: e.sapphires || 0
-  }]));
-  const eventRewards = Object.fromEntries(Object.entries(EVENT_REWARDS).map(([k, r]) => [k, grantOf(r)]));
-  return {
-    recipes,
-    uses: STORY_USES,
-    firstCraft: FIRST_CRAFT,
-    migration: MIGRATION_V10,
-    vitals,
-    potions,
-    world: worldRules(),
-    events,
-    eventRewards,
-    quests: questRules(),
-    research: researchRules(),
-    build: buildRules(),
-    spawnStart: spawnStartRules(),
-    sapphires: sapphireRules(),
-    // v0.17.0
-    shop: shopRules(),
-    // v0.19.0: торговец
-    daily: dailyRules(),
-    // v0.23.0: доска поручений
-    covens: covenRules(),
-    // v0.25.0: Ковены (недельная цель)
-    duel: duelRules(),
-    // v0.26.0: Магическая Дуэль
-    combatPotions: Object.keys(POTIONS)
-    // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
-  };
-}
-
-// src/cloud/playerModel.js
-var RULES = serverRules();
-var ABILITY_IDS = ["telekinesis", "fire", "seal", "ice"];
-var SCHOOL_IDS = ["telekinesis", "fire", "seal", "ice"];
-var num = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 1e15;
-var isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
-var uniq = (a) => [...new Set(a)];
-function walletOf(w) {
-  const o = isObj(w) ? w : {};
-  const daily = isObj(o.daily) && num(o.daily.d) && num(o.daily.n) ? { d: o.daily.d, n: o.daily.n } : {};
-  return { sapphires: num(o.sapphires) ? o.sapphires : 0, daily, welcome: o.welcome === true };
-}
-function emptySnapshot() {
-  return toSnapshot(createDefaultState());
-}
-function toSnapshot(d) {
-  const abilities = {};
-  for (const id of ABILITY_IDS) abilities[id] = { level: d[`${id}Level`] || 0, unlocked: (d.unlockedAbilities || []).includes(id) };
-  return {
-    level: d.heroLevel,
-    xp: d.heroXP,
-    school: { ...SCHOOL_IDS.reduce((o, k) => ({ ...o, [k]: 0 }), {}), ...d.schoolXP || {} },
-    abilities,
-    inventory: { ...d.inventory || {} },
-    quests: uniq(d.completedEvents || []),
-    paths: uniq(d.openedPaths || []),
-    enemies: uniq(d.defeatedEnemies || []),
-    objects: JSON.parse(JSON.stringify(d.worldObjects || {})),
-    research: d.research ? { ...d.research } : null,
-    wallet: walletOf(d.wallet),
-    // v0.17.0: сапфиры (пишет только сервер)
-    pos: { x: d.player?.x ?? 0, y: d.player?.y ?? 0 },
-    safe: { x: d.safePoint?.x ?? 0, y: d.safePoint?.y ?? 0 },
-    hp: d.hp ?? null,
-    mana: d.mana ?? null,
-    vitalsAt: d.vitalsClock ?? null,
-    // v0.12.0: момент (мс), на который верны hp и mana
-    combatSince: d.combatSince ?? null,
-    // v0.12.0: начало боя, о завершении которого сервер ещё не знает
-    combatCtx: d.combatCtx ?? null,
-    // v0.14.0: что сервер запомнил о герое в начале боя (по этому проверяется запись боя)
-    play: d.stats?.playTimeMs || 0,
-    combats: (d.stats?.combats || []).map((c) => ({ ...c })),
-    tutorial: uniq(d.tutorial || [])
-  };
-}
-function fromSnapshot(s, base = createDefaultState()) {
-  const d = { ...base };
-  d.heroLevel = s.level;
-  d.heroXP = s.xp;
-  d.schoolXP = { ...base.schoolXP, ...s.school || {} };
-  d.unlockedAbilities = [];
-  for (const id of ABILITY_IDS) {
-    const a = s.abilities?.[id] || { level: 0, unlocked: false };
-    d[`${id}Level`] = a.level || 0;
-    if (a.unlocked) d.unlockedAbilities.push(id);
-  }
-  d.inventory = { ...base.inventory, ...s.inventory || {} };
-  d.completedEvents = [...s.quests || []];
-  d.openedPaths = [...s.paths || []];
-  d.defeatedEnemies = [...s.enemies || []];
-  d.worldObjects = JSON.parse(JSON.stringify(s.objects || {}));
-  d.research = s.research ? { ...s.research } : null;
-  d.wallet = walletOf(s.wallet);
-  d.player = { x: s.pos.x, y: s.pos.y };
-  d.safePoint = { x: s.safe.x, y: s.safe.y };
-  d.hp = s.hp ?? null;
-  d.mana = s.mana ?? null;
-  d.vitalsClock = s.vitalsAt ?? null;
-  d.combatSince = s.combatSince ?? null;
-  d.combatCtx = s.combatCtx ?? null;
-  d.stats = { playTimeMs: s.play || 0, combats: (s.combats || []).map((c) => ({ ...c })) };
-  d.tutorial = [...s.tutorial || []];
-  return d;
-}
-var COMBAT_POTIONS = [...RULES.combatPotions];
-function fillDefaults(raw) {
-  const def = emptySnapshot();
-  const { meta, action, ...s } = raw;
-  return {
-    snapshot: {
-      ...def,
-      ...s,
-      school: { ...def.school, ...s.school || {} },
-      abilities: { ...def.abilities, ...s.abilities || {} },
-      inventory: { ...def.inventory, ...s.inventory || {} },
-      pos: s.pos || def.pos,
-      safe: s.safe || def.safe,
-      hp: s.hp ?? null,
-      mana: s.mana ?? null,
-      // нет поля (старая схема) — «полный запас»; числовой 0 сохраняется
-      vitalsAt: s.vitalsAt ?? null,
-      combatSince: s.combatSince ?? null,
-      combatCtx: s.combatCtx ?? null
-    },
-    meta: meta || {},
-    action: action || null
-  };
-}
-
 // src/config/balance.enemies.js
 var ENEMIES = {
   forest_scavenger: {
@@ -3567,6 +3195,420 @@ var ARENAS = {
     ]
   }
 };
+
+// src/config/ratings.js
+var MONSTER_LEVELS = {
+  forest_scavenger: 1,
+  young_scavenger: 1,
+  rootling: 2,
+  forest_guardian: 4,
+  node_guardian: 6,
+  frost_critter: 7,
+  frost_collector: 8,
+  volunteer: 9,
+  frost_collector_elite: 9,
+  ice_guardian: 10,
+  experimental_construct: 10,
+  frost_wolf: 10,
+  grave_wisp: 10,
+  grave_hound: 11,
+  severin_boss: 12,
+  frost_alpha: 12,
+  barrow_warden: 12
+};
+var RATINGS = {
+  top: 50,
+  // сколько мест показывает таблица
+  onlineSec: 100,
+  // игрок «в игре», если подавал знак не позже этого
+  pingSec: 45,
+  // как часто открытая игра подаёт знак
+  cacheSec: 20
+  // таблицы в окне не запрашиваются чаще
+};
+function ratingsRules() {
+  return {
+    top: RATINGS.top,
+    onlineSec: RATINGS.onlineSec,
+    levels: { ...MONSTER_LEVELS },
+    power: Object.fromEntries(Object.keys(MONSTER_LEVELS).map((k) => [k, ENEMIES[k]?.hp || 0])),
+    spawns: Object.fromEntries(ENEMY_SPAWNS.filter((s) => MONSTER_LEVELS[s.enemy]).map((s) => [s.id, s.enemy]))
+  };
+}
+
+// src/config/serverRules.js
+function grantOf(r = {}) {
+  const g = {};
+  if (r.heroXP) g.heroXP = r.heroXP;
+  if (r.coins) g.coins = r.coins;
+  if (r.items && Object.keys(r.items).length) g.items = { ...r.items };
+  if (r.schoolXP && Object.keys(r.schoolXP).length) g.schoolXP = { ...r.schoolXP };
+  const up = r.topUpFor ? UPGRADES[r.topUpFor] : null;
+  if (up) {
+    const items = {};
+    for (const [k, v] of Object.entries(up.cost.items || {})) if (!up.cost.noTopUp?.includes(k)) items[k] = v;
+    g.topUp = { school: { [up.ability]: up.cost.schoolXP }, items };
+  }
+  return g;
+}
+var EVENT_ACTIONS = {
+  prologue_seen: {},
+  mirra_taught_alchemy: {},
+  // подсказки «здесь нужен дар / сила»: отмечаются при первом взгляде на закрытый объект, наград нет
+  fire_required_01: {},
+  heavy_blocked_01: {},
+  unlock_telekinesis_1: { unlock: { telekinesis: 1 } },
+  lunar_quest_start: { requires: ["unlock_telekinesis_1"] },
+  unlock_fire_1: { requires: ["heavy_path_open"], unlock: { fire: 1 } },
+  unlock_seal_1: { requires: ["gate_marks_revealed"], unlock: { seal: 1 } },
+  // v0.20.0 — глава II, квесты 1–5 (диалоги Мирры, Иларии, Северина, торговца; первый вход на площадь)
+  ch2_start: { requires: ["chapter_1_complete"] },
+  ch2_city_arrived: { requires: ["ch2_start"] },
+  ch2_met_ilaria: { requires: ["ch2_plaza_cleared"] },
+  ch2_trace_found: { requires: ["ch2_trace_astral", "ch2_trace_debris"] },
+  ch2_met_severin: { requires: ["ch2_archive_read"] },
+  city_merchant_open: { requires: ["ch2_city_arrived"] },
+  // v0.21.0 — квесты 6–10 (торговец, Илария, Северин, Нэрис)
+  ch2_cargo_start: { requires: ["ch2_met_severin"] },
+  ch2_cargo_reported: { requires: ["ch2_cargo_found", "ch2_serials_read"] },
+  ch2_severin_asked: { requires: ["ch2_cargo_reported"] },
+  ch2_frost_wave: { requires: ["ch2_lab_critter"] },
+  ch2_nerys_met: { requires: ["ch2_construct_unstable"] },
+  ch2_rescue_done: { requires: ["ch2_rescue_door", "ch2_rescue_cellar"] },
+  unlock_ice_1: { requires: ["ch2_rescue_done", "warm_potion_crafted"], unlock: { ice: 1 } },
+  ch2_ice_trained: { requires: ["ch2_training_done"] },
+  ch2_choice_start: { requires: ["ch2_ice_trained"] },
+  ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"] },
+  // v0.22.0 — квесты 11–15 (Нэрис, Тихон, Илария, Северин, Ровена, Мирра)
+  unlock_ice_2: { requires: ["ch2_quarter_cleared"], unlock: { ice: 2 } },
+  ch2_brittle_done: { requires: ["ch2_brittle_1", "ch2_brittle_2", "brittle_flask_crafted"] },
+  ch2_lab_found: { requires: ["ch2_brittle_done"] },
+  ch2_stabilized: { requires: ["ch2_vol_1", "ch2_vol_2"], consume: { stabilizing_potion: 2 } },
+  ch2_lab_reported: { requires: ["ch2_stabilized", "ch2_lab_journal"] },
+  // ответ героя Северину — без ветвления сюжета, только отношение (его вспомнит Мирра)
+  ch2_view_danger: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
+  ch2_view_methods: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
+  ch2_view_market: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
+  ch2_view_unsure: { requires: ["ch2_lab_reported"], blockedBy: ["ch2_severin_confronted"] },
+  ch2_severin_confronted: { requires: ["ch2_lab_reported"] },
+  ch2_coven_met: { requires: ["ch2_severin_confronted"] },
+  ch2_coven_supplies: { requires: ["ch2_coven_met"], consume: { crystal_guard: 1, frost_herb: 2 } },
+  ch2_coven_ready: { requires: ["ch2_unstable_1", "ch2_unstable_2", "ch2_coven_supplies"] },
+  ch2_final_start: { requires: ["ch2_coven_ready"] },
+  // Лёд III перед боем: ветка выбирается один раз (ch2_ice3 — общая отметка, по ней появляется Северин)
+  ch2_ice3_frost: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], unlock: { ice: 3 }, branch: { ice: "frost" }, marks: ["ch2_ice3"] },
+  ch2_ice3_shard: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], unlock: { ice: 3 }, branch: { ice: "shard" }, marks: ["ch2_ice3"] },
+  ch2_epilogue: { requires: ["ch2_letters_read"] },
+  chapter_2_complete: { requires: ["ch2_epilogue"], marks: ["title_frost_survivor"], sapphires: 5 }
+};
+function worldRules() {
+  const world = {};
+  const base = (o) => ({
+    requires: [o.requiresEvent, o.waitEvent].filter(Boolean),
+    // v0.21.0: waitEvent — объект виден, но поддаётся после события
+    requiresEnemy: o.requiresEnemyDefeated ? [o.requiresEnemyDefeated] : []
+  });
+  const itemReward = (item, amount) => item === "coins" ? { coins: amount } : { items: { [item]: amount } };
+  const tkLevel = (weight) => {
+    for (const [lvl, st] of Object.entries(ABILITIES.telekinesis.levels)) if (WEIGHT_CLASSES.indexOf(weight) <= WEIGHT_CLASSES.indexOf(st.maxWeight)) return Number(lvl);
+    return 99;
+  };
+  const pickupAfter = (o, spawn, parentState) => {
+    if (spawn) world[`${o.id}_reward`] = { kind: "loot", mark: "collected", reward: itemReward(spawn.item, spawn.amount || 1), parent: { id: o.id, state: parentState } };
+  };
+  const school = (ability) => ({ [ability]: SCHOOL_XP_PER_USE.exploration[ability] || 0 });
+  const effects = (o) => {
+    const events = [];
+    if (o.countsAsFirstInteraction) events.push("first_world_interaction");
+    for (const k of [o.doneEvent, o.openEvent, o.destroyEvent]) if (k) events.push(k);
+    const out = { events };
+    if (o.opensPath) out.path = o.opensPath;
+    return out;
+  };
+  for (const o of INTERACTIVES) {
+    switch (o.kind) {
+      case "gather":
+        world[o.id] = { kind: "gather", item: o.res, amount: o.amount || 1, respawnSec: o.respawnSec ?? 180, mana: WORLD_MANA_COST.gather, ...base(o) };
+        break;
+      case "chest":
+        world[o.id] = { kind: "loot", mark: "opened", reward: o.reward, ...base(o) };
+        break;
+      case "pickup":
+        world[o.id] = { kind: "loot", mark: "collected", reward: itemReward(o.item, o.amount || 1), ...base(o) };
+        break;
+      case "inspect":
+        if (o.first) world[o.id] = { kind: "loot", mark: "looted", reward: { items: o.first.items }, ...base(o) };
+        break;
+      case "stash":
+        world[o.id] = { kind: "stash", guard: o.guard, items: o.items, ...base(o) };
+        break;
+      case "telekinesis": {
+        const weight = o.weight || "light";
+        const mana2 = o.mode === "pull" ? WORLD_MANA_COST.pull : WORLD_MANA_COST.push[weight] ?? WORLD_MANA_COST.push.light;
+        if (o.mode === "pull") world[o.id] = { kind: "loot", mark: "collected", reward: o.reward || {}, mana: mana2, ability: "telekinesis", minLevel: tkLevel(weight), school: school("telekinesis"), ...effects(o), ...base(o) };
+        else world[o.id] = { kind: "cast", mark: "moved", mana: mana2, ability: "telekinesis", minLevel: tkLevel(weight), blockedBy: [], school: school("telekinesis"), ...effects(o), ...base(o) };
+        pickupAfter(o, o.hiddenReward?.spawnPickup, "moved");
+        break;
+      }
+      case "fire":
+        world[o.id] = {
+          kind: "cast",
+          mark: o.persistent ? "burning" : "destroyed",
+          mana: WORLD_MANA_COST.fire,
+          ability: "fire",
+          minLevel: 1,
+          blockedBy: [],
+          school: school("fire"),
+          ...effects(o),
+          ...base(o)
+        };
+        pickupAfter(o, o.reveal?.spawnPickup, "destroyed");
+        break;
+      case "ice":
+        world[o.id] = {
+          kind: "cast",
+          mark: "frozen",
+          mana: WORLD_MANA_COST.ice,
+          ability: "ice",
+          minLevel: o.minLevel || 1,
+          blockedBy: [],
+          school: school("ice"),
+          ...effects(o),
+          ...base(o)
+        };
+        break;
+      case "gate":
+        world[o.id] = {
+          kind: "cast",
+          mana: WORLD_MANA_COST.seal,
+          ability: "seal",
+          minLevel: 1,
+          blockedBy: [o.openEvent],
+          school: school("seal"),
+          ...effects(o),
+          requires: ["guardian_defeated", "gate_marks_revealed", "unlock_seal_1", "seal_training_complete"],
+          requiresEnemy: []
+        };
+        break;
+      case "seal_sigil":
+        world[o.id] = { kind: "cast", mana: WORLD_MANA_COST.seal, ability: "seal", minLevel: 1, blockedBy: [o.doneEvent], school: school("seal"), ...effects(o), ...base(o) };
+        break;
+      default:
+        break;
+    }
+  }
+  return world;
+}
+function questRules() {
+  const out = {};
+  for (const id of SIDE_QUEST_ORDER) {
+    const q = SIDE_QUESTS[id];
+    out[id] = {
+      start: questEvent(id, "start"),
+      done: questEvent(id, "done"),
+      requires: q.requires?.event || null,
+      objectives: q.objectives.map((o) => o.type === "item" ? { type: "item", item: o.item, count: o.count } : o.type === "enemy" ? { type: "enemy", id: o.id } : { type: "event", key: o.key }),
+      consume: { ...q.turnIn?.consume || {} },
+      reward: grantOf(q.reward)
+    };
+  }
+  return out;
+}
+function researchRules() {
+  const out = {};
+  for (const [id, up] of Object.entries(UPGRADES)) {
+    const r = up.requires || {};
+    out[id] = {
+      ability: up.ability,
+      toLevel: up.toLevel,
+      branch: up.branch || null,
+      locked: !!up.locked,
+      heroLevel: r.heroLevel || 0,
+      abilityLevel: r.abilityLevel || 0,
+      event: r.event || null,
+      schoolXP: up.cost.schoolXP,
+      items: { ...up.cost.items || {} },
+      durationMs: up.timerSec[TIMER_MODE] * 1e3,
+      startEvent: up.startEvent || null,
+      completeEvent: up.completeEvent || null
+    };
+  }
+  return out;
+}
+function buildRules() {
+  const branches = {};
+  for (const [id, a] of Object.entries(ABILITIES)) {
+    if (!a.branches) continue;
+    branches[id] = Object.fromEntries(Object.entries(a.branches).map(([b, v]) => [b, { fromLevel: v.fromLevel || 1 }]));
+  }
+  return { respecCoins: BRANCH_RESPEC.coins, branches, ...buildSlotRules() };
+}
+function spawnStartRules() {
+  const out = {};
+  for (const s of ENEMY_SPAWNS) if (s.startEvent) out[s.id] = { event: s.startEvent, requires: s.requiresEvent || null };
+  return out;
+}
+function serverRules() {
+  const recipes = Object.fromEntries(Object.entries(RECIPES).map(([id, r]) => [id, {
+    result: r.result,
+    amount: r.amount,
+    needs: r.needs,
+    requires: r.requires || [],
+    crafted: r.crafted || null,
+    blockedBy: r.blockedBy || []
+  }]));
+  const house = ZONES.find((z) => z.id === VITALS.houseZone);
+  const vitals = {
+    hpRegenPerSec: VITALS.hpRegenPerSec,
+    manaRegenWorld: VITALS.manaRegenWorld,
+    manaRegenHouse: VITALS.manaRegenHouse,
+    house: { x: house.x, y: house.y, w: house.w, h: house.h },
+    defeatHpFraction: HERO_RECOVERY.defeatHpFraction,
+    staleCombatSec: VITALS.staleCombatSec
+  };
+  const potions = Object.fromEntries(Object.entries(POTIONS).filter(([, p]) => p.outside && (p.effect.type === "heal" || p.effect.type === "mana")).map(([id, p]) => [id, { kind: p.effect.type, amount: p.effect.amount }]));
+  const events = Object.fromEntries(Object.entries(EVENT_ACTIONS).map(([k, e]) => [k, {
+    requires: e.requires || [],
+    unlock: e.unlock || {},
+    // v0.22.0: blockedBy — событие уже не нужно; consume — что забирает (предметы); branch — ветка дара вместе с открытием;
+    // marks — ещё события вместе с этим (с их наградами); sapphires — сапфиры в награду (журнал сапфиров, один раз)
+    blockedBy: e.blockedBy || [],
+    consume: e.consume || {},
+    branch: e.branch || {},
+    marks: e.marks || [],
+    sapphires: e.sapphires || 0
+  }]));
+  const eventRewards = Object.fromEntries(Object.entries(EVENT_REWARDS).map(([k, r]) => [k, grantOf(r)]));
+  return {
+    recipes,
+    uses: STORY_USES,
+    firstCraft: FIRST_CRAFT,
+    migration: MIGRATION_V10,
+    vitals,
+    potions,
+    world: worldRules(),
+    events,
+    eventRewards,
+    quests: questRules(),
+    research: researchRules(),
+    build: buildRules(),
+    spawnStart: spawnStartRules(),
+    sapphires: sapphireRules(),
+    // v0.17.0
+    shop: shopRules(),
+    // v0.19.0: торговец
+    daily: dailyRules(),
+    // v0.23.0: доска поручений
+    covens: covenRules(),
+    // v0.25.0: Ковены (недельная цель)
+    duel: duelRules(),
+    // v0.26.0: Магическая Дуэль
+    ratings: ratingsRules(),
+    // v0.29.0: рейтинги (уровни монстров) и «в игре»
+    combatPotions: Object.keys(POTIONS)
+    // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
+  };
+}
+
+// src/cloud/playerModel.js
+var RULES = serverRules();
+var ABILITY_IDS = ["telekinesis", "fire", "seal", "ice"];
+var SCHOOL_IDS = ["telekinesis", "fire", "seal", "ice"];
+var num = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 1e15;
+var isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+var uniq = (a) => [...new Set(a)];
+function walletOf(w) {
+  const o = isObj(w) ? w : {};
+  const daily = isObj(o.daily) && num(o.daily.d) && num(o.daily.n) ? { d: o.daily.d, n: o.daily.n } : {};
+  return { sapphires: num(o.sapphires) ? o.sapphires : 0, daily, welcome: o.welcome === true };
+}
+function emptySnapshot() {
+  return toSnapshot(createDefaultState());
+}
+function toSnapshot(d) {
+  const abilities = {};
+  for (const id of ABILITY_IDS) abilities[id] = { level: d[`${id}Level`] || 0, unlocked: (d.unlockedAbilities || []).includes(id) };
+  return {
+    level: d.heroLevel,
+    xp: d.heroXP,
+    school: { ...SCHOOL_IDS.reduce((o, k) => ({ ...o, [k]: 0 }), {}), ...d.schoolXP || {} },
+    abilities,
+    inventory: { ...d.inventory || {} },
+    quests: uniq(d.completedEvents || []),
+    paths: uniq(d.openedPaths || []),
+    enemies: uniq(d.defeatedEnemies || []),
+    objects: JSON.parse(JSON.stringify(d.worldObjects || {})),
+    research: d.research ? { ...d.research } : null,
+    wallet: walletOf(d.wallet),
+    // v0.17.0: сапфиры (пишет только сервер)
+    pos: { x: d.player?.x ?? 0, y: d.player?.y ?? 0 },
+    safe: { x: d.safePoint?.x ?? 0, y: d.safePoint?.y ?? 0 },
+    hp: d.hp ?? null,
+    mana: d.mana ?? null,
+    vitalsAt: d.vitalsClock ?? null,
+    // v0.12.0: момент (мс), на который верны hp и mana
+    combatSince: d.combatSince ?? null,
+    // v0.12.0: начало боя, о завершении которого сервер ещё не знает
+    combatCtx: d.combatCtx ?? null,
+    // v0.14.0: что сервер запомнил о герое в начале боя (по этому проверяется запись боя)
+    play: d.stats?.playTimeMs || 0,
+    combats: (d.stats?.combats || []).map((c) => ({ ...c })),
+    tutorial: uniq(d.tutorial || [])
+  };
+}
+function fromSnapshot(s, base = createDefaultState()) {
+  const d = { ...base };
+  d.heroLevel = s.level;
+  d.heroXP = s.xp;
+  d.schoolXP = { ...base.schoolXP, ...s.school || {} };
+  d.unlockedAbilities = [];
+  for (const id of ABILITY_IDS) {
+    const a = s.abilities?.[id] || { level: 0, unlocked: false };
+    d[`${id}Level`] = a.level || 0;
+    if (a.unlocked) d.unlockedAbilities.push(id);
+  }
+  d.inventory = { ...base.inventory, ...s.inventory || {} };
+  d.completedEvents = [...s.quests || []];
+  d.openedPaths = [...s.paths || []];
+  d.defeatedEnemies = [...s.enemies || []];
+  d.worldObjects = JSON.parse(JSON.stringify(s.objects || {}));
+  d.research = s.research ? { ...s.research } : null;
+  d.wallet = walletOf(s.wallet);
+  d.player = { x: s.pos.x, y: s.pos.y };
+  d.safePoint = { x: s.safe.x, y: s.safe.y };
+  d.hp = s.hp ?? null;
+  d.mana = s.mana ?? null;
+  d.vitalsClock = s.vitalsAt ?? null;
+  d.combatSince = s.combatSince ?? null;
+  d.combatCtx = s.combatCtx ?? null;
+  d.stats = { playTimeMs: s.play || 0, combats: (s.combats || []).map((c) => ({ ...c })) };
+  d.tutorial = [...s.tutorial || []];
+  return d;
+}
+var COMBAT_POTIONS = [...RULES.combatPotions];
+function fillDefaults(raw) {
+  const def = emptySnapshot();
+  const { meta, action, ...s } = raw;
+  return {
+    snapshot: {
+      ...def,
+      ...s,
+      school: { ...def.school, ...s.school || {} },
+      abilities: { ...def.abilities, ...s.abilities || {} },
+      inventory: { ...def.inventory, ...s.inventory || {} },
+      pos: s.pos || def.pos,
+      safe: s.safe || def.safe,
+      hp: s.hp ?? null,
+      mana: s.mana ?? null,
+      // нет поля (старая схема) — «полный запас»; числовой 0 сохраняется
+      vitalsAt: s.vitalsAt ?? null,
+      combatSince: s.combatSince ?? null,
+      combatCtx: s.combatCtx ?? null
+    },
+    meta: meta || {},
+    action: action || null
+  };
+}
 
 // src/objects/Enemy.js
 var Enemy = class {

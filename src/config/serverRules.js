@@ -19,6 +19,7 @@ import { shopRules } from './shop.js';
 import { dailyRules } from './daily.js';
 import { covenRules } from './covens.js';
 import { duelRules } from './duel.js';
+import { ratingsRules } from './ratings.js';
 
 /**
  * Награда из конфигов → формат серверной операции (_grant / grant):
@@ -260,6 +261,7 @@ export function serverRules() {
     daily: dailyRules(),           // v0.23.0: доска поручений
     covens: covenRules(),          // v0.25.0: Ковены (недельная цель)
     duel: duelRules(),             // v0.26.0: Магическая Дуэль
+    ratings: ratingsRules(),       // v0.29.0: рейтинги (уровни монстров) и «в игре»
     combatPotions: Object.keys(POTIONS),   // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
   };
 }

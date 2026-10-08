@@ -4,7 +4,7 @@
 export const MENU_ITEMS = [
   { id: 'map', label: 'Карта', icon: 'icon_map' },   // v0.27.0: карта мира (отправиться можно только у выхода из локации)
   { id: 'bank', label: 'Банк', icon: 'icon_bank' },   // v0.20.0: окно кошелька (сапфиры)
-  { id: 'rating', label: 'Рейтинг', icon: 'icon_rating', stub: true },
+  { id: 'rating', label: 'Рейтинг', icon: 'icon_rating' },   // v0.29.0: рейтинги и «Онлайн»
   { id: 'chat', label: 'Чат', icon: 'icon_chat' },
   { id: 'forum', label: 'Форум', icon: 'icon_forum', stub: true },
   { id: 'settings', label: 'Настройки', icon: 'icon_settings' },

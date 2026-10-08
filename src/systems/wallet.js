@@ -47,7 +47,7 @@ export function walletView(state) {
   const w = state.data.wallet || {};
   return {
     balance: state.sapphires(),
-    welcome: !w.welcome ? SAPPHIRES.welcome : 0,
+    welcome: !w.welcome && state.hasEvent(SAPPHIRES.welcomeEvent) ? SAPPHIRES.welcome : 0,
     stepsLeftToday: state.speedupStepsLeftToday(),
     uses: [
       `Ускорить изучение дара: −${SAPPHIRES.speedup.chunkMin} мин за ${sapphires(SAPPHIRES.speedup.price)} (не больше ${SAPPHIRES.speedup.dailyChunks} раз в сутки и не больше ${Math.round(SAPPHIRES.speedup.maxCutPct * 100)}% таймера)`,

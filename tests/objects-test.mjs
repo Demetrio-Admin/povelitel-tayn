@@ -328,7 +328,7 @@ console.log('\nПервая глава v0.10.0: алтарь, ворота, Ас
   setM(100);
   let fin = null; const offF = bus.on(MSG.FINAL_SCREEN, (x) => { fin = x; });
   await node.repair();
-  ok(st.hasEvent('chapter_1_complete') && st.item('restoration_bundle') === 0 && Math.abs(vitals.mana(st) - 80) < 0.5 && st.item('coins') === coins0 + 30 && fin, 'ремонт: связка и 20 маны списаны, +30 монет, финал главы');
+  ok(st.hasEvent('chapter_1_complete') && st.item('restoration_bundle') === 0 && Math.abs(vitals.mana(st) - 80) < 0.5 && st.item('coins') === coins0 + 60 && fin, 'ремонт: связка и 20 маны списаны, +60 монет, финал главы');
   ok(!node.isAvailable(), 'восстановленный узел повторно не ремонтируется');
   offF?.();
 }

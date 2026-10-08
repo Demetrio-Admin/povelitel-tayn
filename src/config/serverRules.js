@@ -9,7 +9,7 @@ import { VITALS, HERO_RECOVERY } from './balance.hero.js';
 import { POTIONS } from './resources.js';
 import { ZONES, INTERACTIVES, ENEMY_SPAWNS } from './world.layout.js';
 import { ABILITIES, WORLD_MANA_COST, WEIGHT_CLASSES, SCHOOL_XP_PER_USE } from './balance.abilities.js';
-import { UPGRADES, TIMER_MODE, EVENT_REWARDS, BRANCH_RESPEC } from './balance.progression.js';
+import { UPGRADES, TIMER_MODE, EVENT_REWARDS, BRANCH_RESPEC, BALANCE_MIGRATION } from './balance.progression.js';
 import { SIDE_QUESTS, SIDE_QUEST_ORDER, questEvent } from './quests.js';
 import { STORY_USES, FIRST_CRAFT, MIGRATION_V10 } from './storyItems.js';
 import { buildSlotRules } from './build.js';
@@ -27,6 +27,7 @@ import { duelRules } from './duel.js';
  */
 export function grantOf(r = {}) {
   const g = {};
+  if (r.topUp) g.topUp = structuredClone(r.topUp);
   if (r.heroXP) g.heroXP = r.heroXP;
   if (r.coins) g.coins = r.coins;
   if (r.items && Object.keys(r.items).length) g.items = { ...r.items };
@@ -76,7 +77,7 @@ export const EVENT_ACTIONS = {
   unlock_ice_1: { requires: ['ch2_rescue_done', 'warm_potion_crafted'], unlock: { ice: 1 } },
   ch2_ice_trained: { requires: ['ch2_training_done'] },
   ch2_choice_start: { requires: ['ch2_ice_trained'] },
-  ch2_quarter_cleared: { requires: ['ch2_ice_guardian_defeated', 'ch2_deep_1', 'ch2_deep_2'] },
+  ch2_quarter_cleared: { requires: ['ch2_ice_guardian_defeated', 'ch2_deep_1', 'ch2_deep_2'], sapphires: 1 },
   // v0.22.0 — квесты 11–15 (Нэрис, Тихон, Илария, Северин, Ровена, Мирра)
   unlock_ice_2: { requires: ['ch2_quarter_cleared'], consume: { coins: GIFT_PRICES.storyIce2.coins }, unlock: { ice: 2 } },
   ch2_brittle_done: { requires: ['ch2_brittle_1', 'ch2_brittle_2', 'brittle_flask_crafted'] },
@@ -91,7 +92,7 @@ export const EVENT_ACTIONS = {
   ch2_severin_confronted: { requires: ['ch2_lab_reported'] },
   ch2_coven_met: { requires: ['ch2_severin_confronted'] },
   ch2_coven_supplies: { requires: ['ch2_coven_met'], consume: { crystal_guard: 1, frost_herb: 2 } },
-  ch2_coven_ready: { requires: ['ch2_unstable_1', 'ch2_unstable_2', 'ch2_coven_supplies'] },
+  ch2_coven_ready: { requires: ['ch2_unstable_1', 'ch2_unstable_2', 'ch2_coven_supplies'], sapphires: 1 },
   ch2_final_start: { requires: ['ch2_coven_ready'] },
   // Лёд III перед боем: ветка выбирается один раз (ch2_ice3 — общая отметка, по ней появляется Северин)
   ch2_ice3_frost: { requires: ['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal'], blockedBy: ['ch2_ice3'], consume: { coins: GIFT_PRICES.storyIce3.coins }, unlock: { ice: 3 }, branch: { ice: 'frost' }, marks: ['ch2_ice3'] },
@@ -184,7 +185,7 @@ export function questRules() {
     const q = SIDE_QUESTS[id];
     out[id] = {
       start: questEvent(id, 'start'), done: questEvent(id, 'done'),
-      requires: q.requires?.event || null,
+      requires: q.requires?.event || null, requiresAll: q.requires?.events || [], sapphires: q.reward?.sapphires || 0,
       objectives: q.objectives.map(o => (o.type === 'item' ? { type: 'item', item: o.item, count: o.count }
         : o.type === 'enemy' ? { type: 'enemy', id: o.id } : { type: 'event', key: o.key })),
       consume: { ...(q.turnIn?.consume || {}) },
@@ -252,7 +253,7 @@ export function serverRules() {
   }]));
   const eventRewards = Object.fromEntries(Object.entries(EVENT_REWARDS).map(([k, r]) => [k, grantOf(r)]));
   return {
-    recipes, uses: STORY_USES, firstCraft: FIRST_CRAFT, migration: MIGRATION_V10, vitals, potions, world: worldRules(),
+    balanceMigration: BALANCE_MIGRATION, recipes, uses: STORY_USES, firstCraft: FIRST_CRAFT, migration: MIGRATION_V10, vitals, potions, world: worldRules(),
     events, eventRewards, quests: questRules(), research: researchRules(), build: buildRules(), spawnStart: spawnStartRules(),
     sapphires: sapphireRules(), bag: bagRules(),
     shop: shopRules(),             // v0.19.0: торговец

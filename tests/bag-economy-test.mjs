@@ -52,6 +52,7 @@ try {
   assert.equal(forged.objects.player_bag.capacity, 100); assert.deepEqual(forged.objects.player_bag.pending, {}); assert.equal(forged.wallet.sapphires, 3);
   await assert.rejects(() => asPlayer(() => q("select public._bag_write($1,'{}')", [uid])), /permission denied/);
   console.log('✓ Browser sync and direct helper calls cannot forge capacity, rewards or money.');
+  await db.exec(readFileSync('supabase/migrations/20261007_balance_v30.sql', 'utf8'));
   await sapphires(500);
   const buyId = 'expand-bag-test-01'; s = await action('bag_expand', { price: 0, increment: 99999 }, buyId);
   assert.equal(s.objects.player_bag.capacity, 150); assert.equal(s.wallet.sapphires, 400);
@@ -90,12 +91,12 @@ try {
   console.log('✓ Gift research charges both currencies, materials and XP once; refusal is atomic and completion raises the gift.');
   await events(['ch2_quarter_cleared']); await seed({ coins: 500 }); await sapphires(0);
   s = await action('event', { key: 'unlock_ice_2' }); assert.ok(s.action.ok); assert.equal(s.abilities.ice.level, 2); assert.equal(s.inventory.coins, 0); assert.equal(s.wallet.sapphires, 0);
-  await events(['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal']); await seed({ coins: 2999 });
+  await events(['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal']); await seed({ coins: 1499 });
   s = await action('event', { key: 'ch2_ice3_shard' }); assert.equal(s.action.reason, 'missing'); assert.equal(s.abilities.ice.level, 2);
-  await seed({ coins: 3000 }); s = await action('event', { key: 'ch2_ice3_shard' }); assert.ok(s.action.ok); assert.equal(s.inventory.coins, 0); assert.equal(s.abilities.ice.level, 3);
+  await seed({ coins: 1500 }); s = await action('event', { key: 'ch2_ice3_shard' }); assert.ok(s.action.ok); assert.equal(s.inventory.coins, 0); assert.equal(s.abilities.ice.level, 3);
   console.log('✓ Nerys story upgrades require the stated coins and no sapphires; no free event bypass.');
   await capacity(150);
   s = await asPlayer(async () => (await q("select public.reset_player('warlock') j")).rows[0].j);
   assert.equal(s.objects.player_bag.capacity, 150); assert.deepEqual(s.objects.player_bag.pending, {});
   console.log('✓ Paid capacity survives character reset; pending rewards and old items reset normally.');
-} finally { await db.close(); }
+} catch (error) { console.error(error); throw error; } finally { await db.close(); }

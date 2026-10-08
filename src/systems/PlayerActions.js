@@ -38,6 +38,7 @@ export class PlayerActions {
       if (d) items[k] = d;
     }
     return {
+      sapphires: (after.wallet?.sapphires || 0) - (before.wallet?.sapphires || 0),
       heroXP: after.heroXP - before.heroXP,
       levelUps: HERO_LEVELS.filter(r => r.level > before.heroLevel && r.level <= after.heroLevel),
       items,
@@ -74,6 +75,7 @@ export class PlayerActions {
         if (r.reason !== 'network') break;
         await sleep(3000);
       }
+      if (r?.ok && act.op === 'event' && r.outcome?.sapphires > 0) this.bus?.emit(MSG.REWARD, { granted: { sapphires: r.outcome.sapphires } });
       if (!r?.ok) {
         if (r?.reason !== 'session') console.warn('[PlayerActions] сервер не подтвердил', act.op, r?.reason, r?.error || '');
         this.bus?.emit(MSG.QUEST_CHANGED);
@@ -121,7 +123,7 @@ export class PlayerActions {
   }
 
   /** v0.14.0: бой начался — сервер запоминает состояние героя; в ответе его HP и мана на старт боя (они же в state.data). */
-  combatStart(spawn, enemy) { return this.run({ op: 'combat_start', spawn, enemy }); }
+  combatStart(spawn, enemy) { return this.run({ op: 'combat_start', spawn, enemy, balanceVersion: 30 }); }
 
   /**
    * v0.14.0: запись боя на проверку. Успех: { ok, outcome: 'victory'|'defeat'|'retreat', verdict, outcome (изменения: опыт, уровни, предметы, события) }.
@@ -181,5 +183,5 @@ export class PlayerActions {
   dailyDone(offer) { return this.run({ op: 'daily_done', offer }); }
   covenGive(item, qty) { return this.run({ op: 'coven_give', item, qty }); }   // v0.25.0: материалы в цель недели ковена
   covenClaim() { return this.run({ op: 'coven_claim' }); }
-  duelStart() { return this.run({ op: 'duel_start' }); }   // v0.26.0: вызов на Дуэль (соперника подбирает сервер)
+  duelStart() { return this.run({ op: 'duel_start', balanceVersion: 30 }); }   // v0.26.0: вызов на Дуэль (соперника подбирает сервер)
 }

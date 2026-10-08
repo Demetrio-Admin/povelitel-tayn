@@ -8,7 +8,7 @@ export const SAPPHIRES = {
   speedup: { chunkMin: 15, price: 1, maxCutPct: 0.75, minLeftSec: 60, dailyChunks: 24 },
   respec: 5,                     // смена ветки вместо монет (BRANCH_RESPEC.coins)
   preset: { price: 30, max: 3 }, // первый пресет бесплатный, следующие — за сапфиры, всего не больше max
-  welcome: 3,                    // один раз — за открытие кошелька (в главе II — «Банк»)
+  welcome: 3, welcomeEvent: 'ch2_city_arrived',                    // один раз — за открытие кошелька (в главе II — «Банк»)
 };
 
 /** Правила для сервера (_game_rules) и JS-зеркала: всё в миллисекундах. */
@@ -16,6 +16,6 @@ export function sapphireRules() {
   const s = SAPPHIRES.speedup;
   return {
     speedup: { chunkMs: s.chunkMin * 60_000, price: s.price, maxCutPct: s.maxCutPct, minLeftMs: s.minLeftSec * 1000, dailyChunks: s.dailyChunks },
-    respec: SAPPHIRES.respec, presetPrice: SAPPHIRES.preset.price, presetMax: SAPPHIRES.preset.max, welcome: SAPPHIRES.welcome,
+    respec: SAPPHIRES.respec, presetPrice: SAPPHIRES.preset.price, presetMax: SAPPHIRES.preset.max, welcome: SAPPHIRES.welcome, welcomeEvent: SAPPHIRES.welcomeEvent,
   };
 }

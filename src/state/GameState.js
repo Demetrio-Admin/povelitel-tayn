@@ -2,7 +2,7 @@
 // Не зависит от Phaser: тестируется в node (tests/run-tests.js).
 
 import { HERO_LEVELS } from '../config/balance.hero.js';
-import { UPGRADES, TIMER_MODE, BRANCH_RESPEC } from '../config/balance.progression.js';
+import { UPGRADES, TIMER_MODE, BRANCH_RESPEC, BALANCE_MIGRATION } from '../config/balance.progression.js';
 import { ABILITIES } from '../config/balance.abilities.js';
 import { WORLD } from '../config/world.layout.js';
 import { SAVE } from '../config/game.config.js';
@@ -28,7 +28,7 @@ export function createDefaultState(heroId = DEFAULT_HERO_ID) {
     iceLevel: 0,   // v0.18.0
     schoolXP: { telekinesis: 0, fire: 0, seal: 0, ice: 0 },
     unlockedAbilities: [],
-    completedEvents: [],
+    completedEvents: [BALANCE_MIGRATION.event],
     openedPaths: [],
     defeatedEnemies: [],
     inventory: { coins: 0, lunar_shard: 0, lunar_flame: 0 },
@@ -73,6 +73,14 @@ export class GameState {
       const parsed = JSON.parse(raw);
       if (parsed.version !== SAVE_VERSION) return false;
       this.data = { ...createDefaultState(), ...parsed };
+      // Local old saves receive only missing v0.30 rewards, once. Cloud saves use the SQL migration.
+      if (!this.hasEvent(BALANCE_MIGRATION.event)) {
+        for (const [ev, n] of Object.entries(BALANCE_MIGRATION.coins)) if (this.hasEvent(ev)) this.addItem('coins', n);
+        for (const [ev, n] of Object.entries(BALANCE_MIGRATION.sapphires)) if (this.hasEvent(ev)) this.data.wallet.sapphires += n;
+        if (this.hasEvent('lunar_quest_complete') && this.data.telekinesisLevel < 2) this.addItem('coins', Math.max(0, 195 - this.item('coins')));
+        if (this.hasEvent('chapter_2_complete')) this.addHeroXP(Math.max(0, 7900 - this.data.heroXP));
+        this.markEvent(BALANCE_MIGRATION.event); this.save();
+      }
       return true;
     } catch (e) {
       console.warn('[GameState] load failed', e);
@@ -193,6 +201,7 @@ export class GameState {
     const granted = { heroXP: 0, schoolXP: {}, items: {} };
     if (reward.schoolXP) for (const [k, v] of Object.entries(reward.schoolXP)) { this.addSchoolXP(k, v); granted.schoolXP[k] = v; }
     if (reward.items) for (const [k, v] of Object.entries(reward.items).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) { if (v > 0) { this.awardItem(k, v); granted.items[k] = v; } }
+    if (reward.sapphires) { this.data.wallet.sapphires += reward.sapphires; granted.sapphires = reward.sapphires; }
     if (reward.coins) { this.addItem('coins', reward.coins); granted.items.coins = (granted.items.coins || 0) + reward.coins; }
     if (reward.topUpFor) {
       const up = UPGRADES[reward.topUpFor];
@@ -208,7 +217,8 @@ export class GameState {
       }
     }
     let levelUps = [];
-    if (reward.heroXP) { levelUps = this.addHeroXP(reward.heroXP); granted.heroXP = reward.heroXP; }
+    const xp = Math.max(reward.heroXP || 0, (reward.topUp?.heroXP || 0) - this.data.heroXP);
+    if (xp) { levelUps = this.addHeroXP(xp); granted.heroXP = xp; }
     return { levelUps, granted };
   }
 

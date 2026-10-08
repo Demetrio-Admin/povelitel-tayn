@@ -176,6 +176,10 @@ export const CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }, { x: 236
 
 // v0.20.0: квесты 1–5 главы II (chapter-2-quests-v0.1.md): дорога, площадь, след, Архив, Общество.
 export const CITY_INTERACTIVES = [
+  { id: 'sapphire_city_cache_1', kind: 'chest', x: 2730, y: 3480, texture: 'chest_01', radius: 100,
+    collide: { w: 50, h: 24 }, requiresEvent: 'ch2_city_arrived', reward: { sapphires: 1 }, hint: 'Тайник у площади' },
+  { id: 'sapphire_city_cache_2', kind: 'chest', x: 2910, y: 3960, texture: 'chest_01', radius: 100,
+    collide: { w: 50, h: 24 }, requiresEvent: 'ch2_quarter_cleared', reward: { sapphires: 1 }, hint: 'Тайник у старой ограды' },
   // v0.27.0: выходы на карту мира (лес и город — разные локации, переход — только через карту у выхода)
   // Прежний декоративный указатель d05 у перекрёстка теперь открывает карту.
   { id: 'exit_forest', kind: 'exit', x: 1104, y: 4416, texture: 'signpost_01', radius: 110, collide: { w: 24, h: 10 }, hint: 'Карта мира' },

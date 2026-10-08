@@ -377,7 +377,9 @@ console.log('\n[v0.17.0] Сапфиры: модель окон');
   ok([1, 2, 5, 11, 21, 22, 25, 111].map(sapphireWord).join() === 'сапфир,сапфира,сапфиров,сапфиров,сапфир,сапфира,сапфиров,сапфиров', 'склонение: 1 сапфир, 2 сапфира, 5 сапфиров, 11 сапфиров, 21 сапфир');
   const w = ready(world());
   w.state.data.wallet.sapphires = 0;
-  ok(w.state.sapphires() === 0 && walletView(w.state).welcome === SAPPHIRES.welcome, 'новый герой: 0 сапфиров, доступен подарок');
+  ok(w.state.sapphires() === 0 && walletView(w.state).welcome === 0, 'в лесу банковский подарок недоступен');
+  w.state.markEvent('ch2_city_arrived');
+  ok(walletView(w.state).welcome === SAPPHIRES.welcome, 'в городе доступен банковский подарок');
   w.state.data.wallet = { sapphires: 1, daily: {}, welcome: true };
   w.clock.t = 1_000_000;
   w.state.data.research = { upgradeId: 'seal_2', startedAt: 1_000_000, durationMs: 30 * 60_000 };
@@ -485,7 +487,7 @@ console.log('\n[v0.19.0] Экономика главы II: зелья, амул�
   // амулет: уровни
   ok(amuletEffect('amulet_focus', 0).damageMult === 1.12 && amuletEffect('amulet_focus', 3).damageMult === 1.21, 'Сосредоточение: +12% → +21% на +3');
   ok(amuletEffect('amulet_forest', 2).incomingMult === 0.7 && amuletEffect('amulet_forest', 2).damageMult === 0.92, 'Лесной +2: урон по герою −30%, цена (−8% урона) прежняя');
-  ok(amuletEffect('amulet_frost', 3).iceMult === 1.175 && amuletEffect('amulet_lunar', 9).manaRescue.gainPct === 0.875, 'Инея +3: Лёд +17,5%; уровень не выше максимума');
+  ok(amuletEffect('amulet_frost', 3).iceMult === 1.175 && amuletEffect('amulet_lunar', 9).manaRescue.gainPct === 0.8, 'Инея +3: Лёд +17,5%; уровень не выше максимума');
   ok(AMULET_UPGRADES.map(u => u.coins).join() === '120,220,400', 'цены улучшения: 120 / 220 / 400 монет + материалы');
   // бой: уровень амулета работает, Амулет инея усиливает Лёд
   const w = ready(world()); w.abilities.unlock('ice', 1);

@@ -38,6 +38,8 @@ export function startState(ctx, nowMs = Date.now()) {
   snap.abilities = JSON.parse(JSON.stringify(ctx.abilities));
   snap.inventory = { ...ctx.potions };
   snap.hp = ctx.hp; snap.mana = ctx.mana;
+  // Contexts from pre-v0.30 clients use the old mana/amulet physics. The server stamps the selected version.
+  snap.combatCtx = { ...ctx, balanceVersion: ctx.balanceVersion === 30 ? 30 : 29 };
   snap.objects = ctx.build ? { player_build: JSON.parse(JSON.stringify(ctx.build)) } : {};
   const st = new GameState(null, () => nowMs);
   st.setData(fromSnapshot(snap));

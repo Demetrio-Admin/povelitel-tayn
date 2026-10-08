@@ -1,6 +1,6 @@
 // v0.26.0 — Магическая Дуэль: профиль соперника из слепка, рейтинг (Эло), лиги, сезоны, попытки, бой на JS-зеркале с проверкой записи.
 //   node tests/duel-test.mjs
-import { DUEL, LEAGUES, leagueOf, seasonOf, seasonEndMs, ratingDelta, duelEnemyDef, duelSlots } from '../src/config/duel.js';
+import { DUEL, LEAGUES, leagueOf, seasonOf, seasonEndMs, ratingDelta, duelEnemyDef, duelSlots, duelRules, seasonSapphires, promoSapphires } from '../src/config/duel.js';
 import { applyAction, emptySnapshot, combatApply, duelStateOf } from '../src/cloud/playerModel.js';
 import { verifyCombat } from '../src/cloud/combatVerify.js';
 import { playBot } from './helpers/combat-bot.mjs';
@@ -79,6 +79,23 @@ console.log('\nДуэль: сервер (JS-зеркало)');
   T = seasonEndMs(0) + 1000;
   const ns = duelStateOf(s, T);
   ok(ns.season === 1 && ns.rating === 1200 && ns.wins === 0, 'новый сезон: рейтинг наполовину к 1000, счёт побед с нуля');
+  ok(ns.prev?.season === 0 && ns.prev.rating === 1400 && ns.prev.wins === s.objects.duel.wins, 'итог прошлого сезона запоминается для награды');
+  s.objects.duel = ns;
+  ok(duelStateOf(s, T + DUEL.dayMs).prev?.season === 0, 'внутри сезона итог переносится как есть');
+  ok(!duelStateOf({ objects: {} }, T).prev, 'у нового игрока прошлого сезона нет');
+}
+
+console.log('\nДуэль: сапфиры арены (v0.34.0)');
+{
+  const ids = LEAGUES.map((l) => l.id);
+  ok(ids.every((id) => seasonSapphires(id) > 0) && ids.slice(1).every((id) => promoSapphires(id) > 0) && promoSapphires('bronze') === 0, 'итог сезона у каждой лиги, бонус — у всех, кроме Бронзы');
+  const seas = ids.map(seasonSapphires), pro = ids.map(promoSapphires);
+  ok(seas.every((v, i) => i === 0 || v > seas[i - 1]) && pro.slice(1).every((v, i) => i === 0 || v > pro[i]), 'награды растут вместе с лигой');
+  ok(seasonSapphires('bronze') === 10 && seasonSapphires('legend') === 150 && DUEL.sapphires.minBattles === 5, 'Бронза 10 … Высшая лига 150, минимум 5 боёв');
+  const r = duelRules();
+  ok(r.leagues.length === 7 && r.leagues[2].id === 'gold' && r.leagues[2].from === 1250 && r.sapphires.season.master === 120, 'правила для сервера: лиги и награды');
+  const s0 = emptySnapshot();
+  ok(applyAction(s0, { op: 'duel_season' }).result.reason === 'offline', 'без сервера сапфиры арены не выдаются');
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Дуэль: всё в порядке');

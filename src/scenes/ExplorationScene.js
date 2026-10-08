@@ -43,6 +43,7 @@ import { enemyDownNow } from '../state/enemyRep.js';
 import { IceObject } from '../objects/IceObject.js';
 import { BoardObject } from '../objects/BoardObject.js';
 import { GateObject, SealSigilObject, DustStashObject, ForestNodeObject } from '../objects/ChapterObjects.js';
+import { sapphires as sapphireText } from '../systems/wallet.js';
 
 const ALL_TARGETS = new Map([...INTERACTIVES, ...ENEMY_SPAWNS].map(o => [o.id, o]));   // v0.27.0: id → место (для наведения через выход)
 
@@ -1029,6 +1030,7 @@ export class ExplorationScene extends Phaser.Scene {
       this.toast({ attempts: 'На сегодня попытки Дуэли закончились.', locked: 'Дуэль откроется после главы II.', combat: 'Сначала закончите бой.', network: 'Нет связи с сервером.' }[r?.reason] || 'Не удалось начать Дуэль.', COLORS.danger);
       return;
     }
+    if (r.seasonReward?.sapphires > 0) this.toast(`Награда сезона ${r.seasonReward.season}: +${sapphireText(r.seasonReward.sapphires)}`, 0x6fa8ff);   // v0.34.0
     const opp = r.opponent || {};
     this.toast(`Соперник: ${opp.name}${opp.ghost ? '' : `, ${opp.level} уровень`}`, COLORS.gold);
     services.audio.play('combat_start');

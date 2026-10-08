@@ -58,8 +58,9 @@ console.log('\nДоска поручений: сервер (JS-зеркало)')
       ok(act({ op: 'daily_done', offer: id }).reason === 'progress', `«${DAILY_POOL[id].title}»: без новых побед — ещё не готово`);
       s.objects[`rep:${g.spawns[0]}`] = { wins: ((s.objects[`rep:${g.spawns[0]}`] || {}).wins || 0) + g.count, at: T };
     }
-    const xp = s.xp;
+    const xp = s.xp, sap = s.wallet?.sapphires || 0;
     ok(act({ op: 'daily_done', offer: id }).ok && s.xp - xp === DAILY_POOL[id].reward.heroXP, `«${DAILY_POOL[id].title}» сдано: награда по таблице`);
+    ok(DAILY_POOL[id].reward.sapphires === DAILY.sapphires && (s.wallet?.sapphires || 0) - sap === 3, `«${DAILY_POOL[id].title}»: +3 сапфира за поручение`);
   }
   ok(act({ op: 'daily_done', offer: offers[0] }).reason === 'already', 'сданное второй раз не сдать');
   // новый день — новая доска, счётчик взятых сброшен

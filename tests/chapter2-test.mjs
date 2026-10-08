@@ -242,8 +242,8 @@ console.log('\nГлава II, квесты 6–10: сервер (JS-зеркал
   ok(boss.ok && boss.events.includes('ch2_severin_defeated') && s.inventory.cold_heart === 1, `Северин побеждён за ${Math.round(boss.time || 0)} с: Сердце холода` + (boss.ok ? '' : ` ${boss.reason}`));
   ok(act({ op: 'world', obj: 'final_letters' }).ok && act({ op: 'event', key: 'ch2_epilogue' }).ok, 'письма прочитаны, эпилог с Иларией');
   const sap = walletOf(s.wallet).sapphires;
-  ok(act({ op: 'event', key: 'chapter_2_complete' }).ok && walletOf(s.wallet).sapphires === sap + 5 && s.quests.includes('title_frost_survivor'), 'Мирра: глава II завершена, 5 сапфиров и титул');
-  ok(act({ op: 'event', key: 'chapter_2_complete' }).reason === 'already' && walletOf(s.wallet).sapphires === sap + 5, 'награда главы — один раз');
+  ok(act({ op: 'event', key: 'chapter_2_complete' }).ok && walletOf(s.wallet).sapphires === sap + 50 && s.quests.includes('title_frost_survivor'), 'Мирра: глава II завершена, 50 сапфиров и титул');
+  ok(act({ op: 'event', key: 'chapter_2_complete' }).reason === 'already' && walletOf(s.wallet).sapphires === sap + 50, 'награда главы — один раз');
   ok(s.level >= 14 && s.level <= 15, `после главы II герой на ${s.level} уровне (по балансу 14–15)`);
 }
 

@@ -1,14 +1,15 @@
 // v0.17.0 — Сапфиры: премиальная валюта (docs/design/stage-2-design-pack-v0.2.md §34–35, chapter-2-balance-v0.1.md §31–33).
 // Баланс и журнал — только на сервере (таблицы player_wallet и sapphire_ledger, supabase/schema.sql); клиент лишь показывает.
-// Базовый курс: 1 рубль = 1 сапфир. Платёжный провайдер подключается отдельно.
+// Курс (v0.32.0): 1 рубль = 10 сапфиров, один сапфир — 10 копеек. Цены и награды заданы в сапфирах уже по этому курсу.
+// Платёжный провайдер подключается отдельно.
 export const SAPPHIRES = {
-  rublesPerSapphire: 1,
+  perRuble: 10, rublesPerSapphire: 0.1,
   // ускорение изучения: за price сапфиров таймер короче на chunkMin минут; совсем до нуля нельзя (остаётся не меньше minLeftSec
   // и не меньше (1 − maxCutPct) полного времени); за сутки (UTC) — не больше dailyChunks таких шагов
-  speedup: { chunkMin: 15, price: 1, maxCutPct: 0.75, minLeftSec: 60, dailyChunks: 24 },
-  respec: 5,                     // смена ветки вместо монет (BRANCH_RESPEC.coins)
-  preset: { price: 30, max: 3 }, // первый пресет бесплатный, следующие — за сапфиры, всего не больше max
-  welcome: 3, welcomeEvent: 'ch2_city_arrived',                    // один раз — за открытие кошелька (в главе II — «Банк»)
+  speedup: { chunkMin: 15, price: 10, maxCutPct: 0.75, minLeftSec: 60, dailyChunks: 24 },
+  respec: 50,                    // смена ветки вместо монет (BRANCH_RESPEC.coins)
+  preset: { price: 150, max: 3 }, // первый пресет бесплатный, следующие — за сапфиры, всего не больше max
+  welcome: 30, welcomeEvent: 'ch2_city_arrived',                    // один раз — за открытие кошелька (в главе II — «Банк»)
 };
 
 /** Правила для сервера (_game_rules) и JS-зеркала: всё в миллисекундах. */

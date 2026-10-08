@@ -59,7 +59,7 @@ export const windowsBag = {
         }
         if (Object.keys(b.pending).length) {
           const h = text(this, c, x, cy, 'Незабранные награды', w, { fontSize: UI.type.heading, color: COLORS.textGold }); cy += h.height + 6;
-          const n = text(this, c, x, cy, 'Освободите место и заберите награды. До этого новый бой не начнётся.', w, { color: COLORS.textDim }); cy += n.height + 10;
+          const n = text(this, c, x, cy, 'Награды сохранены. Освободите место и заберите их — новые бои доступны.', w, { color: COLORS.textDim }); cy += n.height + 10;
           for (const [id, qty] of Object.entries(b.pending)) { button(this, c, x + w / 2, cy, w, `${info(id).name} · ${qty}`, () => this.openBagItem(id, true)); cy += UI.touch.button + 10; }
         }
       } else if (this.bagTab === 'gifts') cy = this.bagGiftRows(c, x, cy, w);

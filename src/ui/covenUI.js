@@ -1,3 +1,4 @@
+import { showHeroProfile } from './heroProfileUI.js';
 // v0.25.0 — окно Ковенов (HTML поверх игры, как окна аккаунта: на телефоне так работает клавиатура для названия).
 // Без ковена: список ковенов (вступить) и «Основать ковен». В ковене: девиз, неделя (очки / цель), состав с ролями и действиями,
 // «Внести материалы», «Забрать награду недели», «Покинуть». Чат ковена — вкладка с его названием в окне чата.
@@ -116,7 +117,7 @@ export function showCovens(service, game, { onClose } = {}) {
       if (!m.me && canManage) acts.push(btn('Главой', () => act('transfer', m.ref)));
       if (!m.me && (canManage || (c.myRole === 'officer' && m.role === 'member'))) acts.push(btn('Исключить', () => act('kick', m.ref), 'danger'));
       members.append(el('div', { class: 'cov-item' },
-        el('div', { class: 'grow' }, el('b', { text: m.nickname + (m.me ? ' (вы)' : '') }), el('small', { text: `${COVEN_ROLES[m.role]} · вклад недели: ${m.given}` })), ...acts));
+        el('div', { class: 'grow' }, m.playerId ? btn(m.nickname + (m.me ? ' (вы)' : ''), () => showHeroProfile({ session: service.session, state: service.session.state, targetId: m.playerId }), 'link') : el('b', { text: m.nickname + (m.me ? ' (вы)' : '') }), el('small', { text: `${COVEN_ROLES[m.role]} · вклад недели: ${m.given}` })), ...acts));
     }
     // материалы
     const sel = el('select', { 'aria-label': 'Материал для ковена' }, ...Object.entries(COVENS.points).map(([id, p]) => el('option', { value: id, text: `${ITEMS[id]?.name || id} (${game.item(id)}) · ${p} оч.` })));

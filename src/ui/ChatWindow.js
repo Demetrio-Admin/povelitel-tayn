@@ -1,3 +1,4 @@
+import { showHeroProfile } from './heroProfileUI.js';
 import {
   createElement,
   X,
@@ -1137,6 +1138,7 @@ export class ChatWindow {
     );
     p.roles.forEach((r) => card.append(roleBadge(r)));
     if (p.playerId) card.append(el("p", "", `ID игрока: ${p.playerId}`));
+    if (p.playerId) card.append(button("Герой и подвиги", () => showHeroProfile({ session: this.service.session, state: this.service.session.state, targetId: p.playerId }), { symbol: UserRound }));
     s.append(card);
     const a = el("div", "chat-actions");
     if (!p.self && !this.restricted)

@@ -192,7 +192,7 @@ export const CITY_INTERACTIVES = [
   { id: 'city_board', kind: 'board', x: 2480, y: 3420, texture: 'notice_board_01', collide: { w: 80, h: 20 }, radius: 120, hint: 'Доска поручений' },
   { id: 'npc_ilaria', kind: 'npc', npc: 'ilaria', x: 2560, y: 3260, texture: 'npc_ilaria', collide: { w: 50, h: 24 }, radius: 140 },
   { id: 'npc_merchant', kind: 'npc', npc: 'merchant', x: 3350, y: 3500, texture: 'npc_merchant', collide: { w: 50, h: 24 }, radius: 140 },
-  { id: 'npc_banker', kind: 'npc', npc: 'banker', x: 3320, y: 3830, texture: 'npc_banker', collide: { w: 50, h: 24 }, radius: 140 },
+  { id: 'npc_banker', kind: 'npc', npc: 'banker', x: 3320, y: 3745, texture: 'npc_banker', collide: { w: 50, h: 24 }, radius: 180 },
   { id: 'npc_duelist', kind: 'npc', npc: 'duelist', x: 2640, y: 4040, texture: 'npc_duelist', collide: { w: 50, h: 24 }, radius: 140 },
   { id: 'plaza_trace', kind: 'seal_sigil', x: 2860, y: 3720, texture: 'city_frost_trace', litTexture: 'city_frost_trace', litTint: 0xe8d6ff, radius: 120,
     requiresEvent: 'ch2_met_ilaria', doneEvent: 'ch2_trace_astral', hint: 'Иней на камнях',

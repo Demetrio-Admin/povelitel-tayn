@@ -5,18 +5,7 @@
 import { ENEMIES } from './balance.enemies.js';
 import { ENEMY_SPAWNS } from './world.layout.js';
 
-export const MONSTER_LEVELS = {
-  forest_scavenger: 1, young_scavenger: 1,
-  rootling: 2,
-  forest_guardian: 4,
-  node_guardian: 6,
-  frost_critter: 7,
-  frost_collector: 8,
-  volunteer: 9, frost_collector_elite: 9,
-  ice_guardian: 10, experimental_construct: 10, frost_wolf: 10, grave_wisp: 10,
-  grave_hound: 11,
-  severin_boss: 12, frost_alpha: 12, barrow_warden: 12,
-};
+export const MONSTER_LEVELS = Object.fromEntries(Object.entries(ENEMIES).map(([id, def]) => [id, def.level]));
 
 export const RATINGS = {
   top: 50,          // сколько мест показывает таблица
@@ -35,7 +24,7 @@ export const TABS = [
 export const monsterLevel = (enemyId) => MONSTER_LEVELS[enemyId] || 0;
 export const monsterName = (enemyId) => ENEMIES[enemyId]?.name || enemyId;
 
-/** Лучшая победа по списку побеждённых точек боя: { enemy, level, power } или null. Тот же порядок, что в SQL: уровень, потом здоровье. */
+/** Лучшая победа по списку побеждённых точек боя: { enemy, level, power } или null. Тот же порядок, что в SQL: уровень, потом ранг типа врага (как в профиле). */
 export function bestKillOf(defeatedSpawnIds = []) {
   const enemyOf = Object.fromEntries(ENEMY_SPAWNS.map(s => [s.id, s.enemy]));
   let best = null;
@@ -43,7 +32,7 @@ export function bestKillOf(defeatedSpawnIds = []) {
     const enemy = enemyOf[id], level = monsterLevel(enemy);
     if (!level) continue;
     const power = ENEMIES[enemy]?.hp || 0;
-    if (!best || level > best.level || (level === best.level && power > best.power)) best = { enemy, level, power };
+    if (!best || level > best.level || (level === best.level && ENEMIES[enemy].rank > ENEMIES[best.enemy].rank)) best = { enemy, level, power };
   }
   return best;
 }
@@ -53,6 +42,7 @@ export function ratingsRules() {
   return {
     top: RATINGS.top, onlineSec: RATINGS.onlineSec,
     levels: { ...MONSTER_LEVELS },
+    rank: Object.fromEntries(Object.keys(MONSTER_LEVELS).map(k => [k, ENEMIES[k].rank])),
     power: Object.fromEntries(Object.keys(MONSTER_LEVELS).map(k => [k, ENEMIES[k]?.hp || 0])),
     spawns: Object.fromEntries(ENEMY_SPAWNS.filter(s => MONSTER_LEVELS[s.enemy]).map(s => [s.id, s.enemy])),
   };

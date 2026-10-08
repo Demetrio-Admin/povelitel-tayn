@@ -14,6 +14,7 @@ import { PlayerActions } from './systems/PlayerActions.js';
 import { setHeroSource, T, currentHero } from './state/hero.js';
 import { resolveMap } from './world/mapData.js';
 import { PlayerSession } from './cloud/PlayerSession.js';
+import { HeroProfileService } from './cloud/HeroProfileService.js';
 import { ChatService } from './cloud/ChatService.js';
 import { Presence } from './cloud/Presence.js';
 import { SupabaseApi } from './cloud/api.js';
@@ -72,6 +73,7 @@ export function initServices() {
   if (online) {
     services.session = new PlayerSession({ api, state: services.state, storage, saveDelayMs: CLOUD.saveDelayMs, minorDelayMs: CLOUD.minorDelayMs });
     services.chat = new ChatService(services.session);
+    services.profiles = new HeroProfileService(services.session);
     services.presence = new Presence(services.session);   // v0.29.0: знак «в игре» для списка онлайн
     installSessionUI(services.session);
   } else {

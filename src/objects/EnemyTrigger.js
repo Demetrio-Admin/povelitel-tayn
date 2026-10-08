@@ -38,8 +38,8 @@ export class EnemyTrigger {
     if (this.def.tint) this.sprite.setTint(this.def.tint);
     if (cfg.scale) this.sprite.setScale(this.sprite.scaleX * cfg.scale, this.sprite.scaleY * cfg.scale);
     this.sprite.setDepth(DEPTH.mainBase + cfg.y);
-    this.nameText = scene.add.text(cfg.x, cfg.y - this.sprite.displayHeight - 14, this.def.name, {
-      fontFamily: UI.font, fontSize: UI.type.small, color: '#ff8a7a', stroke: '#000', strokeThickness: 4,
+    this.nameText = scene.add.text(cfg.x, cfg.y - this.sprite.displayHeight - 14, `${this.def.name}\nУр. ${this.def.level} · ${this.def.difficulty === 'boss' ? 'Босс' : this.def.difficulty === 'elite' ? 'Элитный' : 'Обычный'}`, {
+      fontFamily: UI.font, fontSize: UI.type.small, align: 'center', color: '#ff8a7a', stroke: '#000', strokeThickness: 4,
     }).setOrigin(0.5, 1).setDepth(DEPTH.markers);
     this.baseScaleY = this.sprite.scaleY;
     this.idle = scene.tweens.add({ targets: this.sprite, scaleY: this.baseScaleY * 1.04, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });

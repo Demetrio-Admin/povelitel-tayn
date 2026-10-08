@@ -1,3 +1,4 @@
+import { enemyCaption } from '../config/enemyRanks.js';
 import Phaser from 'phaser';
 import { duelEnemyDef, leagueOf } from '../config/duel.js';
 import { duelStateOf } from '../cloud/playerModel.js';
@@ -100,7 +101,7 @@ export class CombatScene extends Phaser.Scene {
 
     this.events.once('shutdown', () => { services.combatSim = null; services.audio.lowHp = false; services.tutorial.hide(); });
     this.cameras.main.fadeIn(350);
-    this.showBanner(`Бой: ${this.def.name}`, COLORS.danger);
+    this.showBanner(`Бой: ${enemyCaption(this.def)}`, COLORS.danger);
     const first = !state.data.stats.combats.length;
     this.time.delayedCall(COMBAT.introSec * 1000, () => {
       this.started = true;
@@ -194,7 +195,7 @@ export class CombatScene extends Phaser.Scene {
   buildEnemyHud() {
     const W = VIEW.width;
     const y = 222;   // под верхним HUD (HP/мана) и левее колонки «Меню»
-    this.add.text(W / 2, y - 14, this.def.name + (this.def.tier === 'strong' ? '  ★' : ''), { fontFamily: FONT, fontSize: UI.type.heading, color: '#ffb3a8', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5, 1).setDepth(5000);
+    this.add.text(W / 2, y - 14, `${this.def.name}\n${this.def.level ? `Ур. ${this.def.level} · ${this.def.difficulty === 'boss' ? 'Босс' : this.def.difficulty === 'elite' ? 'Элитный' : 'Обычный'}` : 'Магическая Дуэль'}`, { fontFamily: FONT, fontSize: UI.type.body, align: 'center', color: '#ffb3a8', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5, 1).setDepth(5000);
     this.enemyHpBar = new UIBar(this, W / 2 - 260, y, 520, 34, 'hp', 5000);
     this.enemyHpText = this.add.text(W / 2, y, '', { fontFamily: FONT, fontSize: UI.type.small, color: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5002);
     this.statusText = this.add.text(W / 2, y + 26, '', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textGold, stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 620 } }).setOrigin(0.5, 0).setDepth(5000);

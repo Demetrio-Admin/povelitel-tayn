@@ -27,9 +27,10 @@ console.log('\nРейтинги: лучшая победа');
 {
   ok(bestKillOf([]) === null && bestKillOf(['no_such_spawn']) === null, 'без побед (или с неизвестной точкой) — лучшей победы нет');
   const a = bestKillOf(['scavenger_01', 'rootling_01', 'forest_guardian_01']);
-  ok(a.enemy === 'forest_guardian' && a.level === 4, 'из нескольких побед берётся самая высокая по уровню');
+  ok(a.enemy === 'forest_guardian' && a.level === ENEMIES.forest_guardian.level, 'из нескольких побед берётся самая высокая по уровню');
   const t = bestKillOf(['fw_alpha', 'gy_warden', 'final_severin']);
-  ok(t.enemy === 'severin_boss' && t.power === 1500, 'при равном уровне — монстр с большим здоровьем (Северин 1500)');
+  ok(t.enemy === 'severin_boss' && t.power === 1500, 'при равном уровне — ранг типа из профиля (Северин)');
+  ok(bestKillOf(['fw_wolf_1', 'gy_wisp_1']).enemy === 'grave_wisp', 'при одинаковом уровне профиль и рейтинг выбирают один тип по рангу');
   ok(bestKillOf(['scavenger_01', 'scavenger_02']).enemy === 'forest_scavenger', 'повторные победы над слабыми остаются слабой лучшей победой');
 }
 

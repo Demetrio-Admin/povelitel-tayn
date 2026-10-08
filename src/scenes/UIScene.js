@@ -81,7 +81,7 @@ export class UIScene extends Phaser.Scene {
       const bottom = [this.bottomShade, this.ctx, ...Object.values(this.buttons).flatMap(b =>
         [b.glow, b.orb, b.bg, b.icon, b.cd, b.cdText, b.lock, b.text])].filter(Boolean);
       const top = [this.topShade, this.portraitGlow, this.portrait, this.portraitHit, this.syncDot,
-        this.levelText, this.xpCaption, this.coinIcon, this.coinText, this.shardIcon, this.shardText,
+        this.levelText, this.xpCaption, this.coinIcon, this.coinText, this.sapphireIcon, this.sapphireText,
         this.hpText, this.hpIcon, this.manaText, this.manaIcon, this.researchText,
         this.journalBtn.c, this.menuBtn.c, this.hpGlow, this.manaGlow, this.hintPlate,
         ...[this.xpBar, this.hpBar, this.manaBar].flatMap(b => [b.trough, b.fill, b.frame])].filter(Boolean);
@@ -570,6 +570,7 @@ export class UIScene extends Phaser.Scene {
 
   pressModalButton(primary) {
     if (!this.modal) return;
+    if (this.modal.heroProfile) { this.modal.close?.(); return; }
     if (this.modal.chat) { if (!primary) this.chatWindow?.back(); return; }
     if (this.modal.menu) { this.closeMenu(); return; }
     if (this.modal.dialogue) { if (primary) this.modal.onPrimary(); else this.modal.onCancel(); return; }
@@ -580,6 +581,7 @@ export class UIScene extends Phaser.Scene {
 
   closeModal(button) {
     if (!this.modal) return;
+    if (this.modal.heroProfile) { this.modal.close?.(); return; }
     if (this.modal.chat) { this.chatWindow?.close(); return; }
     if (this.modal.menu) { this.closeMenu(); return; }
     if (this.modal.dialogue) { this.closeDialogue(true); return; }

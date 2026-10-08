@@ -1,3 +1,4 @@
+import { ENEMY_RANKS } from './enemyRanks.js';
 // Противники и боевые объекты поля. Источник: Combat Math v0.1 §6–§9.
 // Все тайминги — в секундах.
 //
@@ -451,3 +452,6 @@ export const COMBAT = {
   autoTarget: 'enemy',
   logDurations: true,
 };
+
+// Метаданные сложности не участвуют в расчёте урона.
+for (const [id, def] of Object.entries(ENEMIES)) Object.assign(def, ENEMY_RANKS[id]);

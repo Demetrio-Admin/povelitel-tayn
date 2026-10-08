@@ -42,6 +42,15 @@ await mute(async () => {
   } catch (e) { err = e; }
   ok(!err, 'HUD: создаётся, обновляется, переключает режимы' + (err ? ': ' + err.stack.split('\n').slice(0, 3).join(' | ') : ''));
 
+  // Action button switches between exported icons with different source resolutions.
+  const journalTexture = Reg.textures.get('icon_journal');
+  Reg.textures.set('icon_journal', { width: 2048, height: 1024 });
+  ui.onFocus({ icon: 'icon_journal', color: COLORS.gold, label: 'Поручения' });
+  ok(ui.ctxIcon.displayWidth === 60 && ui.ctxIcon.displayHeight === 30, 'контекстная книга из 2048px умещается в кнопку 60px');
+  ui.onFocus({ icon: 'icon_talk', color: COLORS.gold, label: 'Говорить' });
+  ok(Math.max(ui.ctxIcon.displayWidth, ui.ctxIcon.displayHeight) === 60, 'смена книги на разговор сохраняет размер кнопки');
+  Reg.textures.set('icon_journal', journalTexture); ui.onFocus(null);
+
   // ---- полосы на крайних значениях
   err = null;
   try {
@@ -249,11 +258,13 @@ await mute(async () => {
       let travel = null; const onT = (id) => { travel = id; }; sv.bus.on(MSG.MAP_TRAVEL, onT);
       h.openMenu(); h.modal.items.find(x => x.item.id === 'map').hit.emit('pointerdown');
       let t = h.modal ? texts(h.modal.container).join(' | ') : '';
-      ok(h.modal?.opts?.title === 'Карта мира' && !h.modal?.menu && t.includes('Лес Мирры') && t.includes('вы здесь') && t.includes('Город 🔒') && t.includes('Морозный лес 🔒') && t.includes('Старое кладбище 🔒'),
+      ok(h.modal?.opts?.title === 'Карта мира' && !h.modal?.menu && t.includes('Лес Мирры') && t.includes('вы здесь') && t.includes('Город') && t.includes('Морозный лес') && t.includes('Старое кладбище'),
         'меню → «Карта»: карта мира, «вы здесь», закрытые локации под замком');
       ok(h.modal.buttons.length === 1 && t.includes('Закрыть') && !t.includes('Отправиться'), 'из меню карта только для просмотра');
       const flat = (o, out = []) => { out.push(o); (o.children || []).forEach(x => flat(x, out)); return out; };
-      const pick = (name) => { const all = flat(h.modal.container); const b = all.find(o => typeof o.text === 'string' && o.text.startsWith(name)); const hit = all.find(o => o !== b && o.handlers?.pointerup && Math.abs(o.x - b.x) < 2 && Math.abs(o.y - (b.y + 1)) < 3); const sc = h.modal.scroll; h.input.activePointer = { x: sc.x + 5, y: sc.y + 5 }; hit.emit('pointerdown'); hit.emit('pointerup'); };
+      const lockCount = () => flat(h.modal.container).filter(o => o.texKey === 'icon_lock').length;
+      ok(lockCount() === 3, 'закрытые локации: три настоящие иконки замка, независимо от emoji-шрифта');
+      const pick = (name) => { const all = flat(h.modal.container); const b = all.find(o => typeof o.text === 'string' && o.text.startsWith(name)); const hit = all.find(o => o !== b && o.handlers?.pointerup && Math.abs(o.x - b.x) < 24 && Math.abs(o.y - (b.y + 1)) < 3); const sc = h.modal.scroll; h.input.activePointer = { x: sc.x + 5, y: sc.y + 5 }; hit.emit('pointerdown'); hit.emit('pointerup'); };
       pick('Город');
       t = texts(h.modal.container).join(' | ');
       ok(h.modal?.opts?.title === 'Карта мира' && t.includes('Город · Глава II') && t.includes('покажет Мирра'), 'точка на карте: описание локации и почему закрыта');
@@ -264,7 +275,7 @@ await mute(async () => {
       sv.bus.emit(MSG.OPEN_MAP, { exit: 'exit_forest' });
       pick('Город');
       t = texts(h.modal.container).join(' | ');
-      ok(t.includes('Отправиться: Город') && !t.includes('Город 🔒'), 'у выхода: открытая локация — «Отправиться»');
+      ok(t.includes('Отправиться: Город') && lockCount() === 2, 'у выхода: открытая локация — «Отправиться», замок города убран');
       h.closeModal(h.modal.buttons[0]);
       ok(travel === 'city' && !h.modal && !sv.modalOpen, '«Отправиться» — событие перехода в выбранную локацию');
       sv.bus.emit(MSG.OPEN_MAP, { exit: 'exit_forest' });
@@ -396,17 +407,16 @@ await mute(async () => {
     // все тексты сцены, включая вложенные в контейнеры (заглушка Phaser хранит объекты в scene._list)
     const labels = (scene) => { const out = []; const walk = (o) => { if (typeof o.text === 'string') out.push(o.text); (o.children || []).forEach(walk); }; scene._list.forEach(walk); return out; };
     const m1 = new MenuScene(); m1.create();
-    // v0.9.2: выбор героя — прямо на стартовом экране (переключатель «Ведьма | Колдун» и один предпросмотр)
-    ok(m1.accountButton?.text.text === 'Войти' && labels(m1).includes('Начать игру') && labels(m1).includes('✓ Ведьма') && labels(m1).includes('Колдун') && labels(m1).includes('Дары и характеристики одинаковые'),
-      'старт без входа: «Ведьма | Колдун», «Начать игру», «Войти», «Дары и характеристики одинаковые»');
-    ok(m1.picker.image.texture.key === 'hero_down' && labels(m1).includes('Ученица лесной ведьмы'), 'по умолчанию — ведьма: рисунок и роль');
+    ok(m1.accountButton?.text.text === 'Уже играли? Войти' && labels(m1).includes('Начать приключение') && labels(m1).includes('Ведьма') && labels(m1).includes('Колдун') && !labels(m1).includes('Дары и характеристики одинаковые'),
+      'старт: выбор героя, одно главное действие и вход; описания механики убраны');
+    ok(m1.hero === 'witch' && m1.picker.toggles.find(t => t.selected)?.heroId === 'witch', 'по умолчанию выбрана ведьма');
     m1.picker.toggles.find(t => t.heroId === 'warlock').hit.emit('pointerdown'); m1.picker.toggles.find(t => t.heroId === 'warlock').hit.emit('pointerup');
-    ok(m1.hero === 'warlock' && m1.picker.image.texture.key === 'warlock_down' && labels(m1).includes('✓ Колдун') && labels(m1).includes('Ученик лесной ведьмы') && !labels(m1).some(t => /Временный\s+рисунок/.test(t)),
-      'нажатие «Колдун»: сразу меняются рисунок, имя и роль; пометки временной графики нет');
+    ok(m1.hero === 'warlock' && m1.picker.toggles.filter(t => t.selected).length === 1 && m1.picker.toggles.find(t => t.selected)?.heroId === 'warlock',
+      'нажатие Колдун меняет выбранного героя; активный вариант один');
     ok(!ses.signedIn && !srv.calls.length, 'переключение предпросмотра не создаёт профиль и не обращается к серверу');
     m1.startNew();
     const choice = labels(m1);
-    ok(['Играть как гость', 'Создать аккаунт', 'У меня уже есть аккаунт'].every(t => choice.includes(t)), '«Начать игру» → «Как продолжить?» с тремя вариантами');
+    ok(['Играть как гость', 'Создать аккаунт', 'Уже играли? Войти'].every(t => choice.includes(t)), '«Начать игру» → «Как продолжить?» с тремя вариантами');
     m1.back();
     ok(!m1.choice && m1.hero === 'warlock', '«Назад» из «Как продолжить?» — выбор героя сохранён');
     await ses.playAsGuest(m1.hero);
@@ -443,7 +453,7 @@ await mute(async () => {
     ok(labels(m3).some(t => String(t).startsWith('Нюта_Лесная · уровень')), 'стартовый экран игрока: ник и уровень');
     services.session = null;
     const m4 = new MenuScene(); m4.create();
-    ok(labels(m4).some(t => String(t).startsWith('Режим разработки')), 'без сервера меню честно пишет «Режим разработки»');
+    ok(!labels(m4).some(t => /Режим разработки|Глава I|v0\./.test(t)), 'на стартовом экране нет технического текста');
   } catch (e) { err = e; }
   ok(!err, 'аккаунт: меню, выбор героя, HUD и пауза строятся' + (err ? ': ' + err.stack.split('\n').slice(0, 3).join(' | ') : ''));
 

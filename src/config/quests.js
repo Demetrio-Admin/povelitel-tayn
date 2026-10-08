@@ -19,6 +19,35 @@ export const SIDE_QUESTS = {
     reward: { heroXP: 15, coins: 25, items: { elixir_life: 1 } },
     rewardText: 'Настой жизни, 25 монет, 15 опыта',
   },
+  sq_mushrooms: {
+    title: 'Грибы для сушилки', giver: 'veda', place: 'Стартовая поляна',
+    summary: 'Веде нужны два лесных гриба. Соберите их в Старом лесу для сушилки травницы.',
+    requires: { event: 'sq_herbs_done', events: ['fire_gate_open'] },
+    objectives: [{ type: 'item', item: 'forest_mushroom', count: 2, text: 'Лесные грибы' }],
+    turnIn: { npc: 'veda', consume: { forest_mushroom: 2 } },
+    reward: { coins: 35, heroXP: 15, items: { elixir_mana: 1 } },
+    rewardText: 'Лунный эликсир, 35 монет, 15 опыта',
+  },
+  sq_resin: {
+    title: 'Смола для мази', giver: 'veda', place: 'Стартовая поляна',
+    summary: 'Принесите Веде три кусочка древесной смолы для лечебной мази.',
+    requires: { event: 'sq_mushrooms_done' },
+    objectives: [{ type: 'item', item: 'tree_resin', count: 3, text: 'Древесная смола' }],
+    turnIn: { npc: 'veda', consume: { tree_resin: 3 } },
+    reward: { coins: 45, heroXP: 15, items: { elixir_life: 1 } },
+    rewardText: 'Настой жизни, 45 монет, 15 опыта',
+  },
+  sq_veda_stock: {
+    title: 'Запас травницы', giver: 'veda', place: 'Стартовая поляна',
+    summary: 'Лес ожил. Пополните запасы Веды: одна лунная трава, один гриб и два кусочка смолы.',
+    requires: { event: 'sq_resin_done', events: ['chapter_1_complete'] },
+    objectives: [{ type: 'item', item: 'moon_herb', count: 1, text: 'Лунная трава' },
+      { type: 'item', item: 'forest_mushroom', count: 1, text: 'Лесные грибы' },
+      { type: 'item', item: 'tree_resin', count: 2, text: 'Древесная смола' }],
+    turnIn: { npc: 'veda', consume: { moon_herb: 1, forest_mushroom: 1, tree_resin: 2 } },
+    reward: { coins: 65, heroXP: 20, sapphires: 1 },
+    rewardText: '65 монет, 1 сапфир, 20 опыта',
+  },
   sq_dust: {
     title: 'Пыль древних рун',
     giver: 'selena',
@@ -42,6 +71,6 @@ export const SIDE_QUESTS = {
   },
 };
 
-export const SIDE_QUEST_ORDER = ['sq_herbs', 'sq_hunter', 'sq_dust'];
+export const SIDE_QUEST_ORDER = ['sq_herbs', 'sq_mushrooms', 'sq_resin', 'sq_veda_stock', 'sq_hunter', 'sq_dust'];
 
 export const questEvent = (id, kind) => `${id}_${kind}`; // sq_herbs_start / sq_herbs_done

@@ -1,7 +1,9 @@
+import { BAG } from '../config/bag.js';
+import { bindSceneViewport } from '../ui/viewport.js';
 import { T } from '../state/hero.js';
 import Phaser from 'phaser';
 import { VIEW, CAMERA, PLAYER, DEPTH, COLORS, SAVE } from '../config/game.config.js';
-import { WORLD, ZONES, GROUND, INTERACTIVES, ENEMY_SPAWNS } from '../config/world.layout.js';
+import { WORLD, ZONES, INTERACTIVES, ENEMY_SPAWNS } from '../config/world.layout.js';
 import { buildTerrain } from '../world/terrain.js';
 import { paintTerrainChunk, terrainChunks } from '../world/terrainPaint.js';
 import { applyPos } from '../world/mapData.js';
@@ -11,6 +13,7 @@ import { MapEditor } from '../systems/MapEditor.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { Player } from '../objects/Player.js';
+import { CityPresentation } from '../world/CityPresentation.js';
 import { InteractionSystem } from '../systems/InteractionSystem.js';
 import { TelekinesisObject } from '../objects/TelekinesisObject.js';
 import { FireObject } from '../objects/FireObject.js';
@@ -24,7 +27,7 @@ import { GatherObject } from '../objects/GatherObject.js';
 import { NpcObject } from '../objects/NpcObject.js';
 import { AlchemyObject } from '../objects/AlchemyObject.js';
 import { InspectObject } from '../objects/InspectObject.js';
-import { CONTENT_DECOR, AMBIENT } from '../config/world.content.js';
+import { AMBIENT } from '../config/world.content.js';
 import { LivingWorld } from '../world/life.js';
 import { POTIONS } from '../config/resources.js';
 import { HIGHLIGHT, STEP_GUIDE } from '../config/guidance.js';
@@ -33,6 +36,7 @@ import { drawPlate } from '../ui/widgets.js';
 import {
   applyDisplaySize, BookObject, ChestObject, PickupObject, AltarObject, FireCircleObject, TravelObject, ExitObject,
 } from '../objects/InteractiveObject.js';
+import { DISPLAY_SIZE } from '../config/assets.manifest.js';
 import { ZONE_EVENTS } from '../config/world.city.js';
 import { LOCATIONS, locationAt, locationById, locationOpen, inLocation, touchesLocation } from '../config/locations.js';
 import { enemyDownNow } from '../state/enemyRep.js';
@@ -82,6 +86,7 @@ export class ExplorationScene extends Phaser.Scene {
   constructor() { super('ExplorationScene'); }
 
   create() {
+    this.viewport = bindSceneViewport(this, { world: true });
     const { state, bus } = services;
     this.bus = bus;
     services.mode = 'exploration';
@@ -105,6 +110,8 @@ export class ExplorationScene extends Phaser.Scene {
     this.interactiveCfgs = applyPos(INTERACTIVES, this.map.pos).filter(here);
     this.enemyCfgs = applyPos(ENEMY_SPAWNS, this.map.pos).filter(here);
     this.propViews = new Map();
+    this.groundViews = new Map();
+    this.colliderViews = new Map();
 
     this.buildGround();
     this.buildColliders();
@@ -119,14 +126,22 @@ export class ExplorationScene extends Phaser.Scene {
     this.enemies = this.enemyCfgs.map(cfg => new EnemyTrigger(this, cfg));
     this.resumeEncounters();
     this.buildContentDecor();
+    this.cityPresentation = this.loc?.id === 'city' ? new CityPresentation(this) : null;
     this.setupLife();   // v0.28.0
     this.setupGuidance();
     this.refreshAll();
+    this.recoverCityPosition();
 
     // камера: героиня немного ниже центра (Blueprint §7)
     const cam = this.cameras.main;
     cam.setBounds(this.view.x, this.view.y, this.view.w, this.view.h);   // v0.27.0: камера — только своя локация
-    this.followOffsetY = (CAMERA.heroScreenY - 0.5) * VIEW.height + PLAYER.displayHeight * 0.4;
+    const followSize = () => {
+      this.followOffsetY = (CAMERA.heroScreenY - 0.5) * cam.height + PLAYER.displayHeight * 0.4;
+      this.follow();
+    };
+    this.scale.on?.('resize', followSize);
+    this.events.once('shutdown', () => this.scale.off?.('resize', followSize));
+    this.followOffsetY = (CAMERA.heroScreenY - 0.5) * cam.height + PLAYER.displayHeight * 0.4;
     this.follow();
     cam.fadeIn(500);
 
@@ -213,6 +228,21 @@ export class ExplorationScene extends Phaser.Scene {
     return fixed;
   }
 
+  /** A saved city position may now intersect a relocated wall or furnishing. Move only blocked feet locally. */
+  recoverCityPosition() {
+    if (services.edit || this.loc?.id !== 'city') return;
+    const p = { x: this.player.x, y: this.player.y }, { w, h } = PLAYER.hitbox;
+    const blocked = this.colliderObjects.some(o => {
+      const b = o.body;
+      return b && p.x + w / 2 > b.x && p.x - w / 2 < b.x + b.width && p.y > b.y && p.y - h < b.y + b.height;
+    });
+    if (!blocked) return;
+    const route = findPath(this.navGrids(), p, p);
+    if (!route || Math.hypot(route.end.x - p.x, route.end.y - p.y) > 160) return;
+    this.player.setPosition(route.end.x, route.end.y);
+    services.state.data.player = { ...route.end };
+  }
+
   /**
    * v0.10.0: Селена открывает Астрал I (внутренний id 'seal') — сюжетно, без уровня, платы и таймера: дар, событие unlock_seal_1 и разовые +60 опыта.
    * Повторный вызов ничего не выдаёт (событие уже есть).
@@ -238,25 +268,39 @@ export class ExplorationScene extends Phaser.Scene {
    * окно объясняет «3 из 4» и ведёт в «Дары». v0.22.0: 'ice:2' — Лёд II (unlock_ice_2), 'ice:3:frost' / 'ice:3:shard' — Лёд III
    * с веткой (ch2_ice3_frost / ch2_ice3_shard). Повтор ничего не выдаёт.
    */
-  unlockGift(spec) {
+  async unlockGift(spec) {
     const [id, lvlS, branch] = String(spec).split(':');
     const level = Number(lvlS) || 1;
-    if (id !== 'ice') return;
+    if (id !== 'ice' || (level === 3 && !['frost', 'shard'].includes(branch))) return;
     const GIFT = {
       1: { event: 'unlock_ice_1', title: 'Лёд I', text: 'Лёд замораживает воду и нестабильную магию, а в бою замедляет врага: его удары и подготовка сильного удара идут медленнее.\n\n'
-        + 'Теперь даров четыре, а слотов — три. Работают только дары в слотах — и в бою, и в мире. Выберите, какой дар отложить.' },
+        + 'Теперь даров четыре, а слотов — три. Работают только дары в слотах — и в бою, и в мире. Поставьте Лёд в один из слотов, чтобы его кнопка появилась внизу.' },
       2: { event: 'unlock_ice_2', title: 'Лёд II — Хрупкость', text: 'После удара Льдом враг становится хрупким: следующий удар Телекинеза, Огня или Астрала сильнее, '
         + 'а тяжёлый камень по хрупкой цели ещё и разбивает броню.\n\nСначала Лёд — потом сильный удар.' },
       3: { event: `ch2_ice3_${branch}`, title: `Лёд III — ${branch === 'shard' ? 'Осколок' : 'Мороз'}`, text: branch === 'shard'
         ? 'Ветка Осколка: удар Льда по хрупкой цели раскалывает её (урон ×2,2), а Хрупкость от других даров сильнее. Замедление слабое.'
         : 'Ветка Мороза: враг на 55% медленнее шесть секунд — больше времени, чтобы прервать удар. Сам удар Льда слабее.' },
     }[level];
-    const { state, abilities, quests } = services;
-    if (!GIFT || state.hasEvent(GIFT.event) || (level === 3 && state.hasEvent('ch2_ice3'))) return;
-    abilities.unlock('ice', level);
-    if (level === 3) state.setBranch?.('ice', branch);
-    quests.complete(GIFT.event);
-    if (level === 3) state.markEvent('ch2_ice3');
+    const { state, actions } = services;
+    if (!GIFT || this.giftPending || state.hasEvent(GIFT.event) || (level === 3 && state.hasEvent('ch2_ice3'))) return;
+    if (level > 1 && actions.online && state.getObject('player_bag')?.version !== BAG.version) { this.toast('Уроки временно недоступны. Попробуйте позже.', COLORS.danger); return; }
+    // Нельзя показывать дар локально заранее: отказ сервера при следующем сохранении уберёт его из героя.
+    this.giftPending = true;
+    let r;
+    try { r = await actions.confirmEvent(GIFT.event); }
+    finally { this.giftPending = false; }
+    const granted = state.hasEvent(GIFT.event) && state.isUnlocked('ice') && state.abilityLevel('ice') >= level
+      && (level !== 3 || state.branchOf('ice') === branch);
+    if ((!r?.ok && r?.reason !== 'already') || !granted) {
+      const text = {
+        locked: 'Сначала завершите предыдущее задание и сдайте его Нэрис.',
+        missing: 'Не хватает монет для урока Нэрис. Цена указана в диалоге.',
+        network: 'Нет связи с сервером. Поговорите с Нэрис ещё раз, когда связь вернётся.',
+        session: 'Сессия завершилась. Войдите снова, чтобы получить дар.',
+      }[r?.reason] || 'Не удалось получить Лёд. Поговорите с Нэрис ещё раз.';
+      this.toast(text, COLORS.danger);
+      return;
+    }
     this.burst(this.player.x, this.player.y - 60, COLORS.ice, 34);
     this.toast(`Получен дар: ${GIFT.title}`, COLORS.ice);
     this.dialog({
@@ -336,23 +380,13 @@ export class ExplorationScene extends Phaser.Scene {
     const V = this.view, R = this.bounds;
     this.add.tileSprite(R.x, R.y, R.w, R.h + V.bottom, 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
     this.paintTerrain();
-    for (const g of GROUND) if (touchesLocation(g, this.loc)) this.add.tileSprite(g.x, g.y, g.w, g.h, g.tex).setOrigin(0).setDepth(DEPTH.path);
+    this.rebuildGrounds(this.map.grounds);
     if (!V.top && !V.bottom) return;
     // тёмная подстилка под лесом ниже границы мира (деревья — в world.props.js)
     if (V.bottom) this.add.rectangle(R.x, R.y + R.h, R.w, V.bottom, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
     // v0.10.0: тёмный лес над северной границей (только картинка, за край мира пройти нельзя)
     if (!V.top) return;
     this.add.rectangle(R.x, R.y - V.top, R.w, V.top, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
-    const r = rng(9001), keys = ['tree_dark_01', 'tree_dark_02', 'tree_autumn_01', 'tree_autumn_02'];
-    for (let y = R.y - V.top + 90; y <= R.y; y += 85) {
-      for (let x = R.x - 20; x < R.x + R.w + 40; x += 70 + r() * 30) {
-        const k = keys[Math.floor(r() * keys.length)];
-        const im = this.add.image(x + (r() - 0.5) * 20, y + (r() - 0.5) * 20, k).setOrigin(0.5, 1);
-        applyDisplaySize(im, k);
-        if (r() < 0.5) im.setFlipX(true);
-        im.setDepth(DEPTH.mainBase + im.y);
-      }
-    }
   }
 
   /** Дороги и вода: кривые формы рисуются кусками 512×512 и кладутся поверх травы. */
@@ -374,6 +408,20 @@ export class ExplorationScene extends Phaser.Scene {
     // тексты кусков, которых больше нет (дорогу убрали), чистим
     for (const key of this.textures.getTextureKeys()) {
       if (key.startsWith('terrain_') && !this.terrainImages.some(im => im.texture.key === key)) this.textures.remove(key);
+    }
+  }
+
+  rebuildGrounds(list) {
+    this.map.grounds = list;
+    for (const {img} of this.groundViews.values()) img.destroy();
+    this.groundViews.clear();
+    for (const g of list) if (touchesLocation(g,this.loc)) {
+      const img = this.add.tileSprite(g.x,g.y,g.w,g.h,g.tex).setOrigin(0)
+        .setDepth(g.l==='front'?DEPTH.frontDecor:g.l==='back'?DEPTH.backDecor:DEPTH.path+(g.layerOffset??(g.interior?0.4:0)));
+      img.setAngle(g.a||0).setFlipX(!!g.f).setAlpha(g.alpha??1);
+      img.setTileScale(g.tileScale??(['city_paving','city_wood_floor','city_stone_floor','snow_ground_01','grave_ground_01'].includes(g.tex)?0.5:1));
+      if(g.tint)img.setTint(g.tint);
+      this.groundViews.set(g.id,{g,img});
     }
   }
 
@@ -400,6 +448,7 @@ export class ExplorationScene extends Phaser.Scene {
   buildColliders() {
     for (const o of this.colliderObjects || []) o.destroy();
     this.colliderObjects = [];
+    this.colliderViews.clear();
     const keep = (o) => { this.colliderObjects.push(o); return o; };
     for (const c of this.map.colliders) {
       if (!touchesLocation(c, this.loc)) continue;   // v0.27.0: стены других локаций не строятся
@@ -408,24 +457,37 @@ export class ExplorationScene extends Phaser.Scene {
       keep(z);
       const bottomDepth = DEPTH.mainBase + c.y + c.h;
       switch (c.kind) {
-        case 'trees': keep(this.add.rectangle(c.x, c.y, c.w, c.h, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1)); break;
-        case 'wall':
-          keep(this.add.tileSprite(c.x, c.y - 40, c.w, c.h + 40, 'wall_wood_01').setOrigin(0).setDepth(bottomDepth));
+        case 'trees': keep(this.add.rectangle(c.x, c.y, c.w, c.h, this.loc?.id === 'frostwood' ? 0x76938c : this.loc?.id === 'graveyard' ? 0x343d32 : 0x172114).setOrigin(0).setDepth(DEPTH.path - 1)); break;
+        case 'wall': {
+          const city = locationAt(c.x+c.w/2,c.y+c.h/2).id === 'city';
+          const wall = keep(this.add.tileSprite(c.x, c.y - 40, c.w, c.h + 40, c.tex || (city ? 'city_timber' : 'wall_wood_01')).setOrigin(0).setTileScale(city ? 0.25 : 1).setDepth(bottomDepth));
+          this.colliderViews.set(c.id,{c,img:wall});
+          if (city) {
+            wall.setTint(0xa68a69);
+            keep(this.add.rectangle(c.x, c.y - 40, c.w, c.h + 40, 0x000000, 0).setOrigin(0)
+              .setStrokeStyle(3, 0x3c2b20, 0.9).setDepth(bottomDepth + 0.1));
+          }
           break;
+        }
         case 'furniture':
           if (c.tex) { // v0.8: мебель с картинкой — низ спрайта на нижней кромке коллизии
             const im = this.add.image(c.x + c.w / 2, c.y + c.h, c.tex).setOrigin(0.5, 1).setDepth(bottomDepth);
             applyDisplaySize(im, c.tex);
+            if(c.editorStyle)this.styleImage(im,c.editorStyle,c.tex);
+            this.colliderViews.set(c.id,{c,img:im});
             keep(im);
             break;
           }
           keep(this.add.rectangle(c.x, c.y - 20, c.w, c.h + 20, COLORS.woodLight).setOrigin(0).setStrokeStyle(3, COLORS.wood).setDepth(bottomDepth));
           if (c.label) keep(this.add.text(c.x + c.w / 2, c.y + c.h / 2 - 10, c.label, { fontSize: UI.type.small, color: COLORS.textDim }).setOrigin(0.5).setDepth(bottomDepth + 1));
           break;
-        case 'ruin':
-          keep(this.add.tileSprite(c.x, c.y - 30, c.w, c.h + 30, 'wall_ruin_01').setOrigin(0).setTileScale(0.5).setDepth(bottomDepth));
-          keep(this.add.rectangle(c.x, c.y - 30, c.w, c.h + 30).setOrigin(0).setStrokeStyle(3, 0x2f2d33).setDepth(bottomDepth + 1));
+        case 'ruin': {
+          const wall = keep(this.add.tileSprite(c.x,c.y-30,c.w,c.h+30,c.tex || (locationAt(c.x+c.w/2,c.y+c.h/2).id==='city'?'city_wall':'wall_ruin_01'))
+            .setOrigin(0).setTileScale(locationAt(c.x+c.w/2,c.y+c.h/2).id==='city'?0.25:0.5).setDepth(bottomDepth));
+          this.colliderViews.set(c.id,{c,img:wall});
+          keep(this.add.rectangle(c.x,c.y-30,c.w,c.h+30).setOrigin(0).setStrokeStyle(3,0x2f2d33).setDepth(bottomDepth+1));
           break;
+        }
         default: break;
       }
     }
@@ -450,10 +512,7 @@ export class ExplorationScene extends Phaser.Scene {
   /** Один объект расстановки: картинка, свечение, физический блок. Запись в propViews нужна редактору. */
   addProp(p) {
     const img = this.add.image(p.x, p.y, p.k).setOrigin(0.5, 1);
-    applyDisplaySize(img, p.k);
-    if (p.s) img.setScale(img.scaleX * p.s, img.scaleY * p.s);
-    if (p.f) img.setFlipX(true);
-    const view = { p, img, glow: null, blocker: null };
+    const view = { p, img, glow: null, blocker: null, effects: [] };
     this.placePropView(view);
     if (p.light) view.glow = this.addGlow(p.x, p.y - img.displayHeight + 12, 0xffb36b, 0.4, null, p.light / 64);
     if (view.glow && /^candle/.test(p.k) && !services.edit) {
@@ -461,18 +520,54 @@ export class ExplorationScene extends Phaser.Scene {
       const k = view.glow.scale;
       this.tweens.add({ targets: view.glow, scale: { from: k * 0.88, to: k * 1.12 }, duration: 90 + this.random() * 130, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     }
-    const s = propSolid(p);
-    if (s) { view.blocker = this.add.zone(s.x + s.w / 2, s.y + s.h / 2, s.w, s.h); this.solids.add(view.blocker); }
     this.propViews.set(p.id, view);
     return view;
   }
 
   /** Слой и глубина объекта по его данным. */
+  styleImage(img,style,key=img.texture.key) {
+    applyDisplaySize(img,key);
+    if(!DISPLAY_SIZE[key])img.setScale(128/Math.max(img.width,img.height,1));
+    if(style.w||style.h)img.setDisplaySize(style.w||img.displayWidth,style.h||img.displayHeight);
+    if(style.s)img.setScale(img.scaleX*style.s,img.scaleY*style.s);
+    img.setAngle(style.a||0).setFlipX(!!style.f).setAlpha(style.alpha??1);
+    if(style.tint!=null)img.setTint(style.tint);else img.clearTint();
+    if(style.l)img.setDepth(style.l==='floor'?DEPTH.path+1:style.l==='room-floor'?DEPTH.path+0.7:style.l==='back'?DEPTH.backDecor:style.l==='front'?DEPTH.frontDecor:DEPTH.mainBase+img.y);
+  }
+
   placePropView(view) {
-    const { p, img } = view;
-    img.setPosition(p.x, p.y);
-    const depth = p.l === 'back' ? DEPTH.backDecor : p.l === 'front' ? DEPTH.frontDecor : DEPTH.mainBase + p.y;
-    img.setDepth(depth).setAlpha(p.l === 'front' ? 0.85 : 1);
+    const {p,img}=view;
+    img.setTexture(p.k).setPosition(p.x,p.y);
+    this.styleImage(img,p,p.k);
+    const depth=p.l==='floor'?DEPTH.path+1:p.l==='room-floor'?DEPTH.path+0.7:p.l==='back'?DEPTH.backDecor:p.l==='front'?DEPTH.frontDecor:DEPTH.mainBase+p.y;
+    img.setDepth(depth).setAlpha(p.alpha??(p.l==='front'?0.85:1));
+    img.setVisible(services.edit||!p.requires||services.state.hasEvent(p.requires));
+    const footprint=propSolid(p);
+    if(!footprint){view.blocker?.destroy();view.blocker=null;}
+    else {
+      const r=footprint;
+      if(!view.blocker){view.blocker=this.add.zone(r.x+r.w/2,r.y+r.h/2,r.w,r.h);this.solids.add(view.blocker);}
+      else{view.blocker.setPosition(r.x+r.w/2,r.y+r.h/2).setSize(r.w,r.h);view.blocker.body.setSize(r.w,r.h);view.blocker.body.updateFromGameObject();}
+    }
+    if(view.glow)view.glow.setPosition(p.x,p.y-img.displayHeight+12);
+  }
+
+  styleEntity(o,reset=false) {
+    if(!o.cfg.editorStyle&&!reset)return;
+    const style=o.cfg.editorStyle||{};
+    this.tweens.killTweensOf(o.sprite);
+    if(style.texture)o.sprite.setTexture(style.texture);
+    this.styleImage(o.sprite,{...style,s:(o.cfg.scale||1)*(style.s||1)});
+    if(style.tint==null && o.def?.tint)o.sprite.setTint(o.def.tint);
+    o.baseScale={x:o.sprite.scaleX,y:o.sprite.scaleY};
+    o.nameText?.setPosition(o.cfg.x,o.cfg.y-o.sprite.displayHeight-(o.cfg.elevated||0)-(o.npc?58:14));
+    o.badge?.setPosition(o.cfg.x,o.cfg.y-o.sprite.displayHeight-(o.cfg.elevated||0)-8);
+    const layer=style.l;
+    if(layer==='floor')o.sprite.setDepth(DEPTH.path+1);
+    else if(layer==='room-floor')o.sprite.setDepth(DEPTH.path+0.7);
+    else if(layer==='back')o.sprite.setDepth(DEPTH.backDecor);
+    else if(layer==='front')o.sprite.setDepth(DEPTH.frontDecor);
+    else o.sprite.setDepth(DEPTH.mainBase+o.cfg.y);
   }
 
   addGlow(x, y, color, alpha = 0.4, owner = null, scale = 1) {
@@ -485,20 +580,18 @@ export class ExplorationScene extends Phaser.Scene {
   // ------------------------------------------------------------------ наполнение (v0.8)
   /** Ковёр, пучки трав, горшок, костёр охотника и «живые мелочи» вроде пылинок в воздухе. */
   buildContentDecor() {
-    for (const d of CONTENT_DECOR) {
-      if (!inLocation(d, this.loc)) continue;   // v0.27.0
-      const img = this.add.image(d.x, d.y, d.k).setOrigin(0.5, 1);
-      applyDisplaySize(img, d.k);
-      if (d.flip) img.setFlipX(true);
-      img.setDepth(d.floor ? DEPTH.path + 1 : DEPTH.mainBase + d.y);
-      if (d.fire && !services.edit) {
-        const top = d.y - img.displayHeight * 0.55;
-        const g = this.addGlow(d.x, top, 0xff8a3a, 0.55, null, 1.9);
-        this.tweens.add({ targets: g, scale: { from: 1.7, to: 2.1 }, duration: 120 + this.random() * 80, yoyo: true, repeat: -1 });
-        this.add.particles(d.x, top, 'fx_dot', {
-          x: { min: -8, max: 8 }, speedY: { min: -90, max: -40 }, speedX: { min: -12, max: 12 }, scale: { start: 0.75, end: 0 }, alpha: { start: 0.9, end: 0 },
-          lifespan: 620, frequency: 55, tint: [COLORS.fire, 0xffc46b, 0xff3b2f], blendMode: 'ADD',
-        }).setDepth(DEPTH.fx);
+    this.cityLamps = [];
+    for (const {p,img, effects} of this.propViews.values()) {
+      if(p.k==='city_lamp_01')this.cityLamps.push(img);
+      if(p.fire&&!services.edit){
+        const top=p.y-img.displayHeight*0.55;
+        const glow=this.addGlow(p.x,top,0xff8a3a,0.55,null,1.9);
+        effects.push(glow);
+        this.tweens.add({targets:glow,scale:{from:1.7,to:2.1},duration:120+this.random()*80,yoyo:true,repeat:-1});
+        effects.push(this.add.particles(p.x,top,'fx_dot',{
+          x:{min:-8,max:8},speedY:{min:-90,max:-40},speedX:{min:-12,max:12},scale:{start:0.75,end:0},alpha:{start:0.9,end:0},
+          lifespan:620,frequency:55,tint:[COLORS.fire,0xffc46b,0xff3b2f],blendMode:'ADD',
+        }).setDepth(DEPTH.fx));
       }
     }
     if (services.edit) return;
@@ -736,7 +829,7 @@ export class ExplorationScene extends Phaser.Scene {
   screenPointer(pos) {
     const cam = this.cameras.main, v = cam.worldView;
     const sx = (pos.x - v.x) * cam.zoom, sy = (pos.y - pos.h * 0.5 - v.y) * cam.zoom;
-    const W = VIEW.width, H = VIEW.height, m = 70;
+    const W = cam.width, H = cam.height, m = 70;
     if (sx > m && sx < W - m && sy > 170 && sy < H - 190) return null;
     const cx = W / 2, cy = H * 0.5;
     const dx = sx - cx, dy = sy - cy;
@@ -766,8 +859,10 @@ export class ExplorationScene extends Phaser.Scene {
   }
 
   refreshAll() {
-    this.objects?.forEach(o => o.refresh());
-    this.enemies?.forEach(e => e.refresh());
+    this.objects?.forEach(o => {o.refresh();this.styleEntity(o);});
+    this.enemies?.forEach(e => {e.refresh();this.styleEntity(e);});
+    for(const {p,img} of this.propViews.values())img.setVisible(services.edit||!p.requires||services.state.hasEvent(p.requires));
+    this.cityPresentation?.refresh();
   }
 
   // ------------------------------------------------------------------ FX и UI-хелперы
@@ -955,7 +1050,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.cameras.main.fadeIn(300);
     this.inTransition = false;
     services.mode = 'exploration';
-    if (r.reason !== 'busy') this.toast(r.reason === 'network' ? 'Нет связи с сервером — бой не начался.' : 'Не удалось начать бой. Попробуйте ещё раз.', COLORS.danger);
+    if (r.reason !== 'busy') this.toast(r.reason === 'bag_pending' ? 'Заберите или выбросьте незабранные награды в сумке перед новым боем.' : r.reason === 'network' ? 'Нет связи с сервером — бой не начался.' : 'Не удалось начать бой. Попробуйте ещё раз.', COLORS.danger);
   }
 
   onWake(sys, data = {}) {

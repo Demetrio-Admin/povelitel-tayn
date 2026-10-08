@@ -92,7 +92,7 @@ console.log('\n1. Новый гость-колдун');
   await d.shot('start-witch');
   await d.pickToggle('warlock'); await d.shot('start-warlock');
   ok(srv.calls.filter(c => c.path.startsWith('/rest/')).length === 0 && !(await d.ev(() => window.__witch.session.signedIn)), 'переключение в меню не обращается к серверу и не создаёт профиль');
-  await d.tap(360, 1046);                     // «Начать игру»
+  await d.tap(360, 1096);                     // «Начать игру»
   await d.p.waitForFunction(() => !!window.__game.scene.getScene('MenuScene').choice);
   await d.shot('choice');
   await d.tap(360, 530);                      // «Играть как гость»
@@ -126,8 +126,8 @@ console.log('\n2. Регистрация ведьмы и вход с друго�
   const nick = `Vedma_${SUF}`;
   const d = await device('reg');
   await d.p.goto(BASE); await d.menu();
-  await d.tap(360, 1046); await d.p.waitForFunction(() => !!window.__game.scene.getScene('MenuScene').choice);
-  await d.tap(360, 718);                      // «Создать аккаунт»
+  await d.tap(360, 1096); await d.p.waitForFunction(() => !!window.__game.scene.getScene('MenuScene').choice);
+  await d.tap(360, 654);                      // «Создать аккаунт»
   await d.p.waitForSelector('.acc-card input');
   await d.fillForm([nick, PASS, PASS]);
   await d.inGame();
@@ -137,7 +137,7 @@ console.log('\n2. Регистрация ведьмы и вход с друго�
   const e = await device('reg-login');
   await e.p.goto(BASE); await e.menu();
   await e.pickToggle('warlock');              // на этом устройстве в предпросмотре — колдун
-  await e.tap(205, 1160);                     // «Войти»
+  await e.tap(360, 1192);                     // «Войти»
   await e.p.waitForSelector('.acc-card input');
   await e.fillForm([nick, PASS]);
   await e.inGame(); await e.p.waitForTimeout(1000);
@@ -154,8 +154,8 @@ console.log('\n3. Обратный случай и аккаунт колдуна
   const acc = await account('warlock', `Koldun_${SUF}`);
   const d = await device('login-warlock');
   await d.p.goto(BASE); await d.menu();      // предпросмотр по умолчанию — ведьма
-  await d.tap(360, 1046); await d.p.waitForFunction(() => !!window.__game.scene.getScene('MenuScene').choice);
-  await d.tap(360, 868);                      // «У меня уже есть аккаунт»
+  await d.tap(360, 1096); await d.p.waitForFunction(() => !!window.__game.scene.getScene('MenuScene').choice);
+  await d.tap(360, 778);                      // «У меня уже есть аккаунт»
   await d.p.waitForSelector('.acc-card input');
   await d.fillForm([acc.nickname, PASS]);
   await d.inGame(); await d.p.waitForTimeout(1000);

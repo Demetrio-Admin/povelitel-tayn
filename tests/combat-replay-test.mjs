@@ -148,5 +148,15 @@ console.log('\nБой: пауза врага (обучение)');
   ok(verifyCombat(after, play.log, snap.combatSince + 900_000).reason === 'down', 'после победы над врагом он не возрождается: бой не засчитывается');
 }
 
+// v0.30: old browser tabs and fights started before migration retain their recorded physics.
+{
+  const base = ctxFor({ level: 15, hp: 255, mana: 205, build: { amulets: ['amulet_lunar'], amuletLevels: { amulet_lunar: 3 } } });
+  const old = { ...base }; delete old.balanceVersion;
+  const legacy = playBot(old, { policy: 'idle', maxTicks: 1 }).cm;
+  const current = playBot({ ...base, balanceVersion: 30 }, { policy: 'idle', maxTicks: 1 }).cm;
+  ok(legacy.hero.regen === 3 && legacy.manaRescue.gainPct === .875, 'контекст до v0.30: старый реген и старый Лунный амулет');
+  ok(current.hero.regen === 3.8 && current.manaRescue.gainPct === .8, 'контекст v0.30: новый реген и Лунный амулет +3 = 80%');
+}
+
 console.log(failures ? `\nПровалено проверок: ${failures}` : '\nЗапись и повтор боя: всё в порядке');
 process.exit(failures ? 1 : 0);

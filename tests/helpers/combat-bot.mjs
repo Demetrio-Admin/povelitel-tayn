@@ -32,7 +32,8 @@ export function playBot(ctx, opts = {}) {
     if (rec.ticks % 10 === 0) {
       const policy = opts.policy || 'smart';
       const e = cm.enemy;
-      if (policy === 'idle') { /* ничего не делает */ }
+      if (opts.driver) opts.driver(cm, act);
+      else if (policy === 'idle') { /* ничего не делает */ }
       else {
         if (rnd() < 0.15) { const o = cm.fieldObjects.filter(f => f.available && f.def.throwable)[0]; if (o) act('s', o.id); }
         if (cm.hero.hp < cm.hero.maxHp * 0.4 && opts.potions !== false && rnd() < 0.5) act('p', 'elixir_life');
@@ -53,7 +54,7 @@ export function playBot(ctx, opts = {}) {
 }
 
 export const ctxFor = (over = {}) => ({
-  spawn: 'scavenger_01', enemy: 'forest_scavenger', level: 1,
+  spawn: 'scavenger_01', enemy: 'forest_scavenger', level: 1, balanceVersion: 30,
   abilities: { telekinesis: { level: 1, unlocked: true }, fire: { level: 0, unlocked: false }, seal: { level: 0, unlocked: false }, ice: { level: 0, unlocked: false }, ...(over.abilities || {}) },
   hp: 100, mana: 100, potions: { elixir_life: 0, elixir_mana: 0, resin_flask: 0 }, build: null,
   ...Object.fromEntries(Object.entries(over).filter(([k]) => k !== 'abilities')),

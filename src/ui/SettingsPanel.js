@@ -2,6 +2,7 @@ import { VIEW, COLORS } from '../config/game.config.js';
 import { services } from '../services.js';
 import { UI } from '../config/ui.config.js';
 import { addPanel, addDivider, addButton } from './widgets.js';
+import { fullscreenSupported, toggleFullscreen } from './viewport.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -17,7 +18,8 @@ export function buildSettingsPanel(scene, { onDone, depth = 10000, extra = [] } 
   const { settings, audio } = services;
   const W = VIEW.width, H = VIEW.height;
   const extraH = extra.length ? 112 : 0;
-  const pw = 648, ph = 800 + extraH;
+  const fullscreen = fullscreenSupported();
+  const pw = 648, ph = 800 + extraH + (fullscreen ? 100 : 0);
   const left = (W - pw) / 2, top = (H - ph) / 2 - 40;
   const c = scene.add.container(0, 0).setDepth(depth);
   const overlay = scene.add.rectangle(0, 0, W, H, 0x000000, 0.66).setOrigin(0).setInteractive();
@@ -38,7 +40,7 @@ export function buildSettingsPanel(scene, { onDone, depth = 10000, extra = [] } 
   let y = top + 140;
   const rowLabel = (text) => c.add(scene.add.text(left + 40, y, text, { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, shadow: SH }).setOrigin(0, 0.5));
 
-  for (let i = 0; i < 5; i++) c.add(addPanel(scene, left + 28, top + 140 + i * 100 - 38, pw - 56, 76, { variant: 'inset' }));
+  for (let i = 0; i < (fullscreen ? 6 : 5); i++) c.add(addPanel(scene, left + 28, top + 140 + i * 100 - 38, pw - 56, 76, { variant: 'inset' }));
 
   // громкости
   for (const [key, label] of [['sfx', 'Звуки'], ['music', 'Музыка']]) {
@@ -61,6 +63,18 @@ export function buildSettingsPanel(scene, { onDone, depth = 10000, extra = [] } 
     });
     b.t.setColor(settings.get(key) ? COLORS.textGold : COLORS.textDim);
     y += 100;
+  }
+
+  if (fullscreen) {
+    rowLabel('Экран');
+    const label = () => document.fullscreenElement ? 'Свернуть' : 'На весь экран';
+    const b = smallBtn(left + 442, y, 252, label(), async () => {
+      try { await toggleFullscreen(); }
+      catch { b.t.setText('Недоступно'); }
+    });
+    const changed = () => b.t.setText(label());
+    document.addEventListener('fullscreenchange', changed);
+    c.once('destroy', () => document.removeEventListener('fullscreenchange', changed));
   }
 
   const doneY = top + ph - 62;

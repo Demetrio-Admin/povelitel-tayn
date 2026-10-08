@@ -1,0 +1,120 @@
+{
+  "world_map": {
+    "tool": "built-in image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: production background illustration for an interactive fantasy world map, portrait ratio exactly 584:760. Create a beautiful finely hand-drawn watercolor and ink fantasy cartographic atlas on warm aged parchment, with organic terrain and illustrative landmarks, suitable for a cozy dark witch RPG. Entire frame is the map itself; no UI, no title, no labels, NO text, no markers, no compass letters, no border frame. Top-down cartographic view with small illustrated trees and buildings, shaded relief, exquisite delicate ink lines and watercolor washes, muted moss green, warm amber, burgundy autumn, blue gray frost, sepia parchment. Geography MUST obey these exact normalized positions: dense autumn forest and a tiny witch cottage with winding trails in the SOUTHWEST, centered x=26% y=74%; a compact walled medieval town with roofs touched with frost in CENTER, centered x=56.5% y=47.4%; snowy conifer forest in NORTHEAST centered x=80.5% y=22.4%; an old stone cemetery and weathered ruined chapel in SOUTHEAST centered x=80.5% y=79%. Delicate small mountains extend along the top 10% of map. A winding blue river runs top to bottom at roughly x=43% with natural meanders, one bridge along the road from autumn forest to central town. Three natural narrow pale ochre winding roads: forest cottage to town; town to snowy forest; town to cemetery. Leave sufficiently light pale parchment patches right below each of these four centers for game-drawn labels and empty tiny patch at each exact center for a game-drawn pin. Finely detailed small trees, no geometric triangle tree symbols. Not an isometric game level. Balance lovely detail and clear readable geography at mobile size. No huge mountains, no coastlines, no extra towns, no floating UI or text.",
+    "source_name": "exec-ef7bed76-c6d6-406c-8165-cb40476fc4ed.png",
+    "sha256": "2160f566190236f82a3e36f40ca38cfe8e9efe057450a6f4178d02ab14ff8d8d",
+    "source_size": [
+      1099,
+      1431
+    ],
+    "outputs": [
+      {
+        "file": "assets/forest/world-map.webp",
+        "size": [
+          876,
+          1140
+        ]
+      }
+    ]
+  },
+  "squirrel": {
+    "tool": "built-in image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: transparent sprite sheet for a small red squirrel in a hand-painted witch RPG. Make ONE species sprite sheet with exactly THREE animation poses in a SINGLE horizontal row, evenly spaced at centers of three equal width cells, landscape 3:1 aspect ratio, transparent background. Each cell shows the SAME charming natural European red squirrel, RIGHT-facing 3/4 side view from slightly above, rust red fur, cream belly, tufted ears, fluffy curved tail, small bead eye, believable anatomy, not anthropomorphic, NO clothing. Frame 1 crouching running takeoff, frame 2 extended airborne running bound, frame 3 landing with forefeet reaching down. Match the squirrel's identical proportions, colors, direction and body size across all three cells; all paws, ears and tail fully visible, consistent ground baseline, ample transparent gutters between cells, no overlaps. Refined warm watercolor and gouache, fine dark brown ink contours, subtle dry brush texture like a cozy autumn storybook RPG, lovely silhouette still readable at only 38 pixels wide. Rounded natural form, fine fur accents, no big cartoony eyes, no teeth. No scenery, no ground, no shadow, no labels, no grids, no border. Genuinely transparent alpha canvas.",
+    "source_name": "exec-8daeaa74-d237-4729-9554-5db89ede5eed.png",
+    "sha256": "3297ab6a2cbc50528aa83c75c2bc1a1f3309f83c06698539f05e8064bc652165",
+    "source_size": [
+      2172,
+      724
+    ],
+    "outputs": [
+      {
+        "file": "assets/forest/life-squirrel-1.webp",
+        "size": [
+          192,
+          160
+        ]
+      },
+      {
+        "file": "assets/forest/life-squirrel-2.webp",
+        "size": [
+          192,
+          160
+        ]
+      },
+      {
+        "file": "assets/forest/life-squirrel-3.webp",
+        "size": [
+          192,
+          160
+        ]
+      }
+    ]
+  },
+  "rabbit": {
+    "tool": "built-in image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: transparent sprite sheet for a small woodland hare in a hand-painted witch RPG. Make ONE species sprite sheet with exactly THREE animation poses in a SINGLE horizontal row, evenly spaced at centers of three equal width cells, landscape 3:1 aspect ratio, transparent background. Each cell shows the SAME beautiful young woodland hare, RIGHT-facing 3/4 side view from slightly above, warm gray-brown soft fur, creamy belly and small tail, elegant long upright ears tipped brown, small dark eye, realistic compact anatomy, not anthropomorphic, NO clothing. Frame 1 compressed hind legs pushing off, frame 2 airborne stretched leap with tucked forelegs, frame 3 landing forepaws reaching the ground. Match identical proportions, colors, direction and body size across all three cells; paws and ear tips fully visible, consistent ground baseline, ample transparent gutters between cells, no overlap. Refined warm watercolor and gouache, fine dark brown ink contours, subtle dry brush texture like a cozy autumn storybook RPG, appealing delicate animal silhouette readable at only 40 pixels wide. No giant eyes, no smile, no teeth, no ugly polygon patches. No scenery, no ground, no shadow, no labels, no grids, no border. Genuinely transparent alpha canvas.",
+    "source_name": "exec-732d625d-e01b-41fe-ba20-b2a3bb285efc.png",
+    "sha256": "cf52617bb6257efcb3ace1fc250881fbce080b5a1ba579ba26e7a5f6c7597fdb",
+    "source_size": [
+      2172,
+      724
+    ],
+    "outputs": [
+      {
+        "file": "assets/forest/life-rabbit-1.webp",
+        "size": [
+          192,
+          160
+        ]
+      },
+      {
+        "file": "assets/forest/life-rabbit-2.webp",
+        "size": [
+          192,
+          160
+        ]
+      },
+      {
+        "file": "assets/forest/life-rabbit-3.webp",
+        "size": [
+          192,
+          160
+        ]
+      }
+    ]
+  },
+  "bird": {
+    "tool": "built-in image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: transparent animation sprite sheet for a tiny flying woodland robin in a hand-painted witch RPG. Exactly THREE animation poses in ONE horizontal row, evenly spaced at centers of three equal cells, landscape 3:1 aspect ratio, transparent background. The SAME little European robin in each cell, RIGHT-facing side view seen slightly from above, compact gray brown body, modest russet orange chest, tiny pointed beak, bead eye, elegant small feathered wings, natural proportions. Frame 1 wings raised above body; frame 2 wings stretched halfway out; frame 3 wings folded down beneath body. The robin body must stay at IDENTICAL position, size, color and orientation relative to each cell; only wing pose changes, tidy flapping cycle, whole wings inside each cell, ample transparent gutters. Refined watercolor and gouache with fine sepia ink lines, soft feather texture, charming woodland storybook RPG style, clear tiny silhouette readable at only 26 pixels wide. Not anthropomorphic, no clothing, no giant eyes, no thick polygon wing slabs. No scenery, no ground, no shadow, no labels, no grids, no border. Genuinely transparent alpha canvas.",
+    "source_name": "exec-7641d5ec-c788-412a-8a41-c1772a479001.png",
+    "sha256": "cc5c475e305fd0a1a16b499144b357002081ac96fc92f4bed5421844caeac679",
+    "source_size": [
+      2172,
+      724
+    ],
+    "outputs": [
+      {
+        "file": "assets/forest/life-bird-1.webp",
+        "size": [
+          192,
+          160
+        ]
+      },
+      {
+        "file": "assets/forest/life-bird-2.webp",
+        "size": [
+          192,
+          160
+        ]
+      },
+      {
+        "file": "assets/forest/life-bird-3.webp",
+        "size": [
+          192,
+          160
+        ]
+      }
+    ]
+  }
+}

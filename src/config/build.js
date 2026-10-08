@@ -67,7 +67,7 @@ export const AMULET_UPGRADES = [
 export const AMULET_LEVEL_STEP = 0.25;
 
 /** Действующие числа амулета с учётом уровня улучшения (одна функция для боя и окна). */
-export function amuletEffect(id, level = 0) {
+export function amuletEffect(id, level = 0, legacy = false) {
   const e = AMULETS[id]?.effect;
   if (!e) return {};
   const k = 1 + AMULET_LEVEL_STEP * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length));
@@ -75,7 +75,7 @@ export function amuletEffect(id, level = 0) {
   const out = { ...e };
   if (e.damageMult && e.damageMult > 1) out.damageMult = r(1 + (e.damageMult - 1) * k);
   if (e.incomingMult) out.incomingMult = r(1 - (1 - e.incomingMult) * k);
-  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: r(Math.min(0.9, e.manaRescue.gainPct * k)) };
+  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: legacy ? r(e.manaRescue.gainPct * k) : r(e.manaRescue.gainPct + 0.1 * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length))) };
   if (e.iceMult) out.iceMult = r(1 + (e.iceMult - 1) * k);
   if (e.slowBonus) out.slowBonus = r(e.slowBonus * k);
   return out;

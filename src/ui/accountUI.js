@@ -3,36 +3,48 @@
 // Не зависит от Phaser; данные и действия — через PlayerSession. Технические ошибки сервера игрок не видит.
 import { CloudError, errorText } from '../cloud/api.js';
 import { NICK_MIN, NICK_MAX, PASSWORD_MIN } from '../cloud/nickname.js';
+import { bindGameOverlay } from './gameOverlay.js';
+import { heroById } from '../config/heroes.js';
+import { ASSET_FILES } from '../config/assets.manifest.js';
 
 const CSS = `
-.acc-ov{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:14px;
-  background:radial-gradient(ellipse at center,#0e0a08cc,#000d);font:17px/1.4 'Philosopher',Georgia,serif;color:#f1e3c2;
-  -webkit-user-select:none;user-select:none;overflow:auto}
+.acc-ov{position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;display:flex;align-items:center;justify-content:center;padding:12px;
+  background:radial-gradient(ellipse at center,#100d09a6,#100d09d9);font:16px/1.4 'Philosopher',Georgia,serif;color:#f1e3c2;
+  -webkit-user-select:none;user-select:none;overflow:hidden;box-sizing:border-box;touch-action:manipulation;overscroll-behavior:contain;
+  color-scheme:dark;container-type:inline-size;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .acc-ov.top{z-index:120}
-.acc-card{width:min(440px,100%);max-height:100%;overflow:auto;position:relative;padding:20px 20px 18px;border-radius:16px;
-  background:linear-gradient(#35251a,#1d130d);border:3px solid #b8923c;box-shadow:0 0 0 2px #2b1d15,0 14px 40px #000c,inset 0 0 40px #0006}
-.acc-card::before,.acc-card::after{content:'✦';position:absolute;top:6px;color:#e8c56a;font-size:15px;opacity:.85}
-.acc-card::before{left:10px}.acc-card::after{right:10px}
-.acc-card h2{margin:0 0 4px;text-align:center;font-size:25px;color:#f6e3a1;text-shadow:0 2px 0 #000a}
-.acc-sub{text-align:center;color:#a8977a;font-size:15px;margin:0 0 12px}
-.acc-card button{font:inherit;font-size:18px;color:#f1e3c2;background:#4a3324;border:1px solid #b8923c99;border-radius:12px;min-height:48px;padding:8px 14px;cursor:pointer}
-.acc-card button:active{background:#6a4a30}
-.acc-card button.primary{background:linear-gradient(#a37a2a,#7a5a22);border-color:#e8c56a;font-weight:700;color:#fff3cc}
+.acc-ov *{box-sizing:border-box}
+.acc-shell{width:min(440px,100%);max-height:100%;min-height:0;position:relative;display:flex;border-radius:16px;
+  background:linear-gradient(#4a3324,#38271b 50%,#271a11);background-size:100% 100%;box-shadow:0 10px 28px #0008;overflow:hidden}
+.acc-card{width:100%;max-height:100%;min-width:0;overflow:auto;position:relative;padding:25px 23px 18px;
+  scrollbar-width:thin;scrollbar-color:#b59653 #25190f;overscroll-behavior:contain;touch-action:pan-y;outline:none}
+.acc-card h2{margin:0 0 8px;text-align:center;font-size:clamp(23px,6.2cqw,29px);line-height:1.2;color:#f6e3a1;text-shadow:0 2px 3px #0009;overflow-wrap:anywhere}
+.acc-card>h2:first-child{padding:0 15px 14px;background:linear-gradient(90deg,transparent,#d9b45a99,transparent) center bottom/75% 1px no-repeat}
+.acc-sub{text-align:center;color:#d0bfa2;font-size:15px;margin:0 0 18px;line-height:1.45;overflow-wrap:anywhere}
+.acc-card button{font:inherit;font-size:17px;color:#f1e3c2;background:linear-gradient(#49321f,#2c1e12);border:1px solid #b8923c99;border-radius:9px;min-height:46px;padding:9px 14px;cursor:pointer;
+  box-shadow:inset 0 1px 0 #f6e3a12b,0 2px 3px #0004;white-space:normal;overflow-wrap:anywhere;touch-action:manipulation}
+.acc-card button:active{background:#6a4a30;transform:translateY(1px)}
+.acc-card button.primary{background:linear-gradient(#795531,#51351d 55%,#38220f);border-color:#d9b45a;box-shadow:inset 0 0 0 2px #26180f,inset 0 0 0 3px #f6e3a138,0 3px 5px #0005;font-weight:700;color:#fff0bc}
 .acc-card button.danger{border-color:#c8443a;color:#ffb0a0}
-.acc-card button.link{background:none;border:none;min-height:36px;color:#e8c56a;text-decoration:underline;font-size:16px}
+.acc-card button.link{background:none;border:none;box-shadow:none;min-height:40px;color:#e8c56a;font-size:15px}
 .acc-card button:disabled{opacity:.55;cursor:default}
-.acc-field{display:block;margin:0 0 11px}
-.acc-field>span{display:block;font-size:15px;color:#d9c79a;margin:0 0 3px}
-.acc-field input{width:100%;box-sizing:border-box;font:inherit;font-size:18px;color:#fff6dc;background:#120d0a;border:1px solid #b8923c88;border-radius:10px;padding:11px 12px;min-height:48px;
-  -webkit-user-select:text;user-select:text;outline:none}
+.acc-ov :focus-visible{outline:2px solid #f6e3a1;outline-offset:2px}
+.acc-field{display:block;margin:0 0 13px}
+.acc-field>span{display:block;font-size:14px;color:#e3cba3;margin:0 0 5px}
+.acc-field input{width:100%;min-width:0;font:inherit;font-size:17px;color:#fff6dc;background:linear-gradient(#1a110ae6,#24180fe6);border:1px solid #96723b;border-radius:8px;padding:10px 12px;min-height:46px;
+  -webkit-user-select:text;user-select:text;outline:none;box-shadow:inset 0 2px 5px #0005}
+.acc-field input::placeholder{color:#b9a78d;opacity:1}
 .acc-field input:focus{border-color:#e8c56a;box-shadow:0 0 0 2px #e8c56a44}
-.acc-field small{display:block;color:#a8977a;font-size:13px;margin-top:2px}
-.acc-pw{display:flex;gap:6px}.acc-pw input{flex:1;min-width:0}.acc-pw button{min-height:48px;padding:0 12px}
-.acc-err{min-height:1.4em;color:#ff9a8a;font-size:15px;margin:0 0 8px;text-align:center}
+.acc-field small{display:block;color:#cfbea3;font-size:13px;margin-top:5px;line-height:1.4}
+.acc-pw{position:relative}.acc-pw input{padding-right:49px}.acc-pw button{position:absolute;right:2px;top:2px;bottom:2px;min-height:0;width:42px;padding:0;background:transparent;border:0;box-shadow:none;color:#dfc58e}
+.acc-icon{display:inline-block;width:21px;height:21px;vertical-align:middle;background:currentColor;mask:center/contain no-repeat; -webkit-mask:center/contain no-repeat}
+.acc-eye{mask-image:url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8"%3E%3Cpath d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/%3E%3Ccircle cx="12" cy="12" r="3"/%3E%3C/svg%3E');-webkit-mask-image:url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8"%3E%3Cpath d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/%3E%3Ccircle cx="12" cy="12" r="3"/%3E%3C/svg%3E')}
+.acc-err{color:#ffc2b2;font-size:14px;margin:10px 0;text-align:center;line-height:1.4;overflow-wrap:anywhere}
+.acc-err:empty{display:none}
 .acc-ok{color:#9fe9b0}
-.acc-note{font-size:14px;color:#d9b98a;background:#120d0a99;border:1px solid #b8923c55;border-radius:10px;padding:8px 10px;margin:0 0 12px}
-.acc-row{display:flex;flex-direction:column;gap:9px;margin-top:6px}
-.acc-center{text-align:center}
+.acc-note{font-size:13px;color:#decaad;background:#160f0966;border-left:2px solid #b8923c88;border-radius:2px;padding:9px 11px;margin:0 0 14px;line-height:1.45}
+.acc-row{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+.acc-center{text-align:center;margin-top:5px}
 .acc-big{text-align:center;font-size:30px;font-weight:700;color:#f6e3a1;margin:2px 0 0;word-break:break-all}
 .acc-lvl{text-align:center;color:#d9c79a;margin:0 0 10px}
 .acc-kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #b8923c33;font-size:16px}
@@ -40,7 +52,37 @@ const CSS = `
 .acc-status{text-align:center;margin:8px 0 6px;font-size:16px}
 .acc-status.saved{color:#9fe9b0}.acc-status.saving{color:#e8c56a}.acc-status.offline{color:#ffb07a}
 .acc-spin{width:38px;height:38px;margin:12px auto 4px;border-radius:50%;border:4px solid #b8923c44;border-top-color:#e8c56a;animation:accspin 0.9s linear infinite}
+.acc-dismiss{position:absolute;right:3px;top:3px;z-index:2;width:44px;height:44px;display:grid;place-items:center;padding:0;cursor:pointer;
+  color:#e8c56a;background:none;border:0;border-radius:50%;touch-action:manipulation}
+.acc-dismiss::before{content:'';position:absolute;inset:7px;background:#25180fd9;border:1px solid #b8923c66;border-radius:50%;z-index:-1}
+.acc-cross{width:16px;height:16px;mask-image:url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"%3E%3Cpath d="m6 6 12 12M6 18 18 6"/%3E%3C/svg%3E');-webkit-mask-image:url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"%3E%3Cpath d="m6 6 12 12M6 18 18 6"/%3E%3C/svg%3E')}
+@container (max-width:330px){.acc-card{padding:24px 16px 14px}.acc-card h2{font-size:23px}.acc-sub{font-size:14px}.acc-field small{font-size:12px}}
 @keyframes accspin{to{transform:rotate(360deg)}}
+.acc-auth{background:#100b1640;padding:18px;container-type:size}
+.acc-auth .acc-shell{width:min(400px,90%);box-shadow:0 14px 40px #0009}
+.acc-auth .acc-card{padding:20px 24px 14px}
+.acc-auth-portrait{width:76px;height:76px;border-radius:50%;border:2px solid #d9b45a;outline:1px solid #f6e3a155;outline-offset:3px;
+  margin:0 auto 16px;overflow:hidden;background:#24171f;box-shadow:0 4px 10px #0007}
+.acc-auth-portrait img{display:block;width:100%;height:auto;pointer-events:none}
+.acc-auth .acc-card h2{font-size:clamp(24px,7.1cqw,30px);padding:0;border:0;background:none;margin-bottom:6px}
+.acc-auth .acc-sub{margin-bottom:21px;font-size:16px;color:#e2cba1}
+.acc-auth .acc-field{margin-bottom:15px}
+.acc-auth .acc-field>span{font-size:16px;color:#f1e3c2;margin-bottom:6px}
+.acc-auth .acc-field input{background:#120f12a6;border-color:#a68a59;min-height:48px}
+.acc-auth .acc-field small{font-size:13px;color:#bcab8b}
+.acc-auth .acc-row{margin-top:16px}
+.acc-auth .acc-row>.primary{font-size:20px;min-height:52px}
+.acc-auth .acc-center .link{font-size:16px;min-height:44px}
+.acc-access{font-size:14px;border-top:1px solid #b8923c55;border-bottom:1px solid #b8923c55;margin:18px 0 0;color:#decaad}
+.acc-access summary{min-height:44px;padding:11px 0;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.acc-access summary::-webkit-details-marker{display:none}
+.acc-access summary::after{content:'';width:14px;height:14px;flex:none;background:currentColor;
+  mask:center/contain no-repeat url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="m6 9 6 6 6-6"/%3E%3C/svg%3E')}
+.acc-access[open] summary::after{transform:rotate(180deg)}
+.acc-access .acc-note{background:none;border:0;padding:0 0 12px;margin:0;font-size:13px}
+@container (max-height:560px){.acc-auth .acc-auth-portrait{width:48px;height:48px;margin-bottom:10px}.acc-auth .acc-card{padding-top:17px}.acc-auth .acc-sub{margin-bottom:14px}}
+@container (max-width:330px){.acc-auth .acc-shell{width:100%}.acc-auth .acc-card{padding-left:18px;padding-right:18px}.acc-auth .acc-card h2{font-size:23px}}
+@media (prefers-reduced-motion:reduce){.acc-spin{animation:none}}
 `;
 
 function ensureCss() {
@@ -68,26 +110,42 @@ const stack = [];
 function onKey(e) {
   if (!stack.length) return;
   e.stopPropagation();
-  if (e.type === 'keydown' && e.key === 'Escape') { const top = stack[stack.length - 1]; if (top.dismissable) top.close(); }
+  const top = stack[stack.length - 1];
+  if (e.type === 'keydown' && e.key === 'Escape' && top.dismissable) { e.preventDefault(); top.close(); }
+  if (e.type === 'keydown' && e.key === 'Tab') {
+    const controls = [...(top.ov.querySelectorAll?.('button:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex="0"]') || [])].filter(n => n.getClientRects().length);
+    const first = controls[0], last = controls.at(-1), active = document.activeElement;
+    if (first && ((!e.shiftKey && (active === last || !top.ov.contains(active))) || (e.shiftKey && (active === first || !top.ov.contains(active))))) {
+      e.preventDefault(); (e.shiftKey ? last : first).focus();
+    }
+  }
 }
 const KEY_EVENTS = ['keydown', 'keyup', 'keypress'];
 
-function overlay(card, { onClose, dismissable = true, top = false } = {}) {
+function overlay(card, { onClose, dismissable = true, top = false, label, theme } = {}) {
   ensureCss();
-  const ov = el('div', { class: 'acc-ov' + (top ? ' top' : ''), role: 'dialog', 'aria-modal': 'true' }, card);
+  card.setAttribute('tabindex', '-1');
+  const shell = el('div', { class: 'acc-shell' }, card);
+  const ov = el('div', { class: 'acc-ov' + (top ? ' top' : '') + (theme === 'auth' ? ' acc-auth' : ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': label || card.querySelector?.('h2')?.textContent || 'Игровое окно' }, shell);
   let closed = false;
-  const entry = { dismissable, close };
+  const previousFocus = document.activeElement;
+  let unbind = () => {};
+  const entry = { dismissable, close, ov };
   function close() {
     if (closed) return;
     closed = true;
+    unbind();
     ov.remove();
     stack.splice(stack.indexOf(entry), 1);
     if (!stack.length) KEY_EVENTS.forEach(t => window.removeEventListener(t, onKey, true));
+    if (previousFocus?.isConnected) previousFocus.focus?.({ preventScroll: true });
     onClose?.();
   }
+  if (dismissable) shell.append(el('button', { type: 'button', class: 'acc-dismiss', 'aria-label': 'Закрыть окно', onclick: close }, el('span', { class: 'acc-icon acc-cross', 'aria-hidden': 'true' })));
   if (!stack.length) KEY_EVENTS.forEach(t => window.addEventListener(t, onKey, true));
   stack.push(entry);
   document.body.appendChild(ov);
+  unbind = bindGameOverlay(ov, shell, card);
   return { ov, close, get closed() { return closed; } };
 }
 
@@ -104,10 +162,21 @@ export const SAVE_STATUS = { saved: '✓ Прогресс сохранён', sav
 
 function passwordInput(placeholder, autocomplete) {
   const input = el('input', { type: 'password', autocomplete, placeholder, autocapitalize: 'off', spellcheck: 'false' });
-  const eye = el('button', { type: 'button', 'aria-label': 'Показать пароль', text: '👁', onclick: () => { input.type = input.type === 'password' ? 'text' : 'password'; } });
+  const eye = el('button', { type: 'button', 'aria-label': 'Показать пароль', 'aria-pressed': 'false', onclick: () => {
+    const showing = input.type === 'password'; input.type = showing ? 'text' : 'password';
+    eye.setAttribute('aria-label', showing ? 'Скрыть пароль' : 'Показать пароль'); eye.setAttribute('aria-pressed', String(showing));
+  } }, el('span', { class: 'acc-icon acc-eye', 'aria-hidden': 'true' }));
   return { input, box: el('div', { class: 'acc-pw' }, input, eye) };
 }
-const nickInput = (autocomplete) => el('input', { type: 'text', autocomplete, autocapitalize: 'off', spellcheck: 'false', maxlength: String(NICK_MAX + 4), placeholder: 'Например, Дмитрий' });
+const nickInput = (autocomplete) => el('input', { type: 'text', autocomplete, autocapitalize: 'off', spellcheck: 'false', maxlength: String(NICK_MAX + 4), placeholder: 'Имя персонажа', 'aria-label': 'Никнейм' });
+
+function accountHeader(title, subtitle, hero) {
+  const texture = heroById(hero).textures.down;
+  const base = import.meta.env?.BASE_URL || '/';
+  return [el('div', { class: 'acc-auth-portrait', 'aria-hidden': 'true' },
+    el('img', { src: base + ASSET_FILES[texture], alt: '', draggable: false })),
+    el('h2', { text: title }), subtitle ? el('p', { class: 'acc-sub', text: subtitle }) : null];
+}
 
 /** Кнопка с «занятым» состоянием: нельзя нажать десять раз подряд. */
 function busyButton(btn, idleText, busyText) {
@@ -147,25 +216,25 @@ export function showNotice({ title, text, button = 'Понятно', onClose } =
  */
 export function showRegister(session, { mode = 'new', hero, onDone, onCancel } = {}) {
   const nick = nickInput('username');
-  const pw = passwordInput(`от ${PASSWORD_MIN} символов`, 'new-password');
-  const pw2 = passwordInput('ещё раз', 'new-password');
+  const pw = passwordInput(`От ${PASSWORD_MIN} символов`, 'new-password');
+  const pw2 = passwordInput('Ещё раз', 'new-password');
   const err = el('div', { class: 'acc-err', role: 'alert' });
   const submit = el('button', { class: 'primary', type: 'submit', text: 'Создать аккаунт' });
   const busy = busyButton(submit, 'Создать аккаунт', 'Создаём аккаунт…');
   let done = false;
   const form = el('form', { novalidate: true },
-    el('label', { class: 'acc-field' }, el('span', { text: 'Никнейм' }), nick, el('small', { text: `${NICK_MIN}–${NICK_MAX} символов: буквы (латиница или кириллица), цифры и _. Это и имя в игре, и логин.` })),
+    el('label', { class: 'acc-field' }, el('span', { text: 'Никнейм' }), nick, el('small', { text: `${NICK_MIN}–${NICK_MAX} символов` })),
     el('label', { class: 'acc-field' }, el('span', { text: 'Пароль' }), pw.box),
     el('label', { class: 'acc-field' }, el('span', { text: 'Повторите пароль' }), pw2.box),
-    el('p', { class: 'acc-note', text: 'Если вы забудете пароль, восстановить доступ к аккаунту может быть невозможно: почту игра не спрашивает.' }),
+    el('details', { class: 'acc-access' }, el('summary', { text: 'Как сохранить доступ' }),
+      el('p', { class: 'acc-note', text: 'Никнейм — ваше имя в игре и логин. Используйте буквы одного алфавита, цифры или _. Сохраните пароль: если забыть его, восстановить доступ может быть невозможно.' })),
     err,
     el('div', { class: 'acc-row' }, submit));
   const card = el('div', { class: 'acc-card' },
-    el('h2', { text: 'Создание аккаунта' }),
-    el('p', { class: 'acc-sub', text: mode === 'guest' ? 'Ваш персонаж и весь прогресс останутся с вами.' : 'Под этим ником вы будете входить с любого устройства.' }),
+    accountHeader('Создать аккаунт', mode === 'guest' ? 'Ваш персонаж и прогресс сохранятся' : 'Ваше имя в мире магии', hero || session?.hero),
     form,
     el('div', { class: 'acc-center' }, el('button', { class: 'link', type: 'button', text: 'Назад', onclick: () => h.close() })));
-  const h = overlay(card, { onClose: () => { if (!done) onCancel?.(); } });
+  const h = overlay(card, { theme: 'auth', onClose: () => { if (!done) onCancel?.(); } });
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
     if (submit.disabled) return;
@@ -179,7 +248,7 @@ export function showRegister(session, { mode = 'new', hero, onDone, onCancel } =
       onDone?.();
     } catch (e) { busy(false); err.textContent = errMsg(e); }
   });
-  setTimeout(() => { if (!card.contains(document.activeElement)) nick.focus(); }, 50);
+  setTimeout(() => { if (!h.closed && !window.matchMedia?.('(pointer: coarse)').matches && !card.contains(document.activeElement)) nick.focus(); }, 50);
   return h;
 }
 
@@ -197,9 +266,9 @@ export function showLogin(session, { onDone, onCancel, guestWarning = false } = 
     guestWarning ? el('p', { class: 'acc-note', text: 'Сейчас вы играете гостем. После входа в аккаунт гостевой персонаж станет недоступен. Чтобы сохранить его, закройте окно и создайте аккаунт в профиле.' }) : null,
     err,
     el('div', { class: 'acc-row' }, submit));
-  const card = el('div', { class: 'acc-card' }, el('h2', { text: 'Вход' }), form,
+  const card = el('div', { class: 'acc-card' }, accountHeader('С возвращением', null, session?.hero), form,
     el('div', { class: 'acc-center' }, el('button', { class: 'link', type: 'button', text: 'Назад', onclick: () => h.close() })));
-  const h = overlay(card, { onClose: () => { if (!done) onCancel?.(); } });
+  const h = overlay(card, { theme: 'auth', onClose: () => { if (!done) onCancel?.(); } });
   form.addEventListener('submit', async (ev) => {
     ev.preventDefault();
     if (submit.disabled) return;
@@ -212,7 +281,7 @@ export function showLogin(session, { onDone, onCancel, guestWarning = false } = 
       onDone?.();
     } catch (e) { busy(false); err.textContent = errMsg(e); }
   });
-  setTimeout(() => { if (!card.contains(document.activeElement)) nick.focus(); }, 50);
+  setTimeout(() => { if (!h.closed && !window.matchMedia?.('(pointer: coarse)').matches && !card.contains(document.activeElement)) nick.focus(); }, 50);
   return h;
 }
 

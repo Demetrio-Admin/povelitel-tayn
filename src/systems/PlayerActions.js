@@ -38,6 +38,7 @@ export class PlayerActions {
       if (d) items[k] = d;
     }
     return {
+      sapphires: (after.wallet?.sapphires || 0) - (before.wallet?.sapphires || 0),
       heroXP: after.heroXP - before.heroXP,
       levelUps: HERO_LEVELS.filter(r => r.level > before.heroLevel && r.level <= after.heroLevel),
       items,
@@ -56,20 +57,25 @@ export class PlayerActions {
    * Возвращает ответ сервера. Если сервер отказал, его состояние уже заменило локальное — интерфейс обновляется.
    */
   mirror(action) {
-    const ses0 = this.getSession();
-    if (!ses0) return Promise.resolve(null);
-    const uid = ses0.userId;   // действие принадлежит этому игроку: после выхода или смены аккаунта оно не отправляется
+    if (!this.getSession()) return Promise.resolve(null);
+    return this.confirm(action);
+  }
+
+  /** Подтвердить действие до показа результата. Та же очередь и id при повторах; без сервера — правила applyAction. */
+  confirm(action) {
+    const uid = this.getSession()?.userId ?? null;   // после выхода или смены аккаунта действие не отправляется
     const act = { ...action, id: action.id || newId() };
     const job = async () => {
       let r = null;
       for (let i = 0; i < 20; i++) {
-        if (this.getSession()?.userId !== uid) return { ok: false, reason: 'session' };
         while (this.pending) await this.pending.catch(() => {});
+        if ((this.getSession()?.userId ?? null) !== uid) return { ok: false, reason: 'session' };
         r = await this.run(act);
         if (r.reason === 'busy') { await sleep(30); continue; }
         if (r.reason !== 'network') break;
         await sleep(3000);
       }
+      if (r?.ok && act.op === 'event' && r.outcome?.sapphires > 0) this.bus?.emit(MSG.REWARD, { granted: { sapphires: r.outcome.sapphires } });
       if (!r?.ok) {
         if (r?.reason !== 'session') console.warn('[PlayerActions] сервер не подтвердил', act.op, r?.reason, r?.error || '');
         this.bus?.emit(MSG.QUEST_CHANGED);
@@ -117,7 +123,7 @@ export class PlayerActions {
   }
 
   /** v0.14.0: бой начался — сервер запоминает состояние героя; в ответе его HP и мана на старт боя (они же в state.data). */
-  combatStart(spawn, enemy) { return this.run({ op: 'combat_start', spawn, enemy }); }
+  combatStart(spawn, enemy) { return this.run({ op: 'combat_start', spawn, enemy, balanceVersion: 30 }); }
 
   /**
    * v0.14.0: запись боя на проверку. Успех: { ok, outcome: 'victory'|'defeat'|'retreat', verdict, outcome (изменения: опыт, уровни, предметы, события) }.
@@ -138,6 +144,9 @@ export class PlayerActions {
   }
 
   craft(recipe) { return this.run({ op: 'craft', recipe }); }
+  bagExpand() { return this.confirm({ op: 'bag_expand' }); }
+  bagDiscard(item, qty, pending = false) { return this.confirm({ op: 'bag_discard', item, qty, pending }); }
+  bagClaim(item, qty) { return this.confirm({ op: 'bag_claim', item, qty }); }
   use(item) { return this.run({ op: 'use', item }); }
   migrateV10() { return this.run({ op: 'migrate_v10' }); }
 
@@ -152,6 +161,7 @@ export class PlayerActions {
 
   // v0.15.0: подтверждение локальных действий (см. mirror). Условия и награды определяет сервер (config/serverRules.js).
   event(key) { return this.mirror({ op: 'event', key }); }
+  confirmEvent(key) { return this.confirm({ op: 'event', key }); }
   questAccept(quest) { return this.mirror({ op: 'quest_accept', quest }); }
   questTurnIn(quest) { return this.mirror({ op: 'quest_turn_in', quest }); }
   researchStart(upgrade) { return this.mirror({ op: 'research_start', upgrade }); }
@@ -173,5 +183,5 @@ export class PlayerActions {
   dailyDone(offer) { return this.run({ op: 'daily_done', offer }); }
   covenGive(item, qty) { return this.run({ op: 'coven_give', item, qty }); }   // v0.25.0: материалы в цель недели ковена
   covenClaim() { return this.run({ op: 'coven_claim' }); }
-  duelStart() { return this.run({ op: 'duel_start' }); }   // v0.26.0: вызов на Дуэль (соперника подбирает сервер)
+  duelStart() { return this.run({ op: 'duel_start', balanceVersion: 30 }); }   // v0.26.0: вызов на Дуэль (соперника подбирает сервер)
 }

@@ -4,15 +4,15 @@
 //
 // Данные локаций лежат на общем «холсте» координат (у каждой — свой прямоугольник rect, они не пересекаются): так id объектов,
 // сохранения и сервер остаются прежними. Игрок этого холста не видит — для него это отдельные места.
-import { CITY_START } from './world.city.js';
+import { CITY_START, FOREST_RETURN } from './world.city.js';
 import { FROSTWOOD_START, GRAVEYARD_START } from './world.expeditions.js';
 
 export const LOCATIONS = [
   {
     id: 'forest', name: 'Лес Мирры', subtitle: 'Глава I', exit: 'exit_forest',
     rect: { x: 0, y: 0, w: 1800, h: 5400 }, extraTop: 340, extraBottom: 500,   // тёмный лес за краями (только картинка)
-    arrival: { x: 1600, y: 3625 },
-    map: { x: 150, y: 560 },
+    arrival: FOREST_RETURN,
+    map: { x: 150, y: 525 },
     text: 'Дом Мирры, Лунный алтарь, древний круг Огня и старый лес за Древними воротами.',
   },
   {
@@ -20,7 +20,7 @@ export const LOCATIONS = [
     rect: { x: 1800, y: 1300, w: 1800, h: 4100 },
     arrival: CITY_START,
     requires: 'ch2_start', lockedText: 'Дорогу в город покажет Мирра после главы I.',
-    map: { x: 330, y: 360 },
+    map: { x: 330, y: 346 },
     text: 'Город под инеем: площадь, Архив, Общество Преображения, Замёрзший квартал, Дуэльный зал и Дом Ковенов.',
   },
   {

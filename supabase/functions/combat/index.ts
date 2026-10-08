@@ -17,17 +17,17 @@ var HERO_LEVELS = [
   { level: 3, xp: 150, maxHp: 132, maxMana: 110, manaRegen: 3, damageMult: 1.05, note: "\u0414\u043E\u0441\u0442\u0443\u043F \u043A \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u0443 II" },
   { level: 4, xp: 270, maxHp: 138, maxMana: 115, manaRegen: 3, damageMult: 1.08, note: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437 II, \u043F\u0443\u0442\u044C \u043A \u041E\u0433\u043D\u044E" },
   { level: 5, xp: 430, maxHp: 144, maxMana: 120, manaRegen: 3, damageMult: 1.1, note: "\u0421\u0442\u0430\u0440\u044B\u0439 \u043B\u0435\u0441" },
-  { level: 6, xp: 650, maxHp: 152, maxMana: 125, manaRegen: 3, damageMult: 1.12, note: "\u0410\u0441\u0442\u0440\u0430\u043B \u0438 \u0438\u0441\u043F\u044B\u0442\u0430\u043D\u0438\u0435" },
-  { level: 7, xp: 940, maxHp: 160, maxMana: 135, manaRegen: 3, damageMult: 1.15, note: "\u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0438\u0435 \u0433\u043B\u0430\u0432\u044B" },
-  { level: 8, xp: 1300, maxHp: 170, maxMana: 140, manaRegen: 3, damageMult: 1.18, note: "\u0414\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u0432\u044B\u0445\u043E\u0434" },
-  { level: 9, xp: 1750, maxHp: 180, maxMana: 145, manaRegen: 3, damageMult: 1.21, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" },
-  { level: 10, xp: 2350, maxHp: 190, maxMana: 155, manaRegen: 3, damageMult: 1.25, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" },
+  { level: 6, xp: 650, maxHp: 152, maxMana: 125, manaRegen: 3.2, damageMult: 1.12, note: "\u0410\u0441\u0442\u0440\u0430\u043B \u0438 \u0438\u0441\u043F\u044B\u0442\u0430\u043D\u0438\u0435" },
+  { level: 7, xp: 940, maxHp: 160, maxMana: 135, manaRegen: 3.2, damageMult: 1.15, note: "\u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0438\u0435 \u0433\u043B\u0430\u0432\u044B" },
+  { level: 8, xp: 1300, maxHp: 170, maxMana: 140, manaRegen: 3.2, damageMult: 1.18, note: "\u0414\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u0432\u044B\u0445\u043E\u0434" },
+  { level: 9, xp: 1750, maxHp: 180, maxMana: 145, manaRegen: 3.2, damageMult: 1.21, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" },
+  { level: 10, xp: 2350, maxHp: 190, maxMana: 155, manaRegen: 3.2, damageMult: 1.25, note: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435" },
   // v0.18.0: глава II (docs/design/chapter-2-balance-v0.1.md §2)
-  { level: 11, xp: 3100, maxHp: 202, maxMana: 165, manaRegen: 3, damageMult: 1.29, note: "\u041B\u0451\u0434 I" },
-  { level: 12, xp: 4e3, maxHp: 214, maxMana: 175, manaRegen: 3, damageMult: 1.33, note: "\u041B\u0451\u0434 II" },
-  { level: 13, xp: 5100, maxHp: 226, maxMana: 185, manaRegen: 3, damageMult: 1.37, note: "\u041B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F" },
-  { level: 14, xp: 6400, maxHp: 240, maxMana: 195, manaRegen: 3, damageMult: 1.42, note: "\u041A\u043E\u0432\u0435\u043D\u044B" },
-  { level: 15, xp: 7900, maxHp: 255, maxMana: 205, manaRegen: 3, damageMult: 1.48, note: "\u0424\u0438\u043D\u0430\u043B \u0433\u043B\u0430\u0432\u044B II" }
+  { level: 11, xp: 3100, maxHp: 202, maxMana: 165, manaRegen: 3.5, damageMult: 1.29, note: "\u041B\u0451\u0434 I" },
+  { level: 12, xp: 4e3, maxHp: 214, maxMana: 175, manaRegen: 3.5, damageMult: 1.33, note: "\u041B\u0451\u0434 II" },
+  { level: 13, xp: 5100, maxHp: 226, maxMana: 185, manaRegen: 3.5, damageMult: 1.37, note: "\u041B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F" },
+  { level: 14, xp: 6400, maxHp: 240, maxMana: 195, manaRegen: 3.8, damageMult: 1.42, note: "\u041A\u043E\u0432\u0435\u043D\u044B" },
+  { level: 15, xp: 7900, maxHp: 255, maxMana: 205, manaRegen: 3.8, damageMult: 1.48, note: "\u0424\u0438\u043D\u0430\u043B \u0433\u043B\u0430\u0432\u044B II" }
 ];
 var HERO_RECOVERY = {
   // Смерть не наказывает сильно (Combat Math §10).
@@ -159,7 +159,7 @@ var STORY_USES = {
     blockedBy: ["lunar_quest_complete"],
     events: ["lunar_quest_complete"],
     // прежняя разовая награда алтаря + гарантия цены Телекинеза II по школьному опыту и осколкам (трава и пыль — сами)
-    reward: { heroXP: 50, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUp: { school: { telekinesis: 150 }, items: { lunar_shard: 5 } } }
+    reward: { heroXP: 50, coins: 100, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUp: { school: { telekinesis: 150 }, items: { lunar_shard: 5, coins: 195 } } }
   },
   revealing_compound: {
     requires: ["guardian_defeated"],
@@ -172,7 +172,7 @@ var STORY_USES = {
     blockedBy: ["chapter_1_complete"],
     mana: 20,
     events: ["chapter_1_complete"],
-    reward: { heroXP: 100, coins: 30, schoolXP: { seal: 40 } }
+    reward: { heroXP: 100, coins: 60, schoolXP: { seal: 40 } }
   }
 };
 var FIRST_CRAFT = { event: "first_craft_complete", reward: { heroXP: 15 } };
@@ -229,7 +229,7 @@ var AMULET_UPGRADES = [
   { coins: 400, items: { frost_shard: 2, lunar_shard: 3 } }
 ];
 var AMULET_LEVEL_STEP = 0.25;
-function amuletEffect(id, level = 0) {
+function amuletEffect(id, level = 0, legacy = false) {
   const e = AMULETS[id]?.effect;
   if (!e) return {};
   const k = 1 + AMULET_LEVEL_STEP * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length));
@@ -237,7 +237,7 @@ function amuletEffect(id, level = 0) {
   const out = { ...e };
   if (e.damageMult && e.damageMult > 1) out.damageMult = r(1 + (e.damageMult - 1) * k);
   if (e.incomingMult) out.incomingMult = r(1 - (1 - e.incomingMult) * k);
-  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: r(Math.min(0.9, e.manaRescue.gainPct * k)) };
+  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: legacy ? r(e.manaRescue.gainPct * k) : r(e.manaRescue.gainPct + 0.1 * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length))) };
   if (e.iceMult) out.iceMult = r(1 + (e.iceMult - 1) * k);
   if (e.slowBonus) out.slowBonus = r(e.slowBonus * k);
   return out;
@@ -277,6 +277,33 @@ function buildSlotRules() {
     amuletUpgrades: AMULET_UPGRADES.map((u) => ({ coins: u.coins, items: { ...u.items } }))
   };
 }
+
+// src/config/bag.js
+var BAG = { initial: 100, increment: 50, price: 100, max: 1e9, version: 29 };
+var BAG_ITEMS = [...Object.keys(RESOURCES), ...Object.keys(POTIONS), ...Object.keys(CRAFT_ITEMS), "crimson_ember", "moonstone"];
+var counted = new Set(BAG_ITEMS);
+var takesBagSpace = (id) => counted.has(id);
+var bagUsed = (inventory) => BAG_ITEMS.reduce((n, id) => n + Math.max(0, Number(inventory?.[id]) || 0), 0);
+function bagData(objects) {
+  const raw = objects?.player_bag;
+  return {
+    capacity: Number.isInteger(raw?.capacity) && raw.capacity >= BAG.initial && raw.capacity <= BAG.max ? raw.capacity : BAG.initial,
+    pending: Object.fromEntries(Object.entries(raw?.pending || {}).filter(([id, n]) => counted.has(id) && Number.isInteger(n) && n > 0)),
+    version: raw?.version === BAG.version ? BAG.version : 0
+  };
+}
+var bagView = (state) => {
+  const b = bagData(state.data.worldObjects), used = bagUsed(state.data.inventory);
+  return { ...b, used, free: Math.max(0, b.capacity - used), price: BAG.price, increment: BAG.increment };
+};
+var bagRules = () => ({ ...BAG, items: BAG_ITEMS });
+var GIFT_PRICES = {
+  storyTelekinesis: { coins: 150, sapphires: 0 },
+  storyIce2: { coins: 500, sapphires: 0 },
+  storyIce3: { coins: 1500, sapphires: 0 },
+  tier2: { coins: 2e3, sapphires: 200 },
+  tier3: { coins: 1e4, sapphires: 750 }
+};
 
 // src/config/balance.progression.js
 var ITEMS = {
@@ -403,10 +430,14 @@ var UPGRADES = {
     doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u0431\u044C\u0451\u0442 \u0442\u0430\u043A, \u0447\u0442\u043E \u0437\u0430\u0449\u0438\u0442\u0430 \u043D\u0435 \u0443\u0441\u043F\u0435\u0432\u0430\u0435\u0442 \u0432\u0435\u0440\u043D\u0443\u0442\u044C\u0441\u044F."
   }
 };
+for (const [id, up] of Object.entries(UPGRADES)) {
+  Object.assign(up.cost, id === "telekinesis_2" ? GIFT_PRICES.storyTelekinesis : up.toLevel === 2 ? GIFT_PRICES.tier2 : GIFT_PRICES.tier3);
+}
 var BRANCH_RESPEC = { coins: 150 };
 var EVENT_REWARDS = {
+  unlock_telekinesis_1: { coins: 50 },
   first_world_interaction: { heroXP: 10 },
-  lunar_quest_complete: { heroXP: 50, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUpFor: "telekinesis_2" },
+  lunar_quest_complete: { heroXP: 50, coins: 100, schoolXP: { telekinesis: 40 }, items: { lunar_shard: 3 }, topUpFor: "telekinesis_2" },
   telekinesis_2_complete: { heroXP: 30 },
   heavy_path_open: { heroXP: 20 },
   unlock_fire_1: { heroXP: 30 },
@@ -415,32 +446,56 @@ var EVENT_REWARDS = {
   // обычный школьный опыт мира (+6), отдельной награды «за обучение» нет.
   unlock_seal_1: { heroXP: 60 },
   // v0.20.0 — глава II, квесты 1–5 (chapter-2-balance-v0.1.md §4; опыт боёв — в наградах врагов)
-  ch2_city_arrived: { heroXP: 220, coins: 60 },
-  ch2_met_ilaria: { heroXP: 200, coins: 50, items: { frost_herb: 1 } },
-  ch2_trace_found: { heroXP: 300, coins: 80, items: { frost_herb: 2, rune_dust: 1 } },
-  ch2_archive_read: { heroXP: 320, coins: 90 },
-  ch2_met_severin: { heroXP: 340, coins: 80, items: { warm_potion: 1 } },
+  ch2_city_arrived: { heroXP: 220, coins: 80 },
+  ch2_met_ilaria: { heroXP: 200, coins: 90, items: { frost_herb: 1 } },
+  ch2_trace_found: { heroXP: 300, coins: 100, items: { frost_herb: 2, rune_dust: 1 } },
+  ch2_archive_read: { heroXP: 320, coins: 110 },
+  ch2_met_severin: { heroXP: 340, coins: 100, items: { warm_potion: 1 } },
   // v0.21.0: квесты 6–10 (квест — минус опыт обязательных боёв, chapter-2-balance §4)
-  ch2_cargo_reported: { heroXP: 270, coins: 120, items: { frost_herb: 2 } },
-  ch2_frost_wave: { heroXP: 280, coins: 90 },
+  ch2_cargo_reported: { heroXP: 270, coins: 150, items: { frost_herb: 2 } },
+  ch2_frost_wave: { heroXP: 280, coins: 120 },
   ch2_nerys_met: { heroXP: 60 },
-  ch2_rescue_done: { heroXP: 300, coins: 140, items: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 } },
+  ch2_rescue_done: { heroXP: 300, coins: 180, items: { moon_herb: 1, frost_herb: 1, forest_mushroom: 1 } },
   // травы на первый Тёплый настой
   unlock_ice_1: { heroXP: 60 },
-  ch2_ice_trained: { heroXP: 240, coins: 60 },
-  ch2_quarter_cleared: { heroXP: 340, coins: 160, items: { ice_crystal: 2 } },
+  ch2_ice_trained: { heroXP: 240, coins: 100 },
+  ch2_quarter_cleared: { heroXP: 340, coins: 200, items: { ice_crystal: 2 } },
   // v0.22.0: квесты 11–15
   unlock_ice_2: { heroXP: 60, items: { ice_crystal: 1, tree_resin: 1, rune_dust: 1 } },
   // материалы на первый Флакон хрупкости
-  ch2_brittle_done: { heroXP: 240, coins: 70 },
+  ch2_brittle_done: { heroXP: 240, coins: 100 },
   ch2_stabilized: { heroXP: 120 },
-  ch2_lab_reported: { heroXP: 300, coins: 180, items: { frost_shard: 1, lunar_shard: 2 } },
-  ch2_severin_confronted: { heroXP: 380, coins: 80 },
+  ch2_lab_reported: { heroXP: 300, coins: 220, items: { frost_shard: 1, lunar_shard: 2 } },
+  ch2_severin_confronted: { heroXP: 380, coins: 100 },
   ch2_coven_met: { heroXP: 60 },
-  ch2_coven_ready: { heroXP: 300, coins: 180, items: { ice_crystal: 2 } },
+  ch2_coven_ready: { heroXP: 300, coins: 220, items: { ice_crystal: 2 } },
   ch2_epilogue: { heroXP: 250 },
-  chapter_2_complete: { heroXP: 300, coins: 150, items: { frost_shard: 1 } }
+  chapter_2_complete: { heroXP: 300, coins: 330, topUp: { heroXP: 7900 }, items: { frost_shard: 1 } }
   // + 5 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
+};
+var BALANCE_MIGRATION = {
+  event: "balance_v30_applied",
+  coins: {
+    unlock_telekinesis_1: 50,
+    lunar_quest_complete: 100,
+    chapter_1_complete: 30,
+    ch2_city_arrived: EVENT_REWARDS.ch2_city_arrived.coins - 60,
+    ch2_met_ilaria: EVENT_REWARDS.ch2_met_ilaria.coins - 50,
+    ch2_trace_found: EVENT_REWARDS.ch2_trace_found.coins - 80,
+    ch2_archive_read: EVENT_REWARDS.ch2_archive_read.coins - 90,
+    ch2_met_severin: EVENT_REWARDS.ch2_met_severin.coins - 80,
+    ch2_cargo_reported: EVENT_REWARDS.ch2_cargo_reported.coins - 120,
+    ch2_frost_wave: EVENT_REWARDS.ch2_frost_wave.coins - 90,
+    ch2_rescue_done: EVENT_REWARDS.ch2_rescue_done.coins - 140,
+    ch2_ice_trained: EVENT_REWARDS.ch2_ice_trained.coins - 60,
+    ch2_quarter_cleared: EVENT_REWARDS.ch2_quarter_cleared.coins - 160,
+    ch2_brittle_done: EVENT_REWARDS.ch2_brittle_done.coins - 70,
+    ch2_lab_reported: EVENT_REWARDS.ch2_lab_reported.coins - 180,
+    ch2_severin_confronted: EVENT_REWARDS.ch2_severin_confronted.coins - 80,
+    ch2_coven_ready: EVENT_REWARDS.ch2_coven_ready.coins - 180,
+    chapter_2_complete: EVENT_REWARDS.chapter_2_complete.coins - 150
+  },
+  sapphires: { ch2_quarter_cleared: 1, ch2_coven_ready: 1 }
 };
 
 // src/config/balance.abilities.js
@@ -735,24 +790,26 @@ var fm = (female, male) => ({ female, male });
 // src/config/world.city.js
 var CITY_ZONES = [
   { id: "R", name: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0431\u043E\u043B\u044C\u0448\u043E\u0439 \u043C\u0438\u0440", x: 1800, y: 3300, w: 560, h: 650, safePoint: { x: 1960, y: 3625 } },
-  { id: "AR", name: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", x: 2440, y: 2560, w: 420, h: 480, safePoint: { x: 2650, y: 3150 } },
-  { id: "SO", name: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", x: 2960, y: 2560, w: 500, h: 480, safePoint: { x: 3210, y: 3150 } },
-  { id: "LB", name: "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", x: 1840, y: 4060, w: 480, h: 700, safePoint: { x: 2070, y: 3800 } },
-  { id: "DU", name: "\u0417\u0430\u043B \u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u043E\u0439 \u0414\u0443\u044D\u043B\u0438", x: 2420, y: 4100, w: 440, h: 360, safePoint: { x: 2640, y: 4020 } },
-  { id: "CV", name: "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", x: 2960, y: 4100, w: 500, h: 360, safePoint: { x: 3210, y: 4020 } },
+  { id: "AR", name: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", x: 2440, y: 2560, w: 420, h: 480, interior: true, safePoint: { x: 2650, y: 3150 } },
+  { id: "SO", name: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", x: 2960, y: 2560, w: 500, h: 480, interior: true, safePoint: { x: 3210, y: 3150 } },
+  { id: "LB", name: "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", x: 1840, y: 4060, w: 480, h: 700, interior: true, safePoint: { x: 2070, y: 3800 } },
+  { id: "DU", name: "\u0417\u0430\u043B \u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u043E\u0439 \u0414\u0443\u044D\u043B\u0438", x: 2420, y: 4100, w: 440, h: 360, interior: true, safePoint: { x: 2640, y: 4020 } },
+  { id: "CV", name: "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", x: 2960, y: 4100, w: 500, h: 360, interior: true, safePoint: { x: 3210, y: 4020 } },
+  { id: "BK", name: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", x: 3120, y: 3560, w: 400, h: 420, interior: true, safePoint: { x: 3320, y: 4030 } },
   { id: "WH", name: "\u0421\u043A\u043B\u0430\u0434\u0441\u043A\u043E\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 4500, w: 1140, h: 500, safePoint: { x: 2910, y: 4050 } },
   { id: "FQ", name: "\u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 1500, w: 1160, h: 1e3, safePoint: { x: 2910, y: 3150 } },
   { id: "P", name: "\u0426\u0435\u043D\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C", x: 2360, y: 1500, w: 1240, h: 3500, safePoint: { x: 2600, y: 3625 } }
 ];
 var CITY_GROUND = [
-  { tex: "stone_path_01", x: 2360, y: 1500, w: 1240, h: 3540 },
-  { tex: "wooden_floor_01", x: 2440, y: 2560, w: 420, h: 480 },
-  { tex: "wooden_floor_01", x: 2960, y: 2560, w: 500, h: 480 },
+  { tex: "city_paving", x: 2360, y: 1500, w: 1240, h: 3540 },
+  { tex: "city_wood_floor", x: 2440, y: 2560, w: 420, h: 480, interior: true, tint: 15326404 },
+  { tex: "city_stone_floor", x: 2960, y: 2560, w: 500, h: 480, interior: true },
   // v0.22.0: Дуэльный зал и Дом Ковенов открыты (полы), тайная лаборатория к югу от дороги и проход к ней
-  { tex: "wooden_floor_01", x: 2420, y: 4100, w: 440, h: 360 },
-  { tex: "wooden_floor_01", x: 2960, y: 4100, w: 500, h: 360 },
+  { tex: "city_stone_floor", x: 2420, y: 4100, w: 440, h: 360, interior: true, tint: 13157563 },
+  { tex: "city_wood_floor", x: 2960, y: 4100, w: 500, h: 360, interior: true, tint: 13030587 },
   { tex: "stone_path_01", x: 2020, y: 3950, w: 100, h: 120 },
-  { tex: "stone_path_01", x: 1840, y: 4060, w: 480, h: 700 }
+  { tex: "city_stone_floor", x: 1840, y: 4060, w: 480, h: 700, interior: true, tint: 11912649 },
+  { tex: "city_wood_floor", x: 3120, y: 3560, w: 400, h: 420, interior: true, tint: 14009773 }
 ];
 function buildingTop(x, y, w, h, doorX) {
   const t = 30;
@@ -764,14 +821,14 @@ function buildingTop(x, y, w, h, doorX) {
     { kind: "wall", x, y: y + h - t, w, h: t }
   ];
 }
-function building(x, y, w, h, doorX = null) {
+function building(x, y, w, h, doorX = null, doorW = 100) {
   const t = 30, out = [
     { kind: "wall", x, y, w, h: t },
     { kind: "wall", x, y, w: t, h },
     { kind: "wall", x: x + w - t, y, w: t, h }
   ];
   if (doorX == null) out.push({ kind: "wall", x, y: y + h - t, w, h: t });
-  else out.push({ kind: "wall", x, y: y + h - t, w: doorX - x, h: t }, { kind: "wall", x: doorX + 100, y: y + h - t, w: x + w - doorX - 100, h: t });
+  else out.push({ kind: "wall", x, y: y + h - t, w: doorX - x, h: t }, { kind: "wall", x: doorX + doorW, y: y + h - t, w: x + w - doorX - doorW, h: t });
   return out;
 }
 var CITY_COLLIDERS = [
@@ -803,17 +860,17 @@ var CITY_COLLIDERS = [
   // ---- предметы с картинкой (низ спрайта на нижней кромке)
   { kind: "furniture", x: 2700, y: 3520, w: 180, h: 60, tex: "fountain_frozen" },
   { kind: "furniture", x: 3240, y: 3360, w: 220, h: 50, tex: "market_stall_01" },
-  { kind: "furniture", x: 2470, y: 2600, w: 140, h: 40, tex: "bookshelf_01" },
-  { kind: "furniture", x: 2650, y: 2600, w: 140, h: 40, tex: "bookshelf_01" },
-  { kind: "furniture", x: 2560, y: 2820, w: 110, h: 40, tex: "table_01" },
-  { kind: "furniture", x: 3e3, y: 2600, w: 140, h: 40, tex: "bookshelf_01" },
-  { kind: "furniture", x: 3300, y: 2620, w: 90, h: 40, tex: "cauldron_01" },
-  { kind: "furniture", x: 3060, y: 2840, w: 110, h: 40, tex: "table_01" },
-  { kind: "furniture", x: 3330, y: 3770, w: 110, h: 40, tex: "table_01" },
-  { kind: "furniture", x: 2480, y: 4620, w: 100, h: 40, tex: "crate_01" },
-  { kind: "furniture", x: 2640, y: 4700, w: 70, h: 40, tex: "barrel_01" },
-  { kind: "furniture", x: 3120, y: 4640, w: 100, h: 40, tex: "crate_01" },
-  { kind: "furniture", x: 3380, y: 4800, w: 100, h: 40, tex: "crate_01" },
+  { kind: "furniture", x: 2470, y: 2730, w: 140, h: 40, tex: "city_archive_shelf" },
+  { kind: "furniture", x: 2660, y: 2730, w: 140, h: 40, tex: "city_archive_shelf" },
+  { kind: "furniture", x: 2525, y: 2865, w: 160, h: 35, tex: "city_archive_desk" },
+  { kind: "furniture", x: 3010, y: 2740, w: 190, h: 40, tex: "city_society_workbench" },
+  { kind: "furniture", x: 3310, y: 2740, w: 70, h: 40, tex: "city_coolant_stable" },
+  { kind: "furniture", x: 3010, y: 2910, w: 100, h: 30, tex: "city_equipment" },
+  { kind: "furniture", x: 3205, y: 3840, w: 230, h: 30, tex: "city_bank_counter" },
+  { kind: "furniture", x: 2425, y: 4645, w: 300, h: 65, tex: "city_warehouse" },
+  { kind: "furniture", x: 2640, y: 4700, w: 70, h: 40, tex: "city_barrel" },
+  { kind: "furniture", x: 3225, y: 4645, w: 300, h: 65, tex: "city_warehouse" },
+  { kind: "furniture", x: 3380, y: 4800, w: 100, h: 40, tex: "city_crate" },
   // v0.21.0 (добавлено в конец): вторая половина ограды Замёрзшего квартала
   { kind: "ruin", x: 2960, y: 1960, w: 600, h: 40 },
   // v0.22.0 (добавлено в конец): лес вокруг тайной лаборатории и её каменные стены (вход — пролом x 2020–2120, его держит печать lab_seal)
@@ -824,32 +881,84 @@ var CITY_COLLIDERS = [
   { kind: "ruin", x: 1840, y: 4060, w: 180, h: 40 },
   { kind: "ruin", x: 2120, y: 4060, w: 200, h: 40 },
   { kind: "ruin", x: 1840, y: 4720, w: 480, h: 40 },
-  { kind: "furniture", x: 1880, y: 4400, w: 110, h: 40, tex: "table_01" },
-  { kind: "furniture", x: 2180, y: 4120, w: 140, h: 40, tex: "bookshelf_01" },
-  { kind: "furniture", x: 3020, y: 4140, w: 140, h: 40, tex: "bookshelf_01" }
+  { kind: "furniture", x: 1885, y: 4430, w: 150, h: 35, tex: "city_society_workbench" },
+  { kind: "furniture", x: 2180, y: 4230, w: 100, h: 35, tex: "city_coven_cabinet" },
+  { kind: "furniture", x: 3010, y: 4275, w: 120, h: 35, tex: "city_coven_cabinet" },
+  // Residential facades in the formerly empty northern edge; physical footprint matches their base.
+  { kind: "furniture", x: 2415, y: 1510, w: 430, h: 90, tex: "city_house" },
+  { kind: "furniture", x: 3125, y: 1510, w: 430, h: 90, tex: "city_house" },
+  { kind: "furniture", x: 3280, y: 2910, w: 120, h: 30, tex: "city_equipment" },
+  { kind: "furniture", x: 1885, y: 4240, w: 150, h: 35, tex: "city_lab_machine" },
+  { kind: "furniture", x: 2125, y: 4505, w: 150, h: 35, tex: "city_lab_machine" },
+  { kind: "furniture", x: 2e3, y: 4680, w: 100, h: 30, tex: "city_equipment" },
+  { kind: "furniture", x: 2435, y: 4540, w: 50, h: 20, tex: "city_barrel" },
+  { kind: "furniture", x: 3445, y: 4540, w: 50, h: 20, tex: "city_barrel" },
+  { kind: "furniture", x: 2685, y: 4545, w: 70, h: 25, tex: "city_crate" },
+  { kind: "furniture", x: 3335, y: 4575, w: 70, h: 25, tex: "city_crate" }
+];
+var CITY_EXTRA_COLLIDERS = [
+  ...building(3120, 3560, 400, 420, 3250, 140),
+  { kind: "furniture", x: 3380, y: 3720, w: 85, h: 35, tex: "city_bank_safe" },
+  { kind: "furniture", x: 3170, y: 3720, w: 80, h: 30, tex: "trunk_01" },
+  { kind: "furniture", x: 2690, y: 2935, w: 110, h: 30, tex: "city_archive_shelf" },
+  { kind: "furniture", x: 3320, y: 4380, w: 90, h: 30, tex: "trunk_01" },
+  { kind: "furniture", x: 3060, y: 4380, w: 170, h: 30, tex: "city_coven_table" },
+  { kind: "furniture", x: 2465, y: 4250, w: 80, h: 30, tex: "city_duel_rack" },
+  { kind: "furniture", x: 2730, y: 4250, w: 80, h: 30, tex: "city_duel_rack" },
+  { kind: "furniture", x: 2415, y: 2070, w: 430, h: 80, tex: "city_frozen_house" },
+  { kind: "furniture", x: 3125, y: 2050, w: 430, h: 80, tex: "city_frozen_house" },
+  { kind: "furniture", x: 2110, y: 4640, w: 140, h: 35, tex: "city_archive_desk" },
+  { kind: "furniture", x: 2205, y: 4400, w: 70, h: 30, tex: "bed_01" },
+  { kind: "furniture", x: 1885, y: 4530, w: 70, h: 30, tex: "bed_01" }
 ];
 var CITY_KEEP_CLEAR = [{ x: 1800, y: 3300, w: 1800, h: 1700 }, { x: 2360, y: 1460, w: 1240, h: 1840 }, { x: 1800, y: 3950, w: 560, h: 1450 }];
 var CITY_INTERACTIVES = [
+  {
+    id: "sapphire_city_cache_1",
+    kind: "chest",
+    x: 2730,
+    y: 3480,
+    texture: "chest_01",
+    radius: 100,
+    collide: { w: 50, h: 24 },
+    requiresEvent: "ch2_city_arrived",
+    reward: { sapphires: 1 },
+    hint: "\u0422\u0430\u0439\u043D\u0438\u043A \u0443 \u043F\u043B\u043E\u0449\u0430\u0434\u0438"
+  },
+  {
+    id: "sapphire_city_cache_2",
+    kind: "chest",
+    x: 2910,
+    y: 3960,
+    texture: "chest_01",
+    radius: 100,
+    collide: { w: 50, h: 24 },
+    requiresEvent: "ch2_quarter_cleared",
+    reward: { sapphires: 1 },
+    hint: "\u0422\u0430\u0439\u043D\u0438\u043A \u0443 \u0441\u0442\u0430\u0440\u043E\u0439 \u043E\u0433\u0440\u0430\u0434\u044B"
+  },
   // v0.27.0: выходы на карту мира (лес и город — разные локации, переход — только через карту у выхода)
-  { id: "exit_forest", kind: "exit", x: 1640, y: 3625, texture: "signpost_01", radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
+  // Прежний декоративный указатель d05 у перекрёстка теперь открывает карту.
+  { id: "exit_forest", kind: "exit", x: 1104, y: 4416, texture: "signpost_01", radius: 110, collide: { w: 24, h: 10 }, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
   { id: "exit_city", kind: "exit", x: 1880, y: 3625, texture: "signpost_01", radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
   // дорога: ресурсы
-  { id: "frostherb_r1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2060, y: 3420, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_start" },
-  { id: "frostherb_r2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2240, y: 3880, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_start" },
+  { id: "frostherb_r1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2060, y: 3420, texture: "city_frost_herb", radius: 90, requiresEvent: "ch2_start" },
+  { id: "frostherb_r2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2240, y: 3880, texture: "city_frost_herb", radius: 90, requiresEvent: "ch2_start" },
   { id: "resin_r1", kind: "gather", res: "tree_resin", amount: 1, respawnSec: 240, x: 1920, y: 3860, texture: "resin_log_01", radius: 90 },
   // площадь. v0.23.0: доска поручений (5 поручений дня, взять 3) — открывается после квеста 10
   { id: "city_board", kind: "board", x: 2480, y: 3420, texture: "notice_board_01", collide: { w: 80, h: 20 }, radius: 120, hint: "\u0414\u043E\u0441\u043A\u0430 \u043F\u043E\u0440\u0443\u0447\u0435\u043D\u0438\u0439" },
   { id: "npc_ilaria", kind: "npc", npc: "ilaria", x: 2560, y: 3260, texture: "npc_ilaria", collide: { w: 50, h: 24 }, radius: 140 },
   { id: "npc_merchant", kind: "npc", npc: "merchant", x: 3350, y: 3500, texture: "npc_merchant", collide: { w: 50, h: 24 }, radius: 140 },
-  { id: "npc_banker", kind: "npc", npc: "banker", x: 3380, y: 3880, texture: "npc_banker", collide: { w: 50, h: 24 }, radius: 140 },
+  { id: "npc_banker", kind: "npc", npc: "banker", x: 3320, y: 3830, texture: "npc_banker", collide: { w: 50, h: 24 }, radius: 140 },
   { id: "npc_duelist", kind: "npc", npc: "duelist", x: 2640, y: 4040, texture: "npc_duelist", collide: { w: 50, h: 24 }, radius: 140 },
   {
     id: "plaza_trace",
     kind: "seal_sigil",
     x: 2860,
     y: 3720,
-    texture: "seal_sigil_dim",
-    litTexture: "seal_sigil_lit",
+    texture: "city_frost_trace",
+    litTexture: "city_frost_trace",
+    litTint: 15259391,
     radius: 120,
     requiresEvent: "ch2_met_ilaria",
     doneEvent: "ch2_trace_astral",
@@ -866,7 +975,7 @@ var CITY_INTERACTIVES = [
     weight: "light",
     x: 2960,
     y: 3420,
-    texture: "crate_01",
+    texture: "city_crate",
     collide: { w: 70, h: 30 },
     target: { x: 3040, y: 3380 },
     radius: 120,
@@ -879,10 +988,12 @@ var CITY_INTERACTIVES = [
   {
     id: "archive_document",
     kind: "seal_sigil",
-    x: 2615,
-    y: 2880,
-    texture: "magic_book_01",
-    litTexture: "magic_book_01",
+    x: 2605,
+    y: 2900,
+    elevated: 50,
+    texture: "city_archive_document",
+    litTexture: "city_archive_document",
+    litTint: 15259391,
     radius: 110,
     requiresEvent: "ch2_trace_found",
     doneEvent: "ch2_archive_read",
@@ -893,7 +1004,7 @@ var CITY_INTERACTIVES = [
     doneButton: "\u041A \u041E\u0431\u0449\u0435\u0441\u0442\u0432\u0443"
   },
   // Общество Преображения
-  { id: "npc_severin", kind: "npc", npc: "severin", x: 3210, y: 2760, texture: "npc_severin", collide: { w: 50, h: 24 }, radius: 140, hideEvent: "ch2_final_start" },
+  { id: "npc_severin", kind: "npc", npc: "severin", x: 3210, y: 2890, texture: "npc_severin", collide: { w: 50, h: 24 }, radius: 140, hideEvent: "ch2_final_start" },
   // ---- v0.21.0: квест 6 «Пропавший груз» — Складской квартал (после боя со сборщиками)
   {
     id: "wh_cargo",
@@ -902,7 +1013,7 @@ var CITY_INTERACTIVES = [
     weight: "medium",
     x: 3250,
     y: 4930,
-    texture: "crate_01",
+    texture: "city_crate",
     collide: { w: 70, h: 30 },
     target: { x: 3330, y: 4900 },
     radius: 120,
@@ -916,8 +1027,9 @@ var CITY_INTERACTIVES = [
     kind: "seal_sigil",
     x: 2700,
     y: 4930,
-    texture: "trunk_01",
-    litTexture: "trunk_01",
+    texture: "city_equipment",
+    litTexture: "city_equipment",
+    litTint: 15259391,
     radius: 110,
     requiresEvent: "ch2_cargo_found",
     doneEvent: "ch2_serials_read",
@@ -962,10 +1074,10 @@ var CITY_INTERACTIVES = [
   {
     id: "fq_door",
     kind: "seal_sigil",
-    x: 3420,
-    y: 2140,
+    x: 3340,
+    y: 2150,
     texture: "frozen_door_01",
-    litTexture: "frozen_door_01",
+    litTexture: "city_door_open",
     radius: 120,
     requiresEnemyDefeated: "fq_collector",
     doneEvent: "ch2_rescue_door",
@@ -982,9 +1094,9 @@ var CITY_INTERACTIVES = [
     weight: "medium",
     x: 2500,
     y: 2190,
-    texture: "crate_01",
+    texture: "city_crate",
     collide: { w: 70, h: 30 },
-    target: { x: 2470, y: 2120 },
+    target: { x: 2440, y: 2260 },
     radius: 120,
     requiresEnemyDefeated: "fq_critter",
     doneEvent: "ch2_rescue_cellar",
@@ -1014,9 +1126,10 @@ var CITY_INTERACTIVES = [
     kind: "ice",
     x: 2070,
     y: 4100,
-    texture: "lab_seal_01",
-    frozenTexture: "lab_seal_frozen_01",
+    texture: "city_lab_door",
+    frozenTexture: "city_lab_door_open",
     walkable: true,
+    groundWhenFrozen: false,
     collide: { w: 100, h: 40 },
     radius: 130,
     waitEvent: "ch2_lab_found",
@@ -1025,27 +1138,30 @@ var CITY_INTERACTIVES = [
     lockedText: "\u0421\u0442\u0430\u0440\u0430\u044F \u0434\u0432\u0435\u0440\u044C \u0432 \u0441\u043A\u043B\u043E\u043D\u0435 \u0445\u043E\u043B\u043C\u0430, \u043D\u0430 \u043D\u0435\u0439 \u0434\u0440\u043E\u0436\u0438\u0442 \u0447\u0443\u0436\u0430\u044F \u043F\u0435\u0447\u0430\u0442\u044C. \u0427\u0442\u043E \u0437\u0430 \u043D\u0435\u0439 \u2014 \u043F\u043E\u043A\u0430 \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E.",
     doneText: "\u041B\u0451\u0434 \u0443\u0441\u043F\u043E\u043A\u043E\u0438\u043B \u043F\u0435\u0447\u0430\u0442\u044C \u2014 \u043C\u0430\u0433\u0438\u044F \u0437\u0430\u043C\u0435\u0440\u043B\u0430, \u0438 \u0434\u0432\u0435\u0440\u044C \u043F\u043E\u0434\u0430\u043B\u0430\u0441\u044C."
   },
-  { id: "lab_herb_1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 1900, y: 4230, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_lab_open" },
-  { id: "lab_herb_2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2270, y: 4300, texture: "moon_herb_01", radius: 90, requiresEvent: "ch2_lab_open" },
+  { id: "lab_herb_1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 1900, y: 4230, texture: "city_frost_herb", radius: 90, requiresEvent: "ch2_lab_open" },
+  { id: "lab_herb_2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2270, y: 4300, texture: "city_frost_herb", radius: 90, requiresEvent: "ch2_lab_open" },
   {
     id: "lab_chest",
     kind: "chest",
     x: 1910,
     y: 4680,
-    texture: "trunk_01",
+    texture: "chest_01",
+    openTexture: "chest_01_open",
     radius: 110,
     requiresEvent: "ch2_lab_open",
     reward: { items: { rune_dust: 2, lunar_shard: 2, frost_herb: 2 } }
   },
   { id: "lab_cauldron", kind: "alchemy", x: 2260, y: 4690, texture: "cauldron_01", collide: { w: 66, h: 26 }, radius: 120, requiresEvent: "ch2_lab_open" },
-  { id: "npc_tikhon", kind: "npc", npc: "tikhon", x: 1950, y: 4560, texture: "npc_tikhon", radius: 130, requiresEvent: "ch2_vol_1" },
+  { id: "npc_tikhon", kind: "npc", npc: "tikhon", x: 1990, y: 4580, texture: "npc_tikhon", radius: 130, requiresEvent: "ch2_vol_1" },
   {
     id: "lab_journal",
     kind: "seal_sigil",
-    x: 2160,
-    y: 4600,
-    texture: "magic_book_01",
-    litTexture: "magic_book_01",
+    x: 2180,
+    y: 4675,
+    elevated: 50,
+    texture: "city_lab_journal",
+    litTexture: "city_lab_journal",
+    litTint: 15259391,
     radius: 110,
     requiresEnemyDefeated: "lab_construct",
     doneEvent: "ch2_lab_journal",
@@ -1062,7 +1178,7 @@ var CITY_INTERACTIVES = [
     weight: "heavy",
     x: 2760,
     y: 3960,
-    texture: "crate_01",
+    texture: "city_debris",
     collide: { w: 70, h: 30 },
     target: { x: 2820, y: 3900 },
     radius: 120,
@@ -1083,19 +1199,20 @@ var CITY_INTERACTIVES = [
     hint: "\u041B\u0435\u0434\u044F\u043D\u0430\u044F \u043F\u0440\u0435\u0433\u0440\u0430\u0434\u0430",
     doneText: "\u041F\u0440\u0435\u0433\u0440\u0430\u0434\u0430 \u0440\u0430\u0441\u0442\u0430\u044F\u043B\u0430 \u2014 \u0443\u043B\u0438\u0446\u0430 \u043A \u0440\u044B\u043D\u043A\u0443 \u0441\u0432\u043E\u0431\u043E\u0434\u043D\u0430."
   },
+  // Existing id/event retained for saved games and server validation; the object is a damaged experimental device.
   {
     id: "final_rift",
     kind: "ice",
     x: 2520,
     y: 3880,
-    texture: "rift_01",
-    frozenTexture: "rift_frozen_01",
+    texture: "city_coolant",
+    frozenTexture: "city_coolant_stable",
     radius: 130,
     requiresEvent: "ch2_final_start",
     doneEvent: "ch2_fin_ice",
-    hint: "\u041D\u0435\u0441\u0442\u0430\u0431\u0438\u043B\u044C\u043D\u044B\u0439 \u0440\u0430\u0437\u043B\u043E\u043C",
-    lockedText: "\u0420\u0430\u0437\u043B\u043E\u043C \u0434\u0440\u043E\u0436\u0438\u0442 \u0438 \u0432\u044B\u043F\u043B\u0451\u0432\u044B\u0432\u0430\u0435\u0442 \u0445\u043E\u043B\u043E\u0434. \u0415\u0433\u043E \u0443\u0441\u043F\u043E\u043A\u043E\u0438\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u041B\u0451\u0434.",
-    doneText: "\u0420\u0430\u0437\u043B\u043E\u043C \u0441\u0445\u0432\u0430\u0442\u0438\u043B\u0441\u044F \u0440\u043E\u0432\u043D\u044B\u043C \u043B\u044C\u0434\u043E\u043C \u0438 \u0437\u0430\u0442\u0438\u0445."
+    hint: "\u041F\u043E\u0432\u0440\u0435\u0436\u0434\u0451\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0435\u0440\u0432\u0443\u0430\u0440",
+    lockedText: "\u0418\u0437 \u0442\u0440\u0435\u0441\u043D\u0443\u0432\u0448\u0435\u0433\u043E \u0440\u0435\u0437\u0435\u0440\u0432\u0443\u0430\u0440\u0430 \u0432\u044B\u0440\u044B\u0432\u0430\u0435\u0442\u0441\u044F \u043C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u0445\u043E\u043B\u043E\u0434. \u041B\u0451\u0434 \u0441\u0442\u0430\u0431\u0438\u043B\u0438\u0437\u0438\u0440\u0443\u0435\u0442 \u043F\u0440\u0438\u0431\u043E\u0440.",
+    doneText: "\u041B\u0451\u0434 \u0441\u0442\u044F\u043D\u0443\u043B \u0442\u0440\u0435\u0449\u0438\u043D\u044B \u2014 \u0440\u0435\u0437\u0435\u0440\u0432\u0443\u0430\u0440 \u0437\u0430\u0442\u0438\u0445."
   },
   {
     id: "final_ward",
@@ -1121,8 +1238,9 @@ var CITY_INTERACTIVES = [
     kind: "seal_sigil",
     x: 2510,
     y: 4280,
-    texture: "magic_book_01",
-    litTexture: "magic_book_01",
+    texture: "city_letters",
+    litTexture: "city_letters",
+    litTint: 15259391,
     radius: 110,
     requiresEnemyDefeated: "final_severin",
     doneEvent: "ch2_letters_read",
@@ -1160,14 +1278,14 @@ var CITY_ENEMIES = [
   { id: "yard_brittle_2", enemy: "frost_collector", x: 3400, y: 1880, radius: 110, requiresEvent: "unlock_ice_2", defeatEvent: "ch2_brittle_2" },
   // квест 12: добровольцы и конструкт в лаборатории
   { id: "vol_1", enemy: "volunteer", x: 1970, y: 4320, radius: 110, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_vol_1" },
-  { id: "vol_2", enemy: "volunteer", x: 2200, y: 4420, radius: 110, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_vol_2" },
+  { id: "vol_2", enemy: "volunteer", texture: "enemy_volunteer_miron", x: 2150, y: 4400, radius: 110, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_vol_2" },
   { id: "lab_construct", enemy: "experimental_construct", x: 2080, y: 4600, radius: 120, requiresEvent: "ch2_lab_open", defeatEvent: "ch2_lab_construct", repeatSec: 900 },
   // квест 14: нестабильные конструкции в городе
   { id: "unstable_1", enemy: "frost_collector", x: 3e3, y: 3980, radius: 110, requiresEvent: "ch2_coven_met", defeatEvent: "ch2_unstable_1" },
   { id: "unstable_2", enemy: "frost_collector", x: 2720, y: 4660, radius: 110, requiresEvent: "ch2_coven_met", defeatEvent: "ch2_unstable_2" },
   // квест 15: город во льду и Северин в Дуэльном зале
   { id: "final_critter", enemy: "frost_critter", x: 2900, y: 3420, radius: 110, requiresEvent: "ch2_final_start" },
-  { id: "final_collector", enemy: "frost_collector", x: 3240, y: 3620, radius: 110, requiresEvent: "ch2_final_start" },
+  { id: "final_collector", enemy: "frost_collector", x: 3010, y: 3620, radius: 110, requiresEvent: "ch2_final_start" },
   { id: "final_construct", enemy: "experimental_construct", x: 2480, y: 3560, radius: 120, requiresEvent: "ch2_final_start" },
   { id: "final_severin", enemy: "severin_boss", x: 2640, y: 4320, radius: 130, requiresEvent: "ch2_ice3", defeatEvent: "ch2_severin_defeated" }
 ];
@@ -1180,7 +1298,8 @@ var CITY_DECOR = [
   { id: "ct_frost_1", k: "frost_patch_01", x: 2760, y: 3700, floor: true },
   { id: "ct_frost_2", k: "frost_patch_01", x: 2980, y: 3860, floor: true },
   { id: "ct_frost_3", k: "frost_patch_01", x: 2620, y: 3560, floor: true },
-  { id: "ct_candles", k: "candle_group_01", x: 2780, y: 2650 },
+  { id: "bank_lamp_w", k: "city_lamp_01", x: 3170, y: 4030 },
+  { id: "bank_lamp_e", k: "city_lamp_01", x: 3470, y: 4030 },
   // v0.21.0: Замёрзший квартал — иней на мостовой и фонари
   ...[[2560, 2300], [3180, 2420], [2680, 2080], [3360, 2060], [2560, 1660], [3240, 1640], [2700, 1880], [3420, 1860]].map(([x, y], i) => ({ id: `fq_frost_${i}`, k: "frost_patch_01", x, y, floor: true })),
   ...[[2440, 2470], [3520, 2470], [2440, 1940], [3520, 1940], [2440, 1540], [3520, 1540]].map(([x, y], i) => ({ id: `fq_lamp_${i}`, k: "city_lamp_01", x, y }))
@@ -1223,9 +1342,9 @@ var EXP_OBJECT_LIST = [
   { id: "exit_frostwood", kind: "exit", x: 3760, y: 2440, texture: "signpost_01", radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
   { id: "exit_graveyard", kind: "exit", x: 3760, y: 5120, texture: "signpost_01", radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
   // Морозный лес: сбор
-  { id: "fw_herb_1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 4500, y: 2300, texture: "moon_herb_01", radius: 90 },
-  { id: "fw_herb_2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 3900, y: 1650, texture: "moon_herb_01", radius: 90 },
-  { id: "fw_herb_3", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 5100, y: 1100, texture: "moon_herb_01", radius: 90 },
+  { id: "fw_herb_1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 4500, y: 2300, texture: "city_frost_herb", radius: 90 },
+  { id: "fw_herb_2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 3900, y: 1650, texture: "city_frost_herb", radius: 90 },
+  { id: "fw_herb_3", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 5100, y: 1100, texture: "city_frost_herb", radius: 90 },
   { id: "fw_crystal_1", kind: "gather", res: "ice_crystal", amount: 1, respawnSec: 900, x: 5150, y: 2250, texture: "ice_crystal_node_01", radius: 90 },
   { id: "fw_crystal_2", kind: "gather", res: "ice_crystal", amount: 1, respawnSec: 900, x: 3850, y: 600, texture: "ice_crystal_node_01", radius: 90 },
   {
@@ -1234,8 +1353,8 @@ var EXP_OBJECT_LIST = [
     guard: "fw_alpha",
     x: 4500,
     y: 450,
-    texture: "trunk_01",
-    emptyTexture: "trunk_01",
+    texture: "city_wolf_cache",
+    emptyTexture: "city_wolf_cache_empty",
     radius: 110,
     items: { frost_shard: 1, ice_crystal: 1 },
     hint: "\u041B\u043E\u0433\u043E\u0432\u043E \u0432\u043E\u0436\u0430\u043A\u0430",
@@ -1254,8 +1373,8 @@ var EXP_OBJECT_LIST = [
     guard: "gy_warden",
     x: 4800,
     y: 3050,
-    texture: "trunk_01",
-    emptyTexture: "trunk_01",
+    texture: "city_grave_cache",
+    emptyTexture: "city_grave_cache_empty",
     radius: 110,
     items: { frost_shard: 1, lunar_shard: 2 },
     hint: "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u0435 \u043A\u0443\u0440\u0433\u0430\u043D\u0430",
@@ -1293,6 +1412,31 @@ var EXP_DECOR = [
 
 // src/config/world.content.js
 var CONTENT_INTERACTIVES = [
+  // Rare one-time discoveries. Sapphire rewards never go through gather or repeat enemies.
+  {
+    id: "sapphire_trail_cache",
+    kind: "chest",
+    x: 1200,
+    y: 3900,
+    texture: "chest_01",
+    radius: 100,
+    collide: { w: 50, h: 24 },
+    requiresEvent: "unlock_telekinesis_1",
+    reward: { sapphires: 1 },
+    hint: "\u0422\u0430\u0439\u043D\u0438\u043A \u0443 \u0434\u043E\u0440\u043E\u0433\u0438"
+  },
+  {
+    id: "sapphire_oldwood_cache",
+    kind: "chest",
+    x: 520,
+    y: 1750,
+    texture: "chest_01",
+    radius: 100,
+    collide: { w: 50, h: 24 },
+    requiresEvent: "guardian_defeated",
+    reward: { sapphires: 1 },
+    hint: "\u0422\u0430\u0439\u043D\u0438\u043A \u0421\u0442\u0430\u0440\u043E\u0433\u043E \u043B\u0435\u0441\u0430"
+  },
   // ================================================================== ДОМ ВЕДЬМЫ (зона A)
   {
     id: "house_cauldron",
@@ -1645,8 +1789,9 @@ var COLLIDERS = [
   { kind: "ruin", x: 1160, y: 330, w: 540, h: 110 },
   // v0.20.0: дорога и город (только в конец — id коллайдеров c<номер>)
   ...CITY_COLLIDERS,
-  ...EXP_COLLIDERS
+  ...EXP_COLLIDERS,
   // v0.24.0: после городских (номера коллайдеров города не сдвигаются)
+  ...CITY_EXTRA_COLLIDERS
 ];
 var BASE_INTERACTIVES = [
   // A
@@ -1849,6 +1994,7 @@ function materialize(state) {
 
 // src/config/sapphires.js
 var SAPPHIRES = {
+  rublesPerSapphire: 1,
   // ускорение изучения: за price сапфиров таймер короче на chunkMin минут; совсем до нуля нельзя (остаётся не меньше minLeftSec
   // и не меньше (1 − maxCutPct) полного времени); за сутки (UTC) — не больше dailyChunks таких шагов
   speedup: { chunkMin: 15, price: 1, maxCutPct: 0.75, minLeftSec: 60, dailyChunks: 24 },
@@ -1856,7 +2002,8 @@ var SAPPHIRES = {
   // смена ветки вместо монет (BRANCH_RESPEC.coins)
   preset: { price: 30, max: 3 },
   // первый пресет бесплатный, следующие — за сапфиры, всего не больше max
-  welcome: 3
+  welcome: 3,
+  welcomeEvent: "ch2_city_arrived"
   // один раз — за открытие кошелька (в главе II — «Банк»)
 };
 function sapphireRules() {
@@ -1866,7 +2013,8 @@ function sapphireRules() {
     respec: SAPPHIRES.respec,
     presetPrice: SAPPHIRES.preset.price,
     presetMax: SAPPHIRES.preset.max,
-    welcome: SAPPHIRES.welcome
+    welcome: SAPPHIRES.welcome,
+    welcomeEvent: SAPPHIRES.welcomeEvent
   };
 }
 
@@ -1887,12 +2035,12 @@ function createDefaultState(heroId = DEFAULT_HERO_ID) {
     // v0.18.0
     schoolXP: { telekinesis: 0, fire: 0, seal: 0, ice: 0 },
     unlockedAbilities: [],
-    completedEvents: [],
+    completedEvents: [BALANCE_MIGRATION.event],
     openedPaths: [],
     defeatedEnemies: [],
     inventory: { coins: 0, lunar_shard: 0, lunar_flame: 0 },
     // состояние отдельных объектов мира: { [id]: { state, x, y } }
-    worldObjects: {},
+    worldObjects: { player_bag: { capacity: BAG.initial, pending: {}, version: BAG.version } },
     research: null,
     // { upgradeId, startedAt, durationMs, fullMs? } (fullMs — полное время до ускорений за сапфиры)
     wallet: { sapphires: 0, daily: {}, welcome: false },
@@ -1939,6 +2087,14 @@ var GameState = class {
       const parsed = JSON.parse(raw);
       if (parsed.version !== SAVE_VERSION) return false;
       this.data = { ...createDefaultState(), ...parsed };
+      if (!this.hasEvent(BALANCE_MIGRATION.event)) {
+        for (const [ev, n] of Object.entries(BALANCE_MIGRATION.coins)) if (this.hasEvent(ev)) this.addItem("coins", n);
+        for (const [ev, n] of Object.entries(BALANCE_MIGRATION.sapphires)) if (this.hasEvent(ev)) this.data.wallet.sapphires += n;
+        if (this.hasEvent("lunar_quest_complete") && this.data.telekinesisLevel < 2) this.addItem("coins", Math.max(0, 195 - this.item("coins")));
+        if (this.hasEvent("chapter_2_complete")) this.addHeroXP(Math.max(0, 7900 - this.data.heroXP));
+        this.markEvent(BALANCE_MIGRATION.event);
+        this.save();
+      }
       return true;
     } catch (e) {
       console.warn("[GameState] load failed", e);
@@ -2018,6 +2174,13 @@ var GameState = class {
   addItem(id, amount = 1) {
     this.data.inventory[id] = this.item(id) + amount;
   }
+  awardItem(id, amount = 1) {
+    const b = bagView(this);
+    if (amount > 0 && takesBagSpace(id) && amount > b.free) {
+      b.pending[id] = (b.pending[id] || 0) + amount;
+      this.setObject("player_bag", { capacity: b.capacity, pending: b.pending, version: BAG.version });
+    } else this.addItem(id, amount);
+  }
   removeItem(id, amount = 1) {
     if (this.item(id) < amount) return false;
     this.data.inventory[id] -= amount;
@@ -2075,11 +2238,15 @@ var GameState = class {
       this.addSchoolXP(k, v);
       granted.schoolXP[k] = v;
     }
-    if (reward.items) for (const [k, v] of Object.entries(reward.items)) {
+    if (reward.items) for (const [k, v] of Object.entries(reward.items).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
       if (v > 0) {
-        this.addItem(k, v);
+        this.awardItem(k, v);
         granted.items[k] = v;
       }
+    }
+    if (reward.sapphires) {
+      this.data.wallet.sapphires += reward.sapphires;
+      granted.sapphires = reward.sapphires;
     }
     if (reward.coins) {
       this.addItem("coins", reward.coins);
@@ -2096,18 +2263,19 @@ var GameState = class {
         }
         for (const [k, v] of Object.entries(up.cost.items || {})) {
           if (up.cost.noTopUp?.includes(k)) continue;
-          const need = v - this.item(k);
+          const need = v - this.item(k) - (bagView(this).pending[k] || 0);
           if (need > 0) {
-            this.addItem(k, need);
+            this.awardItem(k, need);
             granted.items[k] = (granted.items[k] || 0) + need;
           }
         }
       }
     }
     let levelUps = [];
-    if (reward.heroXP) {
-      levelUps = this.addHeroXP(reward.heroXP);
-      granted.heroXP = reward.heroXP;
+    const xp = Math.max(reward.heroXP || 0, (reward.topUp?.heroXP || 0) - this.data.heroXP);
+    if (xp) {
+      levelUps = this.addHeroXP(xp);
+      granted.heroXP = xp;
     }
     return { levelUps, granted };
   }
@@ -2120,6 +2288,8 @@ var GameState = class {
     if (this.data.research) return { ok: false, reason: this.data.research.upgradeId === upgradeId ? "in_progress" : "busy" };
     const r = up.requires || {};
     const checks = [];
+    checks.push({ label: "\u041C\u043E\u043D\u0435\u0442\u044B", item: "coins", have: this.item("coins"), need: up.cost.coins || 0 });
+    checks.push({ label: "\u0421\u0430\u043F\u0444\u0438\u0440\u044B", have: this.sapphires(), need: up.cost.sapphires || 0 });
     if (r.heroLevel) checks.push({ label: `\u0423\u0440\u043E\u0432\u0435\u043D\u044C ${r.heroLevel}`, have: this.data.heroLevel, need: r.heroLevel });
     if (r.abilityLevel) checks.push({ label: `${up.ability} ${r.abilityLevel}`, have: this.abilityLevel(up.ability), need: r.abilityLevel, hidden: true });
     checks.push({ label: "\u041E\u043F\u044B\u0442 \u0434\u0430\u0440\u0430", have: this.data.schoolXP[up.ability] || 0, need: up.cost.schoolXP });
@@ -2133,6 +2303,8 @@ var GameState = class {
     if (!st.ok) return false;
     const up = UPGRADES[upgradeId];
     this.data.schoolXP[up.ability] -= up.cost.schoolXP;
+    this.removeItem("coins", up.cost.coins || 0);
+    this.data.wallet.sapphires -= up.cost.sapphires || 0;
     for (const [k, v] of Object.entries(up.cost.items || {})) this.removeItem(k, v);
     this.data.research = { upgradeId, startedAt: this.now(), durationMs: up.timerSec[TIMER_MODE] * 1e3 };
     return true;
@@ -2427,6 +2599,43 @@ var SIDE_QUESTS = {
     reward: { heroXP: 15, coins: 25, items: { elixir_life: 1 } },
     rewardText: "\u041D\u0430\u0441\u0442\u043E\u0439 \u0436\u0438\u0437\u043D\u0438, 25 \u043C\u043E\u043D\u0435\u0442, 15 \u043E\u043F\u044B\u0442\u0430"
   },
+  sq_mushrooms: {
+    title: "\u0413\u0440\u0438\u0431\u044B \u0434\u043B\u044F \u0441\u0443\u0448\u0438\u043B\u043A\u0438",
+    giver: "veda",
+    place: "\u0421\u0442\u0430\u0440\u0442\u043E\u0432\u0430\u044F \u043F\u043E\u043B\u044F\u043D\u0430",
+    summary: "\u0412\u0435\u0434\u0435 \u043D\u0443\u0436\u043D\u044B \u0434\u0432\u0430 \u043B\u0435\u0441\u043D\u044B\u0445 \u0433\u0440\u0438\u0431\u0430. \u0421\u043E\u0431\u0435\u0440\u0438\u0442\u0435 \u0438\u0445 \u0432 \u0421\u0442\u0430\u0440\u043E\u043C \u043B\u0435\u0441\u0443 \u0434\u043B\u044F \u0441\u0443\u0448\u0438\u043B\u043A\u0438 \u0442\u0440\u0430\u0432\u043D\u0438\u0446\u044B.",
+    requires: { event: "sq_herbs_done", events: ["fire_gate_open"] },
+    objectives: [{ type: "item", item: "forest_mushroom", count: 2, text: "\u041B\u0435\u0441\u043D\u044B\u0435 \u0433\u0440\u0438\u0431\u044B" }],
+    turnIn: { npc: "veda", consume: { forest_mushroom: 2 } },
+    reward: { coins: 35, heroXP: 15, items: { elixir_mana: 1 } },
+    rewardText: "\u041B\u0443\u043D\u043D\u044B\u0439 \u044D\u043B\u0438\u043A\u0441\u0438\u0440, 35 \u043C\u043E\u043D\u0435\u0442, 15 \u043E\u043F\u044B\u0442\u0430"
+  },
+  sq_resin: {
+    title: "\u0421\u043C\u043E\u043B\u0430 \u0434\u043B\u044F \u043C\u0430\u0437\u0438",
+    giver: "veda",
+    place: "\u0421\u0442\u0430\u0440\u0442\u043E\u0432\u0430\u044F \u043F\u043E\u043B\u044F\u043D\u0430",
+    summary: "\u041F\u0440\u0438\u043D\u0435\u0441\u0438\u0442\u0435 \u0412\u0435\u0434\u0435 \u0442\u0440\u0438 \u043A\u0443\u0441\u043E\u0447\u043A\u0430 \u0434\u0440\u0435\u0432\u0435\u0441\u043D\u043E\u0439 \u0441\u043C\u043E\u043B\u044B \u0434\u043B\u044F \u043B\u0435\u0447\u0435\u0431\u043D\u043E\u0439 \u043C\u0430\u0437\u0438.",
+    requires: { event: "sq_mushrooms_done" },
+    objectives: [{ type: "item", item: "tree_resin", count: 3, text: "\u0414\u0440\u0435\u0432\u0435\u0441\u043D\u0430\u044F \u0441\u043C\u043E\u043B\u0430" }],
+    turnIn: { npc: "veda", consume: { tree_resin: 3 } },
+    reward: { coins: 45, heroXP: 15, items: { elixir_life: 1 } },
+    rewardText: "\u041D\u0430\u0441\u0442\u043E\u0439 \u0436\u0438\u0437\u043D\u0438, 45 \u043C\u043E\u043D\u0435\u0442, 15 \u043E\u043F\u044B\u0442\u0430"
+  },
+  sq_veda_stock: {
+    title: "\u0417\u0430\u043F\u0430\u0441 \u0442\u0440\u0430\u0432\u043D\u0438\u0446\u044B",
+    giver: "veda",
+    place: "\u0421\u0442\u0430\u0440\u0442\u043E\u0432\u0430\u044F \u043F\u043E\u043B\u044F\u043D\u0430",
+    summary: "\u041B\u0435\u0441 \u043E\u0436\u0438\u043B. \u041F\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435 \u0437\u0430\u043F\u0430\u0441\u044B \u0412\u0435\u0434\u044B: \u043E\u0434\u043D\u0430 \u043B\u0443\u043D\u043D\u0430\u044F \u0442\u0440\u0430\u0432\u0430, \u043E\u0434\u0438\u043D \u0433\u0440\u0438\u0431 \u0438 \u0434\u0432\u0430 \u043A\u0443\u0441\u043E\u0447\u043A\u0430 \u0441\u043C\u043E\u043B\u044B.",
+    requires: { event: "sq_resin_done", events: ["chapter_1_complete"] },
+    objectives: [
+      { type: "item", item: "moon_herb", count: 1, text: "\u041B\u0443\u043D\u043D\u0430\u044F \u0442\u0440\u0430\u0432\u0430" },
+      { type: "item", item: "forest_mushroom", count: 1, text: "\u041B\u0435\u0441\u043D\u044B\u0435 \u0433\u0440\u0438\u0431\u044B" },
+      { type: "item", item: "tree_resin", count: 2, text: "\u0414\u0440\u0435\u0432\u0435\u0441\u043D\u0430\u044F \u0441\u043C\u043E\u043B\u0430" }
+    ],
+    turnIn: { npc: "veda", consume: { moon_herb: 1, forest_mushroom: 1, tree_resin: 2 } },
+    reward: { coins: 65, heroXP: 20, sapphires: 1 },
+    rewardText: "65 \u043C\u043E\u043D\u0435\u0442, 1 \u0441\u0430\u043F\u0444\u0438\u0440, 20 \u043E\u043F\u044B\u0442\u0430"
+  },
   sq_dust: {
     title: "\u041F\u044B\u043B\u044C \u0434\u0440\u0435\u0432\u043D\u0438\u0445 \u0440\u0443\u043D",
     giver: "selena",
@@ -2450,7 +2659,7 @@ var SIDE_QUESTS = {
     rewardText: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0421\u043E\u0441\u0440\u0435\u0434\u043E\u0442\u043E\u0447\u0435\u043D\u0438\u044F, \u0441\u043C\u043E\u043B\u044F\u043D\u0430\u044F \u0441\u043A\u043B\u044F\u043D\u043A\u0430, 2 \u0441\u043C\u043E\u043B\u044B, 40 \u043C\u043E\u043D\u0435\u0442, 25 \u043E\u043F\u044B\u0442\u0430"
   }
 };
-var SIDE_QUEST_ORDER = ["sq_herbs", "sq_hunter", "sq_dust"];
+var SIDE_QUEST_ORDER = ["sq_herbs", "sq_mushrooms", "sq_resin", "sq_veda_stock", "sq_hunter", "sq_dust"];
 var questEvent = (id, kind) => `${id}_${kind}`;
 
 // src/config/shop.js
@@ -3239,6 +3448,7 @@ function ratingsRules() {
 // src/config/serverRules.js
 function grantOf(r = {}) {
   const g = {};
+  if (r.topUp) g.topUp = structuredClone(r.topUp);
   if (r.heroXP) g.heroXP = r.heroXP;
   if (r.coins) g.coins = r.coins;
   if (r.items && Object.keys(r.items).length) g.items = { ...r.items };
@@ -3278,9 +3488,9 @@ var EVENT_ACTIONS = {
   unlock_ice_1: { requires: ["ch2_rescue_done", "warm_potion_crafted"], unlock: { ice: 1 } },
   ch2_ice_trained: { requires: ["ch2_training_done"] },
   ch2_choice_start: { requires: ["ch2_ice_trained"] },
-  ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"] },
+  ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"], sapphires: 1 },
   // v0.22.0 — квесты 11–15 (Нэрис, Тихон, Илария, Северин, Ровена, Мирра)
-  unlock_ice_2: { requires: ["ch2_quarter_cleared"], unlock: { ice: 2 } },
+  unlock_ice_2: { requires: ["ch2_quarter_cleared"], consume: { coins: GIFT_PRICES.storyIce2.coins }, unlock: { ice: 2 } },
   ch2_brittle_done: { requires: ["ch2_brittle_1", "ch2_brittle_2", "brittle_flask_crafted"] },
   ch2_lab_found: { requires: ["ch2_brittle_done"] },
   ch2_stabilized: { requires: ["ch2_vol_1", "ch2_vol_2"], consume: { stabilizing_potion: 2 } },
@@ -3293,11 +3503,11 @@ var EVENT_ACTIONS = {
   ch2_severin_confronted: { requires: ["ch2_lab_reported"] },
   ch2_coven_met: { requires: ["ch2_severin_confronted"] },
   ch2_coven_supplies: { requires: ["ch2_coven_met"], consume: { crystal_guard: 1, frost_herb: 2 } },
-  ch2_coven_ready: { requires: ["ch2_unstable_1", "ch2_unstable_2", "ch2_coven_supplies"] },
+  ch2_coven_ready: { requires: ["ch2_unstable_1", "ch2_unstable_2", "ch2_coven_supplies"], sapphires: 1 },
   ch2_final_start: { requires: ["ch2_coven_ready"] },
   // Лёд III перед боем: ветка выбирается один раз (ch2_ice3 — общая отметка, по ней появляется Северин)
-  ch2_ice3_frost: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], unlock: { ice: 3 }, branch: { ice: "frost" }, marks: ["ch2_ice3"] },
-  ch2_ice3_shard: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], unlock: { ice: 3 }, branch: { ice: "shard" }, marks: ["ch2_ice3"] },
+  ch2_ice3_frost: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], consume: { coins: GIFT_PRICES.storyIce3.coins }, unlock: { ice: 3 }, branch: { ice: "frost" }, marks: ["ch2_ice3"] },
+  ch2_ice3_shard: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], consume: { coins: GIFT_PRICES.storyIce3.coins }, unlock: { ice: 3 }, branch: { ice: "shard" }, marks: ["ch2_ice3"] },
   ch2_epilogue: { requires: ["ch2_letters_read"] },
   chapter_2_complete: { requires: ["ch2_epilogue"], marks: ["title_frost_survivor"], sapphires: 5 }
 };
@@ -3407,6 +3617,8 @@ function questRules() {
       start: questEvent(id, "start"),
       done: questEvent(id, "done"),
       requires: q.requires?.event || null,
+      requiresAll: q.requires?.events || [],
+      sapphires: q.reward?.sapphires || 0,
       objectives: q.objectives.map((o) => o.type === "item" ? { type: "item", item: o.item, count: o.count } : o.type === "enemy" ? { type: "enemy", id: o.id } : { type: "event", key: o.key }),
       consume: { ...q.turnIn?.consume || {} },
       reward: grantOf(q.reward)
@@ -3427,7 +3639,8 @@ function researchRules() {
       abilityLevel: r.abilityLevel || 0,
       event: r.event || null,
       schoolXP: up.cost.schoolXP,
-      items: { ...up.cost.items || {} },
+      items: { ...up.cost.items || {}, coins: up.cost.coins || 0 },
+      sapphires: up.cost.sapphires || 0,
       durationMs: up.timerSec[TIMER_MODE] * 1e3,
       startEvent: up.startEvent || null,
       completeEvent: up.completeEvent || null
@@ -3480,6 +3693,7 @@ function serverRules() {
   }]));
   const eventRewards = Object.fromEntries(Object.entries(EVENT_REWARDS).map(([k, r]) => [k, grantOf(r)]));
   return {
+    balanceMigration: BALANCE_MIGRATION,
     recipes,
     uses: STORY_USES,
     firstCraft: FIRST_CRAFT,
@@ -3494,7 +3708,7 @@ function serverRules() {
     build: buildRules(),
     spawnStart: spawnStartRules(),
     sapphires: sapphireRules(),
-    // v0.17.0
+    bag: bagRules(),
     shop: shopRules(),
     // v0.19.0: торговец
     daily: dailyRules(),
@@ -4116,18 +4330,19 @@ var CombatManager = class {
     if (!this.def) throw new Error(`Unknown enemy type ${enemyType}`);
     this.enemy = new Enemy(enemyType, this.def);
     const hs = state.heroStats();
+    const legacy = state.data.combatCtx?.balanceVersion === 29;
     this.hero = {
       maxHp: hs.maxHp,
       hp: hp(state),
       maxMana: hs.maxMana,
       mana: mana(state),
-      regen: hs.manaRegen,
+      regen: legacy ? 3 : hs.manaRegen,
       damageMult: hs.damageMult,
       autoTimer: HERO_BASE.autoAttack.intervalSec
     };
     this.amulets = state.equippedAmulets ? state.equippedAmulets() : [];
     const lv = state.buildData ? state.buildData().amuletLevels || {} : {};
-    const effs = this.amulets.map((a) => amuletEffect(a, lv[a] || 0));
+    const effs = this.amulets.map((a) => amuletEffect(a, lv[a] || 0, legacy));
     let dm = 1, inc = 1, im = 1, sb = 0;
     for (const e of effs) {
       if (e.damageMult) dm *= e.damageMult;
@@ -4675,6 +4890,7 @@ function startState(ctx, nowMs = Date.now()) {
   snap.inventory = { ...ctx.potions };
   snap.hp = ctx.hp;
   snap.mana = ctx.mana;
+  snap.combatCtx = { ...ctx, balanceVersion: ctx.balanceVersion === 30 ? 30 : 29 };
   snap.objects = ctx.build ? { player_build: JSON.parse(JSON.stringify(ctx.build)) } : {};
   const st = new GameState(null, () => nowMs);
   st.setData(fromSnapshot(snap));

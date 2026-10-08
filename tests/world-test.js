@@ -71,7 +71,7 @@ console.log('\nМир: таблица коллизий');
   ok(propSolid({ k: 'tree_dark_01', x: 1, y: 1, fill: 1 }) === null, 'лес-заполнитель отдельной коллизии не имеет (его закрывает блок)');
   const ids = new Set(PROPS.map(p => p.id));
   ok(ids.size === PROPS.length, 'id всех объектов расстановки уникальны');
-  ok(PROPS.every(p => ASSET_FILES[p.k] !== undefined && PROP_DEFS[p.k]), 'у всех объектов есть текстура и запись в propDefs');
+  ok(PROPS.every(p => ASSET_FILES[p.k] !== undefined && (PROP_DEFS[p.k] || Object.hasOwn(p,'solid'))), 'у всех объектов есть текстура и определение проходимости');
   const solidProps = PROPS.filter(p => propSolid(p));
   ok(solidProps.length >= 100, `твёрдых объектов в расстановке: ${solidProps.length}`);
   // ничего твёрдого на дороге и в воде

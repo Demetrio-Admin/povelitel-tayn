@@ -1,4 +1,3 @@
-import { VERSION } from '../config/version.js';
 import Phaser from 'phaser';
 import { VIEW, COLORS } from '../config/game.config.js';
 import { GAME_NAME, GAME_SUBTITLE } from '../config/branding.js';
@@ -11,13 +10,14 @@ import { buildSettingsPanel } from '../ui/SettingsPanel.js';
 import { buildHeroPicker } from '../ui/heroPicker.js';
 import { DEFAULT_HERO_ID } from '../config/heroes.js';
 import { UI } from '../config/ui.config.js';
-import { addPanel, addDivider, addButton, addScreenVignette } from '../ui/widgets.js';
+import { addPanel, addDivider, addButton } from '../ui/widgets.js';
+import { bindSceneViewport } from '../ui/viewport.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
 const W = VIEW.width;
 const H = VIEW.height;
-const PRIMARY_Y = 1046, PRIMARY_H = 100, SECOND_Y = 1160;
+const PRIMARY_Y = 1096, PRIMARY_H = 104, SECOND_Y = 1192;
 
 /**
  * MenuScene — стартовый экран (v0.9.2: выбор героя прямо здесь, без отдельного экрана).
@@ -40,6 +40,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create() {
+    this.viewport = bindSceneViewport(this);
     const { audio } = services;
     const session = services.session;
     this.overlay = null;
@@ -48,10 +49,14 @@ export class MenuScene extends Phaser.Scene {
     this.htmlDlg = null;   // окно регистрации / входа из «Как продолжить?»
     this.buildBackground();
 
-    const title = this.add.text(W / 2, 96, `${GAME_NAME}:`, { fontFamily: FONT, fontSize: '64px', fontStyle: 'bold', color: '#f6e3a1', stroke: '#1a0f08', strokeThickness: 10, shadow: { offsetX: 0, offsetY: 5, color: '#000', blur: 12, fill: true } }).setOrigin(0.5).setDepth(5);
-    this.add.text(W / 2, 156, GAME_SUBTITLE, { fontFamily: FONT, fontSize: `${UI.type.bodyLarge}px`, color: COLORS.text, stroke: '#000', strokeThickness: 4, shadow: SH }).setOrigin(0.5).setDepth(5);
-    addDivider(this, W / 2, 190, 420).setDepth(5);
-    this.tweens.add({ targets: title, y: 90, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.add.text(W / 2, 132, GAME_NAME, { fontFamily: FONT, fontSize: '82px', fontStyle: 'bold', color: '#f6e3a1', stroke: '#170e1d', strokeThickness: 5, shadow: { offsetX: 0, offsetY: 4, color: '#000', blur: 12, fill: true } }).setOrigin(0.5).setDepth(5);
+    this.add.text(W / 2, 216, GAME_SUBTITLE, { fontFamily: FONT, fontSize: '34px', color: COLORS.textGold, stroke: '#170e1d', strokeThickness: 2, shadow: SH }).setOrigin(0.5).setDepth(5);
+    addDivider(this, W / 2, 266, 420).setDepth(5);
+    this.settingsButton = this.add.image(656, 58, 'welcome_settings').setDisplaySize(44, 44).setDepth(6);
+    this.add.rectangle(656, 58, 88, 88, 0, 0).setDepth(7).setInteractive().on('pointerup', () => {
+      if (this.overlay || this.choice || this.htmlDlg || this.busy) return;
+      services.audio.unlock(); services.audio.play('ui_click'); this.openSettings();
+    });
 
     const { state } = services;
     const localSave = !session && state.hasSave() && state.data.completedEvents.length > 0;
@@ -68,29 +73,26 @@ export class MenuScene extends Phaser.Scene {
     });
 
     if (this.mode === 'restricted') {
-      this.line('Доступ к игре ограничен', COLORS.textGold, 250);
-      this.line('Поддержка и обжалование доступны', COLORS.textDim, 292, UI.type.small);
+      this.line('Доступ к игре ограничен', COLORS.textGold, 914);
+      this.line('Поддержка и обжалование доступны', COLORS.textDim, 966, UI.type.small);
       this.primary = this.button(PRIMARY_Y, 'Открыть поддержку', true, () => this.openRestrictedChat(), PRIMARY_H);
       this.accountButton = this.pair('Профиль', () => this.openRestrictedChat(), 'Выйти', async () => { await session.logout(); reloadToMenu(); });
     } else if (this.mode === 'continue-online') {
-      this.line(session.registered ? `${session.nickname} · уровень ${session.level}` : `Гость · уровень ${session.level}`, COLORS.textGold, 250);
-      this.line(session.registered ? 'Прогресс хранится на сервере' : 'Прогресс гостя хранится на сервере', COLORS.textDim, 292, UI.type.small);
+      this.line(session.registered ? `${session.nickname} · уровень ${session.level}` : `Гость · уровень ${session.level}`, COLORS.textGold, 950);
       this.primary = this.button(PRIMARY_Y, 'Продолжить', true, () => this.begin(), PRIMARY_H);
-      this.accountButton = this.pair('Профиль', () => this.openProfile(), 'Настройки', () => this.openSettings());
+      this.accountButton = this.link(SECOND_Y, 'Профиль', () => this.openProfile());
     } else if (this.mode === 'new-online') {
-      this.primary = this.button(PRIMARY_Y, 'Начать игру', true, () => this.startNew(), PRIMARY_H);
-      this.accountButton = this.pair('Войти', () => this.openLogin(), 'Настройки', () => this.openSettings());
+      this.primary = this.button(PRIMARY_Y, 'Начать приключение', true, () => this.startNew(), PRIMARY_H, 536);
+      this.accountButton = this.link(SECOND_Y, 'Уже играли? Войти', () => this.openLogin());
     } else if (this.mode === 'continue-local') {
       const d = state.data;
-      this.line(`Сохранение: уровень ${d.heroLevel} · побед ${d.stats.combats.filter(c => c.result === 'victory').length}`, COLORS.textGold, 262, UI.type.body);
+      this.line(`Уровень ${d.heroLevel}`, COLORS.textGold, 950, UI.type.body);
       this.primary = this.button(PRIMARY_Y, 'Продолжить', true, () => this.begin(), PRIMARY_H);
-      this.pair('Новая игра', () => this.confirmNew(), 'Настройки', () => this.openSettings());
+      this.link(SECOND_Y, 'Новая игра', () => this.confirmNew());
     } else {
-      this.primary = this.button(PRIMARY_Y, 'Начать игру', true, () => this.startNew(), PRIMARY_H);
-      if (this.newGameMode) this.pair('Назад', () => this.scene.restart({}), 'Настройки', () => this.openSettings());
-      else this.button(SECOND_Y, 'Настройки', false, () => this.openSettings());
+      this.primary = this.button(PRIMARY_Y, 'Начать приключение', true, () => this.startNew(), PRIMARY_H, 536);
+      if (this.newGameMode) this.link(SECOND_Y, 'Назад', () => this.scene.restart({}));
     }
-    this.add.text(W / 2, H - 34, session ? `v${VERSION} · Глава I «Лес, который забыл нас»` : `Режим разработки: прогресс в этом браузере · v${VERSION}`, { fontFamily: FONT, fontSize: `${UI.type.small}px`, color: COLORS.textDim, stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5);
 
     const kb = this.input.keyboard;
     const enter = () => { if (this.overlay || this.choice || this.htmlDlg) return; if (isNew) this.startNew(); else this.begin(); };
@@ -132,30 +134,28 @@ export class MenuScene extends Phaser.Scene {
   }
 
   buildBackground() {
-    this.add.rectangle(0, 0, W, H, 0x0f1a14).setOrigin(0);
-    this.add.ellipse(W / 2, 1150, W * 1.4, 700, 0x1d2b1c);
-    const moon = this.add.image(560, 170, 'fx_glow').setTint(0xcfe8ff).setBlendMode('ADD').setScale(2.6).setAlpha(0.55);
-    this.add.circle(560, 170, 46, 0xe9f2ff, 0.9);
-    this.tweens.add({ targets: moon, alpha: 0.35, duration: 2600, yoyo: true, repeat: -1 });
-    const rand = new Phaser.Math.RandomDataGenerator(['menu']);
-    for (let row = 0; row < 3; row++) {
-      for (let i = 0; i < 9; i++) {
-        const key = rand.pick(['tree_dark_01', 'tree_dark_02', 'tree_autumn_01', 'tree_autumn_02']);
-        const ty = 560 + row * 300 + rand.between(-30, 30);
-        const side = i < 4 ? i * 70 - 30 : W - (i - 4) * 70 + 30;
-        this.add.image(side + rand.between(-20, 20), ty, key).setOrigin(0.5, 1).setScale(0.5 * (1.3 + row * 0.25)).setAlpha(0.55 + row * 0.2).setTint(row === 2 ? 0x8899aa : 0xffffff);
-      }
-    }
-    // v0.9.2: герой больше не нарисован в фоне — он в предпросмотре (ведьма или колдун)
+    const cover = this.add.image(W / 2, H / 2, 'welcome_cover').setDisplaySize(W, H);
+    this.viewport?.cover(cover);
+    if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
     this.add.particles(0, 0, 'fx_dot', {
-      x: { min: 0, max: W }, y: { min: 300, max: H }, lifespan: 4000, speedY: { min: -20, max: -5 }, speedX: { min: -10, max: 10 },
-      scale: { start: 0.35, end: 0 }, alpha: { start: 0.9, end: 0 }, tint: [0x9fe9ff, 0xe8c56a], blendMode: 'ADD', frequency: 220,
+      x: { min: 70, max: W - 70 }, y: { min: 350, max: 860 }, lifespan: 5000,
+      speedY: { min: -12, max: -3 }, speedX: { min: -5, max: 5 },
+      scale: { start: 0.2, end: 0 }, alpha: { start: 0.65, end: 0 },
+      tint: [0xf7d270, 0xe8c56a], blendMode: 'ADD', frequency: 650,
     });
-    addScreenVignette(this, W, H, 0.7).setDepth(2);
   }
 
   /** Общий фон меню. */
   static background(scene) { MenuScene.prototype.buildBackground.call(scene); }
+
+  link(y, label, onPress) {
+    const text = this.add.text(W / 2, y, label, { fontFamily: FONT, fontSize: UI.type.body,
+      color: COLORS.textGold, shadow: SH, stroke: '#100e16', strokeThickness: 2 }).setOrigin(0.5).setDepth(5);
+    const hit = this.add.rectangle(W / 2, y, Math.max(280, text.width + 40), 88, 0, 0).setDepth(6).setInteractive();
+    hit.on('pointerup', () => { if (this.overlay || this.choice || this.htmlDlg || this.busy) return;
+      services.audio.unlock(); services.audio.play('ui_click'); onPress(); });
+    return { text, hit };
+  }
 
   button(y, label, primary, onPress, h = UI.touch.button, w = 480) {
     return addButton(this, W / 2, y, w, h, label, {
@@ -224,18 +224,18 @@ export class MenuScene extends Phaser.Scene {
   showChoice() {
     const c = this.add.container(0, 0).setDepth(10000);
     c.add(this.add.rectangle(0, 0, W, H, 0x000000, 0.66).setOrigin(0).setInteractive());
-    c.add(addPanel(this, 36, 320, 648, 694, { accent: COLORS.gold, seed: 21 }));
-    c.add(this.add.text(W / 2, 418, 'Как продолжить?', { fontFamily: FONT, fontSize: UI.type.title, fontStyle: 'bold', color: '#f6e3a1', shadow: SH }).setOrigin(0.5));
+    c.add(addPanel(this, 60, 346, 600, 600, { accent: COLORS.gold, variant: 'dark', seed: 21 }));
+    c.add(this.add.text(W / 2, 418, 'Начать приключение', { fontFamily: FONT, fontSize: UI.type.title, fontStyle: 'bold', color: '#f6e3a1', shadow: SH }).setOrigin(0.5));
     c.add(addDivider(this, W / 2, 458, 440));
     const mk = (y, label, primary, fn, hint) => {
       const b = addButton(this, W / 2, y, 480, UI.touch.button, label, { primary, accent: primary ? COLORS.gold : null, fontSize: UI.type.body, onPress: () => { if (this.busy || this.htmlDlg) return; services.audio.play('ui_click'); fn(); } });
       c.add(b.parts);
       if (hint) c.add(this.add.text(W / 2, y + 56, hint, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, shadow: SH, align: 'center', wordWrap: { width: 570 } }).setOrigin(0.5, 0));
     };
-    mk(530, 'Играть как гость', true, () => this.asGuest(), 'Без регистрации. Аккаунт можно создать позже в профиле');
-    mk(718, 'Создать аккаунт', false, () => this.register(), 'Никнейм и пароль — почта не нужна');
-    mk(868, 'У меня уже есть аккаунт', false, () => this.login());
-    const back = addButton(this, W / 2, 970, 300, UI.touch.button, 'Назад', { fontSize: UI.type.small, onPress: () => this.back() });
+    mk(530, 'Играть как гость', true, () => this.asGuest());
+    mk(654, 'Создать аккаунт', false, () => this.register());
+    mk(778, 'Уже играли? Войти', false, () => this.login());
+    const back = addButton(this, W / 2, 898, 300, UI.touch.button, 'Назад', { fontSize: UI.type.small, onPress: () => this.back() });
     c.add(back.parts);
     this.choice = c;
   }

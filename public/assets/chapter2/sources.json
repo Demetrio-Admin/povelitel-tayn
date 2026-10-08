@@ -1,0 +1,618 @@
+{
+  "ilaria": {
+    "source": "exec-24f9901d-e1ab-47c8-bae5-cf083c53df37.png",
+    "sha256": "dc998234050b894959fe9bf9a3a01776207007482348ebd07c79ea71e57a63bd",
+    "output": "ilaria.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "severin": {
+    "source": "exec-502d15c9-e84c-4555-a39f-8bb119078650.png",
+    "sha256": "5e4b87d1e28b3d836ea21204d2a6534173406726ee2de537c503e49deaa459fe",
+    "output": "severin.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "nerys": {
+    "source": "exec-ec204558-7008-49ff-8e63-52c8bded339e.png",
+    "sha256": "07d0d4b3929ab85d40764ea5ca62f172731c157aad4b9cf8714bb189a087c761",
+    "output": "nerys.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "merchant": {
+    "source": "exec-e4dcbda9-58c2-4d27-9f91-e486b77d4da4.png",
+    "sha256": "4f477a7c00bb1d21148f1882b6cc3c0421a68d125a90fbe957e8d19424bb7ccc",
+    "output": "merchant.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "banker": {
+    "source": "exec-0b11b0c7-cccc-4bc0-ae27-7c781e705828.png",
+    "sha256": "b634b2fe32976a864c957fbd72b155c681a77027ddb37e45c68bcecbbd93541f",
+    "output": "banker.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "duelist": {
+    "source": "exec-1396b6fc-ed1f-4496-a904-d4a27e56898c.png",
+    "sha256": "913ab4a13e1648fc80c9f68591aa0e1386f050a49f391d94cb1de1f4c9a11ca5",
+    "output": "duelist.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "rowena": {
+    "source": "exec-771a1d12-52d4-4bc9-a460-f99d8fea020a.png",
+    "sha256": "2cad2f040ef49d24b078430b426b953669e17f4cc55dd0354ebf611f02a35e63",
+    "output": "rowena.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "tikhon": {
+    "source": "exec-451bec24-c796-40b4-98f9-473ab735d628.png",
+    "sha256": "7e8b2f2148db9ffd4c294b132857ffdece72d64b021381b5fb650f3face4d6cc",
+    "output": "tikhon.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "frost_critter": {
+    "source": "exec-1ccd6220-d105-4fd6-86d8-cf8627e79816.png",
+    "sha256": "45b79f32801b39997b5cf8f4b2def9e1aa9154640b8b3fa4073a26d0e442171e",
+    "output": "frost_critter.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "frost_collector": {
+    "source": "exec-7f0326cf-9e89-4e95-88d6-55b39a8a5a9a.png",
+    "sha256": "086bd5833f1158c5b225b951638ce0708b1275891034e5bda8ebd115378960a1",
+    "output": "frost_collector.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "frost_collector_elite": {
+    "source": "exec-b057b900-4134-420a-9e31-a03bda96a974.png",
+    "sha256": "384623801e5d4112d490b79157c6752b9f3e35c5aa2fc5d0c3c26a07eaf4ca6f",
+    "output": "frost_collector_elite.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "ice_guardian": {
+    "source": "exec-b3c766a1-7c0a-48c1-b3b2-292d08de38e8.png",
+    "sha256": "f61c43542198180e5b8b142cd8040ce029b95126a5d15b7ca1f40dad751c121b",
+    "output": "ice_guardian.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "experimental_construct": {
+    "source": "exec-e0998d6d-697a-4791-a484-7a532724bbfc.png",
+    "sha256": "03750b28688df089729805e7555f5df9a61f012e43ab3062c47c10fd4bec5a96",
+    "output": "experimental_construct.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "miron": {
+    "source": "exec-1dd6e96f-7a6b-45fc-b405-170e2325092d.png",
+    "sha256": "406020f3b3c7e2c5a29f9d0df4fc5ece7f835d46272e013f1d18967ea2642bf3",
+    "output": "miron.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "fountain": {
+    "source": "exec-2172004a-67cf-41f8-ba9a-c8f3998ffca3.png",
+    "sha256": "1931bc4a3981ec0538fe49c973c38d16370dacebac30c5c60518a349c0abebac",
+    "output": "fountain.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "market_stall": {
+    "source": "exec-66dbca12-ca30-4d79-9c7d-9b4084ab5633.png",
+    "sha256": "4b8c87b2104b873895f84de507d44cf1c0e1edb063d9034dcab9c7fe90772828",
+    "output": "market_stall.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "notice_board": {
+    "source": "exec-a3cb2d52-eb8a-4bf8-a46a-66229cfee3ff.png",
+    "sha256": "e6a5541573e177785ec4d5eed959a7d3eafdb796c28121c977fc37fce1d5fc31",
+    "output": "notice_board.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "city_lamp": {
+    "source": "exec-7c17f7b5-ea99-4972-be98-1aeb37127564.png",
+    "sha256": "ed5bc42dc22254b856197cc5a16f774bad690ea0f8929f5a811a69df6f799bd4",
+    "output": "city_lamp.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "crate": {
+    "source": "exec-87993395-eaa6-4fa3-8912-8c9fe4c3270a.png",
+    "sha256": "f05a7a16ee6b90dcdabc31f953b3f74b74ed18b3a22853143c416b07f06c4ffa",
+    "output": "crate.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "barrel": {
+    "source": "exec-ba10b8ef-940b-462c-967e-2112c1333df5.png",
+    "sha256": "9c16aa2dff93b555f7245845266913d80712a52ce881c0c5b65c367fbf5b7588",
+    "output": "barrel.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "city_house": {
+    "source": "exec-4c39fb53-0482-480a-933f-fc62f61a0a2d.png",
+    "sha256": "8ec8dacdd9376882d8a1c946c4ea47a1b5adb3cd4c8987a57c537986d27ef424",
+    "output": "city_house.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "frozen_house": {
+    "source": "exec-f722cf68-6192-408b-b1da-ad8b91186464.png",
+    "sha256": "9083923bd8b113c8768ec8e96f09a1e16818f41edcab4ca7ae57495a9fce1638",
+    "output": "frozen_house.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "frost_herb": {
+    "source": "exec-0a114e1c-6db8-4c03-90f0-c1851167bc89.png",
+    "sha256": "0255664573785833603eefeb8d21e564fa1e37323007d48641d5112b2a37f581",
+    "output": "frost_herb.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "ice_crystal": {
+    "source": "exec-a87012c9-df67-40da-9f9a-2b1dbec3247c.png",
+    "sha256": "75c8c459a10fd5c565db4fe9a2fd79a59a80294984d6eb74f313718b64c5c8f1",
+    "output": "ice_crystal.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "frost_shard": {
+    "source": "exec-9aac55d3-774d-4089-b667-ca2d8c640de0.png",
+    "sha256": "b562709e9b31f991234defc25a54e302626137ebe65ce483f0379a0d608e971d",
+    "output": "frost_shard.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "cold_heart": {
+    "source": "exec-5c8cc8c2-0af9-4fd0-8cf7-6ec33c41f95e.png",
+    "sha256": "afaf20a68336d7c95a9a254683157d6680e2c91defa78993f0471afc95a5c940",
+    "output": "cold_heart.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "potion_warm": {
+    "source": "exec-e245ea78-6023-4438-9e42-c47c9c6dbaf4.png",
+    "sha256": "b680b04006cab838a82f19118431a05f379d145718f17bbb4bfc7a79cb50f326",
+    "output": "potion_warm.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "potion_stable": {
+    "source": "exec-f4d6e03b-1154-484c-88c5-450823652a5b.png",
+    "sha256": "ec4e38ebbd997037e5456d21bd7651a540ba3511aeaeef6321430131d3c4e2b1",
+    "output": "potion_stable.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "potion_brittle": {
+    "source": "exec-457b0b21-f39b-40e1-930f-b93aaa2185f6.png",
+    "sha256": "ff633fbc131dfe62485ece1f3bae56f77458d0537430d6f8042a9e047e82cead",
+    "output": "potion_brittle.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "potion_guard": {
+    "source": "exec-0a60a616-49bf-48f4-a854-b4df1b40b982.png",
+    "sha256": "63ddb14a2e316e1b9c9f5b011e747005d8f0b844cc08493917bc0153fad1167d",
+    "output": "potion_guard.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "reinforced_resin": {
+    "source": "exec-440cab97-8b89-4f48-8716-df59a68058f7.png",
+    "sha256": "0f75deb0abc4d248a7d6ccf128d8f74187ed31ba1ba3833e76515b1df6a82378",
+    "output": "reinforced_resin.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "astral_lens": {
+    "source": "exec-40ff57ce-fd53-4778-a984-15aa318665ea.png",
+    "sha256": "b7c2fd40144fc023fd94a43f0b518c1bafe24a9a02073376a6b13832a57dda51",
+    "output": "astral_lens.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "amulet_frost": {
+    "source": "exec-4a2e8311-8846-406e-8e3a-92c6ea6f9eec.png",
+    "sha256": "b13638567740b3b67a84198021adaec84b2c65df6a458c32fec588b3b062d5ea",
+    "output": "amulet_frost.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "paving": {
+    "source": "exec-82771292-27a6-425f-ae1d-5357247f849a.png",
+    "sha256": "dce66a3e7eacc3a726ebff6e577a3b1e3b710751ac310936d512e09e4efc0402",
+    "output": "paving.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "paving_frost": {
+    "source": "exec-dbc9e85c-2461-4ddb-8d7d-84f1e9f80d6f.png",
+    "sha256": "134045b574e65db1f07c2b9d4146ff73f29e52283713eccd751ff8c4842ca5a0",
+    "output": "paving_frost.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "city_wall": {
+    "source": "exec-f0b85d0f-6997-46d8-91fb-3368f1c856bf.png",
+    "sha256": "7ab8a213ae15ae07f1fe596f5ba6d2f2083aac6096f35137794bbd277cf6ed27",
+    "output": "city_wall.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "city_timber": {
+    "source": "exec-029be4f0-c51a-4fc6-9180-3c441e51dcf2.png",
+    "sha256": "455789b93b1c656177463fd75811bc3dff42318c70d692e5ad5c72e1eea535a4",
+    "output": "city_timber.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "arena_city": {
+    "source": "exec-5ba2b7e2-4d6d-4761-a6bc-cf489e2bab54.png",
+    "sha256": "fd035a4251e0143980623de88a24e43bf9413c214cadec2c314ae90a01a17ba9",
+    "output": "arena_city.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "arena_frost": {
+    "source": "exec-55c1c6a4-4750-4561-bf27-2e271213d174.png",
+    "sha256": "28bca4cb5100a2bcc402d6aaae28bfe512d02a51f994d8b0d847f7e6fefd00f8",
+    "output": "arena_frost.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "arena_lab": {
+    "source": "exec-baa5627b-931f-4c73-9942-81d6687502af.png",
+    "sha256": "5bcadc7a33d8b2857ccf5a70ea5cf9cc00a3ae4b0cfa71d5feaadd219f54efa8",
+    "output": "arena_lab.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "arena_duel": {
+    "source": "exec-8f1b8fa4-e75c-4102-9eb6-68f5e546f707.png",
+    "sha256": "cffc1d21a75728cdae4bcf2ca9b9f10ed9d54c406caae5ba99192aad2f38332f",
+    "output": "arena_duel.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "arena_frostwood": {
+    "source": "exec-623c44b6-04fc-4499-85b7-6bf0eb38cfba.png",
+    "sha256": "5f6bfd61675cac8a92d4e5b7a7ca97fee8978ec4def01cf2922be2d9fbcb94c8",
+    "output": "arena_frostwood.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "arena_graveyard": {
+    "source": "exec-bd04d35f-3a33-4864-a5e5-2058862cd241.png",
+    "sha256": "362eaa77f2f02736b77c2404b22f62de0a0b060ac5daf7864394214bd190e1e5",
+    "output": "arena_graveyard.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "frost_wolf": {
+    "source": "exec-d29011f1-e114-424e-aaa2-1620b1516ad9.png",
+    "sha256": "41d2583428fce9caad056d1406c43eb1b58547028e576598438fdca0acaff792",
+    "output": "frost_wolf.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "frost_alpha": {
+    "source": "exec-1c58815d-3160-4fda-9430-818411c1f305.png",
+    "sha256": "965b0dccca996b38852ae90a4aa1b664ddd1d717fb5f75eb9b1c7fb6361d8250",
+    "output": "frost_alpha.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "grave_wisp": {
+    "source": "exec-c50fce7d-2f3c-4204-98a3-1b489ad4811e.png",
+    "sha256": "cf021878482435f99eb8267742bd2a143c613b2af5c3afa05b7f029c4da68850",
+    "output": "grave_wisp.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "grave_hound": {
+    "source": "exec-aa8fc295-93e5-473a-8eb5-67d90b4c073c.png",
+    "sha256": "d451d65efe87767057d659298426eae8d947a3b24c3af36bd32c1d2145327904",
+    "output": "grave_hound.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "barrow_warden": {
+    "source": "exec-edaa3cf5-ab4c-43a5-912d-610114bfff11.png",
+    "sha256": "b1739658d8c175da7c5c4ba3c44c57a0cebc4005448f554ee16d6ad671ef217a",
+    "output": "barrow_warden.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "resident_woman": {
+    "source": "exec-a94fb2b6-b1a2-40fb-9175-5b052e20100b.png",
+    "sha256": "890991c8be89ee53c12c1eb72b7dd253bb7b5530fdb3640925339792a8d1793e",
+    "output": "resident_woman.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "resident_man": {
+    "source": "exec-e27b3676-a5fb-4b5d-bb05-8002cf688138.png",
+    "sha256": "683229a931b6b91bf3aa72e5b39c4764ae85d88239c993891b4df76782548bb4",
+    "output": "resident_man.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "archive_document": {
+    "source": "exec-545fda0c-53ee-496d-97fa-7be44a540a89.png",
+    "sha256": "a4dca5fcf4b8229c4c64b3edd71008bf5a5f2510482d877b2b3d50a6b94c3ffc",
+    "output": "archive_document.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "lab_journal": {
+    "source": "exec-9283a85f-7b94-4d8b-9088-f689115f9ad1.png",
+    "sha256": "1aa6c74a37ce1952987df4878a2e4e0c39f44c71a4f3e7fb5a99ccb4255c17d7",
+    "output": "lab_journal.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "final_letters": {
+    "source": "exec-a298eab0-fcfc-45c7-8443-4fc254bcca7d.png",
+    "sha256": "6255b15cce8128a932a7196d0ddef3a67546543cc411ba4ff3da736dc3f80dfe",
+    "output": "final_letters.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "equipment": {
+    "source": "exec-95fa8948-d7d3-407c-855c-153a1324064b.png",
+    "sha256": "554336f43cf1d7407f9e56c8b6c04626b721324ec499fbe6514fd2b1eb5acb13",
+    "output": "equipment.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "lab_machine": {
+    "source": "exec-0e415e32-d0ce-471d-9d46-efe0f665355b.png",
+    "sha256": "a5ecf5abb359e5176d962f13ceb03daf9d6391b948f24d2fffc54898254162f4",
+    "output": "lab_machine.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "ice_wall": {
+    "source": "exec-e922c281-faa2-4825-b457-69c4714fd1ae.png",
+    "sha256": "d019506cad9ea448b4b45d7e55e94b48b77ffa41269c22685c35d32dae1d3829",
+    "output": "ice_wall.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "ice_construct": {
+    "source": "exec-fa7f7b18-de5b-4765-8921-7b799e5821d7.png",
+    "sha256": "9b2898bb5ce5786efa6c8bf61a9b33c54bf6f824985665936ce0fe3e8816b269",
+    "output": "ice_construct.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "lab_door": {
+    "source": "exec-e70460a2-eb8a-4e81-b100-19e3936ded7b.png",
+    "sha256": "754e16c283876904a109f731a9722cb639faaf9a3bf0bf2ae192608c1971e396",
+    "output": "lab_door.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "frozen_door": {
+    "source": "exec-70a624fa-9bef-40d8-b720-7e57b7878424.png",
+    "sha256": "769666665a06a47a23a06be464a5994c5ccbbe31f07b4093c1ecfeb0d8a14609",
+    "output": "frozen_door.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "cellar": {
+    "source": "exec-8e40c70c-d9e8-47b8-b580-1bc590287ca5.png",
+    "sha256": "cd45b533f1436a810e58029b8737f19b2982c3edceed7a531cf0bfb0319946bc",
+    "output": "cellar.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "coolant": {
+    "source": "exec-cb99cde6-1ddf-4708-8276-d35e306daa46.png",
+    "sha256": "71fd7b5ad48c281d59ce4af8b855b33ebe69e051922d0b1294d3bed92228facc",
+    "output": "coolant.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "debris": {
+    "source": "exec-81555668-3384-400f-bf1d-db6c4be98e8e.png",
+    "sha256": "b66bfe4ec6a38949cd27d6aec0974abd8e2cca604176f1d7f47b5684bc4e9006",
+    "output": "debris.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "fountain_frozen": {
+    "source": "exec-a5348997-0922-490b-87b8-13cb382d666d.png",
+    "sha256": "e997658557e907ca467eb54d2332f49c23e118806869425ed6aea36b66216419",
+    "output": "fountain_frozen.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "water": {
+    "source": "exec-7c21e1da-08a9-4ca8-9001-caf58846e20a.png",
+    "sha256": "106d1c20fed7843f46768fb3d298026dd3cd4b9953b1994aa3f986671f5c109c",
+    "output": "water.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "ward": {
+    "source": "exec-70c88cf8-c4e1-4a77-b716-fc825114093a.png",
+    "sha256": "dd593d0f989a0bf81b9b9aea1ad5629ea6f56380abf5502797d438ac76aa1d19",
+    "output": "ward.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "frost_trace": {
+    "source": "exec-f768fb8c-db4e-4364-966d-fa02d0becea5.png",
+    "sha256": "5141b0f536ee6c5be06fb2fd16b29bd301cec56126483b1393e161c87fdd0987",
+    "output": "frost_trace.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "warehouse_front": {
+    "source": "exec-10a36e77-2277-470c-a5da-595a498c58ed.png",
+    "sha256": "12476e9afb206ea2b12f79aa9a012e3d5e393c648df5f2352dd6a7f39ae8711f",
+    "output": "warehouse_front.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "cache_wolf": {
+    "source": "exec-9ef03c23-6714-426b-a4b5-909a4aa9dd40.png",
+    "sha256": "2c9925b9a0dce36c591880f453569232000c6cfba1f116e9dedd9cc5452c15c2",
+    "output": "cache_wolf.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "cache_grave": {
+    "source": "exec-ea96c4a9-af9e-4b65-9cda-5a6c3fe69c5b.png",
+    "sha256": "664f6c055504e3c12ea3f72da8137f7f1179a19ab3097a76280af15c07ac5aa7",
+    "output": "cache_grave.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "lab_door_open": {
+    "source": "exec-4dfbc514-f98a-48c6-8493-32c02842007c.png",
+    "sha256": "d797e22efe3f893e7ddbda06c8e02cd6ff7da712f91035aa3e53a930305bdf0a",
+    "output": "lab_door_open.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "open_door": {
+    "source": "exec-4f2b88b8-e388-470a-811c-230172073591.png",
+    "sha256": "a39c08661168901fcef8c764262931f3b17cd93a38cee7a0f4c4bb889b802d52",
+    "output": "open_door.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "coolant_stable": {
+    "source": "exec-2f20662c-6d2f-4f65-9703-11ac226155bc.png",
+    "sha256": "fd724924ba956ecb2e6c38b17cb02f7c90dd721428fcc0931e67241adb6472d9",
+    "output": "coolant_stable.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "snow_ground": {
+    "source": "exec-5ba04e27-8510-4061-b5e1-ea946a4c9935.png",
+    "sha256": "b4c6e8b50bce506c05bde4dafa33285a47361a23ded9169ce653bb400804c5e2",
+    "output": "snow_ground.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "grave_ground": {
+    "source": "exec-64b6a530-da19-4862-8389-69c0abb55464.png",
+    "sha256": "400e3f6a61b969ba22bb1ce3b15db57535c5ce43fad611568cc1c3a3bc2b0a7d",
+    "output": "grave_ground.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "frost_tree_1": {
+    "source": "exec-653a69cd-5e8a-4d42-a5b2-8a7361f14590.png",
+    "sha256": "d2cc8c7b21df4592d2ca38964946a423a2562b971cf30996bcdfa3c235a384bb",
+    "output": "frost_tree_1.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "frost_tree_2": {
+    "source": "exec-9683ac9b-1b56-4423-8a9e-fa66d7fa657a.png",
+    "sha256": "63f774a8da851f2e943481bca6999e3e9f6572216a755a3f40511a6cf09c9108",
+    "output": "frost_tree_2.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "grave_tree": {
+    "source": "exec-b3ca85af-9e1a-439f-80d9-c29f1ac28dfd.png",
+    "sha256": "1aa9868823f781f3e853340125e33ef86c3b8c62b0b92f48eb001b8c8034fb32",
+    "output": "grave_tree.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "gravestone_1": {
+    "source": "exec-24365e14-3c39-485f-8f1e-7a92fa504442.png",
+    "sha256": "ac7f1d8eda472660e6ef37957d52a3049201683d011203cca6c5402ff29e240c",
+    "output": "gravestone_1.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "gravestone_2": {
+    "source": "exec-91503921-24c0-4f9c-b573-f49a0550d9f1.png",
+    "sha256": "1a8a3ee45708ffd1c93bef4c6613ce6b295a84b1bd7daefab4e29fb37ba1596c",
+    "output": "gravestone_2.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "crypt": {
+    "source": "exec-fc31c491-b1f3-4e9e-875f-15ca57baf469.png",
+    "sha256": "373da7289437d236ca55838142da494deaa96f33b9f0a001b8154655d765ab0c",
+    "output": "crypt.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "sign_archive": {
+    "source": "exec-ce0bda02-ff34-45d7-b487-9a8ca2c57b2d.png",
+    "sha256": "b135890d5e9b2faa115e3676d52be5e3c53095b611d789818a4a00b079bfd017",
+    "output": "sign_archive.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "sign_society": {
+    "source": "exec-106aebf4-21ae-41c3-9241-cb96710eacb2.png",
+    "sha256": "e5e96d1fce132d1645caec19e02c25b300fa1fa666506e022fe8837f6609e951",
+    "output": "sign_society.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "sign_duel": {
+    "source": "exec-f21cf220-58b2-4ba1-9860-7a23ab6938c6.png",
+    "sha256": "e2b1b330076bc9c13349f396e95d40ff69d2fe62923dbe3f10f436407d668ce7",
+    "output": "sign_duel.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "sign_coven": {
+    "source": "exec-35685409-a19a-401f-8fc3-f80948bfc347.png",
+    "sha256": "73ba1b1335edefb55c44ff895831fed0f0804d9f122604ae5fc4be9909651954",
+    "output": "sign_coven.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "ice_floor": {
+    "source": "exec-7f111c76-53f6-4df8-af97-a8d06bcdf498.png",
+    "sha256": "b86f8c5d21782eff20a08f8b5ba830cc16e5b50b7efeb68dcf44eba4ec635336",
+    "output": "ice_floor.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "cache_wolf_empty": {
+    "source": "exec-433a3f03-d385-4ec4-a796-26779eebb60f.png",
+    "sha256": "6975ab36a4ddcf5358329167973cb40bc5cc1a93d8faad2f4ab11506f6dc69e9",
+    "output": "cache_wolf_empty.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "cache_grave_empty": {
+    "source": "exec-f29e531a-62d0-401b-9137-ae6a0e44f761.png",
+    "sha256": "af845a6a2f683a80a3f6c3c71af2ddbd3ea241e0d56a77acfab967c449bf675e",
+    "output": "cache_grave_empty.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  },
+  "wood_floor": {
+    "source": "exec-f945bd97-17f5-4e8d-a3fd-597b6e6f8bd1.png",
+    "sha256": "f54da239072d2ab901a197b4d55e183cfc202046a3306cb1540e8b42f75558cc",
+    "output": "wood_floor.webp",
+    "generator": "image_gen",
+    "export": "alpha-preserving WebP"
+  }
+}

@@ -47,7 +47,7 @@ export class QuestLog {
     if (this.isDone(id)) return 'done';
     if (this.isStarted(id)) return q.objectives.every(o => this.objectiveDone(o)) ? 'ready' : 'active';
     const r = q.requires || {};
-    if (r.event && !this.state.hasEvent(r.event)) return 'locked';
+    if ((r.event && !this.state.hasEvent(r.event)) || (r.events || []).some(e => !this.state.hasEvent(e))) return 'locked';
     return 'available';
   }
 
@@ -117,6 +117,7 @@ export class QuestLog {
     const r = q?.reward || {};
     const out = [];
     if (r.coins) out.push(`${r.coins} монет`);
+    if (r.sapphires) out.push(`${r.sapphires} сапфир`);
     for (const [k, v] of Object.entries(r.items || {})) out.push(`${ITEMS[k]?.name || k}${v > 1 ? ` ×${v}` : ''}`);
     if (r.heroXP) out.push(`${r.heroXP} опыта`);
     return out;

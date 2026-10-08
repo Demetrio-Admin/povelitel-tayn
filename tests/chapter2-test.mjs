@@ -233,6 +233,7 @@ console.log('\nГлава II, квесты 6–10: сервер (JS-зеркал
   ok(act({ op: 'world', obj: 'final_rift' }).ok && act({ op: 'world', obj: 'final_ward' }).ok, 'Лёд и Астрал в слотах: разлом и барьер');
   ok(act({ op: 'world', obj: 'final_ice_wall' }).reason === 'benched', 'Огня нет в слотах — преграда не тает');
   ok(act({ op: 'build_set', slots: ['fire', 'telekinesis', 'ice'] }).ok && act({ op: 'world', obj: 'final_ice_wall' }).ok && act({ op: 'world', obj: 'final_debris' }).ok, 'дары поменяны: Огонь и Телекинез');
+  give({ coins: 3000 }); // The story lesson now has a coin price.
   ok(act({ op: 'event', key: 'ch2_ice3_shard' }).ok && s.abilities.ice.level === 3 && s.objects.player_build.branches.ice === 'shard' && s.quests.includes('ch2_ice3'), 'Лёд III, ветка «Осколок»');
   ok(act({ op: 'event', key: 'ch2_ice3_frost' }).reason === 'done', 'вторую ветку бесплатно не взять');
   s.inventory.elixir_life = Math.max(s.inventory.elixir_life || 0, 5);
@@ -274,8 +275,11 @@ console.log('\nГлава II: диалоги');
   ok(variant('ilaria') === 'ilaria_wave_ready', 'волна холода — во время разговора с Иларией');
   for (const k of ['ch2_frost_wave', 'ch2_quarter_open', 'ch2_construct_unstable']) st.markEvent(k);
   ok(variant('nerys') === 'nerys_meet_ready', 'Нэрис появляется после реакции конструкции');
+  st.markEvent('ch2_nerys_met'); st.markEvent('warm_potion_crafted');
+  ok(variant('nerys') === 'nerys_rescue_active', 'настой, сваренный заранее, не открывает урок до спасения жителей');
   for (const k of ['ch2_nerys_met', 'ch2_rescue_door', 'ch2_rescue_cellar']) st.markEvent(k);
   ok(variant('nerys') === 'nerys_rescue_ready', 'жители спасены — Нэрис благодарит');
+  st.data.completedEvents = st.data.completedEvents.filter(k => k !== 'warm_potion_crafted');
   st.markEvent('ch2_rescue_done');
   ok(variant('nerys') === 'nerys_warm_active', 'потом — тёплый настой');
   st.markEvent('warm_potion_crafted');

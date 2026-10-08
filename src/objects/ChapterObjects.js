@@ -216,6 +216,7 @@ export class SealSigilObject extends InteractiveObject {
     if (!tex || !this.sprite.active) return;
     this.sprite.setTexture(tex);
     applyDisplaySize(this.sprite, tex);
+    if (this.cfg.litTint) this.sprite.setTint(this.cfg.litTint);
     this.baseScale = { x: this.sprite.scaleX, y: this.sprite.scaleY };
     if (animate) {
       this.scene.burst(this.x, this.baseY - 20, SEAL, 30);

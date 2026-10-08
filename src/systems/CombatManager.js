@@ -24,18 +24,19 @@ export class CombatManager {
     this.enemy = new Enemy(enemyType, this.def);
 
     const hs = state.heroStats();
+    const legacy = state.data.combatCtx?.balanceVersion === 29;
     // v0.9: бой начинается с текущих запасов героини (не с полных); всё, что изменилось в бою, пишется обратно (commit)
     this.hero = {
       maxHp: hs.maxHp, hp: vitals.hp(state),
       maxMana: hs.maxMana, mana: vitals.mana(state),
-      regen: hs.manaRegen, damageMult: hs.damageMult,
+      regen: legacy ? 3 : hs.manaRegen, damageMult: hs.damageMult,
       autoTimer: HERO_BASE.autoAttack.intervalSec,
     };
     // v0.16.0: амулеты. Их множители считаются один раз на начало боя: damageMult героя и входящий урон; лунный амулет — один раз за бой.
     this.amulets = state.equippedAmulets ? state.equippedAmulets() : [];
     // v0.19.0: уровень улучшения амулета (+1…+3) усиливает его главное свойство (config/build.js amuletEffect)
     const lv = state.buildData ? state.buildData().amuletLevels || {} : {};
-    const effs = this.amulets.map(a => amuletEffect(a, lv[a] || 0));
+    const effs = this.amulets.map(a => amuletEffect(a, lv[a] || 0, legacy));
     let dm = 1, inc = 1, im = 1, sb = 0;
     for (const e of effs) { if (e.damageMult) dm *= e.damageMult; if (e.incomingMult) inc *= e.incomingMult; if (e.iceMult) im *= e.iceMult; if (e.slowBonus) sb += e.slowBonus; }
     this.hero.damageMult = Math.round(this.hero.damageMult * dm * 1000) / 1000;

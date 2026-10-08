@@ -1,3 +1,4 @@
+import { BAG, bagData, bagUsed, takesBagSpace } from '../config/bag.js';
 // Модель игрока на сервере и способ её менять. Без Phaser и DOM.
 //
 // Главное правило: клиент НЕ отправляет «весь сейв». Он считает, что изменилось с момента последнего ответа сервера (diff),
@@ -28,7 +29,7 @@ const RULES = serverRules();
  * Ключи объектов мира, состояние которых пишет только сервер: всё, что есть в RULES.world (с v0.15.0 и магия — сервер ставит mark),
  * победы над врагами rep:* (по ним открываются запасы) и build — ветки даров (player_build).
  */
-export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build' || k === 'daily' || k === 'duel');   // v0.23.0: + доска поручений; v0.26.0: + Дуэль
+export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build' || k === 'player_bag' || k === 'daily' || k === 'duel');   // v0.23.0: + доска поручений; v0.26.0: + Дуэль
 
 export const ABILITY_IDS = ['telekinesis', 'fire', 'seal', 'ice'];   // v0.18.0: + Лёд
 export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal', 'ice'];
@@ -246,16 +247,52 @@ export function healPriceOf(s) {
 // ---------------------------------------------------------------- v0.10.0: крафт, сюжетные предметы, миграция
 const has = (s, ev) => s.quests.includes(ev);
 const addEvent = (s, ev) => { if (!s.quests.includes(ev)) s.quests = [...s.quests, ev]; };
-const addItem = (s, id, n) => { s.inventory[id] = clamp((s.inventory[id] || 0) + n, 0, LIMITS.maxCounter); };
+class BagFull extends Error {}
+const bag = s => bagData(s.objects);
+const freeBag = s => Math.max(0, bag(s).capacity - bagUsed(s.inventory));
+const addItem = (s, id, n) => {
+  if (n > 0 && takesBagSpace(id) && n > freeBag(s)) throw new BagFull();
+  s.inventory[id] = clamp((s.inventory[id] || 0) + n, 0, LIMITS.maxCounter);
+};
+function awardItem(s, id, n) {
+  if (n > 0 && takesBagSpace(id) && n > freeBag(s)) {
+    const b = bag(s); b.pending[id] = Math.min(LIMITS.maxCounter, (b.pending[id] || 0) + n);
+    s.objects.player_bag = { ...b, version: BAG.version };
+  } else addItem(s, id, n);
+}
+function bagAction(s, action) {
+  const b = bag(s);
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  if (action.op === 'bag_expand') {
+    if (b.capacity > BAG.max - BAG.increment) return { ok: false, reason: 'max' };
+    if (walletOf(s.wallet).sapphires < BAG.price) return { ok: false, reason: 'sapphires', need: BAG.price };
+    spend(s, BAG.price); b.capacity += BAG.increment;
+    s.objects.player_bag = { ...b, version: BAG.version };
+    return { ok: true, capacity: b.capacity, price: BAG.price };
+  }
+  const { item, qty } = action;
+  if (!takesBagSpace(item) || !Number.isInteger(qty) || qty < 1 || qty > LIMITS.maxCounter) return { ok: false, reason: 'bad' };
+  if (action.op === 'bag_claim' || action.pending === true) {
+    if ((b.pending[item] || 0) < qty) return { ok: false, reason: 'missing' };
+    if (action.op === 'bag_claim') addItem(s, item, qty);
+    b.pending[item] -= qty; if (!b.pending[item]) delete b.pending[item];
+    s.objects.player_bag = { ...b, version: BAG.version };
+  } else {
+    if ((s.inventory[item] || 0) < qty) return { ok: false, reason: 'missing' };
+    addItem(s, item, -qty);
+  }
+  return { ok: true, item, qty };
+}
+
 
 /**
  * Разовая награда операции (зеркало SQL _grant): опыт героя (уровень растёт по таблице; перед повышением «полные» HP/мана
  * фиксируются числом, как GameState.addHeroXP), монеты, предметы, опыт школ, topUp — «не меньше» (гарантия цены изучения).
  */
 function grant(s, reward = {}) {
-  if (reward.heroXP) {
+  if (reward.heroXP || reward.topUp?.heroXP) {
     const before = s.level;
-    s.xp = clamp(s.xp + reward.heroXP, 0, LIMITS.maxXp);
+    s.xp = clamp(Math.max(s.xp + (reward.heroXP || 0), reward.topUp?.heroXP || 0), 0, LIMITS.maxXp);
     const lvl = Math.max(s.level, levelForXp(s.xp));
     if (lvl > before) {
       const mx = maxVitals(before);
@@ -265,10 +302,10 @@ function grant(s, reward = {}) {
     s.level = lvl;
   }
   if (reward.coins) addItem(s, 'coins', reward.coins);
-  for (const [k, v] of Object.entries(reward.items || {})) addItem(s, k, v);
+  for (const [k, v] of Object.entries(reward.items || {}).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) awardItem(s, k, v);
   for (const [k, v] of Object.entries(reward.schoolXP || {})) s.school[k] = clamp((s.school[k] || 0) + v, 0, LIMITS.maxCounter);
   for (const [k, v] of Object.entries(reward.topUp?.school || {})) s.school[k] = Math.max(s.school[k] || 0, v);
-  for (const [k, v] of Object.entries(reward.topUp?.items || {})) s.inventory[k] = Math.max(s.inventory[k] || 0, v);
+  for (const [k, v] of Object.entries(reward.topUp?.items || {})) awardItem(s, k, Math.max(0, v - (s.inventory[k] || 0) - (bag(s).pending[k] || 0)));
 }
 
 /** Изготовление: рецепт известен, не уже сделан (сюжетный), ингредиентов хватает — иначе ничего не меняется. */
@@ -348,7 +385,7 @@ function questAccept(s, id) {
   const q = questRule(id);
   if (!q) return { ok: false, reason: 'unknown' };
   if (has(s, q.done) || has(s, q.start)) return { ok: false, reason: 'already' };
-  if (q.requires && !has(s, q.requires)) return { ok: false, reason: 'locked' };
+  if ((q.requires && !has(s, q.requires)) || (q.requiresAll || []).some(e => !has(s, e))) return { ok: false, reason: 'locked' };
   addEvent(s, q.start);
   return { ok: true, id };
 }
@@ -364,6 +401,7 @@ function questTurnIn(s, id) {
   for (const [k, n] of Object.entries(q.consume)) addItem(s, k, -n);
   addEvent(s, q.done);
   grant(s, q.reward);
+  if (q.sapphires > 0) s.wallet = { ...walletOf(s.wallet), sapphires: walletOf(s.wallet).sapphires + q.sapphires };
   return { ok: true, id };
 }
 
@@ -378,6 +416,9 @@ function researchStart(s, id) {
   const enough = s.level >= up.heroLevel && (s.abilities[up.ability]?.level || 0) >= up.abilityLevel
     && (s.school[up.ability] || 0) >= up.schoolXP && Object.entries(up.items).every(([k, n]) => (s.inventory[k] || 0) >= n);
   if (!enough) return { ok: false, reason: 'missing' };
+  if (walletOf(s.wallet).sapphires < up.sapphires) return { ok: false, reason: 'sapphires', need: up.sapphires };
+  if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  spend(s, up.sapphires);
   s.school[up.ability] = (s.school[up.ability] || 0) - up.schoolXP;
   for (const [k, n] of Object.entries(up.items)) addItem(s, k, -n);
   s.research = { upgradeId: id, startedAt: num(s.vitalsAt) ? s.vitalsAt : 0, durationMs: up.durationMs };
@@ -556,6 +597,7 @@ function amuletUpgrade(s, id) {
 
 /** Приветственные сапфиры — один раз (op 'bank_welcome'). */
 function bankWelcome(s) {
+  if (!has(s, RULES.sapphires.welcomeEvent)) return { ok: false, reason: 'locked' };
   const w = walletOf(s.wallet);
   if (w.welcome) return { ok: false, reason: 'already' };
   s.wallet = { ...w, sapphires: w.sapphires + RULES.sapphires.welcome, welcome: true };
@@ -697,6 +739,7 @@ function worldAct(s, id) {
     s.objects[id] = { state: 'picked', t: now };
   } else if (r.kind === 'loot') {
     grant(s, r.reward);
+    if (r.reward?.sapphires > 0) s.wallet = { ...walletOf(s.wallet), sapphires: walletOf(s.wallet).sapphires + r.reward.sapphires };
     s.objects[id] = { state: r.mark };
   } else if (r.kind === 'stash') {
     grant(s, { items: r.items });
@@ -755,7 +798,7 @@ export function duelGhostOf(s, rating) {
   return { name: 'Тень дуэлянта', ghost: true, level: s.level, hero: null, abilities, build: s.objects?.player_build ?? null, rating };
 }
 /** Вызов на Дуэль: попытка списывается сразу; сервер запоминает героя и соперника (бой проверяется как обычный). */
-function duelStart(s, nowMs) {
+function duelStart(s, nowMs, balanceVersion) {
   const D = RULES.duel;
   if (!has(s, D.requires)) return { ok: false, reason: 'locked' };
   if (s.combatSince != null) return { ok: false, reason: 'combat' };
@@ -765,7 +808,7 @@ function duelStart(s, nowMs) {
   s.objects.duel = st;
   const opponent = duelGhostOf(s, st.rating);
   s.combatSince = s.vitalsAt;
-  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), duel: { opponent, rating: st.rating, season: st.season } };
+  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), balanceVersion: balanceVersion === 30 ? 30 : 29, duel: { opponent, rating: st.rating, season: st.season } };
   return { ok: true, opponent, rating: st.rating, left: D.attemptsPerDay - st.used };
 }
 
@@ -773,7 +816,7 @@ function duelStart(s, nowMs) {
 function combatStart(s, action = {}) {
   if (!isId(action.spawn) || !isId(action.enemy)) return { ok: false, reason: 'bad_spawn' };
   if (s.combatSince == null) s.combatSince = s.vitalsAt;
-  s.combatCtx = combatCtxOf(s, action.spawn, action.enemy);
+  s.combatCtx = { ...combatCtxOf(s, action.spawn, action.enemy), balanceVersion: action.balanceVersion === 30 ? 30 : 29 };
   // v0.15.0: событие «встреча началась» (combat_intro_01 и др.) ставит сервер, если место боя уже открыто
   const ss = Object.hasOwn(RULES.spawnStart, action.spawn) ? RULES.spawnStart[action.spawn] : null;
   if (ss && (!ss.requires || has(s, ss.requires))) setEvent(s, ss.event);
@@ -893,10 +936,12 @@ function migrateV10(s) {
  *   v0.16.0: { op: 'build_set', slots?, amulets? } — слоты даров и амулеты; { op: 'build_preset', mode: 'save' | 'load' } — один бесплатный пресет
  * nowMs — время сервера: перед любым действием HP и мана восстанавливаются до него (как player_action).
  */
-export function applyAction(snap, action = {}, nowMs = null) {
+function applyActionUnchecked(snap, action = {}, nowMs = null) {
   const s = JSON.parse(JSON.stringify(snap));
   if (num(nowMs)) advanceVitals(s, nowMs);
   const op = isObj(action) ? action.op : null;
+  if (['bag_expand', 'bag_discard', 'bag_claim'].includes(op)) return { snapshot: s, result: bagAction(s, action) };
+  if (op === 'combat_start' && Object.values(bag(s).pending).some(n => n > 0)) return { snapshot: s, result: { ok: false, reason: 'bag_pending' } };
   if (op === 'craft') return { snapshot: s, result: craft(s, action.recipe) };
   if (op === 'use') return { snapshot: s, result: useItem(s, action.item) };
   if (op === 'migrate_v10') return { snapshot: s, result: migrateV10(s) };
@@ -918,7 +963,7 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'amulet_upgrade') return { snapshot: s, result: amuletUpgrade(s, action.amulet) };
   // v0.25.0: Ковены живут в отдельных таблицах (миграция 20261007_covens.sql) — JS-зеркало о них не знает и отвечает как сервер
   // игроку без ковена (или базе без миграции): 'no_coven'
-  if (op === 'duel_start') return { snapshot: s, result: duelStart(s, num(nowMs) ? nowMs : Date.now()) };   // v0.26.0
+  if (op === 'duel_start') return { snapshot: s, result: duelStart(s, num(nowMs) ? nowMs : Date.now(), action.balanceVersion) };   // v0.26.0
   if (op === 'coven_give' || op === 'coven_claim') return { snapshot: s, result: { ok: false, reason: 'no_coven' } };
   if (op === 'daily_take') return { snapshot: s, result: dailyTake(s, action.offer, num(nowMs) ? nowMs : Date.now()) };   // v0.23.0
   if (op === 'daily_done') return { snapshot: s, result: dailyDone(s, action.offer, num(nowMs) ? nowMs : Date.now()) };
@@ -937,7 +982,7 @@ export function applyAction(snap, action = {}, nowMs = null) {
   if (op === 'starter_kit') {
     if (s.quests.includes(STARTER_KIT.event)) return { snapshot: s, result: { ok: false, reason: 'already' } };
     s.quests = [...s.quests, STARTER_KIT.event];
-    for (const [k, v] of Object.entries(STARTER_KIT.items)) s.inventory[k] = (s.inventory[k] || 0) + v;
+    for (const [k, v] of Object.entries(STARTER_KIT.items)) awardItem(s, k, v);
     return { snapshot: s, result: { ok: true } };
   }
   return { snapshot: s, result: { ok: false, reason: 'unknown' } };
@@ -960,4 +1005,13 @@ export function fillDefaults(raw) {
     meta: meta || {},
     action: action || null,
   };
+}
+
+/** Failed inventory actions roll back their mana, coins, ingredients and world marks. */
+export function applyAction(snap, action = {}, nowMs = null) {
+  try { return applyActionUnchecked(snap, action, nowMs); }
+  catch (error) {
+    if (!(error instanceof BagFull)) throw error;
+    return { snapshot: JSON.parse(JSON.stringify(snap)), result: { ok: false, reason: 'bag_full' } };
+  }
 }

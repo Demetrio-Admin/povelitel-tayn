@@ -7,7 +7,7 @@ const ok = (c, m) => { if (c) console.log('  ✓', m); else { failures++; consol
 
 // ---- заглушки браузера
 const any = () => new Proxy(function () {}, {
-  get: (t, k) => (k === 'classList' ? { toggle() {}, contains: () => false, add() {}, remove() {} } : k === 'dataset' ? {} : k === 'style' ? {} : k === Symbol.toPrimitive ? () => '' : any()),
+  get: (t, k) => (k === 'value' ? '' : k === Symbol.match ? false : k === Symbol.iterator ? function* () {} : k === 'classList' ? { toggle() {}, contains: () => false, add() {}, remove() {} } : k === 'dataset' ? {} : k === 'style' ? {} : k === Symbol.toPrimitive ? () => '' : any()),
   apply: () => any(), set: () => true,
 });
 globalThis.document = { createElement: () => any(), head: any(), body: any() };
@@ -38,6 +38,7 @@ function mkScene() {
     input: { on() {}, keyboard: { on() {} }, pointer1: {}, pointer2: {} },
     events: { on(n, f) { (handlers[n] ||= []).push(f); }, once() {}, off() {} },
     terrain: null,
+    styleEntity() {},
     rebuildTerrain(roads, waters) { this.log.terrain++; this.map.roads = roads; this.map.waters = waters; this.terrain = buildTerrain({ ROADS: roads, WATERS: waters }); },
     rebuildColliders(list) { this.log.cols++; this.map.colliders = list; },
   };

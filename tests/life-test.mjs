@@ -1,7 +1,7 @@
 // v0.28.0 — «живой мир»: выбор качающихся деревьев и точек ряби, ассеты, настройка.
 //   node tests/life-test.mjs
 import fs from 'fs';
-import { LIFE, swayAmplitude, pickSwayers, pickWaterSpot, pathClear, isHideout } from '../src/world/life.js';
+import { LIFE, LivingWorld, swayAmplitude, pickSwayers, pickWaterSpot, pathClear, isHideout } from '../src/world/life.js';
 import { ZONES } from '../src/config/world.layout.js';
 import { ASSET_FILES, DISPLAY_SIZE } from '../src/config/assets.manifest.js';
 import { createDefaultSettings, Settings } from '../src/state/Settings.js';
@@ -10,6 +10,8 @@ import { resolveMap } from '../src/world/mapData.js';
 import { buildTerrain } from '../src/world/terrain.js';
 import { AMBIENT } from '../src/config/world.content.js';
 import { touchesLocation, locationById } from '../src/config/locations.js';
+import { collectSolids } from '../src/world/solids.js';
+import { INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
 
 let failures = 0;
 const ok = (c, m) => { if (c) console.log('  ✓', m); else { failures++; console.log('  ✗', m); } };
@@ -54,6 +56,33 @@ console.log('\nЖивой мир: путь зверька');
   ok(pathClear({ x: 0, y: 0 }, { x: 300, y: 0 }, { ...free, solids: [{ x: 280, y: -20, w: 30, h: 40 }] }), 'само дерево у цели не мешает добежать');
   ok(!pathClear({ x: 600, y: 4600 }, { x: 900, y: 5000 }, { ...free, avoid: [house] }) && pathClear({ x: 200, y: 4000 }, { x: 300, y: 4100 }, { ...free, avoid: [house] }), 'дом Мирры обходится, а рядом с ним путь чист');
   ok(!pathClear({ x: 0, y: 0 }, { x: 300, y: 0 }, { ...free, hero: { x: 150, y: 30 } }) && pathClear({ x: 0, y: 0 }, { x: 300, y: 0 }, { ...free, hero: { x: 150, y: 400 } }), 'зверёк не бежит прямо на героиню');
+  // Реальная густая расстановка, а не пустая сцена: прежние 12 случайных попыток
+  // у ручья часто пропускали зверька на целую минуту.
+  const map = resolveMap(), terrain = buildTerrain({ ROADS: map.roads, WATERS: map.waters });
+  const life = new LivingWorld({ bounds: locationById('forest').rect, terrain, random: seeded(17) });
+  life.items = map.props.filter(p => isHideout(p.k));
+  life.solidRects = collectSolids({ colliders: map.colliders, props: map.props, interactives: INTERACTIVES, enemies: ENEMY_SPAWNS, waterRects: [] });
+  for (const [x, y, hx, hy] of [[860, 3850, 1220, 4500], [880, 3250, 1240, 3890], [340, 1860, 700, 2500]]) {
+    const view = { x, y, width: 720, height: 1280, right: x + 720, bottom: y + 1280 };
+    let found = 0;
+    for (let i = 0; i < 100; i++) if (life.pickRun(view, { x: hx, y: hy })) found++;
+    ok(found >= 95, `густой лес (${x}, ${y}): путь найден в ${found} из 100 попыток`);
+  }
+}
+
+console.log('\nЖивой мир: восстановление после падения FPS');
+{
+  const scene = { cameras: { main: { worldView: {} } }, game: { loop: { actualFps: 20 } } };
+  const life = new LivingWorld(scene);
+  life.running = true;
+  life.updateSway = life.spawnRipple = life.updateLeaves = () => {};
+  for (let i = 0; i < LIFE.lowFpsTicks; i++) life.tick();
+  ok(life.lite, 'при устойчиво низком FPS лишние эффекты отключаются');
+  scene.game.loop.actualFps = 60;
+  life.tick();
+  ok(life.lite, 'одного быстрого кадра недостаточно для переключения режима');
+  for (let i = 0; i < LIFE.recoverTicks; i++) life.tick();
+  ok(!life.lite, 'после восстановления FPS птицы и зверьки снова включаются');
 }
 
 console.log('\nЖивой мир: рябь на воде');

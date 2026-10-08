@@ -137,6 +137,8 @@ export const windows09 = {
  * ошибка сервера и сбой клиента — отдельный текст, техническая причина — в консоль (и на экран в режиме ?debug).
  */
 export function actionFailText(r, what, retry = 'Попробуйте ещё раз.') {
+  if (r.reason === 'bag_full') return 'В сумке не хватает места. Освободите его или расширьте сумку.';
+  if (r.reason === 'bag_pending') return 'Сначала заберите незабранные награды в сумке.';
   if (r.reason === 'network') return `Нет связи с сервером — ${what}.`;
   if (r.reason === 'session') return 'Сессия завершилась. Войдите снова.';
   if (r.reason === 'benched') return 'Этот дар не в слоте — поставьте его в «Дарах» (Сумка → Дары).';   // v0.18.0

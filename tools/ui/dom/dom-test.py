@@ -44,7 +44,7 @@ with sync_playwright() as p:
     pg.wait_for_selector('.acc-card')
     labels = pg.locator('.acc-field > span').all_inner_texts()
     check(labels == ['Никнейм', 'Пароль', 'Повторите пароль'], 'поля: Никнейм, Пароль, Повторите пароль — почты нет (' + ', '.join(labels) + ')')
-    check('восстановить доступ' in pg.locator('.acc-note').inner_text(), 'предупреждение о забытом пароле')
+    check('восстановить доступ' in pg.locator('.acc-note').text_content(), 'предупреждение о забытом пароле')
     no_forbidden(pg, 'форма регистрации')
     pg.screenshot(path=os.path.join(OUT, 'dom_register.png'))
     def submit_with(nick, pw, pw2):

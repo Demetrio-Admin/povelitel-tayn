@@ -39,7 +39,10 @@ console.log('\nЛокации: данные');
     ok(inLocation(l.arrival, l) && l.map.x > 0 && l.map.x < 584 && l.map.y > 0 && l.map.y < 760 && l.name && l.subtitle && l.text, `«${l.name}»: прибытие внутри, точка на карте, описание`);
   }
   ok(!INTERACTIVES.some(o => o.kind === 'travel'), 'старых указателей-телепортов больше нет: переходы только через карту мира');
-  ok(ASSET_FILES.world_map_01 && fs.existsSync('public/assets/sprites/world_map_01.png') && DISPLAY_SIZE.world_map_01, 'рисованная карта мира: файл и размер');
+  ok(ASSET_FILES.world_map_01 && fs.existsSync('public/' + ASSET_FILES.world_map_01.split('?')[0]) && DISPLAY_SIZE.world_map_01, 'рисованная карта мира: файл из рабочего манифеста и размер');
+  const ef = INTERACTIVES.find(o => o.id === 'exit_forest');
+  ok(ef.x === 1104 && ef.y === 4416 && !resolveMap().props.some(p => p.id === 'd05'), 'у перекрёстка один интерактивный указатель вместо декоративного двойника');
+  ok(Math.hypot(FOREST_RETURN.x - ef.x, FOREST_RETURN.y - ef.y) < ef.radius, 'возврат из города — на тропу рядом с указателем у перекрёстка');
 }
 
 console.log('\nЛокации: открытие и старые сохранения');

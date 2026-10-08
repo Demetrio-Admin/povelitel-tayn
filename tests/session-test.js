@@ -796,7 +796,7 @@ console.log('\nv0.15.0. Прогресс закрыт для sync_player: игр
   ok(!t4.ok && t4.reason === 'unknown', 'выдуманное задание — unknown');
 
   // изучение: цена и условия — на сервере, время — по часам сервера
-  await give(d, { xp: 1260, school: { telekinesis: 150 }, inv: { lunar_shard: 5, moon_herb: 2, rune_dust: 1 }, quests: ['lunar_quest_complete'] });
+  await give(d, { xp: 1260, school: { telekinesis: 150 }, inv: { coins: 150, lunar_shard: 5, moon_herb: 2, rune_dust: 1 }, quests: ['lunar_quest_complete'] });
   abilities.startResearch('telekinesis_2');
   ok(!!st.data.research, 'изучение началось сразу у игрока');
   await settle();
@@ -841,6 +841,8 @@ console.log('\nv0.15.0. Прогресс закрыт для sync_player: игр
   ok(bp.ok, 'пресет сохранён на сервере');
 
   // v0.17.0: сапфиры — только сервер: приветствие, ускорение изучения, пресет и смена ветки; «Новая игра» кошелёк не трогает
+  ok((await actions.bankWelcome()).reason === 'locked', 'банковское приветствие недоступно до города');
+  await give(d, { quests: ['ch2_city_arrived'] }); await settle();
   const bw = await actions.bankWelcome();
   ok(bw.ok && st.sapphires() === 3, 'приветственные 3 сапфира пришли с сервера');
   ok((await actions.bankWelcome()).reason === 'already', 'второй раз приветствие не выдаётся');

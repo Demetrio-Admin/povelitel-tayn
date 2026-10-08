@@ -2,6 +2,14 @@ import { INTERACTION, DEPTH, CONTROLS } from '../config/game.config.js';
 import { ABILITIES } from '../config/balance.abilities.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
+import { DISPLAY_SIZE } from '../config/assets.manifest.js';
+
+// Exported art may be 64px or 2048px. Markers always occupy the same world space.
+function sizeMarker(image, key, factor = 1) {
+  const [w, h] = DISPLAY_SIZE[key] || [64, 64];
+  const scale = 40 * factor / Math.max(w, h);
+  image.setDisplaySize(w * scale, h * scale);
+}
 
 /**
  * InteractionSystem — выбирает ближайший доступный объект (focus), рисует магические маркеры
@@ -21,8 +29,9 @@ export class InteractionSystem {
 
   add(obj) {
     this.objects.push(obj);
-    const m = this.scene.add.image(obj.x, obj.markerY, obj.markerIcon).setDepth(DEPTH.markers).setScale(0.5).setVisible(false);
-    const glow = this.scene.add.image(obj.x, obj.markerY, 'fx_glow').setDepth(DEPTH.markers - 1).setScale(0.6).setBlendMode('ADD').setVisible(false);
+    const m = this.scene.add.image(obj.x, obj.markerY, obj.markerIcon).setDepth(DEPTH.markers).setVisible(false);
+    sizeMarker(m, obj.markerIcon);
+    const glow = this.scene.add.image(obj.x, obj.markerY, 'fx_glow').setDepth(DEPTH.markers - 1).setDisplaySize(64, 64).setBlendMode('ADD').setVisible(false);
     this.markers.set(obj, { m, glow });
     return obj;
   }
@@ -40,6 +49,7 @@ export class InteractionSystem {
       if (show) {
         const bob = Math.sin(this.time * 3 + obj.x) * 5;
         mk.m.setPosition(obj.x, obj.markerY + bob).setTexture(obj.markerIcon);
+        sizeMarker(mk.m, obj.markerIcon);
         mk.glow.setPosition(obj.x, obj.markerY + bob).setTint(obj.markerColor);
       }
       if (avail && d <= obj.radius && d < bestD) { best = obj; bestD = d; }
@@ -49,8 +59,8 @@ export class InteractionSystem {
 
     if (this.focus) {
       const mk = this.markers.get(this.focus);
-      const pulse = 0.62 + Math.sin(this.time * 6) * 0.06;
-      if (mk) { mk.m.setScale(pulse); mk.glow.setScale(0.9); }
+      const pulse = 1.2 + Math.sin(this.time * 6) * 0.1;
+      if (mk) { sizeMarker(mk.m, this.focus.markerIcon, pulse); mk.glow.setDisplaySize(84, 84); }
       const w = Math.max(90, this.focus.sprite.displayWidth * 1.1);
       this.ring.setVisible(true).setPosition(this.focus.x, this.focus.y - 4).setDisplaySize(w, w * 0.4).setTint(this.focus.markerColor).setAlpha(0.6 + Math.sin(this.time * 6) * 0.2);
     } else this.ring.setVisible(false);
@@ -58,7 +68,7 @@ export class InteractionSystem {
 
   setFocus(obj) {
     if (obj === this.focus) return;
-    if (this.focus) { const mk = this.markers.get(this.focus); if (mk) { mk.m.setScale(0.5); mk.glow.setScale(0.6); } }
+    if (this.focus) { const mk = this.markers.get(this.focus); if (mk) { sizeMarker(mk.m, this.focus.markerIcon); mk.glow.setDisplaySize(64, 64); } }
     this.focus = obj;
     this.bus.emit(MSG.FOCUS_CHANGED, obj ? this.focusInfo() : null);
     if (obj) { obj.onFocus(); obj.focusPop?.(); }

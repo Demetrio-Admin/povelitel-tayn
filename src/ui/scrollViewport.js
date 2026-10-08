@@ -11,7 +11,8 @@ export function addScrollViewport(scene, root, content, { x, y, width, height, c
   root.add(track);
   const max = Math.max(0, contentHeight - height);
   let offset = 0, drag = null, moved = false;
-  const inside = p => p.x >= x && p.x <= x + width && p.y >= y && p.y <= y + height;
+  const point = p => scene.viewport?.point(p) || p;
+  const inside = p => { const at = point(p); return at.x >= x && at.x <= x + width && at.y >= y && at.y <= y + height; };
   const interactive = [];
   const collect = o => { if (o.input) interactive.push(o); if (Array.isArray(o.list)) o.list.forEach(collect); };
   if (Array.isArray(content.list)) content.list.forEach(collect);

@@ -7,6 +7,9 @@
 // реагирует мгновенно, пьёт зелья по порогам и держит Печать под третью фазу). Время этапов — плановое из ТЗ,
 // живой игрок не измерялся. Мана мира: каждое действие списывает свою цену, между этапами — восстановление
 // за плановое время (+0,5/с в лесу, +2/с дома), как в игре.
+import assert from 'node:assert/strict';
+import { pathToFileURL } from 'node:url';
+import { toSnapshot } from '../../src/cloud/playerModel.js';
 import { GameState } from '../../src/state/GameState.js';
 import { QuestFlags } from '../../src/state/QuestFlags.js';
 import { QuestLog } from '../../src/state/QuestLog.js';
@@ -46,7 +49,7 @@ function bot(cm) {
   if (ready('telekinesis') && !strongSoon) { cm.selectedId = (heavy && !(sa && !sa.interruptBy.includes('telekinesis'))) ? heavy.id : (light?.id ?? null); cm.useAbility('telekinesis'); }
 }
 
-function run(scenario) {
+export function run(scenario) {
   const clock = { t: 0 };
   const state = new GameState(mem(), () => clock.t);
   const bus = new EventBus();
@@ -74,10 +77,10 @@ function run(scenario) {
   /** Перед боем игрок ждёт, пока мана восстановится хотя бы до доли frac (время ожидания — в отчёт). */
   const ready = (frac) => { let s = 0; while (vitals.mana(state) < vitals.maxMana(state) * frac && s < 400) { clock.t += 1000; vitals.regenWall(state, clock.t); s++; } waited += s; if (s) L(`    ждём ману перед боем ${s} с`); };
   const gather = (id, n = 1) => { const c = INTERACTIVES.find(o => o.id === id); for (let i = 0; i < n; i++) { pay(WORLD_MANA_COST.gather, id); add({ [c.res]: c.amount || 1 }); } };
-  const chest = (id) => { const c = INTERACTIVES.find(o => o.id === id); state.applyReward(c.reward); track(); };
-  const sq = (id) => { log.accept(id); const r = log.turnIn(id); if (!r) L(`    !! ${id} не сдано`); track(); };
-  const craft = async (id) => { const r = await actions.craft(id); track(); if (!r.ok) L(`    !! крафт ${id}: ${r.reason} ${JSON.stringify(r.missing || '')}`); return r.ok; };
-  const use = async (id) => { const r = await actions.use(id); track(); if (!r.ok) L(`    !! применить ${id}: ${r.reason}`); return r.ok; };
+  const chest = (id) => { const c = INTERACTIVES.find(o => o.id === id); if (scenario === 'main' && ['glade_cache', 'trail_cache', 'west_chest'].includes(id)) return; state.applyReward(c.reward); track(); };
+  const sq = (id) => { log.accept(id); const r = log.turnIn(id); assert.ok(r, `Задание ${id} не сдано`); track(); };
+  const craft = async (id) => { const r = await actions.craft(id); track(); assert.ok(r.ok, `Крафт ${id}: ${r.reason} ${JSON.stringify(r.missing || '')}`); return r.ok; };
+  const use = async (id) => { const r = await actions.use(id); track(); assert.ok(r.ok, `Применить ${id}: ${r.reason}`); return r.ok; };
   const fight = (spawn, type, { lose = false } = {}) => {
     if (!lose) ready(ENEMIES[type].tier === 'strong' ? 0.9 : 0.5);
     const cm = new CombatManager({ enemyType: type, state, abilities });
@@ -115,14 +118,14 @@ function run(scenario) {
     chest('glade_cache'); add({ forest_mushroom: 1, tree_resin: 1 });   // сундук Мирры в доме (первый осмотр)
     gather('herb_g1'); gather('herb_g2'); gather('herb_g3'); gather('herb_t1');
     await craft('elixir_life');                         // первый крафт: +15
-    sq('sq_herbs');                                     // Веда: −3 травы
+    if (scenario !== 'main') sq('sq_herbs');                                     // Веда: −3 травы
     rest(5 * 60 - 0, true);
     // ---------- B. Лес и огоньки (10 мин)
     stage('B. Лес и огоньки');
     fight('scavenger_01', 'forest_scavenger');
     chest('trail_cache');
     gather('mush_t1'); gather('resin_t1');
-    log.accept('sq_hunter'); fight('scavenger_02', 'young_scavenger'); sq('sq_hunter');
+    if (scenario !== 'main') { log.accept('sq_hunter'); fight('scavenger_02', 'young_scavenger'); sq('sq_hunter'); }
     ev('lunar_quest_start');
     pay(WORLD_MANA_COST.pull, 'flame_a'); add({ lunar_flame: 1 });
     pay(WORLD_MANA_COST.push.medium, 'altar_stone'); add({ lunar_flame: 1 });
@@ -135,7 +138,8 @@ function run(scenario) {
     stage('C. Алтарь и ТК II');
     await craft('lunar_wick'); await use('lunar_wick');
     await craft('elixir_mana'); await craft('resin_flask');
-    const okTK = state.startResearch('telekinesis_2'); if (okTK) ev('telekinesis_2_start'); L(`    ТК II запущен: ${okTK}`);
+    const beforeTK = state.item('coins');
+    const okTK = state.startResearch('telekinesis_2'); assert.ok(okTK, `Телекинез II: ${JSON.stringify(state.upgradeStatus('telekinesis_2'))}`); if (okTK) ev('telekinesis_2_start'); L(`    ТК II запущен: ${okTK}`);
     // изучение идёт параллельно отдыху в доме: общий отдых прежний (6 мин), но не меньше самого таймера изучения
     const researchSec = UPGRADES.telekinesis_2.timerSec[TIMER_MODE];
     rest(researchSec, true); abilities.update();
@@ -164,7 +168,7 @@ function run(scenario) {
     let g = 0; while (!state.isEnemyDefeated('forest_guardian_01') && g++ < 3) if (!fight('forest_guardian_01', 'forest_guardian')) heal();
     ev('guardian_defeated'); state.openPath('gate_path');
     await use('revealing_compound');
-    log.accept('sq_dust'); sq('sq_dust');               // Селена: −1 пыль (на F по модели)
+    if (scenario !== 'main') { log.accept('sq_dust'); sq('sq_dust'); }               // Селена: −1 пыль (на F по модели)
     abilities.unlock('seal', 1); ev('unlock_seal_1');
     pay(WORLD_MANA_COST.seal, 'seal_sigil'); abilities.grantUseXP('seal'); ev('seal_training_complete');
     pay(WORLD_MANA_COST.seal, 'ancient_gate'); abilities.grantUseXP('seal'); ev('ancient_gate_open');
@@ -182,6 +186,7 @@ function run(scenario) {
     ready(0.2);
     await use('restoration_bundle');
     rest(6 * 60, false);
+    if (scenario !== 'main') { sq('sq_mushrooms'); sq('sq_resin'); sq('sq_veda_stock'); }
     const end = snapshot();
     // ---------- дополнительный ресурсный выход (через 600 с)
     if (scenario === 'extra') {
@@ -192,11 +197,12 @@ function run(scenario) {
       for (const id of ['herb_g1', 'herb_g2', 'herb_g3', 'herb_t1', 'herb_a1', 'mush_t1', 'mush_a1', 'mush_j1', 'resin_t1', 'resin_a1', 'resin_j1', 'crystal_a1']) gather(id);
       rest(10 * 60 - 3 * 25, false);
     }
-    return { scenario, end, final: snapshot(), inv: Object.fromEntries(RES.concat(['elixir_life', 'elixir_mana', 'resin_flask']).map(k => [k, state.item(k)])),
+    return { scenario, beforeTK, snapshot: toSnapshot(state.data), end, final: snapshot(), inv: Object.fromEntries(RES.concat(['elixir_life', 'elixir_mana', 'resin_flask']).map(k => [k, state.item(k)])),
       min, fights, manaWorld, waited, events: state.data.completedEvents, log: out, crafted: state.data.stats };
   })();
 }
 
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
 const PLAN = { normal: 56.0, defeats: 67.2, extra: 66.0 };
 const res = { normal: await run('normal'), defeats: await run('defeats'), extra: await run('extra') };
 const row = (name, f) => `| ${name} | ${f(res.normal)} | ${f(res.defeats)} | ${f(res.extra)} |`;
@@ -224,3 +230,5 @@ console.log(row('Сильный Страж', r => strong(r, 'forest_guardian_01'
 console.log(row('Хранитель сердца', r => strong(r, 'node_trial')));
 console.log(row('Сюжетные события', r => ['lunar_quest_complete', 'gate_marks_revealed', 'unlock_seal_1', 'ancient_gate_open', 'chapter_trial_defeated', 'chapter_1_complete'].every(e => r.events.includes(e)) ? 'все 6' : 'НЕ ВСЕ'));
 if (LOG) for (const r of Object.values(res)) { console.log(`\n### ${r.scenario}`); console.log(r.log.join('\n')); }
+
+}

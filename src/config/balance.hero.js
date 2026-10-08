@@ -9,7 +9,7 @@ export const HERO_BASE = {
 // xp — суммарный опыт, нужный для достижения уровня.
 // [ПРОТОТИП] Пороги XP в документах не заданы — подобраны так, чтобы по маршруту
 // игрок получал ур. 2 после первого боя и ур. 3 к моменту Телекинеза II.
-// v0.10.0: уровни 6–10 (стартовый баланс v0.1, первая глава); реген маны в бою — 3/с (было 4) на всех уровнях.
+// v0.30: реген маны в бою — 3 / 3,2 / 3,5 / 3,8 по диапазонам уровней 1–5 / 6–10 / 11–13 / 14–15.
 // Тот же набор (level, xp, maxHp, maxMana) — в SQL game_hero_levels (supabase/schema.sql); совпадение проверяет diff-test.
 export const HERO_LEVELS = [
   { level: 1,  xp: 0,    maxHp: 120, maxMana: 100, manaRegen: 3, damageMult: 1.00, note: 'Телекинез I' },
@@ -17,17 +17,17 @@ export const HERO_LEVELS = [
   { level: 3,  xp: 150,  maxHp: 132, maxMana: 110, manaRegen: 3, damageMult: 1.05, note: 'Доступ к Телекинезу II' },
   { level: 4,  xp: 270,  maxHp: 138, maxMana: 115, manaRegen: 3, damageMult: 1.08, note: 'Телекинез II, путь к Огню' },
   { level: 5,  xp: 430,  maxHp: 144, maxMana: 120, manaRegen: 3, damageMult: 1.10, note: 'Старый лес' },
-  { level: 6,  xp: 650,  maxHp: 152, maxMana: 125, manaRegen: 3, damageMult: 1.12, note: 'Астрал и испытание' },
-  { level: 7,  xp: 940,  maxHp: 160, maxMana: 135, manaRegen: 3, damageMult: 1.15, note: 'Завершение главы' },
-  { level: 8,  xp: 1300, maxHp: 170, maxMana: 140, manaRegen: 3, damageMult: 1.18, note: 'Дополнительный выход' },
-  { level: 9,  xp: 1750, maxHp: 180, maxMana: 145, manaRegen: 3, damageMult: 1.21, note: 'Продолжение' },
-  { level: 10, xp: 2350, maxHp: 190, maxMana: 155, manaRegen: 3, damageMult: 1.25, note: 'Продолжение' },
+  { level: 6,  xp: 650,  maxHp: 152, maxMana: 125, manaRegen: 3.2, damageMult: 1.12, note: 'Астрал и испытание' },
+  { level: 7,  xp: 940,  maxHp: 160, maxMana: 135, manaRegen: 3.2, damageMult: 1.15, note: 'Завершение главы' },
+  { level: 8,  xp: 1300, maxHp: 170, maxMana: 140, manaRegen: 3.2, damageMult: 1.18, note: 'Дополнительный выход' },
+  { level: 9,  xp: 1750, maxHp: 180, maxMana: 145, manaRegen: 3.2, damageMult: 1.21, note: 'Продолжение' },
+  { level: 10, xp: 2350, maxHp: 190, maxMana: 155, manaRegen: 3.2, damageMult: 1.25, note: 'Продолжение' },
   // v0.18.0: глава II (docs/design/chapter-2-balance-v0.1.md §2)
-  { level: 11, xp: 3100, maxHp: 202, maxMana: 165, manaRegen: 3, damageMult: 1.29, note: 'Лёд I' },
-  { level: 12, xp: 4000, maxHp: 214, maxMana: 175, manaRegen: 3, damageMult: 1.33, note: 'Лёд II' },
-  { level: 13, xp: 5100, maxHp: 226, maxMana: 185, manaRegen: 3, damageMult: 1.37, note: 'Лаборатория' },
-  { level: 14, xp: 6400, maxHp: 240, maxMana: 195, manaRegen: 3, damageMult: 1.42, note: 'Ковены' },
-  { level: 15, xp: 7900, maxHp: 255, maxMana: 205, manaRegen: 3, damageMult: 1.48, note: 'Финал главы II' },
+  { level: 11, xp: 3100, maxHp: 202, maxMana: 165, manaRegen: 3.5, damageMult: 1.29, note: 'Лёд I' },
+  { level: 12, xp: 4000, maxHp: 214, maxMana: 175, manaRegen: 3.5, damageMult: 1.33, note: 'Лёд II' },
+  { level: 13, xp: 5100, maxHp: 226, maxMana: 185, manaRegen: 3.5, damageMult: 1.37, note: 'Лаборатория' },
+  { level: 14, xp: 6400, maxHp: 240, maxMana: 195, manaRegen: 3.8, damageMult: 1.42, note: 'Ковены' },
+  { level: 15, xp: 7900, maxHp: 255, maxMana: 205, manaRegen: 3.8, damageMult: 1.48, note: 'Финал главы II' },
 ];
 
 export const HERO_RECOVERY = {

@@ -155,7 +155,15 @@ export { el as domEl, overlay as domOverlay };
 /** Открыто ли сейчас какое-нибудь окно аккаунта (игра в это время не принимает ввод). */
 export const anyOpen = () => stack.length > 0;
 
-const errMsg = (e) => (e instanceof CloudError ? (e.code === 'validation' ? e.message : errorText(e.code)) : errorText('unknown'));
+// v0.34.4: при сбое связи, ошибке сервера и неизвестной ошибке в конце — короткая техническая пометка (что не ответило), чтобы по скриншоту
+// было видно причину; обычные отказы (ник занят, неверный пароль) идут без неё
+const TECH = new Set(['network', 'timeout', 'server', 'unknown']);
+const errMsg = (e) => {
+  if (!(e instanceof CloudError)) return errorText('unknown');
+  if (e.code === 'validation') return e.message;
+  const tech = TECH.has(e.code) && (e.detail || e.status) ? ` [${[e.detail, e.status ? `HTTP ${e.status}` : ''].filter(Boolean).join(' · ')}]` : '';
+  return errorText(e.code) + tech;
+};
 const fmtDate = (v) => { if (!v) return '—'; const d = new Date(v); return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }); };
 const fmtPlay = (ms) => { const m = Math.round((ms || 0) / 60000); return m < 60 ? `${m} мин` : `${Math.floor(m / 60)} ч ${m % 60} мин`; };
 export const SAVE_STATUS = { saved: '✓ Прогресс сохранён', saving: 'Сохранение…', offline: 'Нет соединения' };

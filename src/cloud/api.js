@@ -101,7 +101,8 @@ export class SupabaseApi {
       });
     } catch (e) {
       const timeout = e?.name === 'AbortError';
-      throw new CloudError(timeout ? 'timeout' : 'network', RU.network);
+      // detail — только для отладки: что именно не ответило (v0.34.4: попадает в подпись ошибки формы)
+      throw new CloudError(timeout ? 'timeout' : 'network', RU.network, 0, `${timeout ? 'timeout' : 'network'} ${String(path).split('?')[0]}`);
     } finally { if (timer) clearTimeout(timer); }
     let json = null;
     try { const text = await res.text(); json = text ? JSON.parse(text) : null; } catch (e) { json = null; }

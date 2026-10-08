@@ -1,5 +1,5 @@
 // v0.25.0 — Ковены на настоящем Postgres: создание, вступление, роли, чат ковена, недельная цель, материалы и награда (player_action).
-// Схема supabase/schema.sql + tools/sql/auth-stub.sql + миграции чата и ковенов (supabase/migrations/2026100{4,7}_*.sql).
+// Схема supabase/schema.sql + tools/sql/auth-stub.sql + миграции чата и ковенов (supabase/migrations/2026100{4,7,8}_*.sql).
 //   PGHOST=... PGPORT=... PGUSER=postgres node tools/sql/coven-test.mjs
 import { spawnSync } from 'child_process';
 import { randomUUID } from 'crypto';
@@ -16,7 +16,7 @@ const cov = (as, op, args = {}) => J(q(`select public.coven_request('${op}', '${
 const act = (as, a) => J(q(`select public.player_action('${JSON.stringify({ ...a, id: randomUUID() }).replace(/'/g, "''")}'::jsonb) -> 'action';`, as));
 const chat = (as, op, args = {}) => q(`select public.chat_request('${op}', '${JSON.stringify(args)}'::jsonb, '${randomUUID()}'::uuid);`, as);
 
-for (const f of ['supabase/migrations/20261004_game_chat.sql', 'supabase/migrations/20261004_chat_roles_v2.sql', 'supabase/migrations/20261007_covens.sql']) {
+for (const f of ['supabase/migrations/20261004_game_chat.sql', 'supabase/migrations/20261004_chat_roles_v2.sql', 'supabase/migrations/20261007_covens.sql', 'supabase/migrations/20261008_coven_cycles.sql']) {
   const r = spawnSync('psql', ['-X', '-q', '-v', 'ON_ERROR_STOP=1', '-f', f], { encoding: 'utf8', env: process.env });
   if (r.status !== 0) { console.log(r.stderr); process.exit(1); }
 }
@@ -73,14 +73,14 @@ ok(J(q(`select public.get_player();`, U.mem)).inventory.ice_crystal === 10, 'к�
 ok(act(U.lead, { op: 'coven_give', item: 'frost_herb', qty: 50 }).ok && act(U.off, { op: 'coven_give', item: 'frost_herb', qty: 50 }).ok, 'глава и советник — по 100 очков');
 ok(cov(U.mem, 'mine').coven.points === 400, 'цель недели набрана: 400 очков');
 const coins0 = J(q(`select public.get_player();`, U.mem)).inventory.coins || 0;
-ok(act(U.mem, { op: 'coven_claim' }).ok && (J(q(`select public.get_player();`, U.mem)).inventory.coins || 0) === coins0 + 120, 'награда недели: монеты и материалы');
-ok(act(U.mem, { op: 'coven_claim' }).reason === 'already', 'один раз за неделю');
+ok(act(U.mem, { op: 'coven_claim' }).ok && (J(q(`select public.get_player();`, U.mem)).inventory.coins || 0) === coins0 + 50, 'награда цикла: монеты и материалы');
+ok(act(U.mem, { op: 'coven_claim' }).reason === 'already', 'один раз за цикл');
 cov(U.lead, 'kick', { ref: ref('off') });
 q(`update public.coven_members set week_given = 5 where user_id = '${U.mem}';`);
 ok(cov(U.mem, 'mine').coven.members.length === 2 && !roomsOf(U.off).some(r => r.kind === 'coven'), 'исключённый уходит и из чата ковена');
 // новая неделя: очки и вклады обнуляются
-q(`update public.covens set week_start = week_start - 7 where name = '${NAME}'; update public.coven_members set week_start = week_start - 7;`);
-ok(cov(U.lead, 'mine').coven.points === 0 && cov(U.lead, 'mine').coven.myGiven === 0, 'новая неделя — очки и вклады с нуля');
+q(`update public.covens set week_start = week_start - 3 where name = '${NAME}'; update public.coven_members set week_start = week_start - 3;`);
+ok(cov(U.lead, 'mine').coven.points === 0 && cov(U.lead, 'mine').coven.myGiven === 0, 'новый цикл — очки и вклады с нуля');
 
 console.log('\nКовены: передача главенства и распад');
 ok(cov(U.lead, 'transfer', { ref: ref('mem') }).ok && cov(U.mem, 'mine').coven.myRole === 'leader' && cov(U.lead, 'mine').coven.myRole === 'officer', 'главенство передано, прежний глава — советник');

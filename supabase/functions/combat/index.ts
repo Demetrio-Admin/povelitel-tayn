@@ -2815,27 +2815,48 @@ var COVENS = {
   requires: "ch2_coven_ready",
   // знакомство с Ковенами — квест 14 «Не в одиночку»
   maxMembers: 20,
+  cycle: { days: 3, startDay: 20731 },
+  // номер суток UTC первого цикла (понедельник 5 октября 2026); циклы идут подряд по 3 суток
   goal: 400,
-  // очков ковена за неделю
+  // базовая цель цикла (очков ковена)
+  goalStep: 200,
+  // лестница: +200 за выполненный цикл, −200 за невыполненный
+  goalMax: 1500,
+  // потолок цели (и пула: 10% от 1500 = 150)
   minGiven: 20,
-  // личный вклад, чтобы забрать награду недели
+  // минимальный личный вклад: и для обычной награды, и для пятёрки…
+  minGivenPct: 5,
+  // …но не меньше 5% от цели (400 → 20, 1000 → 50, 1500 → 75)
   dailyPoints: 10,
   // за каждое выполненное поручение доски
   maxGive: 99,
   // очки за единицу материала
   points: { moon_herb: 1, forest_mushroom: 1, tree_resin: 1, frost_herb: 2, rune_dust: 2, lunar_shard: 3, ice_crystal: 5 },
-  reward: { coins: 120, items: { ice_crystal: 2, frost_shard: 1 } }
+  // обычная награда цикла (при базовой цели; монеты растут вместе с целью: 50 монет за каждые 400 очков)
+  reward: { coins: 50, items: { ice_crystal: 1 } },
+  top: { size: 5, poolPct: 10, poolMax: 150, shares: [30, 25, 20, 15, 10], claimDays: 14 }
+  // пул сапфиров пятёрке; забрать — 14 суток
 };
 function covenRules() {
   return {
     requires: COVENS.requires,
     maxMembers: COVENS.maxMembers,
     goal: COVENS.goal,
+    goalStep: COVENS.goalStep,
+    goalMax: COVENS.goalMax,
+    cycleDays: COVENS.cycle.days,
+    cycleStartDay: COVENS.cycle.startDay,
     minGiven: COVENS.minGiven,
+    minGivenPct: COVENS.minGivenPct,
     dailyPoints: COVENS.dailyPoints,
     maxGive: COVENS.maxGive,
     points: COVENS.points,
-    reward: COVENS.reward
+    reward: COVENS.reward,
+    topSize: COVENS.top.size,
+    poolPct: COVENS.top.poolPct,
+    poolMax: COVENS.top.poolMax,
+    shares: COVENS.top.shares,
+    claimDays: COVENS.top.claimDays
   };
 }
 

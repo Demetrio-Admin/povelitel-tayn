@@ -68,7 +68,7 @@ export function showHeroProfile({ state, session, service = session ? new HeroPr
       text(`Рейтинг: ${num(p.duel?.rating ?? 1000)} · ${p.league}`), text(`Победы: ${p.duel?.wins || 0} · поражения: ${p.duel?.losses || 0}`, 'hp-sub'),
       section('Приключения'), text(`Побеждено типов противников: ${p.uniqueWins || 0}`),
       text(`Глава I: ${p.chapters?.[0] ? 'пройдена' : 'не завершена'}`, 'hp-sub'), text(`Глава II: ${p.chapters?.[1] ? 'пройдена' : 'не завершена'}`, 'hp-sub'));
-    if (p.coven) sheets.feats.append(section('Ковен'), text(`Вклад этой недели: ${p.coven.given || 0} очков`));
+    if (p.coven) sheets.feats.append(section('Ковен'), text(`Вклад в этом цикле: ${p.coven.given || 0} очков`));
     const v = own && state ? vitals.view(state) : null;
     const rows = [[own ? 'Здоровье' : 'Максимум здоровья', v ? `${Math.ceil(v.hp)} / ${v.maxHp}` : p.stats.maxHp], [own ? 'Мана' : 'Максимум маны', v ? `${Math.floor(v.mana)} / ${v.maxMana}` : p.stats.maxMana], ['Сила магии', `+${Math.round((p.stats.damageMult - 1) * 100)}%`], ['Восстановление маны', `${p.stats.manaRegen.toLocaleString('ru-RU')} / с`]];
     sheets.info.append(section('Характеристики'), ...rows.map(([k, val]) => el('div', { class: 'hp-stat' }, text(k), text(String(val), 'hp-gold'))),

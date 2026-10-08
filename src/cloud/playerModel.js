@@ -778,7 +778,7 @@ export function combatCtxOf(s, spawn, enemy) {
 }
 
 // ---------------------------------------------------------------- v0.26.0: Магическая Дуэль (config/duel.js)
-/** Состояние Дуэли игрока сейчас: { season, rating, wins, losses, best, d, used }. Новый сезон — рейтинг сжимается к базовому наполовину. */
+/** Состояние Дуэли игрока сейчас: { season, rating, wins, losses, best, d, used, prev? }. Новый сезон — рейтинг сжимается к базовому наполовину. */
 export function duelStateOf(s, nowMs) {
   const D = RULES.duel;
   const season = Math.max(0, Math.floor((nowMs - D.seasonStartMs) / D.seasonMs));
@@ -788,6 +788,9 @@ export function duelStateOf(s, nowMs) {
   const st = o && o.season === season
     ? { season, rating: r0, wins: int(o.wins), losses: int(o.losses), best: num(o.best) ? o.best : r0, d: o.d, used: int(o.used) }
     : { season, rating: Math.round(D.baseRating + (r0 - D.baseRating) / 2), wins: 0, losses: 0, best: 0, d: day, used: 0 };
+  // v0.34.0: итог прошлого сезона (для награды сапфирами): при смене сезона запоминается, внутри сезона переносится как есть
+  if (o && o.season === season && isObj(o.prev)) st.prev = o.prev;
+  else if (o && num(o.season) && o.season < season) st.prev = { season: o.season, rating: r0, wins: int(o.wins), losses: int(o.losses) };
   if (st.d !== day) { st.d = day; st.used = 0; }
   if (!(st.best >= st.rating)) st.best = st.rating;
   return st;
@@ -965,6 +968,7 @@ function applyActionUnchecked(snap, action = {}, nowMs = null) {
   // игроку без ковена (или базе без миграции): 'no_coven'
   if (op === 'duel_start') return { snapshot: s, result: duelStart(s, num(nowMs) ? nowMs : Date.now(), action.balanceVersion) };   // v0.26.0
   if (op === 'coven_give' || op === 'coven_claim' || op === 'coven_payout') return { snapshot: s, result: { ok: false, reason: 'no_coven' } };
+  if (op === 'duel_season') return { snapshot: s, result: { ok: false, reason: 'offline' } };   // v0.34.0: сапфиры арены — только на сервере
   if (op === 'daily_take') return { snapshot: s, result: dailyTake(s, action.offer, num(nowMs) ? nowMs : Date.now()) };   // v0.23.0
   if (op === 'daily_done') return { snapshot: s, result: dailyDone(s, action.offer, num(nowMs) ? nowMs : Date.now()) };
   if (op === 'build_set') return { snapshot: s, result: buildSet(s, action) };

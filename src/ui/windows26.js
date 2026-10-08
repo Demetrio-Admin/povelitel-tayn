@@ -46,6 +46,7 @@ export const windows26 = {
         text(battles >= need
           ? `Сейчас: «${lg.name}» — ${sapphireText(seasonSapphires(lg.id))} (боёв в сезоне: ${battles}).`
           : `Сейчас: боёв в сезоне ${battles} из ${need} — до награды сезона ещё ${need - battles}.`, { color: COLORS.textGold });
+        text(`Лучшим игрокам сезона (итоговая таблица, те же ${need} боёв): ${DUEL.sapphires.top.map((n, i) => `${i + 1}-е место ${n}`).join(' · ')}. Забрать нужно в следующем сезоне — откройте это окно или вызовите соперника.`, { color: COLORS.textDim });
         text(`Первая лига (один раз за всё время): ${LEAGUES.slice(1).map((l) => `${l.name} +${promoSapphires(l.id)}`).join(' · ')}.`, { color: COLORS.textDim });
         if (d.prev) {
           const pl = leagueOf(d.prev.rating);
@@ -79,8 +80,8 @@ export const windows26 = {
     let r = null;
     try { r = await services.actions.duelSeason(); } catch { r = null; }
     const rw = r?.ok ? r.reward : null;
-    if (rw?.fresh && rw.sapphires > 0) {
-      this.toast(`Награда сезона ${rw.season}: +${sapphireText(rw.sapphires)}`, 0x6fa8ff);
+    if (rw?.fresh && rw.paid > 0) {
+      this.toast(`Награда сезона ${rw.season}: +${sapphireText(rw.paid)}${rw.top > 0 ? ` (${rw.rank}-е место в таблице!)` : ''}`, 0x6fa8ff);
       this.refreshHud?.();
     }
   },

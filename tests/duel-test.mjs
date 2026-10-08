@@ -95,6 +95,7 @@ console.log('\nДуэль: сапфиры арены (v0.34.0)');
   const r = duelRules();
   ok(r.leagues.length === 7 && r.leagues[2].id === 'gold' && r.leagues[2].from === 1250 && r.sapphires.season.master === 120, 'правила для сервера: лиги и награды');
   const s0 = emptySnapshot();
+  ok(DUEL.sapphires.top.length === 3 && DUEL.sapphires.top[0] > DUEL.sapphires.top[1] && DUEL.sapphires.top[1] > DUEL.sapphires.top[2] && duelRules().sapphires.top[0] === 200, 'топ-3 сезона: 200 / 100 / 50, и они уходят в правила сервера');
   ok(applyAction(s0, { op: 'duel_season' }).result.reason === 'offline', 'без сервера сапфиры арены не выдаются');
 }
 

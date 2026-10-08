@@ -198,7 +198,9 @@ export const hud082 = {
     services.audio.play('modal_open');
     const overlay = this.add.rectangle(0, 0, W, H, 0x000000, M.dim).setOrigin(0).setDepth(9400).setInteractive();
     overlay.on('pointerdown', () => { services.audio.play('ui_back'); this.closeMenu(); });   // касание снаружи только закрывает
-    const pw = M.cellW * M.cols + 32, rows = Math.ceil(MENU_ITEMS.length / M.cols);
+    const menuItems = [...MENU_ITEMS];
+    if (services.chat?.data?.me?.roles?.some(r => ['support', 'developer', 'admin', 'owner'].includes(r))) menuItems.push({ id: 'admin', label: 'Управление', icon: 'icon_settings' });
+    const pw = M.cellW * M.cols + 32, rows = Math.ceil(menuItems.length / M.cols);
     const ph = M.header + rows * M.rowH + M.footer;
     const left = M.left, top = M.top;
     const c = this.add.container(0, 0).setDepth(9500);
@@ -216,7 +218,7 @@ export const hud082 = {
     const closeHit = this.add.zone(closeX, closeY, UI.touch.button, UI.touch.button).setInteractive({ useHandCursor: true });
     closeHit.on('pointerdown', () => { services.audio.play('ui_back'); this.closeMenu(); });
     c.add([closeOrb, closeIcon, closeHit]);
-    const items = MENU_ITEMS.map((item, i) => {
+    const items = menuItems.map((item, i) => {
       const col = i % M.cols, row = Math.floor(i / M.cols);
       const cx = left + 16 + M.cellW * (col + 0.5), cy = top + M.header + row * M.rowH + M.orb / 2 + 4;
       const orb = addCraftMedallion(this, cx, cy, M.orb);
@@ -260,6 +262,7 @@ export const hud082 = {
   onMenuItem(item) {
     if (!this.modal?.menu) return;
     // v0.20.0: Банк — окно кошелька; v0.27.0: Карта — карта мира
+    if (item.id === 'admin') { this.closeMenu(async () => { if (await services.session?.flush({ force: true })) location.href = new URL('admin.html', location.href).toString(); }); return; }
     if (item.id === 'bank') { this.closeMenu(() => this.openWallet()); return; }
     if (item.id === 'map') { this.closeMenu(() => this.openMap()); return; }   // v0.27.0: карта мира (из меню — только посмотреть)
     if (item.id === 'rating') { this.closeMenu(() => this.openRating()); return; }   // v0.29.0: рейтинги и «Онлайн» (Дуэль — вкладка «Арена»)

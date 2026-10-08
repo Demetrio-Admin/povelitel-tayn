@@ -9,7 +9,11 @@ const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => /^index-.*\.j
 let failed = 0;
 const ok = (c, m) => { if (c) console.log('  ✓', m); else { failed++; console.log('  ✗', m); } };
 ok(files.length > 0, 'есть собранный index-*.js (сначала npm run build)');
-const js = files.map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
+// The administration entry shares cloud/config modules with the game. Check
+// only scripts and preloaded JS actually referenced by the game's HTML.
+const html = fs.readFileSync('dist/index.html', 'utf8');
+const gameFiles = [...new Set([...html.matchAll(/(?:src|href)="\.\/assets\/([^"]+\.js)"/g)].map(m => m[1]))];
+const js = gameFiles.map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
 
 // 1) кнопки даров: после сборки нажатие должно отправлять команду дара
 const i = js.indexOf('buildBottomBar(){');

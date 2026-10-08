@@ -32,6 +32,7 @@ import {
   isOwner,
   isDeveloper,
   canManage,
+  canManageResources,
   policyReady,
   textLength,
 } from "../cloud/ChatService.js";
@@ -1211,7 +1212,7 @@ export class ChatWindow {
             )
           : null,
       );
-    if (policyReady(this.me) && isDeveloper(this.me) && canManage(this.me, p)) a.append(button("Управление игроком", () => this.go({ view: "player", playerId: p.playerId }), { symbol: UserRound }));
+    if (policyReady(this.me) && isDeveloper(this.me) && canManageResources(this.me, p)) a.append(button("Управление игроком", () => this.go({ view: "player", playerId: p.playerId }), { symbol: UserRound }));
     if (isAdmin(this.me))
       a.append(
         button("Роли по ID", () => this.go({ view: "roles" }), {
@@ -1330,7 +1331,7 @@ export class ChatWindow {
       if (id.value !== requested || !card.isConnected) return;
       card.replaceChildren();
       append(card, el("h2", `role-${roleOf(p)}`, p.nickname), el("p", "sub", `ID ${p.playerId} · уровень ${p.level} · ${ROLES[roleOf(p)][0]}`));
-      if (!canManage(this.me, p)) { card.append(empty("Аккаунт защищён от изменения вашей ролью.")); return; }
+      if (!canManageResources(this.me, p)) { card.append(empty("Аккаунт защищён от изменения вашей ролью.")); return; }
       const labels = Object.fromEntries(Object.entries(p.catalog).map(([id, name]) => [id, ITEMS[id]?.name || name]));
       const item = select(labels), direction = select({ give: "Выдать", take: "Забрать" }), amount = input("Количество", "1", "number"), why = el("textarea"), current = el("p", "sub");
       amount.min = "1"; amount.max = "999999999"; amount.step = "1";
@@ -1338,13 +1339,13 @@ export class ChatWindow {
       const updateCurrent = () => current.textContent = `У игрока: ${p.inventory[item.value] || 0}`;
       item.onchange = updateCurrent; updateCurrent();
       const done = () => { this.stack.pop(); this.replace({ view: "player", playerId: p.playerId }); };
-      append(card, field("Предмет или ресурс", item), current, field("Действие", direction), field("Количество", amount), field("Причина для журнала", why), button("Проверить ресурсы", () => {
+      append(card, field("Предмет или ресурс", item), current, field("Действие", direction), field("Количество", amount), field("Причина для журнала (необязательно)", why), button("Проверить ресурсы", () => {
         const delta = Number(amount.value) * (direction.value === "take" ? -1 : 1), before = p.inventory[item.value] || 0;
-        if (!Number.isInteger(delta) || delta === 0 || Math.abs(delta) > 999999999 || before + delta < 0 || before + delta > 1000000000 || !why.value.trim()) { this.error.textContent = "Проверьте количество и укажите причину."; return; }
+        if (!Number.isInteger(delta) || delta === 0 || Math.abs(delta) > 999999999 || before + delta < 0 || before + delta > 1000000000) { this.error.textContent = "Проверьте количество."; return; }
         this.confirm("Изменить ресурсы?", `${p.nickname} · ID ${p.playerId}\n${labels[item.value]}: ${before} → ${before + delta}\nПричина: ${why.value}`,
           () => this.service.request("resources", { playerId: p.playerId, revision: p.inventoryRevision, item: item.value, delta, reason: why.value }), done);
       }, { symbol: Check, cls: "chat-button primary" }));
-      if (p.registered) {
+      if (p.registered && canManage(this.me, p)) {
         const nickname = input("Новый никнейм", p.nickname); nickname.setAttribute("aria-label", "Новый никнейм");
         append(card, field("Новый никнейм", nickname), el("p", "sub", "После переименования вход в игре только по новому нику. Пароль сохраняется."), button("Проверить никнейм", () => {
           if (!nickname.value.trim() || !why.value.trim()) { this.error.textContent = "Введите никнейм и причину."; return; }

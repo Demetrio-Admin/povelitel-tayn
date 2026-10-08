@@ -127,6 +127,10 @@ export function installSessionUI(session) {
       if (window.__game?.scene.isActive('ExplorationScene') || window.__game?.scene.isActive('CombatScene')) reloadToMenu();
     }
     if (reason === 'ban-lifted') reloadToMenu();
+    if (reason === 'staff-update') {
+      services.offline = true;
+      showNotice({ title: 'Помощь команды', text: 'Состояние персонажа обновлено. Продолжите игру с новым сохранением.', button: 'Продолжить', onClose: () => reloadToMenu() });
+    }
   });
 }
 

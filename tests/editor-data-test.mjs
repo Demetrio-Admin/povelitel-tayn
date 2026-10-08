@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { ASSET_FILES } from '../src/config/assets.manifest.js';
 import { ASSET_CATALOG, defaultAssetSolid } from '../src/world/assetCatalog.js';
-import { WORLD_DECOR } from '../src/world/decorData.js';
+import { WORLD_DECOR, DECOR_SOLID } from '../src/world/decorData.js';
 import { propSolid } from '../src/world/solids.js';
 import { PROPS, applyEdits, diffEdits, applyPos, diffPos, baseTerrain, applyTerrainEdits, diffTerrain, parseEditsFile, exportEditsFile } from '../src/world/mapData.js';
 
@@ -9,7 +9,10 @@ const copy=v=>structuredClone(v);
 assert.deepEqual(new Set(ASSET_CATALOG.map(a=>a.key)),new Set(Object.keys(ASSET_FILES).filter(k=>ASSET_FILES[k])));
 assert.equal(new Set(PROPS.map(p=>p.id)).size,PROPS.length);
 for(const id of ['bank_lamp_w','city_market_crate','city_room_0','forest_border_0'])assert.ok(PROPS.some(p=>p.id===id));
-assert.ok(WORLD_DECOR.every(p=>propSolid(p)===null),'existing visual filler must not change walkability');
+// v0.34.3: лес-заполнитель и плоский декор проходимы; стоячие предметы и люди из таблицы DECOR_SOLID — нет
+assert.ok(WORLD_DECOR.every(p=>propSolid(p)===null||(!p.fill&&DECOR_SOLID[p.k])),'only listed standing decor has a collision footprint');
+assert.ok(WORLD_DECOR.filter(p=>p.fill).every(p=>propSolid(p)===null),'forest filler stays walkable');
+for(const id of ['city_resident_man','city_resident_woman','city_patient_miron','bank_lamp_w','city_market_crate'])assert.ok(propSolid(WORLD_DECOR.find(p=>p.id===id)),`${id} is solid`);
 assert.equal(propSolid({k:'lantern_01',x:100,y:200,solid:null}),null);
 assert.ok(propSolid({k:'city_crate',x:100,y:200,solid:'auto'}));
 assert.deepEqual(propSolid({k:'city_crate',x:100,y:200,s:2,solid:{w:50,h:25}}),{x:50,y:150,w:100,h:50});

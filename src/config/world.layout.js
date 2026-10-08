@@ -161,7 +161,7 @@ const BASE_INTERACTIVES = [
   // C
   { id: 'trail_cache', kind: 'chest', x: 1660, y: 3640, texture: 'chest_01', reward: { items: { coins: 20 } }, collide: { w: 50, h: 24 } },
   // E / F
-  { id: 'lunar_altar', kind: 'altar', x: 1250, y: 2215, texture: 'lunar_altar_01', radius: 130 },
+  { id: 'lunar_altar', kind: 'altar', x: 1250, y: 2215, texture: 'lunar_altar_01', collide: { w: 120, h: 36 }, radius: 130 },
   { id: 'flame_a', kind: 'telekinesis', mode: 'pull', x: 1600, y: 2280, texture: 'lunar_flame_01', elevated: 70,
     weight: 'light', reward: { items: { lunar_flame: 1 } }, requiresEvent: 'lunar_quest_start', radius: 160,
     hint: 'Огонёк на высокой ветке' },
@@ -176,7 +176,7 @@ const BASE_INTERACTIVES = [
     opensPath: 'fire_circle_path', doneEvent: 'heavy_path_open', lockedEvent: 'heavy_blocked_01',
     panOnOpen: { x: 1250, y: 1600 } },
   // H
-  { id: 'fire_circle', kind: 'fire_circle', x: 1250, y: 1580, texture: 'fire_circle_01', radius: 140 },
+  { id: 'fire_circle', kind: 'fire_circle', x: 1250, y: 1580, texture: 'fire_circle_01', collide: { w: 130, h: 36 }, radius: 140 },
   { id: 'ritual_torch', kind: 'fire', x: 1470, y: 1520, texture: 'torch_01', persistent: true, collide: { w: 24, h: 16 } },
   { id: 'dry_bush', kind: 'fire', x: 1030, y: 1720, texture: 'dry_bush_01', burnSec: 1.0, collide: { w: 56, h: 24 },
     reveal: { spawnPickup: { item: 'crimson_ember', amount: 1, texture: 'icon_ember' } } },

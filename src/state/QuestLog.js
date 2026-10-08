@@ -3,6 +3,7 @@
 // Поэтому сервер ничего нового не знает: всё это уже есть в completedEvents / inventory / defeatedEnemies.
 import { SIDE_QUESTS, SIDE_QUEST_ORDER, questEvent } from '../config/quests.js';
 import { ITEMS } from '../config/balance.progression.js';
+import { sapphires as sapphireText } from '../systems/wallet.js';
 import { MSG } from './EventBus.js';
 
 export class QuestLog {
@@ -117,7 +118,7 @@ export class QuestLog {
     const r = q?.reward || {};
     const out = [];
     if (r.coins) out.push(`${r.coins} монет`);
-    if (r.sapphires) out.push(`${r.sapphires} сапфир`);
+    if (r.sapphires) out.push(sapphireText(r.sapphires));
     for (const [k, v] of Object.entries(r.items || {})) out.push(`${ITEMS[k]?.name || k}${v > 1 ? ` ×${v}` : ''}`);
     if (r.heroXP) out.push(`${r.heroXP} опыта`);
     return out;

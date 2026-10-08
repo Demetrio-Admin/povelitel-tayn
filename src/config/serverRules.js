@@ -78,7 +78,7 @@ export const EVENT_ACTIONS = {
   unlock_ice_1: { requires: ['ch2_rescue_done', 'warm_potion_crafted'], unlock: { ice: 1 } },
   ch2_ice_trained: { requires: ['ch2_training_done'] },
   ch2_choice_start: { requires: ['ch2_ice_trained'] },
-  ch2_quarter_cleared: { requires: ['ch2_ice_guardian_defeated', 'ch2_deep_1', 'ch2_deep_2'], sapphires: 1 },
+  ch2_quarter_cleared: { requires: ['ch2_ice_guardian_defeated', 'ch2_deep_1', 'ch2_deep_2'], sapphires: 10 },
   // v0.22.0 — квесты 11–15 (Нэрис, Тихон, Илария, Северин, Ровена, Мирра)
   unlock_ice_2: { requires: ['ch2_quarter_cleared'], consume: { coins: GIFT_PRICES.storyIce2.coins }, unlock: { ice: 2 } },
   ch2_brittle_done: { requires: ['ch2_brittle_1', 'ch2_brittle_2', 'brittle_flask_crafted'] },
@@ -93,13 +93,13 @@ export const EVENT_ACTIONS = {
   ch2_severin_confronted: { requires: ['ch2_lab_reported'] },
   ch2_coven_met: { requires: ['ch2_severin_confronted'] },
   ch2_coven_supplies: { requires: ['ch2_coven_met'], consume: { crystal_guard: 1, frost_herb: 2 } },
-  ch2_coven_ready: { requires: ['ch2_unstable_1', 'ch2_unstable_2', 'ch2_coven_supplies'], sapphires: 1 },
+  ch2_coven_ready: { requires: ['ch2_unstable_1', 'ch2_unstable_2', 'ch2_coven_supplies'], sapphires: 10 },
   ch2_final_start: { requires: ['ch2_coven_ready'] },
   // Лёд III перед боем: ветка выбирается один раз (ch2_ice3 — общая отметка, по ней появляется Северин)
   ch2_ice3_frost: { requires: ['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal'], blockedBy: ['ch2_ice3'], consume: { coins: GIFT_PRICES.storyIce3.coins }, unlock: { ice: 3 }, branch: { ice: 'frost' }, marks: ['ch2_ice3'] },
   ch2_ice3_shard: { requires: ['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal'], blockedBy: ['ch2_ice3'], consume: { coins: GIFT_PRICES.storyIce3.coins }, unlock: { ice: 3 }, branch: { ice: 'shard' }, marks: ['ch2_ice3'] },
   ch2_epilogue: { requires: ['ch2_letters_read'] },
-  chapter_2_complete: { requires: ['ch2_epilogue'], marks: ['title_frost_survivor'], sapphires: 5 },
+  chapter_2_complete: { requires: ['ch2_epilogue'], marks: ['title_frost_survivor'], sapphires: 50 },
 };
 
 /**

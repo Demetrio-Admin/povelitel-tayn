@@ -38,8 +38,8 @@ try {
  for(const id of ['sapphire_trail_cache','sapphire_oldwood_cache']){
   await interact(id);await page.waitForFunction(id=>window.__witch.state.getObject(id)?.state==='opened',id);await page.waitForTimeout(350);await page.screenshot({path:out+'/'+id+'.png'});
  }
- assert.equal(srv.players.get(uid).snap.wallet.sapphires,2);
- assert.ok((await page.evaluate(()=>window.__toasts)).some(t=>/1 сапфир/.test(t)));
+ assert.equal(srv.players.get(uid).snap.wallet.sapphires,20);
+ assert.ok((await page.evaluate(()=>window.__toasts)).some(t=>/10 сапфиров/.test(t)));
  srv.grant(uid,{quests:['chapter_1_complete','ch2_start','ch2_city_arrived','ch2_quarter_cleared']});
  await page.evaluate(async()=>{await window.__witch.session.flush({force:true});window.__witch.bus.emit('story:map-travel','city');});
  await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city'&&window.__game.scene.getScene('ExplorationScene').player&&window.__witch.mode==='exploration',null,{timeout:20000});await ready();
@@ -47,6 +47,6 @@ try {
   await interact(id);await page.waitForFunction(id=>window.__witch.state.getObject(id)?.state==='opened',id);await page.waitForTimeout(350);await page.screenshot({path:out+'/'+id+'.png'});
  }
  await page.evaluate(()=>window.__game.scene.getScene('UIScene').openWallet()); await page.waitForTimeout(350);await page.screenshot({path:out+'/bank.png'});
- assert.equal(await page.evaluate(()=>window.__witch.state.sapphires()),4);
+ assert.equal(await page.evaluate(()=>window.__witch.state.sapphires()),40);
  assert.deepEqual(errors,[]);console.log('✓ Portrait UI: Veda accepts and rewards, four caches render/open, sapphire toast and bank window work.');
 } finally {await browser.close();await vite.close();await close();}

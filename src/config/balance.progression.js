@@ -153,7 +153,7 @@ export const EVENT_REWARDS = {
   ch2_coven_met:           { heroXP: 60 },
   ch2_coven_ready:         { heroXP: 300, coins: 220, items: { ice_crystal: 2 } },
   ch2_epilogue:            { heroXP: 250 },
-  chapter_2_complete:      { heroXP: 300, coins: 330, topUp: { heroXP: 7900 }, items: { frost_shard: 1 } },   // + 5 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
+  chapter_2_complete:      { heroXP: 300, coins: 330, topUp: { heroXP: 7900 }, items: { frost_shard: 1 } },   // + 50 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
 };
 // lunar_quest_complete теперь выдаёт атомарная операция «применить Лунный фитиль» (storyItems.js STORY_USES.lunar_wick,
 // те же числа); запись выше осталась для старого пути QuestFlags.complete и тестов — алтарь его больше не вызывает.
@@ -180,5 +180,5 @@ export const BALANCE_MIGRATION = {
     ch2_coven_ready: EVENT_REWARDS.ch2_coven_ready.coins - 180,
     chapter_2_complete: EVENT_REWARDS.chapter_2_complete.coins - 150,
   },
-  sapphires: { ch2_quarter_cleared: 1, ch2_coven_ready: 1 },
+  sapphires: { ch2_quarter_cleared: 10, ch2_coven_ready: 10 },
 };

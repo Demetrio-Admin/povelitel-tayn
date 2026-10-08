@@ -844,17 +844,17 @@ console.log('\nv0.15.0. Прогресс закрыт для sync_player: игр
   ok((await actions.bankWelcome()).reason === 'locked', 'банковское приветствие недоступно до города');
   await give(d, { quests: ['ch2_city_arrived'] }); await settle();
   const bw = await actions.bankWelcome();
-  ok(bw.ok && st.sapphires() === 3, 'приветственные 3 сапфира пришли с сервера');
+  ok(bw.ok && st.sapphires() === 30, 'приветственные 30 сапфиров пришли с сервера');
   ok((await actions.bankWelcome()).reason === 'already', 'второй раз приветствие не выдаётся');
-  await give(d, { sapphires: 40, research: { upgradeId: 'seal_2', startedAt: st.now(), durationMs: 1800000 } });
+  await give(d, { sapphires: 220, research: { upgradeId: 'seal_2', startedAt: st.now(), durationMs: 1800000 } });
   await settle();
   const su = await actions.researchSpeedup(1);
-  ok(su.ok && su.price === 1 && st.data.research.durationMs === 900000 && st.sapphires() === 42, 'ускорение на 15 минут за 1 сапфир');
+  ok(su.ok && su.price === 10 && st.data.research.durationMs === 900000 && st.sapphires() === 240, 'ускорение на 15 минут за 10 сапфиров');
   const pu = await actions.presetUnlock();
-  ok(pu.ok && st.buildData().presetSlots === 2 && st.sapphires() === 12, 'второй пресет открыт за 30 сапфиров');
+  ok(pu.ok && st.buildData().presetSlots === 2 && st.sapphires() === 90, 'второй пресет открыт за 150 сапфиров');
   ok((await actions.presetUnlock()).reason === 'sapphires', 'на третий не хватает');
   r = await real();
-  ok(r.wallet.sapphires === 12 && r.objects.player_build.presetSlots === 2, 'сервер хранит баланс и открытый пресет');
+  ok(r.wallet.sapphires === 90 && r.objects.player_build.presetSlots === 2, 'сервер хранит баланс и открытый пресет');
   await give(d, { research: null });
 }
 

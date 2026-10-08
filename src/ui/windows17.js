@@ -44,7 +44,7 @@ export const windows17 = {
         for (const u of v.uses) text(`• ${u}`);
         cy += 6;
         text(`Ускорений сегодня осталось: ${v.stepsLeftToday}`, { color: COLORS.textDim });
-        text('Покупка сапфиров появится позже. Немного сапфиров дают за важные сюжетные достижения и события.', { color: COLORS.textDim });
+        text('Покупка сапфиров появится позже. Сапфиры дают за сюжетные достижения, тайники и поручения доски.', { color: COLORS.textDim });
         return cy - y;
       },
     };

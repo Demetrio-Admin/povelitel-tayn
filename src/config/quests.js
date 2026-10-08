@@ -45,8 +45,8 @@ export const SIDE_QUESTS = {
       { type: 'item', item: 'forest_mushroom', count: 1, text: 'Лесные грибы' },
       { type: 'item', item: 'tree_resin', count: 2, text: 'Древесная смола' }],
     turnIn: { npc: 'veda', consume: { moon_herb: 1, forest_mushroom: 1, tree_resin: 2 } },
-    reward: { coins: 65, heroXP: 20, sapphires: 1 },
-    rewardText: '65 монет, 1 сапфир, 20 опыта',
+    reward: { coins: 65, heroXP: 20, sapphires: 10 },
+    rewardText: '65 монет, 10 сапфиров, 20 опыта',
   },
   sq_dust: {
     title: 'Пыль древних рун',

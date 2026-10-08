@@ -9,6 +9,7 @@ export const DAILY = {
   offers: 5,
   picks: 3,
   dayMs: 86_400_000,
+  sapphires: 3,                      // v0.32.0: сапфиры за каждое выполненное поручение (3 в день × 3 = 9; брать можно не больше picks)
 };
 
 /**
@@ -47,6 +48,8 @@ export const DAILY_POOL = {
   hunt_wisps: { giver: 'Сторож кладбища', title: 'Огоньки на погосте', text: 'По ночам над могилами снова бродят огоньки. Сторож просит развеять двоих.',
     goal: { type: 'wins', spawns: ['gy_wisp_1', 'gy_wisp_2'], count: 2 }, requires: 'chapter_2_complete', reward: { heroXP: 55, coins: 35, items: { rune_dust: 2 } } },
 };
+// награда сапфирами одна для всех поручений: её задаёт DAILY.sapphires, а не каждая запись отдельно
+for (const o of Object.values(DAILY_POOL)) o.reward = { ...o.reward, sapphires: DAILY.sapphires };
 /** Порядок списка для выбора дня (не менять местами: от него зависит, какие поручения выпадут в какой день). */
 export const DAILY_ORDER = Object.keys(DAILY_POOL);
 

@@ -112,7 +112,7 @@ begin
     'id', cv.id, 'name', cv.name, 'motto', cv.motto, 'myRole', m.role, 'myGiven', m.week_given,
     'claimed', m.claimed_week = wk, 'points', cv.week_points, 'goal', (c ->> 'goal')::int, 'minGiven', (c ->> 'minGiven')::int,
     'weekEnds', (wk + 7)::timestamptz at time zone 'utc',
-    'members', coalesce((select jsonb_agg(jsonb_build_object('ref', p.chat_ref, 'nickname', coalesce(p.nickname, 'Гость'), 'role', x.role,
+    'members', coalesce((select jsonb_agg(jsonb_build_object('ref', p.chat_ref, 'playerId', p.player_id::text, 'nickname', coalesce(p.nickname, 'Гость'), 'role', x.role,
         'given', x.week_given, 'me', x.user_id = u) order by case x.role when 'leader' then 0 when 'officer' then 1 else 2 end, x.week_given desc, x.joined_at)
       from public.coven_members x join public.profiles p on p.id = x.user_id where x.coven_id = cv.id), '[]'::jsonb)));
 end $$;

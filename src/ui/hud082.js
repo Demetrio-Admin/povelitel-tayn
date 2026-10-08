@@ -1,6 +1,7 @@
 // v0.8.2 — компактный мобильный HUD: портрет (профиль героя), уровень и опыт, ресурсы, HP и мана в одном ряду,
 // правая колонка «Журнал / Меню», раскрывающееся меню 3×2, заглушки разделов и временное уведомление о цели.
 // Методы подмешиваются в UIScene (как windows08), поэтому `this` — UIScene. Размеры — UI.hud / UI.side / UI.menu.
+import { showHeroProfile } from './heroProfileUI.js';
 import { currentHero } from '../state/hero.js';
 import { VIEW, COLORS } from '../config/game.config.js';
 import { ABILITIES } from '../config/balance.abilities.js';
@@ -9,11 +10,8 @@ import { MENU_ITEMS, STUB_TEXT } from '../config/menu.config.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { xpProgress } from '../state/heroProgress.js';
-import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from './noticeClose.js';
-import { ABILITY_ORDER } from '../systems/AbilitySystem.js';
-import { ROMAN } from '../objects/InteractiveObject.js';
-import { ensureTexture, addMedallion, addDivider, drawPlate, UIBar } from './widgets.js';
+import { ensureTexture, addDivider, drawPlate, UIBar } from './widgets.js';
 import { addCraftMedallion, addCraftMenuPanel, addCraftPortrait } from './witchcraftUI.js';
 
 const FONT = UI.font;
@@ -62,13 +60,13 @@ export const hud082 = {
     this.xpBar = new UIBar(this, this.xpBarX, 34, T.xp.w, T.xp.h, 'xp');
     this.xpCaption = this.add.text(this.xpBarX - 2, 70, '', { fontFamily: FONT, fontSize: T.caption, color: '#fbefd2', shadow: SH, ...STROKE, strokeThickness: 4 }).setOrigin(0, 0.5);
 
-    // ресурсы: монеты и лунные осколки — столбиком, чтобы длинные числа не наезжали на соседей
+    // ресурсы: монеты и сапфиры — столбиком, чтобы длинные числа не наезжали на соседей
     const rx = this.xpBarX + T.xp.w + 36;                  // центр иконок (≈ 446): справа до колонки — место под 7 цифр
     this.resX = rx;
     this.coinIcon = fit(this.add.image(rx, 32, 'icon_coin'), T.resIcon);
     this.coinText = this.add.text(rx + 24, 32, '0', { fontFamily: FONT, fontSize: T.resNumber, fontStyle: 'bold', color: '#fbefd2', shadow: SH, ...STROKE, strokeThickness: 4 }).setOrigin(0, 0.5);
-    this.shardIcon = fit(this.add.image(rx, 74, 'icon_shard'), T.resIcon);
-    this.shardText = this.add.text(rx + 24, 74, '0', { fontFamily: FONT, fontSize: T.resNumber, fontStyle: 'bold', color: '#fbefd2', shadow: SH, ...STROKE, strokeThickness: 4 }).setOrigin(0, 0.5);
+    this.sapphireIcon = fit(this.add.image(rx, 74, 'icon_sapphire'), T.resIcon);
+    this.sapphireText = this.add.text(rx + 24, 74, '0', { fontFamily: FONT, fontSize: T.resNumber, fontStyle: 'bold', color: '#fbefd2', shadow: SH, ...STROKE, strokeThickness: 4 }).setOrigin(0, 0.5);
 
     // HP и мана в одном ряду
     const rowY = 124, gap = 14, right = UI.side.x - UI.side.hitW / 2 - 8;   // правая граница — до колонки Журнал/Меню
@@ -96,7 +94,7 @@ export const hud082 = {
     const roomUnderBar = this.resX - UI.hud.resIcon / 2 - 10 - this.xpBarX;
     this.xpCaption.setX(this.xpCaption.width <= roomUnderBar ? this.xpBarX - 2 : this.levelText.x);
     this.coinText.setText(String(s.item('coins')));
-    this.shardText.setText(String(s.item('lunar_shard')));
+    this.sapphireText.setText(String(s.sapphires()));
     const ses = services.session;
     const st = ses?.ready ? ses.saving : null;
     this.syncDot.setVisible(!!st).setFillStyle(st === 'saved' ? 0x5fd68a : st === 'offline' ? 0xff6a5a : 0xe8c56a);
@@ -280,60 +278,16 @@ export const hud082 = {
 
   // ================================================================== профиль героя (по портрету)
   openHeroProfile() {
-    if (this.modal) return;
-    const s = services.state, d = s.data, hs = s.heroStats();
-    const xp = xpProgress(s);
-    const hud = vitals.view(s);   // v0.9: те же общие запасы, что в HUD и бою
-    const ses = services.session;
-    const content = {
-      build: (c, x, y, w) => {
-        let cy = y;
-        const medal = addMedallion(this, x + 60, cy + 60, 120, COLORS.gold);
-        c.add(medal);
-        const tx = x + 140;
-        const lv = this.add.text(tx, cy + 4, `Уровень ${xp.level}`, { fontFamily: FONT, fontSize: UI.type.title, fontStyle: 'bold', color: COLORS.textGold, shadow: SH });
-        c.add(lv);
-        c.add(this.add.text(tx + lv.width + 16, cy + 4 + lv.height / 2, currentHero().title, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, shadow: SH, wordWrap: { width: Math.max(120, w - 160 - lv.width) } }).setOrigin(0, 0.5));
-        const barW = w - 140, barY = cy + 62;
-        const g = this.add.graphics();
-        g.fillStyle(0x000000, 0.55).fillRoundedRect(tx, barY, barW, 20, 10);
-        if (xp.progress > 0) g.fillStyle(0xe8c56a, 1).fillRoundedRect(tx + 2, barY + 2, Math.max(16, (barW - 4) * xp.progress), 16, 8);
-        g.lineStyle(2, 0xd9b45a, 0.8).strokeRoundedRect(tx, barY, barW, 20, 10);
-        c.add(g);
-        const cap = this.add.text(tx, barY + 30, `${xp.caption}${xp.max ? '' : ` · всего ${d.heroXP}`}`, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.text, shadow: SH, wordWrap: { width: barW } });
-        c.add(cap);
-        cy = Math.max(cy + 132, barY + 30 + cap.height + 14);
-        if (ses?.registered && ses.nickname) {
-          const nick = this.add.text(x, cy, `Ник: ${ses.nickname}${ses.meta.playerId ? ` · ID ${ses.meta.playerId}` : ''}`, { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, shadow: SH, wordWrap: { width: w, useAdvancedWrap: true } });
-          c.add(nick); cy += nick.height + 12;
-        } else if (ses) {
-          const g2 = this.add.text(x, cy, 'Гость — прогресс хранится на этом устройстве', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, wordWrap: { width: w } });
-          c.add(g2); cy += g2.height + 12;
-        }
-        const row = (icon, label, value, color = COLORS.text) => {
-          if (icon) c.add(fit(this.add.image(x + 20, cy + 20, icon), 36));
-          const l = this.add.text(x + (icon ? 52 : 0), cy + 20, label, { fontFamily: FONT, fontSize: UI.type.body, color: COLORS.text, shadow: SH }).setOrigin(0, 0.5);
-          const v = this.add.text(x + w, cy + 20, value, { fontFamily: FONT, fontSize: UI.type.body, fontStyle: 'bold', color, shadow: SH }).setOrigin(1, 0.5);
-          c.add([l, v]); cy += 48;
-        };
-        row('icon_heart', 'Здоровье', `${Math.ceil(hud.hp)} / ${hud.maxHp}`);
-        row('icon_drop', 'Мана', `${Math.floor(hud.mana)} / ${hud.maxMana}`);
-        row(null, 'Восстановление маны', `${hs.manaRegen} в секунду`);
-        row(null, 'Сила магии', `×${hs.damageMult.toFixed(2)}`);
-        row('icon_coin', 'Монеты', String(s.item('coins')), COLORS.textGold);
-        row('icon_shard', 'Лунные осколки', String(s.item('lunar_shard')), COLORS.textGold);
-        cy += 6;
-        const gifts = ABILITY_ORDER.map((id) => {
-          const lv2 = services.abilities.level(id);
-          return `${ABILITIES[id].name} ${lv2 ? ROMAN[lv2] : '— не открыт'}`;
-        }).join(' · ');
-        const gt = this.add.text(x, cy, `Дары: ${gifts}`, { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim, wordWrap: { width: w }, lineSpacing: 2 });
-        c.add(gt); cy += gt.height + 8;
-        return cy - y;
-      },
-    };
-    const buttons = [{ label: 'Закрыть', primary: true, cancel: true }];
-    if (ses && this.mode === 'exploration') buttons.push({ label: 'Аккаунт', onClick: () => this.openAccount() });   // окно героя уже закрыто
-    this.openModal({ title: currentHero().name, color: COLORS.gold, content, buttons, profile: true });   // v0.9.2: «Ведьма» / «Колдун»
+    if (this.modal || services.modalOpen) return;
+    const modal = this.modal = { heroProfile: true };
+    services.modalOpen = true;
+    this.resetJoystick();
+    this.bus.emit(MSG.MODAL_OPEN);
+    const profile = showHeroProfile({ state: services.state, session: services.session,
+      onClose: () => { if (this.modal === modal) this.modal = null; services.modalOpen = false; this.bus.emit(MSG.MODAL_CLOSED); this.refreshHud(); },
+      onAccount: services.session && this.mode === 'exploration' ? () => this.openAccount() : null,
+    });
+    modal.close = profile.close;
+    return profile;
   },
 };

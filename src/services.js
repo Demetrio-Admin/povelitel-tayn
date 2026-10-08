@@ -14,6 +14,7 @@ import { PlayerActions } from './systems/PlayerActions.js';
 import { setHeroSource, T, currentHero } from './state/hero.js';
 import { resolveMap } from './world/mapData.js';
 import { PlayerSession } from './cloud/PlayerSession.js';
+import { HeroProfileService, bindHeroPresence } from './cloud/HeroProfileService.js';
 import { ChatService } from './cloud/ChatService.js';
 import { SupabaseApi } from './cloud/api.js';
 import { CLOUD } from './config/cloud.config.js';
@@ -71,6 +72,8 @@ export function initServices() {
   if (online) {
     services.session = new PlayerSession({ api, state: services.state, storage, saveDelayMs: CLOUD.saveDelayMs, minorDelayMs: CLOUD.minorDelayMs });
     services.chat = new ChatService(services.session);
+    services.profiles = new HeroProfileService(services.session);
+    bindHeroPresence(services.profiles);
     installSessionUI(services.session);
   } else {
     // ?reset — новая игра; ?reset&hero=warlock — новая игра колдуном (автотесты)

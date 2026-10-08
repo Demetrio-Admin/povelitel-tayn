@@ -1,0 +1,43 @@
+.hero-profile .acc-shell{width:min(430px,100%)}
+.hero-profile .hp-card{padding:25px 20px 20px;font-family:'Philosopher',Georgia,serif;font-size:16px}
+.hero-profile .hp-identity{display:flex;align-items:center;gap:12px;padding-right:30px;min-width:0}
+.hero-profile .hp-identity>div:last-child{min-width:0}
+.hero-profile .hp-portrait{width:58px;height:58px;flex:none;border:2px solid #dfbd68;border-radius:50%;overflow:hidden;background:#332036}
+.hero-profile .hp-portrait img{width:100%;height:auto;display:block}
+.hero-profile .hp-name{font-size:25px;color:#dfbd68;overflow-wrap:anywhere}
+.hero-profile .hp-sub{font-size:13px;color:#d4c09b;line-height:1.4;overflow-wrap:anywhere}
+.hero-profile .hp-gold{color:#e5c477}
+.hero-profile .hp-presence{font-size:13px;color:#ccb997;margin-top:3px;overflow-wrap:anywhere}
+.hero-profile .hp-presence.online{color:#9de0b0}
+.hero-profile .hp-xp{height:6px;background:#24190f;border-radius:6px;margin:12px 0 4px;overflow:hidden}
+.hero-profile .hp-xp>div{height:100%;background:#dfbd68}
+.hero-profile .hp-coven{margin:12px 0;padding:8px 0;border-block:1px solid #ab89434d}
+.hero-profile .hp-wallet{display:flex;gap:12px;margin:0 0 12px}
+.hero-profile .hp-wallet>div{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.hero-profile .hp-wallet img{width:28px;height:28px;object-fit:contain}
+.hero-profile .hp-tabs{display:flex;gap:6px;margin-bottom:12px}
+.hero-profile .hp-tabs button{flex:1;min-width:0;padding:8px 3px;font-size:14px;min-height:44px}
+.hero-profile .hp-tabs button[aria-selected=true]{background:linear-gradient(#795531,#4a331b);border-color:#dfbd68;color:#ffe4a1}
+.hero-profile [hidden]{display:none!important}
+.hero-profile .hp-section{font-size:15px;color:#e5c477;margin:12px 0 7px}
+.hero-profile .hp-gifts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.hero-profile button.hp-gift{background:none;border:0;box-shadow:none;padding:0;color:#f1e3c2;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:5px;overflow-wrap:normal;min-width:0}
+.hero-profile .hp-gift small{font-size:11px;color:#cfb78a}
+.hero-profile .hp-gift.equipped small{color:#e5c477}
+.hero-profile .hp-gift-disc{width:52px;height:52px;border:2px solid #a78643;border-radius:50%;background:#24171f;display:grid;place-items:center;position:relative}
+.hero-profile .hp-gift.equipped .hp-gift-disc{border-color:#dfbd68}
+.hero-profile .hp-gift-disc img{width:40px;height:40px;object-fit:contain}
+.hero-profile .hp-gift.locked img{filter:grayscale(1);opacity:.55}
+.hero-profile .hp-gift-level{position:absolute;right:-2px;bottom:-2px;min-width:23px;height:23px;border:1px solid #dfbd68;border-radius:50%;background:#362717;color:#ffe5a4;display:grid;place-items:center;font-size:14px}
+.hero-profile .hp-gift-note{margin:8px 0;min-height:19px}
+.hero-profile .hp-amulets{display:flex;gap:12px;flex-wrap:wrap}
+.hero-profile .hp-amulets>div{display:flex;align-items:center;gap:7px;font-size:13px;flex:1;min-width:100px}
+.hero-profile .hp-amulets img{width:34px;height:34px;object-fit:contain}
+.hero-profile .hp-record{padding:9px;display:flex;gap:9px;align-items:center;border:1px solid #ab89434d;border-radius:8px;background:#23170f66}
+.hero-profile .hp-record img{width:48px;height:62px;object-fit:contain;flex:none}
+.hero-profile .hp-record>div{min-width:0}
+.hero-profile .hp-record .hp-gold{overflow-wrap:anywhere}
+.hero-profile .hp-stat{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:5px 0;border-bottom:1px solid #ab894333}
+.hero-profile .hp-stat>div:last-child{text-align:right;flex-shrink:0}
+.hero-profile .hp-footer{margin-top:14px}.hero-profile .hp-footer button{width:100%}
+@container(max-width:330px){.hero-profile .hp-card{padding-inline:15px}.hero-profile .hp-gift-disc{width:44px;height:44px}.hero-profile .hp-gift-disc img{width:34px;height:34px}.hero-profile button.hp-gift{font-size:11px}.hero-profile .hp-gifts{gap:3px}.hero-profile .hp-tabs button{font-size:13px}.hero-profile .hp-name{font-size:22px}}

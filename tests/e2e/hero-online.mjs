@@ -102,8 +102,9 @@ console.log('\n1. Новый гость-колдун');
   await d.shot('game-warlock');
   await d.ev(() => { const u = window.__game.scene.getScene('UIScene'); u.closeDialogue?.(true); u.openHeroProfile(); });
   await d.p.waitForTimeout(500);
-  const prof = await d.ev(() => { const u = window.__game.scene.getScene('UIScene'); return { title: u.modal?.opts?.title, labels: u.children.list.flatMap(function walk(o) { return [...(o.type === 'Text' ? [o.text] : []), ...((o.list || []).flatMap(walk))]; }) }; });
-  ok(prof.title === 'Колдун' && prof.labels.includes('Ученик лесной ведьмы'), 'профиль: «Колдун», «Ученик лесной ведьмы»');
+  await d.p.locator('.hero-profile').waitFor();
+  const prof = await d.p.locator('.hero-profile').innerText();
+  ok(prof.includes('Колдун') && prof.includes('Дары') && prof.includes('Подвиги'), 'профиль колдуна: герой, дары и подвиги');
   await d.shot('profile-warlock');
   // Перезагрузка гостя: загрузить тот же профиль и сразу открыть мир, без экрана «Продолжить».
   const saved = await d.ev(async () => {

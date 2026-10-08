@@ -313,13 +313,11 @@ await mute(async () => {
     ok(!h.modal && !sv.modalOpen, '«Готово» возвращает в игру с закрытым меню');
     ok(sv.settings.get('sfx') < sfx0 && hits.length > 0, 'настройки: значение сохранилось после закрытия (' + Math.round(sv.settings.get('sfx') * 100) + '%)');
 
-    // профиль героя по портрету: реальные данные, ничего не меняет
+    // HTML-профиль и закрытие проверяет tests/e2e/hero-profile.mjs.
     const before = snap();
-    h.portraitHit.emit('pointerdown');
-    const pt = texts(h.modal.container).join(' | ');
-    ok(h.modal?.opts?.profile && pt.includes('Уровень 5') && pt.includes('41 / 144') && pt.includes('Лунные осколки') && pt.includes('До 6 ур.'), 'портрет → профиль героя с реальными данными');
-    h.closeModal(null);
-    ok(!h.modal && !sv.modalOpen && snap() === before, 'профиль героя закрывается и не меняет сохранение');
+    const { localHeroProfile } = await import('../src/systems/heroProfile.js');
+    const profile = localHeroProfile(sv.state);
+    ok(profile.level === 5 && snap() === before, 'профиль читает реальные данные и не меняет сохранение');
 
     // в бою: меню доступно, журнала нет, служебных выходов в настройках нет
     h.setMode('combat');
@@ -387,21 +385,13 @@ await mute(async () => {
     const kH = gw.portrait.texture.key;
     setHeroSource(() => heroIdNow());
     ok(kW.includes('warlock_down') && kH.includes('hero_down') && kW !== kH, `медальон: колдун и ведьма — разные ключи кэша (${kW} / ${kH})`);
-    // v0.8.2: аккаунт — из профиля героя (портрет), а не из паузы; профиль героя закрывается до открытия окна аккаунта
-    let accOrder = null;
-    g.openAccount = () => { accOrder = g.modal === null && !services.modalOpen; };
-    g.portraitHit.emit('pointerdown');
-    ok(g.modal?.opts?.profile && (g.modal?.buttons || []).some(b => b.label === 'Аккаунт'), 'гость: портрет → профиль героя с кнопкой «Аккаунт»');
-    g.closeModal(g.modal.buttons.find(b => b.label === 'Аккаунт'));
-    ok(accOrder === true, 'профиль героя → аккаунт: окно героя закрыто до открытия аккаунта');
+    // HTML-профиль, крестик и переход в аккаунт проверяются в tests/e2e/hero-profile.mjs.
     await ses.registerGuest({ nickname: 'Нюта_Лесная', password: 'password-1', password2: 'password-1' });
     const u = new UIScene(); u.create(); mkHud(u); u.refreshHud();
     ok(u.levelText.text === 'Ур. 1' && u.syncDot.visible && !labels(u).some(t => String(t).includes('Нюта')), 'HUD игрока: ника в HUD нет, уровень и значок сохранения');
-    u.openHeroProfile();
-    ok(labels(u).some(t => String(t) === 'Ник: Нюта_Лесная'), 'профиль героя: полный ник игрока');
-    ok(u.modal?.opts?.title === 'Колдун' && labels(u).includes('Ученик лесной ведьмы'), 'профиль: «Колдун», «Ученик лесной ведьмы» (герой профиля)');
-    u.closeModal(null);
-    ok(!u.modal && !services.modalOpen, 'профиль героя закрывается без блокировки');
+    const { localHeroProfile, heroProfileView } = await import('../src/systems/heroProfile.js');
+    const hero = heroProfileView(localHeroProfile(services.state, ses));
+    ok(hero.nickname === 'Нюта_Лесная' && hero.heroDef.name === 'Колдун', 'профиль использует ник аккаунта и выбранного героя');
     const m3 = new MenuScene(); m3.create();
     ok(labels(m3).some(t => String(t).startsWith('Нюта_Лесная · уровень')), 'стартовый экран игрока: ник и уровень');
     services.session = null;

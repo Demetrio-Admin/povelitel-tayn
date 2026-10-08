@@ -20,6 +20,9 @@ ok(/pressDock\([A-Za-z_$]+\)\{[^}]*ABILITY_USE/.test(js), 'нажатие дар
 ok(/OPEN_BAG/.test(seg), 'кнопка «Сумка»: нажатие на месте');
 // 4) живой мир (v0.28.0): рябь, качание, птицы не вырезаны
 ok(/updateSway\(/.test(js) && /flyBird\(\)\{/.test(js) && /spawnRipple\(/.test(js) && /life_bird_1/.test(js), 'живой мир: качание, рябь и птицы остались в сборке');
+// 5) рейтинг (v0.29.0): пункт меню открывает окно, окно просит таблицы, знак «в игре» подаётся
+ok(/openRating\(/.test(js) && /ratings_board/.test(js) && /online_players/.test(js) && /presence_ping/.test(js), 'рейтинг: окно, таблицы, «Онлайн» и знак присутствия остались в сборке');
+ok(/id:"rating",label:"Рейтинг"[^}]*\}/.test(js) && !/id:"rating",label:"Рейтинг"[^}]*stub/.test(js), 'пункт меню «Рейтинг» — не заглушка');
 
 console.log(failed ? '\n✗ Сборка: провал' : '\n✓ Сборка: нажатия на месте');
 process.exit(failed ? 1 : 0);

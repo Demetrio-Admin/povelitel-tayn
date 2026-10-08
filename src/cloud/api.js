@@ -149,6 +149,9 @@ export class SupabaseApi {
   resetPlayer(token, hero) { return this.rpc('reset_player', { hero }, token); }
   syncPlayer(token, patch, { keepalive = false } = {}) { return this.rpc('sync_player', { patch }, token, { keepalive }); }
   /** v0.9: атомарное действие сервера (лечение за монеты, стартовый набор). */
+  presencePing(token) { return this.rpc('presence_ping', {}, token); }   // v0.29.0: «я в игре»
+  ratingsBoard(token) { return this.rpc('ratings_board', {}, token); }
+  onlinePlayers(token) { return this.rpc('online_players', {}, token); }
   playerAction(token, action) { return this.rpc('player_action', { action }, token); }
 
   /** v0.14.0: запись боя на проверку (Edge Function combat — supabase/functions/combat). Ответ как у player_action: снимок игрока + action. */

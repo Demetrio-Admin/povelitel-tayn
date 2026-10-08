@@ -263,7 +263,7 @@ export const hud082 = {
     // v0.20.0: Банк — окно кошелька; v0.27.0: Карта — карта мира
     if (item.id === 'bank') { this.closeMenu(() => this.openWallet()); return; }
     if (item.id === 'map') { this.closeMenu(() => this.openMap()); return; }   // v0.27.0: карта мира (из меню — только посмотреть)
-    if (item.id === 'rating' && services.state.hasEvent('chapter_2_complete')) { this.closeMenu(() => this.openDuel()); return; }   // v0.26.0: рейтинг Дуэли
+    if (item.id === 'rating') { this.closeMenu(() => this.openRating()); return; }   // v0.29.0: рейтинги и «Онлайн» (Дуэль — вкладка «Арена»)
     this.closeMenu(() => item.id === 'chat' ? this.openChat() : (item.stub ? this.openStub(item) : this.openSettings()));
   },
 

@@ -15,6 +15,7 @@ import { setHeroSource, T, currentHero } from './state/hero.js';
 import { resolveMap } from './world/mapData.js';
 import { PlayerSession } from './cloud/PlayerSession.js';
 import { ChatService } from './cloud/ChatService.js';
+import { Presence } from './cloud/Presence.js';
 import { SupabaseApi } from './cloud/api.js';
 import { CLOUD } from './config/cloud.config.js';
 import { showLoading, showOffline, showNotice } from './ui/accountUI.js';
@@ -71,6 +72,7 @@ export function initServices() {
   if (online) {
     services.session = new PlayerSession({ api, state: services.state, storage, saveDelayMs: CLOUD.saveDelayMs, minorDelayMs: CLOUD.minorDelayMs });
     services.chat = new ChatService(services.session);
+    services.presence = new Presence(services.session);   // v0.29.0: знак «в игре» для списка онлайн
     installSessionUI(services.session);
   } else {
     // ?reset — новая игра; ?reset&hero=warlock — новая игра колдуном (автотесты)
@@ -94,6 +96,7 @@ export function initServices() {
   const mirror = (a) => services.actions.mirror(a);
   services.quests.mirror = mirror; services.log.mirror = mirror; services.dialogue.mirror = mirror; services.abilities.mirror = mirror;
   if (services.session) services.telemetry = createTelemetry({ session: services.session, bus, state: services.state, heroId: heroIdNow, storage });
+  services.presence?.start();
   // отправляем прогресс, когда игрок сворачивает вкладку или закрывает игру
   const flushNow = () => { if (!services.session) return; services.savePosition?.(); services.session.flush({ keepalive: true }).catch(() => {}); };
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });

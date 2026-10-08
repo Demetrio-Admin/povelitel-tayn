@@ -27,6 +27,17 @@ const bank = CITY_ZONES.find(z => z.id === 'BK'), agatha = interactives.find(o =
 assert.ok(agatha.x > bank.x && agatha.x < bank.x + bank.w && agatha.y > bank.y && agatha.y < bank.y + bank.h);
 assert.ok(Math.min(agatha.x-bank.x, bank.x+bank.w-agatha.x, agatha.y-bank.y, bank.y+bank.h-agatha.y) > agatha.radius,
   'Agatha can only be addressed from inside the bank');
+const bankArt = map.colliders.filter(c => c.tex && c.x >= bank.x && c.x+c.w <= bank.x+bank.w && c.y >= bank.y && c.y+c.h <= bank.y+bank.h)
+  .map(c => { const [w,h] = DISPLAY_SIZE[c.tex]; return { id:c.id, x:c.x+c.w/2-w/2, y:c.y+c.h-h, w,h }; });
+const [aw,ah] = DISPLAY_SIZE[agatha.texture];
+bankArt.push({ id:agatha.id, x:agatha.x-aw/2, y:agatha.y-ah, w:aw, h:ah });
+for (const p of map.props.filter(p => p.k === 'plant_pot_01' && p.x > bank.x && p.x < bank.x+bank.w && p.y > bank.y && p.y < bank.y+bank.h)) {
+  const [w,h] = DISPLAY_SIZE[p.k]; bankArt.push({ id:p.id, x:p.x-w/2, y:p.y-h, w,h });
+}
+for (let i=0;i<bankArt.length;i++) for (let j=i+1;j<bankArt.length;j++) {
+  const a=bankArt[i],b=bankArt[j];
+  assert.ok(!(a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y), `bank art does not overlap: ${a.id}/${b.id}`);
+}
 for (const room of CITY_ZONES.filter(z => z.interior)) {
   const floor = CITY_GROUND.find(g => g.x === room.x && g.y === room.y && g.w === room.w && g.h === room.h);
   assert.ok(floor?.interior && ASSET_FILES[floor.tex], `${room.id}: interior floor above outside frost`);

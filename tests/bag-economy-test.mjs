@@ -53,6 +53,7 @@ try {
   await assert.rejects(() => asPlayer(() => q("select public._bag_write($1,'{}')", [uid])), /permission denied/);
   console.log('✓ Browser sync and direct helper calls cannot forge capacity, rewards or money.');
   await db.exec(readFileSync('supabase/migrations/20261007_balance_v30.sql', 'utf8'));
+  await db.exec(readFileSync('supabase/migrations/20261008_shop_bag_combat.sql', 'utf8'));
   await sapphires(500);
   const buyId = 'expand-bag-test-01'; s = await action('bag_expand', { price: 0, increment: 99999 }, buyId);
   assert.equal(s.objects.player_bag.capacity, 150); assert.equal(s.wallet.sapphires, 400);
@@ -70,7 +71,9 @@ try {
   for (const qty of [-1, 0, 1.5, '1', 1e12]) assert.equal((await action('bag_discard', { item: 'moon_herb', qty })).action.reason, 'bad');
   console.log('✓ Full-bag gathering and buying roll back mana, coins and world marks; currency cannot be discarded.');
   await events(['ch2_city_arrived','ch2_plaza_cleared']); s = await action('event', { key: 'ch2_met_ilaria' }); assert.ok(s.action.ok); assert.equal(s.objects.player_bag.pending.frost_herb, 1); assert.equal(bagUsed(s.inventory), 100);
-  s = await action('combat_start', { spawn: 'bad', enemy: 'bad' }); assert.equal(s.action.reason, 'bag_pending');
+  s = await action('combat_start', { spawn: 'scavenger_01', enemy: 'forest_scavenger' }); assert.equal(s.action.ok, true);
+  assert.equal(s.objects.player_bag.pending.frost_herb, 1);
+  await action('combat_end', { outcome: 'retreat' });
   s = await action('bag_claim', { item: 'frost_herb', qty: 1 }); assert.equal(s.action.reason, 'bag_full'); assert.equal(s.objects.player_bag.pending.frost_herb, 1);
   s = await action('bag_discard', { item: 'moon_herb', qty: 1 }); assert.ok(s.action.ok);
   s = await action('bag_claim', { item: 'frost_herb', qty: 1 }, 'claim-bag-test-01'); assert.ok(s.action.ok); assert.deepEqual(s.objects.player_bag.pending, {}); assert.equal(bagUsed(s.inventory), 100);

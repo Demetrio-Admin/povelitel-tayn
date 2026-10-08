@@ -570,7 +570,7 @@ export class UIScene extends Phaser.Scene {
 
   pressModalButton(primary) {
     if (!this.modal) return;
-    if (this.modal.heroProfile) { this.modal.close?.(); return; }
+    if (this.modal.dom || this.modal.heroProfile) { this.modal.close?.(); return; }
     if (this.modal.chat) { if (!primary) this.chatWindow?.back(); return; }
     if (this.modal.menu) { this.closeMenu(); return; }
     if (this.modal.dialogue) { if (primary) this.modal.onPrimary(); else this.modal.onCancel(); return; }
@@ -581,7 +581,7 @@ export class UIScene extends Phaser.Scene {
 
   closeModal(button) {
     if (!this.modal) return;
-    if (this.modal.heroProfile) { this.modal.close?.(); return; }
+    if (this.modal.dom || this.modal.heroProfile) { this.modal.close?.(); return; }
     if (this.modal.chat) { this.chatWindow?.close(); return; }
     if (this.modal.menu) { this.closeMenu(); return; }
     if (this.modal.dialogue) { this.closeDialogue(true); return; }

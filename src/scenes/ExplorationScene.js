@@ -1050,7 +1050,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.cameras.main.fadeIn(300);
     this.inTransition = false;
     services.mode = 'exploration';
-    if (r.reason !== 'busy') this.toast(r.reason === 'bag_pending' ? 'Заберите или выбросьте незабранные награды в сумке перед новым боем.' : r.reason === 'network' ? 'Нет связи с сервером — бой не начался.' : 'Не удалось начать бой. Попробуйте ещё раз.', COLORS.danger);
+    if (r.reason !== 'busy') this.toast(r.reason === 'bag_pending' ? 'Бои с незабранной добычей станут доступны после обновления сервера.' : r.reason === 'network' ? 'Нет связи с сервером — бой не начался.' : 'Не удалось начать бой. Попробуйте ещё раз.', COLORS.danger);
   }
 
   onWake(sys, data = {}) {

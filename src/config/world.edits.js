@@ -539,16 +539,16 @@ export const EDITS = {
       "y": 2968
     },
     "city_room_6": {
-      "x": 3303,
-      "y": 3853
+      "x": 3320,
+      "y": 3940
     },
     "city_room_7": {
-      "x": 3207,
-      "y": 3828
+      "x": 3175,
+      "y": 3915
     },
     "city_room_8": {
-      "x": 3443,
-      "y": 3898
+      "x": 3465,
+      "y": 3915
     },
     "city_room_9": {
       "x": 3373,
@@ -583,8 +583,8 @@ export const EDITS = {
       "y": 4351
     },
     "city_room_19": {
-      "x": 3008,
-      "y": 4275
+      "x": 3355,
+      "y": 4050
     },
     "city_market_barrel": {
       "x": 3500,
@@ -1119,7 +1119,7 @@ export const EDITS = {
       "y": 4466
     },
     "npc_tikhon": {
-      "x": 1915,
+      "x": 2100,
       "y": 4460
     },
     "final_rift": {
@@ -1184,8 +1184,8 @@ export const EDITS = {
       "y": 3430
     },
     "npc_banker": {
-      "x": 3275,
-      "y": 3667
+      "x": 3320,
+      "y": 3745
     }
   },
   "roads": {
@@ -1560,8 +1560,8 @@ export const EDITS = {
     },
     "c79": {
       "kind": "furniture",
-      "x": 3165,
-      "y": 3730,
+      "x": 3197,
+      "y": 3850,
       "w": 246,
       "h": 37,
       "tex": "city_bank_counter",
@@ -1587,7 +1587,7 @@ export const EDITS = {
     },
     "c92": {
       "kind": "furniture",
-      "x": 1867,
+      "x": 1882,
       "y": 4560,
       "w": 150,
       "h": 35,
@@ -1596,8 +1596,8 @@ export const EDITS = {
     },
     "c93": {
       "kind": "furniture",
-      "x": 2210,
-      "y": 4149,
+      "x": 2190,
+      "y": 4205,
       "w": 100,
       "h": 35,
       "tex": "city_coven_cabinet",
@@ -1606,7 +1606,7 @@ export const EDITS = {
     "c94": {
       "kind": "furniture",
       "x": 2994,
-      "y": 4157,
+      "y": 4217,
       "w": 120,
       "h": 58,
       "tex": "city_coven_cabinet",
@@ -1623,8 +1623,8 @@ export const EDITS = {
     },
     "c98": {
       "kind": "furniture",
-      "x": 1846,
-      "y": 4169,
+      "x": 1885,
+      "y": 4190,
       "w": 150,
       "h": 35,
       "tex": "city_lab_machine",
@@ -1632,7 +1632,7 @@ export const EDITS = {
     },
     "c99": {
       "kind": "furniture",
-      "x": 1843,
+      "x": 1885,
       "y": 4340,
       "w": 150,
       "h": 35,
@@ -1693,25 +1693,33 @@ export const EDITS = {
       "id": "c107"
     },
     "c120": {
+      "id": "c120",
       "kind": "wall",
       "x": 3120,
-      "y": 3949,
-      "w": 273,
-      "h": 27,
-      "id": "c120"
+      "y": 3950,
+      "w": 150,
+      "h": 30
     },
     "c122": {
+      "id": "c122",
       "kind": "wall",
-      "x": 3122.5,
-      "y": 3561,
-      "w": 29,
-      "h": 246,
-      "id": "c122"
+      "x": 3120,
+      "y": 3560,
+      "w": 30,
+      "h": 420
+    },
+    "c123": {
+      "id": "c123",
+      "kind": "wall",
+      "x": 3370,
+      "y": 3950,
+      "w": 150,
+      "h": 30
     },
     "c124": {
       "kind": "furniture",
       "x": 3398.5,
-      "y": 3633,
+      "y": 3695,
       "w": 85,
       "h": 39,
       "tex": "city_bank_safe",
@@ -1722,10 +1730,10 @@ export const EDITS = {
     },
     "c125": {
       "kind": "furniture",
-      "x": 3379.5,
-      "y": 3757,
-      "w": 133,
-      "h": 74,
+      "x": 3170,
+      "y": 3715,
+      "w": 84,
+      "h": 30,
       "tex": "trunk_01",
       "id": "c125",
       "editorStyle": {
@@ -1788,7 +1796,7 @@ export const EDITS = {
     },
     "c134": {
       "kind": "furniture",
-      "x": 2219,
+      "x": 2200,
       "y": 4475,
       "w": 70,
       "h": 30,
@@ -1797,8 +1805,8 @@ export const EDITS = {
     },
     "c135": {
       "kind": "furniture",
-      "x": 2224,
-      "y": 4327,
+      "x": 2200,
+      "y": 4350,
       "w": 70,
       "h": 30,
       "tex": "bed_01",
@@ -1807,4 +1815,4 @@ export const EDITS = {
     "c23": null,
     "c133": null
   }
-}
+};

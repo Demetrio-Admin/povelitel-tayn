@@ -941,7 +941,6 @@ function applyActionUnchecked(snap, action = {}, nowMs = null) {
   if (num(nowMs)) advanceVitals(s, nowMs);
   const op = isObj(action) ? action.op : null;
   if (['bag_expand', 'bag_discard', 'bag_claim'].includes(op)) return { snapshot: s, result: bagAction(s, action) };
-  if (op === 'combat_start' && Object.values(bag(s).pending).some(n => n > 0)) return { snapshot: s, result: { ok: false, reason: 'bag_pending' } };
   if (op === 'craft') return { snapshot: s, result: craft(s, action.recipe) };
   if (op === 'use') return { snapshot: s, result: useItem(s, action.item) };
   if (op === 'migrate_v10') return { snapshot: s, result: migrateV10(s) };

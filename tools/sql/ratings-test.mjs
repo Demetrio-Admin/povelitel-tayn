@@ -53,15 +53,15 @@ console.log('\nРейтинги: уровень');
 console.log('\nРейтинги: лучшая победа над монстром');
 {
   const a = board(A), b = board(B);
-  ok(a.monster.me.enemy === 'frost_alpha' && a.monster.me.level === 12, 'A: лучшая победа — Вожак метели (уровень 12)');
-  ok(b.monster.me.enemy === 'rootling' && b.monster.me.level === 2, 'B: лучшая победа — Корневик (уровень 2), Падальщик ниже');
+  ok(a.monster.me.enemy === 'frost_alpha' && a.monster.me.level === ratingsRules().levels.frost_alpha, 'A: лучшая победа — Вожак метели (уровень 15)');
+  ok(b.monster.me.enemy === 'rootling' && b.monster.me.level === ratingsRules().levels.rootling, 'B: лучшая победа — Корневик (уровень 5), Падальщик ниже');
   ok(a.monster.me.rank < b.monster.me.rank, 'у кого монстр сильнее, тот выше');
   ok(board(C).monster.me === null, 'гость без ника — без места');
   ok(a.monster.top.every((r, i, arr) => i === 0 || arr[i - 1].level >= r.level), 'таблица монстров упорядочена по уровню');
   // тот же уровень — выше тот, кто победил более сильного (по здоровью): Вожак (1300) выше Стража кургана? нет, Страж кургана 1400
   grantPg(B, { enemies: ['gy_warden'] });
   const b2 = board(B), a2 = board(A);
-  ok(b2.monster.me.enemy === 'barrow_warden' && b2.monster.me.level === 12 && b2.monster.me.rank < a2.monster.me.rank, 'при равном уровне выше тот, чей монстр сильнее (Страж кургана 1400 > Вожак 1300)');
+  ok(b2.monster.me.enemy === 'barrow_warden' && b2.monster.me.level === ratingsRules().levels.barrow_warden && b2.monster.me.rank < a2.monster.me.rank, 'при равном уровне выше тот, чей монстр сильнее (Страж кургана 1400 > Вожак 1300)');
 }
 
 console.log('\nРейтинги: арена');

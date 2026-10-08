@@ -949,7 +949,7 @@ var CITY_INTERACTIVES = [
   { id: "city_board", kind: "board", x: 2480, y: 3420, texture: "notice_board_01", collide: { w: 80, h: 20 }, radius: 120, hint: "\u0414\u043E\u0441\u043A\u0430 \u043F\u043E\u0440\u0443\u0447\u0435\u043D\u0438\u0439" },
   { id: "npc_ilaria", kind: "npc", npc: "ilaria", x: 2560, y: 3260, texture: "npc_ilaria", collide: { w: 50, h: 24 }, radius: 140 },
   { id: "npc_merchant", kind: "npc", npc: "merchant", x: 3350, y: 3500, texture: "npc_merchant", collide: { w: 50, h: 24 }, radius: 140 },
-  { id: "npc_banker", kind: "npc", npc: "banker", x: 3320, y: 3830, texture: "npc_banker", collide: { w: 50, h: 24 }, radius: 140 },
+  { id: "npc_banker", kind: "npc", npc: "banker", x: 3320, y: 3745, texture: "npc_banker", collide: { w: 50, h: 24 }, radius: 180 },
   { id: "npc_duelist", kind: "npc", npc: "duelist", x: 2640, y: 4040, texture: "npc_duelist", collide: { w: 50, h: 24 }, radius: 140 },
   {
     id: "plaza_trace",
@@ -2676,7 +2676,7 @@ var SHOP = {
     ice_crystal: 55
   },
   sellPct: 0.33,
-  maxQty: 99
+  maxQty: 1e6
 };
 var sellPrice = (id) => SHOP.buy[id] ? Math.floor(SHOP.buy[id] * SHOP.sellPct) : 0;
 function shopRules() {
@@ -2911,6 +2911,27 @@ function duelRules() {
     reward: DUEL.reward
   };
 }
+
+// src/config/enemyRanks.js
+var ENEMY_RANKS = {
+  young_scavenger: { level: 1, difficulty: "normal", rank: 100 },
+  forest_scavenger: { level: 2, difficulty: "normal", rank: 200 },
+  rootling: { level: 5, difficulty: "normal", rank: 500 },
+  forest_guardian: { level: 6, difficulty: "elite", rank: 610 },
+  node_guardian: { level: 8, difficulty: "boss", rank: 820 },
+  frost_critter: { level: 9, difficulty: "normal", rank: 900 },
+  frost_collector: { level: 10, difficulty: "normal", rank: 1e3 },
+  frost_collector_elite: { level: 11, difficulty: "elite", rank: 1110 },
+  ice_guardian: { level: 12, difficulty: "elite", rank: 1210 },
+  volunteer: { level: 12, difficulty: "normal", rank: 1200 },
+  experimental_construct: { level: 13, difficulty: "elite", rank: 1310 },
+  frost_wolf: { level: 13, difficulty: "normal", rank: 1300 },
+  grave_wisp: { level: 13, difficulty: "normal", rank: 1301 },
+  grave_hound: { level: 14, difficulty: "normal", rank: 1400 },
+  frost_alpha: { level: 15, difficulty: "boss", rank: 1520 },
+  barrow_warden: { level: 15, difficulty: "boss", rank: 1521 },
+  severin_boss: { level: 15, difficulty: "boss", rank: 1522 }
+};
 
 // src/config/balance.enemies.js
 var ENEMIES = {
@@ -3408,27 +3429,10 @@ var ARENAS = {
     ]
   }
 };
+for (const [id, def] of Object.entries(ENEMIES)) Object.assign(def, ENEMY_RANKS[id]);
 
 // src/config/ratings.js
-var MONSTER_LEVELS = {
-  forest_scavenger: 1,
-  young_scavenger: 1,
-  rootling: 2,
-  forest_guardian: 4,
-  node_guardian: 6,
-  frost_critter: 7,
-  frost_collector: 8,
-  volunteer: 9,
-  frost_collector_elite: 9,
-  ice_guardian: 10,
-  experimental_construct: 10,
-  frost_wolf: 10,
-  grave_wisp: 10,
-  grave_hound: 11,
-  severin_boss: 12,
-  frost_alpha: 12,
-  barrow_warden: 12
-};
+var MONSTER_LEVELS = Object.fromEntries(Object.entries(ENEMIES).map(([id, def]) => [id, def.level]));
 var RATINGS = {
   top: 50,
   // сколько мест показывает таблица
@@ -3444,6 +3448,7 @@ function ratingsRules() {
     top: RATINGS.top,
     onlineSec: RATINGS.onlineSec,
     levels: { ...MONSTER_LEVELS },
+    rank: Object.fromEntries(Object.keys(MONSTER_LEVELS).map((k) => [k, ENEMIES[k].rank])),
     power: Object.fromEntries(Object.keys(MONSTER_LEVELS).map((k) => [k, ENEMIES[k]?.hp || 0])),
     spawns: Object.fromEntries(ENEMY_SPAWNS.filter((s) => MONSTER_LEVELS[s.enemy]).map((s) => [s.id, s.enemy]))
   };

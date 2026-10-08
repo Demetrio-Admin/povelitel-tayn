@@ -1,5 +1,5 @@
-// v0.25.0 — клиент Ковенов: RPC coven_request (supabase/migrations/20261007_covens.sql). Материалы и награда недели — через
-// player_action (services.actions.covenGive / covenClaim), чтобы сумка менялась обычным путём.
+// v0.25.0 — клиент Ковенов: RPC coven_request (supabase/migrations/20261007_covens.sql). Материалы, награда цикла и сапфиры пятёрке — через
+// player_action (services.actions.covenGive / covenClaim / covenPayout), чтобы сумка менялась обычным путём.
 import { CloudError } from './api.js';
 
 export const COVEN_REASONS = {
@@ -14,8 +14,9 @@ export const COVEN_REASONS = {
   leader: 'Сначала передайте главенство другому участнику.',
   forbidden: 'Недостаточно прав.',
   same: 'Роль уже такая.',
-  progress: 'Цель недели ещё не набрана.',
-  given: 'Чтобы забрать награду, внесите в цель недели хотя бы немного сами.',
+  progress: 'Цель цикла ещё не набрана.',
+  given: 'Чтобы забрать награду, внесите в цель цикла не меньше минимума сами.',
+  none: 'Сапфиров за прошлые циклы для вас нет.',
   missing: 'Этого нет в сумке.',
   unknown: 'Не получилось. Обновите окно.',
 };

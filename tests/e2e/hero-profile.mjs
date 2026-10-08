@@ -51,7 +51,7 @@ try {
     await page.getByText('Demetrio',{exact:true}).waitFor();await bounded(page);
     assert.equal(await page.locator('.hp-wallet').count(),0);assert.equal(await page.getByRole('button',{name:'Аккаунт',exact:true}).count(),0);
     await page.getByText('Советник',{exact:true}).waitFor();await page.getByRole('button',{name:'Астрал: уровень 3, изучен',exact:true}).click();
-    await page.getByRole('tab',{name:'Подвиги',exact:true}).click();await page.getByText('Вклад этой недели: 85 очков',{exact:true}).waitFor();
+    await page.getByRole('tab',{name:'Подвиги',exact:true}).click();await page.getByText('Вклад в этом цикле: 85 очков',{exact:true}).waitFor();
     await page.getByRole('tab',{name:'Сведения',exact:true}).click();await page.getByText('Максимум здоровья',{exact:true}).waitFor();
     assert.match(await page.locator('#hp-sheet-info').innerText(),/06.10.2026/);
     await page.getByRole('tab',{name:'Герой',exact:true}).click();await page.screenshot({path:`${shots}/${width}x${height}-public.png`});

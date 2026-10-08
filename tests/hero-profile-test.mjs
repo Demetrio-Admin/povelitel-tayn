@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { PGlite } from '@electric-sql/pglite';
 import { ENEMIES } from '../src/config/balance.enemies.js';
 import { ENEMY_SPAWNS } from '../src/config/world.layout.js';
+import { ratingsRules } from '../src/config/ratings.js';
 import { GameState } from '../src/state/GameState.js';
 import { localHeroProfile, heroProfileView } from '../src/systems/heroProfile.js';
 
@@ -33,6 +34,7 @@ try {
   const guardian=ENEMY_SPAWNS.find(s=>s.enemy==='forest_guardian');
   await q("insert into public.player_world(user_id,kind,key,data) values($1,'enemy',$2,'{}')",[veteran,guardian.id]);
   await db.exec(migration); await db.exec(migration);
+  assert.deepEqual((await q("select public._game_rules()->'ratings' r")).rows[0].r,ratingsRules(),'server and client use one enemy-level catalog');
   const old=await rpc(veteran);
   assert.equal(old.strongest.enemy,'forest_guardian');assert.equal(old.strongest.wonAt,null);assert.equal(old.strongest.heroLevel,null);
   assert.equal(old.uniqueWins,1);
@@ -62,6 +64,8 @@ try {
   const profile=await rpc(viewer,id);
   assert.equal(profile.self,false);assert.equal(profile.strongest.enemy,'severin_boss');assert.equal(profile.strongest.heroLevel,14);assert.ok(profile.strongest.wonAt);
   assert.equal(profile.uniqueWins,1);assert.equal(profile.abilities.ice.level,3);
+  const board=await as(player,async()=> (await q('select public.ratings_board() j')).rows[0].j);
+  assert.equal(board.monster.me.enemy,profile.strongest.enemy);assert.equal(board.monster.me.level,ENEMIES[profile.strongest.enemy].level);
   assert.deepEqual(profile.coven,{name:'Лунный круг',role:'leader',given:85});
   assert.equal(heroProfileView(profile).gifts.filter(g=>g.active).length,3,'public profile uses default slots when no build is saved');
   for(const key of ['wallet','inventory','coins','sapphires','user_id','combatCtx','hp','mana','password'])assert.equal(Object.hasOwn(profile,key),false,key);
@@ -80,6 +84,11 @@ try {
   await db.exec('set role anon');
   try { await assert.rejects(()=>q('select public.hero_profile()'),/permission denied/); }
   finally { await db.exec('reset role'); }
+  await q("update public.profiles set online_at=null,last_seen_at=now()-interval '1 day' where id=$1",[player]);
+  await as(player,()=>q('select public.presence_ping()'));
+  assert.equal((await rpc(viewer,id)).online,true,'one shared ping updates profile last seen');
+  const online=await as(viewer,async()=> (await q('select public.online_players() j')).rows[0].j);
+  assert.ok(online.players.some(p=>p.nickname==='Player'),'the same ping puts the hero in online list');
   await db.exec(migration);assert.equal((await rpc(viewer,id)).uniqueWins,1);
   // A fresh install of schema.sql includes the same RPCs and catalog.
   await db.exec(readFileSync('supabase/schema.sql','utf8'));

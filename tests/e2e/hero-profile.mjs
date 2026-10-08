@@ -30,6 +30,7 @@ try {
   for(const [width,height] of [[390,638],[360,800],[1280,900]]){
     const page=await browser.newPage({viewport:{width,height},hasTouch:true,isMobile:width<900});
     page.on('pageerror',e=>errors.push(e.message));
+    page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
     await page.goto('http://127.0.0.1:5191/?skipmenu&reset&hero=warlock');
     await page.waitForFunction(()=>window.__game?.scene.isActive('UIScene')&&window.__game.scene.getScene('UIScene').dlg,null,{timeout:120000});
     assert.match(await page.title(),/Колдовство/);assert.equal(await page.locator('vite-error-overlay').count(),0);
@@ -57,6 +58,16 @@ try {
     await page.getByRole('button',{name:'Закрыть окно',exact:true}).click();
     assert.equal(await page.evaluate(()=>window.__game.scene.getScene('UIScene').modal),null,'public profile clicks do not open underlying journal');
     if(width===390){
+      await page.evaluate(()=>window.__game.scene.getScene('UIScene').openMenu());
+      await page.waitForTimeout(300);
+      const ratingAt=await page.evaluate(()=>{const u=window.__game.scene.getScene('UIScene'),r=u.modal.items.find(i=>i.item.id==='rating').hit.getBounds(),c=u.viewport.cameras.center,g=window.__game,b=g.canvas.getBoundingClientRect();return {x:b.x+(r.centerX-c.scrollX)*b.width/g.scale.width,y:b.y+(r.centerY-c.scrollY)*b.height/g.scale.height};});
+      await page.touchscreen.tap(ratingAt.x,ratingAt.y);
+      await page.waitForFunction(()=>window.__game.scene.getScene('UIScene').modal?.opts?.title==='Рейтинг');
+      const ratingLabels=await page.evaluate(()=>{const out=[];function walk(o){if(o.type==='Text')out.push(o.text);(o.list||[]).forEach(walk);}walk(window.__game.scene.getScene('UIScene').modal.container);return out.join(' | ');});
+      for(const tab of ['Уровень','Монстры','Арена','Онлайн'])assert.ok(ratingLabels.includes(tab),'merged main keeps rating tab '+tab);
+      await page.screenshot({path:`${shots}/ratings.png`});
+      await page.evaluate(()=>window.__game.scene.getScene('UIScene').closeModal(null));
+      await portrait(page);await page.getByRole('button',{name:'Закрыть окно',exact:true}).click();
       await page.evaluate(()=>{window.__game.scene.sleep('ExplorationScene');window.__game.scene.run('CombatScene',{enemyType:'forest_scavenger',spawnId:'forest_scavenger_01'});window.__game.scene.bringToTop('UIScene');});
       await page.waitForTimeout(700);
       const labels=await page.evaluate(()=>window.__game.scene.getScene('CombatScene').children.list.filter(o=>o.type==='Text').map(o=>o.text));

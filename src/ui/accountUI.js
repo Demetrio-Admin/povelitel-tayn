@@ -122,7 +122,7 @@ function onKey(e) {
 }
 const KEY_EVENTS = ['keydown', 'keyup', 'keypress'];
 
-function overlay(card, { onClose, dismissable = true, top = false, label, theme } = {}) {
+function overlay(card, { onClose, dismissable = true, closeButton = dismissable, paintPanel = true, top = false, label, theme } = {}) {
   ensureCss();
   card.setAttribute('tabindex', '-1');
   const shell = el('div', { class: 'acc-shell' }, card);
@@ -141,11 +141,11 @@ function overlay(card, { onClose, dismissable = true, top = false, label, theme 
     if (previousFocus?.isConnected) previousFocus.focus?.({ preventScroll: true });
     onClose?.();
   }
-  if (dismissable) shell.append(el('button', { type: 'button', class: 'acc-dismiss', 'aria-label': 'Закрыть окно', onclick: close }, el('span', { class: 'acc-icon acc-cross', 'aria-hidden': 'true' })));
+  if (dismissable && closeButton) shell.append(el('button', { type: 'button', class: 'acc-dismiss', 'aria-label': 'Закрыть окно', onclick: close }, el('span', { class: 'acc-icon acc-cross', 'aria-hidden': 'true' })));
   if (!stack.length) KEY_EVENTS.forEach(t => window.addEventListener(t, onKey, true));
   stack.push(entry);
   document.body.appendChild(ov);
-  unbind = bindGameOverlay(ov, shell, card);
+  unbind = bindGameOverlay(ov, shell, card, { paintPanel });
   return { ov, close, get closed() { return closed; } };
 }
 

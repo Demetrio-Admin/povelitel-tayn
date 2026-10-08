@@ -1,0 +1,35 @@
+.acc-ov.victory-window{padding:72px 12px 14px;background:#080605bd;font-family:'Philosopher',Georgia,serif;container-type:size}
+.victory-window .acc-shell{width:min(480px,100%);max-height:100%;overflow:visible;background:none;box-shadow:none;border:18px solid transparent;border-image:url('/assets/ui/victory/panel.webp') 95 fill / 18px / 0 stretch}
+.victory-window .victory-card{display:flex;flex-direction:column;min-height:0;overflow:visible;padding:0 15px 13px;gap:13px;color:#f6e6bf;line-height:1.2;font-size:18px}
+.victory-header{flex:none;text-align:center;position:relative;margin:0 -22px}
+.victory-crest{display:block;width:calc(100% + 12px);height:auto;aspect-ratio:2.5;margin:-72px -6px -24px;object-fit:contain;pointer-events:none}
+.victory-window .victory-header h2{margin:0;padding:0 0 12px;background:none;font-size:clamp(38px,12cqw,56px);line-height:1.05;color:#f5ca5b;text-shadow:0 2px 0 #77380b,0 3px 6px #0009;border-bottom:1px solid #bd913f80}
+.victory-rewards{min-height:80px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:thin;scrollbar-color:#b59653 #25190f;outline-offset:2px}
+.victory-loot{display:grid;grid-template-columns:repeat(var(--loot-columns,2),minmax(0,1fr));gap:15px 12px;padding:5px 0 14px}
+.victory-drop{display:flex;align-items:center;justify-content:center;gap:9px;min-width:0}
+.victory-drop-wide{grid-column:1/-1}
+.victory-drop>img{width:54px;height:54px;object-fit:contain;flex:none}
+.victory-drop>div{min-width:0;display:flex;flex-direction:column;gap:2px}
+.victory-quantity{font-size:34px;font-weight:700;color:#ffe0a0;line-height:1;overflow-wrap:anywhere}
+.victory-item-name{font-size:17px;overflow-wrap:anywhere}
+.victory-hero-xp{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 0;border-top:1px solid #b9914d77;font-size:23px}
+.victory-hero-xp>img{width:35px;height:35px;object-fit:contain;flex:none}
+.victory-magic h3{font-weight:400;font-size:21px;color:#e9bd64;display:flex;align-items:center;gap:12px;margin:10px 0 13px;white-space:nowrap}
+.victory-magic h3::before,.victory-magic h3::after{content:'';height:1px;background:#b9914d77;flex:1}
+.victory-schools{display:grid;grid-template-columns:repeat(var(--gift-columns,3),minmax(0,1fr));gap:13px 8px;padding-bottom:7px}
+.victory-school{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0}
+.victory-school>img{width:42px;height:48px;object-fit:contain;flex:none}
+.victory-school>div{min-width:0;display:flex;flex-direction:column;gap:2px}
+.victory-school-name{font-size:14px;overflow-wrap:anywhere}
+.victory-school-quantity{font-size:26px;font-weight:700;color:#ffe0a0;line-height:1.1;overflow-wrap:anywhere}
+.victory-level{display:flex;flex-direction:column;gap:5px;align-items:center;text-align:center;color:#ffe0a0;border-top:1px solid #b9914d77;padding:12px 3px 0;margin-top:10px;font-size:22px}
+.victory-level small{font-size:15px;color:#eedabd;line-height:1.4}
+.victory-details{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;text-align:center;padding-top:12px;border-top:1px solid #b9914d77;font-size:14px;line-height:1.35;color:#dccbb0;flex:none}
+.victory-health{color:#b7daa6}.victory-time{width:100%}
+.victory-window .victory-card button.victory-continue{flex:none;width:100%;min-height:64px;padding:8px 14px;border:0;border-radius:0;background:transparent url('/assets/ui/victory/button.webp') center / 100% auto no-repeat;box-shadow:none;color:#ffedbd;font:700 27px/1.2 'Philosopher',Georgia,serif;text-shadow:0 2px 3px #000b;overflow-wrap:normal}
+.victory-window .victory-card button.victory-continue:active{filter:brightness(1.16);transform:translateY(1px)}
+.victory-window .victory-card button.victory-continue:hover{filter:brightness(1.09)}
+.victory-window .victory-card button.victory-continue:focus-visible{outline:2px solid #fce09a;outline-offset:-9px;border-radius:10px}
+@container(max-width:380px){.victory-window .acc-shell{border-width:15px;border-image-width:15px}.victory-window .victory-card{padding-inline:9px;gap:11px}.victory-crest{margin-top:-62px}.victory-drop>img{width:43px;height:48px}.victory-quantity{font-size:30px}.victory-item-name{font-size:15px}.victory-hero-xp{font-size:21px}.victory-school{flex-direction:column;text-align:center;gap:3px}.victory-school>img{width:44px;height:44px}.victory-school-name{font-size:14px}.victory-school-quantity{font-size:25px}.victory-window .victory-card button.victory-continue{min-height:52px;font-size:24px}}
+@container(max-height:560px){.victory-window .victory-card{gap:8px}.victory-crest{width:85%;margin:-58px auto -15px}.victory-window .victory-header h2{font-size:38px;padding-bottom:8px}.victory-loot{padding-bottom:9px;gap:9px}.victory-hero-xp{padding:8px 0}.victory-magic h3{margin:7px 0 9px}.victory-details{padding-top:8px;font-size:13px}}
+@container(max-height:490px){.victory-window .victory-card{gap:7px;padding-bottom:8px}.victory-loot{gap:7px;padding-bottom:6px}.victory-drop>img{width:38px;height:40px}.victory-quantity{font-size:26px}.victory-item-name{font-size:14px}.victory-hero-xp{font-size:19px;padding:6px 0}.victory-hero-xp>img{width:30px;height:30px}.victory-magic h3{font-size:18px;margin:6px 0 8px}.victory-school>img{width:32px;height:32px}.victory-school-name{font-size:13px}.victory-school-quantity{font-size:22px}.victory-details{gap:4px 12px;padding-top:6px}.victory-window .victory-card button.victory-continue{min-height:50px;font-size:22px}}

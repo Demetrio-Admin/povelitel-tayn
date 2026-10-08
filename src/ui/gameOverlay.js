@@ -4,12 +4,13 @@ import { paintPanel } from './uiPaint.js';
 import { VIEW } from '../config/game.config.js';
 import { UI } from '../config/ui.config.js';
 
-export function bindGameOverlay(root, panel, content) {
+export function bindGameOverlay(root, panel, content, { paintPanel: shouldPaint = true } = {}) {
   const canvas = document.querySelector?.('#game canvas');
   const viewport = window.visualViewport;
   let closed = false, frame = null, paintedSize = '';
 
   function paint() {
+    if (!shouldPaint) return;
     const rect = panel.getBoundingClientRect?.();
     if (!rect?.width || !rect?.height) return;
     const width = Math.round(rect.width), height = Math.round(rect.height);

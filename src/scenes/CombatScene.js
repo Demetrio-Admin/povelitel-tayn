@@ -715,13 +715,9 @@ export class CombatScene extends Phaser.Scene {
     const v = vitals.view(state);   // уже по ответу сервера
     const g = r?.verdict?.reward || {};
     if (out === 'victory') {
-      const lines = [STORY.victory, `Мана: ${v.mana} / ${v.maxMana}`, '', `Время боя: ${secs} сек   ·   прерываний: ${this.cm.stats.interrupts}`, ''];
-      if (g.heroXP) lines.push(T(fm(`+${g.heroXP} опыта героини`, `+${g.heroXP} опыта героя`)));
-      for (const [k, n] of Object.entries(g.schoolXP || {})) lines.push(`+${n} опыта дара «${ABILITIES[k].name}»`);
-      for (const [k, n] of Object.entries(g.items || {})) lines.push(`+${n} ${itemName(k)}`);
-      for (const lv of r.outcome?.levelUps || []) lines.push('', `★ Новый уровень ${lv.level}! ${lv.note || ''}`);
       this.bus.emit(MSG.DIALOG, {
-        title: 'Победа!', color: COLORS.gold, text: lines.join('\n'),
+        title: 'Победа!', color: COLORS.gold,
+        victory: { reward: g, vitals: v, seconds: secs, interrupts: this.cm.stats.interrupts, levelUps: r.outcome?.levelUps || [] },
         buttons: [{ label: 'Продолжить', primary: true, onClick: () => this.exit('victory') }],
       });
     } else if (out === 'defeat') {

@@ -34,6 +34,7 @@ import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from '../ui/noticeClose.js';
 import { addCraftMedallion, setCraftMedallion } from '../ui/witchcraftUI.js';
 import { bindSceneViewport } from '../ui/viewport.js';
+import { sapphires as sapphireText } from '../systems/wallet.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -475,7 +476,7 @@ export class UIScene extends Phaser.Scene {
 
   onReward({ granted, levelUps = [] }) {
     if (granted) {
-      if (granted.sapphires) this.toast(`+${granted.sapphires} сапфир`, 0x6fa8ff);
+      if (granted.sapphires) this.toast(`+${sapphireText(granted.sapphires)}`, 0x6fa8ff);
       if (granted.heroXP) this.toast(`+${granted.heroXP} опыта`, COLORS.gold);
       for (const [k, v] of Object.entries(granted.items || {})) this.toast(`+${v} ${itemName(k)}`, COLORS.gold);
     }

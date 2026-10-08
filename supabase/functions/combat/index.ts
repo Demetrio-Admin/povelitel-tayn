@@ -279,7 +279,7 @@ function buildSlotRules() {
 }
 
 // src/config/bag.js
-var BAG = { initial: 100, increment: 50, price: 100, max: 1e9, version: 29 };
+var BAG = { initial: 100, increment: 50, price: 300, max: 1e9, version: 29 };
 var BAG_ITEMS = [...Object.keys(RESOURCES), ...Object.keys(POTIONS), ...Object.keys(CRAFT_ITEMS), "crimson_ember", "moonstone"];
 var counted = new Set(BAG_ITEMS);
 var takesBagSpace = (id) => counted.has(id);
@@ -301,8 +301,8 @@ var GIFT_PRICES = {
   storyTelekinesis: { coins: 150, sapphires: 0 },
   storyIce2: { coins: 500, sapphires: 0 },
   storyIce3: { coins: 1500, sapphires: 0 },
-  tier2: { coins: 2e3, sapphires: 200 },
-  tier3: { coins: 1e4, sapphires: 750 }
+  tier2: { coins: 2e3, sapphires: 600 },
+  tier3: { coins: 1e4, sapphires: 2e3 }
 };
 
 // src/config/balance.progression.js
@@ -471,7 +471,7 @@ var EVENT_REWARDS = {
   ch2_coven_ready: { heroXP: 300, coins: 220, items: { ice_crystal: 2 } },
   ch2_epilogue: { heroXP: 250 },
   chapter_2_complete: { heroXP: 300, coins: 330, topUp: { heroXP: 7900 }, items: { frost_shard: 1 } }
-  // + 5 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
+  // + 50 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
 };
 var BALANCE_MIGRATION = {
   event: "balance_v30_applied",
@@ -495,7 +495,7 @@ var BALANCE_MIGRATION = {
     ch2_coven_ready: EVENT_REWARDS.ch2_coven_ready.coins - 180,
     chapter_2_complete: EVENT_REWARDS.chapter_2_complete.coins - 150
   },
-  sapphires: { ch2_quarter_cleared: 1, ch2_coven_ready: 1 }
+  sapphires: { ch2_quarter_cleared: 10, ch2_coven_ready: 10 }
 };
 
 // src/config/balance.abilities.js
@@ -922,7 +922,7 @@ var CITY_INTERACTIVES = [
     radius: 100,
     collide: { w: 50, h: 24 },
     requiresEvent: "ch2_city_arrived",
-    reward: { sapphires: 1 },
+    reward: { sapphires: 10 },
     hint: "\u0422\u0430\u0439\u043D\u0438\u043A \u0443 \u043F\u043B\u043E\u0449\u0430\u0434\u0438"
   },
   {
@@ -934,7 +934,7 @@ var CITY_INTERACTIVES = [
     radius: 100,
     collide: { w: 50, h: 24 },
     requiresEvent: "ch2_quarter_cleared",
-    reward: { sapphires: 1 },
+    reward: { sapphires: 10 },
     hint: "\u0422\u0430\u0439\u043D\u0438\u043A \u0443 \u0441\u0442\u0430\u0440\u043E\u0439 \u043E\u0433\u0440\u0430\u0434\u044B"
   },
   // v0.27.0: выходы на карту мира (лес и город — разные локации, переход — только через карту у выхода)
@@ -1422,7 +1422,7 @@ var CONTENT_INTERACTIVES = [
     radius: 100,
     collide: { w: 50, h: 24 },
     requiresEvent: "unlock_telekinesis_1",
-    reward: { sapphires: 1 },
+    reward: { sapphires: 10 },
     hint: "\u0422\u0430\u0439\u043D\u0438\u043A \u0443 \u0434\u043E\u0440\u043E\u0433\u0438"
   },
   {
@@ -1434,7 +1434,7 @@ var CONTENT_INTERACTIVES = [
     radius: 100,
     collide: { w: 50, h: 24 },
     requiresEvent: "guardian_defeated",
-    reward: { sapphires: 1 },
+    reward: { sapphires: 10 },
     hint: "\u0422\u0430\u0439\u043D\u0438\u043A \u0421\u0442\u0430\u0440\u043E\u0433\u043E \u043B\u0435\u0441\u0430"
   },
   // ================================================================== ДОМ ВЕДЬМЫ (зона A)
@@ -1994,15 +1994,16 @@ function materialize(state) {
 
 // src/config/sapphires.js
 var SAPPHIRES = {
-  rublesPerSapphire: 1,
+  perRuble: 10,
+  rublesPerSapphire: 0.1,
   // ускорение изучения: за price сапфиров таймер короче на chunkMin минут; совсем до нуля нельзя (остаётся не меньше minLeftSec
   // и не меньше (1 − maxCutPct) полного времени); за сутки (UTC) — не больше dailyChunks таких шагов
-  speedup: { chunkMin: 15, price: 1, maxCutPct: 0.75, minLeftSec: 60, dailyChunks: 24 },
-  respec: 5,
+  speedup: { chunkMin: 15, price: 10, maxCutPct: 0.75, minLeftSec: 60, dailyChunks: 24 },
+  respec: 50,
   // смена ветки вместо монет (BRANCH_RESPEC.coins)
-  preset: { price: 30, max: 3 },
+  preset: { price: 150, max: 3 },
   // первый пресет бесплатный, следующие — за сапфиры, всего не больше max
-  welcome: 3,
+  welcome: 30,
   welcomeEvent: "ch2_city_arrived"
   // один раз — за открытие кошелька (в главе II — «Банк»)
 };
@@ -2633,8 +2634,8 @@ var SIDE_QUESTS = {
       { type: "item", item: "tree_resin", count: 2, text: "\u0414\u0440\u0435\u0432\u0435\u0441\u043D\u0430\u044F \u0441\u043C\u043E\u043B\u0430" }
     ],
     turnIn: { npc: "veda", consume: { moon_herb: 1, forest_mushroom: 1, tree_resin: 2 } },
-    reward: { coins: 65, heroXP: 20, sapphires: 1 },
-    rewardText: "65 \u043C\u043E\u043D\u0435\u0442, 1 \u0441\u0430\u043F\u0444\u0438\u0440, 20 \u043E\u043F\u044B\u0442\u0430"
+    reward: { coins: 65, heroXP: 20, sapphires: 10 },
+    rewardText: "65 \u043C\u043E\u043D\u0435\u0442, 10 \u0441\u0430\u043F\u0444\u0438\u0440\u043E\u0432, 20 \u043E\u043F\u044B\u0442\u0430"
   },
   sq_dust: {
     title: "\u041F\u044B\u043B\u044C \u0434\u0440\u0435\u0432\u043D\u0438\u0445 \u0440\u0443\u043D",
@@ -2688,7 +2689,9 @@ var DAILY = {
   // доска открывается во второй половине главы II (после квеста 10)
   offers: 5,
   picks: 3,
-  dayMs: 864e5
+  dayMs: 864e5,
+  sapphires: 3
+  // v0.32.0: сапфиры за каждое выполненное поручение (3 в день × 3 = 9; брать можно не больше picks)
 };
 var DAILY_POOL = {
   herbs_alchemist: {
@@ -2794,6 +2797,7 @@ var DAILY_POOL = {
     reward: { heroXP: 55, coins: 35, items: { rune_dust: 2 } }
   }
 };
+for (const o of Object.values(DAILY_POOL)) o.reward = { ...o.reward, sapphires: DAILY.sapphires };
 var DAILY_ORDER = Object.keys(DAILY_POOL);
 function dailyRules() {
   return {
@@ -3493,7 +3497,7 @@ var EVENT_ACTIONS = {
   unlock_ice_1: { requires: ["ch2_rescue_done", "warm_potion_crafted"], unlock: { ice: 1 } },
   ch2_ice_trained: { requires: ["ch2_training_done"] },
   ch2_choice_start: { requires: ["ch2_ice_trained"] },
-  ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"], sapphires: 1 },
+  ch2_quarter_cleared: { requires: ["ch2_ice_guardian_defeated", "ch2_deep_1", "ch2_deep_2"], sapphires: 10 },
   // v0.22.0 — квесты 11–15 (Нэрис, Тихон, Илария, Северин, Ровена, Мирра)
   unlock_ice_2: { requires: ["ch2_quarter_cleared"], consume: { coins: GIFT_PRICES.storyIce2.coins }, unlock: { ice: 2 } },
   ch2_brittle_done: { requires: ["ch2_brittle_1", "ch2_brittle_2", "brittle_flask_crafted"] },
@@ -3508,13 +3512,13 @@ var EVENT_ACTIONS = {
   ch2_severin_confronted: { requires: ["ch2_lab_reported"] },
   ch2_coven_met: { requires: ["ch2_severin_confronted"] },
   ch2_coven_supplies: { requires: ["ch2_coven_met"], consume: { crystal_guard: 1, frost_herb: 2 } },
-  ch2_coven_ready: { requires: ["ch2_unstable_1", "ch2_unstable_2", "ch2_coven_supplies"], sapphires: 1 },
+  ch2_coven_ready: { requires: ["ch2_unstable_1", "ch2_unstable_2", "ch2_coven_supplies"], sapphires: 10 },
   ch2_final_start: { requires: ["ch2_coven_ready"] },
   // Лёд III перед боем: ветка выбирается один раз (ch2_ice3 — общая отметка, по ней появляется Северин)
   ch2_ice3_frost: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], consume: { coins: GIFT_PRICES.storyIce3.coins }, unlock: { ice: 3 }, branch: { ice: "frost" }, marks: ["ch2_ice3"] },
   ch2_ice3_shard: { requires: ["ch2_fin_tk", "ch2_fin_fire", "ch2_fin_ice", "ch2_fin_seal"], blockedBy: ["ch2_ice3"], consume: { coins: GIFT_PRICES.storyIce3.coins }, unlock: { ice: 3 }, branch: { ice: "shard" }, marks: ["ch2_ice3"] },
   ch2_epilogue: { requires: ["ch2_letters_read"] },
-  chapter_2_complete: { requires: ["ch2_epilogue"], marks: ["title_frost_survivor"], sapphires: 5 }
+  chapter_2_complete: { requires: ["ch2_epilogue"], marks: ["title_frost_survivor"], sapphires: 50 }
 };
 function worldRules() {
   const world = {};

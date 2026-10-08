@@ -54,14 +54,16 @@ try {
   console.log('✓ Browser sync and direct helper calls cannot forge capacity, rewards or money.');
   await db.exec(readFileSync('supabase/migrations/20261007_balance_v30.sql', 'utf8'));
   await db.exec(readFileSync('supabase/migrations/20261008_shop_bag_combat.sql', 'utf8'));
-  await sapphires(500);
+  // v0.32.0: курс 1 ₽ = 10 сапфиров — последняя схема перекрывает правила миграции v0.30 (цены в сапфирах ×10) и один раз умножает кошелёк
+  await db.exec(readFileSync('supabase/schema.sql', 'utf8'));
+  await sapphires(700);
   const buyId = 'expand-bag-test-01'; s = await action('bag_expand', { price: 0, increment: 99999 }, buyId);
   assert.equal(s.objects.player_bag.capacity, 150); assert.equal(s.wallet.sapphires, 400);
   s = await action('bag_expand', {}, buyId); assert.equal(s.action.duplicate, true); assert.equal(s.objects.player_bag.capacity, 150); assert.equal(s.wallet.sapphires, 400);
   for (let i=0;i<25;i++) await action('bag_discard', { item: 'coins', qty: 1 });
   s = await action('bag_expand', {}, buyId); assert.equal(s.action.duplicate, true); assert.equal(s.objects.player_bag.capacity, 150); assert.equal(s.wallet.sapphires, 400);
   await sapphires(0); s = await action('bag_expand'); assert.equal(s.action.reason, 'sapphires'); assert.equal(s.objects.player_bag.capacity, 150);
-  console.log('✓ +50 places costs exactly 100 sapphires, retries never charge twice, insufficient funds do not change capacity.');
+  console.log('✓ +50 places costs exactly 300 sapphires, retries never charge twice, insufficient funds do not change capacity.');
   await q('delete from public.player_inventory where user_id=$1', [uid]); await seed({ moon_herb: 100, coins: 20000 }); await capacity(100);
   const gather = Object.entries(serverRules().world).find(([, r]) => r.kind === 'gather' && !r.requires.length && !r.requiresEnemy.length);
   assert.ok(gather);
@@ -85,12 +87,12 @@ try {
   await capacity(1000); await seed({ coins: 20000, crimson_ember: 6, lunar_shard: 30, rune_dust: 10, moon_herb: 2 });
   await q("update public.player_progress set hero_level=8,school_xp='{"+'"fire":1000,"telekinesis":1000,"seal":1000,"ice":1000'+"}' where user_id=$1", [uid]);
   await q("update public.player_abilities set level=1 where user_id=$1 and ability_id='fire'", [uid]);
-  await sapphires(199); const preResearch = await snapshot(); s = await action('research_start', { upgrade: 'fire_2' }); assert.equal(s.action.reason, 'sapphires'); assert.equal(s.inventory.coins, preResearch.inventory.coins); assert.equal(s.inventory.crimson_ember, 6); assert.equal(s.school.fire, 1000); assert.equal(s.research, null);
-  await sapphires(200); s = await action('research_start', { upgrade: 'fire_2' }, 'gift-fire-2-test-01'); assert.ok(s.action.ok); assert.equal(s.inventory.coins, 18000); assert.equal(s.wallet.sapphires, 0); assert.equal(s.inventory.crimson_ember, 0); assert.equal(s.school.fire, 820);
+  await sapphires(599); const preResearch = await snapshot(); s = await action('research_start', { upgrade: 'fire_2' }); assert.equal(s.action.reason, 'sapphires'); assert.equal(s.inventory.coins, preResearch.inventory.coins); assert.equal(s.inventory.crimson_ember, 6); assert.equal(s.school.fire, 1000); assert.equal(s.research, null);
+  await sapphires(600); s = await action('research_start', { upgrade: 'fire_2' }, 'gift-fire-2-test-01'); assert.ok(s.action.ok); assert.equal(s.inventory.coins, 18000); assert.equal(s.wallet.sapphires, 0); assert.equal(s.inventory.crimson_ember, 0); assert.equal(s.school.fire, 820);
   s = await action('research_start', { upgrade: 'fire_2' }, 'gift-fire-2-test-01'); assert.equal(s.action.duplicate, true); assert.equal(s.inventory.coins, 18000);
   await q("update public.player_progress set research=jsonb_set(research,'{startedAt}','0') where user_id=$1", [uid]);
   s = await action('research_finish'); assert.equal(s.abilities.fire.level, 2);
-  assert.deepEqual(GIFT_PRICES.tier3, { coins: 10000, sapphires: 750 });
+  assert.deepEqual(GIFT_PRICES.tier3, { coins: 10000, sapphires: 2000 });
   console.log('✓ Gift research charges both currencies, materials and XP once; refusal is atomic and completion raises the gift.');
   await events(['ch2_quarter_cleared']); await seed({ coins: 500 }); await sapphires(0);
   s = await action('event', { key: 'unlock_ice_2' }); assert.ok(s.action.ok); assert.equal(s.abilities.ice.level, 2); assert.equal(s.inventory.coins, 0); assert.equal(s.wallet.sapphires, 0);

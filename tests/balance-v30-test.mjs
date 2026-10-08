@@ -54,6 +54,14 @@ try {
   await q("insert into public.player_abilities(user_id,ability_id,level,unlocked) values($1,'telekinesis',1,true)",[uid]);
   await db.exec(migration); assert.equal((await snapshot()).inventory.coins,195);
   console.log('✓ Old pre-Telekinesis save receives the 195-coin safety floor.');
+  // v0.32.0: курс 1 ₽ = 10 сапфиров. Последняя схема заменяет правила миграции v0.30 (суммы в сапфирах ×10) и один раз умножает кошельки.
+  const schemaNow = readFileSync('supabase/schema.sql', 'utf8');
+  // кошелёк ветерана — старого курса (в мелком клоне CI предыдущая схема — уже текущая, поэтому метку сбрасываем явно)
+  await db.exec('alter table public.player_wallet add column if not exists rate_ver int'); await q('update public.player_wallet set rate_ver = null where user_id = $1', [veteran]);
+  await db.exec(schemaNow); uid = veteran;
+  assert.equal((await snapshot()).wallet.sapphires, 20); assert.equal((await q("select count(*)::int n from public.sapphire_ledger where user_id=$1 and ref='rate10'", [uid])).rows[0].n, 1);
+  await db.exec(schemaNow); assert.equal((await snapshot()).wallet.sapphires, 20);
+  console.log('✓ Rate migration multiplies an existing wallet by 10 exactly once, however often the schema is applied.');
   await newPlayer();
   assert.equal((await action('bank_welcome')).action.reason,'locked');
   for (const id of ['sq_mushrooms','sq_resin','sq_veda_stock']) assert.equal((await action('quest_accept',{quest:id})).action.reason,'locked');
@@ -70,7 +78,7 @@ try {
     assert.equal((await action('quest_turn_in',{quest:id})).action.ok,true);
     assert.equal((await action('quest_turn_in',{quest:id})).action.reason,'already');
   }
-  s = await snapshot(); assert.equal(s.inventory.coins,170); assert.equal(s.xp,65); assert.equal(s.wallet.sapphires,1);
+  s = await snapshot(); assert.equal(s.inventory.coins,170); assert.equal(s.xp,65); assert.equal(s.wallet.sapphires,10);
   assert.equal(s.inventory.elixir_life,2); assert.equal(s.inventory.elixir_mana,1);
   assert.equal((await action('world',{obj:'sapphire_trail_cache'})).action.reason,'locked');
   await flags(['unlock_telekinesis_1','guardian_defeated','ch2_city_arrived']);
@@ -84,20 +92,20 @@ try {
   }
   assert.equal((await action('world',{obj:'sapphire_city_cache_2'})).action.ok,true);
   assert.equal((await action('bank_welcome')).action.ok,true); assert.equal((await action('bank_welcome')).action.reason,'already');
-  assert.equal((await snapshot()).wallet.sapphires,15);
-  const rewards = await q("select sum(delta)::int n from public.sapphire_ledger where user_id=$1 and kind in ('reward','welcome')",[uid]); assert.equal(rewards.rows[0].n,15);
+  assert.equal((await snapshot()).wallet.sapphires,150);
+  const rewards = await q("select sum(delta)::int n from public.sapphire_ledger where user_id=$1 and kind in ('reward','welcome')",[uid]); assert.equal(rewards.rows[0].n,150);
   const freshCoins = (await snapshot()).inventory.coins; await db.exec(migration); assert.equal((await snapshot()).inventory.coins,freshCoins);
   // Character reset retains the account wallet and ledger: no second cache payout on a new character.
   await asPlayer(()=>q("select public.reset_player('warlock')")); await flags(['unlock_telekinesis_1']);
   const resetChest = await asPlayer(async()=>(await q('select public.player_action($1::jsonb) j',[JSON.stringify({op:'world',obj:'sapphire_trail_cache',id:randomUUID()})])).rows[0].j);
-  assert.equal(resetChest.wallet.sapphires,15);
+  assert.equal(resetChest.wallet.sapphires,150);
   s = await action('combat_start',{spawn:'scavenger_01',enemy:'forest_scavenger',balanceVersion:30}); assert.equal(s.combatCtx.balanceVersion,30);
-  console.log('✓ Veda consumes resources atomically; all nine sapphire sources total 15, with no repeat payout after retries or character reset.');
+  console.log('✓ Veda consumes resources atomically; all nine sapphire sources total 150, with no repeat payout after retries or character reset.');
 } finally { await db.close(); }
 const lunar = [0,1,2,3,9].map(n=>amuletEffect('amulet_lunar',n).manaRescue.gainPct);
 assert.deepEqual(lunar,[.5,.6,.7,.8,.8]);
 const report = await storyPass();
 assert.ok(report.first.beforeTK>=195); assert.ok(report.payments.every(p=>p.before>=p.price)); assert.equal(report.final.level,15);
 assert.equal(report.fights.length,new Set(report.fights.map(f=>f.spawn)).size);
-assert.equal(report.final.sapphires,7); // two plot rewards + finale; no bank, caches or side quests on this route.
+assert.equal(report.final.sapphires,70); // two plot rewards + finale; no bank, caches or side quests on this route.
 console.log(`✓ Verified story route, no side quests/repeated enemies: ${report.first.coins} coins after chapter I; ${report.final.coins} after chapter II; level ${report.final.level}.`);

@@ -2,6 +2,7 @@
 // здесь — что показать: поручения дня, их цель и прогресс, награда, можно ли взять или сдать.
 import { DAILY, DAILY_POOL, dailyOffers, dailyDay } from '../config/daily.js';
 import { ITEMS } from '../config/balance.progression.js';
+import { sapphires as sapphireText } from './wallet.js';
 
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
 const name = (id) => ITEMS[id]?.name || id;
@@ -25,6 +26,7 @@ export function rewardText(r = {}) {
   const parts = [];
   if (r.heroXP) parts.push(`${r.heroXP} опыта`);
   if (r.coins) parts.push(`${r.coins} монет`);
+  if (r.sapphires) parts.push(sapphireText(r.sapphires));
   for (const [k, v] of Object.entries(r.items || {})) parts.push(`${name(k)} ×${v}`);
   return parts.join(', ');
 }

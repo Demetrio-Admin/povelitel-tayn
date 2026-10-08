@@ -192,31 +192,33 @@ console.log('\nБаза: сапфиры (v0.17.0)');
   ok(denied(q(`select * from public.sapphire_ledger;`, A)), 'журнал не читается напрямую');
   const s0 = JSON.parse(q(`select public.sync_player('{"wallet":{"sapphires":999,"welcome":true}}'::jsonb);`, A).out);
   ok(s0.wallet.sapphires === bal(A) && s0.wallet.sapphires < 999, 'sync_player не принимает кошелёк от клиента');
+  q(`select public._add_event('${A}', 'ch2_city_arrived');`);   // приветствие открывается приходом в город (v0.20.0)
   const w1 = act(A, { op: 'bank_welcome', id: 'sec-sapph-0001' });
   const w2 = act(A, { op: 'bank_welcome', id: 'sec-sapph-0002' });
-  ok(w1.action.ok && w1.action.amount === 3 && w1.wallet.sapphires === 3 && w2.action.reason === 'already' && bal(A) === 3, 'приветственные 3 сапфира — один раз');
-  const g1 = q(`select public.admin_grant_sapphires('${A}', 50, 'тестер', 'grant-1');`, 'service').out;
-  const g2 = q(`select public.admin_grant_sapphires('${A}', 50, 'тестер', 'grant-1');`, 'service').out;
-  ok(Number(g1) === 53 && Number(g2) === 53 && bal(A) === 53, 'выдача сервисом: повтор с тем же ref не начисляет второй раз');
+  ok(w1.action.ok && w1.action.amount === 30 && w1.wallet.sapphires === 30 && w2.action.reason === 'already' && bal(A) === 30, 'приветственные 30 сапфиров — один раз');
+  const g1 = q(`select public.admin_grant_sapphires('${A}', 500, 'тестер', 'grant-1');`, 'service').out;
+  const g2 = q(`select public.admin_grant_sapphires('${A}', 500, 'тестер', 'grant-1');`, 'service').out;
+  ok(Number(g1) === 530 && Number(g2) === 530 && bal(A) === 530, 'выдача сервисом: повтор с тем же ref не начисляет второй раз');
   ok(/bad_amount/.test(q(`select public.admin_grant_sapphires('${A}', -5, 'x', 'grant-neg');`, 'service').err), 'отрицательная выдача отклонена');
   // ускорение изучения
   q(`update public.player_progress set research = jsonb_build_object('upgradeId', 'seal_2', 'startedAt', (extract(epoch from now()) * 1000)::bigint, 'durationMs', 1800000) where user_id = '${A}';`);
   const sp = act(A, { op: 'research_speedup', chunks: 2, id: 'sec-sapph-0003' });
-  ok(sp.action.ok && sp.action.price === 2 && sp.action.cutMs === 1350000 && sp.research.durationMs === 450000, 'ускорение 30-минутного изучения: снято не больше 75% (22,5 мин), 2 шага — 2 сапфира');
-  ok(sp.research.fullMs === 1800000 && bal(A) === 51, 'полное время запомнено, сапфиры списаны');
+  ok(sp.action.ok && sp.action.price === 20 && sp.action.cutMs === 1350000 && sp.research.durationMs === 450000, 'ускорение 30-минутного изучения: снято не больше 75% (22,5 мин), 2 шага — 20 сапфиров');
+  ok(sp.research.fullMs === 1800000 && bal(A) === 510, 'полное время запомнено, сапфиры списаны');
   const sp2 = act(A, { op: 'research_speedup', chunks: 96, id: 'sec-sapph-0004' });
-  ok(sp2.action.ok === false && sp2.action.reason === 'limit' && bal(A) === 51, 'дальше нельзя: до нуля таймер не сокращается, сапфиры целы');
+  ok(sp2.action.ok === false && sp2.action.reason === 'limit' && bal(A) === 510, 'дальше нельзя: до нуля таймер не сокращается, сапфиры целы');
   const led = q(`select kind || ':' || delta || ':' || balance from public.sapphire_ledger where user_id = '${A}' order by id;`).out.split('\n');
-  ok(led.join(',') === 'welcome:3:3,admin:50:53,speedup:-2:51', `журнал: ${led.join(', ')}`);
+  ok(led.join(',') === 'welcome:30:30,admin:500:530,speedup:-20:510', `журнал: ${led.join(', ')}`);
   // пресеты и смена ветки за сапфиры
   const pu = act(A, { op: 'preset_unlock', id: 'sec-sapph-0005' });
-  ok(pu.action.ok && pu.action.slots === 2 && bal(A) === 21 && pu.objects.player_build.presetSlots === 2, 'второй пресет открыт за 30 сапфиров');
+  ok(pu.action.ok && pu.action.slots === 2 && bal(A) === 360 && pu.objects.player_build.presetSlots === 2, 'второй пресет открыт за 150 сапфиров');
   ok(act(A, { op: 'build_preset', mode: 'save', slot: 2, id: 'sec-sapph-0006' }).action.ok && act(A, { op: 'build_preset', mode: 'save', slot: 3, id: 'sec-sapph-0007' }).action.reason === 'locked', 'второй пресет сохраняется, третий закрыт');
   const rs = act(A, { op: 'respec', ability: 'telekinesis', branch: 'lord', pay: 'sapphires', id: 'sec-sapph-0008' });
-  ok(rs.action.ok && rs.action.currency === 'sapphires' && rs.action.price === 5 && bal(A) === 16 && rs.objects.player_build.branches.telekinesis === 'lord', 'смена ветки за 5 сапфиров');
+  ok(rs.action.ok && rs.action.currency === 'sapphires' && rs.action.price === 50 && bal(A) === 310 && rs.objects.player_build.branches.telekinesis === 'lord', 'смена ветки за 50 сапфиров');
   // «Новая игра» кошелёк не трогает
   q(`select public.reset_player('witch');`, A);
-  ok(bal(A) === 16 && JSON.parse(q(`select public.get_player();`, A).out).wallet.sapphires === 16, '«Новая игра» не обнуляет сапфиры');
+  ok(bal(A) === 310 && JSON.parse(q(`select public.get_player();`, A).out).wallet.sapphires === 310, '«Новая игра» не обнуляет сапфиры');
+  q(`select public._add_event('${A}', 'ch2_city_arrived');`);   // «Новая игра» стёрла события — снова пришли в город
   ok(act(A, { op: 'bank_welcome', id: 'sec-sapph-0009' }).action.reason === 'already', 'и приветствие после новой игры второй раз не выдаётся');
 }
 
@@ -246,7 +248,7 @@ console.log('\nБаза: торговец и улучшение амулетов
 
 console.log('\nБаза: новая игра');
 const r = JSON.parse(q(`select public.reset_player('witch');`, A).out);
-ok(r.level === 1 && !r.quests.length && !Object.keys(r.inventory).length && r.meta.nickname === NICK && r.meta.rev > a2.meta.rev, 'reset_player: прогресс с нуля, ник и аккаунт те же');
+ok(r.level === 1 && r.quests.every(e => e === 'balance_v30_applied') && !Object.keys(r.inventory).length && r.meta.nickname === NICK && r.meta.rev > a2.meta.rev, 'reset_player: прогресс с нуля, ник и аккаунт те же');
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Проверка базы пройдена');
 process.exit(failures ? 1 : 0);

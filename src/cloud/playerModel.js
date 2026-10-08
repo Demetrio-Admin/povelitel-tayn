@@ -575,6 +575,7 @@ function dailyDone(s, id, nowMs) {
   st.done = [...st.done, id];
   s.objects.daily = st;
   grant(s, offer.reward);
+  if (offer.reward.sapphires > 0) s.wallet = { ...walletOf(s.wallet), sapphires: walletOf(s.wallet).sapphires + offer.reward.sapphires };   // v0.32.0
   return { ok: true, offer: id };
 }
 

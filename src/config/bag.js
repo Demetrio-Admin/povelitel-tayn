@@ -2,7 +2,7 @@ import { RESOURCES, POTIONS, CRAFT_ITEMS } from './resources.js';
 
 // One unit of a resource or consumable takes one place. Story items, equipment
 // and currencies have their own storage and never prevent story progress.
-export const BAG = { initial: 100, increment: 50, price: 100, max: 1_000_000_000, version: 29 };
+export const BAG = { initial: 100, increment: 50, price: 300, max: 1_000_000_000, version: 29 };
 export const BAG_ITEMS = [...Object.keys(RESOURCES), ...Object.keys(POTIONS), ...Object.keys(CRAFT_ITEMS), 'crimson_ember', 'moonstone'];
 const counted = new Set(BAG_ITEMS);
 export const takesBagSpace = id => counted.has(id);
@@ -22,6 +22,6 @@ export const GIFT_PRICES = {
   storyTelekinesis: { coins: 150, sapphires: 0 },
   storyIce2: { coins: 500, sapphires: 0 },
   storyIce3: { coins: 1500, sapphires: 0 },
-  tier2: { coins: 2000, sapphires: 200 },
-  tier3: { coins: 10000, sapphires: 750 },
+  tier2: { coins: 2000, sapphires: 600 },
+  tier3: { coins: 10000, sapphires: 2000 },
 };

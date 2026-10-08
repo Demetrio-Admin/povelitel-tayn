@@ -77,6 +77,13 @@ const time = (s) =>
     hour: "2-digit",
     minute: "2-digit",
   });
+// Дата и время рядом с сообщением: «08.10 20:39» (с годом — если сообщение не этого года)
+const stampText = (s) => {
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return "";
+  const day = d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", ...(d.getFullYear() === new Date().getFullYear() ? {} : { year: "2-digit" }) });
+  return `${day} ${d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}`;
+};
 const icon = (i) => {
   const e = createElement(i);
   e.setAttribute("aria-hidden", "true");
@@ -835,9 +842,10 @@ export class ChatWindow {
       { symbol: RefreshCw, cls: "chat-button chat-older" },
     );
     this.feed.append(older);
-    if (!this.messages.length)
+    const visible = this.messages.filter((m) => !m.deleted);   // удалённые сообщения просто исчезают
+    if (!visible.length)
       this.feed.append(empty("Здесь ещё тихо. Начните разговор."));
-    this.messages.forEach((m) => this.feed.append(this.messageNode(m)));
+    visible.forEach((m) => this.feed.append(this.messageNode(m)));
     if (bottom || near) this.feed.scrollTop = this.feed.scrollHeight;
     else this.feed.scrollTop = oldTop + (this.feed.scrollHeight - oldHeight);
   }
@@ -868,7 +876,7 @@ export class ChatWindow {
         : null,
     );
     name.title = p.nickname;
-    const stamp = el("time", "chat-time", new Date(m.createdAt).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }));
+    const stamp = el("time", "chat-time", stampText(m.createdAt));
     stamp.dateTime = m.createdAt;
     stamp.title = `${time(m.createdAt)}${m.editedAt ? " · изменено" : ""}`;
     by.append(stamp);
@@ -1578,7 +1586,7 @@ export class ChatWindow {
       ),
     );
     s.append(info);
-    t.replies.forEach((r) => s.append(this.messageNode(r, { actions: false })));
+    t.replies.filter((r) => !r.deleted).forEach((r) => s.append(this.messageNode(r, { actions: false })));
     if (!t.own) {
       (t.notes || []).forEach((n) =>
         s.append(

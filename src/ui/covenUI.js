@@ -1,9 +1,11 @@
 import { showHeroProfile } from './heroProfileUI.js';
 // v0.25.0 — окно Ковенов (HTML поверх игры, как окна аккаунта: на телефоне так работает клавиатура для названия).
-// Без ковена: список ковенов (вступить) и «Основать ковен». В ковене: девиз, неделя (очки / цель), состав с ролями и действиями,
-// «Внести материалы», «Забрать награду недели», «Покинуть». Чат ковена — вкладка с его названием в окне чата.
+// Без ковена: список ковенов (вступить) и «Основать ковен». В ковене: девиз, цикл (очки / цель, сколько осталось, цель дальше),
+// награда цикла и пул сапфиров пятёрке лучших, итог прошлого цикла, состав с местами и действиями «Внести материалы»,
+// «Забрать награду цикла», «Забрать сапфиры», «Покинуть». Чат ковена — вкладка с его названием в окне чата.
 import { domEl as el, domOverlay as overlay } from './accountUI.js';
-import { COVENS, COVEN_ROLES } from '../config/covens.js';
+import { COVENS, COVEN_ROLES, covenRewardFor } from '../config/covens.js';
+import { sapphires as sapphireText } from '../systems/wallet.js';
 import { ITEMS } from '../config/balance.progression.js';
 import { covenReason } from '../cloud/CovenService.js';
 import { errorText, CloudError } from '../cloud/api.js';
@@ -37,6 +39,10 @@ const CSS = `
 .cov-give button{flex:1}
 .cov-motto input{flex:1;width:100%}
 .cov-claim{width:100%}
+.cov-pool{margin:10px 0 12px;padding:10px 12px;border:1px solid #6fa8ff66;border-radius:10px;background:#12203055}
+.cov-pool b{color:#9cc4ff;font-size:16px}
+.cov-pool small{display:block;color:#cfbea3;font-size:13px;line-height:1.45;margin-top:4px}
+.cov-payout{margin:0 0 14px}
 .cov-footer{flex-direction:row;flex-wrap:wrap;border-top:1px solid #b8923c44;padding-top:14px}
 .cov-footer button{flex:1;min-width:110px}
 `;
@@ -48,7 +54,7 @@ const errText = (e) => (e instanceof CloudError ? (e.code === 'chat_unavailable'
 
 /**
  * @param service CovenService
- * @param game { item(id) → сколько в сумке, give(item, qty) → ответ сервера, claim() → ответ, onChange() }
+ * @param game { item(id) → сколько в сумке, give(item, qty) → ответ сервера, claim() → ответ, payout() → ответ, onChange() }
  */
 export function showCovens(service, game, { onClose } = {}) {
   ensureCss();
@@ -81,7 +87,7 @@ export function showCovens(service, game, { onClose } = {}) {
     const items = el('div', { class: 'cov-list' });
     for (const c of list?.covens || []) {
       items.append(el('div', { class: 'cov-item' },
-        el('div', { class: 'grow' }, el('b', { text: c.name }), el('small', { text: `${c.members} из ${list.maxMembers} · неделя: ${c.points} очков${c.motto ? ' · ' + c.motto : ''}` })),
+        el('div', { class: 'grow' }, el('b', { text: c.name }), el('small', { text: `${c.members} из ${list.maxMembers} · цикл: ${c.points}${c.goal ? ' / ' + c.goal : ''} очков${c.motto ? ' · ' + c.motto : ''}` })),
         btn('Вступить', async () => { const r = await run(() => service.request('join', { coven: c.id })); if (r) refresh('Вы вступили в ковен.'); })));
     }
     if (!items.children.length) items.append(el('div', { class: 'cov-empty' },
@@ -110,6 +116,8 @@ export function showCovens(service, game, { onClose } = {}) {
     const pct = Math.min(100, Math.round((c.points / c.goal) * 100));
     const canManage = c.myRole === 'leader';
     const members = el('div', { class: 'cov-list' });
+    // место в пятёрке: набран минимум вклада и место не ниже размера пятёрки (пока цикл идёт — это прогноз)
+    const top = (m) => m.qualified && m.rank <= (c.topSize || COVENS.top.size) && (c.shares?.[m.rank - 1] || 0) > 0;
     for (const m of c.members) {
       const acts = [];
       if (!m.me && canManage && m.role === 'member') acts.push(btn('Советник', () => act('promote', m.ref)));
@@ -117,7 +125,7 @@ export function showCovens(service, game, { onClose } = {}) {
       if (!m.me && canManage) acts.push(btn('Главой', () => act('transfer', m.ref)));
       if (!m.me && (canManage || (c.myRole === 'officer' && m.role === 'member'))) acts.push(btn('Исключить', () => act('kick', m.ref), 'danger'));
       members.append(el('div', { class: 'cov-item' },
-        el('div', { class: 'grow' }, m.playerId ? btn(m.nickname + (m.me ? ' (вы)' : ''), () => showHeroProfile({ session: service.session, state: service.session.state, targetId: m.playerId }), 'link') : el('b', { text: m.nickname + (m.me ? ' (вы)' : '') }), el('small', { text: `${COVEN_ROLES[m.role]} · вклад недели: ${m.given}` })), ...acts));
+        el('div', { class: 'grow' }, m.playerId ? btn(m.nickname + (m.me ? ' (вы)' : ''), () => showHeroProfile({ session: service.session, state: service.session.state, targetId: m.playerId }), 'link') : el('b', { text: m.nickname + (m.me ? ' (вы)' : '') }), el('small', { text: `${COVEN_ROLES[m.role]} · вклад: ${m.given} оч.${top(m) ? ` · место ${m.rank} (пятёрка, ${sapphireText(c.shares?.[m.rank - 1] || 0)})` : (m.given > 0 && !m.qualified ? ` · до пятёрки не хватает ${c.minGiven - m.given} оч.` : '')}` })), ...acts));
     }
     // материалы
     const sel = el('select', { 'aria-label': 'Материал для ковена' }, ...Object.entries(COVENS.points).map(([id, p]) => el('option', { value: id, text: `${ITEMS[id]?.name || id} (${game.item(id)}) · ${p} оч.` })));
@@ -126,29 +134,52 @@ export function showCovens(service, game, { onClose } = {}) {
       const r = await run(() => game.give(sel.value, Math.floor(Number(qty.value) || 0)));
       if (r) { game.onChange?.(); refresh(`Внесено: +${r.points} очков ковену.`); }
     }, 'primary'));
-    const claim = btn(c.claimed ? 'Награда недели получена' : 'Забрать награду недели', async () => {
+    const claim = btn(c.claimed ? 'Награда цикла получена' : 'Забрать награду цикла', async () => {
       const r = await run(() => game.claim());
-      if (r) { game.onChange?.(); refresh('Награда недели получена!'); }
+      if (r) { game.onChange?.(); refresh('Награда цикла получена!'); }
     }, 'cov-claim' + (c.points >= c.goal && c.myGiven >= c.minGiven && !c.claimed ? ' primary' : ''));
     if (c.claimed) claim.disabled = true;
     const motto = el('input', { type: 'text', maxlength: '80', value: c.motto, 'aria-label': 'Девиз ковена' });
     const mottoRow = (c.myRole === 'leader' || c.myRole === 'officer')
       ? el('div', { class: 'cov-give cov-motto' }, motto, btn('Сохранить девиз', async () => { const r = await run(() => service.request('motto', { motto: motto.value })); if (r) refresh('Девиз обновлён.'); }))
       : null;
-    const ends = new Date(c.weekEnds);
-    const rewards = el('div', { class: 'cov-rewards', 'aria-label': 'Награда недели' },
-      ...Object.entries({ coins: COVENS.reward.coins, ...COVENS.reward.items }).map(([id, amount]) =>
+    const ends = new Date(c.cycleEnds || c.weekEnds);
+    const left = Math.max(0, ends.getTime() - Date.now()), hours = Math.floor(left / 3_600_000);
+    const leftText = hours >= 24 ? `${Math.floor(hours / 24)} д ${hours % 24} ч` : `${hours} ч`;
+    const reward = covenRewardFor(c.goal);
+    const rewards = el('div', { class: 'cov-rewards', 'aria-label': 'Награда цикла' },
+      ...Object.entries({ coins: reward.coins, ...reward.items }).map(([id, amount]) =>
         el('span', { class: 'cov-reward', title: `${ITEMS[id].name}: ${amount}`, 'aria-label': `${ITEMS[id].name}: ${amount}` },
           el('img', { src: `${import.meta.env?.BASE_URL || './'}${ASSET_FILES[ITEMS[id].icon]}`, alt: '' }), el('b', { text: String(amount) }))));
+    const places = (c.shares || []).map((v, i) => `${i + 1} место — ${v}`).join(' · ');
+    // поля пула, мест и лестницы приходят от сервера с миграцией 20261008; пока её нет, эти строки просто не показываются
+    const pool = c.pool != null ? el('div', { class: 'cov-pool' },
+      el('b', { text: `Пул сапфиров пятёрке лучших: ${c.pool}` }),
+      el('small', { text: `Если цель цикла будет выполнена, лучшие по вкладу делят пул: ${places}. В пятёрку попадают те, кто внёс не меньше ${c.minGiven} оч.` })) : null;
+    const last = c.last
+      ? el('p', { class: 'acc-note', text: c.last.success
+        ? `Прошлый цикл: цель ${c.last.goal} выполнена (${c.last.points}), пул ${c.last.pool} сапфиров.`
+        : `Прошлый цикл: цель ${c.last.goal} не выполнена (${c.last.points}).` }) : null;
+    const pays = c.payouts || [];
+    const payTotal = pays.reduce((n, p) => n + p.amount, 0);
+    const payout = pays.length ? el('div', { class: 'cov-payout' },
+      el('p', { class: 'acc-note', text: `Вы вошли в пятёрку лучших: ${pays.map((p) => `${p.rank} место — ${sapphireText(p.amount)}`).join(', ')}. Забрать можно в течение ${COVENS.top.claimDays} суток после цикла.` }),
+      btn(`Забрать ${sapphireText(payTotal)}`, async () => {
+        const r = await run(() => game.payout());
+        if (r) { game.onChange?.(); refresh(`Получено: ${sapphireText(r.amount)}.`); }
+      }, 'primary cov-claim')) : null;
     card.replaceChildren(
       el('h2', { text: c.name }),
       el('p', { class: 'acc-sub', text: (c.motto || 'Без девиза') + ` · вы — ${COVEN_ROLES[c.myRole].toLowerCase()}` }),
       el('div', { class: 'cov-week' },
-        el('div', { class: 'acc-kv' }, el('span', { text: 'Цель недели' }), el('b', { text: `${c.points} / ${c.goal}` })),
-        el('div', { class: 'cov-bar', role: 'progressbar', 'aria-label': 'Цель недели', 'aria-valuemin': '0', 'aria-valuemax': String(c.goal), 'aria-valuenow': String(c.points) }, el('div', { style: `width:${pct}%` })),
-        el('p', { class: 'cov-deadline', text: `До ${ends.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}` }),
-        rewards,
-        el('p', { class: 'acc-note', text: `Ваш вклад: ${c.myGiven} оч. Для награды нужно не меньше ${c.minGiven} оч. и выполненная цель ковена.` })),
+        el('div', { class: 'acc-kv' }, el('span', { text: 'Цель цикла' }), el('b', { text: `${c.points} / ${c.goal}` })),
+        el('div', { class: 'cov-bar', role: 'progressbar', 'aria-label': 'Цель цикла', 'aria-valuemin': '0', 'aria-valuemax': String(c.goal), 'aria-valuenow': String(c.points) }, el('div', { style: `width:${pct}%` })),
+        el('p', { class: 'cov-deadline', text: `Цикл ${c.cycleDays || COVENS.cycle.days} дня · до ${ends.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}, осталось ${leftText}` }),
+        ...(c.goalUp != null ? [el('p', { class: 'acc-note', text: `Цель следующего цикла: ${c.goalUp}, если выполните эту; ${c.goalDown}, если нет.` })] : []),
+        rewards, ...(pool ? [pool] : []),
+        el('p', { class: 'acc-note', text: `Ваш вклад: ${c.myGiven} оч.${c.myRank ? ` · место ${c.myRank} из ${c.members.length}` : ''}. Для награды нужно не меньше ${c.minGiven} оч. и выполненная цель ковена.` }),
+        ...(last ? [last] : [])),
+      ...(payout ? [payout] : []),
       el('h3', { text: 'Внести материалы' }),
       el('p', { class: 'acc-note', text: `Материалы списываются из сумки. Завершённое поручение доски даёт ещё ${COVENS.dailyPoints} очков ковену.` }),
       give, claim,

@@ -671,6 +671,7 @@ export class UIScene extends Phaser.Scene {
       item: (id) => services.state.item(id),
       give: (item, qty) => services.actions.covenGive(item, qty),
       claim: () => services.actions.covenClaim(),
+      payout: () => services.actions.covenPayout(),
       onChange: () => this.refreshHud?.(),
     }, {
       onClose: () => {

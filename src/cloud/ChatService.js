@@ -28,6 +28,7 @@ export const isDeveloper = (p) => rankOf(p) >= 3;
 export const isModerator = (p) => policyReady(p) ? rankOf(p) >= 1 : isAdmin(p) || p?.roles?.includes("moderator");
 export const isSupport = (p) => policyReady(p) ? rankOf(p) >= 2 : isAdmin(p) || p?.roles?.includes("support");
 export const canManage = (actor, target) => actor?.ref !== target?.ref && rankOf(actor) > rankOf(target) && !isOwner(target);
+export const canManageResources = (actor, target) => isDeveloper(actor) && (canManage(actor, target) || (isOwner(actor) && actor?.ref === target?.ref));
 export const textLength = (s) => Array.from(s.normalize("NFC")).length;
 
 /** One token lifecycle, memory-only drafts, idempotent retry, permission refresh on every poll. */

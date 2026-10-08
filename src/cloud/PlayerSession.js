@@ -125,11 +125,13 @@ export class PlayerSession {
   // ---------------------------------------------------------------- загрузка игрока
   _applyServer(raw) {
     const { snapshot, meta } = fillDefaults(raw);
+    const staffUpdate = this.base && (this.meta.supportRevision || '0') !== (meta.supportRevision || '0');
     this.base = snapshot;
     this.meta = meta;
     this.state.setData(fromSnapshot(snapshot, this.state.data));
     this.state.data.vitalsClock = this.now();
     this.emit('profile');
+    if (staffUpdate) this.emit('staff-update');
   }
 
   async _loadPlayer(hero) {
@@ -366,7 +368,7 @@ export class PlayerSession {
       this._setSaving('saving');
       let raw;
       try {
-        raw = await this._authed(t => this.api.syncPlayer(t, { ...patch, id }, { keepalive }));
+        raw = await this._authed(t => this.api.syncPlayer(t, { ...patch, id, supportRevision: this.meta.supportRevision || '0' }, { keepalive }));
       } catch (e) {
         this.lastError = e;
         if (isNetworkError(e)) { this._goOffline(); return false; }
@@ -378,13 +380,16 @@ export class PlayerSession {
         return false;
       }
       // пока ждали ответа, игра могла ещё что-то изменить — кладём это поверх ответа сервера
-      const later = diffSnapshots(sent, toSnapshot(this.state.data));
+      let later = diffSnapshots(sent, toSnapshot(this.state.data));
       const { snapshot, meta } = fillDefaults(raw);
+      const staffUpdate = (this.meta.supportRevision || '0') !== (meta.supportRevision || '0');
+      if (staffUpdate) later = null;
       this.base = snapshot;
       this.meta = { ...this.meta, ...meta };
       this.inflight = null;
       this._adopt(snapshot, later);
       this._backOnline();
+      if (staffUpdate) this.emit('staff-update');
       // отправленный снимок сделан уже внутри этого вызова — всё, что было до flush(), на сервере
       if (!resend || isEmpty(later)) {
         this._setSaving('saved');
@@ -441,12 +446,15 @@ export class PlayerSession {
     }
     if (!raw) return { ok: false, reason: 'server', error: { rpc, code: 'empty_response', status: 200 } };
     // пока ждали, игра могла что-то изменить (HP и ману задаёт сервер)
-    const later = diffSnapshots(sent, toSnapshot(this.state.data));
+    let later = diffSnapshots(sent, toSnapshot(this.state.data));
     const { snapshot, meta, action: res } = fillDefaults(raw);
+    const staffUpdate = (this.meta.supportRevision || '0') !== (meta.supportRevision || '0');
+    if (staffUpdate) later = null;
     this.base = snapshot;
     this.meta = { ...this.meta, ...meta };
     this._adopt(snapshot, later);
-    if (Object.keys(later).length) this.onStateSaved();
+    if (staffUpdate) this.emit('staff-update');
+    if (!isEmpty(later)) this.onStateSaved();
     if (res?.duplicate) return res;      // v0.10: сервер вернул сохранённый результат первой попытки
     if (res?.reason === 'duplicate') {   // ответ на первую попытку потерялся (действие до v0.10): итог видно по состоянию
       const ok = act?.op === 'heal' ? snapshot.hp === maxVitals(snapshot.level).hp : snapshot.quests.includes(STARTER_KIT.event);

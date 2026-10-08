@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {AdminService} from '../src/admin/AdminService.js';
+import {CloudError} from '../src/cloud/api.js';
+import {PlayerSession} from '../src/cloud/PlayerSession.js';
+import {GameState} from '../src/state/GameState.js';
+import {toSnapshot} from '../src/cloud/playerModel.js';
+let fail=true,calls=[];
+const session={userId:'owner',_authed:fn=>fn('shared-token'),api:{rpc:async(name,args,token)=>{calls.push({name,args,token});if(fail)throw new CloudError('network','Lost response');return {ok:true};}}};
+const s=new AdminService(session),args={playerId:'7',revision:'1',changes:[{item:'coins',delta:3}],reason:''};
+await assert.rejects(()=>s.mutate('resources',args),/Lost response/);const id=calls[0].args.request_id;
+await assert.rejects(()=>s.mutate('resources',{...args,playerId:'8'}),/Предыдущее/);fail=false;await s.mutate('resources',args);assert.equal(calls[1].args.request_id,id);assert.equal(calls[1].token,'shared-token');assert.equal(s.pending,null);
+const st=new GameState(),ps=new PlayerSession({api:{enabled:true},state:st,storage:null});let corrected=0;ps.onChange(r=>{if(r==='staff-update')corrected++;});ps._applyServer({...toSnapshot(st.data),meta:{supportRevision:'0'}});ps._applyServer({...toSnapshot(st.data),pos:{x:1200,y:4416},meta:{supportRevision:'1'}});assert.equal(corrected,1);assert.deepEqual(toSnapshot(st.data).pos,{x:1200,y:4416});
+console.log('✓ Admin service: shared auth, uncertain-response retry ID, changed payload blocked, support-update event');

@@ -13,6 +13,21 @@ export class CloudError extends Error {
 
 // Тексты для игрока. Технические ответы сервера сюда не попадают.
 const RU = {
+  admin_forbidden: 'Ваша роль не позволяет выполнить это действие.',
+  admin_not_found: 'Игрок или операция не найдены.',
+  admin_conflict: 'Игрок изменился. Обновите данные и повторите проверку.',
+  admin_request_reused: 'Этот запрос уже использован для другого изменения.',
+  admin_invalid_request: 'Проверьте ресурс, количество и параметры изменения.',
+  admin_invalid_reason: 'Причина может содержать до 300 символов.',
+  admin_balance: 'Недостаточно ресурсов или превышен предел количества.',
+  admin_in_combat: 'Сначала завершите активный бой.',
+  admin_checkpoint_locked: 'Эта точка ещё недоступна игроку.',
+  admin_no_proof: 'Нет подтверждения, что игрок открыл этот дар.',
+  admin_no_change: 'Дар уже соответствует подтверждённому уровню.',
+  admin_no_research: 'У игрока нет активного изучения.',
+  admin_not_restorable: 'Это изменение уже отменено или не допускает отмену.',
+  admin_restore_conflict: 'После этой операции персонаж изменился. Автоматическая отмена недоступна.',
+
   game_banned: 'Доступ к игре ограничен. Вы можете обратиться в поддержку.',
   chat_forbidden: 'У вас нет прав на это действие.',
   chat_protected: 'Этот сотрудник защищён от изменения вашим набором прав.',
@@ -51,6 +66,7 @@ export function mapError(status, body) {
   const msg = String(body?.msg || body?.message || body?.error_description || body?.error || '').toLowerCase();
   const code = String(body?.error_code || body?.code || '').toLowerCase();
   if (msg === 'game_banned') return 'game_banned';
+  if (msg.startsWith('admin_') && Object.hasOwn(RU, msg)) return msg;
   if (msg.startsWith('chat_') && Object.hasOwn(RU, msg)) return msg;
   if (code === 'pgrst202' || code === '42883') return 'chat_unavailable';
   if (status === 429 || code.includes('rate_limit') || code === 'over_request_rate_limit') return 'rate_limited';

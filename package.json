@@ -1,6 +1,6 @@
 {
   "name": "koldovstvo-magical-rpg",
-  "version": "0.34.4",
+  "version": "0.35.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -39,7 +39,9 @@
     "test:profile": "node tests/hero-profile-test.mjs",
     "test:profile:browser": "node tests/e2e/hero-profile.mjs",
     "test:shop": "node tests/shop-bag-combat-test.mjs",
-    "test:shop:browser": "node tests/e2e/shop.mjs"
+    "test:shop:browser": "node tests/e2e/shop.mjs",
+    "test:admin": "node tools/build-admin-config.mjs --check && node tests/admin-service-test.mjs && node tests/admin-db-test.mjs",
+    "test:admin:browser": "node tests/e2e/admin.mjs"
   },
   "dependencies": {
     "@fontsource/philosopher": "^5.2.8",

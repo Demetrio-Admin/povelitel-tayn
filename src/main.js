@@ -50,9 +50,13 @@ const config = {
 };
 
 // Шрифт интерфейса грузится до старта игры (макс. 2 с), иначе Canvas нарисует текст запасным шрифтом навсегда.
+if (new URLSearchParams(location.search).has('admin')) location.replace(new URL('admin.html', location.href).toString());
+else {
 showLoadingScreen();
 loadUIFont().then(() => {
   const game = new Phaser.Game(config);
   window.__game = game;
   game.events.once(Phaser.Core.Events.READY, () => bindBrowserViewport(game, document.getElementById('game')));
 });
+
+}

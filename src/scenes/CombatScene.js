@@ -2,6 +2,7 @@ import { enemyCaption } from '../config/enemyRanks.js';
 import Phaser from 'phaser';
 import { duelEnemyDef, leagueOf } from '../config/duel.js';
 import { duelStateOf } from '../cloud/playerModel.js';
+import { sapphires as sapphireText } from '../systems/wallet.js';
 import { VIEW, COLORS, DEPTH } from '../config/game.config.js';
 import { bindSceneViewport } from '../ui/viewport.js';
 import { ENEMY_SPAWNS } from '../config/world.layout.js';
@@ -776,6 +777,7 @@ export class CombatScene extends Phaser.Scene {
       ];
       if (g.heroXP) lines.push(`+${g.heroXP} опыта`);
       if (g.items?.coins) lines.push(`+${g.items.coins} монет`);
+      if (r?.promoSapphires > 0) lines.push(`Новая лига — «${leagueOf(st.best).name}»! +${sapphireText(r.promoSapphires)}`);   // v0.34.0
       lines.push('', 'Дуэль — арена: здоровье после боя не теряется.');
       this.bus.emit(MSG.DIALOG, {
         title: out === 'victory' ? 'Победа в Дуэли!' : 'Поражение в Дуэли', color: out === 'victory' ? COLORS.gold : COLORS.danger, text: lines.join('\n'),

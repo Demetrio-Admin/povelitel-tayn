@@ -2873,8 +2873,27 @@ var DUEL = {
   season: { startMs: Date.UTC(2026, 9, 5), lengthDays: 28 },
   matchWindow: 200,
   // соперник ищется в этом окне рейтинга, дальше — ближайший
-  reward: { victory: { coins: 30, heroXP: 20 }, defeat: { coins: 10 } }
+  reward: { victory: { coins: 30, heroXP: 20 }, defeat: { coins: 10 } },
+  // v0.34.0: сапфиры арены. Итог сезона — по лиге на момент его конца (нужно не меньше minBattles боёв в этом сезоне);
+  // бонус за новую лигу выдаётся один раз за всё время (по лучшему рейтингу сезона). Выдача идемпотентна: ключи arena:<сезон> и league:<лига>.
+  sapphires: {
+    minBattles: 5,
+    season: { bronze: 10, silver: 20, gold: 40, platinum: 60, diamond: 90, master: 120, legend: 150 },
+    promo: { silver: 10, gold: 20, platinum: 30, diamond: 50, master: 70, legend: 100 },
+    // лучшие игроки сезона (по итоговому рейтингу, при равенстве — по победам): сапфиры за 1-е, 2-е, 3-е место; нужен тот же минимум боёв.
+    // Забирается в следующем сезоне (таблица прошлого сезона после этого уже не сравнима) — при «Вызове», итоге боя или открытии окна Дуэли.
+    top: [200, 100, 50]
+  }
 };
+var LEAGUES = [
+  { id: "bronze", name: "\u0411\u0440\u043E\u043D\u0437\u0430", from: 0 },
+  { id: "silver", name: "\u0421\u0435\u0440\u0435\u0431\u0440\u043E", from: 1100 },
+  { id: "gold", name: "\u0417\u043E\u043B\u043E\u0442\u043E", from: 1250 },
+  { id: "platinum", name: "\u041F\u043B\u0430\u0442\u0438\u043D\u0430", from: 1400 },
+  { id: "diamond", name: "\u0410\u043B\u043C\u0430\u0437", from: 1550 },
+  { id: "master", name: "\u041C\u0430\u0441\u0442\u0435\u0440", from: 1700 },
+  { id: "legend", name: "\u0412\u044B\u0441\u0448\u0430\u044F \u043B\u0438\u0433\u0430", from: 1850 }
+];
 function ratingDelta(my, opp, win) {
   const expected = 1 / (1 + 10 ** ((opp - my) / 400));
   return Math.round(DUEL.k * ((win ? 1 : 0) - expected));
@@ -2929,7 +2948,9 @@ function duelRules() {
     seasonStartMs: DUEL.season.startMs,
     seasonMs: DUEL.season.lengthDays * DUEL.dayMs,
     matchWindow: DUEL.matchWindow,
-    reward: DUEL.reward
+    reward: DUEL.reward,
+    leagues: LEAGUES.map((l) => ({ id: l.id, from: l.from })),
+    sapphires: DUEL.sapphires
   };
 }
 

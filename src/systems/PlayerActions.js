@@ -184,5 +184,6 @@ export class PlayerActions {
   covenGive(item, qty) { return this.run({ op: 'coven_give', item, qty }); }   // v0.25.0: материалы в цель недели ковена
   covenClaim() { return this.run({ op: 'coven_claim' }); }
   covenPayout() { return this.run({ op: 'coven_payout' }); }   // v0.33.0: сапфиры пятёрке лучших за прошлые циклы
+  duelSeason() { return this.run({ op: 'duel_season' }); }   // v0.34.0: награда сапфирами за прошлый сезон арены (забирается при открытии окна)
   duelStart() { return this.run({ op: 'duel_start', balanceVersion: 30 }); }   // v0.26.0: вызов на Дуэль (соперника подбирает сервер)
 }

@@ -16,6 +16,16 @@ export const DUEL = {
   season: { startMs: Date.UTC(2026, 9, 5), lengthDays: 28 },
   matchWindow: 200,                // соперник ищется в этом окне рейтинга, дальше — ближайший
   reward: { victory: { coins: 30, heroXP: 20 }, defeat: { coins: 10 } },
+  // v0.34.0: сапфиры арены. Итог сезона — по лиге на момент его конца (нужно не меньше minBattles боёв в этом сезоне);
+  // бонус за новую лигу выдаётся один раз за всё время (по лучшему рейтингу сезона). Выдача идемпотентна: ключи arena:<сезон> и league:<лига>.
+  sapphires: {
+    minBattles: 5,
+    season: { bronze: 10, silver: 20, gold: 40, platinum: 60, diamond: 90, master: 120, legend: 150 },
+    promo: { silver: 10, gold: 20, platinum: 30, diamond: 50, master: 70, legend: 100 },
+    // лучшие игроки сезона (по итоговому рейтингу, при равенстве — по победам): сапфиры за 1-е, 2-е, 3-е место; нужен тот же минимум боёв.
+    // Забирается в следующем сезоне (таблица прошлого сезона после этого уже не сравнима) — при «Вызове», итоге боя или открытии окна Дуэли.
+    top: [200, 100, 50],
+  },
 };
 
 // Лиги — рабочие границы для Сезона 0 (§30: окончательные — после тестов)
@@ -28,6 +38,9 @@ export const LEAGUES = [
   { id: 'master', name: 'Мастер', from: 1700 },
   { id: 'legend', name: 'Высшая лига', from: 1850 },
 ];
+/** Сапфиры за итог сезона по лиге (0 — не положено) и за первое достижение лиги. */
+export const seasonSapphires = (leagueId) => DUEL.sapphires.season[leagueId] || 0;
+export const promoSapphires = (leagueId) => DUEL.sapphires.promo[leagueId] || 0;
 export const leagueOf = (rating) => [...LEAGUES].reverse().find((l) => rating >= l.from) || LEAGUES[0];
 
 /** Номер сезона по времени (0 — первый). */
@@ -96,5 +109,6 @@ export function duelEnemyDef(opp) {
 /** Для сервера (_game_rules). */
 export function duelRules() {
   return { requires: DUEL.requires, attemptsPerDay: DUEL.attemptsPerDay, baseRating: DUEL.baseRating, k: DUEL.k, dayMs: DUEL.dayMs,
-    seasonStartMs: DUEL.season.startMs, seasonMs: DUEL.season.lengthDays * DUEL.dayMs, matchWindow: DUEL.matchWindow, reward: DUEL.reward };
+    seasonStartMs: DUEL.season.startMs, seasonMs: DUEL.season.lengthDays * DUEL.dayMs, matchWindow: DUEL.matchWindow, reward: DUEL.reward,
+    leagues: LEAGUES.map((l) => ({ id: l.id, from: l.from })), sapphires: DUEL.sapphires };
 }

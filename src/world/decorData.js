@@ -59,9 +59,27 @@ export function expeditionForestDecor(loc) {
   return props;
 }
 
+// v0.34.3: авторский декор раньше был целиком проходимым (solid: null) — герой шёл сквозь жителей, фонари, надгробия, бочки и ели.
+// Теперь у «стоячих» предметов и людей есть след у основания (прямоугольник у ног, центр по x). Плоское (ковры, следы, цветы,
+// вывески на стенах, пучки трав) и лес-заполнитель остаются проходимыми. Явное d.solid (в том числе null) важнее таблицы.
+const PEOPLE = { w: 30, h: 14 };
+export const DECOR_SOLID = {
+  city_resident_man: PEOPLE, city_resident_woman: PEOPLE, city_patient_miron: PEOPLE,
+  city_lamp_01: { w: 16, h: 10 },
+  tree_frost_01: { w: 34, h: 18 }, tree_frost_02: { w: 34, h: 18 },
+  dead_tree_grey_01: { w: 30, h: 16 },
+  gravestone_01: { w: 40, h: 14 }, gravestone_02: { w: 44, h: 14 },
+  campfire_01: { w: 50, h: 24 },
+  plant_pot_01: { w: 30, h: 14 },
+  city_barrel: { w: 44, h: 18 }, city_crate: { w: 56, h: 20 },
+  city_equipment: { w: 100, h: 24 },
+  rune_slab_01: { w: 70, h: 20 },
+  bush_02: { w: 48, h: 22 },
+};
 const decor = (d) => ({
   ...d, f: d.flip ? 1 : 0, s: d.scale || 1,
-  l: d.ground ? 'room-floor' : d.floor ? 'floor' : 'main', solid: null,
+  l: d.ground ? 'room-floor' : d.floor ? 'floor' : 'main',
+  solid: d.fill ? null : Object.hasOwn(d, 'solid') ? d.solid : (DECOR_SOLID[d.k] ?? null),
 });
 const city = [...cityForestDecor().map(d => decor({ ...d, fill: true }))];
 for (const x of [2425, 3535]) for (const y of [1660,1840,2280,2460,3160,3360,3860,4020,4800,4960]) {

@@ -52,7 +52,7 @@ export const CONTENT_INTERACTIVES = [
   { id: 'npc_goran', kind: 'npc', npc: 'goran', x: 1410, y: 3950, texture: 'npc_goran', collide: { w: 32, h: 14 }, radius: 110 },
 
   // ================================================================== АЛТАРЬ (зона E)
-  { id: 'npc_selena', kind: 'npc', npc: 'selena', x: 1300, y: 2295, texture: 'npc_selena', radius: 120, elevated: 26 },
+  { id: 'npc_selena', kind: 'npc', npc: 'selena', x: 1300, y: 2295, texture: 'npc_selena', collide: { w: 30, h: 14 }, radius: 120, elevated: 26 },
   { id: 'rune_sigil', kind: 'gather', res: 'rune_dust', amount: 1, respawnSec: 240, x: 1360, y: 2110, texture: 'rune_sigil_01', radius: 95,
     gatherText: 'Пыль осыпалась с рунной плиты.' },
   // лёгкая плита: сдвинуть Телекинезом → под ней пыль (источник «Телекинез»)
@@ -61,7 +61,7 @@ export const CONTENT_INTERACTIVES = [
     hiddenReward: { spawnPickup: { item: 'rune_dust', amount: 2, texture: 'icon_dust' } } },
   { id: 'herb_a1', kind: 'gather', res: 'moon_herb', amount: 1, respawnSec: 150, x: 1050, y: 2650, texture: 'moon_herb_01', radius: 90 },
   { id: 'resin_a1', kind: 'gather', res: 'tree_resin', amount: 1, respawnSec: 200, x: 960, y: 2820, texture: 'resin_log_01', collide: { w: 56, h: 18 }, radius: 100 },
-  { id: 'crystal_a1', kind: 'gather', res: 'lunar_shard', amount: 1, respawnSec: 420, x: 1450, y: 2400, texture: 'field_crystal', radius: 100,
+  { id: 'crystal_a1', kind: 'gather', res: 'lunar_shard', amount: 1, respawnSec: 420, x: 1450, y: 2400, texture: 'field_crystal', collide: { w: 60, h: 20 }, radius: 100,
     gatherText: 'Кристалл лунного света дал осколок.' },
   { id: 'mush_a1', kind: 'gather', res: 'forest_mushroom', amount: 1, respawnSec: 200, x: 580, y: 2880, texture: 'mushrooms_brown_01', radius: 90 },
 

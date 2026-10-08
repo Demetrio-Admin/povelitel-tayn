@@ -76,12 +76,38 @@ ok(!board.top.some(r => r.nickname === `duelC_${SUF}`), 'кто не сража�
 ok(/permission denied|not_authenticated/.test(q(`set role anon; select public.duel_board();`).err), 'без входа — нет');
 ok(!J(q(`select public.sync_player('{"objects":{"duel":{"rating":9999,"season":0}}}');`, A)).objects.duel?.rating === 9999 || J(q(`select public.get_player();`, A)).objects.duel.rating === 1016, 'рейтинг клиентом не пишется');
 
-// ---------------------------------------------------------------- v0.34.0: сапфиры арены
-console.log('\nДуэль: сапфиры арены');
+console.log('\nДуэль: сапфиры арены (общее)');
 const cur = seasonOf(Date.now());
 const sap = (u) => Number(q(`select coalesce((select sapphires from public.player_wallet where user_id = '${u}'), 0);`).out);
 const setDuel = (u, patch) => q(`update public.player_world set data = data || '${esc(patch)}'::jsonb where user_id = '${u}' and kind = 'object' and key = 'duel';`);
+const refsOf = (u) => q(`select coalesce(string_agg(ref, ',' order by ref), '') from public.sapphire_ledger where user_id = '${u}' and ref like 'arena%';`).out;
 const refs = (u) => q(`select coalesce(string_agg(ref, ',' order by ref), '') from public.sapphire_ledger where user_id = '${u}' and (ref like 'arena:%' or ref like 'league:%');`).out;
+
+// ---------------------------------------------------------------- v0.34.1: награда лучшим игрокам сезона (топ-3)
+console.log('\nДуэль: лучшие игроки сезона');
+const mk = (n) => { const u = randomUUID(); q(`insert into auth.users (id) values ('${u}');`); q(`select public.create_player('witch');`, u);
+  q(`select public.claim_nickname('${u}', '${n}_${SUF}', '${(n + '_' + SUF).toLowerCase()}');`); grantPg(u, { xp: 100, quests: ['chapter_2_complete'] }); return u; };
+const T = ['t1', 't2', 't3', 't4', 't5', 't6'].map(mk);
+const prevS = { season: cur - 1, wins: 6, losses: 0 };
+// рейтинги выше всех остальных игроков базы; t5 играл мало (4 боя) — в таблицу не входит; t6 — прошлый сезон не предыдущий (cur - 2)
+// (тестовая база) итоги того же сезона от прошлых прогонов в таблицу не попадают
+q(`delete from public.player_world where kind = 'object' and key = 'duel' and ((data ->> 'season')::numeric = ${cur - 1} or (data -> 'prev' ->> 'season')::numeric = ${cur - 1});`);
+q(`insert into public.player_world (user_id, kind, key, data) values ${T.map((u, i) => `('${u}', 'object', 'duel', '${esc({ ...prevS, rating: [9100, 9000, 8900, 8800, 9500, 9999][i], ...(i === 4 ? { wins: 4 } : {}), ...(i === 5 ? { season: cur - 2 } : {}) , best: 9999, d: 0, used: 0 })}')`).join(',')};`);
+const c = (u) => act(u, { op: 'duel_season' }).action.reward;
+// t1 сначала «Вызывает» (состояние переходит в новый сезон, итог уходит в prev) — таблицу сезона это не ломает
+const t1 = act(T[0], { op: 'duel_start' }).action;
+ok(t1.ok && t1.seasonReward.rank === 1 && t1.seasonReward.top === 200 && t1.seasonReward.paid === 350 && sap(T[0]) === 350, '1-е место: Высшая лига 150 + топ 200, выдано при Вызове');
+ok(q(`select data -> 'prev' ->> 'rating' from public.player_world where user_id = '${T[0]}' and key = 'duel';`).out === '9100', 'итог прошлого сезона остался в prev');
+const t2 = c(T[1]); ok(t2.rank === 2 && t2.top === 100 && t2.paid === 250 && sap(T[1]) === 250, '2-е место (после того как t1 уже в новом сезоне): 150 + 100');
+const t3 = c(T[2]); ok(t3.rank === 3 && t3.top === 50 && t3.paid === 200, '3-е место: 150 + 50');
+const t4 = c(T[3]); ok(t4.rank === 4 && t4.top === 0 && t4.paid === 150 && sap(T[3]) === 150, '4-е место — только итог по лиге');
+const t5 = c(T[4]); ok(t5.rank == null && t5.paid === 0 && sap(T[4]) === 0, 'мало боёв (4) — ни лиги, ни таблицы, и t5 не вытесняет других');
+const t6 = c(T[5]); ok(t6.rank == null && t6.top == null && t6.paid === 150, 'позже следующего сезона таблицы нет — остаётся итог по лиге');
+ok(c(T[1]).paid === 0 && c(T[0]).paid === 0 && sap(T[1]) === 250, 'повторно ничего не начисляется');
+ok(refsOf(T[1]) === `arena:${cur - 1},arenatop:${cur - 1}`, 'журнал: arena:<сезон> и arenatop:<сезон>');
+
+// ---------------------------------------------------------------- v0.34.0: сапфиры арены
+console.log('\nДуэль: сапфиры арены');
 const w0 = sap(A);
 ok(act(C, { op: 'duel_season' }).action.reason === 'locked', 'награда сезона до главы II закрыта');
 ok(act(A, { op: 'duel_season' }).action.reward == null, 'без прошлого сезона наград нет');
@@ -113,6 +139,7 @@ ok(act(A, { op: 'duel_season' }).action.reward.fresh === false && sap(A) === w2 
 // доступ
 ok(/permission denied/.test(q(`select public._duel_pay_promo('${A}', '{"best": 1900}'::jsonb, public._game_rules() -> 'duel');`, A).err)
   && /permission denied/.test(q(`select public._duel_pay_prev('${A}', '{}'::jsonb, public._game_rules() -> 'duel');`, A).err), 'игрок не может вызвать выдачу напрямую');
+
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Дуэль (Postgres): всё в порядке');
 process.exit(failures ? 1 : 0);

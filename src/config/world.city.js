@@ -154,8 +154,8 @@ export const CITY_ROOM_DECOR = [
   { key: 'plant_pot_01', x: 3390, y: 2980 },
   // Bank: only a short runner in the customer area; safe and money are behind the counter.
   { key: 'rug_01', x: 3320, y: 3940, scale: 0.52, ground: true, tint: 0xb9c3a0 },
-  { key: 'plant_pot_01', x: 3185, y: 3930 },
-  { key: 'plant_pot_01', x: 3460, y: 3930 },
+  { key: 'plant_pot_01', x: 3185, y: 3930, solid: null },   // стоят по краям прохода к стойке — проходимы
+  { key: 'plant_pot_01', x: 3460, y: 3930, solid: null },
   // Coven: herbs, shared supplies, tea and a warm corner for visitors.
   { key: 'herb_bundle_01', x: 3380, y: 4230 },
   { key: 'herb_bundle_01', x: 3320, y: 4230 },
@@ -183,7 +183,7 @@ export const CITY_INTERACTIVES = [
   // v0.27.0: выходы на карту мира (лес и город — разные локации, переход — только через карту у выхода)
   // Прежний декоративный указатель d05 у перекрёстка теперь открывает карту.
   { id: 'exit_forest', kind: 'exit', x: 1104, y: 4416, texture: 'signpost_01', radius: 110, collide: { w: 24, h: 10 }, hint: 'Карта мира' },
-  { id: 'exit_city', kind: 'exit', x: 1880, y: 3625, texture: 'signpost_01', radius: 110, hint: 'Карта мира' },
+  { id: 'exit_city', kind: 'exit', x: 1880, y: 3625, texture: 'signpost_01', collide: { w: 24, h: 10 }, radius: 110, hint: 'Карта мира' },
   // дорога: ресурсы
   { id: 'frostherb_r1', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 240, x: 2060, y: 3420, texture: 'city_frost_herb', radius: 90, requiresEvent: 'ch2_start' },
   { id: 'frostherb_r2', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 240, x: 2240, y: 3880, texture: 'city_frost_herb', radius: 90, requiresEvent: 'ch2_start' },
@@ -228,7 +228,7 @@ export const CITY_INTERACTIVES = [
   { id: 'ice_construct', kind: 'fire', x: 2700, y: 2330, texture: 'ice_construct_01', collide: { w: 90, h: 30 }, radius: 130,
     requiresEvent: 'ch2_quarter_open', destroyEvent: 'ch2_construct_unstable', burnSec: 1.4, hint: 'Ледяная конструкция',
     doneText: 'Конструкция треснула — и холод рванулся наружу! Кто-то в синем плаще встал между вами и вспышкой.' },
-  { id: 'npc_nerys', kind: 'npc', npc: 'nerys', x: 2800, y: 2230, texture: 'npc_nerys', radius: 140, requiresEvent: 'ch2_construct_unstable', hideEvent: 'ch2_final_start' },
+  { id: 'npc_nerys', kind: 'npc', npc: 'nerys', x: 2800, y: 2230, texture: 'npc_nerys', collide: { w: 30, h: 14 }, radius: 140, requiresEvent: 'ch2_construct_unstable', hideEvent: 'ch2_final_start' },
   { id: 'fq_door', kind: 'seal_sigil', x: 3340, y: 2150, texture: 'frozen_door_01', litTexture: 'city_door_open', radius: 120,
     requiresEnemyDefeated: 'fq_collector', doneEvent: 'ch2_rescue_door', hint: 'Обледеневшая дверь',
     lockedText: 'За дверью кто-то стучит. Сначала — сборщик рядом.',
@@ -250,10 +250,10 @@ export const CITY_INTERACTIVES = [
     doneText: 'Лёд успокоил печать — магия замерла, и дверь подалась.' },
   { id: 'lab_herb_1', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 240, x: 1900, y: 4230, texture: 'city_frost_herb', radius: 90, requiresEvent: 'ch2_lab_open' },
   { id: 'lab_herb_2', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 240, x: 2270, y: 4300, texture: 'city_frost_herb', radius: 90, requiresEvent: 'ch2_lab_open' },
-  { id: 'lab_chest', kind: 'chest', x: 1910, y: 4680, texture: 'chest_01', openTexture: 'chest_01_open', radius: 110, requiresEvent: 'ch2_lab_open',
+  { id: 'lab_chest', kind: 'chest', x: 1910, y: 4680, texture: 'chest_01', collide: { w: 50, h: 24 }, openTexture: 'chest_01_open', radius: 110, requiresEvent: 'ch2_lab_open',
     reward: { items: { rune_dust: 2, lunar_shard: 2, frost_herb: 2 } } },
   { id: 'lab_cauldron', kind: 'alchemy', x: 2260, y: 4690, texture: 'cauldron_01', collide: { w: 66, h: 26 }, radius: 120, requiresEvent: 'ch2_lab_open' },
-  { id: 'npc_tikhon', kind: 'npc', npc: 'tikhon', x: 1990, y: 4580, texture: 'npc_tikhon', radius: 130, requiresEvent: 'ch2_vol_1' },
+  { id: 'npc_tikhon', kind: 'npc', npc: 'tikhon', x: 1990, y: 4580, texture: 'npc_tikhon', collide: { w: 30, h: 14 }, radius: 130, requiresEvent: 'ch2_vol_1' },
   { id: 'lab_journal', kind: 'seal_sigil', x: 2180, y: 4675, elevated: 50, texture: 'city_lab_journal', litTexture: 'city_lab_journal', litTint: 0xe8d6ff, radius: 110,
     requiresEnemyDefeated: 'lab_construct', doneEvent: 'ch2_lab_journal', hint: 'Лабораторный журнал',
     doneTitle: 'Журнал опытов', doneText: 'Астрал проявил стёртые страницы. «Испытуемый №4 — пришёл сам, хочет защищать семью». «Доза снижена по указанию С. В.». Подпись под отчётом — Северин Вейр. Он знал.', doneButton: 'К Иларии' },
@@ -264,17 +264,17 @@ export const CITY_INTERACTIVES = [
   { id: 'final_ice_wall', kind: 'fire', x: 3100, y: 3700, texture: 'ice_wall_01', radius: 130, requiresEvent: 'ch2_final_start', destroyEvent: 'ch2_fin_fire',
     burnSec: 1.4, hint: 'Ледяная преграда', doneText: 'Преграда растаяла — улица к рынку свободна.' },
   // Existing id/event retained for saved games and server validation; the object is a damaged experimental device.
-  { id: 'final_rift', kind: 'ice', x: 2520, y: 3880, texture: 'city_coolant', frozenTexture: 'city_coolant_stable', radius: 130, requiresEvent: 'ch2_final_start', doneEvent: 'ch2_fin_ice',
+  { id: 'final_rift', kind: 'ice', x: 2520, y: 3880, texture: 'city_coolant', collide: { w: 80, h: 26 }, frozenTexture: 'city_coolant_stable', radius: 130, requiresEvent: 'ch2_final_start', doneEvent: 'ch2_fin_ice',
     hint: 'Повреждённый резервуар', lockedText: 'Из треснувшего резервуара вырывается магический холод. Лёд стабилизирует прибор.', doneText: 'Лёд стянул трещины — резервуар затих.' },
   { id: 'final_ward', kind: 'seal_sigil', x: 2640, y: 4130, texture: 'astral_ward_01', litTexture: 'astral_ward_01', collide: { w: 100, h: 30 }, opens: true, radius: 130,
     requiresEvent: 'ch2_final_start', doneEvent: 'ch2_fin_seal', hint: 'Астральный барьер',
     lockedText: 'Дуэльный зал закрыт.',
     doneTitle: 'Барьер снят', doneText: 'Астрал нашёл швы барьера — и завеса рассыпалась искрами. Изнутри тянет холодом и голосом Северина.', doneButton: 'Дальше' },
-  { id: 'npc_nerys_final', kind: 'npc', npc: 'nerys', x: 2800, y: 4040, texture: 'npc_nerys', radius: 140, requiresEvent: 'ch2_final_start' },
+  { id: 'npc_nerys_final', kind: 'npc', npc: 'nerys', x: 2800, y: 4040, texture: 'npc_nerys', collide: { w: 30, h: 14 }, radius: 140, requiresEvent: 'ch2_final_start' },
   { id: 'final_letters', kind: 'seal_sigil', x: 2510, y: 4280, texture: 'city_letters', litTexture: 'city_letters', litTint: 0xe8d6ff, radius: 110,
     requiresEnemyDefeated: 'final_severin', doneEvent: 'ch2_letters_read', hint: 'Зашифрованные письма',
     doneTitle: 'Чужая рука', doneText: 'Под Астралом шифр поплыл. Деньги, материалы, старые схемы — всё это Северину передавал кто-то другой. Подписи нет. Только знак — тот самый стёртый узор с Древних ворот в лесу Мирры.', doneButton: 'К Иларии' },
-  { id: 'npc_severin_after', kind: 'npc', npc: 'severin', x: 2780, y: 4380, texture: 'npc_severin', radius: 130, requiresEvent: 'ch2_severin_defeated' },
+  { id: 'npc_severin_after', kind: 'npc', npc: 'severin', x: 2780, y: 4380, texture: 'npc_severin', collide: { w: 32, h: 14 }, radius: 130, requiresEvent: 'ch2_severin_defeated' },
   // ---- квест 14 «Не в одиночку»: Дом Ковенов
   { id: 'npc_rowena', kind: 'npc', npc: 'rowena', x: 3240, y: 4300, texture: 'npc_rowena', collide: { w: 50, h: 24 }, radius: 140 },
 ];

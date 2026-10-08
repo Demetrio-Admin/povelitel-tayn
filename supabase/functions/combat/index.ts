@@ -940,7 +940,7 @@ var CITY_INTERACTIVES = [
   // v0.27.0: выходы на карту мира (лес и город — разные локации, переход — только через карту у выхода)
   // Прежний декоративный указатель d05 у перекрёстка теперь открывает карту.
   { id: "exit_forest", kind: "exit", x: 1104, y: 4416, texture: "signpost_01", radius: 110, collide: { w: 24, h: 10 }, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
-  { id: "exit_city", kind: "exit", x: 1880, y: 3625, texture: "signpost_01", radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
+  { id: "exit_city", kind: "exit", x: 1880, y: 3625, texture: "signpost_01", collide: { w: 24, h: 10 }, radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
   // дорога: ресурсы
   { id: "frostherb_r1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2060, y: 3420, texture: "city_frost_herb", radius: 90, requiresEvent: "ch2_start" },
   { id: "frostherb_r2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 240, x: 2240, y: 3880, texture: "city_frost_herb", radius: 90, requiresEvent: "ch2_start" },
@@ -1070,7 +1070,7 @@ var CITY_INTERACTIVES = [
     hint: "\u041B\u0435\u0434\u044F\u043D\u0430\u044F \u043A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F",
     doneText: "\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F \u0442\u0440\u0435\u0441\u043D\u0443\u043B\u0430 \u2014 \u0438 \u0445\u043E\u043B\u043E\u0434 \u0440\u0432\u0430\u043D\u0443\u043B\u0441\u044F \u043D\u0430\u0440\u0443\u0436\u0443! \u041A\u0442\u043E-\u0442\u043E \u0432 \u0441\u0438\u043D\u0435\u043C \u043F\u043B\u0430\u0449\u0435 \u0432\u0441\u0442\u0430\u043B \u043C\u0435\u0436\u0434\u0443 \u0432\u0430\u043C\u0438 \u0438 \u0432\u0441\u043F\u044B\u0448\u043A\u043E\u0439."
   },
-  { id: "npc_nerys", kind: "npc", npc: "nerys", x: 2800, y: 2230, texture: "npc_nerys", radius: 140, requiresEvent: "ch2_construct_unstable", hideEvent: "ch2_final_start" },
+  { id: "npc_nerys", kind: "npc", npc: "nerys", x: 2800, y: 2230, texture: "npc_nerys", collide: { w: 30, h: 14 }, radius: 140, requiresEvent: "ch2_construct_unstable", hideEvent: "ch2_final_start" },
   {
     id: "fq_door",
     kind: "seal_sigil",
@@ -1146,13 +1146,14 @@ var CITY_INTERACTIVES = [
     x: 1910,
     y: 4680,
     texture: "chest_01",
+    collide: { w: 50, h: 24 },
     openTexture: "chest_01_open",
     radius: 110,
     requiresEvent: "ch2_lab_open",
     reward: { items: { rune_dust: 2, lunar_shard: 2, frost_herb: 2 } }
   },
   { id: "lab_cauldron", kind: "alchemy", x: 2260, y: 4690, texture: "cauldron_01", collide: { w: 66, h: 26 }, radius: 120, requiresEvent: "ch2_lab_open" },
-  { id: "npc_tikhon", kind: "npc", npc: "tikhon", x: 1990, y: 4580, texture: "npc_tikhon", radius: 130, requiresEvent: "ch2_vol_1" },
+  { id: "npc_tikhon", kind: "npc", npc: "tikhon", x: 1990, y: 4580, texture: "npc_tikhon", collide: { w: 30, h: 14 }, radius: 130, requiresEvent: "ch2_vol_1" },
   {
     id: "lab_journal",
     kind: "seal_sigil",
@@ -1206,6 +1207,7 @@ var CITY_INTERACTIVES = [
     x: 2520,
     y: 3880,
     texture: "city_coolant",
+    collide: { w: 80, h: 26 },
     frozenTexture: "city_coolant_stable",
     radius: 130,
     requiresEvent: "ch2_final_start",
@@ -1232,7 +1234,7 @@ var CITY_INTERACTIVES = [
     doneText: "\u0410\u0441\u0442\u0440\u0430\u043B \u043D\u0430\u0448\u0451\u043B \u0448\u0432\u044B \u0431\u0430\u0440\u044C\u0435\u0440\u0430 \u2014 \u0438 \u0437\u0430\u0432\u0435\u0441\u0430 \u0440\u0430\u0441\u0441\u044B\u043F\u0430\u043B\u0430\u0441\u044C \u0438\u0441\u043A\u0440\u0430\u043C\u0438. \u0418\u0437\u043D\u0443\u0442\u0440\u0438 \u0442\u044F\u043D\u0435\u0442 \u0445\u043E\u043B\u043E\u0434\u043E\u043C \u0438 \u0433\u043E\u043B\u043E\u0441\u043E\u043C \u0421\u0435\u0432\u0435\u0440\u0438\u043D\u0430.",
     doneButton: "\u0414\u0430\u043B\u044C\u0448\u0435"
   },
-  { id: "npc_nerys_final", kind: "npc", npc: "nerys", x: 2800, y: 4040, texture: "npc_nerys", radius: 140, requiresEvent: "ch2_final_start" },
+  { id: "npc_nerys_final", kind: "npc", npc: "nerys", x: 2800, y: 4040, texture: "npc_nerys", collide: { w: 30, h: 14 }, radius: 140, requiresEvent: "ch2_final_start" },
   {
     id: "final_letters",
     kind: "seal_sigil",
@@ -1249,7 +1251,7 @@ var CITY_INTERACTIVES = [
     doneText: "\u041F\u043E\u0434 \u0410\u0441\u0442\u0440\u0430\u043B\u043E\u043C \u0448\u0438\u0444\u0440 \u043F\u043E\u043F\u043B\u044B\u043B. \u0414\u0435\u043D\u044C\u0433\u0438, \u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B\u044B, \u0441\u0442\u0430\u0440\u044B\u0435 \u0441\u0445\u0435\u043C\u044B \u2014 \u0432\u0441\u0451 \u044D\u0442\u043E \u0421\u0435\u0432\u0435\u0440\u0438\u043D\u0443 \u043F\u0435\u0440\u0435\u0434\u0430\u0432\u0430\u043B \u043A\u0442\u043E-\u0442\u043E \u0434\u0440\u0443\u0433\u043E\u0439. \u041F\u043E\u0434\u043F\u0438\u0441\u0438 \u043D\u0435\u0442. \u0422\u043E\u043B\u044C\u043A\u043E \u0437\u043D\u0430\u043A \u2014 \u0442\u043E\u0442 \u0441\u0430\u043C\u044B\u0439 \u0441\u0442\u0451\u0440\u0442\u044B\u0439 \u0443\u0437\u043E\u0440 \u0441 \u0414\u0440\u0435\u0432\u043D\u0438\u0445 \u0432\u043E\u0440\u043E\u0442 \u0432 \u043B\u0435\u0441\u0443 \u041C\u0438\u0440\u0440\u044B.",
     doneButton: "\u041A \u0418\u043B\u0430\u0440\u0438\u0438"
   },
-  { id: "npc_severin_after", kind: "npc", npc: "severin", x: 2780, y: 4380, texture: "npc_severin", radius: 130, requiresEvent: "ch2_severin_defeated" },
+  { id: "npc_severin_after", kind: "npc", npc: "severin", x: 2780, y: 4380, texture: "npc_severin", collide: { w: 32, h: 14 }, radius: 130, requiresEvent: "ch2_severin_defeated" },
   // ---- квест 14 «Не в одиночку»: Дом Ковенов
   { id: "npc_rowena", kind: "npc", npc: "rowena", x: 3240, y: 4300, texture: "npc_rowena", collide: { w: 50, h: 24 }, radius: 140 }
 ];
@@ -1339,14 +1341,14 @@ var EXP_COLLIDERS = [
 var EXP_KEEP_CLEAR = [{ x: 3600, y: 0, w: 1800, h: 5400 }];
 var EXP_OBJECT_LIST = [
   // v0.27.0: выходы на карту мира (вылазки — отдельные локации; описание места — на карте, config/locations.js)
-  { id: "exit_frostwood", kind: "exit", x: 3760, y: 2440, texture: "signpost_01", radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
-  { id: "exit_graveyard", kind: "exit", x: 3760, y: 5120, texture: "signpost_01", radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
+  { id: "exit_frostwood", kind: "exit", x: 3760, y: 2440, texture: "signpost_01", collide: { w: 24, h: 10 }, radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
+  { id: "exit_graveyard", kind: "exit", x: 3760, y: 5120, texture: "signpost_01", collide: { w: 24, h: 10 }, radius: 110, hint: "\u041A\u0430\u0440\u0442\u0430 \u043C\u0438\u0440\u0430" },
   // Морозный лес: сбор
   { id: "fw_herb_1", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 4500, y: 2300, texture: "city_frost_herb", radius: 90 },
   { id: "fw_herb_2", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 3900, y: 1650, texture: "city_frost_herb", radius: 90 },
   { id: "fw_herb_3", kind: "gather", res: "frost_herb", amount: 1, respawnSec: 300, x: 5100, y: 1100, texture: "city_frost_herb", radius: 90 },
-  { id: "fw_crystal_1", kind: "gather", res: "ice_crystal", amount: 1, respawnSec: 900, x: 5150, y: 2250, texture: "ice_crystal_node_01", radius: 90 },
-  { id: "fw_crystal_2", kind: "gather", res: "ice_crystal", amount: 1, respawnSec: 900, x: 3850, y: 600, texture: "ice_crystal_node_01", radius: 90 },
+  { id: "fw_crystal_1", kind: "gather", res: "ice_crystal", amount: 1, respawnSec: 900, x: 5150, y: 2250, texture: "ice_crystal_node_01", collide: { w: 50, h: 18 }, radius: 90 },
+  { id: "fw_crystal_2", kind: "gather", res: "ice_crystal", amount: 1, respawnSec: 900, x: 3850, y: 600, texture: "ice_crystal_node_01", collide: { w: 50, h: 18 }, radius: 90 },
   {
     id: "fw_cache",
     kind: "stash",
@@ -1354,6 +1356,7 @@ var EXP_OBJECT_LIST = [
     x: 4500,
     y: 450,
     texture: "city_wolf_cache",
+    collide: { w: 70, h: 22 },
     emptyTexture: "city_wolf_cache_empty",
     radius: 110,
     items: { frost_shard: 1, ice_crystal: 1 },
@@ -1366,7 +1369,7 @@ var EXP_OBJECT_LIST = [
   { id: "gy_dust_2", kind: "gather", res: "rune_dust", amount: 1, respawnSec: 300, x: 5100, y: 3950, texture: "rune_sigil_01", radius: 90 },
   { id: "gy_mush_1", kind: "gather", res: "forest_mushroom", amount: 1, respawnSec: 300, x: 5050, y: 4900, texture: "mushrooms_brown_01", radius: 90 },
   { id: "gy_mush_2", kind: "gather", res: "forest_mushroom", amount: 1, respawnSec: 300, x: 3900, y: 4100, texture: "mushrooms_brown_01", radius: 90 },
-  { id: "gy_shard_1", kind: "gather", res: "lunar_shard", amount: 1, respawnSec: 900, x: 3900, y: 3300, texture: "field_crystal", radius: 90 },
+  { id: "gy_shard_1", kind: "gather", res: "lunar_shard", amount: 1, respawnSec: 900, x: 3900, y: 3300, texture: "field_crystal", collide: { w: 60, h: 20 }, radius: 90 },
   {
     id: "gy_cache",
     kind: "stash",
@@ -1374,6 +1377,7 @@ var EXP_OBJECT_LIST = [
     x: 4800,
     y: 3050,
     texture: "city_grave_cache",
+    collide: { w: 60, h: 22 },
     emptyTexture: "city_grave_cache_empty",
     radius: 110,
     items: { frost_shard: 1, lunar_shard: 2 },
@@ -1527,7 +1531,7 @@ var CONTENT_INTERACTIVES = [
   // лагерь охотника
   { id: "npc_goran", kind: "npc", npc: "goran", x: 1410, y: 3950, texture: "npc_goran", collide: { w: 32, h: 14 }, radius: 110 },
   // ================================================================== АЛТАРЬ (зона E)
-  { id: "npc_selena", kind: "npc", npc: "selena", x: 1300, y: 2295, texture: "npc_selena", radius: 120, elevated: 26 },
+  { id: "npc_selena", kind: "npc", npc: "selena", x: 1300, y: 2295, texture: "npc_selena", collide: { w: 30, h: 14 }, radius: 120, elevated: 26 },
   {
     id: "rune_sigil",
     kind: "gather",
@@ -1565,6 +1569,7 @@ var CONTENT_INTERACTIVES = [
     x: 1450,
     y: 2400,
     texture: "field_crystal",
+    collide: { w: 60, h: 20 },
     radius: 100,
     gatherText: "\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u043B \u043B\u0443\u043D\u043D\u043E\u0433\u043E \u0441\u0432\u0435\u0442\u0430 \u0434\u0430\u043B \u043E\u0441\u043A\u043E\u043B\u043E\u043A."
   },
@@ -1840,7 +1845,7 @@ var BASE_INTERACTIVES = [
   // C
   { id: "trail_cache", kind: "chest", x: 1660, y: 3640, texture: "chest_01", reward: { items: { coins: 20 } }, collide: { w: 50, h: 24 } },
   // E / F
-  { id: "lunar_altar", kind: "altar", x: 1250, y: 2215, texture: "lunar_altar_01", radius: 130 },
+  { id: "lunar_altar", kind: "altar", x: 1250, y: 2215, texture: "lunar_altar_01", collide: { w: 120, h: 36 }, radius: 130 },
   {
     id: "flame_a",
     kind: "telekinesis",
@@ -1896,7 +1901,7 @@ var BASE_INTERACTIVES = [
     panOnOpen: { x: 1250, y: 1600 }
   },
   // H
-  { id: "fire_circle", kind: "fire_circle", x: 1250, y: 1580, texture: "fire_circle_01", radius: 140 },
+  { id: "fire_circle", kind: "fire_circle", x: 1250, y: 1580, texture: "fire_circle_01", collide: { w: 130, h: 36 }, radius: 140 },
   { id: "ritual_torch", kind: "fire", x: 1470, y: 1520, texture: "torch_01", persistent: true, collide: { w: 24, h: 16 } },
   {
     id: "dry_bush",

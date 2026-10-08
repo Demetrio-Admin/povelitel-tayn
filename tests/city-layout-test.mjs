@@ -19,7 +19,7 @@ const grids = skip => [8, 0].map(pad => buildNav({ width: WORLD.width, height: W
 for (const [name, destination, skip] of [
   ['банк', { x: 3320, y: 3930 }, []], ['архив', { x: 2620, y: 2960 }, []],
   ['общество', { x: 3210, y: 2980 }, []], ['ковен', { x: 3210, y: 4240 }, []],
-  ['лаборатория', { x: 2070, y: 4480 }, GATE_IDS], ['дуэль', { x: 2640, y: 4320 }, GATE_IDS],
+  ['лаборатория', { x: 2070, y: 4520 }, GATE_IDS], ['дуэль', { x: 2640, y: 4320 }, GATE_IDS],
 ]) {
   assert.ok(findPath(grids(skip), CITY_START, destination).complete, `${name}: enter the room through its door`);
 }

@@ -8,7 +8,7 @@ export const SHOP = {
     frost_herb: 22, ice_crystal: 55,
   },
   sellPct: 0.33,
-  maxQty: 99,
+  maxQty: 1_000_000,
 };
 
 /** Цена, по которой торговец покупает у игрока одну штуку. */

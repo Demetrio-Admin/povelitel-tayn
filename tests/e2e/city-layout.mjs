@@ -54,10 +54,10 @@ try {
         const point = await page.evaluate(({x,y}) => {
           window.__game.scale.updateBounds();
           const c = window.__game.scene.getScene('ExplorationScene').cameras.main;
-          return { x:(x-c.worldView.x)*c.zoom, y:(y-c.worldView.y)*c.zoom };
+          return { x:(x-c.worldView.x)*c.zoom, y:(y-c.worldView.y)*c.zoom, width:window.__game.scale.width, height:window.__game.scale.height };
         }, {x,y});
         const box = await page.locator('canvas').first().boundingBox();
-        await page.touchscreen.tap(box.x+point.x*box.width/720, box.y+point.y*box.height/1280);
+        await page.touchscreen.tap(box.x+point.x*box.width/point.width, box.y+point.y*box.height/point.height);
       };
       const events = async list => page.evaluate(list => {
         const w=window.__witch, s=window.__game.scene.getScene('ExplorationScene');
@@ -71,7 +71,8 @@ try {
       });
       assert.ok(art.every(a => !a.missing && a.width > 20), JSON.stringify(art));
 
-      await position(2570,3460);
+      const boardAt = await page.evaluate(() => { const b=window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id==='city_board'); return {x:b.x,y:b.y}; });
+      await position(boardAt.x+90,boardAt.y+70);
       const marker = await page.evaluate(() => {
         const s=window.__game.scene.getScene('ExplorationScene'), board=s.objects.find(o=>o.id==='city_board'), m=s.interaction.markers.get(board).m;
         return { width:m.displayWidth, height:m.displayHeight, source:m.texture.getSourceImage().width, visible:m.visible, focus:s.interaction.focus?.id };
@@ -80,34 +81,34 @@ try {
       assert.equal(marker.focus, 'city_board');
       assert.equal(await page.evaluate(() => Math.max(window.__game.scene.getScene('UIScene').ctxIcon.displayWidth, window.__game.scene.getScene('UIScene').ctxIcon.displayHeight)),60);
       await shot('01-board');
-      await tapWorld(2480,3360);
+      await tapWorld(boardAt.x,boardAt.y-30);
       await page.waitForFunction(() => window.__game.scene.getScene('UIScene').modal?.opts?.title === 'Доска поручений');
       await page.evaluate(() => window.__game.scene.getScene('UIScene').closeModal(null));
       await page.waitForTimeout(400);
-      await position(2700,3460);
+      await position(boardAt.x+220,boardAt.y+70);
       assert.equal(await page.evaluate(() => {
         const s=window.__game.scene.getScene('ExplorationScene'),b=s.objects.find(o=>o.id==='city_board'); return s.interaction.markers.get(b).m.displayWidth;
       }),40);
       console.log(`  ✓ ${name}: большой исходник книги отображается маленьким значком; доска открывается касанием`);
 
       await position(3320,4060); await shot('02-bank-entrance');
-      await tapWorld(3320,3770);
+      await tapWorld(3320,3710);
       await page.waitForFunction(() => window.__game.scene.getScene('UIScene').dlg?.npcId === 'banker', null, { timeout: 20000 });
       const atBank = await page.evaluate(() => { const s=window.__game.scene.getScene('ExplorationScene');return{x:s.player.x,y:s.player.y,zone:s.zone.id}; });
       assert.ok(atBank.x>3150 && atBank.x<3490 && atBank.y<3980 && atBank.y>3590, JSON.stringify(atBank));
-      assert.ok(Math.hypot(atBank.x-3320,atBank.y-3830)<=145,JSON.stringify(atBank));
+      assert.ok(Math.hypot(atBank.x-3320,atBank.y-3745)<=185,JSON.stringify(atBank));
       assert.equal(atBank.zone,'BK');
       await shot('03-agatha-dialogue');
       await page.evaluate(() => window.__game.scene.getScene('UIScene').closeDialogue(true));
       await page.waitForTimeout(400);
-      await position(3320,3930); await shot('04-bank');
+      await position(3320,3915); await shot('04-bank');
       console.log(`  ✓ ${name}: герой входит в дверь банка и разговаривает с Агатой за стойкой`);
 
       for (const [filename,x,y] of [['05-archive',2630,2950],['06-society',3210,2970],['07-coven',3210,4290]]) {
         await position(x,y); await shot(filename);
       }
       await events(['ch2_lab_open','ch2_vol_1','ch2_vol_2','ch2_frost_wave','ch2_quarter_open','ch2_nerys_met']);
-      for (const [filename,x,y] of [['08-laboratory',2070,4480],['09-residential',3330,2310],['10-warehouses',2910,4830]]) {
+      for (const [filename,x,y] of [['08-laboratory',2110,4460],['09-residential',3330,2310],['10-warehouses',2910,4830]]) {
         await position(x,y); await shot(filename);
       }
       await events(['ch2_severin_defeated','chapter_2_complete']);
@@ -119,7 +120,7 @@ try {
       assert.equal(floors,3);
       // Reload an old save where a new house, bank wall or counter now stands.
       // A legitimate position in the entrance must keep its exact coordinates.
-      for (const [x,y,recover] of [[2700,2100,true],[3320,3575,true],[3320,3850,true],[3320,3930,false]]) {
+      for (const [x,y,recover] of [[2700,2100,true],[3320,3575,true],[3320,3870,true],[3320,3930,false]]) {
         await page.evaluate(({x,y}) => {
           const s=window.__game.scene.getScene('ExplorationScene');
           window.__witch.state.data.player={x,y}; window.__oldReloadPlayer=s.player; s.scene.restart();

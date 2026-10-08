@@ -949,7 +949,7 @@ var CITY_INTERACTIVES = [
   { id: "city_board", kind: "board", x: 2480, y: 3420, texture: "notice_board_01", collide: { w: 80, h: 20 }, radius: 120, hint: "\u0414\u043E\u0441\u043A\u0430 \u043F\u043E\u0440\u0443\u0447\u0435\u043D\u0438\u0439" },
   { id: "npc_ilaria", kind: "npc", npc: "ilaria", x: 2560, y: 3260, texture: "npc_ilaria", collide: { w: 50, h: 24 }, radius: 140 },
   { id: "npc_merchant", kind: "npc", npc: "merchant", x: 3350, y: 3500, texture: "npc_merchant", collide: { w: 50, h: 24 }, radius: 140 },
-  { id: "npc_banker", kind: "npc", npc: "banker", x: 3320, y: 3830, texture: "npc_banker", collide: { w: 50, h: 24 }, radius: 140 },
+  { id: "npc_banker", kind: "npc", npc: "banker", x: 3320, y: 3745, texture: "npc_banker", collide: { w: 50, h: 24 }, radius: 180 },
   { id: "npc_duelist", kind: "npc", npc: "duelist", x: 2640, y: 4040, texture: "npc_duelist", collide: { w: 50, h: 24 }, radius: 140 },
   {
     id: "plaza_trace",
@@ -2675,7 +2675,7 @@ var SHOP = {
     ice_crystal: 55
   },
   sellPct: 0.33,
-  maxQty: 99
+  maxQty: 1e6
 };
 var sellPrice = (id) => SHOP.buy[id] ? Math.floor(SHOP.buy[id] * SHOP.sellPct) : 0;
 function shopRules() {

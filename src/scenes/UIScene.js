@@ -1,4 +1,4 @@
-import { T, fm } from '../state/hero.js';
+import { T, fm, currentHeroId } from '../state/hero.js';
 import Phaser from 'phaser';
 import { VIEW, COLORS, CONTROLS } from '../config/game.config.js';
 import { ABILITIES } from '../config/balance.abilities.js';
@@ -8,6 +8,7 @@ import { MSG } from '../state/EventBus.js';
 import { CHAPTER_1_FINAL } from '../config/events.js';
 import { services, resetProgress, reloadToMenu } from '../services.js';
 import { showProfile } from '../ui/accountUI.js';
+import { showVictory } from '../ui/victoryUI.js';
 import { showChat } from '../ui/ChatWindow.js';
 import { showCovens } from '../ui/covenUI.js';
 import { CovenService } from '../cloud/CovenService.js';
@@ -125,7 +126,7 @@ export class UIScene extends Phaser.Scene {
     bus.on(MSG.ABILITY_USE, (id) => { if (this.mode === 'exploration' && (id === 'telekinesis' || id === 'fire')) services.tutorial.complete(id); }, this);
     const offAcc = services.session?.onChange((r) => { if (r === 'saving' || r === 'profile' || r === 'registered') this.refreshHud(); });
     const offChat = services.chat?.onChange(() => { if (this.menuBtn?.text) this.menuBtn.text.setText(services.chat.unread ? `Меню · ${services.chat.unread}` : 'Меню'); });
-    this.events.once('shutdown', () => { this.shuttingDown = true; this.chatWindow?.close(); bus.offContext(this); offAcc?.(); offChat?.(); });
+    this.events.once('shutdown', () => { this.shuttingDown = true; if (this.modal?.victory) this.modal.destroy?.(); this.chatWindow?.close(); bus.offContext(this); offAcc?.(); offChat?.(); });
 
     this.refreshQuest();
     this.refreshHud();
@@ -498,6 +499,7 @@ export class UIScene extends Phaser.Scene {
   /** opts: { title, text, color, buttons: [{ label, primary, onClick }] } */
   openModal(opts) {
     if (this.modal) { this.modalQueue.push(opts); return; }
+    if (opts.victory) { this.openVictory(opts); return; }
     // v0.9.2: заголовок, текст и кнопки могут иметь варианты для ведьмы / колдуна
     opts = { ...opts, title: T(opts.title), text: T(opts.text), buttons: opts.buttons?.map(b => ({ ...b, label: T(b.label) })) };
     services.modalOpen = true;
@@ -555,9 +557,25 @@ export class UIScene extends Phaser.Scene {
     this.bus.emit(MSG.MODAL_OPEN);
   }
 
+  openVictory(opts) {
+    services.modalOpen = true;
+    this.resetJoystick();
+    const modal = this.modal = { victory: true, dom: true, opts };
+    const victoryWindow = showVictory({ result: opts.victory, heroId: currentHeroId(), audio: services.audio,
+      onClose: advance => {
+        if (this.modal !== modal) return;
+        this.modal = null; services.modalOpen = false;
+        this.bus.emit(MSG.MODAL_CLOSED);
+        if (advance && !this.shuttingDown) (opts.buttons?.find(b => b.primary) || opts.buttons?.[0])?.onClick?.();
+        if (!this.shuttingDown && !this.modal && this.modalQueue.length) this.openModal(this.modalQueue.shift());
+      } });
+    modal.close = victoryWindow.close; modal.destroy = victoryWindow.destroy;
+    this.bus.emit(MSG.MODAL_OPEN);
+  }
+
   /** Перерисовать то же окно (например, алхимия после варки) без звука открытия и без очереди. */
   reopenModal() {
-    if (!this.modal?.opts) return;
+    if (!this.modal?.opts || this.modal.dom) return;
     const opts = this.modal.opts;
     const offset = this.modal.scroll?.offset || 0;
     this.modal.scroll?.destroy();

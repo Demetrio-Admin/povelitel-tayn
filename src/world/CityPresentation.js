@@ -1,3 +1,4 @@
+import { BUILDINGS } from '../config/city.plan.js';
 import { COLORS, DEPTH } from '../config/game.config.js';
 import { applyDisplaySize } from '../objects/InteractiveObject.js';
 import { services } from '../services.js';
@@ -8,16 +9,12 @@ export class CityPresentation {
   constructor(scene) {
     this.scene = scene;
     this.images = [];
-    // A clear training floor, with equipment along the sides instead of a living-room rug.
-    const mat = scene.add.graphics().setDepth(DEPTH.path + 0.6);
-    mat.fillStyle(0x695453, 0.22).fillRect(2570, 4230, 140, 150);
-    mat.lineStyle(2, 0xb79c67, 0.7).strokeRect(2570, 4230, 140, 150);
-    mat.strokeEllipse(2640, 4305, 100, 72);
-    this.images.push(mat);
-    const bankName = scene.add.text(3320, 3570, 'Городской Банк', {
-      fontFamily: 'Philosopher', fontSize: '25px', color: '#e7d6ad', stroke: '#251c14', strokeThickness: 5,
-    }).setOrigin(0.5, 1).setDepth(DEPTH.markers - 2);
-    this.images.push(bankName);
+    for(const b of BUILDINGS){
+      const text=scene.add.text(b.door.x,b.door.y+25,b.name,{
+        fontFamily:'Philosopher',fontSize:'28px',color:'#e7d6ad',stroke:'#251c14',strokeThickness:5,
+      }).setOrigin(0.5,1).setDepth(DEPTH.markers-2);
+      this.images.push(text);
+    }
     this.refresh();
   }
 

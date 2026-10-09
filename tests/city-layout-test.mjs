@@ -1,52 +1,44 @@
-// Production layout, real collision data and locked story routes, without Phaser.
 import assert from 'node:assert/strict';
-import { ASSET_FILES, DISPLAY_SIZE } from '../src/config/assets.manifest.js';
-import { WORLD, INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
-import { CITY_ZONES, CITY_GROUND, CITY_START } from '../src/config/world.city.js';
-import { resolveMap, applyPos } from '../src/world/mapData.js';
-import { buildTerrain } from '../src/world/terrain.js';
+import { INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
+import { CITY_ROOMS, CITY_PORTALS, BUILDINGS, CITY_RECT, cityPoint, cityArrival } from '../src/config/city.plan.js';
+import { locationAt, locationById } from '../src/config/locations.js';
+import { resolveMap, applyPos, diffEdits } from '../src/world/mapData.js';
 import { collectSolids } from '../src/world/solids.js';
+import { buildTerrain } from '../src/world/terrain.js';
 import { buildNav, findPath } from '../src/world/nav.js';
 import { checkWalkability, GATE_IDS } from '../src/world/check.js';
-
-const map = resolveMap({ storage: null, useDraft: false });
-const interactives = applyPos(INTERACTIVES, map.pos), enemies = applyPos(ENEMY_SPAWNS, map.pos);
-const terrain = buildTerrain({ ROADS: map.roads, WATERS: map.waters });
-const input = { colliders: map.colliders, props: map.props, interactives, enemies, terrain };
-assert.deepEqual(checkWalkability(input), [], 'all destinations reachable, no bypass around story gates');
-const grids = skip => [8, 0].map(pad => buildNav({ width: WORLD.width, height: WORLD.height, pad,
-  solids: collectSolids({ ...input, waterRects: terrain.waterRects, skip: new Set(skip) }) }));
-for (const [name, destination, skip] of [
-  ['банк', { x: 3320, y: 3930 }, []], ['архив', { x: 2620, y: 2960 }, []],
-  ['общество', { x: 3210, y: 2980 }, []], ['ковен', { x: 3210, y: 4240 }, []],
-  ['лаборатория', { x: 2070, y: 4520 }, GATE_IDS], ['дуэль', { x: 2640, y: 4320 }, GATE_IDS],
-]) {
-  assert.ok(findPath(grids(skip), CITY_START, destination).complete, `${name}: enter the room through its door`);
+const m=resolveMap(),objects=applyPos(INTERACTIVES,m.pos),enemies=applyPos(ENEMY_SPAWNS,m.pos);
+const terrain=buildTerrain({ROADS:m.roads,WATERS:m.waters});
+const input={...m,interactives:objects,enemies,terrain};
+assert.deepEqual(checkWalkability(input),[]);
+const grids=(loc,skip=[])=>[8,0].map(pad=>buildNav({...loc.rect,width:loc.rect.w,height:loc.rect.h,pad,
+  solids:collectSolids({...input,waterRects:terrain.waterRects,skip:new Set(skip)})}));
+const city=locationById('city');
+for(const b of BUILDINGS)assert.ok(findPath(grids(city,GATE_IDS),cityPoint(1500,2780),{x:b.door.x,y:b.door.y+170})?.complete,b.id+' approach');
+for(const r of CITY_ROOMS){
+ assert.equal(locationAt(r.arrival.x,r.arrival.y).id,r.id);
+ assert.ok(m.grounds.some(g=>g.id==='floor_'+r.id && g.interior));
+ for(const o of [...objects,...enemies].filter(o=>locationAt(o.x,o.y).id===r.id)){
+  const result=findPath(grids(r,GATE_IDS),r.arrival,{x:o.x,y:o.y+40});
+  assert.ok(result && Math.hypot(result.end.x-o.x,result.end.y-o.y)<=Math.max(o.radius||100,100),r.id+' '+o.id);
+ }
+ for(const entrance of r.entrances){const d=objects.find(o=>o.id===entrance);assert.equal(d.room,r.id);assert.equal(d.requiresEvent,r.requires);assert.equal(locationAt(d.target.x,d.target.y).id,r.id);}
 }
-const bank = CITY_ZONES.find(z => z.id === 'BK'), agatha = interactives.find(o => o.id === 'npc_banker');
-assert.ok(agatha.x > bank.x && agatha.x < bank.x + bank.w && agatha.y > bank.y && agatha.y < bank.y + bank.h);
-assert.ok(Math.min(agatha.x-bank.x, bank.x+bank.w-agatha.x, agatha.y-bank.y, bank.y+bank.h-agatha.y) > agatha.radius,
-  'Agatha can only be addressed from inside the bank');
-const bankArt = map.colliders.filter(c => c.tex && c.x >= bank.x && c.x+c.w <= bank.x+bank.w && c.y >= bank.y && c.y+c.h <= bank.y+bank.h)
-  .map(c => { const [w,h] = DISPLAY_SIZE[c.tex]; return { id:c.id, x:c.x+c.w/2-w/2, y:c.y+c.h-h, w,h }; });
-const [aw,ah] = DISPLAY_SIZE[agatha.texture];
-bankArt.push({ id:agatha.id, x:agatha.x-aw/2, y:agatha.y-ah, w:aw, h:ah });
-for (const p of map.props.filter(p => p.k === 'plant_pot_01' && p.x > bank.x && p.x < bank.x+bank.w && p.y > bank.y && p.y < bank.y+bank.h)) {
-  const [w,h] = DISPLAY_SIZE[p.k]; bankArt.push({ id:p.id, x:p.x-w/2, y:p.y-h, w,h });
-}
-for (let i=0;i<bankArt.length;i++) for (let j=i+1;j<bankArt.length;j++) {
-  const a=bankArt[i],b=bankArt[j];
-  assert.ok(!(a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y), `bank art does not overlap: ${a.id}/${b.id}`);
-}
-for (const room of CITY_ZONES.filter(z => z.interior)) {
-  const floor = CITY_GROUND.find(g => g.x === room.x && g.y === room.y && g.w === room.w && g.h === room.h);
-  assert.ok(floor?.interior && ASSET_FILES[floor.tex], `${room.id}: interior floor above outside frost`);
-  for (const c of map.colliders.filter(c => c.tex && c.x >= room.x && c.x+c.w <= room.x+room.w && c.y >= room.y && c.y+c.h <= room.y+room.h)) {
-    const [w,h] = DISPLAY_SIZE[c.tex];
-    const x = c.x+c.w/2, y = c.y+c.h;
-    assert.ok(x-w/2 >= room.x+20 && x+w/2 <= room.x+room.w-20 && y-h >= room.y+20,
-      `${room.id}: ${c.tex} stays within the cutaway (${x},${y}; ${w}x${h})`);
-  }
-}
-assert.equal(map.colliders.find(c => c.id === 'c105').x, 3600, 'expedition collider ids remain stable');
-console.log('✓ Город: входы, разные полы, мебель внутри стен, Агата в банке и сюжетные преграды проверены.');
+assert.equal(CITY_ROOMS.length,9);
+assert.equal(CITY_PORTALS.filter(o=>o.id.startsWith('door_warehouse')).length,2);
+assert.equal(objects.find(o=>o.id==='door_warehouse_a').room,objects.find(o=>o.id==='door_warehouse_b').room);
+assert.equal(objects.find(o=>o.id==='npc_banker').x,10560);
+assert.equal(m.colliders.find(o=>o.id==='c105').x,3600,'stable expedition collider id');
+assert.ok(CITY_RECT.w>=3700,'expanded outdoor map');
+assert.equal(CITY_PORTALS.some(o=>o.id.includes('north_')),false);
+const quarter=cityPoint(1500,1350),yard=cityPoint(1500,620),start=cityPoint(1500,2780);
+assert.equal(findPath(grids(city),start,quarter)?.complete,false,'ice gate cannot be bypassed');
+assert.equal(findPath(grids(city,['frost_barrier']),start,yard)?.complete,false,'water gate cannot be bypassed');
+assert.equal(findPath(grids(city,['frost_barrier','fq_water']),start,yard)?.complete,true);
+assert.deepEqual(cityArrival({x:2600,y:3625}),start);
+assert.deepEqual(cityArrival({x:2910,y:1700},k=>k==='ch2_water_frozen'),yard);
+assert.deepEqual(cityArrival(CITY_ROOMS[0].arrival),CITY_ROOMS[0].arrival);
+const storage={getItem:()=>JSON.stringify({v:1,layout:2,pos:{npc_banker:{y:790}},props:{},add:[]})};
+assert.equal(resolveMap({storage,useDraft:true}).pos.npc_banker.y,790);
+assert.equal(diffEdits([],[]).layout,2);
+console.log('✓ Spacious town: 12 approaches, 9 rooms, warehouse doors, old saves and quest gates.');

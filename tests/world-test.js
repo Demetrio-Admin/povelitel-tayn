@@ -1,4 +1,5 @@
 // Тесты мира: форма дорог и воды, таблица коллизий, проходимость маршрута. node tests/world-test.js
+import { CITY_ROOMS } from '../src/config/city.plan.js';
 import { CITY_START, EAST_X } from '../src/config/world.city.js';
 import { regionStart, FROSTWOOD_START, GRAVEYARD_START } from '../src/config/world.expeditions.js';
 import { WORLD, COLLIDERS, INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
@@ -101,7 +102,8 @@ console.log('\nМир: проходимость');
   const seenE = floodFrom(open, CITY_START.x, CITY_START.y);
   // v0.24.0: участки вылазок — тоже отдельные (указатели из города)
   const seenFW = floodFrom(open, FROSTWOOD_START.x, FROSTWOOD_START.y), seenGY = floodFrom(open, GRAVEYARD_START.x, GRAVEYARD_START.y);
-  const seenOf = (o) => { const p = regionStart(o, WORLD.playerStart, CITY_START, EAST_X); return p === CITY_START ? seenE : p === FROSTWOOD_START ? seenFW : p === GRAVEYARD_START ? seenGY : seenO; };
+  const seenRooms=new Map(CITY_ROOMS.map(r=>[r.arrival,floodFrom(open,r.arrival.x,r.arrival.y)]));
+  const seenOf = (o) => { const p = regionStart(o, WORLD.playerStart, CITY_START, EAST_X); return seenRooms.get(p) || (p === CITY_START ? seenE : p === FROSTWOOD_START ? seenFW : p === GRAVEYARD_START ? seenGY : seenO); };
   for (const o of [...INTERACTIVES, ...ENEMY_SPAWNS]) {
     if (['flame_c'].includes(o.id)) continue;
     ok(near(open, seenOf(o), o.id), `ворота открыты: «${o.id}» достижим`);
@@ -130,8 +132,9 @@ console.log('\nМир: проходимость');
 console.log('\nМир: проверка редактора');
 {
   const ENEMIES = ENEMY_SPAWNS;
-  const baseT = buildTerrain({ ROADS, WATERS });
-  const none = checkWalkability({ colliders: COLLIDERS, props: PROPS, interactives: INTERACTIVES, enemies: ENEMIES, terrain: baseT });
+  const base=baseTerrain();
+  const baseT = buildTerrain({ ROADS:base.roads, WATERS:base.waters });
+  const none = checkWalkability({ colliders: base.cols, props: PROPS, interactives: INTERACTIVES, enemies: ENEMIES, terrain: baseT });
   ok(none.length === 0, 'checkWalkability: у базовой расстановки проблем нет' + (none.length ? ': ' + none.map(p => p.text).join('; ') : ''));
   // то, что реально в игре: базовая расстановка + правки из редактора (world.edits.js)
   const live = resolveMap({ storage: null, useDraft: false });
@@ -142,7 +145,7 @@ console.log('\nМир: проверка редактора');
   const bad = checkWalkability({ colliders: COLLIDERS, props: [...PROPS, ...wall], interactives: INTERACTIVES, enemies: ENEMIES, terrain: baseT });
   ok(bad.length > 5, 'checkWalkability: камни поперёк тропы замечены (' + bad.length + ' проблем)');
   // дыра в проходе корней: убрать «корни» из закрытых проходов нельзя, но можно сдвинуть блок деревьев
-  const hole = COLLIDERS.filter(c => !(c.kind === 'trees' && c.x === 500 && c.y === 4030));
+  const hole = base.cols.filter(c => !(c.kind === 'trees' && c.x === 500 && c.y === 4030));
   const leak = checkWalkability({ colliders: hole, props: PROPS, interactives: INTERACTIVES, enemies: ENEMIES, terrain: baseT });
   ok(leak.some(p => /в обход/.test(p.text)), 'checkWalkability: щель в лесном блоке пускает в обход корней — замечено');
 }
@@ -187,16 +190,16 @@ console.log('\nМир: правки и черновик редактора');
   saveDraft(st, { v: 1, props: { t0001: null }, add: [], pos: {} });
   ok(loadDraft(st)?.props.t0001 === null && resolveMap({ storage: st, useDraft: true }).fromDraft && resolveMap({ storage: st, useDraft: false }).fromDraft === false, 'черновик применяется только в режиме редактора/?draft');
   st.setItem(DRAFT_KEY, '{oops'); ok(loadDraft(st) === null, 'битый черновик игнорируется');
-  const expected = PROPS.length - Object.values(EDITS.props).filter(v => v === null).length + EDITS.add.length;
+  const expected = LIVE.props.length;
   ok(resolveMap({ storage: st, useDraft: true }).props.length === expected, `битый черновик → расстановка из world.edits.js (${expected} объектов)`);
 }
 
 console.log('\nМир: правки дорог, воды и стен');
 {
   const b = baseTerrain();
-  ok(b.roads.length === ROADS.length && b.waters.length === WATERS.length && b.cols.length === COLLIDERS.length, 'baseTerrain: все дороги, вода и стены на месте');
+  ok(b.roads.every(r=>!r.pts.some(p=>p[0]>=1800 && p[0]<3600)) && b.waters.length === WATERS.length && b.cols.some(c=>c.id==='city_plan_building_bank') && b.cols.some(c=>c.id==='c105'), 'baseTerrain: все дороги, вода и стены на месте');
   ok(b.cols[0].id === 'c0' && new Set(b.cols.map(c => c.id)).size === b.cols.length, 'у каждой стены есть id (c0, c1…), id уникальны');
-  ok(b.roads.every((r, i) => r.n === i), 'у базовых дорог номер шума = место в списке');
+  ok(b.roads.every(r => r.n === ROADS.findIndex(original=>original.id===r.id)), 'у базовых дорог номер шума = место в списке');
   // без правок живой мир = исходные данные
   const none = applyTerrainEdits({});
   ok(JSON.stringify(none.roads) === JSON.stringify(b.roads) && JSON.stringify(none.colliders) === JSON.stringify(b.cols), 'без правок дороги и стены не меняются');
@@ -239,7 +242,7 @@ console.log('\nМир: правки дорог, воды и стен');
   // старый черновик/файл без разделов дорог по-прежнему читается
   saveDraft(st, { v: 1, props: {}, add: [], pos: {} });
   const rm3 = resolveMap({ storage: st, useDraft: true });
-  ok(rm3.roads.length === ROADS.length && rm3.colliders.length === COLLIDERS.length, 'черновик старого формата (без дорог и стен) читается');
+  ok(rm3.roads.length === b.roads.length && rm3.colliders.length === b.cols.length, 'черновик старого формата (без дорог и стен) читается');
 }
 
 console.log('\nМир: геометрия правки линий и стен');

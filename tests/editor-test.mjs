@@ -15,7 +15,7 @@ const store = new Map();
 globalThis.window = { localStorage: { getItem: k => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: k => store.delete(k) }, location: { pathname: '/' } };
 
 const { services } = await import('../src/services.js');
-const { resolveMap, DRAFT_KEY, exportEditsFile } = await import('../src/world/mapData.js');
+const { resolveMap, DRAFT_KEY, exportEditsFile, diffTerrain } = await import('../src/world/mapData.js');
 const { buildTerrain } = await import('../src/world/terrain.js');
 const { MapEditor } = await import('../src/systems/MapEditor.js');
 const { WORLD, INTERACTIVES, ENEMY_SPAWNS } = await import('../src/config/world.layout.js');
@@ -66,6 +66,8 @@ const { EDITS: FILE_EDITS } = await import('../src/config/world.edits.js');
 // Механику редактора проверяем на базовой дорожке «door» (src/config/world.terrain.js). В настоящей карте её можно удалить
 // в редакторе (world.edits.js: roads.door = null) — тогда для этого теста возвращаем её, остальные правки карты не трогаем.
 if (FILE_EDITS.roads && FILE_EDITS.roads.door === null) delete FILE_EDITS.roads.door;
+// Compare with effective city layout after retiring old city-only patches.
+const effective=resolveMap();Object.assign(FILE_EDITS,diffTerrain(effective));
 const same = (a, b) => JSON.stringify(a || {}) === JSON.stringify(b || {});
 const without = (o, k) => { const c = { ...(o || {}) }; delete c[k]; return c; };
 

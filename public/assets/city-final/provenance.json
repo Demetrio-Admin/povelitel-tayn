@@ -72,6 +72,153 @@
       "key": "archive_rug",
       "file": "archive_rug-v1.webp",
       "prompt": "A single isolated rectangular flat floor rug sprite, deep muted indigo wool with a restrained aged-gold border and a small central eight-point compass star. Orthographic overhead TOP VIEW, absolutely flat, rectangular proportions 1.45:1, short subtle fringe at two ends. Hand-painted watercolor and ink storybook RPG look, softly worn textile, low contrast open central field, no lettering, no furniture, no room, no ground plane. Fill frame tightly. Transparent background."
+    },
+    {
+      "key": "society_exterior",
+      "file": "society_exterior-v1.webp",
+      "prompt": "Use case: stylized-concept. Single isolated front-facing building sprite for storybook watercolour fantasy RPG. Approved building board is architectural/style reference. Actual transparent background, crisp brown ink, warm amber windows, no street, people, HUD, lettering or watermark. Entire roof and facade visible; entrance at bottom. Building-specific architecture: pale sandstone, teal roof, small glass cupola, research instrument emblem",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "lab_exterior",
+      "file": "lab_exterior-v1.webp",
+      "prompt": "Use case: stylized-concept. Single isolated front-facing building sprite for storybook watercolour fantasy RPG. Approved building board is architectural/style reference. Actual transparent background, crisp brown ink, warm amber windows, no street, people, HUD, lettering or watermark. Entire roof and facade visible; entrance at bottom. Building-specific architecture: discreet grey service building, patched slate roof, copper extractor and empty seal panel",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "duel_exterior",
+      "file": "duel_exterior-v1.webp",
+      "prompt": "Use case: stylized-concept. Single isolated front-facing building sprite for storybook watercolour fantasy RPG. Approved building board is architectural/style reference. Actual transparent background, crisp brown ink, warm amber windows, no street, people, HUD, lettering or watermark. Entire roof and facade visible; entrance at bottom. Building-specific architecture: broad sandstone hall, burgundy roof, crossed-staff banners and double doors",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "coven_exterior",
+      "file": "coven_exterior-v1.webp",
+      "prompt": "Use case: stylized-concept. Single isolated front-facing building sprite for storybook watercolour fantasy RPG. Approved building board is architectural/style reference. Actual transparent background, crisp brown ink, warm amber windows, no street, people, HUD, lettering or watermark. Entire roof and facade visible; entrance at bottom. Building-specific architecture: asymmetrical plum-roof timber house, bay window, crescent banners and herbs",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "warehouse_a_exterior",
+      "file": "warehouse_a_exterior-v1.webp",
+      "prompt": "Use case: stylized-concept. Single isolated front-facing building sprite for storybook watercolour fantasy RPG. Approved building board is architectural/style reference. Actual transparent background, crisp brown ink, warm amber windows, no street, people, HUD, lettering or watermark. Entire roof and facade visible; entrance at bottom. Building-specific architecture: broad maintained slate-roof warehouse, wide loading double doors",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "warehouse_b_exterior",
+      "file": "warehouse_b_exterior-v1.webp",
+      "prompt": "Use case: stylized-concept. Single isolated front-facing building sprite for storybook watercolour fantasy RPG. Approved building board is architectural/style reference. Actual transparent background, crisp brown ink, warm amber windows, no street, people, HUD, lettering or watermark. Entire roof and facade visible; entrance at bottom. Building-specific architecture: weathered warehouse, damaged right eave with residual frost",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "cellar_exterior",
+      "file": "cellar_exterior-v1.webp",
+      "prompt": "Use case: stylized-concept. Single isolated front-facing building sprite for storybook watercolour fantasy RPG. Approved building board is architectural/style reference. Actual transparent background, crisp brown ink, warm amber windows, no street, people, HUD, lettering or watermark. Entire roof and facade visible; entrance at bottom. Building-specific architecture: red roof, walnut and plaster, central entrance and right cellar hatch",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "rescue_exterior",
+      "file": "rescue_exterior-v1.webp",
+      "prompt": "Use case: stylized-concept. Single isolated front-facing building sprite for storybook watercolour fantasy RPG. Approved building board is architectural/style reference. Actual transparent background, crisp brown ink, warm amber windows, no street, people, HUD, lettering or watermark. Entire roof and facade visible; entrance at bottom. Building-specific architecture: cream plaster, blue slate roof, twin dormers and central arched entrance",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "north_bay_exterior",
+      "file": "north_bay_exterior-v1.webp",
+      "prompt": "Use case: stylized-concept. Single isolated front-facing building sprite for storybook watercolour fantasy RPG. Approved building board is architectural/style reference. Actual transparent background, crisp brown ink, warm amber windows, no street, people, HUD, lettering or watermark. Entire roof and facade visible; entrance at bottom. Building-specific architecture: tall plum roof, projecting bay window and autumn ivy",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "north_workshop_exterior",
+      "file": "north_workshop_exterior-v1.webp",
+      "prompt": "Use case: stylized-concept. Single isolated front-facing building sprite for storybook watercolour fantasy RPG. Approved building board is architectural/style reference. Actual transparent background, crisp brown ink, warm amber windows, no street, people, HUD, lettering or watermark. Entire roof and facade visible; entrance at bottom. Building-specific architecture: low broad moss-green roof, side workshop and small tool emblem",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "coven_map_table",
+      "file": "coven_map_table-v1.webp",
+      "prompt": "Use case: stylized-concept. Production sprite for the same storybook hand-painted watercolour fantasy RPG, crisp brown ink, amber/walnut/brass palette. Reference board is STYLE reference only. ONE asset, no people, no UI, no lettering, no readable text, no watermark. ONE walnut rectangular map table, front seen slightly from overhead for top-down2D game. Full four legs and tabletop visible, table wide260world×145high, horizontal base. Parchment hand-painted town map spread on table, brass compass, closed plum journal and amber candle, no chairs, no surrounding scene, isolated actual transparent background. Front long edge horizontal, no isometric side view.",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "coven_sofa",
+      "file": "coven_sofa-v1.webp",
+      "prompt": "Use case: stylized-concept. Production sprite for the same storybook hand-painted watercolour fantasy RPG, crisp brown ink, amber/walnut/brass palette. Reference board is STYLE reference only. ONE asset, no people, no UI, no lettering, no readable text, no watermark. ONE front-facing wide cozy carved walnut sofa with muted plum upholstery, embroidered crescent cushions, small adjacent walnut tea stool with teapot at right, isolated actual transparent background. Front slightly overhead view for top-down2D game, entire legs and horizontal base visible. Dimensions260worldwide×150high. No room background or rug.",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "coven_wall",
+      "file": "coven_wall-v1.webp",
+      "prompt": "Use case: stylized-concept. Production rear interior wall sprite for top-down fantasy RPG. Concept board is STYLE reference only. ONE wide flat FRONT-FACING wall strip, entire rectangular wall, 3:1 width to height, horizontal bottom edge, no floor extending below. Actual transparent background outside wall; opaque wall inside. Hand-painted storybook watercolour, crisp brown ink, warm amber sconces and dark walnut beams, medieval fantasy. Sparse wall furnishings integrated within wall; no freestanding large furniture, people, doors, perspective sidewalls, HUD, readable text or watermark. Warm cream plaster and walnut beams, centered plum crescent banner, small amber windows flanking it, dried herbs hanging at sides and wall shelves with herbs and books. Home-like gathering place, plum/gold/walnut.",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "duel_circle",
+      "file": "duel_circle-v1.webp",
+      "prompt": "Use case: stylized-concept. Production sprite for the same storybook hand-painted watercolour fantasy RPG, crisp brown ink, amber/walnut/brass palette. Reference board is STYLE reference only. ONE asset, no people, no UI, no lettering, no readable text, no watermark. ONE flat circular floor inlay isolated on actual transparency, straight overhead orthographic circular view without perspective. Refined thin antique brass double ring with eight-point compass star, muted burgundy inner disc and warm pale sandstone outer ring, subtle worn hand-painted finish. Large quiet negative space, sparse fine design, no glowing runes, no magical portal, no raised plinth. Flat walkable circle.",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "duel_wall",
+      "file": "duel_wall-v1.webp",
+      "prompt": "Use case: stylized-concept. Production rear interior wall sprite for top-down fantasy RPG. Concept board is STYLE reference only. ONE wide flat FRONT-FACING wall strip, entire rectangular wall, 3:1 width to height, horizontal bottom edge, no floor extending below. Actual transparent background outside wall; opaque wall inside. Hand-painted storybook watercolour, crisp brown ink, warm amber sconces and dark walnut beams, medieval fantasy. Sparse wall furnishings integrated within wall; no freestanding large furniture, people, doors, perspective sidewalls, HUD, readable text or watermark. Formal sandstone dueling hall rear wall, tall narrow amber windows, twin burgundy crossed-staff banners and central burgundy star shield, walnut dado and brass sconces. Broad dignified architecture, no furniture.",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "home_stove",
+      "file": "home_stove-v1.webp",
+      "prompt": "Use case: stylized-concept. Production sprite for the same storybook hand-painted watercolour fantasy RPG, crisp brown ink, amber/walnut/brass palette. Reference board is STYLE reference only. ONE asset, no people, no UI, no lettering, no readable text, no watermark. ONE cozy compact black iron cottage stove with gentle amber fire behind glass, bronze fittings and short iron chimney pipe, kettle on top, small stack of firewood on right base. Front facing slightly overhead top-down2D sprite. Horizontal floor base, dimensions130worldwide×210high, actual transparent backdrop. No wall or ground.",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "home_wall",
+      "file": "home_wall-v1.webp",
+      "prompt": "Use case: stylized-concept. Production rear interior wall sprite for top-down fantasy RPG. Concept board is STYLE reference only. ONE wide flat FRONT-FACING wall strip, entire rectangular wall, 3:1 width to height, horizontal bottom edge, no floor extending below. Actual transparent background outside wall; opaque wall inside. Hand-painted storybook watercolour, crisp brown ink, warm amber sconces and dark walnut beams, medieval fantasy. Sparse wall furnishings integrated within wall; no freestanding large furniture, people, doors, perspective sidewalls, HUD, readable text or watermark. Cozy residential kitchen rear wall, warm ochre plaster and sturdy walnut beams, central glowing amber cottage window, wall cupboards at right with jars and plates, hanging dried herbs left and copper cookware, small family painting. No stove or bed or tables on floor.",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "lab_wall",
+      "file": "lab_wall-v1.webp",
+      "prompt": "Use case: stylized-concept. Production rear interior wall sprite for top-down fantasy RPG. Concept board is STYLE reference only. ONE wide flat FRONT-FACING wall strip, entire rectangular wall, 3:1 width to height, horizontal bottom edge, no floor extending below. Actual transparent background outside wall; opaque wall inside. Hand-painted storybook watercolour, crisp brown ink, warm amber sconces and dark walnut beams, medieval fantasy. Sparse wall furnishings integrated within wall; no freestanding large furniture, people, doors, perspective sidewalls, HUD, readable text or watermark. Dark weathered stone laboratory rear wall with copper pipes running along masonry, barred arched alcove centered, amber hanging lamps, a small blue gauge and bolts, no big tank in middle. Ominous but legible, never pitch black.",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "society_wall",
+      "file": "society_wall-v1.webp",
+      "prompt": "Use case: stylized-concept. Production rear interior wall sprite for top-down fantasy RPG. Concept board is STYLE reference only. ONE wide flat FRONT-FACING wall strip, entire rectangular wall, 3:1 width to height, horizontal bottom edge, no floor extending below. Actual transparent background outside wall; opaque wall inside. Hand-painted storybook watercolour, crisp brown ink, warm amber sconces and dark walnut beams, medieval fantasy. Sparse wall furnishings integrated within wall; no freestanding large furniture, people, doors, perspective sidewalls, HUD, readable text or watermark. Pale cool sandstone research reception rear wall, teal hanging banner with brass geometric science emblem centered, paired narrow glowing arched windows, scholarly framed diagrams without text, low built-in side cabinets. Refined teal/cream/brass.",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "stone_floor",
+      "file": "stone_floor-v1.webp",
+      "prompt": "Use case: stylized-concept. Production sprite for the same storybook hand-painted watercolour fantasy RPG, crisp brown ink, amber/walnut/brass palette. Reference board is STYLE reference only. ONE asset, no people, no UI, no lettering, no readable text, no watermark. Seamlessly tileable square texture of quiet warm grey sandstone indoor flagstones, orthographic straight overhead flat view, small rectangular blocks staggered, very fine brown seams, subtle wear, evenly lit, matte low contrast. Opaque image fills entire square edges, absolutely no border, perspective, walls, vignette, objects or plants.",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
+    },
+    {
+      "key": "warehouse_wall",
+      "file": "warehouse_wall-v1.webp",
+      "prompt": "Use case: stylized-concept. Production rear interior wall sprite for top-down fantasy RPG. Concept board is STYLE reference only. ONE wide flat FRONT-FACING wall strip, entire rectangular wall, 3:1 width to height, horizontal bottom edge, no floor extending below. Actual transparent background outside wall; opaque wall inside. Hand-painted storybook watercolour, crisp brown ink, warm amber sconces and dark walnut beams, medieval fantasy. Sparse wall furnishings integrated within wall; no freestanding large furniture, people, doors, perspective sidewalls, HUD, readable text or watermark. Very broad working warehouse rear wall, rough stone and heavy timber posts, two high small amber windows, iron lanterns, blank dark inventory slates and coil of rope mounted on wall. Dusty umber and muted slate, no scattered floor crates.",
+      "sourceReference": "approved building design pack",
+      "processing": "Transparent padding trimmed for sprite pivot; WebP export, no painted-content changes"
     }
   ]
 }

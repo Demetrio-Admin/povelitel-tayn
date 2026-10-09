@@ -776,7 +776,7 @@ var BUILDINGS = [
   ["society", "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", 2240, 1640, 560, 420, 2520, 2060, null],
   ["bank", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", 2300, 2290, 500, 400, 2550, 2690, null],
   ["duel", "\u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u0414\u0443\u044D\u043B\u044C", 200, 2940, 600, 420, 500, 3360, "ch2_fin_seal"],
-  ["coven", "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", 2240, 2940, 560, 420, 2520, 3360, null],
+  ["coven", "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", 2240, 2940, 560, 420, 2600, 3360, null],
   ["warehouse_a", "\u0421\u043A\u043B\u0430\u0434 \u0410", 200, 3710, 600, 340, 500, 4050, null],
   ["warehouse_b", "\u0421\u043A\u043B\u0430\u0434 \u0411", 2240, 3710, 560, 340, 2520, 4050, null],
   ["lab", "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", -700, 2920, 380, 380, -510, 3300, "ch2_lab_open"]
@@ -787,10 +787,10 @@ var layouts = [
   ["society", "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", 13400, 200, 900, 1320],
   ["lab", "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", 10200, 2600, 960, 2160],
   ["duel", "\u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u0414\u0443\u044D\u043B\u044C", 11800, 2600, 1080, 1680],
-  ["coven", "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", 13400, 2600, 840, 1200],
+  ["coven", "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", 13400, 2600, 840, 1440],
   ["warehouse", "\u0421\u043A\u043B\u0430\u0434\u0441\u043A\u043E\u0439 \u043A\u043E\u043C\u043F\u043B\u0435\u043A\u0441", 10200, 5200, 1440, 1680],
-  ["cellar", "\u0414\u043E\u043C \u0441 \u043F\u043E\u0433\u0440\u0435\u0431\u043E\u043C", 11800, 5200, 720, 960],
-  ["rescue", "\u0414\u043E\u043C \u0437\u0430 \u043B\u0435\u0434\u044F\u043D\u043E\u0439 \u0434\u0432\u0435\u0440\u044C\u044E", 13400, 5200, 720, 960]
+  ["cellar", "\u0414\u043E\u043C \u0441 \u043F\u043E\u0433\u0440\u0435\u0431\u043E\u043C", 11800, 5200, 720, 1440],
+  ["rescue", "\u0414\u043E\u043C \u0437\u0430 \u043B\u0435\u0434\u044F\u043D\u043E\u0439 \u0434\u0432\u0435\u0440\u044C\u044E", 13400, 5200, 720, 1440]
 ];
 var CITY_ROOMS = layouts.map(([key, name, x, y, w, h]) => {
   const doors = BUILDINGS.filter((b) => key === "warehouse" ? b.id.startsWith("warehouse_") : b.id === key);
@@ -863,7 +863,7 @@ var CITY_POSITIONS = Object.fromEntries([
   ["fq_water", { ...cityPoint(1500, 780), collide: { w: 540, h: 40 }, editorStyle: { w: 540, h: 90 } }],
   ["ice_construct", cityPoint(1230, 1350)],
   ["npc_nerys", cityPoint(1580, 1230)],
-  ["fq_cellar", cityPoint(540, 1280)],
+  ["fq_cellar", cityPoint(650, 1280)],
   ["fq_door", cityPoint(2520, 1280)],
   ["fq_cauldron", cityPoint(2110, 1350)],
   ["lab_seal", cityPoint(-510, 3340)],
@@ -872,7 +872,7 @@ var CITY_POSITIONS = Object.fromEntries([
   ["lab_chest", rp("lab", 160, 1880)],
   ["lab_cauldron", rp("lab", 820, 1880)],
   ["npc_tikhon", rp("lab", 240, 1540)],
-  ["lab_journal", rp("lab", 710, 1720)],
+  ["lab_journal", { ...rp("lab", 710, 1786), elevated: 41 }],
   ["wh_cargo", rp("warehouse", 1110, 440)],
   ["wh_equipment", rp("warehouse", 400, 630)],
   ["final_debris", cityPoint(730, 3530)],
@@ -880,7 +880,7 @@ var CITY_POSITIONS = Object.fromEntries([
   ["final_rift", cityPoint(280, 3470)],
   ["final_ward", cityPoint(500, 3400)],
   ["npc_nerys_final", cityPoint(850, 3430)],
-  ["final_letters", rp("duel", 840, 590)],
+  ["final_letters", { ...rp("duel", 840, 626), elevated: 41 }],
   ["npc_severin_after", rp("duel", 770, 820)],
   ["plaza_critter", cityPoint(1620, 2790)],
   ["road_scavenger", cityPoint(-300, 2510)],

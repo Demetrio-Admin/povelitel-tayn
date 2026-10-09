@@ -66,8 +66,9 @@ try{
       console.log('✓ Warehouse combat reload stays in the same room');
     }
     const before=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').player.y);
-    await page.keyboard.down('ArrowUp');await page.waitForTimeout(200);await page.keyboard.up('ArrowUp');
-    assert.ok(await page.evaluate(before=>window.__game.scene.getScene('ExplorationScene').player.y<before,before),'movement inside '+loc);
+    await page.keyboard.down('ArrowUp');
+    try{await page.waitForFunction(before=>window.__game.scene.getScene('ExplorationScene').player.y<before,before,{timeout:10000});}
+    finally{await page.keyboard.up('ArrowUp');}
     await atDoor('room_exit_'+exit);await page.evaluate(id=>window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id===id).interact(),'room_exit_'+exit);
     await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc.id==='city' && window.__witch.mode==='exploration');
   }

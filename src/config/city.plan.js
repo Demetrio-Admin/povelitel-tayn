@@ -1,4 +1,4 @@
-// Approved spacious town with production art for the square, Bank and Archive. Coordinate islands use the
+// Approved spacious town with individual production facades and playable rooms. Coordinate islands use the
 // existing server-persisted x/y format; rooms never overlap outdoor locations.
 export const CITY_ORIGIN = { x: 6720, y: 600 };
 export const CITY_RECT = { x: 6000, y: 600, w: 3720, h: 4320 };
@@ -13,7 +13,7 @@ export const BUILDINGS = [
   ['society','Общество Преображения',2240,1640,560,420,2520,2060,null],
   ['bank','Городской Банк',2300,2290,500,400,2550,2690,null],
   ['duel','Магическая Дуэль',200,2940,600,420,500,3360,'ch2_fin_seal'],
-  ['coven','Дом Ковенов',2240,2940,560,420,2520,3360,null],
+  ['coven','Дом Ковенов',2240,2940,560,420,2600,3360,null],
   ['warehouse_a','Склад А',200,3710,600,340,500,4050,null],
   ['warehouse_b','Склад Б',2240,3710,560,340,2520,4050,null],
   ['lab','Тайная лаборатория',-700,2920,380,380,-510,3300,'ch2_lab_open'],
@@ -24,10 +24,10 @@ const layouts = [
   ['society','Общество Преображения',13400,200,900,1320],
   ['lab','Тайная лаборатория',10200,2600,960,2160],
   ['duel','Магическая Дуэль',11800,2600,1080,1680],
-  ['coven','Дом Ковенов',13400,2600,840,1200],
+  ['coven','Дом Ковенов',13400,2600,840,1440],
   ['warehouse','Складской комплекс',10200,5200,1440,1680],
-  ['cellar','Дом с погребом',11800,5200,720,960],
-  ['rescue','Дом за ледяной дверью',13400,5200,720,960],
+  ['cellar','Дом с погребом',11800,5200,720,1440],
+  ['rescue','Дом за ледяной дверью',13400,5200,720,1440],
 ];
 export const CITY_ROOMS = layouts.map(([key,name,x,y,w,h]) => {
   const doors = BUILDINGS.filter(b => (key === 'warehouse' ? b.id.startsWith('warehouse_') : b.id === key));
@@ -61,14 +61,14 @@ export const CITY_POSITIONS = Object.fromEntries([
   ['frost_barrier',{...cityPoint(1500,1520),collide:{w:540,h:40},editorStyle:{w:580,h:160}}],
   ['fq_water',{...cityPoint(1500,780),collide:{w:540,h:40},editorStyle:{w:540,h:90}}],
   ['ice_construct',cityPoint(1230,1350)],['npc_nerys',cityPoint(1580,1230)],
-  ['fq_cellar',cityPoint(540,1280)],['fq_door',cityPoint(2520,1280)],['fq_cauldron',cityPoint(2110,1350)],
+  ['fq_cellar',cityPoint(650,1280)],['fq_door',cityPoint(2520,1280)],['fq_cauldron',cityPoint(2110,1350)],
   ['lab_seal',cityPoint(-510,3340)],['lab_herb_1',rp('lab',140,720)],['lab_herb_2',rp('lab',810,940)],
   ['lab_chest',rp('lab',160,1880)],['lab_cauldron',rp('lab',820,1880)],
-  ['npc_tikhon',rp('lab',240,1540)],['lab_journal',rp('lab',710,1720)],
+  ['npc_tikhon',rp('lab',240,1540)],['lab_journal',{...rp('lab',710,1786),elevated:41}],
   ['wh_cargo',rp('warehouse',1110,440)],['wh_equipment',rp('warehouse',400,630)],
   ['final_debris',cityPoint(730,3530)],['final_ice_wall',cityPoint(2180,2810)],
   ['final_rift',cityPoint(280,3470)],['final_ward',cityPoint(500,3400)],['npc_nerys_final',cityPoint(850,3430)],
-  ['final_letters',rp('duel',840,590)],['npc_severin_after',rp('duel',770,820)],
+  ['final_letters',{...rp('duel',840,626),elevated:41}],['npc_severin_after',rp('duel',770,820)],
   ['plaza_critter',cityPoint(1620,2790)],['road_scavenger',cityPoint(-300,2510)],
   ['wh_collector_1',rp('warehouse',430,1160)],['wh_collector_2',rp('warehouse',1050,900)],['wh_elite',rp('warehouse',790,490)],
   ['lab_critter',cityPoint(2410,2220)],['fq_critter',cityPoint(850,1340)],['fq_collector',cityPoint(2280,1350)],
@@ -112,7 +112,10 @@ export function cityMapData() {
     rect('city_carriage_lane',1320,40,360,4240,'city_final_paving',{tileScale:0.18,tint:0xc4b499}),
     rect('city_frost_quarter',40,800,2920,680,'city_final_paving',{tileScale:0.18,tint:0x92cddd,alpha:0.55,layerOffset:0.2}),
     rect('city_frost_plaza',600,2220,1640,680,'city_final_paving',{tileScale:0.18,tint:0x92cddd,alpha:0.6,layerOffset:0.2}),
-    ...CITY_ROOMS.map(r=>({id:'floor_'+r.id,...r.rect,tex:['archive','bank'].includes(r.key)?'city_final_wood_floor':['coven','cellar','rescue'].includes(r.key)?'city_wood_floor':'city_stone_floor',tileScale:['archive','bank'].includes(r.key)?0.22:0.5,interior:true})),
+    ...CITY_ROOMS.map(r=>({id:'floor_'+r.id,...r.rect,
+      tex:['society','lab','duel','warehouse'].includes(r.key)?'city_final_stone_floor':'city_final_wood_floor',
+      tileScale:['society','lab','duel','warehouse'].includes(r.key)?0.25:0.22,
+      ...(['lab','warehouse'].includes(r.key)?{tint:0xc6c0b3}:{}),interior:true})),
   ];
   const colliders=[];
   const col=(id,x,y,w,h,kind='ruin',extra={})=>colliders.push({id:'city_plan_'+id,...cityPoint(x,y),w,h,kind,...extra});
@@ -122,8 +125,9 @@ export function cityMapData() {
   // Forest confines the approach without blocking the side path to the lab.
   [[-720,0,720,2300],[-720,2740,420,180],[-60,2740,60,1580],[-720,3540,720,780]].forEach((a,i)=>col('edge_'+i,...a,'trees'));
   for(const b of BUILDINGS)colliders.push({id:'city_plan_building_'+b.id,kind:'furniture',x:b.x,y:b.y,w:b.w,h:b.h,
-    tex:b.id==='bank'?'city_final_bank_exterior':b.id==='archive'?'city_final_archive_exterior':b.id.startsWith('warehouse_')?'city_warehouse':b.id==='rescue'?'city_frozen_house':'city_house',
-    editorStyle:{w:b.w,h:b.id==='bank'?460:b.id==='archive'?490:b.h},building:b.id});
+    tex:'city_final_'+b.id+'_exterior',
+    editorStyle:{w:b.w,h:({bank:460,archive:490,society:490,lab:450,duel:470,coven:470,
+      warehouse_a:380,warehouse_b:380,cellar:420,rescue:420,north_bay:490,north_workshop:420})[b.id]},building:b.id});
   col('fountain',860,2460,180,180,'furniture',{tex:'city_final_fountain',editorStyle:{w:210,h:200}});
   for(const [i,[x,y]] of [[710,2390],[710,2770],[1940,2540]].entries())col('bench_'+i,x,y,160,28,'furniture',{tex:'city_final_bench'});
   col('market',2010,2800,220,80,'furniture',{tex:'market_stall_01'});
@@ -146,22 +150,55 @@ export function cityMapData() {
   furniture('archive','desk',220,680,240,35,'city_final_archive_desk');
   furniture('society','bench',110,350,190,40,'city_society_workbench');
   furniture('society','reservoir',690,370,70,40,'city_coolant_stable');
-  furniture('coven','table',130,380,170,30,'city_coven_table');
+  furniture('society','side_bench',610,800,190,40,'city_society_workbench');
+  furniture('coven','table',100,420,240,40,'city_final_coven_map_table');
   furniture('coven','cabinet',620,280,120,35,'city_coven_cabinet');
+  furniture('coven','tea_sofa',540,700,240,40,'city_final_coven_sofa');
   furniture('duel','rack_a',90,450,80,30,'city_duel_rack');
   furniture('duel','rack_b',880,450,80,30,'city_duel_rack');
-  furniture('lab','bed_a',100,1410,70,30,'bed_01');
-  furniture('lab','bed_b',750,1220,70,30,'bed_01');
+  furniture('lab','bed_a',90,1410,130,40,'bed_01',{editorStyle:{w:140,h:150}});
+  furniture('lab','bed_b',740,1220,130,40,'bed_01',{editorStyle:{w:140,h:150}});
   furniture('lab','machine_a',110,440,150,35,'city_lab_machine');
   furniture('lab','machine_b',710,540,150,35,'city_lab_machine');
-  furniture('lab','journal',630,1750,140,35,'city_archive_desk');
+  furniture('lab','journal',630,1750,160,35,'city_archive_desk',{editorStyle:{w:180,h:130}});
+  furniture('duel','letters',760,590,160,35,'city_archive_desk',{editorStyle:{w:180,h:130}});
   furniture('warehouse','crate_a',180,550,100,30,'city_crate');
   furniture('warehouse','crate_b',1170,300,100,30,'city_crate');
-  for(const key of ['cellar','rescue']){furniture(key,key+'_bed',100,320,70,30,'bed_01');furniture(key,key+'_shelf',510,250,140,35,'city_archive_shelf');}
+  furniture('cellar','cellar_kitchen_table',100,690,170,35,'city_coven_table');
+  furniture('rescue','rescue_bed',500,510,120,35,'bed_01',{editorStyle:{w:130,h:150,tint:0xbecfe4}});
+  for(const key of ['cellar','rescue']){
+    furniture(key,key+'_stove',85,410,110,35,'city_final_home_stove');
+    furniture(key,key+'_shelf',510,310,140,35,'city_archive_shelf');
+  }
   const props=[];
   const roomProp=(key,id,k,x,y,extra={})=>props.push({id:'room_decor_'+key+'_'+id,k,...rp(key,x,y),solid:null,...extra});
   roomProp('bank','back_wall','city_final_bank_wall',360,250,{l:'back'});
   roomProp('archive','back_wall','city_final_archive_wall',450,290,{l:'back'});
+  for(const [key,tex,y] of [['society','society',270],['lab','lab',280],['duel','duel',310],
+    ['coven','coven',270],['warehouse','warehouse',300],['cellar','home',250],['rescue','home',250]]){
+    roomProp(key,'back_wall','city_final_'+tex+'_wall',room(key).rect.w/2,y,{l:'back'});
+  }
+  roomProp('duel','arena_inlay','city_final_duel_circle',540,1120,{l:'room-floor'});
+  roomProp('society','rug','city_final_archive_rug',450,1070,{l:'room-floor',w:300,h:350,tint:0x9ab6b0});
+  roomProp('coven','rug','city_final_archive_rug',420,1180,{l:'room-floor',w:270,h:430,tint:0xd0a4c1});
+  for(const key of ['cellar','rescue']){
+    roomProp(key,'rug','city_final_bank_rug',360,1060,{l:'room-floor',w:300,h:260,...(key==='rescue'?{tint:0xb7c8e2}:{})});
+    roomProp(key,'entry_bench','city_final_bench',570,1160,{solid:{w:150,h:24}});
+    roomProp(key,'plant','plant_pot_01',70,1180,{solid:{w:28,h:14}});
+  }
+  for(const [key,x,y] of [['society',140,990],['coven',150,1140],['duel',160,1040],['duel',920,1230]]){
+    roomProp(key,'bench_'+x,'city_final_bench',x,y,{solid:{w:150,h:24}});
+  }
+  for(const [key,x,y] of [['society',80,1170],['society',820,1170],['coven',760,1220]]){
+    roomProp(key,'plant_'+x,'plant_pot_01',x,y,{solid:{w:28,h:14}});
+  }
+  for(const [i,[x,y]] of [[170,920],[1240,1180],[170,380],[1270,650]].entries()){
+    roomProp('warehouse','stack_'+i,i%2?'barrel_01':'city_crate',x,y,{solid:{w:i%2?50:90,h:26}});
+  }
+  // Two stocked sections frame a clear 360px centre aisle on portrait screens.
+  for(const [i,[x,y]] of [[430,980],[1040,1240],[430,380],[1040,660]].entries()){
+    roomProp('warehouse','section_stock_'+i,'city_crate',x,y,{w:180,h:165,solid:{w:160,h:32}});
+  }
   roomProp('bank','rug','city_final_bank_rug',360,760,{l:'room-floor'});
   roomProp('archive','rug','city_final_archive_rug',450,1210,{l:'room-floor'});
   roomProp('bank','waiting_bench','city_final_bench',140,650,{solid:{w:150,h:24}});

@@ -41,6 +41,12 @@ export class CityPresentation {
       fountain.setTexture(key); applyDisplaySize(fountain, key);
     }
     for(const {c,img} of this.scene.colliderViews.values())if(c.editorStyle)this.scene.styleImage(img,c.editorStyle,img.texture.key);
+    // Individual house art shares the story frost state without swapping back to generic houses.
+    for(const {c,img} of this.scene.colliderViews.values()){
+      if(['north_bay','north_workshop','cellar','rescue'].includes(c.building) && quarter && !thawed){
+        img.setTint(0xb6dbea);
+      }
+    }
     for (const im of this.scene.cityLamps || []) {
       if (finale) im.setTint(COLORS.ice); else im.clearTint();
     }

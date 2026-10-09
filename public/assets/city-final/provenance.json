@@ -1,0 +1,77 @@
+{
+  "mode": "built-in imagegen",
+  "date": "2026-10-09",
+  "style": "Approved spacious town and separate playable interiors",
+  "assets": [
+    {
+      "key": "bank_exterior",
+      "file": "bank_exterior-v1.webp",
+      "prompt": "Reference-derived production sprite: extract the approved bank exterior as a separate hand-painted RPG asset; no people, no UI. See approved building and town concept pack."
+    },
+    {
+      "key": "archive_exterior",
+      "file": "archive_exterior-v1.webp",
+      "prompt": "Reference-derived production sprite: extract the approved archive exterior as a separate hand-painted RPG asset; no people, no UI. See approved building and town concept pack."
+    },
+    {
+      "key": "paving",
+      "file": "paving-v1.webp",
+      "prompt": "Reference-derived production sprite: extract the approved paving as a separate hand-painted RPG asset; no people, no UI. See approved building and town concept pack."
+    },
+    {
+      "key": "bank_counter",
+      "file": "bank_counter-v1.webp",
+      "prompt": "From the RIGHT panel of this approved illustration, make a production standalone sprite of the BANK COUNTER only: a long ornate walnut service counter with warm bronze carved panels, a dark green inset, small book of accounts, elegant brass scales, neatly stacked gold coins and an ink well. NO banker, no human, no chair behind it, no safe, no walls, no floor, no other furnishings. Elevated straight-on north-facing top-down RPG perspective, front edge horizontal and both sides almost symmetrical, NOT a rotated isometric desk. Counter body wide and low, around 3:1 silhouette, feet at bottom. Transparent background with small margin. Preserve the reference's warm hand-painted watercolor/ink cozy witch game style. Clear silhouette at mobile sprite sizes, restrained crisp detail, no words, no cast floor shadow, one object only."
+    },
+    {
+      "key": "archive_shelf",
+      "file": "archive_shelf-v1.webp",
+      "prompt": "From the RIGHT panel of this approved illustration, make one production standalone sprite of an ARCHIVE BOOKCASE: a tall upright walnut shelving cabinet with three shelves of varied colorful old books, a few scrolls and drawers below, carved top rail, tiny bronze details. NO floor, no surrounding room, no people, no plants outside it. Elevated straight-on north-facing overhead RPG view, front edge horizontal, not a rotated isometric cabinet. Around 4:3 width-to-height silhouette, warm hand-painted watercolor/ink storybook game style identical to the reference. Entire object on genuinely transparent background, tightly framed with small even margin, base at bottom centre. No lettering or readable text, no shadows extending onto transparent floor."
+    },
+    {
+      "key": "archive_desk",
+      "file": "archive_desk-v1.webp",
+      "prompt": "From the RIGHT panel of this approved illustration, make one production standalone sprite of a WALNUT READING DESK for a magical archive. Broad rectangular tabletop, carved panel drawers, a small globe at the LEFT rear corner, neatly stacked closed books at the RIGHT rear corner, brass candleholder and ink well. Leave the FRONT-CENTRE part of the tabletop clear so a separate interactable quest document can be placed by the game. No glowing quest scroll baked into it. NO chairs, NO people, NO floor, NO room. Elevated straight north-facing overhead RPG view, horizontal front edge, not rotated isometric. Warm detailed watercolor/ink storybook illustration identical to reference, clear silhouette around 2:1 width-to-height. Entire desk on genuine transparent background with small margin, base bottom-centre, no text, no long ground shadow."
+    },
+    {
+      "key": "wood_floor",
+      "file": "wood_floor-v1.webp",
+      "prompt": "A seamless square tile of warm walnut herringbone parquet flooring for the interior of a hand-painted cozy witch 2D overhead RPG. Flat straight top-down orthographic material swatch, softly outlined broad individual boards, quiet amber and medium-brown tones, subtle worn wood grain, light consistent ambient shading. Full frame entirely wood, no rug, no furniture, no people, no border, no vignette, no directional lighting, no perspective, no text. Seamless repeating on all four edges. About 8 to 10 broad boards across the texture; low contrast so a small purple heroine reads clearly against it. Watercolor and fine ink style matching an illustrated fantasy town. No shiny photoreal finish."
+    },
+    {
+      "key": "bank_wall",
+      "file": "bank_wall-v1.webp",
+      "prompt": "Production sprite for the hand-painted storybook RPG Колдовство. Cozy autumn European magical town, watercolor and fine ink, pale old sandstone, walnut wood, warm amber lights, restrained detail readable on mobile. Orthographic elevated front view consistent with a top-down walkable 2D RPG. Transparent background, isolated asset, no ground plane, no people, no UI, no readable lettering, no surrounding scene. One wide bank interior BACK WALL strip only, 3:1 aspect ratio. Pale cream plaster above walnut wainscoting, two narrow glowing arched windows, a small central bronze coin emblem, warm bronze wall sconces. No floor, no furniture in front, no roof. Visible wall thickness minimal. Fill frame tightly."
+    },
+    {
+      "key": "archive_wall",
+      "file": "archive_wall-v1.webp",
+      "prompt": "Production sprite for the hand-painted storybook RPG Колдовство. Cozy autumn European magical town, watercolor and fine ink, pale old sandstone, walnut wood, warm amber lights, restrained detail readable on mobile. Orthographic elevated front view consistent with a top-down walkable 2D RPG. Transparent background, isolated asset, no ground plane, no people, no UI, no readable lettering, no surrounding scene. One wide archive interior BACK WALL strip only, 3:1 aspect ratio. Walnut wall panels, two tall plum-framed blue-and-gold stained glass arched windows flanking a central fitted bookcase filled with burgundy ochre teal manuscripts. Two small amber sconces. No floor, no roof, no foreground furniture. Fill frame tightly."
+    },
+    {
+      "key": "bench",
+      "file": "bench-v1.webp",
+      "prompt": "Production sprite for the hand-painted storybook RPG Колдовство. Cozy autumn European magical town, watercolor and fine ink, pale old sandstone, walnut wood, warm amber lights, restrained detail readable on mobile. Orthographic elevated front view consistent with a top-down walkable 2D RPG. Transparent background, isolated asset, no ground plane, no people, no UI, no readable lettering, no surrounding scene. One horizontal public park bench, warm walnut slats and dark bronze curved legs and armrests, front elevated view with visible seat. Simple charming shape, no plants, no floor, no people. Fill frame tightly."
+    },
+    {
+      "key": "fountain",
+      "file": "fountain-v1.webp",
+      "prompt": "Production sprite for the hand-painted storybook RPG Колдовство. Cozy autumn European magical town, watercolor and fine ink, pale old sandstone, walnut wood, warm amber lights, restrained detail readable on mobile. Orthographic elevated front view consistent with a top-down walkable 2D RPG. Transparent background, isolated asset, no ground plane, no people, no UI, no readable lettering, no surrounding scene. A single compact two-tier circular pale sandstone fountain, rounded broad basin, delicate carved bronze leaf details, a small upper bowl, turquoise water and thin water streams. Front elevated RPG view so pool surface visible. Fountain only. No pavement, no grass, no flowers. Fill frame tightly."
+    },
+    {
+      "key": "fountain_frozen",
+      "file": "fountain_frozen-v1.webp",
+      "prompt": "Edit this fountain into its enchanted frozen winter story variant. Preserve exactly the same framing, silhouette, basin, carved details and elevated front RPG perspective. Replace flowing streams with slender translucent blue ice columns and icicles, freeze pool surfaces pale turquoise with delicate frost cracks, put a light rime on stone edges and bronze leaves. Retain warm hand-painted watercolor-and-ink rendering. Fountain only on transparent background, no ground, no snow landscape, no people or text."
+    },
+    {
+      "key": "bank_rug",
+      "file": "bank_rug-v1.webp",
+      "prompt": "A single isolated rectangular flat floor rug sprite, forest green wool with a restrained bronze-gold double border and a small central three-coin emblem. Orthographic overhead TOP VIEW, absolutely flat, rectangular proportions 1.45:1, short subtle fringe at two ends. Hand-painted watercolor and ink storybook RPG look, softly worn textile, low contrast open central field, no lettering, no furniture, no room, no ground plane. Fill frame tightly. Transparent background."
+    },
+    {
+      "key": "archive_rug",
+      "file": "archive_rug-v1.webp",
+      "prompt": "A single isolated rectangular flat floor rug sprite, deep muted indigo wool with a restrained aged-gold border and a small central eight-point compass star. Orthographic overhead TOP VIEW, absolutely flat, rectangular proportions 1.45:1, short subtle fringe at two ends. Hand-painted watercolor and ink storybook RPG look, softly worn textile, low contrast open central field, no lettering, no furniture, no room, no ground plane. Fill frame tightly. Transparent background."
+    }
+  ]
+}

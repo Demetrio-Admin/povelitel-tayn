@@ -969,7 +969,8 @@ export class ExplorationScene extends Phaser.Scene {
     if (!this.canAct()) return;
     const wp = this.cameras.main.getWorldPoint(x, y);
     const obj = this.interaction.pick(wp.x, wp.y);
-    const goal = obj ? { x: obj.x, y: obj.y } : { x: wp.x, y: wp.y };
+    // Service NPCs can provide a visitor spot on the accessible side of furniture.
+    const goal = obj ? obj.cfg.approach || { x: obj.x, y: obj.y } : { x: wp.x, y: wp.y };
     const route = this.planPath(goal.x, goal.y);
     // куда на самом деле дойдём: закрытая цель → ближайшая достижимая точка (метка ставится туда)
     const end = route?.end || goal;

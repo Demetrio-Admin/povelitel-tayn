@@ -782,7 +782,7 @@ var BUILDINGS = [
   ["lab", "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", -700, 2920, 380, 380, -510, 3300, "ch2_lab_open"]
 ].map(([id, name, x, y, w, h, dx, dy, requires]) => ({ id, name, ...cityPoint(x, y), w, h, door: cityPoint(dx, dy), requires }));
 var layouts = [
-  ["bank", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", 10200, 200, 720, 960],
+  ["bank", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", 10200, 200, 720, 1440],
   ["archive", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", 11800, 200, 900, 1500],
   ["society", "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", 13400, 200, 900, 1320],
   ["lab", "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", 10200, 2600, 960, 2160],
@@ -852,10 +852,11 @@ var CITY_POSITIONS = Object.fromEntries([
   ["plaza_debris", cityPoint(1930, 2370)],
   ["sapphire_city_cache_1", cityPoint(730, 2710)],
   ["sapphire_city_cache_2", cityPoint(2040, 3470)],
+  // The document sorts one pixel in front of the desk, with its art on the tabletop.
   ["npc_ilaria", rp("archive", 260, 1050)],
-  ["archive_document", rp("archive", 330, 650)],
+  ["archive_document", { ...rp("archive", 330, 716), elevated: 41 }],
   ["npc_severin", rp("society", 360, 710)],
-  ["npc_banker", rp("bank", 360, 510)],
+  ["npc_banker", { ...rp("bank", 360, 350), approach: rp("bank", 360, 510) }],
   ["npc_rowena", rp("coven", 270, 610)],
   ["npc_duelist", rp("duel", 260, 1280)],
   ["frost_barrier", { ...cityPoint(1500, 1520), collide: { w: 540, h: 40 }, editorStyle: { w: 580, h: 160 } }],

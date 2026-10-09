@@ -1,4 +1,4 @@
-// Playable blockout of the approved spacious town. Coordinate islands use the
+// Approved spacious town with production art for the square, Bank and Archive. Coordinate islands use the
 // existing server-persisted x/y format; rooms never overlap outdoor locations.
 export const CITY_ORIGIN = { x: 6720, y: 600 };
 export const CITY_RECT = { x: 6000, y: 600, w: 3720, h: 4320 };
@@ -19,7 +19,7 @@ export const BUILDINGS = [
   ['lab','Тайная лаборатория',-700,2920,380,380,-510,3300,'ch2_lab_open'],
 ].map(([id,name,x,y,w,h,dx,dy,requires]) => ({ id,name,...cityPoint(x,y),w,h,door:cityPoint(dx,dy),requires }));
 const layouts = [
-  ['bank','Городской Банк',10200,200,720,960],
+  ['bank','Городской Банк',10200,200,720,1440],
   ['archive','Городской Архив',11800,200,900,1500],
   ['society','Общество Преображения',13400,200,900,1320],
   ['lab','Тайная лаборатория',10200,2600,960,2160],
@@ -54,8 +54,9 @@ export const CITY_POSITIONS = Object.fromEntries([
   ['city_board',cityPoint(370,2430)],['npc_merchant',cityPoint(2120,2930)],
   ['plaza_trace',cityPoint(1540,2740)],['plaza_debris',cityPoint(1930,2370)],
   ['sapphire_city_cache_1',cityPoint(730,2710)],['sapphire_city_cache_2',cityPoint(2040,3470)],
-  ['npc_ilaria',rp('archive',260,1050)],['archive_document',rp('archive',330,650)],
-  ['npc_severin',rp('society',360,710)],['npc_banker',rp('bank',360,510)],
+  // The document sorts one pixel in front of the desk, with its art on the tabletop.
+  ['npc_ilaria',rp('archive',260,1050)],['archive_document',{...rp('archive',330,716),elevated:41}],
+  ['npc_severin',rp('society',360,710)],['npc_banker',{...rp('bank',360,350),approach:rp('bank',360,510)}],
   ['npc_rowena',rp('coven',270,610)],['npc_duelist',rp('duel',260,1280)],
   ['frost_barrier',{...cityPoint(1500,1520),collide:{w:540,h:40},editorStyle:{w:580,h:160}}],
   ['fq_water',{...cityPoint(1500,780),collide:{w:540,h:40},editorStyle:{w:540,h:90}}],
@@ -102,16 +103,16 @@ export function cityZoneData() {
 const rect=(id,x,y,w,h,tex,more={})=>({id,...cityPoint(x,y),w,h,tex,...more});
 export function cityMapData() {
   const grounds=[
-    rect('city_plaza',600,2220,1640,680,'city_paving'),
-    rect('city_avenue',1100,40,800,4240,'city_paving'),
-    rect('city_carriage_lane',1320,40,360,4240,'city_paving',{tint:0xa99c85}),
-    rect('city_entry',-720,2300,1320,440,'stone_path_01'),
+    rect('city_plaza',600,2220,1640,680,'city_final_paving',{tileScale:0.18}),
+    rect('city_avenue',1100,40,800,4240,'city_final_paving',{tileScale:0.18}),
+    rect('city_entry',-720,2300,1320,440,'city_final_paving',{tileScale:0.18}),
     rect('city_lab_path',-300,2740,240,800,'dirt_path_01'),
-    rect('city_lab_forecourt',-700,3300,640,240,'stone_path_01'),
-    rect('city_frost_quarter',40,800,2920,680,'city_paving_frost',{alpha:0.55,layerOffset:0.2}),
-    rect('city_frost_plaza',600,2220,1640,680,'city_paving_frost',{alpha:0.6,layerOffset:0.2}),
-    ...[560,1260,2100,2740,3400,4100].map((y,i)=>rect('city_cross_'+i,60,y,2880,240,'city_paving')),
-    ...CITY_ROOMS.map(r=>({id:'floor_'+r.id,...r.rect,tex:['archive','coven','bank','cellar','rescue'].includes(r.key)?'city_wood_floor':'city_stone_floor',interior:true})),
+    rect('city_lab_forecourt',-700,3300,640,240,'city_final_paving',{tileScale:0.18}),
+    ...[560,1260,2100,2740,3400,4100].map((y,i)=>rect('city_cross_'+i,60,y,2880,240,'city_final_paving',{tileScale:0.18})),
+    rect('city_carriage_lane',1320,40,360,4240,'city_final_paving',{tileScale:0.18,tint:0xc4b499}),
+    rect('city_frost_quarter',40,800,2920,680,'city_final_paving',{tileScale:0.18,tint:0x92cddd,alpha:0.55,layerOffset:0.2}),
+    rect('city_frost_plaza',600,2220,1640,680,'city_final_paving',{tileScale:0.18,tint:0x92cddd,alpha:0.6,layerOffset:0.2}),
+    ...CITY_ROOMS.map(r=>({id:'floor_'+r.id,...r.rect,tex:['archive','bank'].includes(r.key)?'city_final_wood_floor':['coven','cellar','rescue'].includes(r.key)?'city_wood_floor':'city_stone_floor',tileScale:['archive','bank'].includes(r.key)?0.22:0.5,interior:true})),
   ];
   const colliders=[];
   const col=(id,x,y,w,h,kind='ruin',extra={})=>colliders.push({id:'city_plan_'+id,...cityPoint(x,y),w,h,kind,...extra});
@@ -121,9 +122,10 @@ export function cityMapData() {
   // Forest confines the approach without blocking the side path to the lab.
   [[-720,0,720,2300],[-720,2740,420,180],[-60,2740,60,1580],[-720,3540,720,780]].forEach((a,i)=>col('edge_'+i,...a,'trees'));
   for(const b of BUILDINGS)colliders.push({id:'city_plan_building_'+b.id,kind:'furniture',x:b.x,y:b.y,w:b.w,h:b.h,
-    tex:b.id.startsWith('warehouse_')?'city_warehouse':b.id==='rescue'?'city_frozen_house':'city_house',
-    editorStyle:{w:b.w,h:b.h},building:b.id});
-  col('fountain',860,2460,180,180,'furniture',{tex:'city_fountain',editorStyle:{w:180,h:230}});
+    tex:b.id==='bank'?'city_final_bank_exterior':b.id==='archive'?'city_final_archive_exterior':b.id.startsWith('warehouse_')?'city_warehouse':b.id==='rescue'?'city_frozen_house':'city_house',
+    editorStyle:{w:b.w,h:b.id==='bank'?460:b.id==='archive'?490:b.h},building:b.id});
+  col('fountain',860,2460,180,180,'furniture',{tex:'city_final_fountain',editorStyle:{w:210,h:200}});
+  for(const [i,[x,y]] of [[710,2390],[710,2770],[1940,2540]].entries())col('bench_'+i,x,y,160,28,'furniture',{tex:'city_final_bench'});
   col('market',2010,2800,220,80,'furniture',{tex:'market_stall_01'});
   for(const r of CITY_ROOMS) {
     const {x,y,w,h}=r.rect,t=24;
@@ -133,12 +135,15 @@ export function cityMapData() {
     for(const dx of xs){colliders.push({id:r.id+'_wall_bottom_'+dx,kind:'wall',tex:'city_timber',x:x+last,y:y+h-t,w:dx-90-last,h:t});last=dx+90;}
     colliders.push({id:r.id+'_wall_end',kind:'wall',tex:'city_timber',x:x+last,y:y+h-t,w:w-last,h:t});
   }
-  const furniture=(key,id,x,y,w,h,tex)=>colliders.push({id:'room_'+id,kind:'furniture',...rp(key,x,y),w,h,tex});
-  furniture('bank','counter',235,355,250,35,'city_bank_counter');
+  const furniture=(key,id,x,y,w,h,tex,extra={})=>colliders.push({id:'room_'+id,kind:'furniture',...rp(key,x,y),w,h,tex,...extra});
+  furniture('bank','counter',150,400,420,40,'city_final_bank_counter');
   furniture('bank','safe',520,230,80,35,'city_bank_safe');
-  furniture('archive','shelf_left',70,280,140,35,'city_archive_shelf');
-  furniture('archive','shelf_right',630,280,140,35,'city_archive_shelf');
-  furniture('archive','desk',245,680,160,35,'city_archive_desk');
+  furniture('archive','shelf_left',50,380,170,35,'city_final_archive_shelf');
+  furniture('archive','shelf_right',680,380,170,35,'city_final_archive_shelf');
+  furniture('archive','shelf_middle_left',50,800,170,35,'city_final_archive_shelf');
+  furniture('archive','shelf_middle_right',680,800,170,35,'city_final_archive_shelf');
+  furniture('archive','shelf_lower_right',680,1170,170,35,'city_final_archive_shelf');
+  furniture('archive','desk',220,680,240,35,'city_final_archive_desk');
   furniture('society','bench',110,350,190,40,'city_society_workbench');
   furniture('society','reservoir',690,370,70,40,'city_coolant_stable');
   furniture('coven','table',130,380,170,30,'city_coven_table');
@@ -154,10 +159,23 @@ export function cityMapData() {
   furniture('warehouse','crate_b',1170,300,100,30,'city_crate');
   for(const key of ['cellar','rescue']){furniture(key,key+'_bed',100,320,70,30,'bed_01');furniture(key,key+'_shelf',510,250,140,35,'city_archive_shelf');}
   const props=[];
+  const roomProp=(key,id,k,x,y,extra={})=>props.push({id:'room_decor_'+key+'_'+id,k,...rp(key,x,y),solid:null,...extra});
+  roomProp('bank','back_wall','city_final_bank_wall',360,250,{l:'back'});
+  roomProp('archive','back_wall','city_final_archive_wall',450,290,{l:'back'});
+  roomProp('bank','rug','city_final_bank_rug',360,760,{l:'room-floor'});
+  roomProp('archive','rug','city_final_archive_rug',450,1210,{l:'room-floor'});
+  roomProp('bank','waiting_bench','city_final_bench',140,650,{solid:{w:150,h:24}});
+  roomProp('bank','entry_bench','city_final_bench',580,1130,{solid:{w:150,h:24}});
+  roomProp('bank','entry_plant','plant_pot_01',70,1240,{solid:{w:28,h:14}});
+  roomProp('bank','plant_left','plant_pot_01',70,510,{solid:{w:28,h:14}});
+  roomProp('bank','plant_right','plant_pot_01',650,510,{solid:{w:28,h:14}});
+  roomProp('archive','plant_left','plant_pot_01',80,1300,{solid:{w:28,h:14}});
+  roomProp('archive','plant_right','plant_pot_01',820,1300,{solid:{w:28,h:14}});
   const prop=(id,k,x,y,extra={})=>props.push({id:'city_plan_'+id,k,...cityPoint(x,y),solid:null,...extra});
   for(const [i,[x,y]] of [[1050,2160],[1940,2160],[1050,2900],[1940,2900],[1040,3490],[1940,3490],[80,550],[2900,550]].entries())prop('lamp_'+i,'city_lamp_01',x,y);
   for(const [i,[x,y]] of [[850,1750],[2100,1750],[820,3010],[2100,3010],[80,860],[2900,860],[80,3750],[2900,3750]].entries())prop('tree_'+i,i%2?'tree_autumn_01':'tree_autumn_02',x,y);
   prop('archive_sign','city_sign_archive',810,2140);prop('society_sign','city_sign_society',2110,2140);
+  for(const [i,[x,y]] of [[700,2560],[1080,2560],[710,2840],[2140,2540]].entries())prop('plaza_flowers_'+i,'flower_purple_01',x,y,{w:64,h:62});
   prop('duel_sign','city_sign_duel',890,3430);prop('coven_sign','city_sign_coven',2110,3430);
   return {grounds,colliders,props};
 }

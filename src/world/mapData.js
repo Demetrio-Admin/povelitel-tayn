@@ -74,6 +74,7 @@ export function applyPos(list, pos = {}) {
     if (!m || (!dx && !dy)) return out; // всегда копия: редактор меняет cfg, а исходные данные трогать нельзя
     out.x = cfg.x + dx; out.y = cfg.y + dy;
     if (cfg.target) out.target = { x: cfg.target.x + dx, y: cfg.target.y + dy };
+    if (cfg.approach) out.approach = { x: cfg.approach.x + dx, y: cfg.approach.y + dy };
     if (cfg.panOnOpen) out.panOnOpen = { x: cfg.panOnOpen.x + dx, y: cfg.panOnOpen.y + dy };
     return out;
   });

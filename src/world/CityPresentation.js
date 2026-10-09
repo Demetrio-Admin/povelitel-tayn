@@ -10,8 +10,9 @@ export class CityPresentation {
     this.scene = scene;
     this.images = [];
     for(const b of BUILDINGS){
-      const text=scene.add.text(b.door.x,b.door.y+25,b.name,{
-        fontFamily:'Philosopher',fontSize:'28px',color:'#e7d6ad',stroke:'#251c14',strokeThickness:5,
+      const plaque=b.id==='bank'||b.id==='archive';
+      const text=scene.add.text(b.door.x,b.door.y+(b.id==='bank'?-220:b.id==='archive'?-166:25),plaque?(b.id==='bank'?'БАНК':'АРХИВ'):b.name,{
+        fontFamily:'Philosopher',fontSize:plaque?'25px':'28px',color:'#e7d6ad',stroke:'#251c14',strokeThickness:plaque?3:5,
       }).setOrigin(0.5,1).setDepth(DEPTH.markers-2);
       this.images.push(text);
     }
@@ -34,9 +35,9 @@ export class CityPresentation {
         applyDisplaySize(im, im.texture.key);
       }
     }
-    const fountain = this.scene.colliderObjects?.find(im => ['fountain_frozen', 'city_fountain'].includes(im.texture?.key));
-    if (fountain && this.scene.textures.exists('city_fountain')) {
-      const key = !thawed && (state.hasEvent('ch2_city_arrived') || editor) ? 'fountain_frozen' : 'city_fountain';
+    const fountain = this.scene.colliderObjects?.find(im => ['city_final_fountain_frozen', 'city_final_fountain'].includes(im.texture?.key));
+    if (fountain && this.scene.textures.exists('city_final_fountain')) {
+      const key = !thawed && (state.hasEvent('ch2_city_arrived') || editor) ? 'city_final_fountain_frozen' : 'city_final_fountain';
       fountain.setTexture(key); applyDisplaySize(fountain, key);
     }
     for(const {c,img} of this.scene.colliderViews.values())if(c.editorStyle)this.scene.styleImage(img,c.editorStyle,img.texture.key);

@@ -1,3 +1,5 @@
+import { cityArrival } from '../config/city.plan.js';
+import { RoomDoor } from '../objects/RoomDoor.js';
 import { BAG } from '../config/bag.js';
 import { bindSceneViewport } from '../ui/viewport.js';
 import { T } from '../state/hero.js';
@@ -48,6 +50,7 @@ import { sapphires as sapphireText } from '../systems/wallet.js';
 const ALL_TARGETS = new Map([...INTERACTIVES, ...ENEMY_SPAWNS].map(o => [o.id, o]));   // v0.27.0: id → место (для наведения через выход)
 
 const OBJECT_CLASSES = {
+  room_door: RoomDoor,
   travel: TravelObject,   // v0.20.0
   exit: ExitObject,       // v0.27.0: выход на карту мира
   ice: IceObject,         // v0.21.0
@@ -95,7 +98,8 @@ export class ExplorationScene extends Phaser.Scene {
     // v0.27.0: сцена перезапускается при переходе между локациями — временное состояние прошлого запуска сбрасывается
     this.speech = null; this.traveling = false; this.navCache = null; this.terrainImages = []; this.waterZones = []; this.colliderObjects = [];
     // v0.27.0: строится только текущая локация (глава или вылазка) — по положению героя; редактор карты (?edit) видит весь холст
-    let p = this.fixStartPosition(state.data.player);
+    let p = this.fixStartPosition(cityArrival(state.data.player,k=>state.hasEvent(k)));
+    state.data.player={...p};
     this.loc = services.edit ? null : locationAt(p.x, p.y);
     if (this.loc && !inLocation(p, this.loc)) { p = { ...this.loc.arrival }; state.data.player = { ...p }; }   // старое сохранение за краем локации
     const R = this.loc ? this.loc.rect : { x: 0, y: 0, w: WORLD.width, h: WORLD.height };
@@ -231,7 +235,7 @@ export class ExplorationScene extends Phaser.Scene {
 
   /** A saved city position may now intersect a relocated wall or furnishing. Move only blocked feet locally. */
   recoverCityPosition() {
-    if (services.edit || this.loc?.id !== 'city') return;
+    if (services.edit || (this.loc?.id !== 'city' && !this.loc?.interior)) return;
     const p = { x: this.player.x, y: this.player.y }, { w, h } = PLAYER.hitbox;
     const blocked = this.colliderObjects.some(o => {
       const b = o.body;
@@ -379,15 +383,16 @@ export class ExplorationScene extends Phaser.Scene {
   // ------------------------------------------------------------------ мир
   buildGround() {
     const V = this.view, R = this.bounds;
-    this.add.tileSprite(R.x, R.y, R.w, R.h + V.bottom, 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
+    if(this.loc?.interior)this.add.rectangle(R.x,R.y-V.top,R.w,V.h,0x17120e).setOrigin(0).setDepth(DEPTH.ground);
+    else this.add.tileSprite(R.x, R.y, R.w, R.h + V.bottom, 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
     this.paintTerrain();
     this.rebuildGrounds(this.map.grounds);
     if (!V.top && !V.bottom) return;
     // тёмная подстилка под лесом ниже границы мира (деревья — в world.props.js)
-    if (V.bottom) this.add.rectangle(R.x, R.y + R.h, R.w, V.bottom, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
+    if (V.bottom) this.add.rectangle(R.x, R.y + R.h, R.w, V.bottom, (this.loc?.interior?0x17120e:0x172114)).setOrigin(0).setDepth(DEPTH.path - 1);
     // v0.10.0: тёмный лес над северной границей (только картинка, за край мира пройти нельзя)
     if (!V.top) return;
-    this.add.rectangle(R.x, R.y - V.top, R.w, V.top, 0x172114).setOrigin(0).setDepth(DEPTH.path - 1);
+    this.add.rectangle(R.x, R.y - V.top, R.w, V.top, (this.loc?.interior?0x17120e:0x172114)).setOrigin(0).setDepth(DEPTH.path - 1);
   }
 
   /** Дороги и вода: кривые формы рисуются кусками 512×512 и кладутся поверх травы. */
@@ -458,7 +463,7 @@ export class ExplorationScene extends Phaser.Scene {
       keep(z);
       const bottomDepth = DEPTH.mainBase + c.y + c.h;
       switch (c.kind) {
-        case 'trees': keep(this.add.rectangle(c.x, c.y, c.w, c.h, this.loc?.id === 'frostwood' ? 0x76938c : this.loc?.id === 'graveyard' ? 0x343d32 : 0x172114).setOrigin(0).setDepth(DEPTH.path - 1)); break;
+        case 'trees': keep(this.add.rectangle(c.x, c.y, c.w, c.h, this.loc?.id === 'frostwood' ? 0x76938c : this.loc?.id === 'graveyard' ? 0x343d32 : (this.loc?.interior?0x17120e:0x172114)).setOrigin(0).setDepth(DEPTH.path - 1)); break;
         case 'wall': {
           const city = locationAt(c.x+c.w/2,c.y+c.h/2).id === 'city';
           const wall = keep(this.add.tileSprite(c.x, c.y - 40, c.w, c.h + 40, c.tex || (city ? 'city_timber' : 'wall_wood_01')).setOrigin(0).setTileScale(city ? 0.25 : 1).setDepth(bottomDepth));
@@ -725,7 +730,13 @@ export class ExplorationScene extends Phaser.Scene {
     if (id && present(id) && !this.targetDone(id)) return id;
     if (this.loc) {
       const ids = STEP_GUIDE[g.step().id]?.targets || [];
-      if (ids.some(x => !present(x) && ALL_TARGETS.has(x) && !inLocation(ALL_TARGETS.get(x), this.loc) && !this.targetDoneElsewhere(x))) return this.loc.exit;
+      const elsewhere=ids.find(x=>!present(x) && ALL_TARGETS.has(x) && !inLocation(ALL_TARGETS.get(x),this.loc) && !this.targetDoneElsewhere(x));
+      if(elsewhere){
+        const destination=locationAt(ALL_TARGETS.get(elsewhere).x,ALL_TARGETS.get(elsewhere).y);
+        if(this.loc.interior)return this.loc.exit;
+        if(destination.parent===this.loc.id)return destination.entrances[0];
+        return this.loc.exit;
+      }
     }
     return null;
   }
@@ -941,14 +952,9 @@ export class ExplorationScene extends Phaser.Scene {
       sig = (sig * 31 + Math.round(b.x * 3 + b.y * 7 + b.width * 11 + b.height * 13)) | 0;
     }
     sig = sig + ':' + solids.length;
-    if (this.loc) {   // v0.27.0: за краем локации пути нет — маршрут не уводит к соседям
-      const R = this.loc.rect, W = WORLD.width, H = WORLD.height;
-      for (const r of [{ x: 0, y: 0, w: R.x, h: H }, { x: R.x + R.w, y: 0, w: W - R.x - R.w, h: H }, { x: R.x, y: 0, w: R.w, h: R.y }, { x: R.x, y: R.y + R.h, w: R.w, h: H - R.y - R.h }]) {
-        if (r.w > 0 && r.h > 0) solids.push(r);
-      }
-    }
     if (this.navCache?.sig !== sig) {
-      const dims = { width: WORLD.width, height: WORLD.height, solids };
+      const R=this.loc?.rect || {x:0,y:0,w:WORLD.width,h:WORLD.height};
+      const dims = {x:R.x,y:R.y,width:R.w,height:R.h,solids};
       this.navCache = { sig, grids: [buildNav(dims), buildNav({ ...dims, pad: 0 })] }; // с запасом; без запаса — для узких проходов
     }
     return this.navCache.grids;
@@ -963,7 +969,8 @@ export class ExplorationScene extends Phaser.Scene {
     if (!this.canAct()) return;
     const wp = this.cameras.main.getWorldPoint(x, y);
     const obj = this.interaction.pick(wp.x, wp.y);
-    const goal = obj ? { x: obj.x, y: obj.y } : { x: wp.x, y: wp.y };
+    // Service NPCs can provide a visitor spot on the accessible side of furniture.
+    const goal = obj ? obj.cfg.approach || { x: obj.x, y: obj.y } : { x: wp.x, y: wp.y };
     const route = this.planPath(goal.x, goal.y);
     // куда на самом деле дойдём: закрытая цель → ближайшая достижимая точка (метка ставится туда)
     const end = route?.end || goal;
@@ -1106,7 +1113,7 @@ export class ExplorationScene extends Phaser.Scene {
         st.setObject(encKey(e.id), { state: 'lost' });
         const floor = Math.max(1, Math.ceil(vitals.maxHp(st) * 0.2));
         if (vitals.hp(st) < floor) vitals.setHp(st, floor);
-        if (Number.isFinite(enc.x)) { this.player.setPosition(enc.x, enc.y); st.data.player = { x: enc.x, y: enc.y }; }
+        if (Number.isFinite(enc.x)) { const p=enc.x>=1800 && enc.x<3600 ? {x:e.cfg.x,y:e.cfg.y+60} : {x:enc.x,y:enc.y}; this.player.setPosition(p.x,p.y); st.data.player={...p}; }
         st.save();
       }
       this.watchRetry(e);

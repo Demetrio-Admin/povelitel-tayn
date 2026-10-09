@@ -11,6 +11,7 @@ import { STEP_GUIDE } from '../src/config/guidance.js';
 import { NPCS } from '../src/config/npcs.js';
 import { DIALOGUES } from '../src/config/dialogues.js';
 import { INTERACTIVES, ENEMY_SPAWNS, ZONES, WORLD } from '../src/config/world.layout.js';
+import { CITY_RECT } from '../src/config/city.plan.js';
 import { CITY_START, FOREST_RETURN, EAST_X, ZONE_EVENTS } from '../src/config/world.city.js';
 import { ENEMIES } from '../src/config/balance.enemies.js';
 import { DISPLAY_SIZE, ASSET_FILES as ASSETS } from '../src/config/assets.manifest.js';
@@ -46,7 +47,7 @@ console.log('\nГлава II: данные');
   for (const t of ['ice_wall_01', 'ice_construct_01', 'water_patch_01', 'ice_floor_01', 'frozen_door_01']) ok(ASSETS[t] && DISPLAY_SIZE[t] && fs.existsSync(`public/assets/sprites/${t}.png`), `картинка ${t}`);
   const water = INTERACTIVES.find(o => o.id === 'fq_water'), wall = INTERACTIVES.find(o => o.id === 'frost_barrier');
   ok(water.kind === 'ice' && water.walkable && water.collide && wall.kind === 'fire' && wall.waitEvent === 'ch2_frost_wave', 'ледяная стена (Огонь после волны холода) и затопленный пролом (Лёд) — настоящие преграды');
-  ok(ZONES.find(z => z.id === 'FQ').h === 1000, 'Замёрзший квартал — северная часть города');
+  ok(ZONES.find(z => z.id === 'FQ').y === CITY_RECT.y && ZONES.find(z => z.id === 'FQ').h === 1520, 'Замёрзший квартал — северная часть города');
   // v0.22.0
   for (const id of ['tikhon', 'rowena']) ok(NPCS[id] && DIALOGUES[id]?.length && fs.existsSync(`public/assets/sprites/npc_${id}.png`) && fs.existsSync(`public/assets/sprites/portrait_${id}.png`), `${NPCS[id]?.name}: данные, диалоги, спрайт и портрет`);
   for (const id of ['volunteer', 'experimental_construct', 'severin_boss']) ok(ENEMIES[id] && fs.existsSync(`public/assets/sprites/${ENEMIES[id].texture}.png`) && DISPLAY_SIZE[ENEMIES[id].texture], `${ENEMIES[id]?.name}: данные и спрайт`);

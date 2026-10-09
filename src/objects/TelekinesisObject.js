@@ -1,3 +1,4 @@
+import { CITY_POSITIONS, legacyCityPoint } from '../config/city.plan.js';
 import { COLORS, DEPTH } from '../config/game.config.js';
 import { EXPLORATION_MAGIC, WORLD_MANA_COST } from '../config/balance.abilities.js';
 import { EV } from '../config/events.js';
@@ -26,7 +27,8 @@ export class TelekinesisObject extends InteractiveObject {
 
     if (this.saved.state === 'collected') this.remove(false);
     else if (this.saved.state === 'moved') {
-      this.placeAt(this.saved.x ?? this.target_position.x, this.saved.y ?? this.target_position.y);
+      const legacy=CITY_POSITIONS[cfg.id] && legacyCityPoint(this.saved);
+      this.placeAt(legacy ? this.target_position.x : this.saved.x ?? this.target_position.x, legacy ? this.target_position.y : this.saved.y ?? this.target_position.y);
       this.spawnHiddenReward();
     }
     if (cfg.elevated && !this.removed) {

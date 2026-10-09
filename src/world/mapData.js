@@ -1,3 +1,4 @@
+import { cityMapData, CITY_POSITIONS, legacyCityPoint } from '../config/city.plan.js';
 // Данные карты: базовая расстановка + правки из редактора. Без Phaser и DOM.
 import { PROPS as RAW_PROPS } from '../config/world.props.js';
 import { EDITS } from '../config/world.edits.js';
@@ -11,7 +12,9 @@ import { WORLD_DECOR } from './decorData.js';
  * Цветы и деревья-заполнители остаются; правки редактора (EDITS) накладываются уже на этот список.
  */
 const inClearing = (p) => CLEARINGS.some(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
-export const PROPS = [...RAW_PROPS.filter(p => !(inClearing(p) && !p.fill && PROP_DEFS[p.k]?.solid)), ...WORLD_DECOR];
+const LEGACY_PROPS = [...RAW_PROPS.filter(p => !(inClearing(p) && !p.fill && PROP_DEFS[p.k]?.solid)), ...WORLD_DECOR];
+const oldCityRect = r => r.x >= 1800 && r.x < 3600 && r.y + (r.h || 0) >= 1300;
+export const PROPS = [...LEGACY_PROPS.filter(p => !legacyCityPoint(p)), ...cityMapData().props];
 
 export const DRAFT_KEY = 'witch_rpg_map_draft_v1';
 
@@ -59,7 +62,7 @@ export function diffEdits(base, current, pos = {}) {
     if (Object.keys(patch).length) props[c.id] = patch;
   }
   for (const id of byId.keys()) if (!seen.has(id)) props[id] = null;
-  return { v: 1, props, add, pos: { ...pos } };
+  return { v: 1, layout: 2, props, add, pos: { ...pos } };
 }
 
 /** Сдвигает интерактивные объекты и врагов по pos { id: {x, y} }; связанные точки (target, panOnOpen) едут вместе. */
@@ -71,6 +74,7 @@ export function applyPos(list, pos = {}) {
     if (!m || (!dx && !dy)) return out; // всегда копия: редактор меняет cfg, а исходные данные трогать нельзя
     out.x = cfg.x + dx; out.y = cfg.y + dy;
     if (cfg.target) out.target = { x: cfg.target.x + dx, y: cfg.target.y + dy };
+    if (cfg.approach) out.approach = { x: cfg.approach.x + dx, y: cfg.approach.y + dy };
     if (cfg.panOnOpen) out.panOnOpen = { x: cfg.panOnOpen.x + dx, y: cfg.panOnOpen.y + dy };
     return out;
   });
@@ -105,13 +109,12 @@ const clone = (v) => JSON.parse(JSON.stringify(v));
 
 /** Базовые списки с id и номером шума. Каждый раз новые копии: редактор их меняет. */
 export function baseTerrain() {
+  const city=cityMapData();
   return {
-    roads: ROADS.map((r, i) => ({ ...clone(r), n: i })),
-    waters: WATERS.map((w, i) => ({ ...clone(w), n: i })),
-    cols: COLLIDERS.map((c, i) => ({ ...clone(c), id: `c${i}` })),
-    grounds: [...GROUND.map((g, i) => ({ ...clone(g), id: `g${i}` })),
-      {id:'city_frost_quarter',x:2400,y:1500,w:1160,h:1000,tex:'city_paving_frost',tileScale:0.5,layerOffset:0.2},
-      {id:'city_frost_plaza',x:2400,y:3040,w:1160,h:1060,tex:'city_paving_frost',tileScale:0.5,layerOffset:0.2}],
+    roads: ROADS.map((r,i)=>({...clone(r),n:i})).filter(r => !r.pts?.some(p => p[0]>=1800 && p[0]<3600)),
+    waters: WATERS.map((w,i)=>({...clone(w),n:i})),
+    cols: [...COLLIDERS.map((c,i)=>({...clone(c),id:`c${i}`})).filter(c=>!oldCityRect(c)),...city.colliders],
+    grounds: [...GROUND.map((g,i)=>({...clone(g),id:`g${i}`})).filter(g=>!oldCityRect(g)),...city.grounds],
   };
 }
 
@@ -130,7 +133,9 @@ export function applyListEdits(base, patches = {}) {
 }
 
 export function applyTerrainEdits(edits) {
-  const b = baseTerrain(), e = edits || {};
+  const b = baseTerrain(), e = { ...(edits || {}) };
+  if(e.layout!==2)for(const k of ['cols','grounds'])e[k]=Object.fromEntries(Object.entries(e[k]||{}).filter(([,v])=>!v || !oldCityRect(v)));
+  if(e.layout!==2)for(const k of ['roads','waters'])e[k]=Object.fromEntries(Object.entries(e[k]||{}).filter(([,v])=>!v || !v.pts?.some(p=>p[0]>=1800 && p[0]<3600)));
   return {
     roads: applyListEdits(b.roads, e.roads),
     waters: applyListEdits(b.waters, e.waters),
@@ -207,5 +212,7 @@ export function parseEditsFile(text) {
 export function resolveMap({ storage = null, useDraft = false } = {}) {
   const draft = useDraft ? loadDraft(storage) : null;
   const edits = draft || EDITS;
-  return { base: PROPS, edits, props: applyEdits(PROPS, edits), pos: edits.pos || {}, ...applyTerrainEdits(edits), fromDraft: !!draft };
+  const pos={...CITY_POSITIONS};
+  for(const [id,p] of Object.entries(edits.pos||{})){if(p===null){pos[id]=null;continue;}const patch={...p};if(CITY_POSITIONS[id] && edits.layout!==2){delete patch.x;delete patch.y;}pos[id]={...pos[id],...patch};}
+  return { base: PROPS, edits, props: applyEdits(PROPS, edits).filter(p=>edits.layout===2 || !legacyCityPoint(p)), pos, ...applyTerrainEdits(edits), fromDraft: !!draft };
 }

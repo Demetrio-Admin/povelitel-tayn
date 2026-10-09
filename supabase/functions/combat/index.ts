@@ -764,6 +764,165 @@ var SCHOOL_XP_PER_USE = {
   combat: { telekinesis: 5, fire: 5, seal: 5, ice: 5 }
 };
 
+// src/config/city.plan.js
+var CITY_ORIGIN = { x: 6720, y: 600 };
+var cityPoint = (x, y) => ({ x: CITY_ORIGIN.x + x, y: CITY_ORIGIN.y + y });
+var BUILDINGS = [
+  ["north_bay", "\u0421\u0435\u0432\u0435\u0440\u043D\u044B\u0439 \u0434\u043E\u043C", 200, 100, 540, 420, 470, 520, null],
+  ["north_workshop", "\u0414\u043E\u043C \u0441 \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u043E\u0439", 2240, 100, 560, 420, 2520, 520, null],
+  ["cellar", "\u0414\u043E\u043C \u0441 \u043F\u043E\u0433\u0440\u0435\u0431\u043E\u043C", 200, 860, 540, 370, 470, 1230, "ch2_rescue_cellar"],
+  ["rescue", "\u0414\u043E\u043C \u0437\u0430 \u043B\u0435\u0434\u044F\u043D\u043E\u0439 \u0434\u0432\u0435\u0440\u044C\u044E", 2240, 860, 560, 370, 2520, 1230, "ch2_rescue_door"],
+  ["archive", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", 200, 1640, 540, 420, 470, 2060, null],
+  ["society", "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", 2240, 1640, 560, 420, 2520, 2060, null],
+  ["bank", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", 2300, 2290, 500, 400, 2550, 2690, null],
+  ["duel", "\u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u0414\u0443\u044D\u043B\u044C", 200, 2940, 600, 420, 500, 3360, "ch2_fin_seal"],
+  ["coven", "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", 2240, 2940, 560, 420, 2600, 3360, null],
+  ["warehouse_a", "\u0421\u043A\u043B\u0430\u0434 \u0410", 200, 3710, 600, 340, 500, 4050, null],
+  ["warehouse_b", "\u0421\u043A\u043B\u0430\u0434 \u0411", 2240, 3710, 560, 340, 2520, 4050, null],
+  ["lab", "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", -700, 2920, 380, 380, -510, 3300, "ch2_lab_open"]
+].map(([id, name, x, y, w, h, dx, dy, requires]) => ({ id, name, ...cityPoint(x, y), w, h, door: cityPoint(dx, dy), requires }));
+var layouts = [
+  ["bank", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", 10200, 200, 720, 1440],
+  ["archive", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", 11800, 200, 900, 1500],
+  ["society", "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", 13400, 200, 900, 1320],
+  ["lab", "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", 10200, 2600, 960, 2160],
+  ["duel", "\u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u0414\u0443\u044D\u043B\u044C", 11800, 2600, 1080, 1680],
+  ["coven", "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", 13400, 2600, 840, 1440],
+  ["warehouse", "\u0421\u043A\u043B\u0430\u0434\u0441\u043A\u043E\u0439 \u043A\u043E\u043C\u043F\u043B\u0435\u043A\u0441", 10200, 5200, 1440, 1680],
+  ["cellar", "\u0414\u043E\u043C \u0441 \u043F\u043E\u0433\u0440\u0435\u0431\u043E\u043C", 11800, 5200, 720, 1440],
+  ["rescue", "\u0414\u043E\u043C \u0437\u0430 \u043B\u0435\u0434\u044F\u043D\u043E\u0439 \u0434\u0432\u0435\u0440\u044C\u044E", 13400, 5200, 720, 1440]
+];
+var CITY_ROOMS = layouts.map(([key, name, x, y, w, h]) => {
+  const doors = BUILDINGS.filter((b) => key === "warehouse" ? b.id.startsWith("warehouse_") : b.id === key);
+  return {
+    id: "city_" + key,
+    key,
+    name,
+    interior: true,
+    parent: "city",
+    rect: { x, y, w, h },
+    requires: doors[0]?.requires,
+    lockedText: "\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u0443 \u0432\u0445\u043E\u0434\u0430.",
+    arrival: { x: x + w / 2, y: y + h - 180 },
+    exit: "room_exit_" + doors[0].id,
+    entrances: doors.map((b) => "door_" + b.id),
+    extraTop: 120,
+    extraBottom: 180
+  };
+});
+var room = (key) => CITY_ROOMS.find((r) => r.key === key);
+var rp = (key, x, y) => ({ x: room(key).rect.x + x, y: room(key).rect.y + y });
+var CITY_PORTALS = BUILDINGS.filter((b) => !b.id.startsWith("north_")).flatMap((b) => {
+  const key = b.id.startsWith("warehouse_") ? "warehouse" : b.id, r = room(key);
+  const entryX = key === "warehouse" ? b.id === "warehouse_a" ? 300 : 1140 : r.rect.w / 2;
+  const inside = rp(key, entryX, r.rect.h - 180);
+  return [
+    {
+      id: "door_" + b.id,
+      kind: "room_door",
+      x: b.door.x,
+      y: b.door.y + 36,
+      ghost: { w: 160, h: 100 },
+      radius: 150,
+      target: inside,
+      room: r.id,
+      hint: "\u0412\u043E\u0439\u0442\u0438: " + b.name,
+      requiresEvent: b.requires
+    },
+    {
+      id: "room_exit_" + b.id,
+      kind: "room_door",
+      ...rp(key, entryX, r.rect.h - 55),
+      ghost: { w: 160, h: 80 },
+      radius: 130,
+      target: { x: b.door.x, y: b.door.y + 170 },
+      room: "city",
+      hint: "\u0412\u044B\u0439\u0442\u0438: " + b.name
+    }
+  ];
+});
+var CITY_POSITIONS = Object.fromEntries([
+  ["exit_city", cityPoint(-650, 2510)],
+  ["frostherb_r1", cityPoint(-480, 2380)],
+  ["frostherb_r2", cityPoint(-500, 2800)],
+  ["resin_r1", cityPoint(-660, 2640)],
+  ["city_board", cityPoint(370, 2430)],
+  ["npc_merchant", cityPoint(2120, 2930)],
+  ["plaza_trace", cityPoint(1540, 2740)],
+  ["plaza_debris", cityPoint(1930, 2370)],
+  ["sapphire_city_cache_1", cityPoint(730, 2710)],
+  ["sapphire_city_cache_2", cityPoint(2040, 3470)],
+  // The document sorts one pixel in front of the desk, with its art on the tabletop.
+  ["npc_ilaria", rp("archive", 260, 1050)],
+  ["archive_document", { ...rp("archive", 330, 716), elevated: 41 }],
+  ["npc_severin", rp("society", 360, 710)],
+  ["npc_banker", { ...rp("bank", 360, 350), approach: rp("bank", 360, 510) }],
+  ["npc_rowena", rp("coven", 270, 610)],
+  ["npc_duelist", rp("duel", 260, 1280)],
+  ["frost_barrier", { ...cityPoint(1500, 1520), collide: { w: 540, h: 40 }, editorStyle: { w: 580, h: 160 } }],
+  ["fq_water", { ...cityPoint(1500, 780), collide: { w: 540, h: 40 }, editorStyle: { w: 540, h: 90 } }],
+  ["ice_construct", cityPoint(1230, 1350)],
+  ["npc_nerys", cityPoint(1580, 1230)],
+  ["fq_cellar", cityPoint(650, 1280)],
+  ["fq_door", cityPoint(2520, 1280)],
+  ["fq_cauldron", cityPoint(2110, 1350)],
+  ["lab_seal", cityPoint(-510, 3340)],
+  ["lab_herb_1", rp("lab", 140, 720)],
+  ["lab_herb_2", rp("lab", 810, 940)],
+  ["lab_chest", rp("lab", 160, 1880)],
+  ["lab_cauldron", rp("lab", 820, 1880)],
+  ["npc_tikhon", rp("lab", 240, 1540)],
+  ["lab_journal", { ...rp("lab", 710, 1786), elevated: 41 }],
+  ["wh_cargo", rp("warehouse", 1110, 440)],
+  ["wh_equipment", rp("warehouse", 400, 630)],
+  ["final_debris", cityPoint(730, 3530)],
+  ["final_ice_wall", cityPoint(2180, 2810)],
+  ["final_rift", cityPoint(280, 3470)],
+  ["final_ward", cityPoint(500, 3400)],
+  ["npc_nerys_final", cityPoint(850, 3430)],
+  ["final_letters", { ...rp("duel", 840, 626), elevated: 41 }],
+  ["npc_severin_after", rp("duel", 770, 820)],
+  ["plaza_critter", cityPoint(1620, 2790)],
+  ["road_scavenger", cityPoint(-300, 2510)],
+  ["wh_collector_1", rp("warehouse", 430, 1160)],
+  ["wh_collector_2", rp("warehouse", 1050, 900)],
+  ["wh_elite", rp("warehouse", 790, 490)],
+  ["lab_critter", cityPoint(2410, 2220)],
+  ["fq_critter", cityPoint(850, 1340)],
+  ["fq_collector", cityPoint(2280, 1350)],
+  ["fq_training", cityPoint(1500, 590)],
+  ["fq_deep_1", cityPoint(940, 320)],
+  ["fq_deep_2", cityPoint(2060, 320)],
+  ["fq_guardian", cityPoint(1500, 300)],
+  ["yard_brittle_1", cityPoint(870, 650)],
+  ["yard_brittle_2", cityPoint(2120, 650)],
+  ["vol_1", rp("lab", 390, 1240)],
+  ["vol_2", rp("lab", 680, 960)],
+  ["lab_construct", rp("lab", 480, 450)],
+  ["unstable_1", cityPoint(2050, 3450)],
+  ["unstable_2", cityPoint(950, 3670)],
+  ["final_critter", cityPoint(1390, 2610)],
+  ["final_collector", cityPoint(1770, 2870)],
+  ["final_construct", cityPoint(1020, 3410)],
+  ["final_severin", rp("duel", 540, 600)]
+]);
+var plannedObject = (o) => {
+  const p = CITY_POSITIONS[o.id];
+  if (!p) return { ...o };
+  const out = { ...o, ...p };
+  if (o.target) out.target = { x: o.target.x + p.x - o.x, y: o.target.y + p.y - o.y };
+  return out;
+};
+function cityZoneData() {
+  const roomZones = CITY_ROOMS.map((r) => ({ id: { archive: "AR", society: "SO", lab: "LB", duel: "DU", coven: "CV", bank: "BK", warehouse: "WH", cellar: "RC", rescue: "RD" }[r.key], name: r.name, ...r.rect, interior: true, safePoint: r.arrival }));
+  return [
+    ...roomZones,
+    { id: "FQ", name: "\u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", ...cityPoint(0, 0), w: 3e3, h: 1520, safePoint: cityPoint(1500, 1610) },
+    { id: "P", name: "\u0426\u0435\u043D\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C", ...cityPoint(0, 2100), w: 3e3, h: 800, safePoint: cityPoint(1500, 2780) },
+    { id: "R", name: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0433\u043E\u0440\u043E\u0434", ...cityPoint(-720, 2300), w: 720, h: 1240, safePoint: cityPoint(-560, 2510) }
+  ];
+}
+
 // src/config/heroes.js
 var DEFAULT_HERO_ID = "witch";
 var HEROES = [
@@ -788,18 +947,6 @@ var BY_ID = new Map(HEROES.map((h) => [h.id, h]));
 var fm = (female, male) => ({ female, male });
 
 // src/config/world.city.js
-var CITY_ZONES = [
-  { id: "R", name: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0431\u043E\u043B\u044C\u0448\u043E\u0439 \u043C\u0438\u0440", x: 1800, y: 3300, w: 560, h: 650, safePoint: { x: 1960, y: 3625 } },
-  { id: "AR", name: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", x: 2440, y: 2560, w: 420, h: 480, interior: true, safePoint: { x: 2650, y: 3150 } },
-  { id: "SO", name: "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", x: 2960, y: 2560, w: 500, h: 480, interior: true, safePoint: { x: 3210, y: 3150 } },
-  { id: "LB", name: "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", x: 1840, y: 4060, w: 480, h: 700, interior: true, safePoint: { x: 2070, y: 3800 } },
-  { id: "DU", name: "\u0417\u0430\u043B \u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u043E\u0439 \u0414\u0443\u044D\u043B\u0438", x: 2420, y: 4100, w: 440, h: 360, interior: true, safePoint: { x: 2640, y: 4020 } },
-  { id: "CV", name: "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", x: 2960, y: 4100, w: 500, h: 360, interior: true, safePoint: { x: 3210, y: 4020 } },
-  { id: "BK", name: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", x: 3120, y: 3560, w: 400, h: 420, interior: true, safePoint: { x: 3320, y: 4030 } },
-  { id: "WH", name: "\u0421\u043A\u043B\u0430\u0434\u0441\u043A\u043E\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 4500, w: 1140, h: 500, safePoint: { x: 2910, y: 4050 } },
-  { id: "FQ", name: "\u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", x: 2400, y: 1500, w: 1160, h: 1e3, safePoint: { x: 2910, y: 3150 } },
-  { id: "P", name: "\u0426\u0435\u043D\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C", x: 2360, y: 1500, w: 1240, h: 3500, safePoint: { x: 2600, y: 3625 } }
-];
 var CITY_GROUND = [
   { tex: "city_paving", x: 2360, y: 1500, w: 1240, h: 3540 },
   { tex: "city_wood_floor", x: 2440, y: 2560, w: 420, h: 480, interior: true, tint: 15326404 },
@@ -1699,9 +1846,9 @@ var CONTENT_DECOR = [
 
 // src/config/world.layout.js
 var WORLD = {
-  width: 5400,
-  // v0.20.0: восточнее леса — дорога и город (world.city.js); v0.24.0: ещё восточнее — вылазки (world.expeditions.js)
-  height: 5400,
+  width: 14560,
+  // Separate coordinate islands: forest, expeditions, spacious city and its rooms.
+  height: 7120,
   playerStart: { x: 900, y: 5200 },
   defaultSafePoint: { x: 900, y: 4820 }
 };
@@ -1715,7 +1862,7 @@ var ZONES = [
   { id: "J", name: "\u041D\u043E\u0432\u0430\u044F \u0447\u0430\u0441\u0442\u044C \u043B\u0435\u0441\u0430", x: 100, y: 1640, w: 600, h: 2460, safePoint: { x: 400, y: 3900 } },
   { id: "K", name: "\u041F\u043E\u043B\u044F\u043D\u0430 \u041B\u0435\u0441\u043D\u043E\u0433\u043E \u0421\u0442\u0440\u0430\u0436\u0430", x: 100, y: 1100, w: 600, h: 540, safePoint: { x: 400, y: 1760 } },
   { id: "L", name: "\u0414\u0440\u0435\u0432\u043D\u0438\u0435 \u0432\u043E\u0440\u043E\u0442\u0430", x: 0, y: 0, w: 1800, h: 1100, safePoint: { x: 900, y: 820 } },
-  ...CITY_ZONES,
+  ...cityZoneData(),
   // v0.20.0: глава II
   ...EXP_ZONES
   // v0.24.0: вылазки
@@ -1936,7 +2083,7 @@ for (const o of BASE_INTERACTIVES) {
   const extra = CACHE_RESOURCE_REWARDS[o.id];
   if (extra) o.reward = { ...o.reward, items: { ...o.reward.items || {}, ...extra } };
 }
-var INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES, ...EXP_INTERACTIVES];
+var INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES, ...EXP_INTERACTIVES, ...CITY_PORTALS].map(plannedObject);
 var BASE_ENEMY_SPAWNS = [
   { id: "scavenger_01", enemy: "forest_scavenger", x: 1250, y: 3010, radius: 180, startEvent: "combat_intro_01" },
   {
@@ -1961,7 +2108,7 @@ var BASE_ENEMY_SPAWNS = [
     scale: 1.5
   }
 ];
-var ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES, ...CITY_ENEMIES, ...EXP_ENEMIES];
+var ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES, ...CITY_ENEMIES, ...EXP_ENEMIES].map(plannedObject);
 
 // src/config/game.config.js
 var SAVE = {

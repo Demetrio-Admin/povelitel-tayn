@@ -12,8 +12,9 @@ import { buildWalkGrid } from './walk.js';
 export const NAV = { cell: 8, hero: { w: 34, h: 22 }, pad: 8, maxNodes: 60000, snapRing: 14 };
 
 /** Сетка для поиска пути. pad — запас на ширину/высоту тела (px). */
-export function buildNav({ width, height, solids, pad = NAV.pad, cell = NAV.cell, hero = NAV.hero }) {
-  return buildWalkGrid({ width, height, solids, hero: { w: hero.w + pad, h: hero.h + pad / 2 }, cell });
+export function buildNav({ width, height, solids, x = 0, y = 0, pad = NAV.pad, cell = NAV.cell, hero = NAV.hero }) {
+  const grid=buildWalkGrid({ width, height, solids:solids.map(s=>({...s,x:s.x-x,y:s.y-y})), hero: { w: hero.w + pad, h: hero.h + pad / 2 }, cell });
+  return {...grid,x,y};
 }
 
 const free = (g, i, j) => i >= 0 && j >= 0 && i < g.cols && j < g.rows && !g.blocked[j * g.cols + i];
@@ -134,15 +135,15 @@ export function findPath(grids, from, to) {
   const list = Array.isArray(grids) ? grids : [grids];
   let fallback = null;
   for (const g of list) {
-    const c = g.cell;
-    const s = snapFree(g, Math.round(from.x / c), Math.round(from.y / c), NAV.snapRing);
+    const c = g.cell, ox=g.x||0, oy=g.y||0;
+    const s = snapFree(g, Math.round((from.x-ox) / c), Math.round((from.y-oy) / c), NAV.snapRing);
     if (!s) continue;
-    const goalWanted = [Math.round(to.x / c), Math.round(to.y / c)];
+    const goalWanted = [Math.round((to.x-ox) / c), Math.round((to.y-oy) / c)];
     const goal = snapFree(g, goalWanted[0], goalWanted[1], NAV.snapRing) || goalWanted;
     const goalFree = free(g, goalWanted[0], goalWanted[1]);
     const { cells, reached } = astar(g, s, goal, NAV.maxNodes);
     const sm = smooth(g, cells);
-    const points = sm.map(([i, j]) => ({ x: i * c, y: j * c }));
+    const points = sm.map(([i, j]) => ({ x: ox+i * c, y: oy+j * c }));
     // цель свободна и достигнута — последняя точка ровно в нужном месте, а не в центре клетки
     const complete = reached && goalFree;
     if (complete && points.length) points[points.length - 1] = { x: to.x, y: to.y };

@@ -8,7 +8,7 @@ import { PROPS, applyEdits, diffEdits, applyPos, diffPos, baseTerrain, applyTerr
 const copy=v=>structuredClone(v);
 assert.deepEqual(new Set(ASSET_CATALOG.map(a=>a.key)),new Set(Object.keys(ASSET_FILES).filter(k=>ASSET_FILES[k])));
 assert.equal(new Set(PROPS.map(p=>p.id)).size,PROPS.length);
-for(const id of ['bank_lamp_w','city_market_crate','city_room_0','forest_border_0'])assert.ok(PROPS.some(p=>p.id===id));
+for(const id of ['city_plan_lamp_0','city_plan_tree_0','city_plan_archive_sign','forest_border_0'])assert.ok(PROPS.some(p=>p.id===id));
 // v0.34.3: лес-заполнитель и плоский декор проходимы; стоячие предметы и люди из таблицы DECOR_SOLID — нет
 assert.ok(WORLD_DECOR.every(p=>propSolid(p)===null||(!p.fill&&DECOR_SOLID[p.k])),'only listed standing decor has a collision footprint');
 assert.ok(WORLD_DECOR.filter(p=>p.fill).every(p=>propSolid(p)===null),'forest filler stays walkable');
@@ -31,11 +31,12 @@ const walkable=diffEdits(before,[{...before[0],solid:null},before[1]]);
 assert.deepEqual(walkable.props.lamp,{solid:null});
 assert.equal(propSolid(applyEdits(before,walkable)[0]),null);
 assert.deepEqual(before,[{id:'lamp',k:'lantern_01',x:100,y:200,f:1},{id:'flower',k:'flower_white_01',x:120,y:220}]);
-const objs=[{id:'npc',x:50,y:60,target:{x:70,y:80},panOnOpen:{x:90,y:100}},{id:'enemy',x:120,y:130}];
+const objs=[{id:'npc',x:50,y:60,target:{x:70,y:80},approach:{x:50,y:150},panOnOpen:{x:90,y:100}},{id:'enemy',x:120,y:130}];
 const pos={npc:{x:150,texture:'npc_banker',editorStyle:{s:0.8,f:1,l:'front'}},enemy:null};
 const moved=applyPos(objs,pos);
 assert.equal(moved.length,1);assert.deepEqual(moved[0].target,{x:170,y:80});
 assert.deepEqual(moved[0].panOnOpen,{x:190,y:100});
+assert.deepEqual(moved[0].approach,{x:150,y:150},'moving an NPC preserves the visitor spot');
 assert.deepEqual(diffPos(objs,pos),pos);
 assert.deepEqual(applyPos(objs,{npc:{editorStyle:{a:15}}})[0].target,objs[0].target);
 console.log('  ✓ Полные параметры, замена, удаление и связанные точки сюжетных объектов сохраняются');

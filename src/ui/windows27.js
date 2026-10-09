@@ -18,10 +18,11 @@ export const windows27 = {
     if (this.modal) this.closeModal(null);
     const st = services.state;
     const p = st.data.player || { x: 0, y: 0 };
-    const here = locationAt(p.x, p.y);
+    const at = locationAt(p.x,p.y);
+    const here = at.parent ? locationById(at.parent) : at;
     const canGo = !!opts.exit;
     const has = (k) => st.hasEvent(k);
-    if (!this.mapSel || !locationById(this.mapSel)) this.mapSel = here.id;
+    if (!this.mapSel || !locationById(this.mapSel) || locationById(this.mapSel).interior) this.mapSel = here.id;
     const sel = locationById(this.mapSel);
     services.audio.play('journal');
     const content = {
@@ -31,7 +32,7 @@ export const windows27 = {
         const mw = MAP_W * k, mh = MAP_H * k, mx = x + (w - mw) / 2;
         const img = this.add.image(mx, y, 'world_map_01').setOrigin(0).setDisplaySize(mw, mh);
         c.add(img);
-        for (const loc of LOCATIONS) {
+        for (const loc of LOCATIONS.filter(l=>!l.interior)) {
           const open = locationOpen(loc, has);
           const px = mx + loc.map.x * k, py = y + loc.map.y * k;
           const ring = this.add.circle(px, py, loc.id === here.id ? 17 : 13, open ? (loc.id === here.id ? 0xffe08a : 0xc9a24a) : 0x8a8478)

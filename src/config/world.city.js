@@ -6,7 +6,7 @@
 // (INTERACTIVES, ENEMY_SPAWNS, DECOR). Новые коллайдеры добавляются только в конец (id c<номер> в редакторе карты).
 
 /** Куда попадает герой, идя из леса; и куда — возвращаясь в лес. */
-export const CITY_START = { x: 1960, y: 3625 };
+export const CITY_START = { x: 6160, y: 3110 };
 export const FOREST_RETURN = { x: 1200, y: 4416 };
 /** Где начинается восточная часть мира (для проверки проходимости: её места проверяются от CITY_START). */
 export const EAST_X = 1800;

@@ -1,9 +1,14 @@
 import Phaser from 'phaser';
 import { VIEW } from '../config/game.config.js';
 
+/** v0.37.1: widest game area on landscape screens (desktop full screen). The page CSS limits #game to this ratio. */
+export const MAX_LANDSCAPE_ASPECT = 4 / 3;
+
 // Expand the visible map, keeping the authored 720×1280 UI and sprites at one uniform scale.
+// Portrait screens show more map vertically; landscape screens show more map sideways (up to 4:3),
+// instead of a narrow portrait strip.
 export function viewportScaleMode(host) {
-  return host.clientWidth <= host.clientHeight ? Phaser.Scale.EXPAND : Phaser.Scale.FIT;
+  return Phaser.Scale.EXPAND;
 }
 
 export function bindBrowserViewport(game, host) {
@@ -56,10 +61,13 @@ export function bindSceneViewport(scene, { hud = false, world = false } = {}) {
   const cameras = { center };
   if (hud) {
     cameras.top = scene.cameras.add();
+    cameras.topLeft = scene.cameras.add();
+    cameras.topRight = scene.cameras.add();
     cameras.bottom = scene.cameras.add();
-    // Dialogs and dimmers render above both HUD layers.
-    scene.cameras.cameras.splice(0, 3, cameras.top, cameras.bottom, center);
+    // Dialogs and dimmers render above all HUD layers.
+    scene.cameras.cameras.splice(0, 5, cameras.top, cameras.topLeft, cameras.topRight, cameras.bottom, center);
   }
+  const spans = new Set();
   const covers = new Set();
   const fills = new Set();
   const pending = new Set();
@@ -77,8 +85,14 @@ export function bindSceneViewport(scene, { hud = false, world = false } = {}) {
     const { width, height } = scene.scale.gameSize;
     for (const [name, camera] of Object.entries(cameras)) {
       camera.setViewport(0, 0, width, height);
-      if (!world) camera.setScroll((VIEW.width - width) / 2,
-        name === 'top' ? 0 : name === 'bottom' ? VIEW.height - height : (VIEW.height - height) / 2);
+      // Top corners stick to the screen corners on wide screens; the ability bar and windows stay centred.
+      const x = name === 'topLeft' ? 0 : name === 'topRight' ? VIEW.width - width : (VIEW.width - width) / 2;
+      if (!world) camera.setScroll(x, name.startsWith('top') ? 0 : name === 'bottom' ? VIEW.height - height : (VIEW.height - height) / 2);
+    }
+    // Full-width strips (HUD shades) follow the screen width.
+    for (const [object, name] of spans) {
+      if (!object.scene) { spans.delete(object); continue; }
+      object.setX(cameras[name].scrollX).setDisplaySize(width, object.displayHeight);
     }
     for (const object of covers) {
       if (!object.scene) { covers.delete(object); continue; }
@@ -117,6 +131,7 @@ export function bindSceneViewport(scene, { hud = false, world = false } = {}) {
     cameras,
     assign,
     cover(object) { covers.add(object); update(); return object; },
+    span(object, name = 'center') { assign(object, name); spans.add([object, name]); update(); return object; },
     point(pointer, name = 'center') { return cameras[name].getWorldPoint(pointer.x, pointer.y); },
   };
 }

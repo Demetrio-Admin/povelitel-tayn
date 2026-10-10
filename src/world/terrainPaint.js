@@ -159,8 +159,7 @@ function paintRoadFill(ctx, r, img) {
   ctx.lineJoin = 'round';
   pathPoly(ctx, r.poly);
   ctx.fillStyle = pattern(ctx, img, r.kind === 'stone' ? '#5d6068' : '#7b5a3a',r.tileScale||1); ctx.fill();
-  // v0.37.0: town paving is a muted light stone — a soft grey-green veil calms the bright tile without hiding it.
-  if (r.urban) { ctx.fillStyle = 'rgba(86,90,74,0.17)'; ctx.fill(); }
+  // Urban paving has its own restrained palette; no muddy green veil over the painted limestone.
   ctx.restore();
 }
 

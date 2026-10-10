@@ -1,4 +1,4 @@
-import { BUILDINGS } from '../config/city.plan.js';
+import { BUILDINGS, CITY_RECT } from '../config/city.plan.js';
 import { migrateCitySave } from '../world/cityMigration.js';
 import { CITY_WITCH_SPRITES } from '../config/city.witch.art.js';
 import { RoomDoor } from '../objects/RoomDoor.js';
@@ -397,6 +397,8 @@ export class ExplorationScene extends Phaser.Scene {
     if(this.loc?.interior)this.add.rectangle(R.x,R.y-V.top,R.w,V.h,0x17120e).setOrigin(0).setDepth(DEPTH.ground);
     // v0.37.0: the town has its own calm, tended lawn; the forest keeps its wild grass.
     else this.add.tileSprite(R.x, R.y, R.w, R.h + V.bottom, this.loc?.id === 'city' ? 'city_walk_lawn' : 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
+    // The editor shows all locations on one canvas, including the town's own lawn.
+    if (!this.loc) this.add.tileSprite(CITY_RECT.x, CITY_RECT.y, CITY_RECT.w, CITY_RECT.h, 'city_walk_lawn').setOrigin(0).setDepth(DEPTH.ground + 0.1);
     this.paintTerrain();
     this.rebuildGrounds(this.map.grounds);
     if (!V.top && !V.bottom) return;
@@ -411,7 +413,7 @@ export class ExplorationScene extends Phaser.Scene {
   paintTerrain() {
     const chunks = terrainChunks(this.terrain, WORLD.width, WORLD.height + EXTRA_BOTTOM).filter(c => touchesLocation(c, this.loc ? { rect: this.view } : null));
     const src = (k) => { try { return this.textures.get(k).getSourceImage(); } catch (e) { return null; } };
-    const imgs = { dirt: src('dirt_path_01'), stone: src('stone_path_01'), water: src('swamp_water_01'),city_final_paving:src('city_final_paving') };
+    const imgs = { dirt: src('dirt_path_01'), stone: src('stone_path_01'), water: src('swamp_water_01'),city_final_paving:src('city_final_paving'),city_walk_paving:src('city_walk_paving') };
     for (const im of this.terrainImages || []) im.destroy(); // перерисовка после правки в редакторе
     this.terrainImages = [];
     for (const c of chunks) {

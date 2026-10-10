@@ -197,7 +197,7 @@ export function cityMapData() {
       ...(['lab','warehouse'].includes(r.key)?{tint:0xc6c0b3}:{}),interior:true})),
   ];
   const road=(id,w,pts,kind='stone')=>({id:'city_street_'+id,kind,w,pts:pts.map(([x,y])=>{const p=P(x,y);return [p.x,p.y];}),seamless:true,
-    ...(kind==='stone'?{texture:'city_final_paving',tileScale:0.11,urban:true}:{})});
+    ...(kind==='stone'?{texture:'city_walk_paving',tileScale:0.24,urban:true}:{})});
   const roads=[
     // Главная улица: ровная ширина и длинные плавные повороты; дома стоят у неё вразбивку, с короткими подходами
     road('main_gate',130,[[640,5170],[1050,5185],[1400,5170],[1600,5060],[1680,4850],[1680,4600]]),
@@ -352,6 +352,7 @@ export function cityMapData() {
   let index=0;const skipped=[];
   const SOLID={city_walk_tree_sage:{w:18,h:10},city_walk_tree_amber:{w:18,h:10},city_walk_tree_plum:{w:16,h:10},
     city_walk_hedge:{w:104,h:22},city_walk_flowerbed:{w:104,h:22},city_walk_herbbed:{w:104,h:22},city_walk_planter:{w:72,h:18},
+    city_walk_pumpkins:{w:86,h:20},city_walk_porch_pots:{w:68,h:18},city_walk_lamp:{w:16,h:10},
     city_walk_woodpile:{w:96,h:22},city_walk_cart:{w:112,h:26},city_walk_dummy:{w:26,h:12},city_walk_sacks:{w:70,h:18},
     city_lamp_01:{w:16,h:10},city_crate:{w:56,h:20},city_barrel:{w:44,h:18},plant_pot_01:{w:30,h:14},bush_02:{w:48,h:22},bush_01:{w:48,h:22},
     city_duel_rack:{w:70,h:18},rune_slab_01:{w:70,h:20},table_01:{w:90,h:22},lantern_02:{w:30,h:12}};
@@ -377,14 +378,14 @@ export function cityMapData() {
       const nx=-(by-ay)/d,ny=(bx-ax)/d;fn(bx-CITY_RECT.x,by-CITY_RECT.y,nx,ny,side,r.w/2);side=-side;next+=step;
     }
   };
-  const TREES=['city_walk_tree_sage','city_walk_tree_amber','city_walk_tree_plum'];
+  const TREES=['city_walk_tree_sage','city_walk_tree_amber','city_walk_tree_sage','city_walk_tree_plum'];
   let treeTurn=0;
   for(const id of ['main_gate','main_market','main_garden','main_quarter','embankment']){
     along(id,330,120,(x,y,nx,ny,side,hw)=>{
       place('city_lamp_01',x+nx*side*(hw+22),y+ny*side*(hw+22))||place('city_lamp_01',x-nx*side*(hw+22),y-ny*side*(hw+22));
     });
-    along(id,165,200,(x,y,nx,ny,side,hw)=>{
-      const k=TREES[treeTurn++%3],o=hw+70;
+    along(id,210,200,(x,y,nx,ny,side,hw)=>{
+      const k=TREES[treeTurn++%TREES.length],o=hw+80;
       place(k,x-nx*side*o,y-ny*side*o,id==='main_quarter'?{frost:true}:{});
     });
   }
@@ -450,14 +451,16 @@ export function cityMapData() {
     ['city_walk_planter',1040,820,{frost:true}],['city_walk_hedge',1440,260,{frost:true}]]);
   // Сады на окраинах: у каждого свой характер и назначение.
   // Фруктовый сад между лавкой Бориса и Дуэльным залом — ряды деревьев вдоль узкой дорожки.
-  for(let y=3600,row=0;y<=4640;y+=140,row++)for(let x=740+(row%2)*60;x<=1180;x+=150)place(row%3===1?'city_walk_tree_sage':'city_walk_tree_amber',x,y);
+  for(let y=3600,row=0;y<=4640;y+=190,row++)for(let x=740+(row%2)*80;x<=1180;x+=200)place(row%2?'city_walk_tree_sage':'city_walk_tree_amber',x,y);
   // Аптекарский огород у восточной дорожки: грядки с травами между Домом Ковенов и банком.
-  for(let y=3540,row=0;y<=3980;y+=110,row++)for(let x=2200+(row%2)*70;x<=2560;x+=150)place(row%2?'city_walk_herbbed':'city_walk_flowerbed',x,y);
+  group([['city_walk_herbbed',2200,3580],['city_walk_flowerbed',2370,3630],['city_walk_herbbed',2510,3580],
+    ['city_walk_herbbed',2270,3820],['city_walk_flowerbed',2460,3920]]);
   // Тихий сад у Архива: изгородь вокруг скамьи и клумбы.
   group([['city_walk_hedge',760,2700],['city_walk_hedge',760,2780],['city_walk_flowerbed',1000,2340,{paved:false}],['city_walk_tree_sage',1060,3100],
     ['city_walk_tree_amber',780,2960],['flower_white_01',940,2780],['flower_purple_01',990,2900]]);
   // Восточный сад Общества: клумбы рядами и деревья.
-  for(let y=2420,row=0;y<=2900;y+=120,row++)for(let x=2180+(row%2)*80;x<=2560;x+=160)place(row%2?'city_walk_tree_plum':'city_walk_flowerbed',x,y);
+  group([['city_walk_flowerbed',2180,2420],['city_walk_tree_sage',2490,2500],['city_walk_flowerbed',2530,2690],
+    ['city_walk_tree_plum',2210,2830],['city_walk_flowerbed',2500,2870]]);
   // Двор за банком и дровяной угол у южной стены.
   for(let y=4460;y<=4900;y+=110)place('city_walk_hedge',2510,y);
   group([['city_walk_tree_amber',2300,4700],['city_walk_tree_sage',2400,4840],['city_walk_planter',2300,4920],['city_walk_woodpile',1040,5470]]);
@@ -466,7 +469,26 @@ export function cityMapData() {
     ['city_walk_flowerbed',2250,1300,{frost:true}],['city_walk_tree_sage',2520,1300,{frost:true}],['city_walk_planter',2400,1420,{frost:true}],
     ['city_walk_tree_sage',820,2010,{frost:true}],['city_walk_hedge',2480,1800,{frost:true}]]);
   // Вдоль внутренней стороны стены — ряд городских деревьев, как живая граница.
-  for(const x of [730,2560])for(let y=300,i=0;y<=5480;y+=230,i++)place(['city_walk_tree_sage','city_walk_tree_amber','city_walk_tree_plum'][(i+(x>1000?1:0))%3],x,y,y<2080?{frost:true}:{});
+  for(const x of [730,2560])for(let y=300,i=0;y<=5480;y+=280,i++)place(['city_walk_tree_sage','city_walk_tree_amber','city_walk_tree_plum'][(i+(x>1000?1:0))%3],x,y,y<2080?{frost:true}:{});
+  // Flower borders give the open lawns the inhabited feel of the approved concept.
+  for(const x of [790,2500])for(let y=620;y<=5420;y+=560)place('city_walk_flowerbed',x,y,y<2080?{frost:true}:{});
+  for(const [x,y] of [[950,3140],[1120,2980],[2380,3180],[2370,4030],[2150,4610],[1970,4750],
+    [1300,4680],[990,5250],[1260,5390],[2260,5350],[1300,1390],[1050,950],[1930,1960],[2310,1980]])
+    place('city_walk_flowerbed',x,y,y<2080?{frost:true}:{});
+  // Cozy details belong to the houses, not the middle of a walking route.
+  group([
+    ['city_walk_porch_pots',1100,2770],['city_walk_porch_pots',2170,2810],
+    ['city_walk_porch_pots',2240,4280],['city_walk_pumpkins',1170,4610],
+    ['city_walk_pumpkins',955,5020],['city_walk_pumpkins',2270,5080],
+    ['city_walk_porch_pots',2150,3100],['city_walk_herbbed',2200,3080],
+    ['city_walk_pumpkins',1040,770,{frost:true}],['city_walk_porch_pots',2420,920,{frost:true}],
+    ['city_walk_pumpkins',990,1970,{frost:true}],['city_walk_porch_pots',2190,1600,{frost:true}],
+    ['city_walk_herbbed',185,4090],['city_walk_porch_pots',470,4140],
+  ]);
+  // Keep the existing lantern positions and footprints; only the town artwork changes.
+  for(const p of props)if(p.k==='city_lamp_01'){
+    p.k='city_walk_lamp';p.light=42;
+  }
   // Сюжетные детали: открытый погреб и спасённые жители (не мешают проходу, видны после событий)
   props.push({id:'city_plan_rescued_cellar',k:'city_cellar',...P(1050,1830),solid:null,l:'floor',requires:'ch2_rescue_cellar'});
   props.push({id:'city_plan_resident_woman',k:'city_resident_woman',...P(2160,1700),solid:null,requires:'ch2_rescue_door'});

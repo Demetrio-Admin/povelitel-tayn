@@ -47,6 +47,11 @@ export class CityPresentation {
         img.setTint(0xb6dbea);
       }
     }
+    // v0.37.0: gardens, trees and yard props of the frozen quarter share its frost until the thaw.
+    for (const { p, img } of this.scene.propViews?.values() || []) {
+      if (!p.frost) continue;
+      if (quarter && !thawed) img.setTint(0xc4dde8); else if (p.tint != null) img.setTint(p.tint); else img.clearTint();
+    }
     for (const im of this.scene.cityLamps || []) {
       if (finale) im.setTint(COLORS.ice); else im.clearTint();
     }

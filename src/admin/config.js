@@ -1,7 +1,7 @@
 import { ITEMS } from '../config/balance.progression.js';
 import { BAG_ITEMS } from '../config/bag.js';
 import { AMULETS } from '../config/build.js';
-import { CITY_POSITIONS } from '../config/city.plan.js';
+import { CITY_ADMIN_POINTS } from '../config/city.plan.js';
 import { CITY_START, FOREST_RETURN } from '../config/world.city.js';
 
 const counted = new Set(BAG_ITEMS);
@@ -16,8 +16,8 @@ export const ADMIN_CATALOG = {
 export const ADMIN_CHECKPOINTS = {
   forest: { name: 'Лес Мирры', ...FOREST_RETURN },
   city: { name: 'Вход в город', ...CITY_START, requires: 'ch2_start' },
-  nerys: { name: 'У Нэрис', ...CITY_POSITIONS.npc_nerys, y:CITY_POSITIONS.npc_nerys.y+130, requires: 'ch2_nerys_met', blockedBy: 'ch2_final_start' },
-  nerys_final: { name: 'У Нэрис перед экзаменом', ...CITY_POSITIONS.npc_nerys_final, y:CITY_POSITIONS.npc_nerys_final.y+130, requires: 'ch2_final_start' },
+  nerys: { name: 'У Нэрис', ...CITY_ADMIN_POINTS.nerys, requires: 'ch2_nerys_met', blockedBy: 'ch2_final_start' },
+  nerys_final: { name: 'У Нэрис перед экзаменом', ...CITY_ADMIN_POINTS.nerys_final, requires: 'ch2_final_start' },
 };
 export const ADMIN_GIFT_PROOFS = {
   telekinesis: { 1: 'unlock_telekinesis_1', 2: 'telekinesis_2_complete' },

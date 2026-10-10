@@ -88,9 +88,11 @@ try {
   Object.assign(legacyPoints.city,{x:6160,y:3110});Object.assign(legacyPoints.nerys,{x:8300,y:1960});Object.assign(legacyPoints.nerys_final,{x:7570,y:4160});
   await sql("update game_admin.settings set value=jsonb_set(value,'{checkpoints}',$1::jsonb) where key='rules'",[JSON.stringify(legacyPoints)]);
   const cityUpgrade=readFileSync('supabase/migrations/20261010_compact_city_admin_points.sql','utf8');
-  await db.exec(cityUpgrade);await db.exec(cityUpgrade);
+  const walkUpgrade=readFileSync('supabase/migrations/20261011_walkable_city_admin_points.sql','utf8');
+  // Installations apply both city upgrades in order; repeating either keeps the final walkable-town points.
+  await db.exec(cityUpgrade);await db.exec(walkUpgrade);await db.exec(walkUpgrade);
   assert.deepEqual((await sql("select value from game_admin.settings where key='rules'")).rows[0].value,rulesBefore);
-  check(true,'compact-city upgrade is repeatable and preserves gates and other admin rules');
+  check(true,'city upgrades are repeatable, end at the walkable-town points and preserve gates and other admin rules');
   assert.deepEqual((await sql('select to_jsonb(p) row from public.player_progress p order by user_id')).rows,progressBefore);
   check((await sql('select count(*) n from game_admin.entries')).rows[0].n===logged,'city destination upgrade preserves player progress and audit history');
   for(const op of ['players','ledger','audit','errors','stats']) check(await call('support',op),`real ${op} query`);

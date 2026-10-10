@@ -597,13 +597,13 @@ export const DIALOGUES = {
     },
     {
       id: 'ilaria_lab_active', when: c => c.has('ch2_lab_found') && !c.has('ch2_lab_reported'),
-      nodes: { start: { lines: ['Лаборатория — в старом погребе к югу от дороги в город. Дверь держит нестабильная печать: её успокоит только Лёд.'], choices: [{ label: GOT_IT }] } },
+      nodes: { start: { lines: ['Лаборатория — в старом погребе за западной стеной: от дороги в город к нему ведёт лесная тропа. Дверь держит нестабильная печать: её успокоит только Лёд.'], choices: [{ label: GOT_IT }] } },
     },
     {
       id: 'ilaria_lab_ready', when: c => c.has('ch2_brittle_done') && !c.has('ch2_lab_found'),
       nodes: { start: {
         lines: [
-          'Нашла! Накладные на списанное оборудование ведут к старому погребу у дороги, к югу от городских ворот.',
+          'Нашла! Накладные на списанное оборудование ведут к старому погребу у дороги — по тропе вдоль западной стены, перед городскими воротами.',
           'Там делали морозных конструктов. И, кажется, не только их.',
         ],
         choices: [{ label: 'Иду туда.', do: [{ event: 'ch2_lab_found' }] }],
@@ -658,7 +658,7 @@ export const DIALOGUES = {
     },
     {
       id: 'ilaria_cargo_active', when: c => c.has('ch2_cargo_start') && !c.has('ch2_serials_read'),
-      nodes: { start: { lines: ['Склады — к югу от площади, за Дуэльным залом. Говорят, там бродят ледяные конструкты.'], choices: [{ label: GOT_IT }] } },
+      nodes: { start: { lines: ['Склады — у западных ворот, за торговым двором. Говорят, там бродят ледяные конструкты.'], choices: [{ label: GOT_IT }] } },
     },
     {
       id: 'ilaria_after_severin', repeat: true, when: c => c.has('ch2_met_severin'),
@@ -839,7 +839,7 @@ export const DIALOGUES = {
     },
     {
       id: 'merchant_cargo_active', when: c => c.has('ch2_cargo_start') && !c.has('ch2_cargo_found'),
-      nodes: { start: { lines: ['Склады — на юге города, за Дуэльным залом. Осторожнее с чудищами!'], choices: [{ label: 'Посмотреть товар', do: [{ shop: true }] }, BYE] } },
+      nodes: { start: { lines: ['Склады — у самых ворот, за моим двором. Осторожнее с чудищами!'], choices: [{ label: 'Посмотреть товар', do: [{ shop: true }] }, BYE] } },
     },
     {
       id: 'merchant_shop', repeat: true, when: c => c.has('city_merchant_open'),
@@ -976,7 +976,7 @@ export const DIALOGUES = {
     {
       id: 'nerys_water_active', when: c => c.has('unlock_ice_1') && !c.has('ch2_water_frozen'),
       nodes: { start: {
-        lines: ['Пролом в ограде залит водой. Заморозь её — и пройдёшь.', 'Не забудь: дар работает, только если он в одном из трёх слотов. Сумка → Дары.'],
+        lines: ['Проход в садовой стене на севере квартала залит водой. Заморозь её — и пройдёшь.', 'Не забудь: дар работает, только если он в одном из трёх слотов. Сумка → Дары.'],
         choices: [{ label: 'Дары', do: [{ gifts: true }] }, { label: GOT_IT }],
       } },
     },

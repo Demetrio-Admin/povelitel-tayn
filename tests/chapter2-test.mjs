@@ -47,7 +47,8 @@ console.log('\nГлава II: данные');
   for (const t of ['ice_wall_01', 'ice_construct_01', 'water_patch_01', 'ice_floor_01', 'frozen_door_01']) ok(ASSETS[t] && DISPLAY_SIZE[t] && fs.existsSync(`public/assets/sprites/${t}.png`), `картинка ${t}`);
   const water = INTERACTIVES.find(o => o.id === 'fq_water'), wall = INTERACTIVES.find(o => o.id === 'frost_barrier');
   ok(water.kind === 'ice' && water.walkable && water.collide && wall.kind === 'fire' && wall.waitEvent === 'ch2_frost_wave', 'ледяная стена (Огонь после волны холода) и затопленный пролом (Лёд) — настоящие преграды');
-  ok(ZONES.find(z => z.id === 'FQ').y === CITY_RECT.y && ZONES.find(z => z.id === 'FQ').h === 912, 'Замёрзший квартал — северная часть города');
+  { const fy = ZONES.find(z => z.id === 'FY'), fq = ZONES.find(z => z.id === 'FQ');   // v0.37.0: квартал за мостом и Северный двор за затопленным проходом
+    ok(fy.y === CITY_RECT.y && fq.y === fy.y + fy.h && fq.y + fq.h < CITY_RECT.y + CITY_RECT.h / 2, 'Замёрзший квартал — северная часть города'); }
   // v0.22.0
   for (const id of ['tikhon', 'rowena']) ok(NPCS[id] && DIALOGUES[id]?.length && fs.existsSync(`public/assets/sprites/npc_${id}.png`) && fs.existsSync(`public/assets/sprites/portrait_${id}.png`), `${NPCS[id]?.name}: данные, диалоги, спрайт и портрет`);
   for (const id of ['volunteer', 'experimental_construct', 'severin_boss']) ok(ENEMIES[id] && fs.existsSync(`public/assets/sprites/${ENEMIES[id].texture}.png`) && DISPLAY_SIZE[ENEMIES[id].texture], `${ENEMIES[id]?.name}: данные и спрайт`);

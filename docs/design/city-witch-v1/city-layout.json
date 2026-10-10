@@ -1,41 +1,83 @@
 {
   "schema": "witch-city-art-handoff-v1",
-  "status": "approved-style-production-art; integrated in runtime v0.36.2",
+  "status": "approved-style-production-art; walkable town plan v4 integrated in runtime v0.37.0",
+  "places": {
+    "road": {
+      "x": 190,
+      "y": 5175
+    },
+    "labTrail": {
+      "x": 320,
+      "y": 4300
+    },
+    "gate": {
+      "x": 860,
+      "y": 5175
+    },
+    "market": {
+      "x": 1720,
+      "y": 4480
+    },
+    "square": {
+      "x": 1560,
+      "y": 3740
+    },
+    "garden": {
+      "x": 1600,
+      "y": 2860
+    },
+    "bridgeSouth": {
+      "x": 1560,
+      "y": 2300
+    },
+    "quarter": {
+      "x": 1580,
+      "y": 1720
+    },
+    "waterSouth": {
+      "x": 1720,
+      "y": 1250
+    },
+    "yard": {
+      "x": 1720,
+      "y": 1000
+    }
+  },
   "coordinateAuthority": "src/config/city.plan.js; generated overview is an art reference, not collision geometry",
   "worldRect": {
-    "x": 6288,
-    "y": 600,
-    "w": 2232,
-    "h": 2592
+    "x": 5600,
+    "y": 160,
+    "w": 2880,
+    "h": 5760
   },
   "overviewViewBox": {
     "x": 0,
     "y": 0,
-    "w": 2232,
-    "h": 2592
+    "w": 2880,
+    "h": 5760
   },
   "style": "Разноцветный ведьминский город; палитра Леса Мирры; ровные улицы с плавными поворотами",
   "buildings": [
     {
       "id": "north_bay",
       "name": "Северный дом",
-      "x": 7056,
-      "y": 660,
+      "x": 6638,
+      "y": 528,
       "w": 324,
       "h": 252,
       "door": {
-        "x": 7218,
-        "y": 912
+        "x": 6800,
+        "y": 780
       },
       "requires": null,
       "number": 1,
       "mapPosition": {
-        "x": 768,
-        "y": 60
+        "x": 1038,
+        "y": 368
       },
       "mapDoor": {
-        "x": 930,
-        "y": 312
+        "x": 1200,
+        "y": 620
       },
       "palette": {
         "roof": "#774b65",
@@ -53,23 +95,23 @@
     {
       "id": "north_workshop",
       "name": "Дом с мастерской",
-      "x": 7860,
-      "y": 660,
+      "x": 7682,
+      "y": 708,
       "w": 336,
       "h": 252,
       "door": {
-        "x": 8028,
-        "y": 912
+        "x": 7850,
+        "y": 960
       },
       "requires": null,
       "number": 2,
       "mapPosition": {
-        "x": 1572,
-        "y": 60
+        "x": 2082,
+        "y": 548
       },
       "mapDoor": {
-        "x": 1740,
-        "y": 312
+        "x": 2250,
+        "y": 800
       },
       "palette": {
         "roof": "#9b5948",
@@ -87,23 +129,23 @@
     {
       "id": "cellar",
       "name": "Дом с погребом",
-      "x": 7056,
-      "y": 1116,
+      "x": 6688,
+      "y": 1758,
       "w": 324,
       "h": 222,
       "door": {
-        "x": 7218,
-        "y": 1338
+        "x": 6850,
+        "y": 1980
       },
       "requires": "ch2_rescue_cellar",
       "number": 3,
       "mapPosition": {
-        "x": 768,
-        "y": 516
+        "x": 1088,
+        "y": 1598
       },
       "mapDoor": {
-        "x": 930,
-        "y": 738
+        "x": 1250,
+        "y": 1820
       },
       "palette": {
         "roof": "#406c69",
@@ -121,23 +163,23 @@
     {
       "id": "rescue",
       "name": "Дом за ледяной дверью",
-      "x": 7860,
-      "y": 1116,
+      "x": 7422,
+      "y": 1518,
       "w": 336,
       "h": 222,
       "door": {
-        "x": 8028,
-        "y": 1338
+        "x": 7590,
+        "y": 1740
       },
       "requires": "ch2_rescue_door",
       "number": 4,
       "mapPosition": {
-        "x": 1572,
-        "y": 516
+        "x": 1822,
+        "y": 1358
       },
       "mapDoor": {
-        "x": 1740,
-        "y": 738
+        "x": 1990,
+        "y": 1580
       },
       "palette": {
         "roof": "#754752",
@@ -155,23 +197,23 @@
     {
       "id": "archive",
       "name": "Городской Архив",
-      "x": 7056,
-      "y": 1584,
+      "x": 6688,
+      "y": 2468,
       "w": 324,
       "h": 252,
       "door": {
-        "x": 7218,
-        "y": 1836
+        "x": 6850,
+        "y": 2720
       },
       "requires": null,
       "number": 5,
       "mapPosition": {
-        "x": 768,
-        "y": 984
+        "x": 1088,
+        "y": 2308
       },
       "mapDoor": {
-        "x": 930,
-        "y": 1236
+        "x": 1250,
+        "y": 2560
       },
       "palette": {
         "roof": "#685074",
@@ -189,23 +231,23 @@
     {
       "id": "society",
       "name": "Общество Преображения",
-      "x": 7860,
-      "y": 1584,
+      "x": 7382,
+      "y": 2608,
       "w": 336,
       "h": 252,
       "door": {
-        "x": 8028,
-        "y": 1836
+        "x": 7550,
+        "y": 2860
       },
       "requires": null,
       "number": 6,
       "mapPosition": {
-        "x": 1572,
-        "y": 984
+        "x": 1782,
+        "y": 2448
       },
       "mapDoor": {
-        "x": 1740,
-        "y": 1236
+        "x": 1950,
+        "y": 2700
       },
       "palette": {
         "roof": "#3f676f",
@@ -223,23 +265,23 @@
     {
       "id": "bank",
       "name": "Городской Банк",
-      "x": 7896,
-      "y": 1974,
+      "x": 7500,
+      "y": 4170,
       "w": 300,
       "h": 240,
       "door": {
-        "x": 8046,
-        "y": 2214
+        "x": 7650,
+        "y": 4410
       },
       "requires": null,
       "number": 7,
       "mapPosition": {
-        "x": 1608,
-        "y": 1374
+        "x": 1900,
+        "y": 4010
       },
       "mapDoor": {
-        "x": 1758,
-        "y": 1614
+        "x": 2050,
+        "y": 4250
       },
       "palette": {
         "roof": "#4d607c",
@@ -257,23 +299,23 @@
     {
       "id": "duel",
       "name": "Магическая Дуэль",
-      "x": 7020,
-      "y": 2364,
+      "x": 6520,
+      "y": 3178,
       "w": 360,
       "h": 252,
       "door": {
-        "x": 7200,
-        "y": 2616
+        "x": 6700,
+        "y": 3430
       },
       "requires": "ch2_fin_seal",
       "number": 8,
       "mapPosition": {
-        "x": 732,
-        "y": 1764
+        "x": 920,
+        "y": 3018
       },
       "mapDoor": {
-        "x": 912,
-        "y": 2016
+        "x": 1100,
+        "y": 3270
       },
       "palette": {
         "roof": "#6b507e",
@@ -291,23 +333,23 @@
     {
       "id": "coven",
       "name": "Дом Ковенов",
-      "x": 7860,
-      "y": 2364,
+      "x": 7334,
+      "y": 3078,
       "w": 336,
       "h": 252,
       "door": {
-        "x": 8076,
-        "y": 2616
+        "x": 7550,
+        "y": 3330
       },
       "requires": null,
       "number": 9,
       "mapPosition": {
-        "x": 1572,
-        "y": 1764
+        "x": 1734,
+        "y": 2918
       },
       "mapDoor": {
-        "x": 1788,
-        "y": 2016
+        "x": 1950,
+        "y": 3170
       },
       "palette": {
         "roof": "#805058",
@@ -325,23 +367,23 @@
     {
       "id": "warehouse_a",
       "name": "Склад А",
-      "x": 7020,
-      "y": 2826,
+      "x": 6570,
+      "y": 4966,
       "w": 360,
       "h": 204,
       "door": {
-        "x": 7200,
-        "y": 3030
+        "x": 6750,
+        "y": 5170
       },
       "requires": null,
       "number": 10,
       "mapPosition": {
-        "x": 732,
-        "y": 2226
+        "x": 970,
+        "y": 4806
       },
       "mapDoor": {
-        "x": 912,
-        "y": 2430
+        "x": 1150,
+        "y": 5010
       },
       "palette": {
         "roof": "#50694d",
@@ -359,23 +401,23 @@
     {
       "id": "warehouse_b",
       "name": "Склад Б",
-      "x": 7860,
-      "y": 2826,
+      "x": 7482,
+      "y": 5041,
       "w": 336,
       "h": 204,
       "door": {
-        "x": 8028,
-        "y": 3030
+        "x": 7650,
+        "y": 5245
       },
       "requires": null,
       "number": 11,
       "mapPosition": {
-        "x": 1572,
-        "y": 2226
+        "x": 1882,
+        "y": 4881
       },
       "mapDoor": {
-        "x": 1740,
-        "y": 2430
+        "x": 2050,
+        "y": 5085
       },
       "palette": {
         "roof": "#506774",
@@ -393,23 +435,23 @@
     {
       "id": "lab",
       "name": "Тайная лаборатория",
-      "x": 6300,
-      "y": 2352,
+      "x": 5816,
+      "y": 3892,
       "w": 228,
       "h": 228,
       "door": {
-        "x": 6414,
-        "y": 2580
+        "x": 5930,
+        "y": 4120
       },
       "requires": "ch2_lab_open",
       "number": 12,
       "mapPosition": {
-        "x": 12,
-        "y": 1752
+        "x": 216,
+        "y": 3732
       },
       "mapDoor": {
-        "x": 126,
-        "y": 1980
+        "x": 330,
+        "y": 3960
       },
       "palette": {
         "roof": "#615769",
@@ -657,8 +699,8 @@
     {
       "id": "door_cellar",
       "kind": "room_door",
-      "x": 7218,
-      "y": 1366,
+      "x": 6850,
+      "y": 2008,
       "ghost": {
         "w": 120,
         "h": 80
@@ -683,8 +725,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 7218,
-        "y": 1438
+        "x": 6850,
+        "y": 2080
       },
       "room": "city",
       "hint": "Выйти: Дом с погребом"
@@ -692,8 +734,8 @@
     {
       "id": "door_rescue",
       "kind": "room_door",
-      "x": 8028,
-      "y": 1366,
+      "x": 7590,
+      "y": 1768,
       "ghost": {
         "w": 120,
         "h": 80
@@ -718,8 +760,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 8028,
-        "y": 1438
+        "x": 7590,
+        "y": 1840
       },
       "room": "city",
       "hint": "Выйти: Дом за ледяной дверью"
@@ -727,8 +769,8 @@
     {
       "id": "door_archive",
       "kind": "room_door",
-      "x": 7218,
-      "y": 1864,
+      "x": 6850,
+      "y": 2748,
       "ghost": {
         "w": 120,
         "h": 80
@@ -753,8 +795,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 7218,
-        "y": 1936
+        "x": 6850,
+        "y": 2820
       },
       "room": "city",
       "hint": "Выйти: Городской Архив"
@@ -762,8 +804,8 @@
     {
       "id": "door_society",
       "kind": "room_door",
-      "x": 8028,
-      "y": 1864,
+      "x": 7550,
+      "y": 2888,
       "ghost": {
         "w": 120,
         "h": 80
@@ -788,8 +830,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 8028,
-        "y": 1936
+        "x": 7550,
+        "y": 2960
       },
       "room": "city",
       "hint": "Выйти: Общество Преображения"
@@ -797,8 +839,8 @@
     {
       "id": "door_bank",
       "kind": "room_door",
-      "x": 8046,
-      "y": 2242,
+      "x": 7650,
+      "y": 4438,
       "ghost": {
         "w": 120,
         "h": 80
@@ -823,8 +865,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 8046,
-        "y": 2314
+        "x": 7650,
+        "y": 4510
       },
       "room": "city",
       "hint": "Выйти: Городской Банк"
@@ -832,8 +874,8 @@
     {
       "id": "door_duel",
       "kind": "room_door",
-      "x": 7200,
-      "y": 2644,
+      "x": 6700,
+      "y": 3458,
       "ghost": {
         "w": 120,
         "h": 80
@@ -858,8 +900,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 7200,
-        "y": 2716
+        "x": 6700,
+        "y": 3530
       },
       "room": "city",
       "hint": "Выйти: Магическая Дуэль"
@@ -867,8 +909,8 @@
     {
       "id": "door_coven",
       "kind": "room_door",
-      "x": 8076,
-      "y": 2644,
+      "x": 7550,
+      "y": 3358,
       "ghost": {
         "w": 120,
         "h": 80
@@ -893,8 +935,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 8076,
-        "y": 2716
+        "x": 7550,
+        "y": 3430
       },
       "room": "city",
       "hint": "Выйти: Дом Ковенов"
@@ -902,8 +944,8 @@
     {
       "id": "door_warehouse_a",
       "kind": "room_door",
-      "x": 7200,
-      "y": 3058,
+      "x": 6750,
+      "y": 5198,
       "ghost": {
         "w": 120,
         "h": 80
@@ -928,8 +970,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 7200,
-        "y": 3130
+        "x": 6750,
+        "y": 5270
       },
       "room": "city",
       "hint": "Выйти: Склад А"
@@ -937,8 +979,8 @@
     {
       "id": "door_warehouse_b",
       "kind": "room_door",
-      "x": 8028,
-      "y": 3058,
+      "x": 7650,
+      "y": 5273,
       "ghost": {
         "w": 120,
         "h": 80
@@ -963,8 +1005,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 8028,
-        "y": 3130
+        "x": 7650,
+        "y": 5345
       },
       "room": "city",
       "hint": "Выйти: Склад Б"
@@ -972,8 +1014,8 @@
     {
       "id": "door_lab",
       "kind": "room_door",
-      "x": 6414,
-      "y": 2608,
+      "x": 5930,
+      "y": 4148,
       "ghost": {
         "w": 120,
         "h": 80
@@ -998,8 +1040,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 6414,
-        "y": 2680
+        "x": 5930,
+        "y": 4220
       },
       "room": "city",
       "hint": "Выйти: Тайная лаборатория"
@@ -1007,532 +1049,807 @@
   ],
   "roads": [
     {
-      "id": "city_street_avenue",
+      "id": "city_street_main_gate",
       "kind": "stone",
-      "w": 200,
+      "w": 130,
       "pts": [
         [
-          7620,
-          648
+          6240,
+          5330
         ],
         [
-          7602,
-          948
+          6650,
+          5345
         ],
         [
-          7620,
-          1068
+          7000,
+          5330
         ],
         [
-          7620,
-          1512
+          7200,
+          5220
         ],
         [
-          7596,
-          1890
+          7280,
+          5010
         ],
         [
-          7644,
-          2280
-        ],
-        [
-          7608,
-          2676
-        ],
-        [
-          7620,
-          3132
+          7280,
+          4760
         ]
       ],
       "seamless": true,
       "texture": "city_final_paving",
-      "tileScale": 0.12,
+      "tileScale": 0.11,
       "urban": true
     },
     {
-      "id": "city_street_entry",
+      "id": "city_street_main_market",
+      "kind": "stone",
+      "w": 130,
+      "pts": [
+        [
+          7240,
+          4410
+        ],
+        [
+          7160,
+          4180
+        ],
+        [
+          7100,
+          3940
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_main_garden",
+      "kind": "stone",
+      "w": 130,
+      "pts": [
+        [
+          7080,
+          3450
+        ],
+        [
+          7140,
+          3220
+        ],
+        [
+          7200,
+          3020
+        ],
+        [
+          7200,
+          2800
+        ],
+        [
+          7160,
+          2580
+        ],
+        [
+          7160,
+          2430
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_bridge",
+      "kind": "stone",
+      "w": 130,
+      "pts": [
+        [
+          7160,
+          2440
+        ],
+        [
+          7160,
+          2170
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_main_quarter",
+      "kind": "stone",
+      "w": 130,
+      "pts": [
+        [
+          7160,
+          2190
+        ],
+        [
+          7140,
+          2040
+        ],
+        [
+          7200,
+          1840
+        ],
+        [
+          7280,
+          1640
+        ],
+        [
+          7320,
+          1460
+        ],
+        [
+          7320,
+          1300
+        ],
+        [
+          7320,
+          1000
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_apron_a",
+      "kind": "stone",
+      "w": 160,
+      "pts": [
+        [
+          6650,
+          5250
+        ],
+        [
+          6850,
+          5250
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_lane_b",
+      "kind": "stone",
+      "w": 100,
+      "pts": [
+        [
+          7240,
+          5140
+        ],
+        [
+          7480,
+          5310
+        ],
+        [
+          7600,
+          5320
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_apron_b",
+      "kind": "stone",
+      "w": 160,
+      "pts": [
+        [
+          7560,
+          5320
+        ],
+        [
+          7740,
+          5320
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_market",
+      "kind": "stone",
+      "w": 300,
+      "pts": [
+        [
+          7240,
+          4560
+        ],
+        [
+          7400,
+          4550
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_merchant_pad",
+      "kind": "stone",
+      "w": 230,
+      "pts": [
+        [
+          6960,
+          4590
+        ],
+        [
+          7040,
+          4590
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_bank_court",
       "kind": "stone",
       "w": 150,
       "pts": [
         [
-          6306,
-          2106
+          7550,
+          4470
         ],
         [
-          6462,
-          2094
-        ],
-        [
-          6648,
-          2118
-        ],
-        [
-          6930,
-          2100
-        ],
-        [
-          7200,
-          2118
+          7720,
+          4470
         ]
       ],
       "seamless": true,
       "texture": "city_final_paving",
-      "tileScale": 0.12,
+      "tileScale": 0.11,
       "urban": true
     },
     {
       "id": "city_street_square",
       "kind": "stone",
-      "w": 330,
+      "w": 420,
       "pts": [
         [
-          7104,
-          2136
+          7000,
+          3660
         ],
         [
-          7320,
-          2118
-        ],
-        [
-          7638,
-          2136
-        ],
-        [
-          8100,
-          2148
+          7160,
+          3650
         ]
       ],
       "seamless": true,
       "texture": "city_final_paving",
-      "tileScale": 0.12,
+      "tileScale": 0.11,
       "urban": true
     },
     {
-      "id": "city_street_lab",
-      "kind": "dirt",
-      "w": 100,
+      "id": "city_street_duel_lane",
+      "kind": "stone",
+      "w": 90,
       "pts": [
         [
-          6630,
-          2136
+          6780,
+          3505
         ],
         [
-          6612,
-          2322
+          6900,
+          3560
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_duel_court",
+      "kind": "stone",
+      "w": 150,
+      "pts": [
+        [
+          6620,
+          3500
+        ],
+        [
+          6780,
+          3500
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_coven_lane",
+      "kind": "stone",
+      "w": 90,
+      "pts": [
+        [
+          7240,
+          3490
+        ],
+        [
+          7380,
+          3420
+        ],
+        [
+          7480,
+          3405
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_coven_court",
+      "kind": "stone",
+      "w": 150,
+      "pts": [
+        [
+          7480,
+          3400
+        ],
+        [
+          7640,
+          3400
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_archive_lane",
+      "kind": "stone",
+      "w": 90,
+      "pts": [
+        [
+          7160,
+          2790
+        ],
+        [
+          6930,
+          2790
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_archive_court",
+      "kind": "stone",
+      "w": 150,
+      "pts": [
+        [
+          6770,
+          2790
+        ],
+        [
+          6930,
+          2790
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_society_lane",
+      "kind": "stone",
+      "w": 90,
+      "pts": [
+        [
+          7200,
+          2920
+        ],
+        [
+          7480,
+          2930
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_society_court",
+      "kind": "stone",
+      "w": 150,
+      "pts": [
+        [
+          7480,
+          2930
+        ],
+        [
+          7640,
+          2930
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_embankment",
+      "kind": "stone",
+      "w": 90,
+      "pts": [
+        [
+          6360,
+          2412
+        ],
+        [
+          6800,
+          2410
+        ],
+        [
+          7160,
+          2410
+        ],
+        [
+          7700,
+          2414
+        ],
+        [
+          8160,
+          2410
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_cellar_lane",
+      "kind": "stone",
+      "w": 90,
+      "pts": [
+        [
+          7140,
+          2050
+        ],
+        [
+          6930,
+          2050
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_cellar_court",
+      "kind": "stone",
+      "w": 150,
+      "pts": [
+        [
+          6770,
+          2050
+        ],
+        [
+          6930,
+          2050
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_rescue_lane",
+      "kind": "stone",
+      "w": 90,
+      "pts": [
+        [
+          7220,
+          1800
+        ],
+        [
+          7510,
+          1810
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_rescue_court",
+      "kind": "stone",
+      "w": 150,
+      "pts": [
+        [
+          7510,
+          1810
+        ],
+        [
+          7670,
+          1810
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_yard",
+      "kind": "stone",
+      "w": 420,
+      "pts": [
+        [
+          7200,
+          800
+        ],
+        [
+          7440,
+          780
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_bay_lane",
+      "kind": "stone",
+      "w": 90,
+      "pts": [
+        [
+          7020,
+          860
+        ],
+        [
+          6880,
+          850
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_bay_court",
+      "kind": "stone",
+      "w": 150,
+      "pts": [
+        [
+          6720,
+          850
+        ],
+        [
+          6880,
+          850
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_workshop_lane",
+      "kind": "stone",
+      "w": 90,
+      "pts": [
+        [
+          7600,
+          920
+        ],
+        [
+          7770,
+          1020
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_workshop_court",
+      "kind": "stone",
+      "w": 150,
+      "pts": [
+        [
+          7770,
+          1030
+        ],
+        [
+          7930,
+          1030
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_orchard_walk",
+      "kind": "stone",
+      "w": 64,
+      "pts": [
+        [
+          6850,
+          4600
+        ],
+        [
+          6650,
+          4410
+        ],
+        [
+          6550,
+          4110
         ],
         [
           6600,
-          2520
+          3580
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_west_walk",
+      "kind": "stone",
+      "w": 64,
+      "pts": [
+        [
+          6560,
+          3460
         ],
         [
-          6414,
-          2622
+          6480,
+          3160
+        ],
+        [
+          6500,
+          2860
+        ],
+        [
+          6560,
+          2580
+        ],
+        [
+          6500,
+          2412
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_east_walk",
+      "kind": "stone",
+      "w": 64,
+      "pts": [
+        [
+          7720,
+          4470
+        ],
+        [
+          7950,
+          4310
+        ],
+        [
+          8000,
+          3860
+        ],
+        [
+          7900,
+          3490
+        ],
+        [
+          7950,
+          3110
+        ],
+        [
+          7900,
+          2660
+        ],
+        [
+          8050,
+          2412
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.11,
+      "urban": true
+    },
+    {
+      "id": "city_street_road",
+      "kind": "dirt",
+      "w": 150,
+      "pts": [
+        [
+          5560,
+          5330
+        ],
+        [
+          5820,
+          5324
+        ],
+        [
+          6040,
+          5332
+        ],
+        [
+          6300,
+          5330
         ]
       ],
       "seamless": true
     },
     {
-      "id": "city_street_cross_0",
-      "kind": "stone",
-      "w": 120,
+      "id": "city_street_lab_trail",
+      "kind": "dirt",
+      "w": 110,
       "pts": [
         [
-          7104,
-          960
+          5930,
+          5310
         ],
         [
-          7320,
-          945
+          5900,
+          5010
         ],
         [
-          7608,
-          972
+          5970,
+          4680
         ],
         [
-          7980,
-          954
+          5920,
+          4360
         ],
         [
-          8184,
-          966
+          5930,
+          4170
         ]
       ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_cross_1",
-      "kind": "stone",
-      "w": 120,
-      "pts": [
-        [
-          7104,
-          1386
-        ],
-        [
-          7320,
-          1371
-        ],
-        [
-          7608,
-          1398
-        ],
-        [
-          7980,
-          1380
-        ],
-        [
-          8184,
-          1392
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_cross_2",
-      "kind": "stone",
-      "w": 120,
-      "pts": [
-        [
-          7104,
-          1884
-        ],
-        [
-          7320,
-          1869
-        ],
-        [
-          7608,
-          1896
-        ],
-        [
-          7980,
-          1878
-        ],
-        [
-          8184,
-          1890
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_cross_3",
-      "kind": "stone",
-      "w": 120,
-      "pts": [
-        [
-          7104,
-          2298
-        ],
-        [
-          7320,
-          2283
-        ],
-        [
-          7608,
-          2310
-        ],
-        [
-          7980,
-          2292
-        ],
-        [
-          8184,
-          2304
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_cross_4",
-      "kind": "stone",
-      "w": 120,
-      "pts": [
-        [
-          7104,
-          2664
-        ],
-        [
-          7320,
-          2649
-        ],
-        [
-          7608,
-          2676
-        ],
-        [
-          7980,
-          2658
-        ],
-        [
-          8184,
-          2670
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_cross_5",
-      "kind": "stone",
-      "w": 120,
-      "pts": [
-        [
-          7104,
-          3078
-        ],
-        [
-          7320,
-          3063
-        ],
-        [
-          7608,
-          3090
-        ],
-        [
-          7980,
-          3072
-        ],
-        [
-          8184,
-          3084
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_forecourt_north_bay",
-      "kind": "stone",
-      "w": 85,
-      "pts": [
-        [
-          7104.6,
-          936
-        ],
-        [
-          7331.4,
-          936
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_forecourt_north_workshop",
-      "kind": "stone",
-      "w": 85,
-      "pts": [
-        [
-          7910.4,
-          936
-        ],
-        [
-          8145.6,
-          936
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_forecourt_cellar",
-      "kind": "stone",
-      "w": 85,
-      "pts": [
-        [
-          7104.6,
-          1362
-        ],
-        [
-          7331.4,
-          1362
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_forecourt_rescue",
-      "kind": "stone",
-      "w": 85,
-      "pts": [
-        [
-          7910.4,
-          1362
-        ],
-        [
-          8145.6,
-          1362
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_forecourt_archive",
-      "kind": "stone",
-      "w": 85,
-      "pts": [
-        [
-          7104.6,
-          1860
-        ],
-        [
-          7331.4,
-          1860
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_forecourt_society",
-      "kind": "stone",
-      "w": 85,
-      "pts": [
-        [
-          7910.4,
-          1860
-        ],
-        [
-          8145.6,
-          1860
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_forecourt_bank",
-      "kind": "stone",
-      "w": 85,
-      "pts": [
-        [
-          7941,
-          2238
-        ],
-        [
-          8151,
-          2238
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_forecourt_duel",
-      "kind": "stone",
-      "w": 85,
-      "pts": [
-        [
-          7074,
-          2640
-        ],
-        [
-          7326,
-          2640
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_forecourt_coven",
-      "kind": "stone",
-      "w": 85,
-      "pts": [
-        [
-          7958.4,
-          2640
-        ],
-        [
-          8193.6,
-          2640
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_forecourt_warehouse_a",
-      "kind": "stone",
-      "w": 85,
-      "pts": [
-        [
-          7074,
-          3054
-        ],
-        [
-          7326,
-          3054
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
-    },
-    {
-      "id": "city_street_forecourt_warehouse_b",
-      "kind": "stone",
-      "w": 85,
-      "pts": [
-        [
-          7910.4,
-          3054
-        ],
-        [
-          8145.6,
-          3054
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.12,
-      "urban": true
+      "seamless": true
     }
   ],
   "interactives": [
     {
       "id": "sapphire_city_cache_1",
       "kind": "chest",
-      "x": 7158,
-      "y": 2226,
+      "x": 6830,
+      "y": 3800,
       "texture": "chest_01",
       "radius": 100,
       "collide": {
@@ -1545,15 +1862,15 @@
       },
       "hint": "Тайник у площади",
       "mapPosition": {
-        "x": 870,
-        "y": 1626
+        "x": 1230,
+        "y": 3640
       }
     },
     {
       "id": "sapphire_city_cache_2",
       "kind": "chest",
-      "x": 7944,
-      "y": 2682,
+      "x": 8080,
+      "y": 5640,
       "texture": "chest_01",
       "radius": 100,
       "collide": {
@@ -1566,15 +1883,15 @@
       },
       "hint": "Тайник у старой ограды",
       "mapPosition": {
-        "x": 1656,
-        "y": 2082
+        "x": 2480,
+        "y": 5480
       }
     },
     {
       "id": "exit_city",
       "kind": "exit",
-      "x": 6330,
-      "y": 2106,
+      "x": 5710,
+      "y": 5310,
       "texture": "signpost_01",
       "collide": {
         "w": 24,
@@ -1583,8 +1900,8 @@
       "radius": 110,
       "hint": "Карта мира",
       "mapPosition": {
-        "x": 42,
-        "y": 1506
+        "x": 110,
+        "y": 5150
       }
     },
     {
@@ -1593,14 +1910,14 @@
       "res": "frost_herb",
       "amount": 1,
       "respawnSec": 240,
-      "x": 6432,
-      "y": 2028,
+      "x": 5850,
+      "y": 5220,
       "texture": "city_frost_herb",
       "radius": 90,
       "requiresEvent": "ch2_start",
       "mapPosition": {
-        "x": 144,
-        "y": 1428
+        "x": 250,
+        "y": 5060
       }
     },
     {
@@ -1609,14 +1926,14 @@
       "res": "frost_herb",
       "amount": 1,
       "respawnSec": 240,
-      "x": 6420,
-      "y": 2280,
+      "x": 5985,
+      "y": 4800,
       "texture": "city_frost_herb",
       "radius": 90,
       "requiresEvent": "ch2_start",
       "mapPosition": {
-        "x": 132,
-        "y": 1680
+        "x": 385,
+        "y": 4640
       }
     },
     {
@@ -1625,20 +1942,20 @@
       "res": "tree_resin",
       "amount": 1,
       "respawnSec": 240,
-      "x": 6324,
-      "y": 2184,
+      "x": 6100,
+      "y": 5450,
       "texture": "resin_log_01",
       "radius": 90,
       "mapPosition": {
-        "x": 36,
-        "y": 1584
+        "x": 500,
+        "y": 5290
       }
     },
     {
       "id": "city_board",
       "kind": "board",
-      "x": 7104,
-      "y": 2058,
+      "x": 7420,
+      "y": 4388,
       "texture": "notice_board_01",
       "collide": {
         "w": 80,
@@ -1647,8 +1964,8 @@
       "radius": 120,
       "hint": "Доска поручений",
       "mapPosition": {
-        "x": 816,
-        "y": 1458
+        "x": 1820,
+        "y": 4228
       }
     },
     {
@@ -1669,8 +1986,8 @@
       "id": "npc_merchant",
       "kind": "npc",
       "npc": "merchant",
-      "x": 8238,
-      "y": 2412,
+      "x": 7070,
+      "y": 4580,
       "texture": "npc_merchant",
       "collide": {
         "w": 50,
@@ -1678,8 +1995,8 @@
       },
       "radius": 140,
       "mapPosition": {
-        "x": 1950,
-        "y": 1812
+        "x": 1470,
+        "y": 4420
       }
     },
     {
@@ -1717,8 +2034,8 @@
     {
       "id": "plaza_trace",
       "kind": "seal_sigil",
-      "x": 7644,
-      "y": 2244,
+      "x": 7160,
+      "y": 3780,
       "texture": "city_frost_trace",
       "litTexture": "city_frost_trace",
       "litTint": 15259391,
@@ -1731,8 +2048,8 @@
       "doneText": "Астрал проявил под инеем знаки: руническая пыль, следы лунных осколков — и клеймо мастерской, которого вы никогда не видели.",
       "doneButton": "Дальше",
       "mapPosition": {
-        "x": 1356,
-        "y": 1644
+        "x": 1560,
+        "y": 3620
       }
     },
     {
@@ -1740,16 +2057,16 @@
       "kind": "telekinesis",
       "mode": "push",
       "weight": "light",
-      "x": 7878,
-      "y": 2022,
+      "x": 7220,
+      "y": 3540,
       "texture": "city_crate",
       "collide": {
         "w": 70,
         "h": 30
       },
       "target": {
-        "x": 7926,
-        "y": 1998
+        "x": 7268,
+        "y": 3516
       },
       "radius": 120,
       "requiresEvent": "ch2_met_ilaria",
@@ -1762,8 +2079,8 @@
         }
       },
       "mapPosition": {
-        "x": 1590,
-        "y": 1422
+        "x": 1620,
+        "y": 3380
       }
     },
     {
@@ -1849,12 +2166,12 @@
     {
       "id": "frost_barrier",
       "kind": "fire",
-      "x": 7620,
-      "y": 1512,
+      "x": 7160,
+      "y": 2326,
       "texture": "ice_wall_01",
       "collide": {
-        "w": 324,
-        "h": 24
+        "w": 150,
+        "h": 44
       },
       "radius": 130,
       "waitEvent": "ch2_frost_wave",
@@ -1864,19 +2181,19 @@
       "lockedText": "Улицу к северному кварталу перегородила стена льда. Город запретил туда ходить — пока.",
       "doneText": "Лёд поплыл и осел. Путь в Замёрзший квартал открыт.",
       "editorStyle": {
-        "w": 348,
-        "h": 120
+        "w": 180,
+        "h": 128
       },
       "mapPosition": {
-        "x": 1332,
-        "y": 912
+        "x": 1560,
+        "y": 2166
       }
     },
     {
       "id": "ice_construct",
       "kind": "fire",
-      "x": 7458,
-      "y": 1410,
+      "x": 7360,
+      "y": 2120,
       "texture": "ice_construct_01",
       "collide": {
         "w": 90,
@@ -1889,16 +2206,16 @@
       "hint": "Ледяная конструкция",
       "doneText": "Конструкция треснула — и холод рванулся наружу! Кто-то в синем плаще встал между вами и вспышкой.",
       "mapPosition": {
-        "x": 1170,
-        "y": 810
+        "x": 1760,
+        "y": 1960
       }
     },
     {
       "id": "npc_nerys",
       "kind": "npc",
       "npc": "nerys",
-      "x": 7668,
-      "y": 1338,
+      "x": 7260,
+      "y": 2090,
       "texture": "npc_nerys",
       "collide": {
         "w": 30,
@@ -1908,15 +2225,15 @@
       "requiresEvent": "ch2_construct_unstable",
       "hideEvent": "ch2_final_start",
       "mapPosition": {
-        "x": 1380,
-        "y": 738
+        "x": 1660,
+        "y": 1930
       }
     },
     {
       "id": "fq_door",
       "kind": "seal_sigil",
-      "x": 8028,
-      "y": 1368,
+      "x": 7590,
+      "y": 1770,
       "texture": "frozen_door_01",
       "litTexture": "city_door_open",
       "radius": 120,
@@ -1928,8 +2245,8 @@
       "doneText": "Астрал показал узлы, на которых держится лёд. Нэрис разбила их одним касанием — и двое жителей вышли наружу, дрожа от холода.",
       "doneButton": "Дальше",
       "mapPosition": {
-        "x": 1740,
-        "y": 768
+        "x": 1990,
+        "y": 1610
       }
     },
     {
@@ -1937,16 +2254,16 @@
       "kind": "telekinesis",
       "mode": "push",
       "weight": "medium",
-      "x": 7326,
-      "y": 1368,
+      "x": 6650,
+      "y": 1990,
       "texture": "city_crate",
       "collide": {
         "w": 70,
         "h": 30
       },
       "target": {
-        "x": 7290,
-        "y": 1410
+        "x": 6614,
+        "y": 2032
       },
       "radius": 120,
       "requiresEnemyDefeated": "fq_critter",
@@ -1959,15 +2276,15 @@
         }
       },
       "mapPosition": {
-        "x": 1038,
-        "y": 768
+        "x": 1050,
+        "y": 1830
       }
     },
     {
       "id": "fq_cauldron",
       "kind": "alchemy",
-      "x": 7890,
-      "y": 1410,
+      "x": 7500,
+      "y": 2170,
       "texture": "cauldron_01",
       "collide": {
         "w": 66,
@@ -1976,21 +2293,21 @@
       "radius": 120,
       "requiresEvent": "ch2_nerys_met",
       "mapPosition": {
-        "x": 1602,
-        "y": 810
+        "x": 1900,
+        "y": 2010
       }
     },
     {
       "id": "fq_water",
       "kind": "ice",
-      "x": 7620,
-      "y": 1068,
+      "x": 7320,
+      "y": 1302,
       "texture": "water_patch_01",
       "frozenTexture": "ice_floor_01",
       "walkable": true,
       "collide": {
-        "w": 324,
-        "h": 24
+        "w": 230,
+        "h": 52
       },
       "radius": 130,
       "doneEvent": "ch2_water_frozen",
@@ -2001,15 +2318,15 @@
         "s": 1.21
       },
       "mapPosition": {
-        "x": 1332,
-        "y": 468
+        "x": 1720,
+        "y": 1142
       }
     },
     {
       "id": "lab_seal",
       "kind": "ice",
-      "x": 6414,
-      "y": 2604,
+      "x": 5930,
+      "y": 4144,
       "texture": "city_lab_door",
       "frozenTexture": "city_lab_door_open",
       "walkable": true,
@@ -2025,8 +2342,8 @@
       "lockedText": "Старая дверь в склоне холма, на ней дрожит чужая печать. Что за ней — пока неизвестно.",
       "doneText": "Лёд успокоил печать — магия замерла, и дверь подалась.",
       "mapPosition": {
-        "x": 126,
-        "y": 2004
+        "x": 330,
+        "y": 3984
       }
     },
     {
@@ -2129,31 +2446,31 @@
       "kind": "telekinesis",
       "mode": "push",
       "weight": "heavy",
-      "x": 6996,
-      "y": 2718,
+      "x": 6850,
+      "y": 3580,
       "texture": "city_debris",
       "collide": {
         "w": 70,
         "h": 30
       },
       "target": {
-        "x": 7032,
-        "y": 2682
+        "x": 6886,
+        "y": 3544
       },
       "radius": 120,
       "requiresEvent": "ch2_final_start",
       "doneEvent": "ch2_fin_tk",
       "hint": "Завал у Дуэльного зала",
       "mapPosition": {
-        "x": 708,
-        "y": 2118
+        "x": 1250,
+        "y": 3420
       }
     },
     {
       "id": "final_ice_wall",
       "kind": "fire",
-      "x": 8028,
-      "y": 2286,
+      "x": 7160,
+      "y": 4220,
       "texture": "ice_wall_01",
       "radius": 130,
       "requiresEvent": "ch2_final_start",
@@ -2162,15 +2479,15 @@
       "hint": "Ледяная преграда",
       "doneText": "Преграда растаяла — улица к рынку свободна.",
       "mapPosition": {
-        "x": 1740,
-        "y": 1686
+        "x": 1560,
+        "y": 4060
       }
     },
     {
       "id": "final_rift",
       "kind": "ice",
-      "x": 6888,
-      "y": 2682,
+      "x": 6560,
+      "y": 3600,
       "texture": "city_coolant",
       "collide": {
         "w": 80,
@@ -2184,15 +2501,15 @@
       "lockedText": "Из треснувшего резервуара вырывается магический холод. Лёд стабилизирует прибор.",
       "doneText": "Лёд стянул трещины — резервуар затих.",
       "mapPosition": {
-        "x": 600,
-        "y": 2082
+        "x": 960,
+        "y": 3440
       }
     },
     {
       "id": "final_ward",
       "kind": "seal_sigil",
-      "x": 7020,
-      "y": 2640,
+      "x": 6700,
+      "y": 3454,
       "texture": "astral_ward_01",
       "litTexture": "astral_ward_01",
       "collide": {
@@ -2209,16 +2526,16 @@
       "doneText": "Астрал нашёл швы барьера — и завеса рассыпалась искрами. Изнутри тянет холодом и голосом Северина.",
       "doneButton": "Дальше",
       "mapPosition": {
-        "x": 732,
-        "y": 2040
+        "x": 1100,
+        "y": 3294
       }
     },
     {
       "id": "npc_nerys_final",
       "kind": "npc",
       "npc": "nerys",
-      "x": 7230,
-      "y": 2658,
+      "x": 6800,
+      "y": 3640,
       "texture": "npc_nerys",
       "collide": {
         "w": 30,
@@ -2227,8 +2544,8 @@
       "radius": 140,
       "requiresEvent": "ch2_final_start",
       "mapPosition": {
-        "x": 942,
-        "y": 2058
+        "x": 1200,
+        "y": 3480
       }
     },
     {
@@ -2281,8 +2598,8 @@
     {
       "id": "door_cellar",
       "kind": "room_door",
-      "x": 7218,
-      "y": 1366,
+      "x": 6850,
+      "y": 2008,
       "ghost": {
         "w": 120,
         "h": 80
@@ -2296,8 +2613,8 @@
       "hint": "Войти: Дом с погребом",
       "requiresEvent": "ch2_rescue_cellar",
       "mapPosition": {
-        "x": 930,
-        "y": 766
+        "x": 1250,
+        "y": 1848
       }
     },
     {
@@ -2311,8 +2628,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 7218,
-        "y": 1438
+        "x": 6850,
+        "y": 2080
       },
       "room": "city",
       "hint": "Выйти: Дом с погребом",
@@ -2321,8 +2638,8 @@
     {
       "id": "door_rescue",
       "kind": "room_door",
-      "x": 8028,
-      "y": 1366,
+      "x": 7590,
+      "y": 1768,
       "ghost": {
         "w": 120,
         "h": 80
@@ -2336,8 +2653,8 @@
       "hint": "Войти: Дом за ледяной дверью",
       "requiresEvent": "ch2_rescue_door",
       "mapPosition": {
-        "x": 1740,
-        "y": 766
+        "x": 1990,
+        "y": 1608
       }
     },
     {
@@ -2351,8 +2668,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 8028,
-        "y": 1438
+        "x": 7590,
+        "y": 1840
       },
       "room": "city",
       "hint": "Выйти: Дом за ледяной дверью",
@@ -2361,8 +2678,8 @@
     {
       "id": "door_archive",
       "kind": "room_door",
-      "x": 7218,
-      "y": 1864,
+      "x": 6850,
+      "y": 2748,
       "ghost": {
         "w": 120,
         "h": 80
@@ -2376,8 +2693,8 @@
       "hint": "Войти: Городской Архив",
       "requiresEvent": null,
       "mapPosition": {
-        "x": 930,
-        "y": 1264
+        "x": 1250,
+        "y": 2588
       }
     },
     {
@@ -2391,8 +2708,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 7218,
-        "y": 1936
+        "x": 6850,
+        "y": 2820
       },
       "room": "city",
       "hint": "Выйти: Городской Архив",
@@ -2401,8 +2718,8 @@
     {
       "id": "door_society",
       "kind": "room_door",
-      "x": 8028,
-      "y": 1864,
+      "x": 7550,
+      "y": 2888,
       "ghost": {
         "w": 120,
         "h": 80
@@ -2416,8 +2733,8 @@
       "hint": "Войти: Общество Преображения",
       "requiresEvent": null,
       "mapPosition": {
-        "x": 1740,
-        "y": 1264
+        "x": 1950,
+        "y": 2728
       }
     },
     {
@@ -2431,8 +2748,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 8028,
-        "y": 1936
+        "x": 7550,
+        "y": 2960
       },
       "room": "city",
       "hint": "Выйти: Общество Преображения",
@@ -2441,8 +2758,8 @@
     {
       "id": "door_bank",
       "kind": "room_door",
-      "x": 8046,
-      "y": 2242,
+      "x": 7650,
+      "y": 4438,
       "ghost": {
         "w": 120,
         "h": 80
@@ -2456,8 +2773,8 @@
       "hint": "Войти: Городской Банк",
       "requiresEvent": null,
       "mapPosition": {
-        "x": 1758,
-        "y": 1642
+        "x": 2050,
+        "y": 4278
       }
     },
     {
@@ -2471,8 +2788,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 8046,
-        "y": 2314
+        "x": 7650,
+        "y": 4510
       },
       "room": "city",
       "hint": "Выйти: Городской Банк",
@@ -2481,8 +2798,8 @@
     {
       "id": "door_duel",
       "kind": "room_door",
-      "x": 7200,
-      "y": 2644,
+      "x": 6700,
+      "y": 3458,
       "ghost": {
         "w": 120,
         "h": 80
@@ -2496,8 +2813,8 @@
       "hint": "Войти: Магическая Дуэль",
       "requiresEvent": "ch2_fin_seal",
       "mapPosition": {
-        "x": 912,
-        "y": 2044
+        "x": 1100,
+        "y": 3298
       }
     },
     {
@@ -2511,8 +2828,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 7200,
-        "y": 2716
+        "x": 6700,
+        "y": 3530
       },
       "room": "city",
       "hint": "Выйти: Магическая Дуэль",
@@ -2521,8 +2838,8 @@
     {
       "id": "door_coven",
       "kind": "room_door",
-      "x": 8076,
-      "y": 2644,
+      "x": 7550,
+      "y": 3358,
       "ghost": {
         "w": 120,
         "h": 80
@@ -2536,8 +2853,8 @@
       "hint": "Войти: Дом Ковенов",
       "requiresEvent": null,
       "mapPosition": {
-        "x": 1788,
-        "y": 2044
+        "x": 1950,
+        "y": 3198
       }
     },
     {
@@ -2551,8 +2868,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 8076,
-        "y": 2716
+        "x": 7550,
+        "y": 3430
       },
       "room": "city",
       "hint": "Выйти: Дом Ковенов",
@@ -2561,8 +2878,8 @@
     {
       "id": "door_warehouse_a",
       "kind": "room_door",
-      "x": 7200,
-      "y": 3058,
+      "x": 6750,
+      "y": 5198,
       "ghost": {
         "w": 120,
         "h": 80
@@ -2576,8 +2893,8 @@
       "hint": "Войти: Склад А",
       "requiresEvent": null,
       "mapPosition": {
-        "x": 912,
-        "y": 2458
+        "x": 1150,
+        "y": 5038
       }
     },
     {
@@ -2591,8 +2908,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 7200,
-        "y": 3130
+        "x": 6750,
+        "y": 5270
       },
       "room": "city",
       "hint": "Выйти: Склад А",
@@ -2601,8 +2918,8 @@
     {
       "id": "door_warehouse_b",
       "kind": "room_door",
-      "x": 8028,
-      "y": 3058,
+      "x": 7650,
+      "y": 5273,
       "ghost": {
         "w": 120,
         "h": 80
@@ -2616,8 +2933,8 @@
       "hint": "Войти: Склад Б",
       "requiresEvent": null,
       "mapPosition": {
-        "x": 1740,
-        "y": 2458
+        "x": 2050,
+        "y": 5113
       }
     },
     {
@@ -2631,8 +2948,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 8028,
-        "y": 3130
+        "x": 7650,
+        "y": 5345
       },
       "room": "city",
       "hint": "Выйти: Склад Б",
@@ -2641,8 +2958,8 @@
     {
       "id": "door_lab",
       "kind": "room_door",
-      "x": 6414,
-      "y": 2608,
+      "x": 5930,
+      "y": 4148,
       "ghost": {
         "w": 120,
         "h": 80
@@ -2656,8 +2973,8 @@
       "hint": "Войти: Тайная лаборатория",
       "requiresEvent": "ch2_lab_open",
       "mapPosition": {
-        "x": 126,
-        "y": 2008
+        "x": 330,
+        "y": 3988
       }
     },
     {
@@ -2671,8 +2988,8 @@
       },
       "radius": 130,
       "target": {
-        "x": 6414,
-        "y": 2680
+        "x": 5930,
+        "y": 4220
       },
       "room": "city",
       "hint": "Выйти: Тайная лаборатория",
@@ -2683,26 +3000,26 @@
     {
       "id": "plaza_critter",
       "enemy": "frost_critter",
-      "x": 7692,
-      "y": 2274,
+      "x": 7080,
+      "y": 3810,
       "radius": 130,
       "requiresEvent": "ch2_city_arrived",
       "defeatEvent": "ch2_plaza_cleared",
       "mapPosition": {
-        "x": 1404,
-        "y": 1674
+        "x": 1480,
+        "y": 3650
       }
     },
     {
       "id": "road_scavenger",
       "enemy": "young_scavenger",
-      "x": 6540,
-      "y": 2106,
+      "x": 6120,
+      "y": 5190,
       "radius": 110,
       "requiresEvent": "ch2_start",
       "mapPosition": {
-        "x": 252,
-        "y": 1506
+        "x": 520,
+        "y": 5030
       }
     },
     {
@@ -2738,120 +3055,120 @@
     {
       "id": "lab_critter",
       "enemy": "frost_critter",
-      "x": 8166,
-      "y": 1932,
+      "x": 7750,
+      "y": 3040,
       "radius": 120,
       "requiresEvent": "ch2_severin_asked",
       "defeatEvent": "ch2_lab_critter",
       "mapPosition": {
-        "x": 1878,
-        "y": 1332
+        "x": 2150,
+        "y": 2880
       }
     },
     {
       "id": "fq_critter",
       "enemy": "frost_critter",
-      "x": 7230,
-      "y": 1404,
+      "x": 6550,
+      "y": 2150,
       "radius": 120,
       "requiresEvent": "ch2_nerys_met",
       "repeatSec": 480,
       "mapPosition": {
-        "x": 942,
-        "y": 804
+        "x": 950,
+        "y": 1990
       }
     },
     {
       "id": "fq_collector",
       "enemy": "frost_collector",
-      "x": 8088,
-      "y": 1410,
+      "x": 7800,
+      "y": 1880,
       "radius": 120,
       "requiresEvent": "ch2_nerys_met",
       "mapPosition": {
-        "x": 1800,
-        "y": 810
+        "x": 2200,
+        "y": 1720
       }
     },
     {
       "id": "fq_training",
       "enemy": "frost_critter",
-      "x": 7620,
-      "y": 954,
+      "x": 7320,
+      "y": 1060,
       "radius": 110,
       "requiresEvent": "unlock_ice_1",
       "defeatEvent": "ch2_training_done",
       "mapPosition": {
-        "x": 1332,
-        "y": 354
+        "x": 1720,
+        "y": 900
       }
     },
     {
       "id": "fq_deep_1",
       "enemy": "frost_collector",
-      "x": 7284,
-      "y": 792,
+      "x": 7050,
+      "y": 660,
       "radius": 120,
       "requiresEvent": "ch2_choice_start",
       "defeatEvent": "ch2_deep_1",
       "repeatSec": 600,
       "mapPosition": {
-        "x": 996,
-        "y": 192
+        "x": 1450,
+        "y": 500
       }
     },
     {
       "id": "fq_deep_2",
       "enemy": "frost_collector",
-      "x": 7956,
-      "y": 792,
+      "x": 7590,
+      "y": 640,
       "radius": 120,
       "requiresEvent": "ch2_choice_start",
       "defeatEvent": "ch2_deep_2",
       "repeatSec": 600,
       "mapPosition": {
-        "x": 1668,
-        "y": 192
+        "x": 1990,
+        "y": 480
       }
     },
     {
       "id": "fq_guardian",
       "enemy": "ice_guardian",
-      "x": 7620,
-      "y": 780,
+      "x": 7320,
+      "y": 600,
       "radius": 140,
       "requiresEvent": "ch2_choice_start",
       "defeatEvent": "ch2_ice_guardian_defeated",
       "repeatSec": 1200,
       "mapPosition": {
-        "x": 1332,
-        "y": 180
+        "x": 1720,
+        "y": 440
       }
     },
     {
       "id": "yard_brittle_1",
       "enemy": "frost_collector",
-      "x": 7242,
-      "y": 990,
+      "x": 7060,
+      "y": 960,
       "radius": 110,
       "requiresEvent": "unlock_ice_2",
       "defeatEvent": "ch2_brittle_1",
       "mapPosition": {
-        "x": 954,
-        "y": 390
+        "x": 1460,
+        "y": 800
       }
     },
     {
       "id": "yard_brittle_2",
       "enemy": "frost_collector",
-      "x": 7992,
-      "y": 990,
+      "x": 7590,
+      "y": 960,
       "radius": 110,
       "requiresEvent": "unlock_ice_2",
       "defeatEvent": "ch2_brittle_2",
       "mapPosition": {
-        "x": 1704,
-        "y": 390
+        "x": 1990,
+        "y": 800
       }
     },
     {
@@ -2889,63 +3206,63 @@
     {
       "id": "unstable_1",
       "enemy": "frost_collector",
-      "x": 7950,
-      "y": 2670,
+      "x": 7360,
+      "y": 3520,
       "radius": 110,
       "requiresEvent": "ch2_coven_met",
       "defeatEvent": "ch2_unstable_1",
       "mapPosition": {
-        "x": 1662,
-        "y": 2070
+        "x": 1760,
+        "y": 3360
       }
     },
     {
       "id": "unstable_2",
       "enemy": "frost_collector",
-      "x": 7290,
-      "y": 2802,
+      "x": 7050,
+      "y": 5120,
       "radius": 110,
       "requiresEvent": "ch2_coven_met",
       "defeatEvent": "ch2_unstable_2",
       "mapPosition": {
-        "x": 1002,
-        "y": 2202
+        "x": 1450,
+        "y": 4960
       }
     },
     {
       "id": "final_critter",
       "enemy": "frost_critter",
-      "x": 7554,
-      "y": 2166,
+      "x": 7040,
+      "y": 3480,
       "radius": 110,
       "requiresEvent": "ch2_final_start",
       "mapPosition": {
-        "x": 1266,
-        "y": 1566
+        "x": 1440,
+        "y": 3320
       }
     },
     {
       "id": "final_collector",
       "enemy": "frost_collector",
-      "x": 7782,
-      "y": 2322,
+      "x": 7320,
+      "y": 4620,
       "radius": 110,
       "requiresEvent": "ch2_final_start",
       "mapPosition": {
-        "x": 1494,
-        "y": 1722
+        "x": 1720,
+        "y": 4460
       }
     },
     {
       "id": "final_construct",
       "enemy": "experimental_construct",
-      "x": 7332,
-      "y": 2646,
+      "x": 7300,
+      "y": 3600,
       "radius": 120,
       "requiresEvent": "ch2_final_start",
       "mapPosition": {
-        "x": 1044,
-        "y": 2046
+        "x": 1700,
+        "y": 3440
       }
     },
     {
@@ -2980,215 +3297,5 @@
     "overview": "city-overview.png",
     "northFacades": "city-facades-north.png",
     "southFacades": "city-facades-south.png"
-  },
-  "facadeFrames": {
-    "north_bay": {
-      "image": "city-facades-north.png",
-      "frameKey": "city_final_north_bay_exterior",
-      "frame": {
-        "x": 0,
-        "y": 0,
-        "w": 512,
-        "h": 512
-      },
-      "visibleBoundsAlpha32": {
-        "x": 32,
-        "y": 80,
-        "w": 453,
-        "h": 385
-      },
-      "doorAnchorRequiresVisualReview": true
-    },
-    "north_workshop": {
-      "image": "city-facades-north.png",
-      "frameKey": "city_final_north_workshop_exterior",
-      "frame": {
-        "x": 512,
-        "y": 0,
-        "w": 528,
-        "h": 512
-      },
-      "visibleBoundsAlpha32": {
-        "x": 24,
-        "y": 51,
-        "w": 504,
-        "h": 410
-      },
-      "doorAnchorRequiresVisualReview": true
-    },
-    "cellar": {
-      "image": "city-facades-north.png",
-      "frameKey": "city_final_cellar_exterior",
-      "frame": {
-        "x": 1040,
-        "y": 0,
-        "w": 496,
-        "h": 512
-      },
-      "visibleBoundsAlpha32": {
-        "x": 13,
-        "y": 56,
-        "w": 458,
-        "h": 411
-      },
-      "doorAnchorRequiresVisualReview": true
-    },
-    "rescue": {
-      "image": "city-facades-north.png",
-      "frameKey": "city_final_rescue_exterior",
-      "frame": {
-        "x": 0,
-        "y": 512,
-        "w": 512,
-        "h": 512
-      },
-      "visibleBoundsAlpha32": {
-        "x": 34,
-        "y": 15,
-        "w": 467,
-        "h": 408
-      },
-      "doorAnchorRequiresVisualReview": true
-    },
-    "archive": {
-      "image": "city-facades-north.png",
-      "frameKey": "city_final_archive_exterior",
-      "frame": {
-        "x": 512,
-        "y": 512,
-        "w": 512,
-        "h": 512
-      },
-      "visibleBoundsAlpha32": {
-        "x": 11,
-        "y": 16,
-        "w": 473,
-        "h": 406
-      },
-      "doorAnchorRequiresVisualReview": true
-    },
-    "society": {
-      "image": "city-facades-north.png",
-      "frameKey": "city_final_society_exterior",
-      "frame": {
-        "x": 1024,
-        "y": 512,
-        "w": 512,
-        "h": 512
-      },
-      "visibleBoundsAlpha32": {
-        "x": 7,
-        "y": 4,
-        "w": 483,
-        "h": 416
-      },
-      "doorAnchorRequiresVisualReview": true
-    },
-    "bank": {
-      "image": "city-facades-south.png",
-      "frameKey": "city_final_bank_exterior",
-      "frame": {
-        "x": 0,
-        "y": 0,
-        "w": 512,
-        "h": 512
-      },
-      "visibleBoundsAlpha32": {
-        "x": 13,
-        "y": 77,
-        "w": 490,
-        "h": 418
-      },
-      "doorAnchorRequiresVisualReview": true
-    },
-    "duel": {
-      "image": "city-facades-south.png",
-      "frameKey": "city_final_duel_exterior",
-      "frame": {
-        "x": 512,
-        "y": 0,
-        "w": 512,
-        "h": 512
-      },
-      "visibleBoundsAlpha32": {
-        "x": 1,
-        "y": 88,
-        "w": 473,
-        "h": 407
-      },
-      "doorAnchorRequiresVisualReview": true
-    },
-    "coven": {
-      "image": "city-facades-south.png",
-      "frameKey": "city_final_coven_exterior",
-      "frame": {
-        "x": 1024,
-        "y": 0,
-        "w": 512,
-        "h": 512
-      },
-      "visibleBoundsAlpha32": {
-        "x": 12,
-        "y": 99,
-        "w": 488,
-        "h": 396
-      },
-      "doorAnchorRequiresVisualReview": true
-    },
-    "warehouse_a": {
-      "image": "city-facades-south.png",
-      "frameKey": "city_final_warehouse_a_exterior",
-      "frame": {
-        "x": 0,
-        "y": 512,
-        "w": 527,
-        "h": 512
-      },
-      "visibleBoundsAlpha32": {
-        "x": 23,
-        "y": 90,
-        "w": 504,
-        "h": 349
-      },
-      "doorAnchorRequiresVisualReview": true
-    },
-    "warehouse_b": {
-      "image": "city-facades-south.png",
-      "frameKey": "city_final_warehouse_b_exterior",
-      "frame": {
-        "x": 527,
-        "y": 512,
-        "w": 548,
-        "h": 512
-      },
-      "visibleBoundsAlpha32": {
-        "x": 38,
-        "y": 107,
-        "w": 510,
-        "h": 335
-      },
-      "doorAnchorRequiresVisualReview": true
-    },
-    "lab": {
-      "image": "city-facades-south.png",
-      "frameKey": "city_final_lab_exterior",
-      "frame": {
-        "x": 1075,
-        "y": 512,
-        "w": 461,
-        "h": 512
-      },
-      "visibleBoundsAlpha32": {
-        "x": 34,
-        "y": 75,
-        "w": 396,
-        "h": 376
-      },
-      "doorAnchorRequiresVisualReview": true
-    }
-  },
-  "overviewImageSize": {
-    "w": 1166,
-    "h": 1349
   }
 }

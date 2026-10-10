@@ -1,109 +1,162 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2232" height="2592" viewBox="0 0 2232 2592">
-<rect width="100%" height="100%" fill="#344333"/>
-<rect x="432" y="0" width="1800" height="2592" fill="#6d7257"/>
-<polyline points="1332,48 1314,348 1332,468 1332,912 1308,1290 1356,1680 1320,2076 1332,2532" stroke="#aea085" stroke-width="220" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1332,48 1314,348 1332,468 1332,912 1308,1290 1356,1680 1320,2076 1332,2532" stroke="#d7c8a6" stroke-width="200" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="18,1506 174,1494 360,1518 642,1500 912,1518" stroke="#aea085" stroke-width="170" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="18,1506 174,1494 360,1518 642,1500 912,1518" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,1536 1032,1518 1350,1536 1812,1548" stroke="#aea085" stroke-width="350" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,1536 1032,1518 1350,1536 1812,1548" stroke="#d7c8a6" stroke-width="330" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="342,1536 324,1722 312,1920 126,2022" stroke="#aea085" stroke-width="120" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="342,1536 324,1722 312,1920 126,2022" stroke="#867554" stroke-width="100" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,360 1032,345 1320,372 1692,354 1896,366" stroke="#aea085" stroke-width="140" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,360 1032,345 1320,372 1692,354 1896,366" stroke="#d7c8a6" stroke-width="120" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,786 1032,771 1320,798 1692,780 1896,792" stroke="#aea085" stroke-width="140" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,786 1032,771 1320,798 1692,780 1896,792" stroke="#d7c8a6" stroke-width="120" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,1284 1032,1269 1320,1296 1692,1278 1896,1290" stroke="#aea085" stroke-width="140" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,1284 1032,1269 1320,1296 1692,1278 1896,1290" stroke="#d7c8a6" stroke-width="120" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,1698 1032,1683 1320,1710 1692,1692 1896,1704" stroke="#aea085" stroke-width="140" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,1698 1032,1683 1320,1710 1692,1692 1896,1704" stroke="#d7c8a6" stroke-width="120" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,2064 1032,2049 1320,2076 1692,2058 1896,2070" stroke="#aea085" stroke-width="140" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,2064 1032,2049 1320,2076 1692,2058 1896,2070" stroke="#d7c8a6" stroke-width="120" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,2478 1032,2463 1320,2490 1692,2472 1896,2484" stroke="#aea085" stroke-width="140" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816,2478 1032,2463 1320,2490 1692,2472 1896,2484" stroke="#d7c8a6" stroke-width="120" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816.6000000000004,336 1043.3999999999996,336" stroke="#aea085" stroke-width="105" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816.6000000000004,336 1043.3999999999996,336" stroke="#d7c8a6" stroke-width="85" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1622.3999999999996,336 1857.6000000000004,336" stroke="#aea085" stroke-width="105" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1622.3999999999996,336 1857.6000000000004,336" stroke="#d7c8a6" stroke-width="85" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816.6000000000004,762 1043.3999999999996,762" stroke="#aea085" stroke-width="105" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816.6000000000004,762 1043.3999999999996,762" stroke="#d7c8a6" stroke-width="85" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1622.3999999999996,762 1857.6000000000004,762" stroke="#aea085" stroke-width="105" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1622.3999999999996,762 1857.6000000000004,762" stroke="#d7c8a6" stroke-width="85" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816.6000000000004,1260 1043.3999999999996,1260" stroke="#aea085" stroke-width="105" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="816.6000000000004,1260 1043.3999999999996,1260" stroke="#d7c8a6" stroke-width="85" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1622.3999999999996,1260 1857.6000000000004,1260" stroke="#aea085" stroke-width="105" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1622.3999999999996,1260 1857.6000000000004,1260" stroke="#d7c8a6" stroke-width="85" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1653,1638 1863,1638" stroke="#aea085" stroke-width="105" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1653,1638 1863,1638" stroke="#d7c8a6" stroke-width="85" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="786,2040 1038,2040" stroke="#aea085" stroke-width="105" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="786,2040 1038,2040" stroke="#d7c8a6" stroke-width="85" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1670.3999999999996,2040 1905.6000000000004,2040" stroke="#aea085" stroke-width="105" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1670.3999999999996,2040 1905.6000000000004,2040" stroke="#d7c8a6" stroke-width="85" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="786,2454 1038,2454" stroke="#aea085" stroke-width="105" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="786,2454 1038,2454" stroke="#d7c8a6" stroke-width="85" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1622.3999999999996,2454 1857.6000000000004,2454" stroke="#aea085" stroke-width="105" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1622.3999999999996,2454 1857.6000000000004,2454" stroke="#d7c8a6" stroke-width="85" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="432" y="0" width="24" height="1380" fill="#b4a78a" stroke="#524d3c" stroke-width="4"/>
-<rect x="432" y="1644" width="24" height="948" fill="#b4a78a" stroke="#524d3c" stroke-width="4"/>
-<rect x="432" y="0" width="1800" height="24" fill="#b4a78a" stroke="#524d3c" stroke-width="4"/>
-<rect x="2208" y="0" width="24" height="2592" fill="#b4a78a" stroke="#524d3c" stroke-width="4"/>
-<rect x="432" y="2568" width="1800" height="24" fill="#b4a78a" stroke="#524d3c" stroke-width="4"/>
-<rect x="432" y="888" width="738" height="24" fill="#b4a78a" stroke="#524d3c" stroke-width="4"/>
-<rect x="1494" y="888" width="738" height="24" fill="#b4a78a" stroke="#524d3c" stroke-width="4"/>
-<rect x="432" y="444" width="738" height="24" fill="#b4a78a" stroke="#524d3c" stroke-width="4"/>
-<rect x="1494" y="444" width="738" height="24" fill="#b4a78a" stroke="#524d3c" stroke-width="4"/>
-<rect x="768" y="60" width="324" height="252" rx="12" fill="#d4ad84" stroke="#28271f" stroke-width="5"/>
-<rect x="776" y="68" width="308" height="120.96" rx="10" fill="#774b65"/>
-<text x="930" y="126" text-anchor="middle" font-family="sans-serif" font-size="35" font-weight="bold" fill="#fff4d5">1. north_bay</text>
-<circle cx="930" cy="340" r="28" fill="#f9df97" stroke="#362820" stroke-width="5"/>
-<rect x="1572" y="60" width="336" height="252" rx="12" fill="#c8b27b" stroke="#28271f" stroke-width="5"/>
-<rect x="1580" y="68" width="320" height="120.96" rx="10" fill="#9b5948"/>
-<text x="1740" y="126" text-anchor="middle" font-family="sans-serif" font-size="35" font-weight="bold" fill="#fff4d5">2. north_workshop</text>
-<circle cx="1740" cy="340" r="28" fill="#f9df97" stroke="#362820" stroke-width="5"/>
-<rect x="768" y="516" width="324" height="222" rx="12" fill="#a0ae88" stroke="#28271f" stroke-width="5"/>
-<rect x="776" y="524" width="308" height="106.56" rx="10" fill="#406c69"/>
-<text x="930" y="582" text-anchor="middle" font-family="sans-serif" font-size="35" font-weight="bold" fill="#fff4d5">3. cellar</text>
-<circle cx="930" cy="766" r="28" fill="#f9df97" stroke="#362820" stroke-width="5"/>
-<rect x="1572" y="516" width="336" height="222" rx="12" fill="#ddd1ae" stroke="#28271f" stroke-width="5"/>
-<rect x="1580" y="524" width="320" height="106.56" rx="10" fill="#754752"/>
-<text x="1740" y="582" text-anchor="middle" font-family="sans-serif" font-size="35" font-weight="bold" fill="#fff4d5">4. rescue</text>
-<circle cx="1740" cy="766" r="28" fill="#f9df97" stroke="#362820" stroke-width="5"/>
-<rect x="768" y="984" width="324" height="252" rx="12" fill="#a8b28e" stroke="#28271f" stroke-width="5"/>
-<rect x="776" y="992" width="308" height="120.96" rx="10" fill="#685074"/>
-<text x="930" y="1050" text-anchor="middle" font-family="sans-serif" font-size="35" font-weight="bold" fill="#fff4d5">5. archive</text>
-<circle cx="930" cy="1264" r="28" fill="#f9df97" stroke="#362820" stroke-width="5"/>
-<rect x="1572" y="984" width="336" height="252" rx="12" fill="#a7b7b4" stroke="#28271f" stroke-width="5"/>
-<rect x="1580" y="992" width="320" height="120.96" rx="10" fill="#3f676f"/>
-<text x="1740" y="1050" text-anchor="middle" font-family="sans-serif" font-size="35" font-weight="bold" fill="#fff4d5">6. society</text>
-<circle cx="1740" cy="1264" r="28" fill="#f9df97" stroke="#362820" stroke-width="5"/>
-<rect x="1608" y="1374" width="300" height="240" rx="12" fill="#bdb6c5" stroke="#28271f" stroke-width="5"/>
-<rect x="1616" y="1382" width="284" height="115.19999999999999" rx="10" fill="#4d607c"/>
-<text x="1758" y="1440" text-anchor="middle" font-family="sans-serif" font-size="35" font-weight="bold" fill="#fff4d5">7. bank</text>
-<circle cx="1758" cy="1642" r="28" fill="#f9df97" stroke="#362820" stroke-width="5"/>
-<rect x="732" y="1764" width="360" height="252" rx="12" fill="#bf967d" stroke="#28271f" stroke-width="5"/>
-<rect x="740" y="1772" width="344" height="120.96" rx="10" fill="#6b507e"/>
-<text x="912" y="1830" text-anchor="middle" font-family="sans-serif" font-size="35" font-weight="bold" fill="#fff4d5">8. duel</text>
-<circle cx="912" cy="2044" r="28" fill="#f9df97" stroke="#362820" stroke-width="5"/>
-<rect x="1572" y="1764" width="336" height="252" rx="12" fill="#cdb885" stroke="#28271f" stroke-width="5"/>
-<rect x="1580" y="1772" width="320" height="120.96" rx="10" fill="#805058"/>
-<text x="1740" y="1830" text-anchor="middle" font-family="sans-serif" font-size="35" font-weight="bold" fill="#fff4d5">9. coven</text>
-<circle cx="1788" cy="2044" r="28" fill="#f9df97" stroke="#362820" stroke-width="5"/>
-<rect x="732" y="2226" width="360" height="204" rx="12" fill="#c5b893" stroke="#28271f" stroke-width="5"/>
-<rect x="740" y="2234" width="344" height="97.92" rx="10" fill="#50694d"/>
-<text x="912" y="2292" text-anchor="middle" font-family="sans-serif" font-size="35" font-weight="bold" fill="#fff4d5">10. warehouse_a</text>
-<circle cx="912" cy="2458" r="28" fill="#f9df97" stroke="#362820" stroke-width="5"/>
-<rect x="1572" y="2226" width="336" height="204" rx="12" fill="#c39b81" stroke="#28271f" stroke-width="5"/>
-<rect x="1580" y="2234" width="320" height="97.92" rx="10" fill="#506774"/>
-<text x="1740" y="2292" text-anchor="middle" font-family="sans-serif" font-size="35" font-weight="bold" fill="#fff4d5">11. warehouse_b</text>
-<circle cx="1740" cy="2458" r="28" fill="#f9df97" stroke="#362820" stroke-width="5"/>
-<rect x="12" y="1752" width="228" height="228" rx="12" fill="#a9aa8c" stroke="#28271f" stroke-width="5"/>
-<rect x="20" y="1760" width="212" height="109.44" rx="10" fill="#615769"/>
-<text x="126" y="1818" text-anchor="middle" font-family="sans-serif" font-size="35" font-weight="bold" fill="#fff4d5">12. lab</text>
-<circle cx="126" cy="2008" r="28" fill="#f9df97" stroke="#362820" stroke-width="5"/>
-<rect x="1170" y="897" width="324" height="30" fill="#a3d8df" stroke="#426976" stroke-width="3"/>
-<text x="1332" y="879" text-anchor="middle" font-family="sans-serif" font-size="28" fill="#eafcff">REMOVABLE ICE GATE</text>
-<rect x="1170" y="453" width="324" height="30" fill="#a3d8df" stroke="#426976" stroke-width="3"/>
-<text x="1332" y="435" text-anchor="middle" font-family="sans-serif" font-size="28" fill="#eafcff">FREEZABLE WATER GAP</text>
-<circle cx="1002" cy="1530" r="78" fill="#66b9bc" stroke="#ebd7ab" stroke-width="14"/>
-<text x="100" y="1450" font-family="sans-serif" font-size="32" fill="#f4e4ba">FOREST ENTRY</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="2880" height="5760" viewBox="0 0 2880 5760">
+<rect width="100%" height="100%" fill="#6d7b57"/>
+<rect x="0" y="0" width="640" height="3620" fill="#344333"/>
+<rect x="0" y="3620" width="80" height="480" fill="#344333"/>
+<rect x="0" y="4100" width="240" height="900" fill="#344333"/>
+<rect x="420" y="4100" width="220" height="900" fill="#344333"/>
+<rect x="0" y="5330" width="640" height="430" fill="#344333"/>
+<rect x="2640" y="0" width="240" height="5760" fill="#344333"/>
+<rect x="640" y="0" width="2000" height="120" fill="#344333"/>
+<rect x="640" y="5600" width="2000" height="160" fill="#344333"/>
+<rect x="600" y="2082" width="2080" height="96" fill="#3f6b70" stroke="#c3b694" stroke-width="10"/>
+<polyline points="640,5170 1050,5185 1400,5170 1600,5060 1680,4850 1680,4600" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="640,5170 1050,5185 1400,5170 1600,5060 1680,4850 1680,4600" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1640,4250 1560,4020 1500,3780" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1640,4250 1560,4020 1500,3780" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1480,3290 1540,3060 1600,2860 1600,2640 1560,2420 1560,2270" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1480,3290 1540,3060 1600,2860 1600,2640 1560,2420 1560,2270" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,2280 1560,2010" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,2280 1560,2010" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,2030 1540,1880 1600,1680 1680,1480 1720,1300 1720,1140 1720,840" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,2030 1540,1880 1600,1680 1680,1480 1720,1300 1720,1140 1720,840" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1050,5090 1250,5090" stroke="#aea085" stroke-width="174" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1050,5090 1250,5090" stroke="#d7c8a6" stroke-width="160" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1640,4980 1880,5150 2000,5160" stroke="#aea085" stroke-width="114" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1640,4980 1880,5150 2000,5160" stroke="#d7c8a6" stroke-width="100" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1960,5160 2140,5160" stroke="#aea085" stroke-width="174" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1960,5160 2140,5160" stroke="#d7c8a6" stroke-width="160" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1640,4400 1800,4390" stroke="#aea085" stroke-width="314" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1640,4400 1800,4390" stroke="#d7c8a6" stroke-width="300" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1360,4430 1440,4430" stroke="#aea085" stroke-width="244" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1360,4430 1440,4430" stroke="#d7c8a6" stroke-width="230" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1950,4310 2120,4310" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1950,4310 2120,4310" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1400,3500 1560,3490" stroke="#aea085" stroke-width="434" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1400,3500 1560,3490" stroke="#d7c8a6" stroke-width="420" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1180,3345 1300,3400" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1180,3345 1300,3400" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1020,3340 1180,3340" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1020,3340 1180,3340" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1640,3330 1780,3260 1880,3245" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1640,3330 1780,3260 1880,3245" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1880,3240 2040,3240" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1880,3240 2040,3240" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,2630 1330,2630" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,2630 1330,2630" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1170,2630 1330,2630" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1170,2630 1330,2630" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1600,2760 1880,2770" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1600,2760 1880,2770" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1880,2770 2040,2770" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1880,2770 2040,2770" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="760,2252 1200,2250 1560,2250 2100,2254 2560,2250" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="760,2252 1200,2250 1560,2250 2100,2254 2560,2250" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1540,1890 1330,1890" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1540,1890 1330,1890" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1170,1890 1330,1890" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1170,1890 1330,1890" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1620,1640 1910,1650" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1620,1640 1910,1650" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1910,1650 2070,1650" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1910,1650 2070,1650" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1600,640 1840,620" stroke="#aea085" stroke-width="434" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1600,640 1840,620" stroke="#d7c8a6" stroke-width="420" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1420,700 1280,690" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1420,700 1280,690" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1120,690 1280,690" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1120,690 1280,690" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="2000,760 2170,860" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="2000,760 2170,860" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="2170,870 2330,870" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="2170,870 2330,870" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1250,4440 1050,4250 950,3950 1000,3420" stroke="#aea085" stroke-width="78" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1250,4440 1050,4250 950,3950 1000,3420" stroke="#d7c8a6" stroke-width="64" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="960,3300 880,3000 900,2700 960,2420 900,2252" stroke="#aea085" stroke-width="78" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="960,3300 880,3000 900,2700 960,2420 900,2252" stroke="#d7c8a6" stroke-width="64" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="2120,4310 2350,4150 2400,3700 2300,3330 2350,2950 2300,2500 2450,2252" stroke="#aea085" stroke-width="78" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="2120,4310 2350,4150 2400,3700 2300,3330 2350,2950 2300,2500 2450,2252" stroke="#d7c8a6" stroke-width="64" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="-40,5170 220,5164 440,5172 700,5170" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="-40,5170 220,5164 440,5172 700,5170" stroke="#867554" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="330,5150 300,4850 370,4520 320,4200 330,4010" stroke="#aea085" stroke-width="124" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="330,5150 300,4850 370,4520 320,4200 330,4010" stroke="#867554" stroke-width="110" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="640" y="160" width="40" height="4920" fill="#cfc3a3" stroke="#524d3c" stroke-width="3"/>
+<rect x="640" y="5260" width="40" height="340" fill="#cfc3a3" stroke="#524d3c" stroke-width="3"/>
+<rect x="2600" y="160" width="40" height="5440" fill="#cfc3a3" stroke="#524d3c" stroke-width="3"/>
+<rect x="640" y="120" width="2000" height="40" fill="#cfc3a3" stroke="#524d3c" stroke-width="3"/>
+<rect x="640" y="5560" width="2000" height="40" fill="#cfc3a3" stroke="#524d3c" stroke-width="3"/>
+<rect x="680" y="1100" width="940" height="36" fill="#cfc3a3" stroke="#524d3c" stroke-width="3"/>
+<rect x="1820" y="1100" width="780" height="36" fill="#cfc3a3" stroke="#524d3c" stroke-width="3"/>
+<rect x="700" y="2948" width="150" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
+<rect x="700" y="868" width="220" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
+<rect x="700" y="4758" width="180" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
+<rect x="2400" y="4348" width="180" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
+<rect x="2420" y="3348" width="160" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
+<rect x="2250" y="1828" width="300" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
+<rect x="2440" y="1018" width="140" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
+<rect x="2400" y="2948" width="180" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
+<rect x="700" y="1978" width="200" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
+<rect x="1038" y="368" width="324" height="252" rx="12" fill="#d4ad84" stroke="#28271f" stroke-width="5"/>
+<rect x="1046" y="376" width="308" height="120.96" rx="10" fill="#774b65"/>
+<text x="1200" y="434" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">1. north_bay</text>
+<circle cx="1200" cy="648" r="24" fill="#f9df97" stroke="#362820" stroke-width="5"/>
+<rect x="2082" y="548" width="336" height="252" rx="12" fill="#c8b27b" stroke="#28271f" stroke-width="5"/>
+<rect x="2090" y="556" width="320" height="120.96" rx="10" fill="#9b5948"/>
+<text x="2250" y="614" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">2. north_workshop</text>
+<circle cx="2250" cy="828" r="24" fill="#f9df97" stroke="#362820" stroke-width="5"/>
+<rect x="1088" y="1598" width="324" height="222" rx="12" fill="#a0ae88" stroke="#28271f" stroke-width="5"/>
+<rect x="1096" y="1606" width="308" height="106.56" rx="10" fill="#406c69"/>
+<text x="1250" y="1664" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">3. cellar</text>
+<circle cx="1250" cy="1848" r="24" fill="#f9df97" stroke="#362820" stroke-width="5"/>
+<rect x="1822" y="1358" width="336" height="222" rx="12" fill="#ddd1ae" stroke="#28271f" stroke-width="5"/>
+<rect x="1830" y="1366" width="320" height="106.56" rx="10" fill="#754752"/>
+<text x="1990" y="1424" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">4. rescue</text>
+<circle cx="1990" cy="1608" r="24" fill="#f9df97" stroke="#362820" stroke-width="5"/>
+<rect x="1088" y="2308" width="324" height="252" rx="12" fill="#a8b28e" stroke="#28271f" stroke-width="5"/>
+<rect x="1096" y="2316" width="308" height="120.96" rx="10" fill="#685074"/>
+<text x="1250" y="2374" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">5. archive</text>
+<circle cx="1250" cy="2588" r="24" fill="#f9df97" stroke="#362820" stroke-width="5"/>
+<rect x="1782" y="2448" width="336" height="252" rx="12" fill="#a7b7b4" stroke="#28271f" stroke-width="5"/>
+<rect x="1790" y="2456" width="320" height="120.96" rx="10" fill="#3f676f"/>
+<text x="1950" y="2514" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">6. society</text>
+<circle cx="1950" cy="2728" r="24" fill="#f9df97" stroke="#362820" stroke-width="5"/>
+<rect x="1900" y="4010" width="300" height="240" rx="12" fill="#bdb6c5" stroke="#28271f" stroke-width="5"/>
+<rect x="1908" y="4018" width="284" height="115.19999999999999" rx="10" fill="#4d607c"/>
+<text x="2050" y="4076" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">7. bank</text>
+<circle cx="2050" cy="4278" r="24" fill="#f9df97" stroke="#362820" stroke-width="5"/>
+<rect x="920" y="3018" width="360" height="252" rx="12" fill="#bf967d" stroke="#28271f" stroke-width="5"/>
+<rect x="928" y="3026" width="344" height="120.96" rx="10" fill="#6b507e"/>
+<text x="1100" y="3084" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">8. duel</text>
+<circle cx="1100" cy="3298" r="24" fill="#f9df97" stroke="#362820" stroke-width="5"/>
+<rect x="1734" y="2918" width="336" height="252" rx="12" fill="#cdb885" stroke="#28271f" stroke-width="5"/>
+<rect x="1742" y="2926" width="320" height="120.96" rx="10" fill="#805058"/>
+<text x="1902" y="2984" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">9. coven</text>
+<circle cx="1950" cy="3198" r="24" fill="#f9df97" stroke="#362820" stroke-width="5"/>
+<rect x="970" y="4806" width="360" height="204" rx="12" fill="#c5b893" stroke="#28271f" stroke-width="5"/>
+<rect x="978" y="4814" width="344" height="97.92" rx="10" fill="#50694d"/>
+<text x="1150" y="4872" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">10. warehouse_a</text>
+<circle cx="1150" cy="5038" r="24" fill="#f9df97" stroke="#362820" stroke-width="5"/>
+<rect x="1882" y="4881" width="336" height="204" rx="12" fill="#c39b81" stroke="#28271f" stroke-width="5"/>
+<rect x="1890" y="4889" width="320" height="97.92" rx="10" fill="#506774"/>
+<text x="2050" y="4947" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">11. warehouse_b</text>
+<circle cx="2050" cy="5113" r="24" fill="#f9df97" stroke="#362820" stroke-width="5"/>
+<rect x="216" y="3732" width="228" height="228" rx="12" fill="#a9aa8c" stroke="#28271f" stroke-width="5"/>
+<rect x="224" y="3740" width="212" height="109.44" rx="10" fill="#615769"/>
+<text x="330" y="3798" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">12. lab</text>
+<circle cx="330" cy="3988" r="24" fill="#f9df97" stroke="#362820" stroke-width="5"/>
+<rect x="1485" y="2140" width="150" height="30" fill="#a3d8df" stroke="#426976" stroke-width="3"/>
+<text x="1560" y="2130" text-anchor="middle" font-family="sans-serif" font-size="26" fill="#eafcff">ICE WALL ON THE BRIDGE</text>
+<rect x="1605" y="1116" width="230" height="30" fill="#a3d8df" stroke="#426976" stroke-width="3"/>
+<text x="1720" y="1106" text-anchor="middle" font-family="sans-serif" font-size="26" fill="#eafcff">FLOODED PASSAGE</text>
+<rect x="275" y="3958" width="110" height="30" fill="#a3d8df" stroke="#426976" stroke-width="3"/>
+<text x="330" y="3948" text-anchor="middle" font-family="sans-serif" font-size="26" fill="#eafcff">LAB SEAL</text>
+<circle cx="1380" cy="3470" r="64" fill="#66b9bc" stroke="#ebd7ab" stroke-width="12"/>
+<text x="250" y="5175" font-family="sans-serif" font-size="30" font-weight="bold" fill="#2b2420" stroke="#f4e4ba" stroke-width="6" paint-order="stroke">ROAD</text>
+<text x="920" y="5175" font-family="sans-serif" font-size="30" font-weight="bold" fill="#2b2420" stroke="#f4e4ba" stroke-width="6" paint-order="stroke">GATE · WAREHOUSES</text>
+<text x="1780" y="4480" font-family="sans-serif" font-size="30" font-weight="bold" fill="#2b2420" stroke="#f4e4ba" stroke-width="6" paint-order="stroke">MARKET</text>
+<text x="1620" y="3740" font-family="sans-serif" font-size="30" font-weight="bold" fill="#2b2420" stroke="#f4e4ba" stroke-width="6" paint-order="stroke">SQUARE</text>
+<text x="1660" y="2860" font-family="sans-serif" font-size="30" font-weight="bold" fill="#2b2420" stroke="#f4e4ba" stroke-width="6" paint-order="stroke">GARDEN</text>
+<text x="1620" y="2300" font-family="sans-serif" font-size="30" font-weight="bold" fill="#2b2420" stroke="#f4e4ba" stroke-width="6" paint-order="stroke">EMBANKMENT</text>
+<text x="1640" y="1720" font-family="sans-serif" font-size="30" font-weight="bold" fill="#2b2420" stroke="#f4e4ba" stroke-width="6" paint-order="stroke">FROZEN QUARTER</text>
+<text x="1780" y="1000" font-family="sans-serif" font-size="30" font-weight="bold" fill="#2b2420" stroke="#f4e4ba" stroke-width="6" paint-order="stroke">NORTHERN YARD</text>
+<text x="380" y="4300" font-family="sans-serif" font-size="30" font-weight="bold" fill="#2b2420" stroke="#f4e4ba" stroke-width="6" paint-order="stroke">LAB TRAIL</text>
 </svg>

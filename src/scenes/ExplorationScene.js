@@ -1,4 +1,5 @@
-import { cityArrival, BUILDINGS } from '../config/city.plan.js';
+import { BUILDINGS } from '../config/city.plan.js';
+import { migrateCitySave } from '../world/cityMigration.js';
 import { CITY_WITCH_SPRITES } from '../config/city.witch.art.js';
 import { RoomDoor } from '../objects/RoomDoor.js';
 import { BAG } from '../config/bag.js';
@@ -99,17 +100,9 @@ export class ExplorationScene extends Phaser.Scene {
     // v0.27.0: сцена перезапускается при переходе между локациями — временное состояние прошлого запуска сбрасывается
     this.speech = null; this.traveling = false; this.navCache = null; this.terrainImages = []; this.waterZones = []; this.colliderObjects = [];
     // v0.27.0: строится только текущая локация (глава или вылазка) — по положению героя; редактор карты (?edit) видит весь холст
-    const cityLayout=state.getObject('city_layout')?.version||2;
-    let p = this.fixStartPosition(cityArrival(state.data.player,k=>state.hasEvent(k),cityLayout));
-    if(cityLayout<3){
-      state.data.safePoint=cityArrival(state.data.safePoint,k=>state.hasEvent(k),cityLayout);
-      // Local moved-object coordinates use the same layout as the saved player.
-      // Online moved states normally have no coordinates and use the new target.
-      for(const o of Object.values(state.data.worldObjects))if(o?.state==='moved' && Number.isFinite(o.x) && Number.isFinite(o.y)){
-        Object.assign(o,cityArrival(o,k=>state.hasEvent(k),cityLayout));
-      }
-      state.setObject('city_layout',{version:3});
-    }
+    // v0.37.0: one-time move to the walkable town plan (player, safe point and pushed objects travel with the marker).
+    migrateCitySave(state);
+    let p = this.fixStartPosition(state.data.player);
     state.data.player={...p};
     this.loc = services.edit ? null : locationAt(p.x, p.y);
     if (this.loc && !inLocation(p, this.loc)) { p = { ...this.loc.arrival }; state.data.player = { ...p }; }   // старое сохранение за краем локации
@@ -395,7 +388,8 @@ export class ExplorationScene extends Phaser.Scene {
   buildGround() {
     const V = this.view, R = this.bounds;
     if(this.loc?.interior)this.add.rectangle(R.x,R.y-V.top,R.w,V.h,0x17120e).setOrigin(0).setDepth(DEPTH.ground);
-    else this.add.tileSprite(R.x, R.y, R.w, R.h + V.bottom, 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
+    // v0.37.0: the town has its own calm, tended lawn; the forest keeps its wild grass.
+    else this.add.tileSprite(R.x, R.y, R.w, R.h + V.bottom, this.loc?.id === 'city' ? 'city_walk_lawn' : 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
     this.paintTerrain();
     this.rebuildGrounds(this.map.grounds);
     if (!V.top && !V.bottom) return;
@@ -500,6 +494,33 @@ export class ExplorationScene extends Phaser.Scene {
           keep(this.add.rectangle(c.x, c.y - 20, c.w, c.h + 20, COLORS.woodLight).setOrigin(0).setStrokeStyle(3, COLORS.wood).setDepth(bottomDepth));
           if (c.label) keep(this.add.text(c.x + c.w / 2, c.y + c.h / 2 - 10, c.label, { fontSize: UI.type.small, color: COLORS.textDim }).setOrigin(0.5).setDepth(bottomDepth + 1));
           break;
+        case 'citywall': {
+          // v0.37.0: light aged-stone town wall with simple posts. North–south runs show their cap from above.
+          if (c.w >= c.h) {
+            const H = c.h + (c.low ? 40 : 58);
+            const wall = keep(this.add.tileSprite(c.x, c.y + c.h - H, c.w, H, 'city_walk_wall_face').setOrigin(0).setTileScale(H / 112).setDepth(bottomDepth));
+            this.colliderViews.set(c.id, { c, img: wall });
+            const posts = Math.max(1, Math.round(c.w / 340));
+            for (let i = 0; i <= posts; i++) {
+              const px = Math.min(c.x + c.w - 14, Math.max(c.x + 14, c.x + (c.w * i) / posts));
+              keep(this.add.image(px, c.y + c.h + 2, 'city_walk_wall_post').setOrigin(0.5, 1).setDisplaySize(40, H + 26).setDepth(bottomDepth + 0.2));
+            }
+          } else {
+            const wall = keep(this.add.tileSprite(c.x - 6, c.y - 40, c.w + 12, c.h + 40, 'city_walk_wall_top').setOrigin(0).setTileScale((c.w + 12) / 64).setDepth(DEPTH.backDecor + 1));
+            this.colliderViews.set(c.id, { c, img: wall });
+            for (let y = c.y + 160; y < c.y + c.h - 80; y += 420)
+              keep(this.add.image(c.x + c.w / 2, y + 30, 'city_walk_wall_post').setOrigin(0.5, 1).setDisplaySize(c.w + 14, 92).setDepth(DEPTH.mainBase + y + 30));
+          }
+          break;
+        }
+        case 'fence': {
+          // Low, light garden fence: readable as a boundary without boxing houses in.
+          const H = c.style === 'iron' ? 52 : 46;
+          const img = keep(this.add.tileSprite(c.x, c.y + c.h - H, c.w, H, c.style === 'iron' ? 'city_walk_fence_iron' : 'city_walk_fence_wood')
+            .setOrigin(0).setTileScale(H / 72).setDepth(bottomDepth));
+          this.colliderViews.set(c.id, { c, img });
+          break;
+        }
         case 'ruin': {
           const wall = keep(this.add.tileSprite(c.x,c.y-30,c.w,c.h+30,c.tex || (locationAt(c.x+c.w/2,c.y+c.h/2).id==='city'?'city_wall':'wall_ruin_01'))
             .setOrigin(0).setTileScale(locationAt(c.x+c.w/2,c.y+c.h/2).id==='city'?0.25:0.5).setDepth(bottomDepth));

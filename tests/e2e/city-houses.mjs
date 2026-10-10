@@ -4,10 +4,12 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
+import { BUILDINGS } from '../../src/config/city.plan.js';
 process.env.VITE_SUPABASE_URL='';process.env.VITE_SUPABASE_ANON_KEY='';
 const root=path.resolve(new URL('../..',import.meta.url).pathname);
 const out=process.env.CITY_SHOTS_DIR||'/tmp/koldovstvo-city-houses';await fs.mkdir(out,{recursive:true});
-const server=await createServer({root,server:{host:'127.0.0.1',port:5195,strictPort:true,hmr:false}});await server.listen();
+const modules=await fs.realpath(path.join(root,'node_modules'));
+const server=await createServer({root,server:{host:'127.0.0.1',port:5195,strictPort:true,hmr:false,fs:{allow:[root,modules]}}});await server.listen();
 const browser=await chromium.launch({executablePath:process.env.CHROME_PATH,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 try{
  for(const viewport of (process.env.CITY_VIEWPORTS?JSON.parse(process.env.CITY_VIEWPORTS):[{width:390,height:844},{width:320,height:568},{width:1280,height:900}])){
@@ -43,7 +45,8 @@ try{
    assert.equal(b.key,'city_final_'+id+'_exterior');await move(b.x,b.y+150);await shot(id+'-exterior');
   }
   await page.evaluate(()=>{window.__witch.state.markEvent('ch2_frost_wave');window.__game.scene.getScene('ExplorationScene').refreshAll();});
-  await move(9240,1910);await shot('rescue-frozen');
+  const rescue=BUILDINGS.find(b=>b.id==='rescue');
+  await move(rescue.door.x,rescue.door.y+150);await shot('rescue-frozen');
   assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').colliderViews.get('city_plan_building_rescue').img.tintTopLeft),0xb6dbea);
   for(const key of (process.env.HOUSE_ROOMS?process.env.HOUSE_ROOMS.split(','):['society','coven','lab','duel','warehouse','cellar','rescue'])){
    const door=key==='warehouse'?'warehouse_a':key;
@@ -75,7 +78,7 @@ try{
   }
   await page.evaluate(()=>{window.__witch.state.markEvent('ch2_severin_defeated');window.__game.scene.getScene('ExplorationScene').refreshAll();});
   assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').colliderViews.get('city_plan_building_rescue').img.isTinted),false,'story thaw keeps individual facade and clears frost');
-  await move(9240,1910);await shot('rescue-thawed');
+  await move(rescue.door.x,rescue.door.y+150);await shot('rescue-thawed');
   assert.deepEqual(errors,[]);await page.close();console.log('✓ House graphics, dialogues, papers and frost',viewport);
  }
 }finally{await browser.close();await server.close();}

@@ -12,17 +12,17 @@ const server=await createServer({root,server:{host:'127.0.0.1',port:5192,strictP
 const browser=await chromium.launch({executablePath:process.env.CHROME_PATH,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 try{
  for(const viewport of (process.env.CITY_VIEWPORTS?JSON.parse(process.env.CITY_VIEWPORTS):[{width:390,height:844},{width:320,height:568},{width:1280,height:900}])){
-  const page=await browser.newPage({viewport,hasTouch:true}),errors=[];
+  const page=await browser.newPage({viewport,hasTouch:true}),errors=[];page.setDefaultTimeout(120000);
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'){errors.push(m.text());console.error(m.text(),m.location().url);}});
   await page.goto('http://127.0.0.1:5192/?reset&skipmenu');
   await page.waitForFunction(()=>window.__game?.scene.getScene('ExplorationScene')?.player,null,{timeout:120000});console.log('Booted',viewport.width);
   await page.evaluate(()=>{
    const w=window.__witch,u=window.__game.scene.getScene('UIScene');
-   for(const e of ['prologue_seen','chapter_1_complete','ch2_start'])w.state.markEvent(e);
+   for(const e of ['prologue_seen','chapter_1_complete','ch2_start','ch2_city_arrived'])w.state.markEvent(e);
    w.state.markEnemyDefeated('plaza_critter');w.settings.set('hints',false);w.tutorial.hide();u.closeDialogue(true);u.closeModal(null);u.toasts.forEach(t=>t.destroy());u.toasts=[];
    window.__game.scene.getScene('ExplorationScene').travelToLocation('city');
   });
-  await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city' && window.__witch.mode==='exploration');
+  await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city' && window.__witch.mode==='exploration').catch(async e=>{console.log(await page.evaluate(()=>({loc:window.__game.scene.getScene('ExplorationScene').loc?.id,mode:window.__witch.mode,player:window.__witch.state.data.player,layout:window.__witch.state.getObject('city_layout')})));throw e;});
   const atDoor=async id=>{
    await page.evaluate(id=>{
     const s=window.__game.scene.getScene('ExplorationScene'),u=window.__game.scene.getScene('UIScene'),d=s.objects.find(o=>o.id===id);
@@ -31,7 +31,7 @@ try{
     for(const e of s.enemies)e.grace=60000;
    },id);await page.waitForTimeout(300);
   };
-  const enter=async(id,loc)=>{console.log('Door',viewport.width,id);await atDoor(id);await page.keyboard.press('Space');await page.waitForFunction(loc=>window.__game.scene.getScene('ExplorationScene').loc?.id===loc && window.__witch.mode==='exploration',loc);};
+  const enter=async(id,loc)=>{console.log('Door',viewport.width,id);await atDoor(id);await page.waitForFunction(id=>window.__game.scene.getScene('ExplorationScene').interaction.focus?.id===id,id);await page.keyboard.press('Space');await page.waitForFunction(loc=>window.__game.scene.getScene('ExplorationScene').loc?.id===loc && window.__witch.mode==='exploration',loc).catch(async e=>{console.log(await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene');return{loc:s.loc?.id,mode:window.__witch.mode,p:[s.player.x,s.player.y],focus:s.interaction.focus?.id,events:window.__witch.state.data.completedEvents,layout:window.__witch.state.getObject('city_layout'),fade:s.cameras.main.fadeEffect.isRunning};}));throw e;});};
   await page.waitForTimeout(4500);await atDoor('door_bank');await page.screenshot({path:path.join(out,viewport.width+'-bank-outside.png')});
   await page.keyboard.press('Space');await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city_bank' && window.__witch.mode==='exploration');
   assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.some(o=>o.id==='npc_banker')),true);

@@ -766,21 +766,24 @@ var SCHOOL_XP_PER_USE = {
 
 // src/config/city.plan.js
 var CITY_ORIGIN = { x: 6720, y: 600 };
-var cityPoint = (x, y) => ({ x: CITY_ORIGIN.x + x, y: CITY_ORIGIN.y + y });
+var CITY_SCALE = 0.6;
+var size = (v) => v * CITY_SCALE;
+var CITY_RECT = { x: 6288, y: 600, w: size(3720), h: size(4320) };
+var cityPoint = (x, y) => ({ x: CITY_ORIGIN.x + size(x), y: CITY_ORIGIN.y + size(y) });
 var BUILDINGS = [
-  ["north_bay", "\u0421\u0435\u0432\u0435\u0440\u043D\u044B\u0439 \u0434\u043E\u043C", 200, 100, 540, 420, 470, 520, null],
-  ["north_workshop", "\u0414\u043E\u043C \u0441 \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u043E\u0439", 2240, 100, 560, 420, 2520, 520, null],
-  ["cellar", "\u0414\u043E\u043C \u0441 \u043F\u043E\u0433\u0440\u0435\u0431\u043E\u043C", 200, 860, 540, 370, 470, 1230, "ch2_rescue_cellar"],
-  ["rescue", "\u0414\u043E\u043C \u0437\u0430 \u043B\u0435\u0434\u044F\u043D\u043E\u0439 \u0434\u0432\u0435\u0440\u044C\u044E", 2240, 860, 560, 370, 2520, 1230, "ch2_rescue_door"],
-  ["archive", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", 200, 1640, 540, 420, 470, 2060, null],
-  ["society", "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", 2240, 1640, 560, 420, 2520, 2060, null],
-  ["bank", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", 2300, 2290, 500, 400, 2550, 2690, null],
-  ["duel", "\u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u0414\u0443\u044D\u043B\u044C", 200, 2940, 600, 420, 500, 3360, "ch2_fin_seal"],
-  ["coven", "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", 2240, 2940, 560, 420, 2600, 3360, null],
-  ["warehouse_a", "\u0421\u043A\u043B\u0430\u0434 \u0410", 200, 3710, 600, 340, 500, 4050, null],
-  ["warehouse_b", "\u0421\u043A\u043B\u0430\u0434 \u0411", 2240, 3710, 560, 340, 2520, 4050, null],
+  ["north_bay", "\u0421\u0435\u0432\u0435\u0440\u043D\u044B\u0439 \u0434\u043E\u043C", 560, 100, 540, 420, 830, 520, null],
+  ["north_workshop", "\u0414\u043E\u043C \u0441 \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u043E\u0439", 1900, 100, 560, 420, 2180, 520, null],
+  ["cellar", "\u0414\u043E\u043C \u0441 \u043F\u043E\u0433\u0440\u0435\u0431\u043E\u043C", 560, 860, 540, 370, 830, 1230, "ch2_rescue_cellar"],
+  ["rescue", "\u0414\u043E\u043C \u0437\u0430 \u043B\u0435\u0434\u044F\u043D\u043E\u0439 \u0434\u0432\u0435\u0440\u044C\u044E", 1900, 860, 560, 370, 2180, 1230, "ch2_rescue_door"],
+  ["archive", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", 560, 1640, 540, 420, 830, 2060, null],
+  ["society", "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", 1900, 1640, 560, 420, 2180, 2060, null],
+  ["bank", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", 1960, 2290, 500, 400, 2210, 2690, null],
+  ["duel", "\u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u0414\u0443\u044D\u043B\u044C", 500, 2940, 600, 420, 800, 3360, "ch2_fin_seal"],
+  ["coven", "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", 1900, 2940, 560, 420, 2260, 3360, null],
+  ["warehouse_a", "\u0421\u043A\u043B\u0430\u0434 \u0410", 500, 3710, 600, 340, 800, 4050, null],
+  ["warehouse_b", "\u0421\u043A\u043B\u0430\u0434 \u0411", 1900, 3710, 560, 340, 2180, 4050, null],
   ["lab", "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", -700, 2920, 380, 380, -510, 3300, "ch2_lab_open"]
-].map(([id, name, x, y, w, h, dx, dy, requires]) => ({ id, name, ...cityPoint(x, y), w, h, door: cityPoint(dx, dy), requires }));
+].map(([id, name, x, y, w, h, dx, dy, requires]) => ({ id, name, ...cityPoint(x, y), w: size(w), h: size(h), door: cityPoint(dx, dy), requires }));
 var layouts = [
   ["bank", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", 10200, 200, 720, 1440],
   ["archive", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", 11800, 200, 900, 1500],
@@ -821,9 +824,9 @@ var CITY_PORTALS = BUILDINGS.filter((b) => !b.id.startsWith("north_")).flatMap((
       id: "door_" + b.id,
       kind: "room_door",
       x: b.door.x,
-      y: b.door.y + 36,
-      ghost: { w: 160, h: 100 },
-      radius: 150,
+      y: b.door.y + 28,
+      ghost: { w: 120, h: 80 },
+      radius: 110,
       target: inside,
       room: r.id,
       hint: "\u0412\u043E\u0439\u0442\u0438: " + b.name,
@@ -835,7 +838,7 @@ var CITY_PORTALS = BUILDINGS.filter((b) => !b.id.startsWith("north_")).flatMap((
       ...rp(key, entryX, r.rect.h - 55),
       ghost: { w: 160, h: 80 },
       radius: 130,
-      target: { x: b.door.x, y: b.door.y + 170 },
+      target: { x: b.door.x, y: b.door.y + 100 },
       room: "city",
       hint: "\u0412\u044B\u0439\u0442\u0438: " + b.name
     }
@@ -846,8 +849,8 @@ var CITY_POSITIONS = Object.fromEntries([
   ["frostherb_r1", cityPoint(-480, 2380)],
   ["frostherb_r2", cityPoint(-500, 2800)],
   ["resin_r1", cityPoint(-660, 2640)],
-  ["city_board", cityPoint(370, 2430)],
-  ["npc_merchant", cityPoint(2120, 2930)],
+  ["city_board", cityPoint(640, 2430)],
+  ["npc_merchant", cityPoint(2530, 3020)],
   ["plaza_trace", cityPoint(1540, 2740)],
   ["plaza_debris", cityPoint(1930, 2370)],
   ["sapphire_city_cache_1", cityPoint(730, 2710)],
@@ -859,13 +862,13 @@ var CITY_POSITIONS = Object.fromEntries([
   ["npc_banker", { ...rp("bank", 360, 350), approach: rp("bank", 360, 510) }],
   ["npc_rowena", rp("coven", 270, 610)],
   ["npc_duelist", rp("duel", 260, 1280)],
-  ["frost_barrier", { ...cityPoint(1500, 1520), collide: { w: 540, h: 40 }, editorStyle: { w: 580, h: 160 } }],
-  ["fq_water", { ...cityPoint(1500, 780), collide: { w: 540, h: 40 }, editorStyle: { w: 540, h: 90 } }],
+  ["frost_barrier", { ...cityPoint(1500, 1520), collide: { w: size(540), h: size(40) }, editorStyle: { w: size(580), h: 120 } }],
+  ["fq_water", { ...cityPoint(1500, 780), collide: { w: size(540), h: size(40) }, editorStyle: { w: size(540), h: 70 } }],
   ["ice_construct", cityPoint(1230, 1350)],
   ["npc_nerys", cityPoint(1580, 1230)],
-  ["fq_cellar", cityPoint(650, 1280)],
-  ["fq_door", cityPoint(2520, 1280)],
-  ["fq_cauldron", cityPoint(2110, 1350)],
+  ["fq_cellar", cityPoint(1010, 1280)],
+  ["fq_door", cityPoint(2180, 1280)],
+  ["fq_cauldron", cityPoint(1950, 1350)],
   ["lab_seal", cityPoint(-510, 3340)],
   ["lab_herb_1", rp("lab", 140, 720)],
   ["lab_herb_2", rp("lab", 810, 940)],
@@ -875,7 +878,7 @@ var CITY_POSITIONS = Object.fromEntries([
   ["lab_journal", { ...rp("lab", 710, 1786), elevated: 41 }],
   ["wh_cargo", rp("warehouse", 1110, 440)],
   ["wh_equipment", rp("warehouse", 400, 630)],
-  ["final_debris", cityPoint(730, 3530)],
+  ["final_debris", cityPoint(460, 3530)],
   ["final_ice_wall", cityPoint(2180, 2810)],
   ["final_rift", cityPoint(280, 3470)],
   ["final_ward", cityPoint(500, 3400)],
@@ -910,16 +913,17 @@ var plannedObject = (o) => {
   const p = CITY_POSITIONS[o.id];
   if (!p) return { ...o };
   const out = { ...o, ...p };
-  if (o.target) out.target = { x: o.target.x + p.x - o.x, y: o.target.y + p.y - o.y };
+  const outdoors = p.x >= CITY_RECT.x && p.x < CITY_RECT.x + CITY_RECT.w;
+  if (o.target) out.target = { x: p.x + (o.target.x - o.x) * (outdoors ? CITY_SCALE : 1), y: p.y + (o.target.y - o.y) * (outdoors ? CITY_SCALE : 1) };
   return out;
 };
 function cityZoneData() {
   const roomZones = CITY_ROOMS.map((r) => ({ id: { archive: "AR", society: "SO", lab: "LB", duel: "DU", coven: "CV", bank: "BK", warehouse: "WH", cellar: "RC", rescue: "RD" }[r.key], name: r.name, ...r.rect, interior: true, safePoint: r.arrival }));
   return [
     ...roomZones,
-    { id: "FQ", name: "\u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", ...cityPoint(0, 0), w: 3e3, h: 1520, safePoint: cityPoint(1500, 1610) },
-    { id: "P", name: "\u0426\u0435\u043D\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C", ...cityPoint(0, 2100), w: 3e3, h: 800, safePoint: cityPoint(1500, 2780) },
-    { id: "R", name: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0433\u043E\u0440\u043E\u0434", ...cityPoint(-720, 2300), w: 720, h: 1240, safePoint: cityPoint(-560, 2510) }
+    { id: "FQ", name: "\u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", ...cityPoint(0, 0), w: size(3e3), h: size(1520), safePoint: cityPoint(1500, 1610) },
+    { id: "P", name: "\u0426\u0435\u043D\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C", ...cityPoint(0, 2100), w: size(3e3), h: size(800), safePoint: cityPoint(1500, 2780) },
+    { id: "R", name: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0433\u043E\u0440\u043E\u0434", ...cityPoint(-720, 2300), w: size(720), h: size(1240), safePoint: cityPoint(-560, 2510) }
   ];
 }
 
@@ -947,6 +951,7 @@ var BY_ID = new Map(HEROES.map((h) => [h.id, h]));
 var fm = (female, male) => ({ female, male });
 
 // src/config/world.city.js
+var CITY_START = cityPoint(-560, 2510);
 var CITY_GROUND = [
   { tex: "city_paving", x: 2360, y: 1500, w: 1240, h: 3540 },
   { tex: "city_wood_floor", x: 2440, y: 2560, w: 420, h: 480, interior: true, tint: 15326404 },

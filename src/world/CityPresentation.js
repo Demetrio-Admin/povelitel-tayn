@@ -11,7 +11,7 @@ export class CityPresentation {
     this.images = [];
     for(const b of BUILDINGS){
       const plaque=b.id==='bank'||b.id==='archive';
-      const text=scene.add.text(b.door.x,b.door.y+(b.id==='bank'?-220:b.id==='archive'?-166:25),plaque?(b.id==='bank'?'БАНК':'АРХИВ'):b.name,{
+      const text=scene.add.text(b.door.x,b.door.y+(b.id==='bank'?-132:b.id==='archive'?-100:18),plaque?(b.id==='bank'?'БАНК':'АРХИВ'):b.name,{
         fontFamily:'Philosopher',fontSize:plaque?'25px':'28px',color:'#e7d6ad',stroke:'#251c14',strokeThickness:plaque?3:5,
       }).setOrigin(0.5,1).setDepth(DEPTH.markers-2);
       this.images.push(text);

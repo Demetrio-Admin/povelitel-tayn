@@ -1,0 +1,134 @@
+{
+  "frames": {
+    "city_final_bank_exterior": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      }
+    },
+    "city_final_duel_exterior": {
+      "frame": {
+        "x": 512,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      }
+    },
+    "city_final_coven_exterior": {
+      "frame": {
+        "x": 1024,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 512
+      }
+    },
+    "city_final_warehouse_a_exterior": {
+      "frame": {
+        "x": 0,
+        "y": 512,
+        "w": 527,
+        "h": 512
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 527,
+        "h": 512
+      },
+      "sourceSize": {
+        "w": 527,
+        "h": 512
+      }
+    },
+    "city_final_warehouse_b_exterior": {
+      "frame": {
+        "x": 527,
+        "y": 512,
+        "w": 548,
+        "h": 512
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 548,
+        "h": 512
+      },
+      "sourceSize": {
+        "w": 548,
+        "h": 512
+      }
+    },
+    "city_final_lab_exterior": {
+      "frame": {
+        "x": 1075,
+        "y": 512,
+        "w": 461,
+        "h": 512
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 461,
+        "h": 512
+      },
+      "sourceSize": {
+        "w": 461,
+        "h": 512
+      }
+    }
+  },
+  "meta": {
+    "app": "Koldovstvo city art handoff",
+    "image": "city-facades-south.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1536,
+      "h": 1024
+    },
+    "scale": "1"
+  }
+}

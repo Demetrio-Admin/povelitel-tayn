@@ -765,25 +765,27 @@ var SCHOOL_XP_PER_USE = {
 };
 
 // src/config/city.plan.js
-var CITY_ORIGIN = { x: 6720, y: 600 };
-var CITY_SCALE = 0.6;
-var size = (v) => v * CITY_SCALE;
-var CITY_RECT = { x: 6288, y: 600, w: size(3720), h: size(4320) };
-var cityPoint = (x, y) => ({ x: CITY_ORIGIN.x + size(x), y: CITY_ORIGIN.y + size(y) });
+var CITY_RECT = { x: 5600, y: 160, w: 2880, h: 5760 };
+var cityPoint = (x, y) => ({ x: CITY_RECT.x + x, y: CITY_RECT.y + y });
+var TARGET_SCALE = 0.6;
+var insideRect = (p, r) => p && p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h;
 var BUILDINGS = [
-  ["north_bay", "\u0421\u0435\u0432\u0435\u0440\u043D\u044B\u0439 \u0434\u043E\u043C", 560, 100, 540, 420, 830, 520, null],
-  ["north_workshop", "\u0414\u043E\u043C \u0441 \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u043E\u0439", 1900, 100, 560, 420, 2180, 520, null],
-  ["cellar", "\u0414\u043E\u043C \u0441 \u043F\u043E\u0433\u0440\u0435\u0431\u043E\u043C", 560, 860, 540, 370, 830, 1230, "ch2_rescue_cellar"],
-  ["rescue", "\u0414\u043E\u043C \u0437\u0430 \u043B\u0435\u0434\u044F\u043D\u043E\u0439 \u0434\u0432\u0435\u0440\u044C\u044E", 1900, 860, 560, 370, 2180, 1230, "ch2_rescue_door"],
-  ["archive", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", 560, 1640, 540, 420, 830, 2060, null],
-  ["society", "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", 1900, 1640, 560, 420, 2180, 2060, null],
-  ["bank", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", 1960, 2290, 500, 400, 2210, 2690, null],
-  ["duel", "\u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u0414\u0443\u044D\u043B\u044C", 500, 2940, 600, 420, 800, 3360, "ch2_fin_seal"],
-  ["coven", "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", 1900, 2940, 560, 420, 2260, 3360, null],
-  ["warehouse_a", "\u0421\u043A\u043B\u0430\u0434 \u0410", 500, 3710, 600, 340, 800, 4050, null],
-  ["warehouse_b", "\u0421\u043A\u043B\u0430\u0434 \u0411", 1900, 3710, 560, 340, 2180, 4050, null],
-  ["lab", "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", -700, 2920, 380, 380, -510, 3300, "ch2_lab_open"]
-].map(([id, name, x, y, w, h, dx, dy, requires]) => ({ id, name, ...cityPoint(x, y), w: size(w), h: size(h), door: cityPoint(dx, dy), requires }));
+  ["north_bay", "\u0421\u0435\u0432\u0435\u0440\u043D\u044B\u0439 \u0434\u043E\u043C", 1200, 620, 324, 252, 162, null],
+  ["north_workshop", "\u0414\u043E\u043C \u0441 \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u043E\u0439", 2250, 800, 336, 252, 168, null],
+  ["cellar", "\u0414\u043E\u043C \u0441 \u043F\u043E\u0433\u0440\u0435\u0431\u043E\u043C", 1250, 1820, 324, 222, 162, "ch2_rescue_cellar"],
+  ["rescue", "\u0414\u043E\u043C \u0437\u0430 \u043B\u0435\u0434\u044F\u043D\u043E\u0439 \u0434\u0432\u0435\u0440\u044C\u044E", 1990, 1580, 336, 222, 168, "ch2_rescue_door"],
+  ["archive", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", 1250, 2560, 324, 252, 162, null],
+  ["society", "\u041E\u0431\u0449\u0435\u0441\u0442\u0432\u043E \u041F\u0440\u0435\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F", 1950, 2700, 336, 252, 168, null],
+  ["bank", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", 2050, 4250, 300, 240, 150, null],
+  ["duel", "\u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u0414\u0443\u044D\u043B\u044C", 1100, 3270, 360, 252, 180, "ch2_fin_seal"],
+  ["coven", "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", 1950, 3170, 336, 252, 216, null],
+  ["warehouse_a", "\u0421\u043A\u043B\u0430\u0434 \u0410", 1150, 5010, 360, 204, 180, null],
+  ["warehouse_b", "\u0421\u043A\u043B\u0430\u0434 \u0411", 2050, 5085, 336, 204, 168, null],
+  ["lab", "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", 330, 3960, 228, 228, 114, "ch2_lab_open"]
+].map(([id, name, dx, dy, w, h, ox, requires]) => {
+  const door = cityPoint(dx, dy);
+  return { id, name, x: door.x - ox, y: door.y - h, w, h, door, requires };
+});
 var layouts = [
   ["bank", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0411\u0430\u043D\u043A", 10200, 200, 720, 1440],
   ["archive", "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u043E\u0439 \u0410\u0440\u0445\u0438\u0432", 11800, 200, 900, 1500],
@@ -844,32 +846,62 @@ var CITY_PORTALS = BUILDINGS.filter((b) => !b.id.startsWith("north_")).flatMap((
     }
   ];
 });
+var P = cityPoint;
 var CITY_POSITIONS = Object.fromEntries([
-  ["exit_city", cityPoint(-650, 2510)],
-  ["frostherb_r1", cityPoint(-480, 2380)],
-  ["frostherb_r2", cityPoint(-500, 2800)],
-  ["resin_r1", cityPoint(-660, 2640)],
-  ["city_board", cityPoint(640, 2430)],
-  ["npc_merchant", cityPoint(2530, 3020)],
-  ["plaza_trace", cityPoint(1540, 2740)],
-  ["plaza_debris", cityPoint(1930, 2370)],
-  ["sapphire_city_cache_1", cityPoint(730, 2710)],
-  ["sapphire_city_cache_2", cityPoint(2040, 3470)],
-  // The document sorts one pixel in front of the desk, with its art on the tabletop.
+  // Дорога и тропа к лаборатории за западной стеной
+  ["exit_city", P(110, 5150)],
+  ["frostherb_r1", P(250, 5060)],
+  ["frostherb_r2", P(385, 4640)],
+  ["resin_r1", P(500, 5290)],
+  ["road_scavenger", P(520, 5030)],
+  ["lab_seal", P(330, 3984)],
+  // Торговый двор: отдельная площадка Бориса, банк, доска поручений
+  ["npc_merchant", P(1470, 4420)],
+  ["city_board", P(1820, 4228)],
+  ["final_collector", P(1720, 4460)],
+  ["final_ice_wall", P(1560, 4060)],
+  // Центральная площадь: фонтан смещён к западу, восточная часть свободна для событий
+  ["plaza_trace", P(1560, 3620)],
+  ["plaza_debris", P(1620, 3380)],
+  ["plaza_critter", P(1480, 3650)],
+  ["sapphire_city_cache_1", P(1230, 3640)],
+  ["final_critter", P(1440, 3320)],
+  ["final_construct", P(1700, 3440)],
+  // Двор Дуэльного зала и Дом Ковенов
+  ["final_debris", P(1250, 3420)],
+  ["final_rift", P(960, 3440)],
+  ["final_ward", P(1100, 3294)],
+  ["npc_nerys_final", P(1200, 3480)],
+  ["unstable_1", P(1760, 3360)],
+  // Сад и Общество
+  ["lab_critter", P(2150, 2880)],
+  // Склады у ворот
+  ["unstable_2", P(1450, 4960)],
+  ["sapphire_city_cache_2", P(2480, 5480)],
+  // Ледяная стена стоит на мосту — единственном проходе через канал в Замёрзший квартал
+  ["frost_barrier", { ...P(1560, 2166), collide: { w: 150, h: 44 }, editorStyle: { w: 180, h: 128 } }],
+  ["ice_construct", P(1760, 1960)],
+  ["npc_nerys", P(1660, 1930)],
+  ["fq_cellar", P(1050, 1830)],
+  ["fq_door", P(1990, 1610)],
+  ["fq_cauldron", P(1900, 2010)],
+  ["fq_critter", P(950, 1990)],
+  ["fq_collector", P(2200, 1720)],
+  // Затопленный проход в садовой стене и Северный двор за ним
+  ["fq_water", { ...P(1720, 1142), collide: { w: 230, h: 52 }, editorStyle: { w: 250, h: 96 } }],
+  ["fq_training", P(1720, 900)],
+  ["fq_deep_1", P(1450, 500)],
+  ["fq_deep_2", P(1990, 480)],
+  ["fq_guardian", P(1720, 440)],
+  ["yard_brittle_1", P(1460, 800)],
+  ["yard_brittle_2", P(1990, 800)],
+  // Помещения не переносятся
   ["npc_ilaria", rp("archive", 260, 1050)],
   ["archive_document", { ...rp("archive", 330, 716), elevated: 41 }],
   ["npc_severin", rp("society", 360, 710)],
   ["npc_banker", { ...rp("bank", 360, 350), approach: rp("bank", 360, 510) }],
   ["npc_rowena", rp("coven", 270, 610)],
   ["npc_duelist", rp("duel", 260, 1280)],
-  ["frost_barrier", { ...cityPoint(1500, 1520), collide: { w: size(540), h: size(40) }, editorStyle: { w: size(580), h: 120 } }],
-  ["fq_water", { ...cityPoint(1500, 780), collide: { w: size(540), h: size(40) }, editorStyle: { w: size(540), h: 70 } }],
-  ["ice_construct", cityPoint(1230, 1350)],
-  ["npc_nerys", cityPoint(1580, 1230)],
-  ["fq_cellar", cityPoint(1010, 1280)],
-  ["fq_door", cityPoint(2180, 1280)],
-  ["fq_cauldron", cityPoint(1950, 1350)],
-  ["lab_seal", cityPoint(-510, 3340)],
   ["lab_herb_1", rp("lab", 140, 720)],
   ["lab_herb_2", rp("lab", 810, 940)],
   ["lab_chest", rp("lab", 160, 1880)],
@@ -878,54 +910,82 @@ var CITY_POSITIONS = Object.fromEntries([
   ["lab_journal", { ...rp("lab", 710, 1786), elevated: 41 }],
   ["wh_cargo", rp("warehouse", 1110, 440)],
   ["wh_equipment", rp("warehouse", 400, 630)],
-  ["final_debris", cityPoint(460, 3530)],
-  ["final_ice_wall", cityPoint(2180, 2810)],
-  ["final_rift", cityPoint(280, 3470)],
-  ["final_ward", cityPoint(500, 3400)],
-  ["npc_nerys_final", cityPoint(850, 3430)],
   ["final_letters", { ...rp("duel", 840, 626), elevated: 41 }],
   ["npc_severin_after", rp("duel", 770, 820)],
-  ["plaza_critter", cityPoint(1620, 2790)],
-  ["road_scavenger", cityPoint(-300, 2510)],
   ["wh_collector_1", rp("warehouse", 430, 1160)],
   ["wh_collector_2", rp("warehouse", 1050, 900)],
   ["wh_elite", rp("warehouse", 790, 490)],
-  ["lab_critter", cityPoint(2410, 2220)],
-  ["fq_critter", cityPoint(850, 1340)],
-  ["fq_collector", cityPoint(2280, 1350)],
-  ["fq_training", cityPoint(1500, 590)],
-  ["fq_deep_1", cityPoint(940, 320)],
-  ["fq_deep_2", cityPoint(2060, 320)],
-  ["fq_guardian", cityPoint(1500, 300)],
-  ["yard_brittle_1", cityPoint(870, 650)],
-  ["yard_brittle_2", cityPoint(2120, 650)],
   ["vol_1", rp("lab", 390, 1240)],
   ["vol_2", rp("lab", 680, 960)],
   ["lab_construct", rp("lab", 480, 450)],
-  ["unstable_1", cityPoint(2050, 3450)],
-  ["unstable_2", cityPoint(950, 3670)],
-  ["final_critter", cityPoint(1390, 2610)],
-  ["final_collector", cityPoint(1770, 2870)],
-  ["final_construct", cityPoint(1020, 3410)],
   ["final_severin", rp("duel", 540, 600)]
 ]);
 var plannedObject = (o) => {
   const p = CITY_POSITIONS[o.id];
   if (!p) return { ...o };
   const out = { ...o, ...p };
-  const outdoors = p.x >= CITY_RECT.x && p.x < CITY_RECT.x + CITY_RECT.w;
-  if (o.target) out.target = { x: p.x + (o.target.x - o.x) * (outdoors ? CITY_SCALE : 1), y: p.y + (o.target.y - o.y) * (outdoors ? CITY_SCALE : 1) };
+  const outdoors = insideRect(p, CITY_RECT);
+  if (o.target) out.target = { x: p.x + (o.target.x - o.x) * (outdoors ? TARGET_SCALE : 1), y: p.y + (o.target.y - o.y) * (outdoors ? TARGET_SCALE : 1) };
   return out;
+};
+var doorFront = (id) => {
+  const b = BUILDINGS.find((b2) => b2.id === id);
+  return { x: b.door.x, y: b.door.y + 100 };
+};
+var CITY_SPOTS = {
+  road: P(190, 5175),
+  labTrail: P(320, 4300),
+  gate: P(860, 5175),
+  market: P(1720, 4480),
+  square: P(1560, 3740),
+  garden: P(1600, 2860),
+  bridgeSouth: P(1560, 2300),
+  quarter: P(1580, 1720),
+  waterSouth: P(1720, 1250),
+  yard: P(1720, 1e3)
 };
 function cityZoneData() {
   const roomZones = CITY_ROOMS.map((r) => ({ id: { archive: "AR", society: "SO", lab: "LB", duel: "DU", coven: "CV", bank: "BK", warehouse: "WH", cellar: "RC", rescue: "RD" }[r.key], name: r.name, ...r.rect, interior: true, safePoint: r.arrival }));
+  const zone = (id, name, x, y, w, h, safePoint) => ({ id, name, ...P(x, y), w, h, safePoint });
   return [
     ...roomZones,
-    { id: "FQ", name: "\u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", ...cityPoint(0, 0), w: size(3e3), h: size(1520), safePoint: cityPoint(1500, 1610) },
-    { id: "P", name: "\u0426\u0435\u043D\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C", ...cityPoint(0, 2100), w: size(3e3), h: size(800), safePoint: cityPoint(1500, 2780) },
-    { id: "R", name: "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0433\u043E\u0440\u043E\u0434", ...cityPoint(-720, 2300), w: size(720), h: size(1240), safePoint: cityPoint(-560, 2510) }
+    zone("FY", "\u0421\u0435\u0432\u0435\u0440\u043D\u044B\u0439 \u0434\u0432\u043E\u0440", 640, 0, 2e3, 1120, CITY_SPOTS.waterSouth),
+    zone("FQ", "\u0417\u0430\u043C\u0451\u0440\u0437\u0448\u0438\u0439 \u043A\u0432\u0430\u0440\u0442\u0430\u043B", 640, 1120, 2e3, 1062, CITY_SPOTS.bridgeSouth),
+    zone("GD", "\u0421\u0430\u0434 \u0443 \u0410\u0440\u0445\u0438\u0432\u0430", 640, 2182, 2e3, 898, CITY_SPOTS.garden),
+    zone("P", "\u0426\u0435\u043D\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C", 640, 3080, 2e3, 880, CITY_SPOTS.square),
+    zone("M", "\u0422\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0434\u0432\u043E\u0440", 640, 3960, 2e3, 800, CITY_SPOTS.market),
+    zone("G", "\u0412\u043E\u0440\u043E\u0442\u0430 \u0438 \u0441\u043A\u043B\u0430\u0434\u044B", 640, 4760, 2e3, 1e3, CITY_SPOTS.gate),
+    zone("R", "\u0414\u043E\u0440\u043E\u0433\u0430 \u0432 \u0433\u043E\u0440\u043E\u0434", 0, 3560, 640, 2200, CITY_SPOTS.road)
   ];
 }
+var V3_LANDMARKS = [
+  [[-560, 2510], "road"],
+  [[-500, 3200], "labTrail"],
+  [[1500, 2780], "square"],
+  [[860, 2560], "square"],
+  [[640, 2430], "square"],
+  [[2530, 3020], "market"],
+  [[2210, 2790], doorFront("bank")],
+  [[830, 2160], doorFront("archive")],
+  [[2180, 2160], doorFront("society")],
+  [[800, 3460], doorFront("duel")],
+  [[2260, 3460], doorFront("coven")],
+  [[800, 4150], doorFront("warehouse_a")],
+  [[2180, 4150], doorFront("warehouse_b")],
+  [[1500, 4220], "gate"],
+  [[1500, 3450], "square"],
+  [[1500, 1900], "garden"]
+];
+var CITY_ADMIN_POINTS = { nerys: P(1700, 1840), nerys_final: P(1180, 3560) };
+var CITY_FIXED_POINTS = Object.values(CITY_ADMIN_POINTS);
+var CITY_CANAL = {
+  id: "city_canal",
+  type: "canal",
+  urban: true,
+  half: 48,
+  pts: [[P(600, 2130).x, P(600, 2130).y], [P(2680, 2130).x, P(2680, 2130).y]],
+  gaps: [[P(1505, 0).x, P(1615, 0).x]]
+};
 
 // src/config/heroes.js
 var DEFAULT_HERO_ID = "witch";
@@ -951,7 +1011,7 @@ var BY_ID = new Map(HEROES.map((h) => [h.id, h]));
 var fm = (female, male) => ({ female, male });
 
 // src/config/world.city.js
-var CITY_START = cityPoint(-560, 2510);
+var CITY_START = cityPoint(190, 5175);
 var CITY_GROUND = [
   { tex: "city_paving", x: 2360, y: 1500, w: 1240, h: 3540 },
   { tex: "city_wood_floor", x: 2440, y: 2560, w: 420, h: 480, interior: true, tint: 15326404 },

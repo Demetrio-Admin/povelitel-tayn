@@ -7,7 +7,7 @@
 
 /** Куда попадает герой, идя из леса; и куда — возвращаясь в лес. */
 import { cityPoint } from './city.plan.js';
-export const CITY_START = cityPoint(-560,2510);
+export const CITY_START = cityPoint(190,5175);   // v0.37.0: у указателя на дороге к западным воротам
 export const FOREST_RETURN = { x: 1200, y: 4416 };
 /** Где начинается восточная часть мира (для проверки проходимости: её места проверяются от CITY_START). */
 export const EAST_X = 1800;
@@ -336,6 +336,8 @@ export const CITY_DECOR = [
 
 /** v0.20.0: событие «впервые пришёл в зону» (ExplorationScene.updateZone → quests.complete; сервер проверяет условия EVENT_ACTIONS). */
 export const ZONE_EVENTS = {
+  // v0.37.0: город начинается у ворот и складов; площадь тоже засчитывает приход (старые сохранения).
+  G: { event: 'ch2_city_arrived', requires: ['ch2_start'] },
   P: { event: 'ch2_city_arrived', requires: ['ch2_start'] },
 };
 

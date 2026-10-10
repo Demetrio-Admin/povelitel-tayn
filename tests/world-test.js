@@ -76,7 +76,8 @@ console.log('\nМир: таблица коллизий');
   const solidProps = PROPS.filter(p => propSolid(p));
   ok(solidProps.length >= 100, `твёрдых объектов в расстановке: ${solidProps.length}`);
   // ничего твёрдого на дороге и в воде
-  const bad = solidProps.filter(p => distToRoad(terrain, p.x, p.y) === 0 || onWater(terrain, p.x, p.y));
+  // v0.37.0: only a stall's own goods may stand on its paved pad (paved: true); nothing solid on streets or water.
+  const bad = solidProps.filter(p => (!p.paved && distToRoad(terrain, p.x, p.y) === 0) || onWater(terrain, p.x, p.y));
   ok(bad.length === 0, 'на дорогах и в воде нет твёрдых объектов' + (bad.length ? ': ' + bad.slice(0, 3).map(p => p.id).join(',') : ''));
 }
 
@@ -197,7 +198,7 @@ console.log('\nМир: правки и черновик редактора');
 console.log('\nМир: правки дорог, воды и стен');
 {
   const b = baseTerrain();
-  ok(b.roads.every(r=>!r.pts.some(p=>p[0]>=1800 && p[0]<3600)) && b.waters.length === WATERS.length && b.cols.some(c=>c.id==='city_plan_building_bank') && b.cols.some(c=>c.id==='c105'), 'baseTerrain: все дороги, вода и стены на месте');
+  ok(b.roads.every(r=>!r.pts.some(p=>p[0]>=1800 && p[0]<3600)) && b.waters.filter(w=>!w.id?.startsWith('city_')).length === WATERS.length && b.waters.some(w=>w.id==='city_canal') && b.cols.some(c=>c.id==='city_plan_building_bank') && b.cols.some(c=>c.id==='c105'), 'baseTerrain: все дороги, вода и стены на месте');
   ok(b.cols[0].id === 'c0' && new Set(b.cols.map(c => c.id)).size === b.cols.length, 'у каждой стены есть id (c0, c1…), id уникальны');
   ok(b.roads.filter(r=>!r.id.startsWith('city_street_')).every(r => r.n === ROADS.findIndex(original=>original.id===r.id)), 'у базовых дорог номер шума = место в списке');
   ok(b.roads.filter(r=>r.id.startsWith('city_street_')).every((r,i)=>r.n===100+i), 'городские дорожки имеют отдельные стабильные номера шума');

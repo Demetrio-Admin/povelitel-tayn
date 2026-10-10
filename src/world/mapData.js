@@ -113,7 +113,7 @@ export function baseTerrain() {
   return {
     roads: [...ROADS.map((r,i)=>({...clone(r),n:i})).filter(r => !r.pts?.some(p => p[0]>=1800 && p[0]<3600)),
       ...city.roads.map((r,i)=>({...clone(r),n:100+i}))],
-    waters: WATERS.map((w,i)=>({...clone(w),n:i})),
+    waters: [...WATERS.map((w,i)=>({...clone(w),n:i})),...(city.waters||[]).map((w,i)=>({...clone(w),n:200+i}))],
     cols: [...COLLIDERS.map((c,i)=>({...clone(c),id:`c${i}`})).filter(c=>!oldCityRect(c)),...city.colliders],
     grounds: [...GROUND.map((g,i)=>({...clone(g),id:`g${i}`})).filter(g=>!oldCityRect(g)),...city.grounds],
   };

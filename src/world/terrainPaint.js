@@ -59,7 +59,41 @@ function fringe(ctx, poly, seed, kind) {
   }
 }
 
+/** v0.37.0: town canal — calm blue-green water between dressed stone banks (no mud, no reeds). */
+function paintCanal(ctx, w, c, img, index) {
+  const poly = w.poly;
+  ctx.save();
+  ctx.lineJoin = 'round';
+  pathPoly(ctx, poly);
+  ctx.fillStyle = '#3f6b70'; ctx.fill();
+  ctx.save();
+  ctx.clip();
+  ctx.globalAlpha = 0.35; ctx.fillStyle = pattern(ctx, img, '#3f6b70'); ctx.fill(); ctx.globalAlpha = 1;
+  const b = w.bounds, mid = (b.y + b.y1) / 2;
+  const g = ctx.createLinearGradient(0, b.y, 0, b.y1);
+  g.addColorStop(0, 'rgba(14,34,38,0.55)'); g.addColorStop(0.35, 'rgba(70,120,124,0)'); g.addColorStop(1, 'rgba(120,170,166,0.25)');
+  ctx.fillStyle = g; ctx.fillRect(c.x, b.y, c.w, b.y1 - b.y);
+  const cell = 64;
+  for (let gx = Math.floor(c.x / cell); gx <= Math.floor((c.x + c.w) / cell); gx++) {
+    for (let k = 0; k < 2; k++) {
+      const r = mulberry32((gx * 73856093) ^ (k * 19349663) ^ (index * 83492791));
+      const x = gx * cell + r() * cell, y = mid + (r() - 0.5) * (b.y1 - b.y) * 0.6, len = 12 + r() * 20;
+      ctx.strokeStyle = `rgba(214,236,230,${0.12 + r() * 0.14})`; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(x - len / 2, y); ctx.quadraticCurveTo(x, y - 2, x + len / 2, y); ctx.stroke();
+    }
+  }
+  ctx.restore();
+  // dressed stone kerb with a dark joint and a sunlit top edge
+  pathPoly(ctx, poly);
+  ctx.strokeStyle = '#4f4537'; ctx.lineWidth = 20; ctx.stroke();
+  ctx.strokeStyle = '#c3b694'; ctx.lineWidth = 14; ctx.stroke();
+  ctx.strokeStyle = 'rgba(242,228,196,0.6)'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.setLineDash([2, 38]); ctx.strokeStyle = 'rgba(96,84,66,0.7)'; ctx.lineWidth = 14; ctx.stroke(); ctx.setLineDash([]);
+  ctx.restore();
+}
+
 function paintWater(ctx, w, c, img, index) {
+  if (w.urban) return paintCanal(ctx, w, c, img, index);
   const poly = w.poly;
   ctx.save();
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -125,6 +159,8 @@ function paintRoadFill(ctx, r, img) {
   ctx.lineJoin = 'round';
   pathPoly(ctx, r.poly);
   ctx.fillStyle = pattern(ctx, img, r.kind === 'stone' ? '#5d6068' : '#7b5a3a',r.tileScale||1); ctx.fill();
+  // v0.37.0: town paving is a muted light stone — a soft grey-green veil calms the bright tile without hiding it.
+  if (r.urban) { ctx.fillStyle = 'rgba(86,90,74,0.17)'; ctx.fill(); }
   ctx.restore();
 }
 

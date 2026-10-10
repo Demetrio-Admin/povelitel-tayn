@@ -23,6 +23,12 @@ export function buildRoad(r, index = 0) {
 export function buildWater(w, index = 0, { rects: rects_ = true } = {}) {
   index = w.n ?? index;
   let poly;
+  if (w.type === 'canal') {
+    // v0.37.0: town canal — constant width, straight stone banks; gaps are bridges (walkable, water drawn under the deck).
+    poly = ribbon(catmullRom(w.pts, 10), () => w.half, () => w.half, { step: 10, taper: 0 });
+    const rects = rects_ ? cutGaps(polygonToRects(poly, WATER_CELL), w.gaps || []) : [];
+    return { id: w.id, type: w.type, urban: true, n: index, poly, bounds: polygonBounds(poly), rects };
+  }
   if (w.type === 'river') {
     const nL = valueNoise(900 + index * 5), nR = valueNoise(950 + index * 5);
     const center = catmullRom(w.pts, 10);
@@ -33,6 +39,21 @@ export function buildWater(w, index = 0, { rects: rects_ = true } = {}) {
   }
   const rects = rects_ ? polygonToRects(poly, WATER_CELL) : [];
   return { id: w.id, type: w.type, n: index, poly, bounds: polygonBounds(poly), rects };
+}
+
+/** Removes walkable x-ranges [x0, x1] (bridges) from water collision strips. */
+function cutGaps(rects, gaps) {
+  let out = rects;
+  for (const [g0, g1] of gaps) {
+    out = out.flatMap(r => {
+      if (r.x >= g1 || r.x + r.w <= g0) return [r];
+      const parts = [];
+      if (r.x < g0) parts.push({ ...r, w: g0 - r.x });
+      if (r.x + r.w > g1) parts.push({ ...r, x: g1, w: r.x + r.w - g1 });
+      return parts;
+    });
+  }
+  return out;
 }
 
 export function buildTerrain({ ROADS, WATERS }) {

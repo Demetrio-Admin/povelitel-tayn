@@ -17,11 +17,8 @@ const checkFrame = async (page, portrait) => {
   await page.waitForFunction(portrait => {
     const host = document.getElementById('game').getBoundingClientRect();
     const canvas = document.querySelector('#game canvas')?.getBoundingClientRect();
-    // v0.37.1: the canvas always fills its host; on landscape screens the host is a centred area up to 4:3
-    // (a wider map instead of a narrow portrait strip).
-    const page = document.documentElement.getBoundingClientRect();
-    return canvas && Math.abs(host.width - canvas.width) < 1 && Math.abs(host.height - canvas.height) < 1
-      && (portrait || (canvas.width / canvas.height <= 4 / 3 + .01 && Math.abs(host.x + host.width / 2 - page.width / 2) < 2));
+    return canvas && (portrait ? Math.abs(host.width - canvas.width) < 1 && Math.abs(host.height - canvas.height) < 1
+      : Math.abs(canvas.width / canvas.height - 9 / 16) < .001);
   }, portrait);
   const result = await page.evaluate(() => {
     const game = window.__game, r = game.canvas.getBoundingClientRect(), host = document.getElementById('game').getBoundingClientRect();
@@ -89,7 +86,7 @@ try {
     const frame = await checkFrame(page, width < height);
     const uiFit = await page.evaluate(() => {
       const s = window.__game.scene.getScene('UIScene'), { width, height } = s.scale.gameSize;
-      const controls = [[s.portraitHit, 'topLeft'], [s.journalBtn.hit, 'topRight'], [s.menuBtn.hit, 'topRight'], [s.buttons.bag.bg, 'bottom']];
+      const controls = [[s.portraitHit, 'top'], [s.journalBtn.hit, 'top'], [s.menuBtn.hit, 'top'], [s.buttons.bag.bg, 'bottom']];
       return controls.every(([o, name]) => {
         const r = o.getBounds(), cam = s.viewport.cameras[name];
         return r.left - cam.scrollX >= 0 && r.right - cam.scrollX <= width && r.top - cam.scrollY >= 0 && r.bottom - cam.scrollY <= height;

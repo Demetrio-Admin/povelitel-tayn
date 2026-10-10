@@ -80,19 +80,15 @@ export class UIScene extends Phaser.Scene {
 
     // Keep authored coordinates and masks intact; only their camera anchors move on resize.
     if (this.viewport) {
-      const bottom = [this.ctx, ...Object.values(this.buttons).flatMap(b =>
+      const bottom = [this.bottomShade, this.ctx, ...Object.values(this.buttons).flatMap(b =>
         [b.glow, b.orb, b.bg, b.icon, b.cd, b.cdText, b.lock, b.text])].filter(Boolean);
-      // v0.37.1: on wide screens the hero card sits in the top-left corner, Journal and Menu in the top-right one.
-      const topLeft = [this.portraitGlow, this.portrait, this.portraitHit, this.syncDot,
+      const top = [this.topShade, this.portraitGlow, this.portrait, this.portraitHit, this.syncDot,
         this.levelText, this.xpCaption, this.coinIcon, this.coinText, this.sapphireIcon, this.sapphireText,
-        this.hpText, this.hpIcon, this.manaText, this.manaIcon, this.researchText, this.hpGlow, this.manaGlow,
+        this.hpText, this.hpIcon, this.manaText, this.manaIcon, this.researchText,
+        this.journalBtn.c, this.menuBtn.c, this.hpGlow, this.manaGlow, this.hintPlate,
         ...[this.xpBar, this.hpBar, this.manaBar].flatMap(b => [b.trough, b.fill, b.frame])].filter(Boolean);
       bottom.forEach(o => this.viewport.assign(o, 'bottom'));
-      topLeft.forEach(o => this.viewport.assign(o, 'topLeft'));
-      [this.journalBtn.c, this.menuBtn.c].forEach(o => this.viewport.assign(o, 'topRight'));
-      [this.hintPlate].filter(Boolean).forEach(o => this.viewport.assign(o, 'top'));
-      if (this.topShade) this.viewport.span(this.topShade, 'top');
-      if (this.bottomShade) this.viewport.span(this.bottomShade, 'bottom');
+      top.forEach(o => this.viewport.assign(o, 'top'));
     }
 
     this.controls = new InputController(this, bus, services.input, {
@@ -817,7 +813,7 @@ export class UIScene extends Phaser.Scene {
 
   levelFx() {
     const r = this.add.image(UI.hud.portraitX, UI.hud.portraitY, 'fx_ring').setTint(COLORS.gold).setBlendMode('ADD').setScale(0.4).setDepth(8000);
-    this.viewport?.assign(r, 'topLeft');
+    this.viewport?.assign(r, 'top');
     this.tweens.add({ targets: r, scale: 3, alpha: 0, duration: 800, ease: 'Quad.easeOut', onComplete: () => r.destroy() });
     this.tweens.add({ targets: this.levelText, scale: { from: 1.6, to: 1 }, duration: 500, ease: 'Back.easeOut' });
   }

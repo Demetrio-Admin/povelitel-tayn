@@ -13,3 +13,13 @@
     box-shadow: 0 0 44px 18px rgba(10, 15, 12, 0.56);
   }
 }
+
+/* v0.37.1: landscape screens (desktop full screen) show a wider map instead of a narrow portrait strip.
+   The game area grows up to 4:3 (MAX_LANDSCAPE_ASPECT in ui/viewport.js); the painted surround fills the rest. */
+html #game {
+  --game-avail-w: calc(var(--viewport-width, 100vw) - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  --game-avail-h: calc(var(--viewport-height, 100dvh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  --game-w: min(var(--game-avail-w), calc(var(--game-avail-h) * 4 / 3));
+  width: var(--game-w);
+  left: calc(var(--viewport-left, 0px) + env(safe-area-inset-left, 0px) + (var(--game-avail-w) - var(--game-w)) / 2);
+}

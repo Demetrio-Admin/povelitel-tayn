@@ -99,10 +99,10 @@ export class LivingWorld {
     this.interiors = ZONES.filter(z => z.interior);
   }
 
-  /** Запуск. В редакторе и вне леса Мирры не включается. */
+  /** Forest and outdoor town share the same light ambient animations. */
   start(settings) {
     const s = this.scene;
-    if (this.running || s.loc?.id !== 'forest') return;
+    if (this.running || !['forest','city'].includes(s.loc?.id)) return;
     if (settings && settings.get('anim') === false) return;
     this.running = true;
     this.items = [];

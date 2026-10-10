@@ -20,8 +20,11 @@ function signedArea(poly) {
   return a / 2;
 }
 
-function pattern(ctx, img, fallback) {
-  try { if (img) { const p = ctx.createPattern(img, 'repeat'); if (p) return p; } } catch (e) { /* нет картинки — зальём цветом */ }
+function pattern(ctx, img, fallback, scale=1) {
+  try { if (img) { const p = ctx.createPattern(img, 'repeat'); if (p) {
+    if(scale!==1)p.setTransform({a:scale,b:0,c:0,d:scale,e:0,f:0});
+    return p;
+  } } } catch (e) { /* нет картинки — зальём цветом */ }
   return fallback;
 }
 
@@ -107,6 +110,10 @@ function paintRoadBase(ctx, r) {
   ctx.shadowBlur = 24;
   ctx.fillStyle = 'rgba(40,28,14,0.8)'; ctx.fill();
   ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
+  if(r.urban){
+    ctx.strokeStyle='rgba(62,53,40,0.8)';ctx.lineWidth=14;ctx.stroke();
+    ctx.restore();return;
+  }
   // утоптанный край — землистая кайма, переходящая в траву
   ctx.strokeStyle = r.kind === 'stone' ? 'rgba(48,56,38,0.55)' : 'rgba(78,58,32,0.5)';
   ctx.lineWidth = 16; ctx.stroke();
@@ -117,7 +124,7 @@ function paintRoadFill(ctx, r, img) {
   ctx.save();
   ctx.lineJoin = 'round';
   pathPoly(ctx, r.poly);
-  ctx.fillStyle = pattern(ctx, img, r.kind === 'stone' ? '#5d6068' : '#7b5a3a'); ctx.fill();
+  ctx.fillStyle = pattern(ctx, img, r.kind === 'stone' ? '#5d6068' : '#7b5a3a',r.tileScale||1); ctx.fill();
   ctx.restore();
 }
 
@@ -141,6 +148,12 @@ function paintRoadEdge(ctx, r, roads, chunk, index) {
   ctx.clip();
   ctx.lineJoin = 'round';
   const stone = r.kind === 'stone';
+  if(r.urban){
+    ctx.strokeStyle='#6e6250';ctx.lineWidth=19;ctx.stroke();
+    ctx.strokeStyle='#c4b391';ctx.lineWidth=13;ctx.stroke();
+    ctx.strokeStyle='rgba(240,220,176,0.55)';ctx.lineWidth=3;ctx.stroke();
+    ctx.restore();ctx.restore();return;
+  }
   ctx.strokeStyle = stone ? 'rgba(24,38,20,0.5)' : 'rgba(44,28,12,0.42)'; ctx.lineWidth = 22; ctx.stroke();
   ctx.strokeStyle = stone ? 'rgba(14,22,12,0.5)' : 'rgba(30,18,8,0.4)'; ctx.lineWidth = 8; ctx.stroke();
   ctx.restore();
@@ -161,7 +174,7 @@ export function paintTerrainChunk(ctx, chunk, terrain, imgs = {}) {
   roads.forEach(([r]) => paintRoadBase(ctx, r));
   const joined = roads.map(([r]) => r);
   roads.forEach(([r, i]) => {
-    paintRoadFill(ctx, r, r.kind === 'stone' ? imgs.stone : imgs.dirt);
+    paintRoadFill(ctx, r, imgs[r.texture] || (r.kind === 'stone' ? imgs.stone : imgs.dirt));
     if (!r.seamless) paintRoadEdge(ctx, r, joined, chunk, i);
   });
   roads.forEach(([r, i]) => { if (r.seamless) paintRoadEdge(ctx, r, joined, chunk, i); });

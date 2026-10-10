@@ -1,0 +1,3194 @@
+{
+  "schema": "witch-city-art-handoff-v1",
+  "status": "approved-style-production-art; integrated in runtime v0.36.2",
+  "coordinateAuthority": "src/config/city.plan.js; generated overview is an art reference, not collision geometry",
+  "worldRect": {
+    "x": 6288,
+    "y": 600,
+    "w": 2232,
+    "h": 2592
+  },
+  "overviewViewBox": {
+    "x": 0,
+    "y": 0,
+    "w": 2232,
+    "h": 2592
+  },
+  "style": "Разноцветный ведьминский город; палитра Леса Мирры; ровные улицы с плавными поворотами",
+  "buildings": [
+    {
+      "id": "north_bay",
+      "name": "Северный дом",
+      "x": 7056,
+      "y": 660,
+      "w": 324,
+      "h": 252,
+      "door": {
+        "x": 7218,
+        "y": 912
+      },
+      "requires": null,
+      "number": 1,
+      "mapPosition": {
+        "x": 768,
+        "y": 60
+      },
+      "mapDoor": {
+        "x": 930,
+        "y": 312
+      },
+      "palette": {
+        "roof": "#774b65",
+        "facade": "#d4ad84",
+        "roofName": "винная",
+        "facadeName": "абрикосовый"
+      },
+      "roomId": null,
+      "clearApproach": {
+        "radius": 110,
+        "returnOffsetY": 100
+      },
+      "exteriorTexture": "city_final_north_bay_exterior"
+    },
+    {
+      "id": "north_workshop",
+      "name": "Дом с мастерской",
+      "x": 7860,
+      "y": 660,
+      "w": 336,
+      "h": 252,
+      "door": {
+        "x": 8028,
+        "y": 912
+      },
+      "requires": null,
+      "number": 2,
+      "mapPosition": {
+        "x": 1572,
+        "y": 60
+      },
+      "mapDoor": {
+        "x": 1740,
+        "y": 312
+      },
+      "palette": {
+        "roof": "#9b5948",
+        "facade": "#c8b27b",
+        "roofName": "терракотовая",
+        "facadeName": "охристый"
+      },
+      "roomId": null,
+      "clearApproach": {
+        "radius": 110,
+        "returnOffsetY": 100
+      },
+      "exteriorTexture": "city_final_north_workshop_exterior"
+    },
+    {
+      "id": "cellar",
+      "name": "Дом с погребом",
+      "x": 7056,
+      "y": 1116,
+      "w": 324,
+      "h": 222,
+      "door": {
+        "x": 7218,
+        "y": 1338
+      },
+      "requires": "ch2_rescue_cellar",
+      "number": 3,
+      "mapPosition": {
+        "x": 768,
+        "y": 516
+      },
+      "mapDoor": {
+        "x": 930,
+        "y": 738
+      },
+      "palette": {
+        "roof": "#406c69",
+        "facade": "#a0ae88",
+        "roofName": "сине-зелёная",
+        "facadeName": "шалфейный"
+      },
+      "roomId": "city_cellar",
+      "clearApproach": {
+        "radius": 110,
+        "returnOffsetY": 100
+      },
+      "exteriorTexture": "city_final_cellar_exterior"
+    },
+    {
+      "id": "rescue",
+      "name": "Дом за ледяной дверью",
+      "x": 7860,
+      "y": 1116,
+      "w": 336,
+      "h": 222,
+      "door": {
+        "x": 8028,
+        "y": 1338
+      },
+      "requires": "ch2_rescue_door",
+      "number": 4,
+      "mapPosition": {
+        "x": 1572,
+        "y": 516
+      },
+      "mapDoor": {
+        "x": 1740,
+        "y": 738
+      },
+      "palette": {
+        "roof": "#754752",
+        "facade": "#ddd1ae",
+        "roofName": "бордовая",
+        "facadeName": "кремовый"
+      },
+      "roomId": "city_rescue",
+      "clearApproach": {
+        "radius": 110,
+        "returnOffsetY": 100
+      },
+      "exteriorTexture": "city_final_rescue_exterior"
+    },
+    {
+      "id": "archive",
+      "name": "Городской Архив",
+      "x": 7056,
+      "y": 1584,
+      "w": 324,
+      "h": 252,
+      "door": {
+        "x": 7218,
+        "y": 1836
+      },
+      "requires": null,
+      "number": 5,
+      "mapPosition": {
+        "x": 768,
+        "y": 984
+      },
+      "mapDoor": {
+        "x": 930,
+        "y": 1236
+      },
+      "palette": {
+        "roof": "#685074",
+        "facade": "#a8b28e",
+        "roofName": "сливовая",
+        "facadeName": "шалфейный"
+      },
+      "roomId": "city_archive",
+      "clearApproach": {
+        "radius": 110,
+        "returnOffsetY": 100
+      },
+      "exteriorTexture": "city_final_archive_exterior"
+    },
+    {
+      "id": "society",
+      "name": "Общество Преображения",
+      "x": 7860,
+      "y": 1584,
+      "w": 336,
+      "h": 252,
+      "door": {
+        "x": 8028,
+        "y": 1836
+      },
+      "requires": null,
+      "number": 6,
+      "mapPosition": {
+        "x": 1572,
+        "y": 984
+      },
+      "mapDoor": {
+        "x": 1740,
+        "y": 1236
+      },
+      "palette": {
+        "roof": "#3f676f",
+        "facade": "#a7b7b4",
+        "roofName": "петролевая",
+        "facadeName": "серо-голубой"
+      },
+      "roomId": "city_society",
+      "clearApproach": {
+        "radius": 110,
+        "returnOffsetY": 100
+      },
+      "exteriorTexture": "city_final_society_exterior"
+    },
+    {
+      "id": "bank",
+      "name": "Городской Банк",
+      "x": 7896,
+      "y": 1974,
+      "w": 300,
+      "h": 240,
+      "door": {
+        "x": 8046,
+        "y": 2214
+      },
+      "requires": null,
+      "number": 7,
+      "mapPosition": {
+        "x": 1608,
+        "y": 1374
+      },
+      "mapDoor": {
+        "x": 1758,
+        "y": 1614
+      },
+      "palette": {
+        "roof": "#4d607c",
+        "facade": "#bdb6c5",
+        "roofName": "сланцево-синяя",
+        "facadeName": "светло-лавандовый"
+      },
+      "roomId": "city_bank",
+      "clearApproach": {
+        "radius": 110,
+        "returnOffsetY": 100
+      },
+      "exteriorTexture": "city_final_bank_exterior"
+    },
+    {
+      "id": "duel",
+      "name": "Магическая Дуэль",
+      "x": 7020,
+      "y": 2364,
+      "w": 360,
+      "h": 252,
+      "door": {
+        "x": 7200,
+        "y": 2616
+      },
+      "requires": "ch2_fin_seal",
+      "number": 8,
+      "mapPosition": {
+        "x": 732,
+        "y": 1764
+      },
+      "mapDoor": {
+        "x": 912,
+        "y": 2016
+      },
+      "palette": {
+        "roof": "#6b507e",
+        "facade": "#bf967d",
+        "roofName": "тёмно-фиолетовая",
+        "facadeName": "тёплый кирпич"
+      },
+      "roomId": "city_duel",
+      "clearApproach": {
+        "radius": 110,
+        "returnOffsetY": 100
+      },
+      "exteriorTexture": "city_final_duel_exterior"
+    },
+    {
+      "id": "coven",
+      "name": "Дом Ковенов",
+      "x": 7860,
+      "y": 2364,
+      "w": 336,
+      "h": 252,
+      "door": {
+        "x": 8076,
+        "y": 2616
+      },
+      "requires": null,
+      "number": 9,
+      "mapPosition": {
+        "x": 1572,
+        "y": 1764
+      },
+      "mapDoor": {
+        "x": 1788,
+        "y": 2016
+      },
+      "palette": {
+        "roof": "#805058",
+        "facade": "#cdb885",
+        "roofName": "винная",
+        "facadeName": "светлая охра"
+      },
+      "roomId": "city_coven",
+      "clearApproach": {
+        "radius": 110,
+        "returnOffsetY": 100
+      },
+      "exteriorTexture": "city_final_coven_exterior"
+    },
+    {
+      "id": "warehouse_a",
+      "name": "Склад А",
+      "x": 7020,
+      "y": 2826,
+      "w": 360,
+      "h": 204,
+      "door": {
+        "x": 7200,
+        "y": 3030
+      },
+      "requires": null,
+      "number": 10,
+      "mapPosition": {
+        "x": 732,
+        "y": 2226
+      },
+      "mapDoor": {
+        "x": 912,
+        "y": 2430
+      },
+      "palette": {
+        "roof": "#50694d",
+        "facade": "#c5b893",
+        "roofName": "мохово-зелёная",
+        "facadeName": "песочный"
+      },
+      "roomId": "city_warehouse",
+      "clearApproach": {
+        "radius": 110,
+        "returnOffsetY": 100
+      },
+      "exteriorTexture": "city_final_warehouse_a_exterior"
+    },
+    {
+      "id": "warehouse_b",
+      "name": "Склад Б",
+      "x": 7860,
+      "y": 2826,
+      "w": 336,
+      "h": 204,
+      "door": {
+        "x": 8028,
+        "y": 3030
+      },
+      "requires": null,
+      "number": 11,
+      "mapPosition": {
+        "x": 1572,
+        "y": 2226
+      },
+      "mapDoor": {
+        "x": 1740,
+        "y": 2430
+      },
+      "palette": {
+        "roof": "#506774",
+        "facade": "#c39b81",
+        "roofName": "сине-серая",
+        "facadeName": "приглушённая терракота"
+      },
+      "roomId": "city_warehouse",
+      "clearApproach": {
+        "radius": 110,
+        "returnOffsetY": 100
+      },
+      "exteriorTexture": "city_final_warehouse_b_exterior"
+    },
+    {
+      "id": "lab",
+      "name": "Тайная лаборатория",
+      "x": 6300,
+      "y": 2352,
+      "w": 228,
+      "h": 228,
+      "door": {
+        "x": 6414,
+        "y": 2580
+      },
+      "requires": "ch2_lab_open",
+      "number": 12,
+      "mapPosition": {
+        "x": 12,
+        "y": 1752
+      },
+      "mapDoor": {
+        "x": 126,
+        "y": 1980
+      },
+      "palette": {
+        "roof": "#615769",
+        "facade": "#a9aa8c",
+        "roofName": "дымчато-сливовая",
+        "facadeName": "серо-оливковый"
+      },
+      "roomId": "city_lab",
+      "clearApproach": {
+        "radius": 110,
+        "returnOffsetY": 100
+      },
+      "exteriorTexture": "city_final_lab_exterior"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "city_bank",
+      "key": "bank",
+      "name": "Городской Банк",
+      "interior": true,
+      "parent": "city",
+      "rect": {
+        "x": 10200,
+        "y": 200,
+        "w": 720,
+        "h": 1440
+      },
+      "requires": null,
+      "lockedText": "Сначала завершите действие у входа.",
+      "arrival": {
+        "x": 10560,
+        "y": 1460
+      },
+      "exit": "room_exit_bank",
+      "entrances": [
+        "door_bank"
+      ],
+      "extraTop": 120,
+      "extraBottom": 180
+    },
+    {
+      "id": "city_archive",
+      "key": "archive",
+      "name": "Городской Архив",
+      "interior": true,
+      "parent": "city",
+      "rect": {
+        "x": 11800,
+        "y": 200,
+        "w": 900,
+        "h": 1500
+      },
+      "requires": null,
+      "lockedText": "Сначала завершите действие у входа.",
+      "arrival": {
+        "x": 12250,
+        "y": 1520
+      },
+      "exit": "room_exit_archive",
+      "entrances": [
+        "door_archive"
+      ],
+      "extraTop": 120,
+      "extraBottom": 180
+    },
+    {
+      "id": "city_society",
+      "key": "society",
+      "name": "Общество Преображения",
+      "interior": true,
+      "parent": "city",
+      "rect": {
+        "x": 13400,
+        "y": 200,
+        "w": 900,
+        "h": 1320
+      },
+      "requires": null,
+      "lockedText": "Сначала завершите действие у входа.",
+      "arrival": {
+        "x": 13850,
+        "y": 1340
+      },
+      "exit": "room_exit_society",
+      "entrances": [
+        "door_society"
+      ],
+      "extraTop": 120,
+      "extraBottom": 180
+    },
+    {
+      "id": "city_lab",
+      "key": "lab",
+      "name": "Тайная лаборатория",
+      "interior": true,
+      "parent": "city",
+      "rect": {
+        "x": 10200,
+        "y": 2600,
+        "w": 960,
+        "h": 2160
+      },
+      "requires": "ch2_lab_open",
+      "lockedText": "Сначала завершите действие у входа.",
+      "arrival": {
+        "x": 10680,
+        "y": 4580
+      },
+      "exit": "room_exit_lab",
+      "entrances": [
+        "door_lab"
+      ],
+      "extraTop": 120,
+      "extraBottom": 180
+    },
+    {
+      "id": "city_duel",
+      "key": "duel",
+      "name": "Магическая Дуэль",
+      "interior": true,
+      "parent": "city",
+      "rect": {
+        "x": 11800,
+        "y": 2600,
+        "w": 1080,
+        "h": 1680
+      },
+      "requires": "ch2_fin_seal",
+      "lockedText": "Сначала завершите действие у входа.",
+      "arrival": {
+        "x": 12340,
+        "y": 4100
+      },
+      "exit": "room_exit_duel",
+      "entrances": [
+        "door_duel"
+      ],
+      "extraTop": 120,
+      "extraBottom": 180
+    },
+    {
+      "id": "city_coven",
+      "key": "coven",
+      "name": "Дом Ковенов",
+      "interior": true,
+      "parent": "city",
+      "rect": {
+        "x": 13400,
+        "y": 2600,
+        "w": 840,
+        "h": 1440
+      },
+      "requires": null,
+      "lockedText": "Сначала завершите действие у входа.",
+      "arrival": {
+        "x": 13820,
+        "y": 3860
+      },
+      "exit": "room_exit_coven",
+      "entrances": [
+        "door_coven"
+      ],
+      "extraTop": 120,
+      "extraBottom": 180
+    },
+    {
+      "id": "city_warehouse",
+      "key": "warehouse",
+      "name": "Складской комплекс",
+      "interior": true,
+      "parent": "city",
+      "rect": {
+        "x": 10200,
+        "y": 5200,
+        "w": 1440,
+        "h": 1680
+      },
+      "requires": null,
+      "lockedText": "Сначала завершите действие у входа.",
+      "arrival": {
+        "x": 10920,
+        "y": 6700
+      },
+      "exit": "room_exit_warehouse_a",
+      "entrances": [
+        "door_warehouse_a",
+        "door_warehouse_b"
+      ],
+      "extraTop": 120,
+      "extraBottom": 180
+    },
+    {
+      "id": "city_cellar",
+      "key": "cellar",
+      "name": "Дом с погребом",
+      "interior": true,
+      "parent": "city",
+      "rect": {
+        "x": 11800,
+        "y": 5200,
+        "w": 720,
+        "h": 1440
+      },
+      "requires": "ch2_rescue_cellar",
+      "lockedText": "Сначала завершите действие у входа.",
+      "arrival": {
+        "x": 12160,
+        "y": 6460
+      },
+      "exit": "room_exit_cellar",
+      "entrances": [
+        "door_cellar"
+      ],
+      "extraTop": 120,
+      "extraBottom": 180
+    },
+    {
+      "id": "city_rescue",
+      "key": "rescue",
+      "name": "Дом за ледяной дверью",
+      "interior": true,
+      "parent": "city",
+      "rect": {
+        "x": 13400,
+        "y": 5200,
+        "w": 720,
+        "h": 1440
+      },
+      "requires": "ch2_rescue_door",
+      "lockedText": "Сначала завершите действие у входа.",
+      "arrival": {
+        "x": 13760,
+        "y": 6460
+      },
+      "exit": "room_exit_rescue",
+      "entrances": [
+        "door_rescue"
+      ],
+      "extraTop": 120,
+      "extraBottom": 180
+    }
+  ],
+  "portals": [
+    {
+      "id": "door_cellar",
+      "kind": "room_door",
+      "x": 7218,
+      "y": 1366,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 12160,
+        "y": 6460
+      },
+      "room": "city_cellar",
+      "hint": "Войти: Дом с погребом",
+      "requiresEvent": "ch2_rescue_cellar"
+    },
+    {
+      "id": "room_exit_cellar",
+      "kind": "room_door",
+      "x": 12160,
+      "y": 6585,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 7218,
+        "y": 1438
+      },
+      "room": "city",
+      "hint": "Выйти: Дом с погребом"
+    },
+    {
+      "id": "door_rescue",
+      "kind": "room_door",
+      "x": 8028,
+      "y": 1366,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 13760,
+        "y": 6460
+      },
+      "room": "city_rescue",
+      "hint": "Войти: Дом за ледяной дверью",
+      "requiresEvent": "ch2_rescue_door"
+    },
+    {
+      "id": "room_exit_rescue",
+      "kind": "room_door",
+      "x": 13760,
+      "y": 6585,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 8028,
+        "y": 1438
+      },
+      "room": "city",
+      "hint": "Выйти: Дом за ледяной дверью"
+    },
+    {
+      "id": "door_archive",
+      "kind": "room_door",
+      "x": 7218,
+      "y": 1864,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 12250,
+        "y": 1520
+      },
+      "room": "city_archive",
+      "hint": "Войти: Городской Архив",
+      "requiresEvent": null
+    },
+    {
+      "id": "room_exit_archive",
+      "kind": "room_door",
+      "x": 12250,
+      "y": 1645,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 7218,
+        "y": 1936
+      },
+      "room": "city",
+      "hint": "Выйти: Городской Архив"
+    },
+    {
+      "id": "door_society",
+      "kind": "room_door",
+      "x": 8028,
+      "y": 1864,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 13850,
+        "y": 1340
+      },
+      "room": "city_society",
+      "hint": "Войти: Общество Преображения",
+      "requiresEvent": null
+    },
+    {
+      "id": "room_exit_society",
+      "kind": "room_door",
+      "x": 13850,
+      "y": 1465,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 8028,
+        "y": 1936
+      },
+      "room": "city",
+      "hint": "Выйти: Общество Преображения"
+    },
+    {
+      "id": "door_bank",
+      "kind": "room_door",
+      "x": 8046,
+      "y": 2242,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 10560,
+        "y": 1460
+      },
+      "room": "city_bank",
+      "hint": "Войти: Городской Банк",
+      "requiresEvent": null
+    },
+    {
+      "id": "room_exit_bank",
+      "kind": "room_door",
+      "x": 10560,
+      "y": 1585,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 8046,
+        "y": 2314
+      },
+      "room": "city",
+      "hint": "Выйти: Городской Банк"
+    },
+    {
+      "id": "door_duel",
+      "kind": "room_door",
+      "x": 7200,
+      "y": 2644,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 12340,
+        "y": 4100
+      },
+      "room": "city_duel",
+      "hint": "Войти: Магическая Дуэль",
+      "requiresEvent": "ch2_fin_seal"
+    },
+    {
+      "id": "room_exit_duel",
+      "kind": "room_door",
+      "x": 12340,
+      "y": 4225,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 7200,
+        "y": 2716
+      },
+      "room": "city",
+      "hint": "Выйти: Магическая Дуэль"
+    },
+    {
+      "id": "door_coven",
+      "kind": "room_door",
+      "x": 8076,
+      "y": 2644,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 13820,
+        "y": 3860
+      },
+      "room": "city_coven",
+      "hint": "Войти: Дом Ковенов",
+      "requiresEvent": null
+    },
+    {
+      "id": "room_exit_coven",
+      "kind": "room_door",
+      "x": 13820,
+      "y": 3985,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 8076,
+        "y": 2716
+      },
+      "room": "city",
+      "hint": "Выйти: Дом Ковенов"
+    },
+    {
+      "id": "door_warehouse_a",
+      "kind": "room_door",
+      "x": 7200,
+      "y": 3058,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 10500,
+        "y": 6700
+      },
+      "room": "city_warehouse",
+      "hint": "Войти: Склад А",
+      "requiresEvent": null
+    },
+    {
+      "id": "room_exit_warehouse_a",
+      "kind": "room_door",
+      "x": 10500,
+      "y": 6825,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 7200,
+        "y": 3130
+      },
+      "room": "city",
+      "hint": "Выйти: Склад А"
+    },
+    {
+      "id": "door_warehouse_b",
+      "kind": "room_door",
+      "x": 8028,
+      "y": 3058,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 11340,
+        "y": 6700
+      },
+      "room": "city_warehouse",
+      "hint": "Войти: Склад Б",
+      "requiresEvent": null
+    },
+    {
+      "id": "room_exit_warehouse_b",
+      "kind": "room_door",
+      "x": 11340,
+      "y": 6825,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 8028,
+        "y": 3130
+      },
+      "room": "city",
+      "hint": "Выйти: Склад Б"
+    },
+    {
+      "id": "door_lab",
+      "kind": "room_door",
+      "x": 6414,
+      "y": 2608,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 10680,
+        "y": 4580
+      },
+      "room": "city_lab",
+      "hint": "Войти: Тайная лаборатория",
+      "requiresEvent": "ch2_lab_open"
+    },
+    {
+      "id": "room_exit_lab",
+      "kind": "room_door",
+      "x": 10680,
+      "y": 4705,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 6414,
+        "y": 2680
+      },
+      "room": "city",
+      "hint": "Выйти: Тайная лаборатория"
+    }
+  ],
+  "roads": [
+    {
+      "id": "city_street_avenue",
+      "kind": "stone",
+      "w": 200,
+      "pts": [
+        [
+          7620,
+          648
+        ],
+        [
+          7602,
+          948
+        ],
+        [
+          7620,
+          1068
+        ],
+        [
+          7620,
+          1512
+        ],
+        [
+          7596,
+          1890
+        ],
+        [
+          7644,
+          2280
+        ],
+        [
+          7608,
+          2676
+        ],
+        [
+          7620,
+          3132
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_entry",
+      "kind": "stone",
+      "w": 150,
+      "pts": [
+        [
+          6306,
+          2106
+        ],
+        [
+          6462,
+          2094
+        ],
+        [
+          6648,
+          2118
+        ],
+        [
+          6930,
+          2100
+        ],
+        [
+          7200,
+          2118
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_square",
+      "kind": "stone",
+      "w": 330,
+      "pts": [
+        [
+          7104,
+          2136
+        ],
+        [
+          7320,
+          2118
+        ],
+        [
+          7638,
+          2136
+        ],
+        [
+          8100,
+          2148
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_lab",
+      "kind": "dirt",
+      "w": 100,
+      "pts": [
+        [
+          6630,
+          2136
+        ],
+        [
+          6612,
+          2322
+        ],
+        [
+          6600,
+          2520
+        ],
+        [
+          6414,
+          2622
+        ]
+      ],
+      "seamless": true
+    },
+    {
+      "id": "city_street_cross_0",
+      "kind": "stone",
+      "w": 120,
+      "pts": [
+        [
+          7104,
+          960
+        ],
+        [
+          7320,
+          945
+        ],
+        [
+          7608,
+          972
+        ],
+        [
+          7980,
+          954
+        ],
+        [
+          8184,
+          966
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_cross_1",
+      "kind": "stone",
+      "w": 120,
+      "pts": [
+        [
+          7104,
+          1386
+        ],
+        [
+          7320,
+          1371
+        ],
+        [
+          7608,
+          1398
+        ],
+        [
+          7980,
+          1380
+        ],
+        [
+          8184,
+          1392
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_cross_2",
+      "kind": "stone",
+      "w": 120,
+      "pts": [
+        [
+          7104,
+          1884
+        ],
+        [
+          7320,
+          1869
+        ],
+        [
+          7608,
+          1896
+        ],
+        [
+          7980,
+          1878
+        ],
+        [
+          8184,
+          1890
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_cross_3",
+      "kind": "stone",
+      "w": 120,
+      "pts": [
+        [
+          7104,
+          2298
+        ],
+        [
+          7320,
+          2283
+        ],
+        [
+          7608,
+          2310
+        ],
+        [
+          7980,
+          2292
+        ],
+        [
+          8184,
+          2304
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_cross_4",
+      "kind": "stone",
+      "w": 120,
+      "pts": [
+        [
+          7104,
+          2664
+        ],
+        [
+          7320,
+          2649
+        ],
+        [
+          7608,
+          2676
+        ],
+        [
+          7980,
+          2658
+        ],
+        [
+          8184,
+          2670
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_cross_5",
+      "kind": "stone",
+      "w": 120,
+      "pts": [
+        [
+          7104,
+          3078
+        ],
+        [
+          7320,
+          3063
+        ],
+        [
+          7608,
+          3090
+        ],
+        [
+          7980,
+          3072
+        ],
+        [
+          8184,
+          3084
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_forecourt_north_bay",
+      "kind": "stone",
+      "w": 85,
+      "pts": [
+        [
+          7104.6,
+          936
+        ],
+        [
+          7331.4,
+          936
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_forecourt_north_workshop",
+      "kind": "stone",
+      "w": 85,
+      "pts": [
+        [
+          7910.4,
+          936
+        ],
+        [
+          8145.6,
+          936
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_forecourt_cellar",
+      "kind": "stone",
+      "w": 85,
+      "pts": [
+        [
+          7104.6,
+          1362
+        ],
+        [
+          7331.4,
+          1362
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_forecourt_rescue",
+      "kind": "stone",
+      "w": 85,
+      "pts": [
+        [
+          7910.4,
+          1362
+        ],
+        [
+          8145.6,
+          1362
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_forecourt_archive",
+      "kind": "stone",
+      "w": 85,
+      "pts": [
+        [
+          7104.6,
+          1860
+        ],
+        [
+          7331.4,
+          1860
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_forecourt_society",
+      "kind": "stone",
+      "w": 85,
+      "pts": [
+        [
+          7910.4,
+          1860
+        ],
+        [
+          8145.6,
+          1860
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_forecourt_bank",
+      "kind": "stone",
+      "w": 85,
+      "pts": [
+        [
+          7941,
+          2238
+        ],
+        [
+          8151,
+          2238
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_forecourt_duel",
+      "kind": "stone",
+      "w": 85,
+      "pts": [
+        [
+          7074,
+          2640
+        ],
+        [
+          7326,
+          2640
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_forecourt_coven",
+      "kind": "stone",
+      "w": 85,
+      "pts": [
+        [
+          7958.4,
+          2640
+        ],
+        [
+          8193.6,
+          2640
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_forecourt_warehouse_a",
+      "kind": "stone",
+      "w": 85,
+      "pts": [
+        [
+          7074,
+          3054
+        ],
+        [
+          7326,
+          3054
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    },
+    {
+      "id": "city_street_forecourt_warehouse_b",
+      "kind": "stone",
+      "w": 85,
+      "pts": [
+        [
+          7910.4,
+          3054
+        ],
+        [
+          8145.6,
+          3054
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_final_paving",
+      "tileScale": 0.12,
+      "urban": true
+    }
+  ],
+  "interactives": [
+    {
+      "id": "sapphire_city_cache_1",
+      "kind": "chest",
+      "x": 7158,
+      "y": 2226,
+      "texture": "chest_01",
+      "radius": 100,
+      "collide": {
+        "w": 50,
+        "h": 24
+      },
+      "requiresEvent": "ch2_city_arrived",
+      "reward": {
+        "sapphires": 10
+      },
+      "hint": "Тайник у площади",
+      "mapPosition": {
+        "x": 870,
+        "y": 1626
+      }
+    },
+    {
+      "id": "sapphire_city_cache_2",
+      "kind": "chest",
+      "x": 7944,
+      "y": 2682,
+      "texture": "chest_01",
+      "radius": 100,
+      "collide": {
+        "w": 50,
+        "h": 24
+      },
+      "requiresEvent": "ch2_quarter_cleared",
+      "reward": {
+        "sapphires": 10
+      },
+      "hint": "Тайник у старой ограды",
+      "mapPosition": {
+        "x": 1656,
+        "y": 2082
+      }
+    },
+    {
+      "id": "exit_city",
+      "kind": "exit",
+      "x": 6330,
+      "y": 2106,
+      "texture": "signpost_01",
+      "collide": {
+        "w": 24,
+        "h": 10
+      },
+      "radius": 110,
+      "hint": "Карта мира",
+      "mapPosition": {
+        "x": 42,
+        "y": 1506
+      }
+    },
+    {
+      "id": "frostherb_r1",
+      "kind": "gather",
+      "res": "frost_herb",
+      "amount": 1,
+      "respawnSec": 240,
+      "x": 6432,
+      "y": 2028,
+      "texture": "city_frost_herb",
+      "radius": 90,
+      "requiresEvent": "ch2_start",
+      "mapPosition": {
+        "x": 144,
+        "y": 1428
+      }
+    },
+    {
+      "id": "frostherb_r2",
+      "kind": "gather",
+      "res": "frost_herb",
+      "amount": 1,
+      "respawnSec": 240,
+      "x": 6420,
+      "y": 2280,
+      "texture": "city_frost_herb",
+      "radius": 90,
+      "requiresEvent": "ch2_start",
+      "mapPosition": {
+        "x": 132,
+        "y": 1680
+      }
+    },
+    {
+      "id": "resin_r1",
+      "kind": "gather",
+      "res": "tree_resin",
+      "amount": 1,
+      "respawnSec": 240,
+      "x": 6324,
+      "y": 2184,
+      "texture": "resin_log_01",
+      "radius": 90,
+      "mapPosition": {
+        "x": 36,
+        "y": 1584
+      }
+    },
+    {
+      "id": "city_board",
+      "kind": "board",
+      "x": 7104,
+      "y": 2058,
+      "texture": "notice_board_01",
+      "collide": {
+        "w": 80,
+        "h": 20
+      },
+      "radius": 120,
+      "hint": "Доска поручений",
+      "mapPosition": {
+        "x": 816,
+        "y": 1458
+      }
+    },
+    {
+      "id": "npc_ilaria",
+      "kind": "npc",
+      "npc": "ilaria",
+      "x": 12060,
+      "y": 1250,
+      "texture": "npc_ilaria",
+      "collide": {
+        "w": 50,
+        "h": 24
+      },
+      "radius": 140,
+      "mapPosition": null
+    },
+    {
+      "id": "npc_merchant",
+      "kind": "npc",
+      "npc": "merchant",
+      "x": 8238,
+      "y": 2412,
+      "texture": "npc_merchant",
+      "collide": {
+        "w": 50,
+        "h": 24
+      },
+      "radius": 140,
+      "mapPosition": {
+        "x": 1950,
+        "y": 1812
+      }
+    },
+    {
+      "id": "npc_banker",
+      "kind": "npc",
+      "npc": "banker",
+      "x": 10560,
+      "y": 550,
+      "texture": "npc_banker",
+      "collide": {
+        "w": 50,
+        "h": 24
+      },
+      "radius": 180,
+      "approach": {
+        "x": 10560,
+        "y": 710
+      },
+      "mapPosition": null
+    },
+    {
+      "id": "npc_duelist",
+      "kind": "npc",
+      "npc": "duelist",
+      "x": 12060,
+      "y": 3880,
+      "texture": "npc_duelist",
+      "collide": {
+        "w": 50,
+        "h": 24
+      },
+      "radius": 140,
+      "mapPosition": null
+    },
+    {
+      "id": "plaza_trace",
+      "kind": "seal_sigil",
+      "x": 7644,
+      "y": 2244,
+      "texture": "city_frost_trace",
+      "litTexture": "city_frost_trace",
+      "litTint": 15259391,
+      "radius": 120,
+      "requiresEvent": "ch2_met_ilaria",
+      "doneEvent": "ch2_trace_astral",
+      "hint": "Иней на камнях",
+      "lockedText": "Иней лёг узором — будто кто-то выжег его магией. Без Астрала не разобрать.",
+      "doneTitle": "След проявился",
+      "doneText": "Астрал проявил под инеем знаки: руническая пыль, следы лунных осколков — и клеймо мастерской, которого вы никогда не видели.",
+      "doneButton": "Дальше",
+      "mapPosition": {
+        "x": 1356,
+        "y": 1644
+      }
+    },
+    {
+      "id": "plaza_debris",
+      "kind": "telekinesis",
+      "mode": "push",
+      "weight": "light",
+      "x": 7878,
+      "y": 2022,
+      "texture": "city_crate",
+      "collide": {
+        "w": 70,
+        "h": 30
+      },
+      "target": {
+        "x": 7926,
+        "y": 1998
+      },
+      "radius": 120,
+      "requiresEvent": "ch2_met_ilaria",
+      "doneEvent": "ch2_trace_debris",
+      "hint": "Разбитый ящик",
+      "hiddenReward": {
+        "spawnPickup": {
+          "item": "frost_herb",
+          "amount": 2
+        }
+      },
+      "mapPosition": {
+        "x": 1590,
+        "y": 1422
+      }
+    },
+    {
+      "id": "archive_document",
+      "kind": "seal_sigil",
+      "x": 12130,
+      "y": 916,
+      "elevated": 41,
+      "texture": "city_archive_document",
+      "litTexture": "city_archive_document",
+      "litTint": 15259391,
+      "radius": 110,
+      "requiresEvent": "ch2_trace_found",
+      "doneEvent": "ch2_archive_read",
+      "hint": "Старый документ",
+      "lockedText": "Пыльные папки о холодной магии. Илария скажет, что искать.",
+      "doneTitle": "Общество Преображения",
+      "doneText": "Под Астралом выцветшие строки проступили снова. Ледяная магия в этих краях редка — а недавно все записи о ней забрал исследователь Общества Преображения. Подпись: Северин Вейр.",
+      "doneButton": "К Обществу",
+      "mapPosition": null
+    },
+    {
+      "id": "npc_severin",
+      "kind": "npc",
+      "npc": "severin",
+      "x": 13760,
+      "y": 910,
+      "texture": "npc_severin",
+      "collide": {
+        "w": 50,
+        "h": 24
+      },
+      "radius": 140,
+      "hideEvent": "ch2_final_start",
+      "mapPosition": null
+    },
+    {
+      "id": "wh_cargo",
+      "kind": "telekinesis",
+      "mode": "push",
+      "weight": "medium",
+      "x": 11310,
+      "y": 5640,
+      "texture": "city_crate",
+      "collide": {
+        "w": 70,
+        "h": 30
+      },
+      "target": {
+        "x": 11390,
+        "y": 5610
+      },
+      "radius": 120,
+      "requiresEnemyDefeated": "wh_elite",
+      "doneEvent": "ch2_cargo_found",
+      "hint": "Ящики с грузом",
+      "hiddenReward": {
+        "spawnPickup": {
+          "item": "ice_crystal",
+          "amount": 1
+        }
+      },
+      "mapPosition": null
+    },
+    {
+      "id": "wh_equipment",
+      "kind": "seal_sigil",
+      "x": 10600,
+      "y": 5830,
+      "texture": "city_equipment",
+      "litTexture": "city_equipment",
+      "litTint": 15259391,
+      "radius": 110,
+      "requiresEvent": "ch2_cargo_found",
+      "doneEvent": "ch2_serials_read",
+      "hint": "Оборудование с клеймом",
+      "lockedText": "Ящик с инструментами под инеем. Сначала разберитесь со сборщиками.",
+      "doneTitle": "Списанное оборудование",
+      "doneText": "Под Астралом проступили серийные номера и клеймо Общества Преображения. Рядом — печать: «Списано». Полгода назад. Кто-то пользуется оборудованием, которого официально нет.",
+      "doneButton": "К Иларии",
+      "mapPosition": null
+    },
+    {
+      "id": "frost_barrier",
+      "kind": "fire",
+      "x": 7620,
+      "y": 1512,
+      "texture": "ice_wall_01",
+      "collide": {
+        "w": 324,
+        "h": 24
+      },
+      "radius": 130,
+      "waitEvent": "ch2_frost_wave",
+      "destroyEvent": "ch2_quarter_open",
+      "burnSec": 1.6,
+      "hint": "Ледяная стена",
+      "lockedText": "Улицу к северному кварталу перегородила стена льда. Город запретил туда ходить — пока.",
+      "doneText": "Лёд поплыл и осел. Путь в Замёрзший квартал открыт.",
+      "editorStyle": {
+        "w": 348,
+        "h": 120
+      },
+      "mapPosition": {
+        "x": 1332,
+        "y": 912
+      }
+    },
+    {
+      "id": "ice_construct",
+      "kind": "fire",
+      "x": 7458,
+      "y": 1410,
+      "texture": "ice_construct_01",
+      "collide": {
+        "w": 90,
+        "h": 30
+      },
+      "radius": 130,
+      "requiresEvent": "ch2_quarter_open",
+      "destroyEvent": "ch2_construct_unstable",
+      "burnSec": 1.4,
+      "hint": "Ледяная конструкция",
+      "doneText": "Конструкция треснула — и холод рванулся наружу! Кто-то в синем плаще встал между вами и вспышкой.",
+      "mapPosition": {
+        "x": 1170,
+        "y": 810
+      }
+    },
+    {
+      "id": "npc_nerys",
+      "kind": "npc",
+      "npc": "nerys",
+      "x": 7668,
+      "y": 1338,
+      "texture": "npc_nerys",
+      "collide": {
+        "w": 30,
+        "h": 14
+      },
+      "radius": 140,
+      "requiresEvent": "ch2_construct_unstable",
+      "hideEvent": "ch2_final_start",
+      "mapPosition": {
+        "x": 1380,
+        "y": 738
+      }
+    },
+    {
+      "id": "fq_door",
+      "kind": "seal_sigil",
+      "x": 8028,
+      "y": 1368,
+      "texture": "frozen_door_01",
+      "litTexture": "city_door_open",
+      "radius": 120,
+      "requiresEnemyDefeated": "fq_collector",
+      "doneEvent": "ch2_rescue_door",
+      "hint": "Обледеневшая дверь",
+      "lockedText": "За дверью кто-то стучит. Сначала — сборщик рядом.",
+      "doneTitle": "Люди за дверью",
+      "doneText": "Астрал показал узлы, на которых держится лёд. Нэрис разбила их одним касанием — и двое жителей вышли наружу, дрожа от холода.",
+      "doneButton": "Дальше",
+      "mapPosition": {
+        "x": 1740,
+        "y": 768
+      }
+    },
+    {
+      "id": "fq_cellar",
+      "kind": "telekinesis",
+      "mode": "push",
+      "weight": "medium",
+      "x": 7326,
+      "y": 1368,
+      "texture": "city_crate",
+      "collide": {
+        "w": 70,
+        "h": 30
+      },
+      "target": {
+        "x": 7290,
+        "y": 1410
+      },
+      "radius": 120,
+      "requiresEnemyDefeated": "fq_critter",
+      "doneEvent": "ch2_rescue_cellar",
+      "hint": "Ящики над погребом",
+      "hiddenReward": {
+        "spawnPickup": {
+          "item": "frost_herb",
+          "amount": 1
+        }
+      },
+      "mapPosition": {
+        "x": 1038,
+        "y": 768
+      }
+    },
+    {
+      "id": "fq_cauldron",
+      "kind": "alchemy",
+      "x": 7890,
+      "y": 1410,
+      "texture": "cauldron_01",
+      "collide": {
+        "w": 66,
+        "h": 26
+      },
+      "radius": 120,
+      "requiresEvent": "ch2_nerys_met",
+      "mapPosition": {
+        "x": 1602,
+        "y": 810
+      }
+    },
+    {
+      "id": "fq_water",
+      "kind": "ice",
+      "x": 7620,
+      "y": 1068,
+      "texture": "water_patch_01",
+      "frozenTexture": "ice_floor_01",
+      "walkable": true,
+      "collide": {
+        "w": 324,
+        "h": 24
+      },
+      "radius": 130,
+      "doneEvent": "ch2_water_frozen",
+      "hint": "Затопленный пролом",
+      "lockedText": "Вода из лопнувшей трубы залила пролом в ограде. Здесь пригодился бы Лёд.",
+      "doneText": "Вода схватилась льдом — можно пройти.",
+      "editorStyle": {
+        "s": 1.21
+      },
+      "mapPosition": {
+        "x": 1332,
+        "y": 468
+      }
+    },
+    {
+      "id": "lab_seal",
+      "kind": "ice",
+      "x": 6414,
+      "y": 2604,
+      "texture": "city_lab_door",
+      "frozenTexture": "city_lab_door_open",
+      "walkable": true,
+      "groundWhenFrozen": false,
+      "collide": {
+        "w": 100,
+        "h": 40
+      },
+      "radius": 130,
+      "waitEvent": "ch2_lab_found",
+      "doneEvent": "ch2_lab_open",
+      "hint": "Нестабильная печать",
+      "lockedText": "Старая дверь в склоне холма, на ней дрожит чужая печать. Что за ней — пока неизвестно.",
+      "doneText": "Лёд успокоил печать — магия замерла, и дверь подалась.",
+      "mapPosition": {
+        "x": 126,
+        "y": 2004
+      }
+    },
+    {
+      "id": "lab_herb_1",
+      "kind": "gather",
+      "res": "frost_herb",
+      "amount": 1,
+      "respawnSec": 240,
+      "x": 10340,
+      "y": 3320,
+      "texture": "city_frost_herb",
+      "radius": 90,
+      "requiresEvent": "ch2_lab_open",
+      "mapPosition": null
+    },
+    {
+      "id": "lab_herb_2",
+      "kind": "gather",
+      "res": "frost_herb",
+      "amount": 1,
+      "respawnSec": 240,
+      "x": 11010,
+      "y": 3540,
+      "texture": "city_frost_herb",
+      "radius": 90,
+      "requiresEvent": "ch2_lab_open",
+      "mapPosition": null
+    },
+    {
+      "id": "lab_chest",
+      "kind": "chest",
+      "x": 10360,
+      "y": 4480,
+      "texture": "chest_01",
+      "collide": {
+        "w": 50,
+        "h": 24
+      },
+      "openTexture": "chest_01_open",
+      "radius": 110,
+      "requiresEvent": "ch2_lab_open",
+      "reward": {
+        "items": {
+          "rune_dust": 2,
+          "lunar_shard": 2,
+          "frost_herb": 2
+        }
+      },
+      "mapPosition": null
+    },
+    {
+      "id": "lab_cauldron",
+      "kind": "alchemy",
+      "x": 11020,
+      "y": 4480,
+      "texture": "cauldron_01",
+      "collide": {
+        "w": 66,
+        "h": 26
+      },
+      "radius": 120,
+      "requiresEvent": "ch2_lab_open",
+      "mapPosition": null
+    },
+    {
+      "id": "npc_tikhon",
+      "kind": "npc",
+      "npc": "tikhon",
+      "x": 10440,
+      "y": 4140,
+      "texture": "npc_tikhon",
+      "collide": {
+        "w": 30,
+        "h": 14
+      },
+      "radius": 130,
+      "requiresEvent": "ch2_vol_1",
+      "mapPosition": null
+    },
+    {
+      "id": "lab_journal",
+      "kind": "seal_sigil",
+      "x": 10910,
+      "y": 4386,
+      "elevated": 41,
+      "texture": "city_lab_journal",
+      "litTexture": "city_lab_journal",
+      "litTint": 15259391,
+      "radius": 110,
+      "requiresEnemyDefeated": "lab_construct",
+      "doneEvent": "ch2_lab_journal",
+      "hint": "Лабораторный журнал",
+      "doneTitle": "Журнал опытов",
+      "doneText": "Астрал проявил стёртые страницы. «Испытуемый №4 — пришёл сам, хочет защищать семью». «Доза снижена по указанию С. В.». Подпись под отчётом — Северин Вейр. Он знал.",
+      "doneButton": "К Иларии",
+      "mapPosition": null
+    },
+    {
+      "id": "final_debris",
+      "kind": "telekinesis",
+      "mode": "push",
+      "weight": "heavy",
+      "x": 6996,
+      "y": 2718,
+      "texture": "city_debris",
+      "collide": {
+        "w": 70,
+        "h": 30
+      },
+      "target": {
+        "x": 7032,
+        "y": 2682
+      },
+      "radius": 120,
+      "requiresEvent": "ch2_final_start",
+      "doneEvent": "ch2_fin_tk",
+      "hint": "Завал у Дуэльного зала",
+      "mapPosition": {
+        "x": 708,
+        "y": 2118
+      }
+    },
+    {
+      "id": "final_ice_wall",
+      "kind": "fire",
+      "x": 8028,
+      "y": 2286,
+      "texture": "ice_wall_01",
+      "radius": 130,
+      "requiresEvent": "ch2_final_start",
+      "destroyEvent": "ch2_fin_fire",
+      "burnSec": 1.4,
+      "hint": "Ледяная преграда",
+      "doneText": "Преграда растаяла — улица к рынку свободна.",
+      "mapPosition": {
+        "x": 1740,
+        "y": 1686
+      }
+    },
+    {
+      "id": "final_rift",
+      "kind": "ice",
+      "x": 6888,
+      "y": 2682,
+      "texture": "city_coolant",
+      "collide": {
+        "w": 80,
+        "h": 26
+      },
+      "frozenTexture": "city_coolant_stable",
+      "radius": 130,
+      "requiresEvent": "ch2_final_start",
+      "doneEvent": "ch2_fin_ice",
+      "hint": "Повреждённый резервуар",
+      "lockedText": "Из треснувшего резервуара вырывается магический холод. Лёд стабилизирует прибор.",
+      "doneText": "Лёд стянул трещины — резервуар затих.",
+      "mapPosition": {
+        "x": 600,
+        "y": 2082
+      }
+    },
+    {
+      "id": "final_ward",
+      "kind": "seal_sigil",
+      "x": 7020,
+      "y": 2640,
+      "texture": "astral_ward_01",
+      "litTexture": "astral_ward_01",
+      "collide": {
+        "w": 100,
+        "h": 30
+      },
+      "opens": true,
+      "radius": 130,
+      "requiresEvent": "ch2_final_start",
+      "doneEvent": "ch2_fin_seal",
+      "hint": "Астральный барьер",
+      "lockedText": "Дуэльный зал закрыт.",
+      "doneTitle": "Барьер снят",
+      "doneText": "Астрал нашёл швы барьера — и завеса рассыпалась искрами. Изнутри тянет холодом и голосом Северина.",
+      "doneButton": "Дальше",
+      "mapPosition": {
+        "x": 732,
+        "y": 2040
+      }
+    },
+    {
+      "id": "npc_nerys_final",
+      "kind": "npc",
+      "npc": "nerys",
+      "x": 7230,
+      "y": 2658,
+      "texture": "npc_nerys",
+      "collide": {
+        "w": 30,
+        "h": 14
+      },
+      "radius": 140,
+      "requiresEvent": "ch2_final_start",
+      "mapPosition": {
+        "x": 942,
+        "y": 2058
+      }
+    },
+    {
+      "id": "final_letters",
+      "kind": "seal_sigil",
+      "x": 12640,
+      "y": 3226,
+      "texture": "city_letters",
+      "litTexture": "city_letters",
+      "litTint": 15259391,
+      "radius": 110,
+      "requiresEnemyDefeated": "final_severin",
+      "doneEvent": "ch2_letters_read",
+      "hint": "Зашифрованные письма",
+      "doneTitle": "Чужая рука",
+      "doneText": "Под Астралом шифр поплыл. Деньги, материалы, старые схемы — всё это Северину передавал кто-то другой. Подписи нет. Только знак — тот самый стёртый узор с Древних ворот в лесу Мирры.",
+      "doneButton": "К Иларии",
+      "elevated": 41,
+      "mapPosition": null
+    },
+    {
+      "id": "npc_severin_after",
+      "kind": "npc",
+      "npc": "severin",
+      "x": 12570,
+      "y": 3420,
+      "texture": "npc_severin",
+      "collide": {
+        "w": 32,
+        "h": 14
+      },
+      "radius": 130,
+      "requiresEvent": "ch2_severin_defeated",
+      "mapPosition": null
+    },
+    {
+      "id": "npc_rowena",
+      "kind": "npc",
+      "npc": "rowena",
+      "x": 13670,
+      "y": 3210,
+      "texture": "npc_rowena",
+      "collide": {
+        "w": 50,
+        "h": 24
+      },
+      "radius": 140,
+      "mapPosition": null
+    },
+    {
+      "id": "door_cellar",
+      "kind": "room_door",
+      "x": 7218,
+      "y": 1366,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 12160,
+        "y": 6460
+      },
+      "room": "city_cellar",
+      "hint": "Войти: Дом с погребом",
+      "requiresEvent": "ch2_rescue_cellar",
+      "mapPosition": {
+        "x": 930,
+        "y": 766
+      }
+    },
+    {
+      "id": "room_exit_cellar",
+      "kind": "room_door",
+      "x": 12160,
+      "y": 6585,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 7218,
+        "y": 1438
+      },
+      "room": "city",
+      "hint": "Выйти: Дом с погребом",
+      "mapPosition": null
+    },
+    {
+      "id": "door_rescue",
+      "kind": "room_door",
+      "x": 8028,
+      "y": 1366,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 13760,
+        "y": 6460
+      },
+      "room": "city_rescue",
+      "hint": "Войти: Дом за ледяной дверью",
+      "requiresEvent": "ch2_rescue_door",
+      "mapPosition": {
+        "x": 1740,
+        "y": 766
+      }
+    },
+    {
+      "id": "room_exit_rescue",
+      "kind": "room_door",
+      "x": 13760,
+      "y": 6585,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 8028,
+        "y": 1438
+      },
+      "room": "city",
+      "hint": "Выйти: Дом за ледяной дверью",
+      "mapPosition": null
+    },
+    {
+      "id": "door_archive",
+      "kind": "room_door",
+      "x": 7218,
+      "y": 1864,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 12250,
+        "y": 1520
+      },
+      "room": "city_archive",
+      "hint": "Войти: Городской Архив",
+      "requiresEvent": null,
+      "mapPosition": {
+        "x": 930,
+        "y": 1264
+      }
+    },
+    {
+      "id": "room_exit_archive",
+      "kind": "room_door",
+      "x": 12250,
+      "y": 1645,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 7218,
+        "y": 1936
+      },
+      "room": "city",
+      "hint": "Выйти: Городской Архив",
+      "mapPosition": null
+    },
+    {
+      "id": "door_society",
+      "kind": "room_door",
+      "x": 8028,
+      "y": 1864,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 13850,
+        "y": 1340
+      },
+      "room": "city_society",
+      "hint": "Войти: Общество Преображения",
+      "requiresEvent": null,
+      "mapPosition": {
+        "x": 1740,
+        "y": 1264
+      }
+    },
+    {
+      "id": "room_exit_society",
+      "kind": "room_door",
+      "x": 13850,
+      "y": 1465,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 8028,
+        "y": 1936
+      },
+      "room": "city",
+      "hint": "Выйти: Общество Преображения",
+      "mapPosition": null
+    },
+    {
+      "id": "door_bank",
+      "kind": "room_door",
+      "x": 8046,
+      "y": 2242,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 10560,
+        "y": 1460
+      },
+      "room": "city_bank",
+      "hint": "Войти: Городской Банк",
+      "requiresEvent": null,
+      "mapPosition": {
+        "x": 1758,
+        "y": 1642
+      }
+    },
+    {
+      "id": "room_exit_bank",
+      "kind": "room_door",
+      "x": 10560,
+      "y": 1585,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 8046,
+        "y": 2314
+      },
+      "room": "city",
+      "hint": "Выйти: Городской Банк",
+      "mapPosition": null
+    },
+    {
+      "id": "door_duel",
+      "kind": "room_door",
+      "x": 7200,
+      "y": 2644,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 12340,
+        "y": 4100
+      },
+      "room": "city_duel",
+      "hint": "Войти: Магическая Дуэль",
+      "requiresEvent": "ch2_fin_seal",
+      "mapPosition": {
+        "x": 912,
+        "y": 2044
+      }
+    },
+    {
+      "id": "room_exit_duel",
+      "kind": "room_door",
+      "x": 12340,
+      "y": 4225,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 7200,
+        "y": 2716
+      },
+      "room": "city",
+      "hint": "Выйти: Магическая Дуэль",
+      "mapPosition": null
+    },
+    {
+      "id": "door_coven",
+      "kind": "room_door",
+      "x": 8076,
+      "y": 2644,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 13820,
+        "y": 3860
+      },
+      "room": "city_coven",
+      "hint": "Войти: Дом Ковенов",
+      "requiresEvent": null,
+      "mapPosition": {
+        "x": 1788,
+        "y": 2044
+      }
+    },
+    {
+      "id": "room_exit_coven",
+      "kind": "room_door",
+      "x": 13820,
+      "y": 3985,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 8076,
+        "y": 2716
+      },
+      "room": "city",
+      "hint": "Выйти: Дом Ковенов",
+      "mapPosition": null
+    },
+    {
+      "id": "door_warehouse_a",
+      "kind": "room_door",
+      "x": 7200,
+      "y": 3058,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 10500,
+        "y": 6700
+      },
+      "room": "city_warehouse",
+      "hint": "Войти: Склад А",
+      "requiresEvent": null,
+      "mapPosition": {
+        "x": 912,
+        "y": 2458
+      }
+    },
+    {
+      "id": "room_exit_warehouse_a",
+      "kind": "room_door",
+      "x": 10500,
+      "y": 6825,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 7200,
+        "y": 3130
+      },
+      "room": "city",
+      "hint": "Выйти: Склад А",
+      "mapPosition": null
+    },
+    {
+      "id": "door_warehouse_b",
+      "kind": "room_door",
+      "x": 8028,
+      "y": 3058,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 11340,
+        "y": 6700
+      },
+      "room": "city_warehouse",
+      "hint": "Войти: Склад Б",
+      "requiresEvent": null,
+      "mapPosition": {
+        "x": 1740,
+        "y": 2458
+      }
+    },
+    {
+      "id": "room_exit_warehouse_b",
+      "kind": "room_door",
+      "x": 11340,
+      "y": 6825,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 8028,
+        "y": 3130
+      },
+      "room": "city",
+      "hint": "Выйти: Склад Б",
+      "mapPosition": null
+    },
+    {
+      "id": "door_lab",
+      "kind": "room_door",
+      "x": 6414,
+      "y": 2608,
+      "ghost": {
+        "w": 120,
+        "h": 80
+      },
+      "radius": 110,
+      "target": {
+        "x": 10680,
+        "y": 4580
+      },
+      "room": "city_lab",
+      "hint": "Войти: Тайная лаборатория",
+      "requiresEvent": "ch2_lab_open",
+      "mapPosition": {
+        "x": 126,
+        "y": 2008
+      }
+    },
+    {
+      "id": "room_exit_lab",
+      "kind": "room_door",
+      "x": 10680,
+      "y": 4705,
+      "ghost": {
+        "w": 160,
+        "h": 80
+      },
+      "radius": 130,
+      "target": {
+        "x": 6414,
+        "y": 2680
+      },
+      "room": "city",
+      "hint": "Выйти: Тайная лаборатория",
+      "mapPosition": null
+    }
+  ],
+  "enemies": [
+    {
+      "id": "plaza_critter",
+      "enemy": "frost_critter",
+      "x": 7692,
+      "y": 2274,
+      "radius": 130,
+      "requiresEvent": "ch2_city_arrived",
+      "defeatEvent": "ch2_plaza_cleared",
+      "mapPosition": {
+        "x": 1404,
+        "y": 1674
+      }
+    },
+    {
+      "id": "road_scavenger",
+      "enemy": "young_scavenger",
+      "x": 6540,
+      "y": 2106,
+      "radius": 110,
+      "requiresEvent": "ch2_start",
+      "mapPosition": {
+        "x": 252,
+        "y": 1506
+      }
+    },
+    {
+      "id": "wh_collector_1",
+      "enemy": "frost_collector",
+      "x": 10630,
+      "y": 6360,
+      "radius": 120,
+      "requiresEvent": "ch2_cargo_start",
+      "repeatSec": 600,
+      "mapPosition": null
+    },
+    {
+      "id": "wh_collector_2",
+      "enemy": "frost_collector",
+      "x": 11250,
+      "y": 6100,
+      "radius": 120,
+      "requiresEvent": "ch2_cargo_start",
+      "repeatSec": 600,
+      "mapPosition": null
+    },
+    {
+      "id": "wh_elite",
+      "enemy": "frost_collector_elite",
+      "x": 10990,
+      "y": 5690,
+      "radius": 130,
+      "requiresEvent": "ch2_cargo_start",
+      "defeatEvent": "ch2_wh_boss",
+      "mapPosition": null
+    },
+    {
+      "id": "lab_critter",
+      "enemy": "frost_critter",
+      "x": 8166,
+      "y": 1932,
+      "radius": 120,
+      "requiresEvent": "ch2_severin_asked",
+      "defeatEvent": "ch2_lab_critter",
+      "mapPosition": {
+        "x": 1878,
+        "y": 1332
+      }
+    },
+    {
+      "id": "fq_critter",
+      "enemy": "frost_critter",
+      "x": 7230,
+      "y": 1404,
+      "radius": 120,
+      "requiresEvent": "ch2_nerys_met",
+      "repeatSec": 480,
+      "mapPosition": {
+        "x": 942,
+        "y": 804
+      }
+    },
+    {
+      "id": "fq_collector",
+      "enemy": "frost_collector",
+      "x": 8088,
+      "y": 1410,
+      "radius": 120,
+      "requiresEvent": "ch2_nerys_met",
+      "mapPosition": {
+        "x": 1800,
+        "y": 810
+      }
+    },
+    {
+      "id": "fq_training",
+      "enemy": "frost_critter",
+      "x": 7620,
+      "y": 954,
+      "radius": 110,
+      "requiresEvent": "unlock_ice_1",
+      "defeatEvent": "ch2_training_done",
+      "mapPosition": {
+        "x": 1332,
+        "y": 354
+      }
+    },
+    {
+      "id": "fq_deep_1",
+      "enemy": "frost_collector",
+      "x": 7284,
+      "y": 792,
+      "radius": 120,
+      "requiresEvent": "ch2_choice_start",
+      "defeatEvent": "ch2_deep_1",
+      "repeatSec": 600,
+      "mapPosition": {
+        "x": 996,
+        "y": 192
+      }
+    },
+    {
+      "id": "fq_deep_2",
+      "enemy": "frost_collector",
+      "x": 7956,
+      "y": 792,
+      "radius": 120,
+      "requiresEvent": "ch2_choice_start",
+      "defeatEvent": "ch2_deep_2",
+      "repeatSec": 600,
+      "mapPosition": {
+        "x": 1668,
+        "y": 192
+      }
+    },
+    {
+      "id": "fq_guardian",
+      "enemy": "ice_guardian",
+      "x": 7620,
+      "y": 780,
+      "radius": 140,
+      "requiresEvent": "ch2_choice_start",
+      "defeatEvent": "ch2_ice_guardian_defeated",
+      "repeatSec": 1200,
+      "mapPosition": {
+        "x": 1332,
+        "y": 180
+      }
+    },
+    {
+      "id": "yard_brittle_1",
+      "enemy": "frost_collector",
+      "x": 7242,
+      "y": 990,
+      "radius": 110,
+      "requiresEvent": "unlock_ice_2",
+      "defeatEvent": "ch2_brittle_1",
+      "mapPosition": {
+        "x": 954,
+        "y": 390
+      }
+    },
+    {
+      "id": "yard_brittle_2",
+      "enemy": "frost_collector",
+      "x": 7992,
+      "y": 990,
+      "radius": 110,
+      "requiresEvent": "unlock_ice_2",
+      "defeatEvent": "ch2_brittle_2",
+      "mapPosition": {
+        "x": 1704,
+        "y": 390
+      }
+    },
+    {
+      "id": "vol_1",
+      "enemy": "volunteer",
+      "x": 10590,
+      "y": 3840,
+      "radius": 110,
+      "requiresEvent": "ch2_lab_open",
+      "defeatEvent": "ch2_vol_1",
+      "mapPosition": null
+    },
+    {
+      "id": "vol_2",
+      "enemy": "volunteer",
+      "texture": "enemy_volunteer_miron",
+      "x": 10880,
+      "y": 3560,
+      "radius": 110,
+      "requiresEvent": "ch2_lab_open",
+      "defeatEvent": "ch2_vol_2",
+      "mapPosition": null
+    },
+    {
+      "id": "lab_construct",
+      "enemy": "experimental_construct",
+      "x": 10680,
+      "y": 3050,
+      "radius": 120,
+      "requiresEvent": "ch2_lab_open",
+      "defeatEvent": "ch2_lab_construct",
+      "repeatSec": 900,
+      "mapPosition": null
+    },
+    {
+      "id": "unstable_1",
+      "enemy": "frost_collector",
+      "x": 7950,
+      "y": 2670,
+      "radius": 110,
+      "requiresEvent": "ch2_coven_met",
+      "defeatEvent": "ch2_unstable_1",
+      "mapPosition": {
+        "x": 1662,
+        "y": 2070
+      }
+    },
+    {
+      "id": "unstable_2",
+      "enemy": "frost_collector",
+      "x": 7290,
+      "y": 2802,
+      "radius": 110,
+      "requiresEvent": "ch2_coven_met",
+      "defeatEvent": "ch2_unstable_2",
+      "mapPosition": {
+        "x": 1002,
+        "y": 2202
+      }
+    },
+    {
+      "id": "final_critter",
+      "enemy": "frost_critter",
+      "x": 7554,
+      "y": 2166,
+      "radius": 110,
+      "requiresEvent": "ch2_final_start",
+      "mapPosition": {
+        "x": 1266,
+        "y": 1566
+      }
+    },
+    {
+      "id": "final_collector",
+      "enemy": "frost_collector",
+      "x": 7782,
+      "y": 2322,
+      "radius": 110,
+      "requiresEvent": "ch2_final_start",
+      "mapPosition": {
+        "x": 1494,
+        "y": 1722
+      }
+    },
+    {
+      "id": "final_construct",
+      "enemy": "experimental_construct",
+      "x": 7332,
+      "y": 2646,
+      "radius": 120,
+      "requiresEvent": "ch2_final_start",
+      "mapPosition": {
+        "x": 1044,
+        "y": 2046
+      }
+    },
+    {
+      "id": "final_severin",
+      "enemy": "severin_boss",
+      "x": 12340,
+      "y": 3200,
+      "radius": 130,
+      "requiresEvent": "ch2_ice3",
+      "defeatEvent": "ch2_severin_defeated",
+      "mapPosition": null
+    }
+  ],
+  "dynamicExteriorIds": [
+    "frost_barrier",
+    "fq_water",
+    "ice_construct",
+    "fq_cellar",
+    "fq_door",
+    "fq_cauldron",
+    "plaza_trace",
+    "plaza_debris",
+    "lab_seal",
+    "final_debris",
+    "final_ice_wall",
+    "final_rift",
+    "final_ward",
+    "sapphire_city_cache_1",
+    "sapphire_city_cache_2"
+  ],
+  "artFiles": {
+    "overview": "city-overview.png",
+    "northFacades": "city-facades-north.png",
+    "southFacades": "city-facades-south.png"
+  },
+  "facadeFrames": {
+    "north_bay": {
+      "image": "city-facades-north.png",
+      "frameKey": "city_final_north_bay_exterior",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "visibleBoundsAlpha32": {
+        "x": 32,
+        "y": 80,
+        "w": 453,
+        "h": 385
+      },
+      "doorAnchorRequiresVisualReview": true
+    },
+    "north_workshop": {
+      "image": "city-facades-north.png",
+      "frameKey": "city_final_north_workshop_exterior",
+      "frame": {
+        "x": 512,
+        "y": 0,
+        "w": 528,
+        "h": 512
+      },
+      "visibleBoundsAlpha32": {
+        "x": 24,
+        "y": 51,
+        "w": 504,
+        "h": 410
+      },
+      "doorAnchorRequiresVisualReview": true
+    },
+    "cellar": {
+      "image": "city-facades-north.png",
+      "frameKey": "city_final_cellar_exterior",
+      "frame": {
+        "x": 1040,
+        "y": 0,
+        "w": 496,
+        "h": 512
+      },
+      "visibleBoundsAlpha32": {
+        "x": 13,
+        "y": 56,
+        "w": 458,
+        "h": 411
+      },
+      "doorAnchorRequiresVisualReview": true
+    },
+    "rescue": {
+      "image": "city-facades-north.png",
+      "frameKey": "city_final_rescue_exterior",
+      "frame": {
+        "x": 0,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "visibleBoundsAlpha32": {
+        "x": 34,
+        "y": 15,
+        "w": 467,
+        "h": 408
+      },
+      "doorAnchorRequiresVisualReview": true
+    },
+    "archive": {
+      "image": "city-facades-north.png",
+      "frameKey": "city_final_archive_exterior",
+      "frame": {
+        "x": 512,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "visibleBoundsAlpha32": {
+        "x": 11,
+        "y": 16,
+        "w": 473,
+        "h": 406
+      },
+      "doorAnchorRequiresVisualReview": true
+    },
+    "society": {
+      "image": "city-facades-north.png",
+      "frameKey": "city_final_society_exterior",
+      "frame": {
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
+      },
+      "visibleBoundsAlpha32": {
+        "x": 7,
+        "y": 4,
+        "w": 483,
+        "h": 416
+      },
+      "doorAnchorRequiresVisualReview": true
+    },
+    "bank": {
+      "image": "city-facades-south.png",
+      "frameKey": "city_final_bank_exterior",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "visibleBoundsAlpha32": {
+        "x": 13,
+        "y": 77,
+        "w": 490,
+        "h": 418
+      },
+      "doorAnchorRequiresVisualReview": true
+    },
+    "duel": {
+      "image": "city-facades-south.png",
+      "frameKey": "city_final_duel_exterior",
+      "frame": {
+        "x": 512,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "visibleBoundsAlpha32": {
+        "x": 1,
+        "y": 88,
+        "w": 473,
+        "h": 407
+      },
+      "doorAnchorRequiresVisualReview": true
+    },
+    "coven": {
+      "image": "city-facades-south.png",
+      "frameKey": "city_final_coven_exterior",
+      "frame": {
+        "x": 1024,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "visibleBoundsAlpha32": {
+        "x": 12,
+        "y": 99,
+        "w": 488,
+        "h": 396
+      },
+      "doorAnchorRequiresVisualReview": true
+    },
+    "warehouse_a": {
+      "image": "city-facades-south.png",
+      "frameKey": "city_final_warehouse_a_exterior",
+      "frame": {
+        "x": 0,
+        "y": 512,
+        "w": 527,
+        "h": 512
+      },
+      "visibleBoundsAlpha32": {
+        "x": 23,
+        "y": 90,
+        "w": 504,
+        "h": 349
+      },
+      "doorAnchorRequiresVisualReview": true
+    },
+    "warehouse_b": {
+      "image": "city-facades-south.png",
+      "frameKey": "city_final_warehouse_b_exterior",
+      "frame": {
+        "x": 527,
+        "y": 512,
+        "w": 548,
+        "h": 512
+      },
+      "visibleBoundsAlpha32": {
+        "x": 38,
+        "y": 107,
+        "w": 510,
+        "h": 335
+      },
+      "doorAnchorRequiresVisualReview": true
+    },
+    "lab": {
+      "image": "city-facades-south.png",
+      "frameKey": "city_final_lab_exterior",
+      "frame": {
+        "x": 1075,
+        "y": 512,
+        "w": 461,
+        "h": 512
+      },
+      "visibleBoundsAlpha32": {
+        "x": 34,
+        "y": 75,
+        "w": 396,
+        "h": 376
+      },
+      "doorAnchorRequiresVisualReview": true
+    }
+  },
+  "overviewImageSize": {
+    "w": 1166,
+    "h": 1349
+  }
+}

@@ -1,5 +1,6 @@
 // Stable, editable decorative placements. Existing ids and collision-free footprints are preserved.
 import { CITY_COLLIDERS, CITY_ROOM_DECOR } from '../config/world.city.js';
+import { cityMapData } from '../config/city.plan.js';
 import { EXP_COLLIDERS } from '../config/world.expeditions.js';
 import { CONTENT_DECOR } from '../config/world.content.js';
 import { LOCATIONS, locationAt } from '../config/locations.js';
@@ -26,12 +27,12 @@ export function cityForestDecor() {
   const keys = ['tree_dark_01', 'tree_dark_02', 'tree_autumn_01', 'tree_autumn_02', 'birch_01'];
   let seed = 20261006;
   const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
-  for (const c of CITY_COLLIDERS.filter(c => c.kind === 'trees' && c.w >= 150)) {
-    const top = Math.max(1260, c.y);
-    for (let y = top + 60; y < c.y + c.h; y += 74) {
+  for (const c of cityMapData().colliders.filter(c => c.kind === 'trees' && c.w >= 150)) {
+    const top = c.y;
+    for (let y = top + 60; y < c.y + c.h; y += 95) {
       for (let x = c.x + 45; x < c.x + c.w - 30; x += 85) {
         props.push({ id: `city_forest_${props.length}`, k: keys[Math.floor(random() * keys.length)],
-          x: x + (random() - 0.5) * 20, y: y + (random() - 0.5) * 16, flip: random() < 0.5 });
+          x: x + (random() - 0.5) * 20, y: y + (random() - 0.5) * 16, flip: random() < 0.5,solid:null,fill:true });
       }
     }
   }

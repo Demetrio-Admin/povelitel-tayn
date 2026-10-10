@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
+import { BUILDINGS, cityPoint } from '../../src/config/city.plan.js';
 process.env.VITE_SUPABASE_URL='';process.env.VITE_SUPABASE_ANON_KEY='';
 const root=path.resolve(new URL('../..',import.meta.url).pathname);
 const out=process.env.CITY_SHOTS_DIR||'/tmp/koldovstvo-city-graphics';await fs.mkdir(out,{recursive:true});
@@ -23,6 +24,15 @@ try{
    window.__game.scene.getScene('ExplorationScene').travelToLocation('city');
   });
   await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city' && window.__witch.mode==='exploration');
+  const facades=await page.evaluate(()=>{
+   const s=window.__game.scene.getScene('ExplorationScene');
+   return [...s.colliderViews.values()].filter(v=>v.c.building).map(({c,img})=>({id:c.building,loaded:img.texture.customData.cityWitch===true,x:img.x,y:img.y}));
+  });
+  assert.equal(facades.length,BUILDINGS.length);
+  for(const b of BUILDINGS){
+   const f=facades.find(f=>f.id===b.id);assert.ok(f?.loaded,'approved facade loaded: '+b.id);
+   assert.deepEqual([f.x,f.y],[b.door.x,b.door.y],'doorstep anchor: '+b.id);
+  }
   const settle=async()=>{await page.waitForTimeout(1800);await page.evaluate(()=>{
    const s=window.__game.scene.getScene('ExplorationScene'),u=window.__game.scene.getScene('UIScene');
    u.toasts.forEach(t=>t.destroy());u.toasts=[];u.goalBanner?.setVisible(false);u.zoneBanner?.setVisible(false);u.hintPlate?.setVisible(false);s.heroSay=()=>{};
@@ -57,7 +67,7 @@ try{
   await move(12200,1020);await shot('archive-desk');
   await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').travelToLocation('city'));
   await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city' && window.__witch.mode==='exploration');
-  await move(7840,3260);await shot('square-frozen');
+  const square=cityPoint(1200,2740);await move(square.x,square.y);await shot('square-frozen');
   assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').colliderViews.get('city_plan_fountain').img.texture.key),'city_final_fountain_frozen');
   await page.evaluate(()=>{window.__witch.state.markEvent('ch2_severin_defeated');window.__game.scene.getScene('ExplorationScene').refreshAll();});await shot('square-thawed');
   assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').colliderViews.get('city_plan_fountain').img.texture.key),'city_final_fountain');

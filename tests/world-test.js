@@ -199,7 +199,8 @@ console.log('\nМир: правки дорог, воды и стен');
   const b = baseTerrain();
   ok(b.roads.every(r=>!r.pts.some(p=>p[0]>=1800 && p[0]<3600)) && b.waters.length === WATERS.length && b.cols.some(c=>c.id==='city_plan_building_bank') && b.cols.some(c=>c.id==='c105'), 'baseTerrain: все дороги, вода и стены на месте');
   ok(b.cols[0].id === 'c0' && new Set(b.cols.map(c => c.id)).size === b.cols.length, 'у каждой стены есть id (c0, c1…), id уникальны');
-  ok(b.roads.every(r => r.n === ROADS.findIndex(original=>original.id===r.id)), 'у базовых дорог номер шума = место в списке');
+  ok(b.roads.filter(r=>!r.id.startsWith('city_street_')).every(r => r.n === ROADS.findIndex(original=>original.id===r.id)), 'у базовых дорог номер шума = место в списке');
+  ok(b.roads.filter(r=>r.id.startsWith('city_street_')).every((r,i)=>r.n===100+i), 'городские дорожки имеют отдельные стабильные номера шума');
   // без правок живой мир = исходные данные
   const none = applyTerrainEdits({});
   ok(JSON.stringify(none.roads) === JSON.stringify(b.roads) && JSON.stringify(none.colliders) === JSON.stringify(b.cols), 'без правок дороги и стены не меняются');

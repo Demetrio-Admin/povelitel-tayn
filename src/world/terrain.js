@@ -7,14 +7,16 @@ export const WATER_CELL = 16;
 export function buildRoad(r, index = 0) {
   index = r.n ?? index;
   const borderless = r.borderless === true;
+  const urban = r.urban === true;
   const seamless = r.seamless === true || borderless;
   const nL = valueNoise(100 + index * 7), nR = valueNoise(300 + index * 11), nW = valueNoise(500 + index * 13);
   const center = catmullRom(r.pts, 10);
   const hw = r.w / 2;
   const left = (s) => hw * (0.86 + 0.28 * nL(s / 95) + 0.12 * (nW(s / 260) - 0.5));
   const right = (s) => hw * (0.86 + 0.28 * nR(s / 95) + 0.12 * (nW(s / 260) - 0.5));
-  const poly = ribbon(center, left, right, { step: 10, taper: r.w * 0.55, roundCaps: seamless });
-  return { id: r.id, kind: r.kind, seamless, borderless, n: index, poly, bounds: polygonBounds(poly) };
+  const poly = ribbon(center, urban ? () => hw : left, urban ? () => hw : right, { step: 10, taper: urban ? 0 : r.w * 0.55, roundCaps: seamless });
+  return { id: r.id, kind: r.kind, seamless, borderless, urban, n: index, poly, bounds: polygonBounds(poly),
+    ...(r.texture?{texture:r.texture}:{}),...(r.tileScale?{tileScale:r.tileScale}:{}) };
 }
 
 /** Только контур (без прямоугольников коллизии) — для быстрого показа в редакторе. */

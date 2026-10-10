@@ -1,4 +1,5 @@
-import { cityArrival } from '../config/city.plan.js';
+import { cityArrival, BUILDINGS } from '../config/city.plan.js';
+import { CITY_WITCH_SPRITES } from '../config/city.witch.art.js';
 import { RoomDoor } from '../objects/RoomDoor.js';
 import { BAG } from '../config/bag.js';
 import { bindSceneViewport } from '../ui/viewport.js';
@@ -98,7 +99,17 @@ export class ExplorationScene extends Phaser.Scene {
     // v0.27.0: сцена перезапускается при переходе между локациями — временное состояние прошлого запуска сбрасывается
     this.speech = null; this.traveling = false; this.navCache = null; this.terrainImages = []; this.waterZones = []; this.colliderObjects = [];
     // v0.27.0: строится только текущая локация (глава или вылазка) — по положению героя; редактор карты (?edit) видит весь холст
-    let p = this.fixStartPosition(cityArrival(state.data.player,k=>state.hasEvent(k)));
+    const cityLayout=state.getObject('city_layout')?.version||2;
+    let p = this.fixStartPosition(cityArrival(state.data.player,k=>state.hasEvent(k),cityLayout));
+    if(cityLayout<3){
+      state.data.safePoint=cityArrival(state.data.safePoint,k=>state.hasEvent(k),cityLayout);
+      // Local moved-object coordinates use the same layout as the saved player.
+      // Online moved states normally have no coordinates and use the new target.
+      for(const o of Object.values(state.data.worldObjects))if(o?.state==='moved' && Number.isFinite(o.x) && Number.isFinite(o.y)){
+        Object.assign(o,cityArrival(o,k=>state.hasEvent(k),cityLayout));
+      }
+      state.setObject('city_layout',{version:3});
+    }
     state.data.player={...p};
     this.loc = services.edit ? null : locationAt(p.x, p.y);
     if (this.loc && !inLocation(p, this.loc)) { p = { ...this.loc.arrival }; state.data.player = { ...p }; }   // старое сохранение за краем локации
@@ -399,7 +410,7 @@ export class ExplorationScene extends Phaser.Scene {
   paintTerrain() {
     const chunks = terrainChunks(this.terrain, WORLD.width, WORLD.height + EXTRA_BOTTOM).filter(c => touchesLocation(c, this.loc ? { rect: this.view } : null));
     const src = (k) => { try { return this.textures.get(k).getSourceImage(); } catch (e) { return null; } };
-    const imgs = { dirt: src('dirt_path_01'), stone: src('stone_path_01'), water: src('swamp_water_01') };
+    const imgs = { dirt: src('dirt_path_01'), stone: src('stone_path_01'), water: src('swamp_water_01'),city_final_paving:src('city_final_paving') };
     for (const im of this.terrainImages || []) im.destroy(); // перерисовка после правки в редакторе
     this.terrainImages = [];
     for (const c of chunks) {
@@ -480,6 +491,8 @@ export class ExplorationScene extends Phaser.Scene {
             const im = this.add.image(c.x + c.w / 2, c.y + c.h, c.tex).setOrigin(0.5, 1).setDepth(bottomDepth);
             applyDisplaySize(im, c.tex);
             if(c.editorStyle)this.styleImage(im,c.editorStyle,c.tex);
+            const facade=CITY_WITCH_SPRITES[c.tex],building=facade && BUILDINGS.find(b=>b.id===c.building);
+            if(building)im.setOrigin(facade.anchor.x,facade.anchor.y).setPosition(building.door.x,building.door.y);
             this.colliderViews.set(c.id,{c,img:im});
             keep(im);
             break;

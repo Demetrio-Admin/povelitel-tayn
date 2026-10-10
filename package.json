@@ -1,6 +1,6 @@
 {
   "name": "koldovstvo-magical-rpg",
-  "version": "0.37.0",
+  "version": "0.37.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -45,7 +45,8 @@
     "test:victory:browser": "node tests/e2e/victory.mjs",
     "test:city-rooms": "node tests/e2e/city-rooms.mjs",
     "test:city-graphics": "node tests/e2e/city-graphics.mjs",
-    "test:city-houses": "node tests/e2e/city-houses.mjs"
+    "test:city-houses": "node tests/e2e/city-houses.mjs",
+    "ui:city-cozy": "node tools/art/render-cozy-city.mjs"
   },
   "dependencies": {
     "@fontsource/philosopher": "^5.2.8",

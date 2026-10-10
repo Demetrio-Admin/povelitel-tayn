@@ -143,8 +143,15 @@ export class ExplorationScene extends Phaser.Scene {
 
     // камера: героиня немного ниже центра (Blueprint §7)
     const cam = this.cameras.main;
-    cam.setBounds(this.view.x, this.view.y, this.view.w, this.view.h);   // v0.27.0: камера — только своя локация
+    // v0.27.0: камера — только своя локация. v0.37.1: если экран шире локации (комната на широком экране),
+    // локация стоит по центру, а не прижата к левому краю.
+    const fitBounds = () => {
+      const w = Math.max(this.view.w, cam.width);
+      cam.setBounds(this.view.x - (w - this.view.w) / 2, this.view.y, w, this.view.h);
+    };
+    fitBounds();
     const followSize = () => {
+      fitBounds();
       this.followOffsetY = (CAMERA.heroScreenY - 0.5) * cam.height + PLAYER.displayHeight * 0.4;
       this.follow();
     };

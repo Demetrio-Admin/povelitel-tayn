@@ -1,4 +1,4 @@
-# City art QA — v0.37.1
+# City art QA — v0.37.2
 
 Target: the user-approved blend in `docs/design/city-cozy/approved-reference.jpg`.
 Rendered evidence: the actual Phaser overview, `reference-comparison.jpg`, the Bank / Archive / square phone captures, and the live Cloud Browser preview.

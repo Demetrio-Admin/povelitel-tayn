@@ -1058,29 +1058,59 @@
           5330
         ],
         [
-          6650,
-          5345
-        ],
-        [
-          7000,
+          6700,
           5330
         ],
         [
-          7200,
-          5220
+          7160,
+          5330
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
+      "urban": true
+    },
+    {
+      "id": "city_street_south_street",
+      "kind": "stone",
+      "w": 130,
+      "pts": [
+        [
+          7160,
+          5330
         ],
         [
-          7280,
-          5010
+          7500,
+          5330
         ],
         [
-          7280,
+          7800,
+          5330
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
+      "urban": true
+    },
+    {
+      "id": "city_street_main_south",
+      "kind": "stone",
+      "w": 130,
+      "pts": [
+        [
+          7160,
+          5330
+        ],
+        [
+          7160,
           4760
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
@@ -1089,21 +1119,17 @@
       "w": 130,
       "pts": [
         [
-          7240,
-          4410
+          7160,
+          4770
         ],
         [
           7160,
-          4180
-        ],
-        [
-          7100,
-          3940
+          3950
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
@@ -1112,24 +1138,8 @@
       "w": 130,
       "pts": [
         [
-          7080,
-          3450
-        ],
-        [
-          7140,
-          3220
-        ],
-        [
-          7200,
-          3020
-        ],
-        [
-          7200,
-          2800
-        ],
-        [
           7160,
-          2580
+          3430
         ],
         [
           7160,
@@ -1137,8 +1147,8 @@
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
@@ -1156,8 +1166,8 @@
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
@@ -1170,20 +1180,20 @@
           2190
         ],
         [
-          7140,
-          2040
+          7160,
+          1960
         ],
         [
-          7200,
-          1840
+          7190,
+          1770
         ],
         [
-          7280,
-          1640
+          7270,
+          1570
         ],
         [
           7320,
-          1460
+          1420
         ],
         [
           7320,
@@ -1191,305 +1201,278 @@
         ],
         [
           7320,
-          1000
+          1090
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
-      "id": "city_street_apron_a",
+      "id": "city_street_a_path",
       "kind": "stone",
-      "w": 160,
+      "w": 90,
       "pts": [
         [
-          6650,
-          5250
+          6750,
+          5330
         ],
         [
-          6850,
-          5250
+          6750,
+          5200
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
-      "id": "city_street_lane_b",
+      "id": "city_street_b_path",
       "kind": "stone",
-      "w": 100,
+      "w": 90,
       "pts": [
         [
-          7240,
-          5140
+          7650,
+          5330
         ],
         [
-          7480,
-          5310
-        ],
-        [
-          7600,
-          5320
+          7650,
+          5265
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
-      "id": "city_street_apron_b",
+      "id": "city_street_market_street",
       "kind": "stone",
-      "w": 160,
+      "w": 190,
       "pts": [
         [
-          7560,
-          5320
+          6790,
+          4510
         ],
         [
-          7740,
-          5320
+          7160,
+          4510
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
-      "id": "city_street_market",
+      "id": "city_street_bank_lane",
       "kind": "stone",
-      "w": 300,
+      "w": 110,
       "pts": [
         [
-          7240,
-          4560
+          7160,
+          4460
         ],
         [
-          7400,
-          4550
+          7650,
+          4460
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_merchant_pad",
-      "kind": "stone",
-      "w": 230,
-      "pts": [
-        [
-          6960,
-          4590
-        ],
-        [
-          7040,
-          4590
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_bank_court",
-      "kind": "stone",
-      "w": 150,
-      "pts": [
-        [
-          7550,
-          4470
-        ],
-        [
-          7720,
-          4470
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
       "id": "city_street_square",
       "kind": "stone",
-      "w": 420,
+      "w": 540,
       "pts": [
         [
-          7000,
-          3660
+          7090,
+          3700
         ],
         [
-          7160,
-          3650
+          7110,
+          3700
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
+      "urban": true
+    },
+    {
+      "id": "city_street_yard",
+      "kind": "stone",
+      "w": 500,
+      "pts": [
+        [
+          7310,
+          850
+        ],
+        [
+          7330,
+          850
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
       "id": "city_street_duel_lane",
       "kind": "stone",
-      "w": 90,
+      "w": 110,
       "pts": [
         [
-          6780,
-          3505
+          7000,
+          3490
         ],
         [
-          6900,
-          3560
+          6700,
+          3490
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_duel_court",
-      "kind": "stone",
-      "w": 150,
-      "pts": [
-        [
-          6620,
-          3500
-        ],
-        [
-          6780,
-          3500
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
       "id": "city_street_coven_lane",
       "kind": "stone",
-      "w": 90,
+      "w": 110,
       "pts": [
         [
-          7240,
-          3490
+          7160,
+          3380
         ],
         [
-          7380,
-          3420
-        ],
-        [
-          7480,
-          3405
+          7550,
+          3380
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_coven_court",
-      "kind": "stone",
-      "w": 150,
-      "pts": [
-        [
-          7480,
-          3400
-        ],
-        [
-          7640,
-          3400
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
       "id": "city_street_archive_lane",
       "kind": "stone",
-      "w": 90,
+      "w": 110,
       "pts": [
         [
           7160,
-          2790
+          2780
         ],
         [
-          6930,
-          2790
+          6850,
+          2780
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_archive_court",
-      "kind": "stone",
-      "w": 150,
-      "pts": [
-        [
-          6770,
-          2790
-        ],
-        [
-          6930,
-          2790
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
       "id": "city_street_society_lane",
       "kind": "stone",
-      "w": 90,
+      "w": 110,
       "pts": [
         [
-          7200,
+          7160,
           2920
         ],
         [
-          7480,
-          2930
+          7550,
+          2920
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
-      "id": "city_street_society_court",
+      "id": "city_street_cellar_lane",
       "kind": "stone",
-      "w": 150,
+      "w": 110,
       "pts": [
         [
-          7480,
-          2930
+          7160,
+          2040
         ],
         [
-          7640,
-          2930
+          6850,
+          2040
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
+      "urban": true
+    },
+    {
+      "id": "city_street_rescue_lane",
+      "kind": "stone",
+      "w": 110,
+      "pts": [
+        [
+          7200,
+          1800
+        ],
+        [
+          7590,
+          1800
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
+      "urban": true
+    },
+    {
+      "id": "city_street_bay_lane",
+      "kind": "stone",
+      "w": 110,
+      "pts": [
+        [
+          7100,
+          840
+        ],
+        [
+          6800,
+          840
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
+      "urban": true
+    },
+    {
+      "id": "city_street_workshop_lane",
+      "kind": "stone",
+      "w": 110,
+      "pts": [
+        [
+          7500,
+          1030
+        ],
+        [
+          7850,
+          1030
+        ]
+      ],
+      "seamless": true,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
@@ -1498,297 +1481,17 @@
       "w": 90,
       "pts": [
         [
-          6360,
+          6680,
           2412
         ],
         [
-          6800,
-          2410
-        ],
-        [
-          7160,
-          2410
-        ],
-        [
-          7700,
-          2414
-        ],
-        [
-          8160,
-          2410
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_cellar_lane",
-      "kind": "stone",
-      "w": 90,
-      "pts": [
-        [
-          7140,
-          2050
-        ],
-        [
-          6930,
-          2050
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_cellar_court",
-      "kind": "stone",
-      "w": 150,
-      "pts": [
-        [
-          6770,
-          2050
-        ],
-        [
-          6930,
-          2050
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_rescue_lane",
-      "kind": "stone",
-      "w": 90,
-      "pts": [
-        [
-          7220,
-          1800
-        ],
-        [
-          7510,
-          1810
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_rescue_court",
-      "kind": "stone",
-      "w": 150,
-      "pts": [
-        [
-          7510,
-          1810
-        ],
-        [
-          7670,
-          1810
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_yard",
-      "kind": "stone",
-      "w": 420,
-      "pts": [
-        [
-          7200,
-          800
-        ],
-        [
-          7440,
-          780
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_bay_lane",
-      "kind": "stone",
-      "w": 90,
-      "pts": [
-        [
-          7020,
-          860
-        ],
-        [
-          6880,
-          850
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_bay_court",
-      "kind": "stone",
-      "w": 150,
-      "pts": [
-        [
-          6720,
-          850
-        ],
-        [
-          6880,
-          850
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_workshop_lane",
-      "kind": "stone",
-      "w": 90,
-      "pts": [
-        [
-          7600,
-          920
-        ],
-        [
-          7770,
-          1020
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_workshop_court",
-      "kind": "stone",
-      "w": 150,
-      "pts": [
-        [
-          7770,
-          1030
-        ],
-        [
-          7930,
-          1030
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_orchard_walk",
-      "kind": "stone",
-      "w": 64,
-      "pts": [
-        [
-          6850,
-          4600
-        ],
-        [
-          6650,
-          4410
-        ],
-        [
-          6550,
-          4110
-        ],
-        [
-          6600,
-          3580
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_west_walk",
-      "kind": "stone",
-      "w": 64,
-      "pts": [
-        [
-          6560,
-          3460
-        ],
-        [
-          6480,
-          3160
-        ],
-        [
-          6500,
-          2860
-        ],
-        [
-          6560,
-          2580
-        ],
-        [
-          6500,
+          7640,
           2412
         ]
       ],
       "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
-      "urban": true
-    },
-    {
-      "id": "city_street_east_walk",
-      "kind": "stone",
-      "w": 64,
-      "pts": [
-        [
-          7720,
-          4470
-        ],
-        [
-          7950,
-          4310
-        ],
-        [
-          8000,
-          3860
-        ],
-        [
-          7900,
-          3490
-        ],
-        [
-          7950,
-          3110
-        ],
-        [
-          7900,
-          2660
-        ],
-        [
-          8050,
-          2412
-        ]
-      ],
-      "seamless": true,
-      "texture": "city_final_paving",
-      "tileScale": 0.11,
+      "texture": "city_walk_paving",
+      "tileScale": 0.24,
       "urban": true
     },
     {
@@ -1986,7 +1689,7 @@
       "id": "npc_merchant",
       "kind": "npc",
       "npc": "merchant",
-      "x": 7070,
+      "x": 6935,
       "y": 4580,
       "texture": "npc_merchant",
       "collide": {
@@ -1995,7 +1698,7 @@
       },
       "radius": 140,
       "mapPosition": {
-        "x": 1470,
+        "x": 1335,
         "y": 4420
       }
     },

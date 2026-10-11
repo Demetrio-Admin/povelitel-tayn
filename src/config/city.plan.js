@@ -74,8 +74,8 @@ export const CITY_POSITIONS = Object.fromEntries([
   ['exit_city',P(110,5150)],['frostherb_r1',P(250,5060)],['frostherb_r2',P(385,4640)],['resin_r1',P(500,5290)],
   ['road_scavenger',P(520,5030)],
   ['lab_seal',P(330,3984)],
-  // Торговый двор: отдельная площадка Бориса, банк, доска поручений
-  ['npc_merchant',P(1470,4420)],['city_board',P(1820,4228)],
+  // Торговый двор: Торговая улица уходит на запад от главной; лавка Бориса стоит на её конце, банк и доска — на востоке
+  ['npc_merchant',P(1335,4420)],['city_board',P(1820,4228)],
   ['final_collector',P(1720,4460)],['final_ice_wall',P(1560,4060)],
   // Центральная площадь: фонтан смещён к западу, восточная часть свободна для событий
   ['plaza_trace',P(1560,3620)],['plaza_debris',P(1620,3380)],['plaza_critter',P(1480,3650)],
@@ -200,42 +200,35 @@ export function cityMapData() {
   const road=(id,w,pts,kind='stone')=>({id:'city_street_'+id,kind,w,pts:pts.map(([x,y])=>{const p=P(x,y);return [p.x,p.y];}),seamless:true,
     ...(kind==='stone'?{texture:'city_walk_paving',tileScale:0.24,urban:true}:{})});
   const roads=[
-    // Главная улица: ровная ширина и длинные плавные повороты; дома стоят у неё вразбивку, с короткими подходами
-    road('main_gate',130,[[640,5170],[1050,5185],[1400,5170],[1600,5060],[1680,4850],[1680,4600]]),
-    road('main_market',130,[[1640,4250],[1560,4020],[1500,3780]]),
-    road('main_garden',130,[[1480,3290],[1540,3060],[1600,2860],[1600,2640],[1560,2420],[1560,2270]]),
+    // Главная улица — одна прямая ось x=1560 от Складской улицы до моста, дальше мягкий поворот к проходу в Северный двор.
+    // Всё остальное — ровные ответвления одной ширины под прямым углом, каждое ведёт к двери своего дома; без петель и пятачков.
+    road('main_gate',130,[[640,5170],[1100,5170],[1560,5170]]),
+    road('south_street',130,[[1560,5170],[1900,5170],[2200,5170]]),
+    road('main_south',130,[[1560,5170],[1560,4600]]),
+    road('main_market',130,[[1560,4610],[1560,3790]]),
+    road('main_garden',130,[[1560,3270],[1560,2270]]),
     road('bridge',130,[[1560,2280],[1560,2010]]),
-    road('main_quarter',130,[[1560,2030],[1540,1880],[1600,1680],[1680,1480],[1720,1300],[1720,1140],[1720,840]]),
-    // Дворы, площадки и подходы к дверям
-    road('apron_a',160,[[1050,5090],[1250,5090]]),
-    road('lane_b',100,[[1640,4980],[1880,5150],[2000,5160]]),
-    road('apron_b',160,[[1960,5160],[2140,5160]]),
-    road('market',300,[[1640,4400],[1800,4390]]),
-    road('merchant_pad',230,[[1360,4430],[1440,4430]]),
-    road('bank_court',150,[[1950,4310],[2120,4310]]),
-    road('square',420,[[1400,3500],[1560,3490]]),
-    road('duel_lane',90,[[1180,3345],[1300,3400]]),
-    road('duel_court',150,[[1020,3340],[1180,3340]]),
-    road('coven_lane',90,[[1640,3330],[1780,3260],[1880,3245]]),
-    road('coven_court',150,[[1880,3240],[2040,3240]]),
-    road('archive_lane',90,[[1560,2630],[1330,2630]]),
-    road('archive_court',150,[[1170,2630],[1330,2630]]),
-    road('society_lane',90,[[1600,2760],[1880,2770]]),
-    road('society_court',150,[[1880,2770],[2040,2770]]),
-    road('embankment',90,[[760,2252],[1200,2250],[1560,2250],[2100,2254],[2560,2250]]),
-    road('cellar_lane',90,[[1540,1890],[1330,1890]]),
-    road('cellar_court',150,[[1170,1890],[1330,1890]]),
-    road('rescue_lane',90,[[1620,1640],[1910,1650]]),
-    road('rescue_court',150,[[1910,1650],[2070,1650]]),
-    road('yard',420,[[1600,640],[1840,620]]),
-    road('bay_lane',90,[[1420,700],[1280,690]]),
-    road('bay_court',150,[[1120,690],[1280,690]]),
-    road('workshop_lane',90,[[2000,760],[2170,860]]),
-    road('workshop_court',150,[[2170,870],[2330,870]]),
-    // Узкие мощёные дорожки — боковые петли через сады: рынок → двор Дуэльного зала → набережная, банк → ковены → Общество
-    road('orchard_walk',64,[[1250,4440],[1050,4250],[950,3950],[1000,3420]]),
-    road('west_walk',64,[[960,3300],[880,3000],[900,2700],[960,2420],[900,2252]]),
-    road('east_walk',64,[[2120,4310],[2350,4150],[2400,3700],[2300,3330],[2350,2950],[2300,2500],[2450,2252]]),
+    road('main_quarter',130,[[1560,2030],[1560,1800],[1590,1610],[1670,1410],[1720,1260],[1720,1140],[1720,930]]),
+    // Склады смотрят на Складскую улицу: короткие дорожки от неё к дверям
+    road('a_path',90,[[1150,5170],[1150,5040]]),
+    road('b_path',90,[[2050,5170],[2050,5105]]),
+    // Торговая улица: на запад — к лавке Бориса, на восток — к банку; поперечная на всю ширину перекрёстка
+    road('market_street',190,[[1190,4350],[1560,4350]]),
+    road('bank_lane',110,[[1560,4300],[2050,4300]]),
+    // Центральная площадь и тренировочный двор — круглые, с фонтаном и плацем внутри
+    road('square',540,[[1490,3540],[1510,3540]]),
+    road('yard',500,[[1710,690],[1730,690]]),
+    // Ответвления к домам (дорожка заканчивается у самой двери)
+    road('duel_lane',110,[[1400,3330],[1100,3330]]),
+    road('coven_lane',110,[[1560,3220],[1950,3220]]),
+    road('archive_lane',110,[[1560,2620],[1250,2620]]),
+    road('society_lane',110,[[1560,2760],[1950,2760]]),
+    road('cellar_lane',110,[[1560,1880],[1250,1880]]),
+    road('rescue_lane',110,[[1600,1640],[1990,1640]]),
+    road('bay_lane',110,[[1500,680],[1200,680]]),
+    road('workshop_lane',110,[[1900,870],[2250,870]]),
+    // Набережная на южном берегу канала: короткая аллея с фонарями и скамьями, не от стены до стены
+    road('embankment',90,[[1080,2252],[2040,2252]]),
     // Дорога из леса и боковая тропа к лаборатории
     road('road',150,[[-40,5170],[220,5164],[440,5172],[700,5170]],'dirt'),
     road('lab_trail',110,[[330,5150],[300,4850],[370,4520],[320,4200],[330,4010]],'dirt'),
@@ -254,16 +247,14 @@ export function cityMapData() {
     tex:'city_final_'+b.id+'_exterior',
     editorStyle:{w:b.w,h:({bank:276,archive:294,society:294,lab:270,duel:282,coven:282,
       warehouse_a:228,warehouse_b:228,cellar:252,rescue:252,north_bay:294,north_workshop:252})[b.id]},building:b.id});
-  col('fountain',1326,3416,108,108,'furniture',{tex:'city_final_fountain',editorStyle:{w:210,h:200}});
-  // Скамьи: у фонтана, на рынке, в садах и на набережной.
-  for(const [i,[x,y]] of [[1330,3680],[1700,3660],[1580,4560],[1250,5430],[1380,2820],[2280,2600],[1000,2335],[2150,2335],[960,760],[820,3700],[2300,3880]].entries())
+  col('fountain',1446,3484,108,108,'furniture',{tex:'city_final_fountain',editorStyle:{w:210,h:200}});   // в центре круглой площади
+  // Скамьи: на площади и у лавки, на набережной и в тихих садах — всегда у дорожки или под деревом, а не посреди газона.
+  for(const [i,[x,y]] of [[1330,3690],[1700,3670],[1400,4545],[1270,2338],[1850,2338],[1400,2850],[2280,2600],[1010,780],[1610,990],[2300,3880],[1870,5345]].entries())
     col('bench_'+i,x-48,y-17,96,17,'furniture',{tex:'city_final_bench'});
-  col('market',1264,4332,132,48,'furniture',{tex:'market_stall_01'});
-  // Низкие лёгкие ограды: палисадники и края садов, а не замкнутые коробки вокруг домов.
-  const fence=(id,x,y,w,style)=>col('fence_'+id,x,y-12,w,12,'fence',{style});
-  fence('archive_garden',700,2960,150,'iron');fence('bay_garden',700,880,220,'wood');fence('yard_a',700,4770,180,'wood');
-  fence('bank_garden',2400,4360,180,'iron');fence('coven_garden',2420,3360,160,'wood');fence('rescue_yard',2250,1840,300,'wood');
-  fence('workshop_yard',2440,1030,140,'wood');fence('society_garden',2400,2960,180,'iron');fence('cellar_garden',700,1990,200,'wood');
+  col('market',1124,4332,132,48,'furniture',{tex:'market_stall_01'});
+  // Ограды: одиночные заборчики посреди газона убраны — края садов держат живые изгороди и клумбы (см. декор ниже).
+  const fence=(id,x,y,w,style)=>col('fence_'+id,x,y-12,w,12,'fence',{style});   // низкая ограда для правок редактора; в плане не используется
+  void fence;
   for(const r of CITY_ROOMS) {
     const {x,y,w,h}=r.rect,t=24;
     const xs=r.key==='warehouse'?[300,1140]:[w/2];
@@ -342,14 +333,17 @@ export function cityMapData() {
   roomProp('archive','plant_left','plant_pot_01',80,1300,{solid:{w:28,h:14}});
   roomProp('archive','plant_right','plant_pot_01',820,1300,{solid:{w:28,h:14}});
 
-  // ---- уличные детали: небольшие осмысленные группы, подходы к дверям и квестовым объектам свободны
+  // ---- уличные детали (v0.38): сады у домов, рощи, огород и фруктовый сад — группы со смыслом, без рядов и полос.
+  // Подходы к дверям, улицы и квестовые места свободны; всё, что не прошло проверку, молча пропускается (skipped).
   const streetShapes=roads.map((r,i)=>buildRoad(r,100+i));
   const doorClear = p => BUILDINGS.some(b => Math.abs(p.x-b.door.x)<110 && p.y>b.door.y-25 && p.y<b.door.y+125);
   const questClear = p => Object.values(CITY_POSITIONS).some(o => insideRect(o,CITY_RECT) && Math.hypot(p.x-o.x,p.y-o.y)<(o.collide?130:100));
+  const spotClear = p => [...Object.values(CITY_SPOTS),...Object.values(CITY_ADMIN_POINTS)].some(s => Math.hypot(p.x-s.x,p.y-s.y)<90);
   const onStreet = p => streetShapes.some(r=>distToPolygon(p.x,p.y,r.poly)<14);
   const footprint = (p,s) => colliders.some(c=>c.kind!=='trees' && p.x+s.w/2+6>c.x && p.x-s.w/2-6<c.x+c.w && p.y+6>c.y && p.y-s.h-6<c.y+c.h);
-  const inCanal = p => Math.abs(p.y-CITY_CANAL.pts[0][1])<CITY_CANAL.half-4 && p.x>CITY_CANAL.pts[0][0] && p.x<CITY_CANAL.pts[1][0];
+  const inCanal = p => Math.abs(p.y-CITY_CANAL.pts[0][1])<CITY_CANAL.half+6 && p.x>CITY_CANAL.pts[0][0] && p.x<CITY_CANAL.pts[1][0];
   const nearProp = (p,k) => props.some(q=>q.k===k && Math.hypot(q.x-p.x,q.y-p.y)<90);
+  const stacked = (p,s) => props.some(q=>q.solid && p.x+s.w/2+8>q.x-q.solid.w/2 && p.x-s.w/2-8<q.x+q.solid.w/2 && p.y+8>q.y-q.solid.h && p.y-s.h-8<q.y);
   let index=0;const skipped=[];
   const SOLID={city_walk_tree_sage:{w:18,h:10},city_walk_tree_amber:{w:18,h:10},city_walk_tree_plum:{w:16,h:10},
     city_walk_hedge:{w:104,h:22},city_walk_flowerbed:{w:104,h:22},city_walk_herbbed:{w:104,h:22},city_walk_planter:{w:72,h:18},
@@ -357,19 +351,21 @@ export function cityMapData() {
     city_walk_woodpile:{w:96,h:22},city_walk_cart:{w:112,h:26},city_walk_dummy:{w:26,h:12},city_walk_sacks:{w:70,h:18},
     city_lamp_01:{w:16,h:10},city_crate:{w:56,h:20},city_barrel:{w:44,h:18},plant_pot_01:{w:30,h:14},bush_02:{w:48,h:22},bush_01:{w:48,h:22},
     city_duel_rack:{w:70,h:18},rune_slab_01:{w:70,h:20},table_01:{w:90,h:22},lantern_02:{w:30,h:12}};
-  // paved: a stall's goods or a planter may stand on paving on purpose; doors and quest spots stay clear regardless.
+  // paved: a stall's goods, a planter or a lamp may stand on paving on purpose; doors, quest spots and spots of the walk stay clear regardless.
   const place=(k,x,y,extra={})=>{
     const p=P(x,y);
     const {force,...rest}=extra,paved=rest.paved;
     if(!force && inCanal(p)){skipped.push([k,x,y,'water']);return false;}
-    if(!force && (doorClear(p)||questClear(p))){skipped.push([k,x,y,doorClear(p)?'door':'quest']);return false;}
+    if(!force && (doorClear(p)||questClear(p)||spotClear(p))){skipped.push([k,x,y,doorClear(p)?'door':'quest']);return false;}
+    if(!force && !paved && onStreet(p)){skipped.push([k,x,y,'street']);return false;}
     const solid=Object.hasOwn(rest,'solid')?rest.solid:SOLID[k]??null;
-    if(solid && !force && ((!paved && onStreet(p)) || footprint(p,solid) || nearProp(p,k))){skipped.push([k,x,y,onStreet(p)?'street':footprint(p,solid)?'footprint':'near']);return false;}
+    if(solid && !force && (footprint(p,solid) || nearProp(p,k) || stacked(p,solid))){skipped.push([k,x,y,footprint(p,solid)?'footprint':'near']);return false;}
+    if(rest.frost===undefined && y<2100)rest.frost=true;   // всё севернее канала лежит под инеем квартала
     props.push({id:'city_plan_'+(rest.name||k.replace(/^city_(walk_)?/,'')+'_'+index++),k,...p,solid,...rest});
     return true;
   };
   const group=(list)=>list.forEach(([k,x,y,extra])=>place(k,x,y,extra));
-  // Rhythm along the main street: a lamp at every long stretch and a town tree between them, alternating sides.
+  // Rhythm along a street: a lamp on every long stretch, alternating sides.
   const along=(id,step,first,fn)=>{
     const r=roads.find(r=>r.id==='city_street_'+id),pts=catmullRom(r.pts,10);
     let acc=0,next=first,side=1;
@@ -379,113 +375,114 @@ export function cityMapData() {
       const nx=-(by-ay)/d,ny=(bx-ax)/d;fn(bx-CITY_RECT.x,by-CITY_RECT.y,nx,ny,side,r.w/2);side=-side;next+=step;
     }
   };
-  const TREES=['city_walk_tree_sage','city_walk_tree_amber','city_walk_tree_sage','city_walk_tree_plum'];
-  let treeTurn=0;
-  for(const id of ['main_gate','main_market','main_garden','main_quarter','embankment']){
-    along(id,330,120,(x,y,nx,ny,side,hw)=>{
+  for(const id of ['main_gate','south_street','main_south','main_market','main_garden','main_quarter','embankment',
+    'market_street','bank_lane','duel_lane','coven_lane','archive_lane','society_lane','cellar_lane','rescue_lane','bay_lane','workshop_lane']){
+    along(id,id==='embankment'?240:330,id==='embankment'?60:/lane|street$|bank/.test(id)&&!/^(main|south)/.test(id)?170:120,(x,y,nx,ny,side,hw)=>{
       place('city_lamp_01',x+nx*side*(hw+22),y+ny*side*(hw+22))||place('city_lamp_01',x-nx*side*(hw+22),y-ny*side*(hw+22));
     });
-    along(id,210,200,(x,y,nx,ny,side,hw)=>{
-      const k=TREES[treeTurn++%TREES.length],o=hw+80;
-      place(k,x-nx*side*o,y-ny*side*o,id==='main_quarter'?{frost:true}:{});
-    });
   }
-
+  // Seeded scatter: natural groves (never rows). Trees mix three species; the filter in place() drops anything that would block.
+  const rng=seed=>{let s=seed>>>0;return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};};
+  const TREES=['city_walk_tree_sage','city_walk_tree_amber','city_walk_tree_plum'];
+  const grove=(cx,cy,rx,ry,n,seed,gap=125,kinds=TREES)=>{
+    const r=rng(seed),pts=[];
+    for(let tries=0;pts.length<n&&tries<n*60;tries++){
+      const a=r()*Math.PI*2,d=Math.sqrt(r()),x=Math.round(cx+Math.cos(a)*d*rx),y=Math.round(cy+Math.sin(a)*d*ry);
+      if(pts.some(q=>Math.hypot(q.x-x,q.y-y)<gap))continue;
+      pts.push({x,y,k:kinds[Math.floor(r()*kinds.length)]});
+    }
+    pts.sort((a,b)=>a.y-b.y).forEach(q=>place(q.k,q.x,q.y));
+  };
   // 1. Дорога и ворота: фонари у въезда, тропа к лаборатории уходит в лес
   group([['lantern_02',430,5070],['lantern_02',590,5262],['city_walk_wall_post',660,5088,{solid:null,force:true,name:'gate_post_n'}],
     ['city_walk_wall_post',660,5268,{solid:null,force:true,name:'gate_post_s'}],['city_lamp_01',730,5080],['city_lamp_01',730,5280],
     ['lantern_01',220,3990],['city_crate',480,3990],['rock_small_01',150,4060],['flower_white_01',410,4880],['flower_purple_01',200,4980]]);
-  // Склад А: двор погрузки — телега, ящики, мешки; дрова у стены
-  group([['city_walk_cart',880,5030],['city_crate',1380,4990],['city_barrel',1400,5050],['city_walk_sacks',890,4940],['city_crate',760,4980,{name:'crate_a_wall'}],
-    ['city_walk_woodpile',760,4860],['city_walk_tree_sage',860,4780],['city_barrel',760,5050,{name:'barrel_a_wall'}]]);
-  // Склад Б: отдельный двор за поворотом — штабель, бочки, мешки
-  group([['city_crate',2260,5120],['city_crate',2300,5175],['city_barrel',2340,5110],['city_walk_sacks',2290,5260],
-    ['city_walk_cart',1840,5290],['city_walk_tree_amber',2400,4950],['city_walk_woodpile',2450,5380]]);
-  // Зелёный клин в повороте улицы и южная полоса вдоль стены
-  group([['city_walk_flowerbed',1480,4930],['city_walk_hedge',1440,4800],['bush_02',1300,4760],
-    ['city_walk_tree_sage',900,5440],['city_walk_flowerbed',1450,5450],['city_walk_planter',1650,5420],['city_walk_tree_plum',1800,5470],
-    ['city_walk_hedge',2150,5420],['city_walk_tree_sage',2540,5300],['flower_purple_01',1120,5440],['city_walk_planter',1900,4800],['city_walk_hedge',2150,4780]]);
-  // 2. Торговый двор: лавка Бориса со своим товаром; место покупателя перед лавкой свободно
-  group([['city_crate',1250,4420,{paved:true}],['city_barrel',1250,4480,{paved:true}],['city_walk_sacks',1470,4320,{paved:true}],
-    ['plant_pot_01',1530,4360,{paved:true,name:'merchant_herbs'}],['city_walk_tree_amber',1190,4260],['flower_purple_01',1360,4580],
-    ['city_walk_planter',1880,4250,{paved:true}],['city_walk_planter',2230,4250],['city_walk_tree_sage',2260,4560],
-    ['city_walk_flowerbed',2000,4520],['city_walk_hedge',2480,4440],['bush_01',1860,4600],['city_walk_tree_plum',2460,4000]]);
-  // Сад вдоль дорожки от рынка к Дуэльному залу
-  group([['city_walk_tree_sage',780,4200],['city_walk_tree_amber',1120,4080],['city_walk_tree_plum',780,3820],['city_walk_flowerbed',1100,3820],
-    ['bush_02',760,4520],['city_walk_hedge',1060,4600],['city_walk_tree_sage',1150,3650],['flower_white_01',1180,3960],
-    ['flower_purple_01',830,3600],['city_walk_planter',1320,4020],['city_walk_hedge',780,4380]]);
-  // 3. Площадь: фонтан, скамьи, клумбы; восточная половина свободна для событий
-  group([['flower_purple_01',1300,3550],['flower_white_01',1460,3550],['city_walk_planter',1400,3270,{paved:true}],
-    ['city_walk_tree_amber',1770,3600],['city_walk_tree_plum',1140,3760],['city_walk_flowerbed',1800,3760],['city_walk_tree_sage',1680,3240]]);
-  // Двор Дуэльного зала: тренировочные чучела и стойка
-  group([['city_walk_dummy',860,3420],['city_walk_dummy',820,3330],['city_duel_rack',1230,3290],['city_sign_duel',1260,3300,{solid:null,name:'duel_sign'}],
-    ['city_walk_tree_amber',800,3180],['city_walk_hedge',1340,3190]]);
-  // Дом Ковенов: травяной сад и фонари под полумесяцем
-  group([['city_walk_herbbed',1660,3150],['city_walk_herbbed',2170,3250],['lantern_02',2120,3170],['city_sign_coven',1800,3200,{solid:null,name:'coven_sign'}],
-    ['city_walk_tree_plum',2150,3060],['candle_group_01',2090,3205],['city_walk_herbbed',2180,3420],['bush_02',2000,3420]]);
-  // 4. Сад у Архива: тихий садик с западной стороны, клумбы и живые изгороди
-  group([['city_walk_tree_plum',760,2420],['city_walk_hedge',800,2560],['city_walk_flowerbed',790,2860],['city_sign_archive',1420,2610,{solid:null,name:'archive_sign'}],
-    ['city_walk_tree_sage',1060,2700],['city_walk_flowerbed',1250,2800],['city_walk_hedge',1220,2920],['city_walk_tree_amber',1420,2950],
-    ['city_walk_tree_amber',1450,2420],['city_walk_planter',1460,2340],['city_walk_tree_sage',1050,3020],['bush_01',800,3060],
-    ['city_walk_flowerbed',1250,3060],['city_walk_tree_plum',1420,3120],['city_walk_hedge',800,2300]]);
-  // Общество Преображения: двор с рунной плитой и восточный сад вдоль дорожки
-  group([['rune_slab_01',1780,2880],['city_sign_society',2100,2740,{solid:null,name:'society_sign'}],['city_walk_tree_sage',2180,2480],['city_walk_planter',2160,2640],
-    ['flower_purple_01',1830,2830],['city_walk_tree_plum',2470,2700],['city_walk_flowerbed',2480,2420],['city_walk_hedge',2200,2960],
-    ['city_walk_tree_amber',2500,3120],['city_walk_tree_sage',2480,3560],['city_walk_flowerbed',2220,3700],['city_walk_tree_plum',2500,4250]]);
-  // Набережная: фонари у воды
-  for(const x of [900,1250,1950,2350])place('city_lamp_01',x,2192);
+  // 2. Склады на Складской улице: у каждого свой рабочий двор, перед дверью — клумбы и кадки
+  group([['city_walk_cart',860,5040],['city_walk_sacks',880,4950],['city_crate',760,4990,{name:'crate_a_wall'}],['city_walk_woodpile',770,4870],
+    ['city_barrel',760,5060,{name:'barrel_a_wall'}],['city_walk_tree_sage',860,4770],['city_crate',1385,5000],['city_barrel',1410,5055],
+    ['city_walk_porch_pots',1025,5040,{paved:true}],['city_walk_porch_pots',1275,5040,{paved:true}],['city_walk_hedge',1040,5085],['city_walk_hedge',1260,5085]]);
+  group([['city_crate',2290,5010],['city_crate',2335,5055],['city_barrel',2390,5015],['city_walk_sacks',2300,4940],['city_walk_cart',1790,5050],
+    ['city_walk_tree_amber',2400,4880],['city_walk_woodpile',2470,5330],['city_walk_porch_pots',1925,5105,{paved:true}],['city_walk_porch_pots',2175,5105,{paved:true}],
+    ['city_walk_hedge',1930,5090],['city_walk_hedge',2170,5090]]);
+  // Южный сад вдоль стены: клумбы, скамья и тихие деревья
+  group([['city_walk_tree_sage',900,5440],['city_walk_flowerbed',1050,5410],['city_walk_tree_plum',1250,5470],['city_walk_flowerbed',1450,5430],
+    ['city_walk_planter',1680,5400],['city_walk_tree_amber',1810,5470],['city_walk_hedge',2050,5420],['city_walk_tree_sage',2210,5490],
+    ['flower_purple_01',1120,5450],['city_walk_woodpile',1040,5475],['city_walk_pumpkins',2300,5420]]);
+  // 3. Торговая улица: лавка Бориса со своим товаром (место покупателя свободно), перед банком — доска и кадки
+  group([['city_crate',1120,4440,{paved:true}],['city_barrel',1120,4495,{paved:true}],['city_walk_sacks',1310,4330,{paved:true}],
+    ['plant_pot_01',1400,4375,{paved:true,name:'merchant_herbs'}],['city_walk_tree_amber',1170,4225],['flower_purple_01',1400,4510],
+    ['city_walk_planter',1840,4410],['city_walk_flowerbed',1960,4440],['city_walk_hedge',2110,4430],['city_walk_tree_sage',2260,4560],
+    ['city_walk_porch_pots',1925,4325,{paved:true}],['city_walk_porch_pots',2175,4325,{paved:true}],['bush_01',1840,4640],['city_walk_pumpkins',1255,4560]]);
+  // 4. Площадь: кольцо фонарей по краю, цветы на мостовой, четыре уголка зелени вокруг; восточная половина свободна для событий
+  for(const a of [20,160,200,340])place('city_lamp_01',1500+Math.round(255*Math.cos(a*Math.PI/180)),3540+Math.round(255*Math.sin(a*Math.PI/180)),{paved:true});
+  group([['flower_purple_01',1300,3550,{paved:true}],['flower_white_01',1460,3550,{paved:true}],
+    ['city_walk_tree_amber',1190,3270],['city_walk_flowerbed',1250,3260],['city_walk_tree_plum',1810,3250],['city_walk_flowerbed',1780,3290],
+    ['city_walk_tree_sage',1180,3830],['city_walk_hedge',1260,3850],['city_walk_tree_amber',1830,3840],['city_walk_flowerbed',1760,3860]]);
+  // 5. Двор Дуэльного зала: чучела и стойка у западной стороны, перед дверью — кадки
+  group([['city_walk_dummy',850,3290],['city_walk_dummy',790,3390],['city_duel_rack',960,3420],['city_sign_duel',1180,3300,{solid:null,paved:true,name:'duel_sign'}],
+    ['city_walk_tree_amber',800,3170],['city_walk_hedge',1010,3480],['city_walk_porch_pots',975,3305,{paved:true}],['city_walk_porch_pots',1225,3305,{paved:true}]]);
+  // 6. Дом Ковенов: травяной сад и фонари под полумесяцем
+  group([['city_walk_herbbed',2210,3240],['city_walk_herbbed',2220,3090],['lantern_02',2120,3210],['city_sign_coven',1800,3195,{solid:null,paved:true,name:'coven_sign'}],
+    ['city_walk_tree_plum',2250,2980],['candle_group_01',2090,3225,{solid:null,paved:true}],['city_walk_porch_pots',1825,3250,{paved:true}],
+    ['city_walk_porch_pots',2075,3250,{paved:true}],['bush_02',2000,3330],['city_walk_hedge',1840,3330]]);
+  // 7. Тихий сад у Архива: скамья в кольце живых изгородей, клумбы и деревья по краям
+  group([['city_sign_archive',1420,2600,{solid:null,paved:true,name:'archive_sign'}],['city_walk_porch_pots',1125,2625,{paved:true}],['city_walk_porch_pots',1375,2650,{paved:true}],
+    ['city_walk_tree_plum',770,2400],['city_walk_hedge',900,2680],['city_walk_hedge',1010,2680],['city_walk_flowerbed',860,2870],['city_walk_flowerbed',1020,2870],
+    ['city_walk_tree_sage',760,2780],['city_walk_tree_amber',1080,2960],['flower_white_01',940,2780],['flower_purple_01',990,2900],['city_walk_hedge',810,2330],
+    ['city_walk_tree_sage',1280,2900],['city_walk_flowerbed',1250,2990],['city_walk_planter',1440,2400],['city_walk_tree_amber',1450,2970]]);
+  // 8. Общество Преображения: двор с рунной плитой и восточный сад
+  group([['rune_slab_01',1780,2880],['city_sign_society',2100,2750,{solid:null,paved:true,name:'society_sign'}],['city_walk_planter',2160,2640],
+    ['flower_purple_01',1830,2840],['city_walk_porch_pots',1825,2790,{paved:true}],['city_walk_porch_pots',2075,2790,{paved:true}],['city_walk_tree_sage',2180,2430],
+    ['city_walk_tree_plum',2460,2680],['city_walk_flowerbed',2490,2420],['city_walk_hedge',2260,2960],['city_walk_tree_amber',2470,3000],
+    ['city_walk_tree_sage',2330,2850],['city_walk_flowerbed',2160,2870]]);
+  // 9. Набережная: фонари у воды и цветы на краях аллеи
+  for(const x of [900,2350])place('city_lamp_01',x,2192);
   for(const [x,y] of [[1492,2084],[1628,2084],[1492,2186],[1628,2186]])place('city_walk_wall_post',x,y,{solid:null,force:true,name:'bridge_post_'+x+'_'+y});
-  // 5. Замёрзший квартал: дома за мостом, иней, котёл Нэрис у канала
-  group([['city_barrel',820,1850,{frost:true}],['city_walk_planter',800,1720,{frost:true}],['city_walk_tree_sage',820,1520,{frost:true}],
-    ['city_walk_hedge',1200,2030,{frost:true}],['city_walk_woodpile',2250,1460,{frost:true}],['city_walk_tree_plum',2420,1560,{frost:true}],
-    ['city_walk_tree_sage',2300,1950,{frost:true}],['herb_bundle_01',2010,2010],['city_crate',2020,1940,{frost:true}],['city_walk_flowerbed',2120,1820,{frost:true}],
-    ['city_walk_hedge',2050,1250,{frost:true}],['city_walk_tree_amber',2350,1220,{frost:true}],['city_walk_hedge',950,1300,{frost:true}],
-    ['city_walk_tree_plum',800,1250,{frost:true}],['city_walk_planter',1350,1300,{frost:true}],['city_walk_tree_amber',1460,1560,{frost:true}],
-    ['city_barrel',2480,1700,{frost:true}],['city_walk_flowerbed',2450,2010,{frost:true}],['city_walk_tree_sage',1450,1420,{frost:true}]]);
+  group([['city_walk_flowerbed',1050,2335],['city_walk_flowerbed',2080,2335],['city_walk_tree_plum',2240,2330],['city_walk_tree_sage',880,2335]]);
+  // 10. Замёрзший квартал: дома за мостом, иней, котёл Нэрис у канала
+  group([['city_walk_porch_pots',1125,1910,{paved:true}],['city_walk_porch_pots',1375,1910,{paved:true}],['city_walk_porch_pots',1865,1670,{paved:true}],
+    ['city_walk_porch_pots',2115,1670,{paved:true}],['city_barrel',830,1850],['city_walk_planter',810,1720],['city_walk_woodpile',840,1450],['city_walk_planter',960,1470],
+    ['city_walk_tree_sage',860,1580],['city_walk_hedge',1200,2040],['city_walk_woodpile',2250,1460],['city_walk_tree_plum',2420,1560],['city_walk_tree_sage',2310,1950],
+    ['herb_bundle_01',2010,2010],['city_crate',2020,1945],['city_walk_flowerbed',2120,1830],['city_barrel',2480,1700],['city_walk_flowerbed',2450,2010],
+    ['city_walk_tree_amber',2350,1230],['city_walk_hedge',2050,1250],['city_walk_tree_plum',820,1260],['city_walk_hedge',950,1310],['city_walk_planter',1350,1310],
+    ['city_walk_tree_amber',1450,1560],['city_walk_tree_sage',1420,1400],['city_walk_flowerbed',2250,1290]]);
   for(const [x,y] of [[1350,2030],[1900,1760],[1150,1580],[2050,1460],[1700,1340],[2380,1980],[860,1980],[1500,1240]])
     props.push({id:`city_plan_frost_${x}_${y}`,k:'frost_patch_01',...P(x,y),solid:null,l:'floor',alpha:0.6});
-  // 6. Северный двор: Северный дом с палисадником, мастерская с рабочим двором, учебный плац
-  group([['city_walk_flowerbed',900,640,{frost:true}],['city_barrel',960,580,{frost:true}],['city_walk_tree_plum',820,460,{frost:true}],
-    ['city_walk_woodpile',2500,780,{frost:true}],['table_01',2100,960,{frost:true}],['city_walk_cart',2480,980,{frost:true}],
-    ['city_walk_dummy',1460,360],['city_walk_dummy',1990,360],['city_walk_tree_sage',2500,450,{frost:true}],['city_walk_tree_amber',2100,250,{frost:true}],
-    ['city_walk_hedge',900,960,{frost:true}],['city_walk_tree_sage',1350,960,{frost:true}],['city_walk_tree_plum',2150,1010,{frost:true}],
-    ['city_walk_planter',1040,820,{frost:true}],['city_walk_hedge',1440,260,{frost:true}]]);
-  // Сады на окраинах: у каждого свой характер и назначение.
-  // Фруктовый сад между лавкой Бориса и Дуэльным залом — ряды деревьев вдоль узкой дорожки.
-  for(let y=3600,row=0;y<=4640;y+=190,row++)for(let x=740+(row%2)*80;x<=1180;x+=200)place(row%2?'city_walk_tree_sage':'city_walk_tree_amber',x,y);
-  // Аптекарский огород у восточной дорожки: грядки с травами между Домом Ковенов и банком.
-  group([['city_walk_herbbed',2200,3580],['city_walk_flowerbed',2370,3630],['city_walk_herbbed',2510,3580],
-    ['city_walk_herbbed',2270,3820],['city_walk_flowerbed',2460,3920]]);
-  // Тихий сад у Архива: изгородь вокруг скамьи и клумбы.
-  group([['city_walk_hedge',760,2700],['city_walk_hedge',760,2780],['city_walk_flowerbed',1000,2340,{paved:false}],['city_walk_tree_sage',1060,3100],
-    ['city_walk_tree_amber',780,2960],['flower_white_01',940,2780],['flower_purple_01',990,2900]]);
-  // Восточный сад Общества: клумбы рядами и деревья.
-  group([['city_walk_flowerbed',2180,2420],['city_walk_tree_sage',2490,2500],['city_walk_flowerbed',2530,2690],
-    ['city_walk_tree_plum',2210,2830],['city_walk_flowerbed',2500,2870]]);
-  // Двор за банком и дровяной угол у южной стены.
-  for(let y=4460;y<=4900;y+=110)place('city_walk_hedge',2510,y);
-  group([['city_walk_tree_amber',2300,4700],['city_walk_tree_sage',2400,4840],['city_walk_planter',2300,4920],['city_walk_woodpile',1040,5470]]);
-  // Жилые дворы квартала: огороды, поленницы, кадки за домами.
-  group([['city_walk_woodpile',800,1400,{frost:true}],['city_walk_planter',960,1460,{frost:true}],['city_walk_tree_amber',1000,1200,{frost:true}],
-    ['city_walk_flowerbed',2250,1300,{frost:true}],['city_walk_tree_sage',2520,1300,{frost:true}],['city_walk_planter',2400,1420,{frost:true}],
-    ['city_walk_tree_sage',820,2010,{frost:true}],['city_walk_hedge',2480,1800,{frost:true}]]);
-  // Вдоль внутренней стороны стены — ряд городских деревьев, как живая граница.
-  for(const x of [730,2560])for(let y=300,i=0;y<=5480;y+=280,i++)place(['city_walk_tree_sage','city_walk_tree_amber','city_walk_tree_plum'][(i+(x>1000?1:0))%3],x,y,y<2080?{frost:true}:{});
-  // Flower borders give the open lawns the inhabited feel of the approved concept.
-  for(const x of [790,2500])for(let y=620;y<=5420;y+=560)place('city_walk_flowerbed',x,y,y<2080?{frost:true}:{});
-  for(const [x,y] of [[950,3140],[1120,2980],[2380,3180],[2370,4030],[2150,4610],[1970,4750],
-    [1300,4680],[990,5250],[1260,5390],[2260,5350],[1300,1390],[1050,950],[1930,1960],[2310,1980]])
-    place('city_walk_flowerbed',x,y,y<2080?{frost:true}:{});
+  // 11. Северный двор: Северный дом с палисадником, мастерская с рабочим двором, учебный плац
+  group([['city_walk_porch_pots',1075,705,{paved:true}],['city_walk_porch_pots',1325,705,{paved:true}],['city_walk_flowerbed',900,650],['city_barrel',960,590],
+    ['city_walk_tree_plum',820,460],['city_walk_woodpile',2500,790],['table_01',2110,975],['city_walk_cart',2480,985],['city_walk_porch_pots',2125,890,{paved:true}],
+    ['city_walk_porch_pots',2375,890,{paved:true}],['city_walk_dummy',1460,360],['city_walk_dummy',1990,360],['city_walk_tree_sage',2500,450],
+    ['city_walk_tree_amber',2100,260],['city_walk_hedge',900,960],['city_walk_tree_sage',1350,960],['city_walk_tree_plum',2150,1020],['city_walk_planter',1040,830],
+    ['city_walk_hedge',1440,250]]);
+  // Палисадники вдоль ответвлений: клумба и живая изгородь по южной стороне каждой дорожки (с северной стоит фасад)
+  roads.filter(r=>/_lane$/.test(r.id)).forEach((r,i)=>{
+    const [[ax,ay],[bx,by]]=[r.pts[0],r.pts[r.pts.length-1]].map(([x,y])=>[x-CITY_RECT.x,y-CITY_RECT.y]);
+    [0.32,0.68].forEach((f,j)=>place((i+j)%2?'city_walk_hedge':'city_walk_flowerbed',ax+(bx-ax)*f,ay+(by-ay)*f+128));
+  });
+  // Садовая стена Северного двора: кусты, клумбы и пара деревьев кучками, чтобы она не читалась голой полосой
+  group([['city_walk_hedge',840,1180],['city_walk_flowerbed',960,1176],['bush_02',1250,1172],['city_walk_tree_plum',1330,1195],
+    ['city_walk_flowerbed',2000,1176],['city_walk_hedge',2110,1180],['bush_01',2380,1172],['city_walk_tree_amber',2480,1195],
+    ['bush_02',1010,1078],['city_walk_flowerbed',1450,1072],['city_walk_hedge',2300,1078],['city_walk_tree_sage',2050,1085]]);
+  // Тренировочный плац: фонари по краю круглой площади
+  for(const a of [25,155,205,335])place('city_lamp_01',1720+Math.round(235*Math.cos(a*Math.PI/180)),690+Math.round(235*Math.sin(a*Math.PI/180)),{paved:true});
+  // 12. Рощи и сады на окраинах — у каждой своё назначение
+  grove(860,380,150,150,4,11);grove(2450,330,110,110,3,12);grove(880,1190,160,150,3,13);grove(2480,1140,110,100,3,14);
+  // Фруктовый сад между лавкой Бориса и Дуэльным залом
+  grove(930,4070,200,520,13,21,135,['city_walk_tree_sage','city_walk_tree_amber','city_walk_tree_amber','city_walk_tree_plum']);
+  group([['bush_02',760,4540],['city_walk_hedge',1060,4630],['city_walk_hedge',780,4400],['flower_white_01',1180,3960],['flower_purple_01',830,3620],['city_walk_flowerbed',1100,3830]]);
+  // Аптекарский огород у Дома Ковенов и банка: компактные грядки с травами, скамья и несколько деревьев
+  group([['city_walk_herbbed',2200,3640],['city_walk_herbbed',2330,3640],['city_walk_flowerbed',2460,3640],['city_walk_herbbed',2200,3730],
+    ['city_walk_herbbed',2330,3730],['city_walk_flowerbed',2460,3730],['city_walk_hedge',2330,3560],['city_walk_planter',2150,3910],['city_walk_flowerbed',2440,3960]]);
+  grove(2370,3880,190,330,8,31);grove(2400,4660,180,260,5,32);grove(2420,2200,120,90,2,33);
+  grove(940,5290,140,100,3,34);grove(2250,5400,300,90,4,35);
+  // Сады у стен: по одной живой группе, а не ряды вдоль ограды
+  grove(760,2150,70,60,2,41);grove(2490,2300,80,80,3,42);grove(780,3600,60,150,3,43);grove(2500,4300,60,100,3,44);
+  // Цветочные бордюры у домов
+  for(const [x,y] of [[1000,3140],[1130,2990],[2400,3180],[2380,4090],[2160,4650],[1990,4770],[1300,4700],[990,5250],[1260,5390],[2260,5350],[1300,1390],[1050,950],[1930,1960],[2310,1980]])
+    place('city_walk_flowerbed',x,y);
   // Cozy details belong to the houses, not the middle of a walking route.
-  group([
-    ['city_walk_porch_pots',1100,2770],['city_walk_porch_pots',2170,2810],
-    ['city_walk_porch_pots',2240,4280],['city_walk_pumpkins',1170,4610],
-    ['city_walk_pumpkins',955,5020],['city_walk_pumpkins',2270,5080],
-    ['city_walk_porch_pots',2150,3100],['city_walk_herbbed',2200,3080],
-    ['city_walk_pumpkins',1040,770,{frost:true}],['city_walk_porch_pots',2420,920,{frost:true}],
-    ['city_walk_pumpkins',990,1970,{frost:true}],['city_walk_porch_pots',2190,1600,{frost:true}],
-    ['city_walk_herbbed',185,4090],['city_walk_porch_pots',470,4140],
-  ]);
+  group([['city_walk_pumpkins',1170,4610],['city_walk_pumpkins',955,5030],['city_walk_pumpkins',2270,5090],['city_walk_pumpkins',1040,780],['city_walk_pumpkins',990,1970],
+    ['city_walk_herbbed',185,4090],['city_walk_porch_pots',470,4140]]);
   // Keep the existing lantern positions and footprints; only the town artwork changes.
   for(const p of props)if(p.k==='city_lamp_01'){
     p.k='city_walk_lamp';p.light=42;

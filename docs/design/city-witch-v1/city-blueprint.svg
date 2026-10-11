@@ -9,72 +9,50 @@
 <rect x="640" y="0" width="2000" height="120" fill="#344333"/>
 <rect x="640" y="5600" width="2000" height="160" fill="#344333"/>
 <rect x="600" y="2082" width="2080" height="96" fill="#3f6b70" stroke="#c3b694" stroke-width="10"/>
-<polyline points="640,5170 1050,5185 1400,5170 1600,5060 1680,4850 1680,4600" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="640,5170 1050,5185 1400,5170 1600,5060 1680,4850 1680,4600" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1640,4250 1560,4020 1500,3780" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1640,4250 1560,4020 1500,3780" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1480,3290 1540,3060 1600,2860 1600,2640 1560,2420 1560,2270" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1480,3290 1540,3060 1600,2860 1600,2640 1560,2420 1560,2270" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="640,5170 1100,5170 1560,5170" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="640,5170 1100,5170 1560,5170" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,5170 1900,5170 2200,5170" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,5170 1900,5170 2200,5170" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,5170 1560,4600" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,5170 1560,4600" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,4610 1560,3790" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,4610 1560,3790" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,3270 1560,2270" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,3270 1560,2270" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="1560,2280 1560,2010" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="1560,2280 1560,2010" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1560,2030 1540,1880 1600,1680 1680,1480 1720,1300 1720,1140 1720,840" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1560,2030 1540,1880 1600,1680 1680,1480 1720,1300 1720,1140 1720,840" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1050,5090 1250,5090" stroke="#aea085" stroke-width="174" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1050,5090 1250,5090" stroke="#d7c8a6" stroke-width="160" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1640,4980 1880,5150 2000,5160" stroke="#aea085" stroke-width="114" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1640,4980 1880,5150 2000,5160" stroke="#d7c8a6" stroke-width="100" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1960,5160 2140,5160" stroke="#aea085" stroke-width="174" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1960,5160 2140,5160" stroke="#d7c8a6" stroke-width="160" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1640,4400 1800,4390" stroke="#aea085" stroke-width="314" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1640,4400 1800,4390" stroke="#d7c8a6" stroke-width="300" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1360,4430 1440,4430" stroke="#aea085" stroke-width="244" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1360,4430 1440,4430" stroke="#d7c8a6" stroke-width="230" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1950,4310 2120,4310" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1950,4310 2120,4310" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1400,3500 1560,3490" stroke="#aea085" stroke-width="434" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1400,3500 1560,3490" stroke="#d7c8a6" stroke-width="420" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1180,3345 1300,3400" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1180,3345 1300,3400" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1020,3340 1180,3340" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1020,3340 1180,3340" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1640,3330 1780,3260 1880,3245" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1640,3330 1780,3260 1880,3245" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1880,3240 2040,3240" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1880,3240 2040,3240" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1560,2630 1330,2630" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1560,2630 1330,2630" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1170,2630 1330,2630" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1170,2630 1330,2630" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1600,2760 1880,2770" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1600,2760 1880,2770" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1880,2770 2040,2770" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1880,2770 2040,2770" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="760,2252 1200,2250 1560,2250 2100,2254 2560,2250" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="760,2252 1200,2250 1560,2250 2100,2254 2560,2250" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1540,1890 1330,1890" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1540,1890 1330,1890" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1170,1890 1330,1890" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1170,1890 1330,1890" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1620,1640 1910,1650" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1620,1640 1910,1650" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1910,1650 2070,1650" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1910,1650 2070,1650" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1600,640 1840,620" stroke="#aea085" stroke-width="434" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1600,640 1840,620" stroke="#d7c8a6" stroke-width="420" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1420,700 1280,690" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1420,700 1280,690" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1120,690 1280,690" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1120,690 1280,690" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="2000,760 2170,860" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="2000,760 2170,860" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="2170,870 2330,870" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="2170,870 2330,870" stroke="#d7c8a6" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1250,4440 1050,4250 950,3950 1000,3420" stroke="#aea085" stroke-width="78" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="1250,4440 1050,4250 950,3950 1000,3420" stroke="#d7c8a6" stroke-width="64" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="960,3300 880,3000 900,2700 960,2420 900,2252" stroke="#aea085" stroke-width="78" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="960,3300 880,3000 900,2700 960,2420 900,2252" stroke="#d7c8a6" stroke-width="64" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="2120,4310 2350,4150 2400,3700 2300,3330 2350,2950 2300,2500 2450,2252" stroke="#aea085" stroke-width="78" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<polyline points="2120,4310 2350,4150 2400,3700 2300,3330 2350,2950 2300,2500 2450,2252" stroke="#d7c8a6" stroke-width="64" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,2030 1560,1800 1590,1610 1670,1410 1720,1260 1720,1140 1720,930" stroke="#aea085" stroke-width="144" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,2030 1560,1800 1590,1610 1670,1410 1720,1260 1720,1140 1720,930" stroke="#d7c8a6" stroke-width="130" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1150,5170 1150,5040" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1150,5170 1150,5040" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="2050,5170 2050,5105" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="2050,5170 2050,5105" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1190,4350 1560,4350" stroke="#aea085" stroke-width="204" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1190,4350 1560,4350" stroke="#d7c8a6" stroke-width="190" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,4300 2050,4300" stroke="#aea085" stroke-width="124" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,4300 2050,4300" stroke="#d7c8a6" stroke-width="110" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1490,3540 1510,3540" stroke="#aea085" stroke-width="554" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1490,3540 1510,3540" stroke="#d7c8a6" stroke-width="540" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1710,690 1730,690" stroke="#aea085" stroke-width="514" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1710,690 1730,690" stroke="#d7c8a6" stroke-width="500" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1400,3330 1100,3330" stroke="#aea085" stroke-width="124" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1400,3330 1100,3330" stroke="#d7c8a6" stroke-width="110" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,3220 1950,3220" stroke="#aea085" stroke-width="124" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,3220 1950,3220" stroke="#d7c8a6" stroke-width="110" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,2620 1250,2620" stroke="#aea085" stroke-width="124" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,2620 1250,2620" stroke="#d7c8a6" stroke-width="110" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,2760 1950,2760" stroke="#aea085" stroke-width="124" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,2760 1950,2760" stroke="#d7c8a6" stroke-width="110" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,1880 1250,1880" stroke="#aea085" stroke-width="124" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1560,1880 1250,1880" stroke="#d7c8a6" stroke-width="110" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1600,1640 1990,1640" stroke="#aea085" stroke-width="124" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1600,1640 1990,1640" stroke="#d7c8a6" stroke-width="110" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1500,680 1200,680" stroke="#aea085" stroke-width="124" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1500,680 1200,680" stroke="#d7c8a6" stroke-width="110" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1900,870 2250,870" stroke="#aea085" stroke-width="124" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1900,870 2250,870" stroke="#d7c8a6" stroke-width="110" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1080,2252 2040,2252" stroke="#aea085" stroke-width="104" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1080,2252 2040,2252" stroke="#d7c8a6" stroke-width="90" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="-40,5170 220,5164 440,5172 700,5170" stroke="#aea085" stroke-width="164" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="-40,5170 220,5164 440,5172 700,5170" stroke="#867554" stroke-width="150" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 <polyline points="330,5150 300,4850 370,4520 320,4200 330,4010" stroke="#aea085" stroke-width="124" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
@@ -86,15 +64,6 @@
 <rect x="640" y="5560" width="2000" height="40" fill="#cfc3a3" stroke="#524d3c" stroke-width="3"/>
 <rect x="680" y="1100" width="940" height="36" fill="#cfc3a3" stroke="#524d3c" stroke-width="3"/>
 <rect x="1820" y="1100" width="780" height="36" fill="#cfc3a3" stroke="#524d3c" stroke-width="3"/>
-<rect x="700" y="2948" width="150" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
-<rect x="700" y="868" width="220" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
-<rect x="700" y="4758" width="180" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
-<rect x="2400" y="4348" width="180" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
-<rect x="2420" y="3348" width="160" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
-<rect x="2250" y="1828" width="300" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
-<rect x="2440" y="1018" width="140" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
-<rect x="2400" y="2948" width="180" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
-<rect x="700" y="1978" width="200" height="12" fill="#3a3238" stroke="#524d3c" stroke-width="3"/>
 <rect x="1038" y="368" width="324" height="252" rx="12" fill="#d4ad84" stroke="#28271f" stroke-width="5"/>
 <rect x="1046" y="376" width="308" height="120.96" rx="10" fill="#774b65"/>
 <text x="1200" y="434" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="bold" fill="#fff4d5">1. north_bay</text>
@@ -149,7 +118,7 @@
 <text x="1720" y="1106" text-anchor="middle" font-family="sans-serif" font-size="26" fill="#eafcff">FLOODED PASSAGE</text>
 <rect x="275" y="3958" width="110" height="30" fill="#a3d8df" stroke="#426976" stroke-width="3"/>
 <text x="330" y="3948" text-anchor="middle" font-family="sans-serif" font-size="26" fill="#eafcff">LAB SEAL</text>
-<circle cx="1380" cy="3470" r="64" fill="#66b9bc" stroke="#ebd7ab" stroke-width="12"/>
+<circle cx="1500" cy="3538" r="64" fill="#66b9bc" stroke="#ebd7ab" stroke-width="12"/>
 <text x="250" y="5175" font-family="sans-serif" font-size="30" font-weight="bold" fill="#2b2420" stroke="#f4e4ba" stroke-width="6" paint-order="stroke">ROAD</text>
 <text x="920" y="5175" font-family="sans-serif" font-size="30" font-weight="bold" fill="#2b2420" stroke="#f4e4ba" stroke-width="6" paint-order="stroke">GATE · WAREHOUSES</text>
 <text x="1780" y="4480" font-family="sans-serif" font-size="30" font-weight="bold" fill="#2b2420" stroke="#f4e4ba" stroke-width="6" paint-order="stroke">MARKET</text>

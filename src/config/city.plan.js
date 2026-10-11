@@ -188,6 +188,7 @@ export const CITY_CANAL = { id:'city_canal', type:'canal', urban:true, half:48,
   pts:[[P(600,2130).x,P(600,2130).y],[P(2680,2130).x,P(2680,2130).y]], gaps:[[P(1505,0).x,P(1615,0).x]] };
 export function cityMapData() {
   const grounds=[
+    {id:'city_lawn',...CITY_RECT,tex:'city_walk_lawn',l:'ground'},
     // Иней лежит на всём квартале (трава и улицы), пока его не растопят; на площади — только в финале.
     rect('city_frost_quarter',680,160,1920,1922,'snow_ground_01',{tileScale:0.5,tint:0xdcf0f6,alpha:0.3,layerOffset:0.2}),
     rect('city_frost_plaza',680,3080,1920,1680,'snow_ground_01',{tileScale:0.5,tint:0xdcf0f6,alpha:0.36,layerOffset:0.2}),

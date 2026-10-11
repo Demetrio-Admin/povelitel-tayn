@@ -3,21 +3,22 @@ import { WORLD, INTERACTIVES, ENEMY_SPAWNS } from '../config/world.layout.js';
 import { services } from '../services.js';
 import { buildEditorPanel } from '../ui/editorPanel.js';
 import { History, pickAt, snapValue, nextId, clamp } from '../world/editorCore.js';
-import { diffEdits, diffPos, diffTerrain, saveDraft, clearDraft, exportEditsFile, parseEditsFile } from '../world/mapData.js';
+import { applyPos, diffEdits, diffPos, diffTerrain, saveDraft, clearDraft, exportEditsFile, parseEditsFile } from '../world/mapData.js';
+import { linkBuildingPortals } from '../world/buildingGeometry.js';
 import { buildRoad, buildWater } from '../world/terrain.js';
 import * as TE from '../world/terrainEdit.js';
 import { collectSolids, propSolid, baseSolid } from '../world/solids.js';
 import { checkWalkability } from '../world/check.js';
 import { PROP_DEFS } from '../world/propDefs.js';
 import { assetName, assetGroup, ASSET_CATALOG, defaultAssetSolid } from '../world/assetCatalog.js';
-import { LOCATIONS } from '../config/locations.js';
+import { LOCATIONS, locationAt } from '../config/locations.js';
 import { ENEMIES } from '../config/balance.enemies.js';
 
 const SNAPS = [0, 8, 16, 32];
 const clone = (v) => JSON.parse(JSON.stringify(v));
 const COL_COLORS = { trees: 0x58c46a, wall: 0xd9a066, ruin: 0xb0b4c4, furniture: 0xe8d37a };
-const SHAPE_COLORS = { dirt: 0xe8a36a, stone: 0xc9d2e0, river: 0x5cc8ff, blob: 0x5cc8ff };
-const KIND_NAMES = { dirt: 'тропа', stone: 'каменная дорога', river: 'ручей', blob: 'водоём', trees: 'лес', wall: 'стена дома', ruin: 'руины', furniture: 'мебель' };
+const SHAPE_COLORS = { dirt: 0xe8a36a, stone: 0xc9d2e0, river: 0x5cc8ff, canal: 0x5cc8ff, blob: 0x5cc8ff };
+const KIND_NAMES = { dirt: 'тропа', stone: 'каменная дорога', river: 'ручей', canal: 'городской канал', blob: 'водоём', trees: 'лес', wall: 'стена дома', citywall:'городская стена', fence:'ограда', ruin: 'руины', furniture: 'мебель' };
 const TOP = DEPTH.markers + 50;
 
 /**
@@ -42,6 +43,7 @@ export class MapEditor {
     this.resetArmed = false;
     this.mode = 'props';
     this.entityFilter = 'all';
+    this.locationId = locationAt(scene.player.x, scene.player.y).id;
     // рабочие копии дорог, воды и стен: меняются в редакторе, а сцена получает из них новые копии при каждой правке
     this.roads = clone(services.map.roads);
     this.waters = clone(services.map.waters);
@@ -73,9 +75,9 @@ export class MapEditor {
       fit: () => this.fit(), hero: () => this.cam.centerOn(scene.player.x, scene.player.y),
       add: (key,placement) => this.addAsset(key,placement), replace: key => this.replaceTexture(key),
       property: (key,value) => this.setProperty(key,value),
-      select_entity: id => {this.select(id); const e=this.selected;if(e)this.cam.centerOn(e.x,e.y);},
+      select_entity: id => {this.select(id); const e=this.selected;if(e){this.locationId=locationAt(e.x,e.y).id;this.panel.setLocation?.(this.locationId);this.cam.centerOn(e.x,e.y);}},
       entity_filter: filter => {this.entityFilter=filter;this.select(null);},
-      location: id => {const l=LOCATIONS.find(l=>l.id===id);if(l){this.cam.setZoom(0.65);this.cam.centerOn(l.rect.x+l.rect.w/2,l.arrival.y);}},
+      location: id => this.goLocation(id),
       check: () => this.check(),
       import: file=>this.importFile(file),
       play: () => this.play(), copy: () => this.copy(), download: () => this.download(),
@@ -101,6 +103,7 @@ export class MapEditor {
     scene.events.once('shutdown', () => { this.panel.destroy(); scene.events.off('update', this.tick, this); });
 
     this.panel.setMode('props');
+    this.panel.setLocation?.(this.locationId);
     this.refreshPanel();
     this.panel.setStatus(services.map.fromDraft ? `Загружен черновик · правок: ${this.countEdits()}` : 'Правок пока нет. Всё, что вы сдвинете, сохранится в этом браузере.');
   }
@@ -112,11 +115,12 @@ export class MapEditor {
     for (const o of s.objects) {
       if(o._editorDeleted)continue;
       s.tweens.killTweensOf(o.sprite);
-      o.sprite.setVisible(true).setAlpha(1);
+      o.sprite.setVisible(true).setAlpha(o.cfg.ghost ? 0 : 1);
       if (o.baseScale) o.sprite.setScale(o.baseScale.x, o.baseScale.y).setAngle(0);
       for (const g of o.glows || []) g.setVisible(true);
       o.onFreeze?.();
       s.styleEntity(o);
+      if(o.cfg.ghost)o.sprite.setAlpha(0); // invisible interaction zones are not white patches on the map
     }
     for (const e of s.enemies) {
       if(e._editorDeleted)continue;
@@ -163,7 +167,7 @@ export class MapEditor {
     } else if (e.kind === 'obj') {
       const o = e.ref, dx = x - o.x, dy = y - o.baseY;
       o.cfg.x = x; o.cfg.y = y;
-      if (o.cfg.target) o.cfg.target = { x: o.cfg.target.x + dx, y: o.cfg.target.y + dy };
+      if (o.cfg.target && o.cfg.kind !== 'room_door') o.cfg.target = { x: o.cfg.target.x + dx, y: o.cfg.target.y + dy };
       if (o.target_position) o.target_position = { ...o.cfg.target };
       o.sprite.setPosition(x, y - (o.cfg.elevated || 0)).setDepth(DEPTH.mainBase + y);
       o.baseY = y;
@@ -263,7 +267,7 @@ export class MapEditor {
   zoomAt(px, py, factor) {
     const cam = this.cam;
     const before = cam.getWorldPoint(px, py);
-    cam.setZoom(clamp(cam.zoom * factor, 0.18, 2.6));
+    cam.setZoom(clamp(cam.zoom * factor, 0.04, 2.6));
     const after = cam.getWorldPoint(px, py);
     cam.scrollX += before.x - after.x;
     cam.scrollY += before.y - after.y;
@@ -382,7 +386,7 @@ export class MapEditor {
     if(e.kind==='col'||e.kind==='ground'){
       const list=e.kind==='col'?this.cols:this.grounds;
       const id=nextId(new Set(list.map(v=>v.id)),e.kind==='col'?'cw':'gr');
-      const data=clone(e.ref);data.id=id;data.x+=24;data.y+=16;
+      const data=clone(e.ref);data.id=id;data.x+=24;data.y+=16;delete data.building;
       this.mutate(()=>list.push(data));this.select(id);return;
     }
     const g=this.snap||8,taken=new Set([...services.map.base.map(p=>p.id),...this.propViews().map(x=>x.p.id)]);
@@ -486,8 +490,15 @@ export class MapEditor {
   }
 
   fit() {
-    this.cam.setZoom(clamp(VIEW.width / (WORLD.width + 80), 0.18, 1));
-    this.cam.centerOn(WORLD.width / 2, this.cam.worldView.centerY);
+    const loc=LOCATIONS.find(l=>l.id===this.locationId),r=loc?.rect||{x:0,y:0,w:WORLD.width,h:WORLD.height};
+    this.cam.setZoom(clamp(Math.min((this.cam.width||VIEW.width)/(r.w+80),(this.cam.height||VIEW.height)/(r.h+160)),0.04,1));
+    this.cam.centerOn(r.x+r.w/2,r.y+r.h/2);
+  }
+
+  goLocation(id) {
+    if(id==='all'){this.locationId=id;this.select(null);this.fit();return;}
+    const l=LOCATIONS.find(l=>l.id===id);if(!l)return;
+    this.locationId=id;this.select(null);this.cam.setZoom(0.65);this.cam.centerOn(l.rect.x+l.rect.w/2,l.arrival.y);
   }
 
   doUndo() { const op = this.history.undo(); if (op) { this.changed(false); this.drawSelection(); } this.refreshPanel(); }
@@ -530,9 +541,9 @@ export class MapEditor {
   infoTerrain() {
     const sh = this.selShape;
     if (!sh) return 'Дороги и река. Тяните белые кружки — точки линий. Коснитесь линии — выбрать её. Пустое место — двигать карту.';
-    const kind = KIND_NAMES[sh.type === 'river' ? 'river' : sh.type === 'blob' ? 'blob' : sh.kind] + (sh.kind ? (sh.borderless ? ' · вставка без краёв' : sh.seamless ? ' · без швов' : ' · со швом') : '');
+    const kind = KIND_NAMES[sh.type || sh.kind] + (sh.kind ? (sh.borderless ? ' · вставка без краёв' : sh.seamless ? ' · без швов' : ' · со швом') : '');
     if (!sh.pts) return `Водоём «${sh.id}» (${kind})\nцентр ${sh.cx}, ${sh.cy}  размер ${sh.rx}×${sh.ry}`;
-    const size = sh.type === 'river' ? `ширина ${sh.base * 2}–${(sh.base + sh.extra) * 2}` : `ширина ${sh.w}`;
+    const size = sh.type === 'canal' ? `ширина ${sh.half * 2}` : sh.type === 'river' ? `ширина ${sh.base * 2}–${(sh.base + sh.extra) * 2}` : `ширина ${sh.w}`;
     const pt = this.tsel.i != null ? `\nточка ${this.tsel.i + 1} из ${sh.pts.length}: ${sh.pts[this.tsel.i][0]}, ${sh.pts[this.tsel.i][1]}` : `\nточек ${sh.pts.length}; выбран отрезок ${(this.tsel.seg ?? 0) + 1}`;
     return `${sh.type === 'river' ? 'Ручей' : 'Дорога'} «${sh.id}» (${kind}), ${size}${pt}`;
   }
@@ -606,7 +617,14 @@ export class MapEditor {
     const g=JSON.stringify(this.grounds);
     if(g!==this.applied.grounds){this.applied.grounds=g;this.scene.rebuildGrounds(clone(this.grounds));}
     const c = JSON.stringify(this.cols);
-    if (c !== this.applied.cols) { this.applied.cols = c; this.scene.rebuildColliders(clone(this.cols)); }
+    if (c !== this.applied.cols) {
+      this.applied.cols = c; this.scene.rebuildColliders(clone(this.cols));
+      const portals=applyPos(linkBuildingPortals(INTERACTIVES,this.cols),this.pos);
+      for(const cfg of portals.filter(o=>o.kind==='room_door')){
+        const o=this.scene.objects.find(o=>o.id===cfg.id);if(!o)continue;
+        o.cfg=clone(cfg);o.baseY=cfg.y;o.sprite.setPosition(cfg.x,cfg.y).setDepth(DEPTH.mainBase+cfg.y);
+      }
+    }
   }
 
   /** Записывает в историю правку дорог/воды/стен: before — снимок до, текущее состояние — после. */
@@ -812,7 +830,8 @@ export class MapEditor {
     if (!sh) return;
     const f = dir > 0 ? 1.1 : 1 / 1.1;
     this.mutate(() => {
-      if (sh.type === 'river') { sh.base = Math.round(clamp(sh.base * f, 20, 160)); sh.extra = Math.round(clamp(sh.extra * f, 8, 90)); }
+      if (sh.type === 'canal') sh.half=clamp(sh.half+dir*4,12,160);
+      else if (sh.type === 'river') { sh.base = Math.round(clamp(sh.base * f, 20, 160)); sh.extra = Math.round(clamp(sh.extra * f, 8, 90)); }
       else if (sh.type === 'blob') { sh.rx = Math.round(clamp(sh.rx * f, 24, 500)); sh.ry = Math.round(clamp(sh.ry * f, 24, 500)); }
       else sh.w = Math.round(clamp(sh.w + dir * 8, 40, 260));
     });
@@ -859,6 +878,7 @@ export class MapEditor {
     this.mutate(() => {
       const id = nextId(new Set(this.roads.map(r => r.id)), 'rd');
       const r = { id, kind, ...(seamless || borderless ? { seamless: true } : {}), ...(borderless ? { borderless: true } : {}), w: kind === 'stone' ? 120 : 100, n: TE.nextNoise(this.roads, this.waters), pts: [[cx - 140, cy], [cx, cy - 24], [cx + 140, cy]] };
+      if(kind==='stone' && locationAt(cx,cy).id==='city')Object.assign(r,{texture:'city_walk_paving',tileScale:0.24,urban:true});
       this.roads.push(r);
       this.tsel = { kind: 'road', id, i: 1, seg: null };
     });
@@ -906,7 +926,8 @@ export class MapEditor {
     this.mutate(() => {
       const id = nextId(new Set(this.cols.map(x => x.id)), 'cn');
       const g = this.snap || 16;
-      this.cols.push({ ...clone(c), id, x: c.x + g * 2, y: c.y + g * 2 });
+      const copy={ ...clone(c), id, x: c.x + g * 2, y: c.y + g * 2 };delete copy.building;
+      this.cols.push(copy);
       this.csel = id;
     });
   }
@@ -954,7 +975,7 @@ export class MapEditor {
     };
     const all = [...this.roads.map(s => ({ s, kind: 'road' })), ...this.waters.map(s => ({ s, kind: 'water' }))];
     for (const { s, kind } of all) {
-      const color = SHAPE_COLORS[s.type === 'river' ? 'river' : s.type === 'blob' ? 'blob' : s.kind];
+      const color = SHAPE_COLORS[s.type || s.kind];
       const sel = this.tsel && this.tsel.kind === kind && this.tsel.id === s.id;
       if (s.pts) {
         line(s, color, sel ? 4 : 2, sel ? 1 : 0.8);

@@ -48,11 +48,11 @@ try{
    const point=await page.evaluate(id=>{
     const s=window.__game.scene.getScene('ExplorationScene'),e=s.editor.find(id),c=s.cameras.main;
     c.setZoom(1);c.centerOn(e.img.x,e.img.y-e.img.displayHeight/2);c.preRender();s.editor.select(null);
-    const b=e.img.getBounds();return{x:(b.centerX-c.worldView.x)*c.zoom,y:(b.centerY-c.worldView.y)*c.zoom};
+    const b=e.img.getBounds();return{x:(b.centerX-c.worldView.x)*c.zoom,y:(b.centerY-c.worldView.y)*c.zoom,w:window.__game.scale.width,h:window.__game.scale.height};
    },id);
    const box=await page.locator('canvas').first().boundingBox();
-   const p={x:box.x+point.x*box.width/720,y:box.y+point.y*box.height/1280};
-   const end={x:p.x+60*box.width/720,y:p.y+30*box.height/1280};
+   const p={x:box.x+point.x*box.width/point.w,y:box.y+point.y*box.height/point.h};
+   const end={x:p.x+60*box.width/point.w,y:p.y+30*box.height/point.h};
    if(name==='mobile'){
     const cdp=await context.newCDPSession(page);
     await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...p,id:0}]});
@@ -74,14 +74,14 @@ try{
    // Existing hardcoded city lamps are now selectable placements.
    await panel.locator('summary').filter({hasText:'Объекты на карте'}).click();
    await panel.locator('[data-r=entity-filter]').selectOption('prop');
-   const walkableLamp=await page.evaluate(()=>[...window.__game.scene.getScene('ExplorationScene').propViews.values()].find(v=>v.p.k==='lantern_01'&&v.blocker).p.id);
+   const walkableLamp=await page.evaluate(()=>[...window.__game.scene.getScene('ExplorationScene').propViews.values()].find(v=>v.p.k==='city_walk_lamp'&&v.blocker).p.id);
    await panel.locator('[data-r=entities]').selectOption(walkableLamp);await field('collision').selectOption('none');
-   await panel.locator('[data-r=entities]').selectOption('bank_lamp_w');
+   await panel.locator('[data-r=entities]').selectOption(walkableLamp);
    await panel.locator('[data-a=delete]').click();await panel.locator('[data-a=undo]').click();
    // Furniture shares its saved collider record; rendered size is independent of its footprint.
    await panel.locator('[data-r=entity-filter]').selectOption('col');
-   const counter=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.cols.find(c=>c.tex==='city_bank_counter').id);
-   await panel.locator('[data-r=entities]').selectOption(counter);await set('x',3330);await set('w',250);
+   const counter=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.cols.find(c=>c.tex==='city_final_bank_counter').id);
+   await panel.locator('[data-r=entities]').selectOption(counter);await set('x',10400);await set('w',250);
    // A storyline entity can be removed and restored; deletion survives reload.
    await panel.locator('[data-r=entity-filter]').selectOption('obj');await panel.locator('[data-r=entities]').selectOption('npc_banker');
    await set('a',20);assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.selected.img.angle),20);
@@ -99,15 +99,44 @@ try{
    await panel.locator('[data-a=undo]').click();
    // Floor records also persist, and can be resized and retextured.
    await panel.locator('[data-r=entity-filter]').selectOption('ground');
-   const floor=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.grounds.find(g=>g.tex==='city_wood_floor').id);
+   const floor=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.grounds.find(g=>g.id==='floor_city_bank').id);
    await panel.locator('[data-r=entities]').selectOption(floor);await set('w',430);await set('tileScale',0.65);
    await panel.locator('[data-r=entity-filter]').selectOption('prop');await panel.locator('[data-r=entities]').selectOption(id);
    await search.fill('ящик');await panel.locator('[data-asset=crate_01]').click();await panel.locator('[data-a=replace]').click();
    assert.equal(await page.evaluate(id=>window.__game.scene.getScene('ExplorationScene').editor.find(id).ref.p.k,id),'crate_01');
    await panel.locator('[data-a=undo]').click();
+   // Current city artwork and linked building geometry must survive every editor path.
+   await panel.locator('[data-r=location]').selectOption('city');
+   await search.fill('Банк');await panel.locator('[data-asset=city_final_bank_exterior]').click();
+   await page.waitForFunction(()=>{const cv=document.querySelector('[data-r=asset-preview] canvas');return cv&&cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data.some(v=>v>0);});
+   await panel.locator('[data-r=entity-filter]').selectOption('col');
+   await panel.locator('[data-r=entities]').selectOption('city_plan_building_bank');
+   const bankBefore=await page.evaluate(()=>{const e=window.__game.scene.getScene('ExplorationScene').editor;return{ref:structuredClone(e.selected.ref),door:structuredClone(e.scene.objects.find(o=>o.id==='door_bank').cfg),exit:structuredClone(e.scene.objects.find(o=>o.id==='room_exit_bank').cfg)};});
+   const bankX=bankBefore.ref.x+bankBefore.ref.w/2;
+   await set('x',bankX+120);
+   const bankState=()=>page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),v=s.colliderViews.get('city_plan_building_bank');return{x:v.img.x,y:v.img.y,door:s.objects.find(o=>o.id==='door_bank').cfg,exit:s.objects.find(o=>o.id==='room_exit_bank').cfg};});
+   let bankMoved=await bankState();
+   assert.equal(bankMoved.door.x,bankBefore.door.x+120);assert.equal(bankMoved.x,bankMoved.door.x);
+   assert.deepEqual(bankMoved.door.target,bankBefore.door.target);assert.equal(bankMoved.exit.target.x,bankBefore.exit.target.x+120);
+   await panel.locator('[data-a=undo]').click();assert.equal((await bankState()).x,bankMoved.x-120);
+   await panel.locator('[data-a=redo]').click();assert.equal((await bankState()).x,bankMoved.x);
+   await panel.locator('[data-a=dup]').click();
+   assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.selected.ref.building),undefined);
+   await panel.locator('[data-a=delete]').click();
+   await panel.locator('[data-r=entity-filter]').selectOption('ground');await panel.locator('[data-r=entities]').selectOption('city_lawn');
+   await set('tileScale',0.9);
+   await panel.locator('[data-a=fit]').click();
+   assert.ok(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').cameras.main.zoom)<0.3);
+   // Canal width uses its actual half-width, without writing an unused road width.
+   await panel.locator('[data-a=mode_terrain]').click();
+   const canal=await page.evaluate(()=>{const e=window.__game.scene.getScene('ExplorationScene').editor; e.selectT({kind:'water',id:'city_canal',i:0});return e.selShape.half;});
+   await panel.locator('[data-a=wider]').click();assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.selShape.half),canal+4);
+   await panel.locator('[data-a=undo]').click();await panel.locator('[data-a=mode_props]').click();
+   console.log(`  ✓ ${name}: новый фасад, перенос дома/входа/возврата, отмена, трава и канал`);
    const saved=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.buildEdits());
    await page.reload();await page.waitForFunction(()=>window.__game?.scene.getScene('ExplorationScene')?.editor);
    assert.deepEqual(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.buildEdits()),saved);
+   assert.equal((await bankState()).x,bankMoved.x);
    assert.deepEqual(await page.evaluate(()=>{const im=window.__game.scene.getScene('ExplorationScene').editor.find('npc_mirra').img;return{w:Math.round(im.displayWidth*10000)/10000,a:im.angle,alpha:im.alpha,f:im.flipX};}),{w:100,a:25,alpha:0.6,f:true});
    const downloaded=page.waitForEvent('download');await panel.locator('[data-a=download]').click();
    const file=path.join(out,`${name}-world.edits.js`);await (await downloaded).saveAs(file);
@@ -116,6 +145,7 @@ try{
    await Promise.all([page.waitForNavigation({waitUntil:'domcontentloaded'}),panel.locator('[data-r=import]').setInputFiles(file)]);
    await page.waitForFunction(()=>window.__game?.scene.getScene('ExplorationScene')?.editor);
    assert.deepEqual(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.buildEdits()),saved);
+   assert.equal((await bankState()).x,bankMoved.x);
    console.log(`  ✓ ${name}: фонарь, мебель, сюжетные объекты и полы редактируются; черновик восстановлен точно`);
    await panel.locator('[data-r=location]').selectOption('city');await search.fill('фонарь');
    if(name==='mobile')await panel.locator('[data-r=assets]').scrollIntoViewIfNeeded();
@@ -124,12 +154,20 @@ try{
    await panel.locator('[data-a=play]').click();await page.waitForFunction(()=>window.__game?.scene.isActive('UIScene')&&window.__game.scene.getScene('ExplorationScene')?.player);
    data=await page.evaluate(id=>{const s=window.__game.scene.getScene('ExplorationScene'),v=s.propViews.get(id);return{p:v.p,w:v.img.displayWidth,h:v.img.displayHeight,angle:v.img.angle,flip:v.img.flipX,body:v.blocker.body.width};},id);
    assert.equal(data.p.k,'city_crate');assert.ok(Math.abs(data.w-168)<0.01);assert.ok(Math.abs(data.h-140)<0.01);assert.equal(data.angle,15);assert.equal(data.flip,true);assert.equal(data.body,70);
-   assert.equal(await page.evaluate(id=>!!window.__game.scene.getScene('ExplorationScene').propViews.get(id).blocker,walkableLamp),false);
    assert.deepEqual(await page.evaluate(()=>{const im=window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id==='npc_mirra').sprite;return{w:Math.round(im.displayWidth*10000)/10000,a:im.angle,alpha:im.alpha,f:im.flipX};}),{w:100,a:25,alpha:0.6,f:true});
    await page.evaluate(()=>{const w=window.__witch;w.state.markEvent('ch2_start');w.bus.emit('story:map-travel','city');});
    await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city');
+   assert.equal(await page.evaluate(id=>!!window.__game.scene.getScene('ExplorationScene').propViews.get(id).blocker,walkableLamp),false);
+   const liveDoor=await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),d=s.objects.find(o=>o.id==='door_bank');return{x:d.x,target:d.cfg.target};});
+   assert.equal(liveDoor.x,bankMoved.door.x);assert.deepEqual(liveDoor.target,bankBefore.door.target);
+   await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id==='door_bank').interact());
+   await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city_bank'&&window.__witch.mode==='exploration');
    const live=await page.evaluate(({counter,floor})=>{const s=window.__game.scene.getScene('ExplorationScene');return{banker:s.objects.some(o=>o.id==='npc_banker'),counter:s.colliderViews.get(counter).img.displayWidth,floor:s.groundViews.get(floor).g};},{counter,floor});
    assert.equal(live.banker,false);assert.equal(live.counter,250);assert.equal(live.floor.w,430);assert.equal(live.floor.tileScale,0.65);
+   const returnX=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id==='room_exit_bank').cfg.target.x);
+   assert.equal(returnX,bankMoved.exit.target.x);
+   await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id==='room_exit_bank').interact());
+   await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city'&&window.__witch.mode==='exploration');
    assert.deepEqual(errors,[]);
    console.log(`  ✓ ${name}: «Играть с правками» отображает все изменения; ошибок и отсутствующих картинок нет`);
   }catch(e){await page.screenshot({path:path.join(out,`${name}-failure.png`)}).catch(()=>{});console.log(errors);throw e;}

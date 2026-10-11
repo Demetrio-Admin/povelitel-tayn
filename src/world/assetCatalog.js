@@ -1,6 +1,8 @@
 // The asset manifest is the catalog: new shipped images appear here automatically.
 import { ASSET_FILES, DISPLAY_SIZE } from '../config/assets.manifest.js';
 import { PROP_DEFS } from './propDefs.js';
+import { CITY_WITCH_ATLASES, CITY_WITCH_SPRITES } from '../config/city.witch.art.js';
+import { BUILDINGS } from '../config/city.plan.js';
 
 export const ASSET_GROUPS = {
   nature:'Деревья, цветы и природа', furniture:'Мебель и оборудование', town:'Город и здания',
@@ -8,6 +10,13 @@ export const ASSET_GROUPS = {
   ground:'Полы, стены и покрытия', portraits:'Портреты', ui:'Иконки и интерфейс', backgrounds:'Фоны',
 };
 const NAMES = {
+  city_walk_lawn:'Городская трава',city_walk_paving:'Светлая городская мостовая',
+  city_walk_wall_face:'Каменная городская стена',city_walk_wall_top:'Верх городской стены',city_walk_wall_post:'Столб городской стены',
+  city_walk_fence_iron:'Кованая ограда',city_walk_fence_wood:'Деревянная ограда',
+  city_walk_tree_sage:'Шалфейное городское дерево',city_walk_tree_amber:'Янтарное городское дерево',city_walk_tree_plum:'Сливовое городское дерево',
+  city_walk_hedge:'Живая изгородь',city_walk_flowerbed:'Городской цветник',city_walk_herbbed:'Грядка трав',city_walk_planter:'Кашпо с цветами',
+  city_walk_woodpile:'Поленница',city_walk_cart:'Тележка',city_walk_dummy:'Тренировочное чучело',city_walk_sacks:'Мешки',
+  city_walk_pumpkins:'Тыквы',city_walk_porch_pots:'Горшки у крыльца',city_walk_lamp:'Тёплый городской фонарь',
   bed_01:'Кровать',table_01:'Стол',bookshelf_01:'Книжный шкаф',cauldron_01:'Котёл',wardrobe_01:'Шкаф',rug_01:'Ковёр',
   herb_bundle_01:'Связка трав',plant_pot_01:'Растение в горшке',trunk_01:'Сундук для вещей',campfire_01:'Костёр',
   crate_01:'Ящик',barrel_01:'Бочка',market_stall_01:'Торговая лавка',notice_board_01:'Доска поручений',city_lamp_01:'Городской фонарь',
@@ -42,11 +51,15 @@ const WORDS={icon:'Иконка',portrait:'Портрет',enemy:'Монстр',
 };
 export function assetName(key) {
   key=String(key);
+  const building=BUILDINGS.find(b=>key===`city_final_${b.id}_exterior`);
+  if(building)return building.name+' — фасад';
   if(NAMES[key]||PROP_DEFS[key])return NAMES[key]||PROP_DEFS[key].name;
   const p=key.match(/^(npc|portrait)_(.+)$/);if(p&&PEOPLE[p[2]])return (p[1]==='portrait'?'Портрет: ':'')+PEOPLE[p[2]];
   return key.replace(/^life_/,'').split('_').map(w=>WORDS[w]??w).join(' ').replace(/\s+/g,' ').trim();
 }
 export function assetGroup(key) {
+  if(/^city_walk_(tree_|hedge|flowerbed|herbbed|planter|porch_pots|pumpkins)/.test(key))return 'nature';
+  if(/^city_walk_(lawn|paving|wall_face|wall_top|fence_)/.test(key))return 'ground';
   if(/^(icon_|ui_)/.test(key))return 'ui'; if(key.startsWith('portrait_'))return 'portraits';
   if(key.startsWith('arena_')||key==='world_map_01')return 'backgrounds';
   if(/^(npc_|hero_|warlock_|city_(resident|patient))/.test(key))return 'characters';
@@ -57,7 +70,10 @@ export function assetGroup(key) {
   if(/city_|lantern|lamp|crate|barrel|market|notice|sign|house|door|fountain|gravestone|crypt/.test(key))return 'town';
   return 'objects';
 }
-export const ASSET_CATALOG=Object.entries(ASSET_FILES).filter(([,src])=>!!src).map(([key,src])=>({key,src,name:assetName(key),group:assetGroup(key),size:DISPLAY_SIZE[key]||[128,128]}));
+export const ASSET_CATALOG=Object.entries(ASSET_FILES).filter(([,src])=>!!src).map(([key,src])=>{
+  const sprite=CITY_WITCH_SPRITES[key];
+  return {key,src:sprite?CITY_WITCH_ATLASES[sprite.atlas]:src,frame:sprite?.frame,name:assetName(key),group:assetGroup(key),size:DISPLAY_SIZE[key]||[128,128]};
+});
 export function defaultAssetSolid(key){
   if(PROP_DEFS[key])return PROP_DEFS[key].solid;
   if(!['furniture','town'].includes(assetGroup(key)))return null;

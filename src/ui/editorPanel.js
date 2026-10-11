@@ -24,6 +24,8 @@ const CSS = `
 #me-panel .me-assets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-height:225px;overflow:auto;padding:4px 0}
 #me-panel .me-assets button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:5px;font-size:11px;line-height:1.2;min-width:0}
 #me-panel .me-assets img{width:64px;height:64px;object-fit:contain;background:#ead8aa18;border-radius:5px}
+#me-panel .me-art{display:flex;align-items:center;justify-content:center;width:64px;height:64px;background:#ead8aa18;border-radius:5px;flex-shrink:0}
+#me-panel .me-art canvas{max-width:100%;max-height:100%}
 #me-panel .me-picked{display:flex;align-items:center;gap:8px;font-size:12px}
 #me-panel .me-picked img{width:50px;height:50px;object-fit:contain}
 #me-panel .me-inspector{padding-top:8px;border-top:1px solid #b8923c55}
@@ -55,7 +57,7 @@ export function buildEditorPanel(actions) {
       <div class="me-row me-tabs">
         <button data-a="mode_props">Объекты</button><button data-a="mode_terrain">Дороги и река</button><button data-a="mode_walls">Стены</button>
       </div>
-      <div class="me-row"><select data-r="location" aria-label="Локация"><option value="">Перейти к локации…</option></select></div>
+      <div class="me-row"><select data-r="location" aria-label="Локация"><option value="">Перейти к локации…</option><option value="all">Все локации</option></select></div>
       <div class="me-info" data-r="info">Коснитесь объекта, чтобы выбрать. Тяните — переместить. Пустое место — двигать карту.</div>
       <div class="me-row">
         <button data-a="undo">↶ Отмена</button><button data-a="redo">↷ Повтор</button>
@@ -86,7 +88,7 @@ export function buildEditorPanel(actions) {
       </div>
       <div data-sec="walls" class="me-body" style="padding:0">
         <div class="me-row">
-          <select data-r="wallkind"><option value="wall">Стена дома</option><option value="ruin">Руины</option><option value="trees">Лес (непроходимо)</option><option value="furniture">Мебель</option></select>
+          <select data-r="wallkind"><option value="wall">Стена дома</option><option value="citywall">Городская стена</option><option value="fence">Ограда сада</option><option value="ruin">Руины</option><option value="trees">Лес (непроходимо)</option><option value="furniture">Мебель</option></select>
           <button data-a="wall_add">＋ Добавить</button>
         </div>
         <div class="me-row">
@@ -97,7 +99,7 @@ export function buildEditorPanel(actions) {
       </div>
       <div class="me-row">
         <button data-a="snap">Сетка: нет</button><button data-a="colliders">Коллизии</button>
-        <button data-a="fit">Вся карта</button><button data-a="hero">К герою</button>
+        <button data-a="fit">Локация целиком</button><button data-a="hero">К герою</button>
       </div>
       <div data-sec="props">
         <details open>
@@ -105,14 +107,14 @@ export function buildEditorPanel(actions) {
           <input type="search" data-r="asset-search" placeholder="Найти: фонарь, ящик, цветы…" aria-label="Поиск рисунков">
           <select data-r="asset-group" aria-label="Категория рисунков"><option value="all">Все картинки</option></select>
           <div class="me-assets" data-r="assets"></div>
-          <div class="me-picked"><img data-r="asset-preview" alt=""><span data-r="asset-name"></span></div>
+          <div class="me-picked"><span data-r="asset-preview"></span><span data-r="asset-name"></span></div>
           <div class="me-row"><select data-r="placement" aria-label="Способ размещения"><option value="prop">Объект на карте</option><option value="ground">Участок пола / покрытия</option></select></div>
           <div class="me-row"><button data-a="add" class="me-primary">＋ Добавить</button><button data-a="replace">Заменить рисунок</button></div>
           <div class="me-hint">Картинки персонажей и монстров добавляются как декор. У существующих сюжетных объектов сохраняется поведение.</div>
         </details>
         <details>
           <summary>Объекты на карте</summary>
-          <select data-r="entity-filter" aria-label="Тип объектов"><option value="all">Все объекты</option><option value="prop">Декор и растения</option><option value="col">Мебель и стены</option><option value="obj">Сюжетные объекты и NPC</option><option value="enemy">Враги</option><option value="ground">Полы и покрытия</option></select>
+          <select data-r="entity-filter" aria-label="Тип объектов"><option value="all">Все объекты</option><option value="prop">Декор и растения</option><option value="col">Дома, мебель и стены</option><option value="obj">Сюжетные объекты и NPC</option><option value="enemy">Враги</option><option value="ground">Полы, трава и покрытия</option></select>
           <input type="search" data-r="entity-search" placeholder="Название или ID объекта" aria-label="Поиск объектов на карте">
           <select data-r="entities" aria-label="Выбрать объект"><option value="">Выберите объект…</option></select>
         </details>
@@ -122,7 +124,7 @@ export function buildEditorPanel(actions) {
             <label>Ширина рисунка<input data-p="w" type="number" min="1" max="8000" step="1"></label><label>Высота рисунка<input data-p="h" type="number" min="1" max="8000" step="1"></label>
             <label>Масштаб<input data-p="s" type="number" min="0.05" max="10" step="0.05"></label><label>Поворот, °<input data-p="a" type="number" step="5"></label>
             <label>Непрозрачность<input data-p="alpha" type="number" min="0" max="1" step="0.1"></label>
-            <label>Слой<select data-p="l"><option value="main">По высоте объекта</option><option value="back">Позади объектов</option><option value="front">Поверх объектов</option><option value="room-floor">На полу комнаты</option><option value="floor">На земле</option></select></label>
+            <label>Слой<select data-p="l"><option value="main">По высоте объекта</option><option value="back">Позади объектов</option><option value="front">Поверх объектов</option><option value="room-floor">На полу комнаты</option><option value="floor">На земле</option><option value="ground">Под дорогами</option></select></label>
             <label>Коллизия<select data-p="collision"><option value="auto">По типу картинки</option><option value="none">Можно проходить</option><option value="custom">Свой размер</option></select></label>
             <label>Масштаб плитки<input data-p="tileScale" type="number" min="0.05" max="8" step="0.05"></label>
             <label>След: ширина<input data-p="solid_w" type="number" min="1" max="8000" step="1"></label><label>След: высота<input data-p="solid_h" type="number" min="1" max="8000" step="1"></label>
@@ -145,12 +147,22 @@ export function buildEditorPanel(actions) {
   const $=r=>root.querySelector(`[data-r=${r}]`);
   const btn=a=>root.querySelector(`[data-a=${a}]`);
   let chosen='lantern_01',entities=[],lastEntities='';
+  const images=new Map();
+  const art=a=>{
+    if(!a.frame){const img=document.createElement('img');img.src=a.src;img.alt=a.name;img.loading='lazy';img.decoding='async';return img;}
+    const wrap=document.createElement('span');wrap.className='me-art';wrap.setAttribute('role','img');wrap.setAttribute('aria-label',a.name);
+    const canvas=document.createElement('canvas'),f=a.frame,scale=64/Math.max(f.w,f.h);
+    canvas.width=Math.round(f.w*scale);canvas.height=Math.round(f.h*scale);wrap.append(canvas);
+    if(!images.has(a.src))images.set(a.src,new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=a.src;}));
+    images.get(a.src).then(img=>canvas.getContext('2d').drawImage(img,f.x,f.y,f.w,f.h,0,0,canvas.width,canvas.height)).catch(()=>wrap.textContent='Нет превью');
+    return wrap;
+  };
   for(const [value,label] of Object.entries(ASSET_GROUPS)){const o=document.createElement('option');o.value=value;o.textContent=label;$('asset-group').appendChild(o);}
   for(const l of LOCATIONS){const o=document.createElement('option');o.value=l.id;o.textContent=l.name;$('location').appendChild(o);}
   const picked=()=>{
     const a=ASSET_CATALOG.find(a=>a.key===chosen);
     if(!a)return;
-    $('asset-preview').src=a.src;$('asset-preview').alt=a.name;$('asset-name').textContent=a.name;
+    $('asset-preview').replaceChildren(art(a));$('asset-name').textContent=a.name;
     for(const b of $('assets').querySelectorAll('[data-asset]'))b.classList.toggle('me-on',b.dataset.asset===chosen);
   };
   const renderAssets=()=>{
@@ -160,7 +172,7 @@ export function buildEditorPanel(actions) {
     $('assets').replaceChildren();
     for(const a of shown){
       const b=document.createElement('button');b.type='button';b.dataset.asset=a.key;b.title=`${a.name} (${a.key})`;
-      const img=document.createElement('img');img.src=a.src;img.alt=a.name;img.loading='lazy';img.decoding='async';
+      const img=art(a);
       const label=document.createElement('span');label.textContent=a.name;b.append(img,label);$('assets').appendChild(b);
     }
     $('asset-count').textContent=`${shown.length} / ${ASSET_CATALOG.length}`;
@@ -205,6 +217,7 @@ export function buildEditorPanel(actions) {
 
   return {
     root,
+    setLocation(id){$('location').value=id||'';},
     setEntities(items,selected,filter){entities=items;$('entity-filter').value=filter;renderEntities(selected);},
     setInspector(e,values={}){
       $('inspector').hidden=!e;if(!e)return;

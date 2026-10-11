@@ -1,6 +1,6 @@
-import { BUILDINGS, CITY_RECT } from '../config/city.plan.js';
 import { migrateCitySave } from '../world/cityMigration.js';
 import { CITY_WITCH_SPRITES } from '../config/city.witch.art.js';
+import { buildingDoor, linkBuildingPortals } from '../world/buildingGeometry.js';
 import { RoomDoor } from '../objects/RoomDoor.js';
 import { BAG } from '../config/bag.js';
 import { bindSceneViewport } from '../ui/viewport.js';
@@ -116,7 +116,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.map = services.map;
     this.terrain = buildTerrain({ ROADS: this.map.roads, WATERS: this.map.waters });
     const here = (o) => inLocation(o, this.loc);
-    this.interactiveCfgs = applyPos(INTERACTIVES, this.map.pos).filter(here);
+    this.interactiveCfgs = applyPos(linkBuildingPortals(INTERACTIVES, this.map.colliders), this.map.pos).filter(here);
     this.enemyCfgs = applyPos(ENEMY_SPAWNS, this.map.pos).filter(here);
     this.propViews = new Map();
     this.groundViews = new Map();
@@ -353,6 +353,7 @@ export class ExplorationScene extends Phaser.Scene {
   }
 
   follow() {
+    if (services.edit) return; // viewport resize must not take the editor camera back to the hero
     this.cameras.main.startFollow(this.player.sprite, false, CAMERA.lerp, CAMERA.lerp, 0, this.followOffsetY);
     this.cameras.main.setDeadzone(CAMERA.deadzone.w, CAMERA.deadzone.h);
   }
@@ -390,8 +391,6 @@ export class ExplorationScene extends Phaser.Scene {
     if(this.loc?.interior)this.add.rectangle(R.x,R.y-V.top,R.w,V.h,0x17120e).setOrigin(0).setDepth(DEPTH.ground);
     // v0.37.0: the town has its own calm, tended lawn; the forest keeps its wild grass.
     else this.add.tileSprite(R.x, R.y, R.w, R.h + V.bottom, this.loc?.id === 'city' ? 'city_walk_lawn' : 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
-    // The editor shows all locations on one canvas, including the town's own lawn.
-    if (!this.loc) this.add.tileSprite(CITY_RECT.x, CITY_RECT.y, CITY_RECT.w, CITY_RECT.h, 'city_walk_lawn').setOrigin(0).setDepth(DEPTH.ground + 0.1);
     this.paintTerrain();
     this.rebuildGrounds(this.map.grounds);
     if (!V.top && !V.bottom) return;
@@ -430,7 +429,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.groundViews.clear();
     for (const g of list) if (touchesLocation(g,this.loc)) {
       const img = this.add.tileSprite(g.x,g.y,g.w,g.h,g.tex).setOrigin(0)
-        .setDepth(g.l==='front'?DEPTH.frontDecor:g.l==='back'?DEPTH.backDecor:DEPTH.path+(g.layerOffset??(g.interior?0.4:0)));
+        .setDepth(g.l==='ground'?DEPTH.ground+0.1:g.l==='front'?DEPTH.frontDecor:g.l==='back'?DEPTH.backDecor:DEPTH.path+(g.layerOffset??(g.interior?0.4:0)));
       img.setAngle(g.a||0).setFlipX(!!g.f).setAlpha(g.alpha??1);
       img.setTileScale(g.tileScale??(['city_paving','city_wood_floor','city_stone_floor','snow_ground_01','grave_ground_01'].includes(g.tex)?0.5:1));
       if(g.tint)img.setTint(g.tint);
@@ -487,8 +486,8 @@ export class ExplorationScene extends Phaser.Scene {
             const im = this.add.image(c.x + c.w / 2, c.y + c.h, c.tex).setOrigin(0.5, 1).setDepth(bottomDepth);
             applyDisplaySize(im, c.tex);
             if(c.editorStyle)this.styleImage(im,c.editorStyle,c.tex);
-            const facade=CITY_WITCH_SPRITES[c.tex],building=facade && BUILDINGS.find(b=>b.id===c.building);
-            if(building)im.setOrigin(facade.anchor.x,facade.anchor.y).setPosition(building.door.x,building.door.y);
+            const facade=CITY_WITCH_SPRITES[c.tex],door=buildingDoor(c);
+            if(door){if(facade)im.setOrigin(facade.anchor.x,facade.anchor.y);im.setPosition(door.x,door.y);}
             this.colliderViews.set(c.id,{c,img:im});
             keep(im);
             break;
@@ -500,7 +499,7 @@ export class ExplorationScene extends Phaser.Scene {
           // v0.37.0: light aged-stone town wall with simple posts. North–south runs show their cap from above.
           if (c.w >= c.h) {
             const H = c.h + (c.low ? 40 : 58);
-            const wall = keep(this.add.tileSprite(c.x, c.y + c.h - H, c.w, H, 'city_walk_wall_face').setOrigin(0).setTileScale(H / 112).setDepth(bottomDepth));
+            const wall = keep(this.add.tileSprite(c.x, c.y + c.h - H, c.w, H, c.tex || 'city_walk_wall_face').setOrigin(0).setTileScale(H / 112).setDepth(bottomDepth));
             this.colliderViews.set(c.id, { c, img: wall });
             const posts = Math.max(1, Math.round(c.w / 340));
             for (let i = 0; i <= posts; i++) {
@@ -508,7 +507,7 @@ export class ExplorationScene extends Phaser.Scene {
               keep(this.add.image(px, c.y + c.h + 2, 'city_walk_wall_post').setOrigin(0.5, 1).setDisplaySize(40, H + 26).setDepth(bottomDepth + 0.2));
             }
           } else {
-            const wall = keep(this.add.tileSprite(c.x - 6, c.y - 40, c.w + 12, c.h + 40, 'city_walk_wall_top').setOrigin(0).setTileScale((c.w + 12) / 64).setDepth(DEPTH.backDecor + 1));
+            const wall = keep(this.add.tileSprite(c.x - 6, c.y - 40, c.w + 12, c.h + 40, c.tex || 'city_walk_wall_top').setOrigin(0).setTileScale((c.w + 12) / 64).setDepth(DEPTH.backDecor + 1));
             this.colliderViews.set(c.id, { c, img: wall });
             for (let y = c.y + 160; y < c.y + c.h - 80; y += 420)
               keep(this.add.image(c.x + c.w / 2, y + 30, 'city_walk_wall_post').setOrigin(0.5, 1).setDisplaySize(c.w + 14, 92).setDepth(DEPTH.mainBase + y + 30));
@@ -518,7 +517,7 @@ export class ExplorationScene extends Phaser.Scene {
         case 'fence': {
           // Low, light garden fence: readable as a boundary without boxing houses in.
           const H = c.style === 'iron' ? 52 : 46;
-          const img = keep(this.add.tileSprite(c.x, c.y + c.h - H, c.w, H, c.style === 'iron' ? 'city_walk_fence_iron' : 'city_walk_fence_wood')
+          const img = keep(this.add.tileSprite(c.x, c.y + c.h - H, c.w, H, c.tex || (c.style === 'iron' ? 'city_walk_fence_iron' : 'city_walk_fence_wood'))
             .setOrigin(0).setTileScale(H / 72).setDepth(bottomDepth));
           this.colliderViews.set(c.id, { c, img });
           break;
@@ -574,14 +573,16 @@ export class ExplorationScene extends Phaser.Scene {
     if(style.s)img.setScale(img.scaleX*style.s,img.scaleY*style.s);
     img.setAngle(style.a||0).setFlipX(!!style.f).setAlpha(style.alpha??1);
     if(style.tint!=null)img.setTint(style.tint);else img.clearTint();
-    if(style.l)img.setDepth(style.l==='floor'?DEPTH.path+1:style.l==='room-floor'?DEPTH.path+0.7:style.l==='back'?DEPTH.backDecor:style.l==='front'?DEPTH.frontDecor:DEPTH.mainBase+img.y);
+    if(style.l)img.setDepth(style.l==='ground'?DEPTH.ground+0.1:style.l==='floor'?DEPTH.path+1:style.l==='room-floor'?DEPTH.path+0.7:style.l==='back'?DEPTH.backDecor:style.l==='front'?DEPTH.frontDecor:DEPTH.mainBase+img.y);
   }
 
   placePropView(view) {
     const {p,img}=view;
     img.setTexture(p.k).setPosition(p.x,p.y);
+    const facade=CITY_WITCH_SPRITES[p.k];
+    img.setOrigin(facade?.anchor.x??0.5,facade?.anchor.y??1);
     this.styleImage(img,p,p.k);
-    const depth=p.l==='floor'?DEPTH.path+1:p.l==='room-floor'?DEPTH.path+0.7:p.l==='back'?DEPTH.backDecor:p.l==='front'?DEPTH.frontDecor:DEPTH.mainBase+p.y;
+    const depth=p.l==='ground'?DEPTH.ground+0.1:p.l==='floor'?DEPTH.path+1:p.l==='room-floor'?DEPTH.path+0.7:p.l==='back'?DEPTH.backDecor:p.l==='front'?DEPTH.frontDecor:DEPTH.mainBase+p.y;
     img.setDepth(depth).setAlpha(p.alpha??(p.l==='front'?0.85:1));
     img.setVisible(services.edit||!p.requires||services.state.hasEvent(p.requires));
     const footprint=propSolid(p);

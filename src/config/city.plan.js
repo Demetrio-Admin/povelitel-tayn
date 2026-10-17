@@ -7,6 +7,7 @@ import { buildRoad } from '../world/terrain.js';
 import { distToPolygon, catmullRom } from '../world/geometry.js';
 import { dressArchiveDistrict } from './city.archive.js';
 import { dressCityNeighborhoods } from './city.neighborhoods.js';
+import { dressLaboratoryTrail } from './city.lab-garden.js';
 
 export const CITY_LAYOUT_VERSION = 4;
 export const CITY_RECT = { x: 5600, y: 160, w: 2880, h: 5760 };
@@ -499,6 +500,7 @@ export function cityMapData() {
   // Selected courtyard concept: forest-style gardens around the Archive, with the original city geometry.
   dressArchiveDistrict({ grounds, colliders, props, roads, point: P, buildings: BUILDINGS, questPositions: CITY_POSITIONS });
   dressCityNeighborhoods({ colliders, props, roads, point: P, buildings: BUILDINGS, questPositions: CITY_POSITIONS });
+  dressLaboratoryTrail({ colliders, props, roads, point: P, buildings: BUILDINGS, questPositions: CITY_POSITIONS });
   return {grounds,colliders,props,roads,waters:[CITY_CANAL],skipped};
 }
 export const cityLocal = local;

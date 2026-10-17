@@ -1,6 +1,6 @@
 // Stable, editable decorative placements. Existing ids and collision-free footprints are preserved.
 import { CITY_COLLIDERS, CITY_ROOM_DECOR } from '../config/world.city.js';
-import { cityMapData } from '../config/city.plan.js';
+import { cityMapData, CITY_RECT } from '../config/city.plan.js';
 import { EXP_COLLIDERS } from '../config/world.expeditions.js';
 import { CONTENT_DECOR } from '../config/world.content.js';
 import { LOCATIONS, locationAt } from '../config/locations.js';
@@ -36,7 +36,12 @@ export function cityForestDecor() {
       }
     }
   }
-  return props;
+  // Leave room for the authored rocky/flowering edge of the laboratory trail.
+  // Filter after assigning IDs so every retained forest tree keeps its editor identity.
+  return props.filter(p => {
+    const x = p.x - CITY_RECT.x, y = p.y - CITY_RECT.y;
+    return !(y > 4100 && y < 5000 && ((x > 170 && x < 240) || (x > 420 && x < 520)));
+  });
 }
 
 /** Fill already blocked expedition thickets; no new obstacles or route changes. */

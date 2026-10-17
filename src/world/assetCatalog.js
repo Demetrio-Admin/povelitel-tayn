@@ -11,6 +11,7 @@ export const ASSET_GROUPS = {
 };
 const NAMES = {
   city_neighborhood_market_stall:'Лавка Бориса с навесом и товарами',
+  city_lab_garden_workbench:'Стол алхимика у тайной лаборатории',
   city_archive_worn_paving:'Потёртая мостовая у Архива',city_archive_garden_ground:'Земля и трава сада Архива',
   city_archive_reading_table:'Столик для чтения в саду',
   city_walk_lawn:'Городская трава',city_walk_paving:'Светлая городская мостовая',

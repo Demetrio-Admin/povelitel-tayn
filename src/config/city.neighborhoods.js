@@ -46,6 +46,7 @@ export function dressCityNeighborhoods({ colliders, props, roads, point, buildin
     if (buildings.some(b => Math.abs(p.x - b.door.x) < 112 && p.y > b.door.y - 25 && p.y < b.door.y + 150)) return;
     if (Object.values(questPositions).some(q => Math.hypot(p.x - q.x, p.y - q.y) < 135)) return;
     if (!solid && streetShapes.some(r => distToPolygon(p.x, p.y, r.poly) < 12)) return;
+    if (!solid && colliders.some(c => p.x > c.x - 8 && p.x < c.x + c.w + 8 && p.y > c.y - 8 && p.y < c.y + c.h + 8)) return;
     if (solid) {
       const scale = extra.s || 1;
       const box = { x: p.x - solid.w * scale / 2, y: p.y - solid.h * scale, w: solid.w * scale, h: solid.h * scale };
@@ -123,12 +124,24 @@ export function dressCityNeighborhoods({ colliders, props, roads, point, buildin
     [2290, 4840], [2450, 5290], [2220, 5460], [1780, 5420], [1350, 5460], [950, 5400],
     [810, 1370], [1380, 1300], [840, 1960], [2300, 1860], [2400, 1400], [2070, 1320],
     [800, 530], [960, 890], [1350, 960], [2120, 960], [2410, 920], [2320, 360],
+    // Flowering banks beside the routes, not another row of evenly spaced trees.
+    [1130, 3530], [1170, 3590], [1290, 3800], [1310, 3980], [1390, 4070],
+    [1710, 3830], [1800, 3900], [1960, 3770], [2210, 3650], [2280, 3750], [2460, 3840],
+    [1030, 4140], [1210, 4150], [1320, 4220], [1360, 4300], [1190, 4560], [1090, 4620],
+    [1780, 4180], [1820, 4100], [2290, 4390], [2330, 4450], [2110, 4590], [1980, 4650],
+    [1340, 4770], [1260, 4820], [1390, 4900], [1880, 4820], [2160, 4860], [2360, 4940],
+    [1230, 5360], [1330, 5420], [1690, 5370], [1860, 5400], [2050, 5430], [2200, 5370],
+    [1010, 1400], [1110, 1350], [1310, 1440], [1370, 1530], [2160, 1390], [2290, 1460],
+    [2280, 1930], [2140, 2040], [1190, 1970], [1290, 2020], [850, 1690],
+    [880, 650], [1020, 880], [1160, 940], [1320, 920], [2130, 930], [2310, 980],
   ]) {
     add('bush_02', x, y, { s: 0.85, solid: { w: 30, h: 14 } });
     add('bush_01', x - 32, y + 22, { s: 0.7, solid: { w: 24, h: 12 } });
     add('flower_white_01', x + 30, y + 18, { s: 0.85 });
     add('flower_purple_01', x - 22, y + 40, { s: 0.8 });
     add('flower_white_01', x + 12, y + 48, { s: 0.65 });
+    add('flower_purple_01', x + 54, y + 30, { s: 0.75 });
+    add('flower_white_01', x - 46, y + 52, { s: 0.7 });
   }
   for (const [x, y] of [[1190, 3830], [1880, 3860], [2210, 3500], [2380, 4010], [1160, 4300],
     [1870, 4510], [2240, 4430], [900, 5330], [1490, 5370], [2240, 5340],

@@ -5,6 +5,7 @@ import { services } from '../services.js';
 import { showLoadingScreen, setLoadingProgress, hideLoadingScreen } from '../ui/loadingScreen.js';
 import { CITY_WITCH_ATLASES, CITY_WITCH_SPRITES } from '../config/city.witch.art.js';
 import { installCityWitchSprites } from '../world/cityWitchArt.js';
+import { WALK_SHEET_FILES, WALK_FRAME } from '../config/hero.walk.js';
 
 // PreloadScene — загружает реальные PNG из манифеста (если указаны) и генерирует
 // graybox-заглушки для всех остальных ключей. Логика игры не знает, откуда взялась текстура.
@@ -21,6 +22,8 @@ export class PreloadScene extends Phaser.Scene {
     });
     for (const [key, path] of Object.entries(ASSET_FILES)) if (path && !CITY_WITCH_SPRITES[key]) this.load.image(key, path);
     for (const [key, path] of Object.entries(CITY_WITCH_ATLASES)) this.load.image(key, path);
+    // покадровая ходьба героев: ряд кадров 166×240 (config/hero.walk.js)
+    for (const [key, path] of Object.entries(WALK_SHEET_FILES)) this.load.spritesheet(key, path, { frameWidth: WALK_FRAME.w, frameHeight: WALK_FRAME.h });
   }
 
   create() {

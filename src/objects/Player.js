@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { PLAYER, DEPTH } from '../config/game.config.js';
 import { HeroAnimator } from '../systems/HeroAnimator.js';
 import { currentHero } from '../state/hero.js';
+import { walkSheetsFor, walkFrameIndex } from '../config/hero.walk.js';
 
 // Player — герой (ведьма или колдун) в exploration. Pivot — низ по центру, hitbox — у ступней (Hero Spec §13).
 // 4 направления: down / up / side (лево = зеркало side). v0.9.2: текстуры — из определения выбранного героя
@@ -14,7 +15,9 @@ const STUCK_STOP = 0.5;           // с: столько стоим без дви
 export class Player {
   constructor(scene, x, y) {
     this.scene = scene;
-    this.tex = currentHero().textures;
+    const hero = currentHero();
+    this.tex = hero.textures;
+    this.walkTex = walkSheetsFor(hero.id);   // листы покадровой ходьбы; нет листа — прежняя процедурная ходьба
     this.shadow = scene.add.image(x, y, 'hero_shadow').setDepth(DEPTH.path + 1).setAlpha(0.8);
     // sprite — физическое тело (невидимое), view — то, что рисуется и анимируется:
     // смещения анимации не должны попадать в физику.
@@ -79,7 +82,20 @@ export class Player {
   face(dx, dy) {
     if (Math.abs(dx) > Math.abs(dy)) { this.facing = 'side'; this.sprite.setFlipX(dx < 0); }
     else { this.facing = dy < 0 ? 'up' : 'down'; this.sprite.setFlipX(false); }
-    this.view.setTexture(this.tex[this.facing]).setFlipX(this.sprite.flipX);
+    this.showFrame();
+  }
+
+  /** Есть ли лист покадровой ходьбы для текущего ракурса. */
+  hasWalkFrames() { return this.scene.textures.exists(this.walkTex[this.facing]); }
+
+  /** Рисунок героя: в ходьбе — кадр листа по фазе шага, иначе обычный рисунок ракурса. */
+  showFrame() {
+    if (this.anim.walking && !this.anim.isDead && this.hasWalkFrames()) {
+      this.view.setTexture(this.walkTex[this.facing], walkFrameIndex(this.anim.cycle));
+    } else {
+      this.view.setTexture(this.tex[this.facing]);
+    }
+    this.view.setFlipX(this.sprite.flipX);
   }
 
   get dir() { return this.facing === 'side' ? (this.sprite.flipX ? -1 : 1) : 0; }
@@ -138,7 +154,8 @@ export class Player {
     const speed = Math.hypot(vx, vy);
     const want = intent && Math.hypot(intent.x, intent.y) > 0.05 ? intent : (speed > 0.05 ? { x: vx, y: vy } : null);
     if (want && this.casting <= 0) this.face(want.x, want.y);
-    const pose = this.anim.update(dt, { speed: Math.min(1, speed), dir: this.dir, face: this.facing });
+    const pose = this.anim.update(dt, { speed: Math.min(1, speed), dir: this.dir, face: this.facing, frames: this.hasWalkFrames() });
+    this.showFrame();
     const H = PLAYER.displayHeight, v = this.view;
     v.setPosition(this.sprite.x + pose.dx * H, this.sprite.y + pose.dy * H);
     v.setScale(this.baseScale * pose.sx, this.baseScale * pose.sy).setAngle(pose.rot).setAlpha(pose.alpha);

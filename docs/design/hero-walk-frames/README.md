@@ -47,7 +47,7 @@ python3 tools/art/hero_walk_frames.py --preview  # и обновляет preview
 - `src/scenes/PreloadScene.js` — загружает листы как спрайт-листы.
 - `src/objects/Player.js` — в ходьбе показывает кадр листа, стоя и при касте показывает обычный рисунок.
   Если лист не загрузился, герой ходит по-старому.
-- `src/systems/HeroAnimator.js` — режим `frames: true` отключает процедурный подскок и покачивание (`walkFrames` в
+- `src/systems/HeroAnimator.js` — режим `frames: true` отключает процедурный подскок и сжатие, оставляя лёгкое покачивание и наклон (`walkFrames` в
   `src/config/hero.anim.js`), чтобы они не складывались с нарисованными в кадрах.
 
 ## Почему шаг всё равно немного скользит

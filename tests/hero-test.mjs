@@ -63,7 +63,7 @@ console.log('\nПокадровая ходьба');
   ok(WALK_FRAME.w === 166 && WALK_FRAME.h === 240, 'кадр того же холста, что у стоячих рисунков (общий масштаб, ноги и hitbox)');
   ok(walkSheetsFor('warlock').side === 'warlock_walk_side' && walkSheetsFor('druid').side === 'hero_walk_side' && walkSheetsFor(undefined).down === 'hero_walk_down', 'листы по id героя; неизвестный — как у ведьмы');
   const idx = [0, 0.1666, 0.17, 0.5, 0.999, 1, 1.25, -0.1].map(walkFrameIndex);
-  ok(idx.join() === '0,0,1,3,5,0,1,5', `номер кадра по доле цикла (${idx.join(' ')})`);
+  ok(idx.join() === '0,1,1,4,7,0,2,7', `номер кадра по доле цикла (${idx.join(' ')})`);
   ok(Object.keys(ASSET_FILES).every(k => !sheets.includes(k)), 'листы ходьбы грузятся отдельно как спрайт-листы, а не как обычные картинки манифеста');
 
   // Player.showFrame: кадр листа только в ходьбе и только если лист загружен; иначе обычный рисунок ракурса
@@ -78,11 +78,11 @@ console.log('\nПокадровая ходьба');
     Player.prototype.showFrame.call(self);
     return JSON.stringify(calls);
   };
-  ok(shown() === '[["hero_walk_side",3],["flip",true]]', 'ходьба: кадр листа по фазе шага, зеркало для «влево»');
+  ok(shown() === '[["hero_walk_side",4],["flip",true]]', 'ходьба: кадр листа по фазе шага, зеркало для «влево»');
   ok(shown({ anim: { walking: false } }) === '[["hero_side"],["flip",true]]', 'стоит: обычный рисунок ракурса');
   ok(shown({}, []) === '[["hero_side"],["flip",true]]', 'листа нет (не загрузился): прежний рисунок, без ошибок');
   ok(shown({ anim: { isDead: true } }) === '[["hero_side"],["flip",true]]', 'поражение: обычный рисунок');
-  ok(shown({ self: { facing: 'down' }, anim: { cycle: 0.99 } }).startsWith('[["hero_walk_down",5]'), 'другой ракурс — свой лист, последний кадр цикла');
+  ok(shown({ self: { facing: 'down' }, anim: { cycle: 0.99 } }).startsWith('[["hero_walk_down",7]'), 'другой ракурс — свой лист, последний кадр цикла');
 }
 
 console.log('\nТексты: resolver');

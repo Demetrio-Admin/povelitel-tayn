@@ -5,6 +5,7 @@
 // Независимые помещения (CITY_ROOMS) не переносятся; меняются только внешний план, двери и точки возврата.
 import { buildRoad } from '../world/terrain.js';
 import { distToPolygon, catmullRom } from '../world/geometry.js';
+import { dressArchiveDistrict } from './city.archive.js';
 
 export const CITY_LAYOUT_VERSION = 4;
 export const CITY_RECT = { x: 5600, y: 160, w: 2880, h: 5760 };
@@ -494,7 +495,8 @@ export function cityMapData() {
   props.push({id:'city_plan_rescued_cellar',k:'city_cellar',...P(1050,1830),solid:null,l:'floor',requires:'ch2_rescue_cellar'});
   props.push({id:'city_plan_resident_woman',k:'city_resident_woman',...P(2160,1700),solid:null,requires:'ch2_rescue_door'});
   props.push({id:'city_plan_resident_man',k:'city_resident_man',...P(2230,1660),solid:null,requires:'ch2_rescue_door'});
-  // Крупные лесные деревья — только за городской стеной.
+  // Selected courtyard concept: forest-style gardens around the Archive, with the original city geometry.
+  dressArchiveDistrict({ grounds, colliders, props, roads, point: P, buildings: BUILDINGS, questPositions: CITY_POSITIONS });
   return {grounds,colliders,props,roads,waters:[CITY_CANAL],skipped};
 }
 export const cityLocal = local;

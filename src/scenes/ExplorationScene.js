@@ -470,7 +470,9 @@ export class ExplorationScene extends Phaser.Scene {
       keep(z);
       const bottomDepth = DEPTH.mainBase + c.y + c.h;
       switch (c.kind) {
-        case 'trees': keep(this.add.rectangle(c.x, c.y, c.w, c.h, this.loc?.id === 'frostwood' ? 0x76938c : this.loc?.id === 'graveyard' ? 0x343d32 : (this.loc?.interior?0x17120e:0x172114)).setOrigin(0).setDepth(DEPTH.path - 1)); break;
+        case 'trees':
+          if (c.forestUnderlay !== false) keep(this.add.rectangle(c.x, c.y, c.w, c.h, this.loc?.id === 'frostwood' ? 0x76938c : this.loc?.id === 'graveyard' ? 0x343d32 : (this.loc?.interior?0x17120e:0x172114)).setOrigin(0).setDepth(DEPTH.path - 1));
+          break;
         case 'wall': {
           const city = locationAt(c.x+c.w/2,c.y+c.h/2).id === 'city';
           const wall = keep(this.add.tileSprite(c.x, c.y - 40, c.w, c.h + 40, c.tex || (city ? 'city_timber' : 'wall_wood_01')).setOrigin(0).setTileScale(city ? 0.25 : 1).setDepth(bottomDepth));

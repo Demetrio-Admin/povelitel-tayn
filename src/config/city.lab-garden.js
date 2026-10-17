@@ -4,6 +4,9 @@ import { distToPolygon } from '../world/geometry.js';
 
 export function dressLaboratoryTrail({ colliders, props, roads, point, buildings, questPositions }) {
   const origin = point(0, 0);
+  // These rectangles define collision only. Their dark floor used to cover the lawn
+  // and show straight edges between the trees along the entire western approach.
+  for (const c of colliders) if (/^city_plan_forest_[0-4]$/.test(c.id)) c.forestUnderlay = false;
   const trail = roads.find(r => r.id === 'city_street_lab_trail');
   if (trail) Object.assign(trail, { kind: 'stone', texture: 'city_archive_worn_paving', tileScale: 0.34, urban: false });
   roads.push({ id: 'city_street_lab_forecourt', kind: 'stone', w: 130,

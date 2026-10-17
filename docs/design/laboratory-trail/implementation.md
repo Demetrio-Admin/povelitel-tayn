@@ -6,6 +6,8 @@ The city option 2 art direction continues along the narrow trail outside the wes
 
 The forest filler loses only the inner row beside the long narrow corridor, allowing its authored rocky and flowering margins to show. Filtering happens after assigning IDs, so retained trees preserve their editor identities. Extra woodland-edge decorations sit inside existing forest blockers; they add no collision. Solid planting avoids the path, buildings, door and quest positions. The workbench is reachable while the laboratory door is still sealed.
 
+The five western forest blockers use `forestUnderlay: false`: their collision zones remain active, but the renderer no longer paints their flat dark rectangles over the lawn and garden ground. This removes the straight dark edges at the clearing, corridor sides and road junction instead of hiding those edges with more trees. Other forest underlays keep their existing rendering.
+
 ## Assets and visual comparison
 
 Built-in Image Gen produced `concept.webp` and `public/assets/city-laboratory/workbench.webp`. Briefs: one secluded laboratory at the end of a narrow forest path outside the existing city wall, using the selected city/forest palette; then one transparent wooden potting workbench with potion bottles, brass scale, herbs, mortar, parchment and books. The sprite is cropped to its alpha bounds and resized to at most 480px, encoded losslessly with exact alpha-edge colors. World size is 108 × 98; collision is only its 82 × 22 base.

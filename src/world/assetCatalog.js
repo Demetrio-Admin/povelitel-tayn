@@ -10,6 +10,8 @@ export const ASSET_GROUPS = {
   ground:'Полы, стены и покрытия', portraits:'Портреты', ui:'Иконки и интерфейс', backgrounds:'Фоны',
 };
 const NAMES = {
+  city_archive_worn_paving:'Потёртая мостовая у Архива',city_archive_garden_ground:'Земля и трава сада Архива',
+  city_archive_reading_table:'Столик для чтения в саду',
   city_walk_lawn:'Городская трава',city_walk_paving:'Светлая городская мостовая',
   city_walk_wall_face:'Каменная городская стена',city_walk_wall_top:'Верх городской стены',city_walk_wall_post:'Столб городской стены',
   city_walk_fence_iron:'Кованая ограда',city_walk_fence_wood:'Деревянная ограда',

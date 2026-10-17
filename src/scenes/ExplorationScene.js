@@ -406,6 +406,7 @@ export class ExplorationScene extends Phaser.Scene {
     const chunks = terrainChunks(this.terrain, WORLD.width, WORLD.height + EXTRA_BOTTOM).filter(c => touchesLocation(c, this.loc ? { rect: this.view } : null));
     const src = (k) => { try { return this.textures.get(k).getSourceImage(); } catch (e) { return null; } };
     const imgs = { dirt: src('dirt_path_01'), stone: src('stone_path_01'), water: src('swamp_water_01'),city_final_paving:src('city_final_paving'),city_walk_paving:src('city_walk_paving') };
+    for (const road of this.terrain.roads) if (road.texture && !imgs[road.texture]) imgs[road.texture] = src(road.texture);
     for (const im of this.terrainImages || []) im.destroy(); // перерисовка после правки в редакторе
     this.terrainImages = [];
     for (const c of chunks) {

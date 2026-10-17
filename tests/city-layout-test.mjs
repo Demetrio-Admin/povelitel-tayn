@@ -4,6 +4,7 @@ import { INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
 import { CITY_ROOMS, CITY_PORTALS, BUILDINGS, CITY_RECT, CITY_POSITIONS, CITY_SPOTS, CITY_ADMIN_POINTS, CITY_LAYOUT_VERSION,
   V3_CITY, CITY_CANAL, cityPoint, cityArrival, cityMapData } from '../src/config/city.plan.js';
 import { CITY_START } from '../src/config/world.city.js';
+import { inArchiveDistrict } from '../src/config/city.archive.js';
 import { ADMIN_CHECKPOINTS } from '../src/admin/config.js';
 import { locationAt, locationById } from '../src/config/locations.js';
 import { resolveMap, applyPos, diffEdits } from '../src/world/mapData.js';
@@ -76,10 +77,15 @@ const solidProps=m.props.filter(p=>inCity(p) && propSolid(p));
 for(const p of solidProps)assert.ok(mainStreets.every(r=>distToPolygon(p.x,p.y,r.poly)>8),'street clear of '+p.id);
 const wall=m.colliders.find(c=>c.id==='city_plan_wall_west_n'),east=m.colliders.find(c=>c.id==='city_plan_wall_east');
 const inside=m.props.filter(p=>p.x>wall.x+wall.w && p.x<east.x && p.y>CITY_RECT.y+160 && p.y<CITY_RECT.y+5560);
-assert.equal(inside.filter(p=>/^(tree_dark|tree_autumn|birch)/.test(p.k)).length,0,'no forest trees inside the town');
+const forestTrees=inside.filter(p=>/^(tree_dark|tree_autumn|birch)/.test(p.k));
+assert.ok(forestTrees.length>=10,'Archive garden reuses the first chapter trees');
+assert.ok(forestTrees.every(p=>inArchiveDistrict(p.x-CITY_RECT.x,p.y-CITY_RECT.y)),'forest garden is confined to the Archive district');
 assert.ok(inside.filter(p=>p.k.startsWith('city_walk_tree_')).length>=30,'compact town trees');
 assert.ok(new Set(inside.map(p=>p.k)).size>=18,'varied small groups of details');
 assert.equal(m.colliders.filter(c=>c.kind==='fence').every(c=>c.h<=14),true,'inner fences are low');
+const readingTable=m.props.find(p=>p.k==='city_archive_reading_table');
+assert.ok(readingTable,'the selected reading corner is present');
+assert.ok(reach(CITY_SPOTS.garden,{x:readingTable.x+95,y:readingTable.y+50},GATE_IDS),'reading corner is reachable from the street');
 
 // ---- story gates: the bridge is the only way into the quarter, the flooded passage the only way north
 const quarter=front('cellar'),yard=CITY_SPOTS.yard,south=CITY_SPOTS.bridgeSouth,lab=front('lab');

@@ -11,6 +11,7 @@ import { CHAPTER2_FILES, CHAPTER2_SIZES } from './chapter2.art.generated.js';
 import { CITY_INTERIOR_FILES, CITY_INTERIOR_SIZES } from './city.interiors.generated.js';
 import { CITY_FINAL_FILES, CITY_FINAL_SIZES } from './city.final.art.js';
 import { CITY_WALK_FILES, CITY_WALK_SIZES } from './city.walk.art.js';
+import { ARCHIVE_FILES, ARCHIVE_SIZES } from './city.archive.art.js';
 
 export const ASSET_FILES = {
   welcome_cover: 'assets/ui/welcome-cover-v1.webp',
@@ -100,6 +101,8 @@ Object.assign(ASSET_FILES, CITY_FINAL_FILES);
 Object.assign(DISPLAY_SIZE, CITY_FINAL_SIZES);
 Object.assign(ASSET_FILES, CITY_WALK_FILES);
 Object.assign(DISPLAY_SIZE, CITY_WALK_SIZES);
+Object.assign(ASSET_FILES, ARCHIVE_FILES);
+Object.assign(DISPLAY_SIZE, ARCHIVE_SIZES);
 
 /** Рисунки-заглушки, не готовые к релизу. Оба героя используют финальные PNG. */
 export const TEMPORARY_ART = [];

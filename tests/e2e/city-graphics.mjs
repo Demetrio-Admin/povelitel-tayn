@@ -42,8 +42,8 @@ try{
      trees:['sage','amber','plum'].map(k=>keys('city_walk_tree_'+k)),forestInside:list.filter(o=>/^(tree_dark|tree_autumn|birch)/.test(o.texture?.key)&&o.x>s.loc.rect.x+680&&o.x<s.loc.rect.x+2600&&o.y>s.loc.rect.y+160&&o.y<s.loc.rect.y+5560).length,
      missing:[...new Set(list.filter(o=>key(o)==='__MISSING').map(o=>o.name||o.type))]};
   });
-  // The Archive courtyard deliberately reuses chapter I trees; CPU layout checks confine them to that district.
-  assert.ok(env.lawn && env.walls>=7 && env.posts>=10 && env.fences>=6 && env.trees.every(n=>n>=10) && env.forestInside>=10 && env.missing.length===0,JSON.stringify(env));
+  // Chapter I trees now form the gardens in every district; CPU tests check distribution and thaw semantics.
+  assert.ok(env.lawn && env.walls>=7 && env.posts>=10 && env.fences>=6 && env.forestInside>=70 && env.missing.length===0,JSON.stringify(env));
   const settle=async()=>{await page.waitForTimeout(1800);await page.evaluate(()=>{
    const s=window.__game.scene.getScene('ExplorationScene'),u=window.__game.scene.getScene('UIScene');
    u.toasts.forEach(t=>t.destroy());u.toasts=[];u.goalBanner?.setVisible(false);u.zoneBanner?.setVisible(false);u.hintPlate?.setVisible(false);s.heroSay=()=>{};

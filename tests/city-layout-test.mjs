@@ -4,7 +4,6 @@ import { INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
 import { CITY_ROOMS, CITY_PORTALS, BUILDINGS, CITY_RECT, CITY_POSITIONS, CITY_SPOTS, CITY_ADMIN_POINTS, CITY_LAYOUT_VERSION,
   V3_CITY, CITY_CANAL, cityPoint, cityArrival, cityMapData } from '../src/config/city.plan.js';
 import { CITY_START } from '../src/config/world.city.js';
-import { inArchiveDistrict } from '../src/config/city.archive.js';
 import { ADMIN_CHECKPOINTS } from '../src/admin/config.js';
 import { locationAt, locationById } from '../src/config/locations.js';
 import { resolveMap, applyPos, diffEdits } from '../src/world/mapData.js';
@@ -69,18 +68,21 @@ for(const b of BUILDINGS){
 const merchant=byId('npc_merchant'),mainStreets=m.roads.filter(r=>/city_street_main_/.test(r.id)).map((r,i)=>buildRoad(r,i));
 assert.ok(Math.hypot(merchant.x-door('bank').x,merchant.y-door('bank').y)>=600,'merchant is not pressed against the bank');
 assert.ok(mainStreets.every(r=>distToPolygon(merchant.x,merchant.y,r.poly)>=150),'merchant stands off the main street');
-assert.ok(m.colliders.some(c=>c.tex==='market_stall_01' && Math.hypot(c.x+c.w/2-merchant.x,c.y+c.h-merchant.y)<260),'stall beside the merchant');
+assert.ok(m.colliders.some(c=>c.tex==='city_neighborhood_market_stall' && Math.hypot(c.x+c.w/2-merchant.x,c.y+c.h-merchant.y)<260),'stall beside the merchant');
 const customer={x:merchant.x-140,y:merchant.y+20,w:140,h:90};
 assert.deepEqual(solids().filter(s=>s.src!=='obj:npc_merchant' && s.x<customer.x+customer.w && s.x+s.w>customer.x && s.y<customer.y+customer.h && s.y+s.h>customer.y).map(s=>s.src),[],'customer space');
-// ---- decor never blocks the main street; inner trees are compact town trees
+// ---- the approved forest garden continues across the city, without obstructing routes
 const solidProps=m.props.filter(p=>inCity(p) && propSolid(p));
 for(const p of solidProps)assert.ok(mainStreets.every(r=>distToPolygon(p.x,p.y,r.poly)>8),'street clear of '+p.id);
 const wall=m.colliders.find(c=>c.id==='city_plan_wall_west_n'),east=m.colliders.find(c=>c.id==='city_plan_wall_east');
 const inside=m.props.filter(p=>p.x>wall.x+wall.w && p.x<east.x && p.y>CITY_RECT.y+160 && p.y<CITY_RECT.y+5560);
 const forestTrees=inside.filter(p=>/^(tree_dark|tree_autumn|birch)/.test(p.k));
-assert.ok(forestTrees.length>=10,'Archive garden reuses the first chapter trees');
-assert.ok(forestTrees.every(p=>inArchiveDistrict(p.x-CITY_RECT.x,p.y-CITY_RECT.y)),'forest garden is confined to the Archive district');
-assert.ok(inside.filter(p=>p.k.startsWith('city_walk_tree_')).length>=30,'compact town trees');
+for(const [name,minY,maxY] of [['north',160,1100],['quarter',1136,2080],['archive',2190,3120],['square',3120,4060],['market',4060,4760],['gate',4760,5560]]) {
+  const trees=forestTrees.filter(p=>p.y>CITY_RECT.y+minY && p.y<CITY_RECT.y+maxY);
+  assert.ok(trees.length>=8,name+' has authored forest-style planting');
+  if(maxY<=2080)assert.ok(trees.every(p=>p.frost),name+' planting follows the thaw state');
+}
+assert.ok(m.roads.filter(r=>r.id.startsWith('city_street_') && r.kind==='stone').every(r=>r.texture==='city_archive_worn_paving'),'consistent worn paving throughout the city');
 assert.ok(new Set(inside.map(p=>p.k)).size>=18,'varied small groups of details');
 assert.equal(m.colliders.filter(c=>c.kind==='fence').every(c=>c.h<=14),true,'inner fences are low');
 const readingTable=m.props.find(p=>p.k==='city_archive_reading_table');

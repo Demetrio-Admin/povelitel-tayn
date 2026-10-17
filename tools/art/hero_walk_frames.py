@@ -23,28 +23,36 @@ ROOT = os.path.join(os.path.dirname(__file__), '..', '..')
 SPR = os.path.join(ROOT, 'public', 'assets', 'sprites')
 W, H = 166, 240
 SS = 4                 # запас разрешения при сборке кадра
-FRAMES = 6             # кадров в цикле (два шага); то же число в src/config/hero.walk.js
+FRAMES = 8             # кадров в цикле (два шага); то же число в src/config/hero.walk.js
 
-# Параметры (в пикселях исходного рисунка). Те же числа, что в демо, которое смотрели при выборе.
-LIFT = 5.4             # подъём сапога
-RISE = 2.6             # приподнимание корпуса на проходе
-SWING = {'down': 0.8, 'up': 0.8, 'side': 2.5}
+# Параметры (в пикселях исходного рисунка).
+# Герой едет быстро (230 px/с при росте 120 px), а ноги короткие, поэтому шаг должен быть заметно размашистым,
+# иначе вместо шагов видно скольжение. Частота шага задаётся в config/hero.anim.js (walkFrames.rate).
+LIFT = 8.0             # подъём сапога над землёй в махе
+RISE = 4.0             # приподнимание корпуса на проходе
+SPREAD = 0.8           # разведение ног в стороны, вид спереди и сзади
+STRIDE_Y = 3.0         # вынос стопы вперёд-назад, вид спереди и сзади: вперёд стопа ниже (спереди) или выше (сзади)
+SWING_DEG = 24         # вид сбоку: наклон ноги вперёд-назад от бедра
 
 # Разрез на ноги. y0 — линия реза (ниже неё корпус не рисуется), box — где искать ноги,
 # mode 'color': забрать только цвет сапог и кожи (ведьма: плащ рядом того же тона, что штаны колдуна, поэтому у колдуна 'box'),
-# split — граница между левой и правой ногой, ov — запас перекрытия (нужен в профиле, где сапоги перекрываются).
+# split — граница между левой и правой ногой.
+# front (только профиль): на рисунке сапоги перекрываются, задний виден узкой полоской справа от переднего, остальное закрыто.
+# Поэтому передняя нога берётся целиком (всё левее split плюс носок ниже toe_y), а задняя достраивается как её копия,
+# сдвинутая на bx вправо и чуть темнее. Тогда при расхождении ног обе остаются целыми.
 HEROES = {
     'hero': {
-        'down': dict(y0=199, x0=58, x1=114, mode='color', split=86, ov=0),
-        'up': dict(y0=202, x0=56, x1=110, mode='color', split=84, ov=0),
-        'side': dict(y0=204, x0=68, x1=106, mode='color', split=89, ov=4),
+        'down': dict(y0=199, x0=58, x1=114, mode='color', split=86),
+        'up': dict(y0=202, x0=56, x1=110, mode='color', split=84),
+        'side': dict(y0=204, x0=68, x1=106, mode='color', front=dict(split=91, toe_y=225, bx=8)),
     },
     'warlock': {
-        'down': dict(y0=200, x0=56, x1=116, mode='box', split=85, ov=0),
-        'up': dict(y0=201, x0=56, x1=112, mode='box', split=82, ov=0),
-        'side': dict(y0=205, x0=70, x1=114, mode='box', split=96, ov=4),
+        'down': dict(y0=200, x0=56, x1=116, mode='box', split=85),
+        'up': dict(y0=201, x0=56, x1=112, mode='box', split=82),
+        'side': dict(y0=205, x0=70, x1=114, mode='box', front=dict(split=91, toe_y=225, bx=8)),
     },
 }
+REAR_SHADE = 0.9       # задняя нога в профиле чуть темнее передней
 
 
 def cut_layers(im, c):
@@ -65,9 +73,22 @@ def cut_layers(im, c):
     body[E] = 0
     leg = np.zeros_like(arr)
     leg[E] = arr[E]
-    split, ov = c['split'], c['ov']
+    f = c.get('front')
+    if f:
+        ys, xs = np.mgrid[0:A.shape[0], 0:A.shape[1]]
+        front = E & ((xs <= f['split']) | (ys >= f['toe_y']))
+        fa = np.zeros_like(arr)
+        fa[front] = arr[front]
+        piece = Image.fromarray(fa)
+        bb = piece.getbbox()
+        a_img = piece.crop(bb)
+        rear = np.array(a_img).astype(float)
+        rear[:, :, :3] *= REAR_SHADE
+        b_img = Image.fromarray(rear.astype('uint8'))
+        return Image.fromarray(body), (a_img, bb), (b_img, (bb[0] + f['bx'], bb[1], bb[2] + f['bx'], bb[3]))
+    split = c['split']
     out = []
-    for xa, xb in ((x0, split + ov), (split - ov if ov else split, x1)):
+    for xa, xb in ((x0, split), (split, x1)):
         p = np.zeros_like(leg)
         p[:, xa:xb] = leg[:, xa:xb]
         piece = Image.fromarray(p)
@@ -76,13 +97,14 @@ def cut_layers(im, c):
     return Image.fromarray(body), out[0], out[1]
 
 
-def leg_state(s, sw):
-    """s — доля цикла ноги: первая половина — мах (нога в воздухе), вторая — опора (нога скользит назад)."""
+def leg_state(s):
+    """s — доля цикла ноги: первая половина — мах (нога в воздухе), вторая — опора (нога идёт назад).
+    -> (подъём сапога, вынос ноги st от -1 (назад) до +1 (вперёд))."""
     if s < 0.5:
         q = s / 0.5
-        return LIFT * math.sin(math.pi * q), -sw * math.cos(math.pi * q)
+        return LIFT * math.sin(math.pi * q), -math.cos(math.pi * q)
     q = (s - 0.5) / 0.5
-    return 0.0, sw * (1 - 2 * q)
+    return 0.0, 1 - 2 * q
 
 
 def strip_off(view, y, th, u):
@@ -97,18 +119,26 @@ def render_frame(view, c, parts, cyc):
     u = (cyc * 2) % 1
     th = 2 * math.pi * cyc
     rise = RISE * math.sin(math.pi * u)
-    sw = SWING[view]
     layer = Image.new('RGBA', (W * SS, H * SS), (0, 0, 0, 0))
-    states = {'A': leg_state(cyc % 1, sw), 'B': leg_state((cyc + 0.5) % 1, sw)}
+    states = {'A': leg_state(cyc % 1), 'B': leg_state((cyc + 0.5) % 1)}
     for name, piece, bb in (('B', B, bbB), ('A', A, bbA)) if view == 'side' else (('A', A, bbA), ('B', B, bbB)):
-        lift, dx = states[name]
+        lift, st = states[name]
         top = bb[1] - rise
-        bottom = bb[3] - lift
+        if view == 'side':
+            bottom, dx = bb[3] - lift, 0.0
+        else:
+            # спереди стопа, вынесенная вперёд, ниже на экране, сзади выше: нога идёт к зрителю или от него
+            bottom = bb[3] - lift + (STRIDE_Y if view == 'down' else -STRIDE_Y) * st
+            dx = SPREAD * st
         w = (bb[2] - bb[0]) * SS
         h = max(1, round((bottom - top) * SS))
         scaled = piece.resize((w, h), Image.LANCZOS)
         tmp = Image.new('RGBA', layer.size, (0, 0, 0, 0))
         tmp.paste(scaled, (round((bb[0] + dx) * SS), round(top * SS)))
+        if view == 'side':
+            # нога качается от бедра: сдвиг растёт книзу, верх ноги остаётся под подолом, подошва остаётся горизонтальной
+            t = math.tan(math.radians(SWING_DEG)) * st
+            tmp = tmp.convert('RGBa').transform(tmp.size, Image.AFFINE, (1, -t, t * top * SS, 0, 1, 0), resample=Image.BICUBIC).convert('RGBA')
         layer = Image.alpha_composite(layer, tmp)
     bodyS = body.resize((W * SS, H * SS), Image.LANCZOS)
     bl = Image.new('RGBA', layer.size, (0, 0, 0, 0))

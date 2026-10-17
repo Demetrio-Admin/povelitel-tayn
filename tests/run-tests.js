@@ -253,6 +253,20 @@ console.log('\nАнимации героини');
   const mr = meanRot(1), ml = meanRot(-1);
   ok(mr > 1 && ml < -1 && Math.abs(mr + ml) < 0.5, `наклон вперёд зеркален для влево/вправо (${ml.toFixed(1)}° / ${mr.toFixed(1)}°)`);
 
+  // покадровая ходьба (frames: true): подскок, сжатие и покачивание уже в кадрах, процедурная часть выключена
+  const fa = new HeroAnimator(); let fdy = 0, frot = 0, fsq = 0, walkOn = true; const cyc = [];
+  for (let i = 0; i < 120; i++) {
+    const p = fa.update(1 / 60, { speed: 1, dir: 1, face: 'side', frames: true });
+    fdy = Math.max(fdy, Math.abs(p.dy)); frot = Math.max(frot, Math.abs(p.rot)); fsq = Math.max(fsq, Math.abs(p.sy - 1), Math.abs(p.sx - 1));
+    walkOn = walkOn && fa.walking && finite(p); cyc.push(fa.cycle);
+  }
+  ok(fdy === 0 && frot < 1e-9 && fsq < HERO_ANIM.idle.sy + 1e-6 && walkOn, 'ходьба с кадрами: без подскока, покачивания и сжатия, walking = true');
+  ok(cyc.every(c => c >= 0 && c < 1) && Math.min(...cyc) < 0.1 && Math.max(...cyc) > 0.9, 'ходьба с кадрами: доля цикла идёт по кругу 0…1');
+  const fi = new HeroAnimator(); fi.update(1 / 60, { speed: 1, frames: true }); fi.update(1 / 60, { speed: 0, frames: true });
+  ok(!fi.walking && fi.cycle === fi.cycle && fi.cycle >= 0 && fi.cycle < 1, 'остановка: walking = false, цикл остаётся корректным числом');
+  const same = new HeroAnimator(), same2 = new HeroAnimator();
+  ok(JSON.stringify(run(same, 1, { speed: 1, dir: 1, face: 'side' })) === JSON.stringify(run(same2, 1, { speed: 1, dir: 1, face: 'side', frames: false })), 'без frames прежняя процедурная ходьба не изменилась');
+
   for (const kind of ['telekinesis', 'fire', 'auto', 'seal']) {
     const c = new HeroAnimator(); c.playCast(kind);
     ok(c.isCasting && c.castDuration(kind) > 0, `каст ${kind}: запущен, длительность > 0`);

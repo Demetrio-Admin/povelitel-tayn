@@ -5,6 +5,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { HEROES, heroById, isKnownHero, DEFAULT_HERO_ID, HERO_SHARED_TEXT, HERO_SAME_NOTE } from '../src/config/heroes.js';
 import { ASSET_FILES, DISPLAY_SIZE, TEMPORARY_ART } from '../src/config/assets.manifest.js';
+import { Player } from '../src/objects/Player.js';
+import { WALK_SHEETS, WALK_SHEET_FILES, WALK_FRAME, WALK_FRAMES, walkSheetsFor, walkFrameIndex } from '../src/config/hero.walk.js';
 import { heroText, T, fm, isGendered, setHeroSource, currentHero, currentHeroId, genderOf } from '../src/state/hero.js';
 import { GameState, createDefaultState } from '../src/state/GameState.js';
 import { SAVE } from '../src/config/game.config.js';
@@ -45,6 +47,42 @@ console.log('\nОпределения героев');
   if (TEMPORARY_ART.length) console.log(`  ⚠ ВРЕМЕННАЯ графика (не для релиза): ${TEMPORARY_ART.join(', ')} — см. config/assets.manifest.js`);
   ok(TEMPORARY_ART.every(k => ASSET_FILES[k]), 'временная графика отмечена в manifest (TEMPORARY_ART) и загружается');
   ok(Object.values(m.textures).every(k => !TEMPORARY_ART.includes(k)), 'колдун использует финальные рисунки');
+}
+
+console.log('\nПокадровая ходьба');
+{
+  const sheets = Object.values(WALK_SHEETS).flatMap(s => Object.values(s));
+  ok(Object.keys(WALK_SHEETS).join() === HEROES.map(h => h.id).join(), 'листы ходьбы есть у каждого героя (те же id)');
+  ok(sheets.length === 6 && new Set(sheets).size === 6 && Object.keys(WALK_SHEET_FILES).join() === sheets.join(), 'шесть листов: down / up / side у ведьмы и колдуна, пути для загрузки совпадают');
+  for (const key of sheets) {
+    const file = path.join(ROOT, 'public', WALK_SHEET_FILES[key]);
+    ok(fs.existsSync(file), `${key}: файл на месте`);
+    const s = pngSize(file);
+    ok(s.w === WALK_FRAME.w * WALK_FRAMES && s.h === WALK_FRAME.h && s.colorType === 6, `${key}: ${WALK_FRAMES} кадров ${WALK_FRAME.w}×${WALK_FRAME.h} в ряд, RGBA`);
+  }
+  ok(WALK_FRAME.w === 166 && WALK_FRAME.h === 240, 'кадр того же холста, что у стоячих рисунков (общий масштаб, ноги и hitbox)');
+  ok(walkSheetsFor('warlock').side === 'warlock_walk_side' && walkSheetsFor('druid').side === 'hero_walk_side' && walkSheetsFor(undefined).down === 'hero_walk_down', 'листы по id героя; неизвестный — как у ведьмы');
+  const idx = [0, 0.1666, 0.17, 0.5, 0.999, 1, 1.25, -0.1].map(walkFrameIndex);
+  ok(idx.join() === '0,0,1,3,5,0,1,5', `номер кадра по доле цикла (${idx.join(' ')})`);
+  ok(Object.keys(ASSET_FILES).every(k => !sheets.includes(k)), 'листы ходьбы грузятся отдельно как спрайт-листы, а не как обычные картинки манифеста');
+
+  // Player.showFrame: кадр листа только в ходьбе и только если лист загружен; иначе обычный рисунок ракурса
+  const shown = (over = {}, have = sheets) => {
+    const calls = [];
+    const self = {
+      anim: { walking: true, isDead: false, cycle: 0.5, ...over.anim }, walkTex: WALK_SHEETS.witch, tex: heroById('witch').textures,
+      facing: 'side', scene: { textures: { exists: k => have.includes(k) } }, sprite: { flipX: true },
+      view: { setTexture: (...a) => calls.push(a), setFlipX: (v) => calls.push(['flip', v]) }, ...over.self,
+    };
+    self.hasWalkFrames = Player.prototype.hasWalkFrames;
+    Player.prototype.showFrame.call(self);
+    return JSON.stringify(calls);
+  };
+  ok(shown() === '[["hero_walk_side",3],["flip",true]]', 'ходьба: кадр листа по фазе шага, зеркало для «влево»');
+  ok(shown({ anim: { walking: false } }) === '[["hero_side"],["flip",true]]', 'стоит: обычный рисунок ракурса');
+  ok(shown({}, []) === '[["hero_side"],["flip",true]]', 'листа нет (не загрузился): прежний рисунок, без ошибок');
+  ok(shown({ anim: { isDead: true } }) === '[["hero_side"],["flip",true]]', 'поражение: обычный рисунок');
+  ok(shown({ self: { facing: 'down' }, anim: { cycle: 0.99 } }).startsWith('[["hero_walk_down",5]'), 'другой ракурс — свой лист, последний кадр цикла');
 }
 
 console.log('\nТексты: resolver');

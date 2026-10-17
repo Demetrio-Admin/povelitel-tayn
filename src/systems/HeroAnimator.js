@@ -26,9 +26,12 @@ export class HeroAnimator {
   }
 
   reset() {
-    this.t = 0; this.phase = 0; this.move = 0;
+    this.t = 0; this.phase = 0; this.move = 0; this.walking = false;
     this.castState = null; this.hurtState = null; this.deathState = null;
   }
+
+  /** Доля цикла ходьбы 0…1 (цикл — два шага); по ней Player выбирает кадр листа. */
+  get cycle() { return ((this.phase / (2 * Math.PI)) % 1 + 1) % 1; }
 
   /** Длительность каста — нужна Player, чтобы не менять направление в позе. */
   castDuration(kind) { return this.cfg.cast[this.cfg.castAlias[kind] || kind]?.dur ?? 0; }
@@ -50,26 +53,29 @@ export class HeroAnimator {
 
   /**
    * @param dt секунды
-   * @param opts speed 0…1, dir −1/0/+1 (вбок: влево/вправо; 0 — вверх/вниз), face 'up'|'down'|'side'
+   * @param opts speed 0…1, dir −1/0/+1 (вбок: влево/вправо; 0 — вверх/вниз), face 'up'|'down'|'side',
+   *   frames — ходьба рисуется покадровым листом: процедурный подскок и покачивание выключаются (cfg.walkFrames)
    */
-  update(dt, { speed = 0, dir = 0, face = 'down' } = {}) {
+  update(dt, { speed = 0, dir = 0, face = 'down', frames = false } = {}) {
     const c = this.cfg;
+    const wk = frames ? c.walkFrames : c.walk;
     dt = Math.max(0, dt);
     this.t += dt;
 
     // --- локомоция: idle ↔ walk
     const moving = speed > 0.05;
-    this.move += ((moving ? 1 : 0) - this.move) * Math.min(1, dt * c.walk.blendRate);
-    if (moving) this.phase += dt * c.walk.rate * Math.max(0.5, Math.min(1, speed));
+    this.walking = moving;
+    this.move += ((moving ? 1 : 0) - this.move) * Math.min(1, dt * wk.blendRate);
+    if (moving) this.phase += dt * wk.rate * Math.max(0.5, Math.min(1, speed));
     const b = Math.sin(this.t * c.idle.rate);
     const s = Math.abs(Math.sin(this.phase));
     const land = Math.pow(1 - s, 6);
     const m = this.move;
-    let sy = lerp(1 + c.idle.sy * b, 1 + c.walk.stretch * s - c.walk.squash * land, m);
-    let sx = lerp(1 - c.idle.sx * b, 1 - c.walk.thin * s + c.walk.squashW * land, m);
-    let dy = -c.walk.hop * s * m;
+    let sy = lerp(1 + c.idle.sy * b, 1 + wk.stretch * s - wk.squash * land, m);
+    let sx = lerp(1 - c.idle.sx * b, 1 - wk.thin * s + wk.squashW * land, m);
+    let dy = -wk.hop * s * m;
     let dx = 0;
-    let rot = (Math.sin(this.phase) * c.walk.sway + c.walk.lean * dir) * m;
+    let rot = (Math.sin(this.phase) * wk.sway + wk.lean * dir) * m;
     let alpha = 1;
     let flash = null;
 

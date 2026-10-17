@@ -88,6 +88,9 @@ assert.equal(m.colliders.filter(c=>c.kind==='fence').every(c=>c.h<=14),true,'inn
 const readingTable=m.props.find(p=>p.k==='city_archive_reading_table');
 assert.ok(readingTable,'the selected reading corner is present');
 assert.ok(reach(CITY_SPOTS.garden,{x:readingTable.x+95,y:readingTable.y+50},GATE_IDS),'reading corner is reachable from the street');
+const labWorkbench=m.props.find(p=>p.k==='city_lab_garden_workbench');
+assert.ok(labWorkbench,'alchemy workbench beside the laboratory');
+assert.ok(reach(CITY_START,{x:labWorkbench.x,y:labWorkbench.y+55},[]),'laboratory side yard reachable with its door still sealed');
 
 // ---- story gates: the bridge is the only way into the quarter, the flooded passage the only way north
 const quarter=front('cellar'),yard=CITY_SPOTS.yard,south=CITY_SPOTS.bridgeSouth,lab=front('lab');

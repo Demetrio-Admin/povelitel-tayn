@@ -181,7 +181,11 @@ try{
     await page.keyboard.press('Escape');assert.equal(await panel.locator('[data-r=menu]').isHidden(),true);
     // Щелчок по карте при открытом меню только закрывает его и ничего не выбирает.
     await page.mouse.click(sp.x,sp.y,{button:'right'});assert.equal(await panel.locator('[data-r=menu]').isVisible(),true);
-    await page.mouse.click(sp.x+180,sp.y+60);
+    // щёлкаем в верхний левый угол карты: меню открывается вправо-вниз от курсора и туда не достаёт
+    const menuBox=await panel.locator('[data-r=menu]').boundingBox(),mapBox=await page.locator('canvas').first().boundingBox();
+    const away={x:mapBox.x+30,y:mapBox.y+30};
+    assert.ok(away.x<menuBox.x||away.y<menuBox.y,'точка щелчка вне меню');
+    await page.mouse.click(away.x,away.y);
     assert.equal(await panel.locator('[data-r=menu]').isHidden(),true);
     assert.equal(await ed(()=>window.__game.scene.getScene('ExplorationScene').editor.selectedId),hovered,'щелчок мимо меню не меняет выбор');
     // Alt + перетаскивание: тянется копия, оригинал остаётся; копия и перенос отменяются одним шагом.

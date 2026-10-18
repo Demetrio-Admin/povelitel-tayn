@@ -147,4 +147,14 @@ export function dressCityNeighborhoods({ colliders, props, roads, point, buildin
     [1870, 4510], [2240, 4430], [900, 5330], [1490, 5370], [2240, 5340],
     [900, 1860], [2250, 1710], [1440, 1200], [2000, 990], [1040, 890]])
     add('city_walk_lamp', x, y, { w: 42, h: 114, light: 36, solid: { w: 14, h: 10 } });
+
+  // Sparse ornamental accents from the selected city preview. Append with stable IDs
+  // so every existing tree, decoration, doorstep and route keeps its placement.
+  for (const [id, k, x, y, s] of [
+    ['plaza_lilac', 'city_walk_tree_plum', 1140, 3560, 1.4],
+    ['plaza_sage', 'city_walk_tree_sage', 1875, 3500, 1.4],
+    ['garden_amber', 'city_walk_tree_amber', 1925, 3760, 1.35],
+    ['market_sage', 'city_walk_tree_sage', 1300, 4265, 1.35],
+    ['bank_lilac', 'city_walk_tree_plum', 2310, 4305, 1.4],
+  ]) props.push({ id: 'city_ornamental_' + id, k, ...point(x, y), s, solid: { w: 18, h: 10 } });
 }

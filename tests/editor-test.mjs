@@ -41,6 +41,9 @@ function mkScene() {
     styleEntity() {},
     rebuildTerrain(roads, waters) { this.log.terrain++; this.map.roads = roads; this.map.waters = waters; this.terrain = buildTerrain({ ROADS: roads, WATERS: waters }); },
     rebuildColliders(list) { this.log.cols++; this.map.colliders = list; },
+    rebuildGrounds(list) { this.map.grounds = list; },
+    addProp(p) { const view = { p, img: chain() }; this.propViews.set(p.id, view); return view; },
+    placePropView() {},
   };
   return sc;
 }
@@ -51,8 +54,9 @@ function mkEditor(storage = null) {
   services.map = resolveMap({ storage: window.localStorage, useDraft: true });
   const scene = mkScene();
   scene.map = services.map;
-  scene.objects = applyPos(INTERACTIVES, services.map.pos).map(cfg => ({ id: cfg.id, cfg, x: cfg.x, baseY: cfg.y, sprite: chain() }));
-  scene.enemies = applyPos(ENEMY_SPAWNS, services.map.pos).map(cfg => ({ id: cfg.id, cfg, sprite: chain(), label: chain(), ring: chain() }));
+  // как у настоящих объектов: x — положение картинки (её двигает редактор), baseY — точка основания
+  scene.objects = applyPos(INTERACTIVES, services.map.pos).map(cfg => ({ id: cfg.id, cfg, get x() { return this.cfg.x; }, baseY: cfg.y, sprite: chain() }));
+  scene.enemies = applyPos(ENEMY_SPAWNS, services.map.pos).map(cfg => ({ id: cfg.id, cfg, sprite: chain(), label: chain(), nameText: chain(), ring: chain() }));
   for (const p of services.map.props) scene.propViews.set(p.id, { p, img: chain() });
   scene.terrain = buildTerrain({ ROADS: services.map.roads, WATERS: services.map.waters });
   return { scene, ed: new MapEditor(scene) };
@@ -281,6 +285,139 @@ console.log('\nРедактор: стены');
   fresh.ed.check();
   ok(/в порядке/.test(said), 'после отмены проверка снова чистая');
   void base1;
+}
+
+console.log('\nРедактор: группа объектов, буфер обмена и выравнивание');
+{
+  const { scene, ed } = mkEditor();
+  const ids = [...scene.propViews.values()].filter(v => /^(tree|bush|rock)_/.test(v.p.k)).slice(0, 3).map(v => v.p.id);
+  const story = scene.objects.find(o => o.cfg.kind === 'npc' && !o.cfg.ghost)?.id || scene.objects[0].id;
+  const at = id => { const e = ed.find(id); return e && [e.x, e.y]; };
+  const start = Object.fromEntries([...ids, story].map(id => [id, at(id)]));
+  ed.selectMany([...ids, story], ids[0]);
+  ok(ed.sel.size === 4 && ed.selectedId === ids[0], 'выбор группы: главный объект — тот, что указан');
+  const steps = ed.history.undoStack.length;
+  ed.nudge(10, -5);
+  ok([...ids, story].every(id => at(id)[0] === start[id][0] + 10 && at(id)[1] === start[id][1] - 5), 'сдвиг двигает всю группу, включая сюжетный объект');
+  ok(ed.history.undoStack.length === steps + 1 && /сдвиг 4 объектов/.test(ed.history.undoLabel), 'сдвиг группы — один шаг отмены с понятной подписью');
+  ed.doUndo();
+  ok([...ids, story].every(id => at(id)[0] === start[id][0] && at(id)[1] === start[id][1]) && ed.sel.size === 4, 'одна отмена возвращает всех и сохраняет выбор группы');
+  // удаление группы
+  ed.selectMany([...ids, story]);
+  ed.remove();
+  ok([...ids, story].every(id => !ed.find(id)) && ed.pos[story] === null && ed.sel.size === 0, 'удаление группы: декор убран, сюжетный объект скрыт и записан как null');
+  ed.doUndo();
+  ok([...ids, story].every(id => !!ed.find(id)) && ed.pos[story] !== null && ed.sel.size === 4, 'одна отмена возвращает всю группу и выбирает её');
+  ed.doRedo();
+  ok([...ids, story].every(id => !ed.find(id)), 'повтор удаляет всех снова');
+  ed.doUndo();
+  // копия группы
+  const n0 = scene.propViews.size;
+  ed.selectMany(ids.slice(0, 2));
+  ed.duplicate();
+  const copies = [...ed.sel];
+  ok(scene.propViews.size === n0 + 2 && copies.length === 2 && copies.every(id => !ids.includes(id)), 'копия группы выбирает новые объекты');
+  ok(copies.every((id, i) => at(id)[0] === start[ids[i]][0] + 24 && at(id)[1] === start[ids[i]][1] + 16), 'копии стоят рядом, на том же расстоянии друг от друга');
+  ed.doUndo();
+  ok(scene.propViews.size === n0 && ids.slice(0, 2).every(id => ed.sel.has(id)), 'одна отмена убирает все копии и возвращает выбор оригиналов');
+  ed.doRedo();
+  ok(scene.propViews.size === n0 + 2 && copies.every(id => ed.sel.has(id)), 'повтор возвращает копии и выбирает их');
+  ed.doUndo();
+  // буфер обмена: вставка под курсор
+  ed.selectMany(ids.slice(0, 2), ids[0]);
+  ok(ed.copySel(), 'Ctrl+C копирует выбранное');
+  ed.paste({ x: 700, y: 4400 });
+  const pasted = [...ed.sel];
+  const off = [start[ids[1]][0] - start[ids[0]][0], start[ids[1]][1] - start[ids[0]][1]];
+  ok(pasted.length === 2 && at(pasted[0])[0] === 700 && at(pasted[0])[1] === 4400 && at(pasted[1])[0] === 700 + off[0] && at(pasted[1])[1] === 4400 + off[1], 'Ctrl+V: главный — под курсором, остальные на прежнем расстоянии');
+  ed.doUndo();
+  ok(pasted.every(id => !ed.find(id)), 'вставка отменяется одним шагом');
+  // сюжетный объект копируется как декор, без наград и событий
+  ed.select(story); ed.copySel(); ed.paste({ x: 640, y: 4300 });
+  const deco = ed.find(ed.selectedId);
+  ok(deco.kind === 'prop' && !deco.ref.p.requires && !deco.ref.p.fire && deco.ref.p.k, 'копия сюжетного объекта — декор с той же картинкой');
+  ed.doUndo();
+  // зеркало, размер и выравнивание группы
+  ed.selectMany(ids);
+  const f0 = ids.map(id => ed.find(id).ref.p.f || 0);
+  ed.flip();
+  ok(ids.every((id, i) => (ed.find(id).ref.p.f || 0) === (f0[i] ? 0 : 1)), 'зеркало у каждого в группе');
+  ed.doUndo();
+  ok(ids.every((id, i) => (ed.find(id).ref.p.f || 0) === f0[i]), 'и одна отмена');
+  ed.rescale(1.1);
+  ok(ids.every(id => (ed.find(id).ref.p.s || 1) !== 1), '«Больше» для всей группы');
+  ed.doUndo();
+  ed.selectMany(ids, ids[0]);
+  ed.align('y');
+  ok(ids.every(id => at(id)[1] === start[ids[0]][1]), '«В ряд»: все на высоте главного');
+  ed.doUndo();
+  ed.spread('x');
+  const xs = ids.map(id => at(id)[0]).sort((a, b) => a - b);
+  ok(Math.abs((xs[1] - xs[0]) - (xs[2] - xs[1])) <= 1, '«Поровну ↔»: равные промежутки');
+  ed.doUndo();
+  ok(ids.every(id => at(id)[0] === start[id][0] && at(id)[1] === start[id][1]), 'после отмен всё на местах');
+  // клавиши по физической кнопке: D в русской раскладке — «в»
+  ed.select(ids[0]);
+  const n1 = scene.propViews.size;
+  ed.onKey({ key: 'в', code: 'KeyD', preventDefault() {} });
+  ok(scene.propViews.size === n1 + 1, 'D (русская раскладка) делает копию');
+  ed.onKey({ key: 'я', code: 'KeyZ', ctrlKey: true, preventDefault() {} });
+  ok(scene.propViews.size === n1, 'Ctrl+Z (русская раскладка) отменяет');
+  ed.selectMany(ids);
+  ed.onKey({ key: 'ArrowRight', code: 'ArrowRight', shiftKey: true, preventDefault() {} });
+  ok(ids.every(id => at(id)[0] === start[id][0] + 10), 'Shift+стрелка сдвигает группу на 10');
+  ed.doUndo();
+  ok(ed.countEdits() >= 0 && JSON.stringify(ed.buildEdits().props) === JSON.stringify(mkEditor().ed.buildEdits().props), 'после всех отмен правок объектов нет');
+}
+
+console.log('\nРедактор: точные поля дорог и стен, жесты');
+{
+  const { ed } = mkEditor();
+  ed.setMode('terrain');
+  const road = () => ed.roads.find(r => r.id === 'cross');
+  ed.selectT({ kind: 'road', id: 'cross', i: 1, seg: null });
+  ed.setTerrainProp('w', '150');
+  ok(road().w === 150, 'поле «Ширина» меняет ширину дороги');
+  ed.setTerrainProp('w', '9999');
+  ok(road().w === 260, 'ширина не выходит за пределы, что и у кнопки «Шире»');
+  const p1 = road().pts[1].slice();
+  ed.setTerrainProp('px', String(p1[0] + 33));
+  ok(road().pts[1][0] === p1[0] + 33 && road().pts[1][1] === p1[1], 'поле X точки двигает только эту точку');
+  ed.doUndo(); ed.doUndo(); ed.doUndo();
+  ok(road().w === mkEditor().ed.roads.find(r => r.id === 'cross').w && road().pts[1][0] === p1[0], 'три отмены возвращают дорогу');
+  // точка двойным щелчком — на самой линии
+  const pts = road().pts, n = pts.length;
+  let seg = 0; for (let i = 0; i < n - 1; i++) if (Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]) > Math.hypot(pts[seg + 1][0] - pts[seg][0], pts[seg + 1][1] - pts[seg][1])) seg = i;
+  const mid = { x: (pts[seg][0] + pts[seg + 1][0]) / 2, y: (pts[seg][1] + pts[seg + 1][1]) / 2 + 6 };
+  ed.insertPointAt({ kind: 'road', id: 'cross', i: null, seg }, mid);
+  const added = road().pts[seg + 1];
+  ok(road().pts.length === n + 1 && ed.tsel.i === seg + 1 && Math.hypot(added[0] - mid.x, added[1] - mid.y) < 40, 'двойной щелчок по линии ставит точку там, где щёлкнули');
+  ed.doUndo();
+  ok(road().pts.length === n, 'и отменяется');
+  // выбранную линию тянут целиком
+  const before = JSON.stringify(road().pts);
+  ed.selectT({ kind: 'road', id: 'cross', i: null, seg });
+  ed.onDown(P(mid.x, mid.y - 6)); ed.onMove(P(mid.x + 40, mid.y + 24)); ed.onUp(P(mid.x + 40, mid.y + 24));
+  const moved = road().pts, old = JSON.parse(before);
+  ok(moved.every((p, i) => p[0] === old[i][0] + 40 && p[1] === old[i][1] + 30), 'перетаскивание выбранной линии сдвигает все её точки');
+  ed.doUndo();
+  ok(JSON.stringify(road().pts) === before, 'и одна отмена возвращает её');
+  // Alt + щелчок по точке убирает её
+  ed.selectT(null);
+  const pt = road().pts[2];
+  ed.onDown({ x: pt[0], y: pt[1], isDown: true, event: { altKey: true } }); ed.onUp(P(pt[0], pt[1]));
+  ok(road().pts.length === n - 1, 'Alt + щелчок по точке убирает её');
+  ed.doUndo();
+  // стены: тип и точный размер
+  ed.setMode('walls');
+  const wall = { ...ed.cols.find(c => c.kind === 'ruin' && !c.tex && !c.building) };
+  ed.selectC(wall.id);
+  ed.setWallProp('w', '333'); ed.setWallProp('kind', 'fence');
+  ok(ed.col(wall.id).w === 333 && ed.col(wall.id).kind === 'fence', 'у стены меняются ширина и тип');
+  ed.doUndo(); ed.doUndo();
+  ok(ed.col(wall.id).w === wall.w && ed.col(wall.id).kind === 'ruin', 'отмена возвращает тип и размер');
+  const building = ed.cols.find(c => c.building);
+  if (building) { ed.selectC(building.id); ed.setWallProp('kind', 'ruin'); ok(ed.col(building.id).kind === building.kind, 'у здания тип не меняется: его фасад и вход привязаны к стене'); }
 }
 
 console.log('\nРедактор: режимы и черновик');

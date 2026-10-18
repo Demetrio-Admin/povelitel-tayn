@@ -216,6 +216,29 @@ export function paintTerrainChunk(ctx, chunk, terrain, imgs = {}) {
   ctx.restore();
 }
 
+/** Задевает ли прямоугольник линии (с тенью и бахромой) кусок мира. */
+export const chunkTouches = (bounds, chunk) => touches(bounds, chunk);
+
+/**
+ * Прямоугольники линий, которые изменились между двумя построениями (было и стало).
+ * Кусок рисуется только из линий, которые его задевают, поэтому после правки в редакторе
+ * достаточно перерисовать куски под старым и новым положением изменённых линий.
+ */
+export function changedTerrainBounds(before, after) {
+  const sig = s => JSON.stringify([s.kind, s.type, s.seamless, s.borderless, s.urban, s.texture, s.tileScale, s.n, s.poly]);
+  const out = [];
+  for (const list of ['roads', 'waters']) {
+    const a = new Map(before[list].map(s => [s.id, s])), b = new Map(after[list].map(s => [s.id, s]));
+    for (const id of new Set([...a.keys(), ...b.keys()])) {
+      const x = a.get(id), y = b.get(id);
+      if (x && y && sig(x) === sig(y)) continue;
+      if (x) out.push(x.bounds);
+      if (y) out.push(y.bounds);
+    }
+  }
+  return out;
+}
+
 /** Список кусков, в которые что-то попадает: [{ cx, cy, x, y, w, h }]. */
 export function terrainChunks(terrain, worldW, worldH, size = CHUNK) {
   const shapes = [...terrain.roads, ...terrain.waters];

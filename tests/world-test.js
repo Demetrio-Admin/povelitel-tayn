@@ -9,7 +9,8 @@ import { buildRoad, buildTerrain, distToRoad, onWater } from '../src/world/terra
 import { PROP_DEFS } from '../src/world/propDefs.js';
 import { collectSolids, propSolid } from '../src/world/solids.js';
 import { buildWalkGrid, floodFrom, reachableNear } from '../src/world/walk.js';
-import { PROPS, applyEdits, diffEdits, applyPos, diffPos, exportEditsFile, resolveMap, saveDraft, loadDraft, DRAFT_KEY, baseTerrain, applyListEdits, applyTerrainEdits, diffList, diffTerrain } from '../src/world/mapData.js';
+import { PROPS, applyEdits, diffEdits, applyPos, diffPos, exportEditsFile, resolveMap, saveDraft, loadDraft, DRAFT_KEY, baseTerrain, applyListEdits, applyTerrainEdits, diffList, diffTerrain, countEditDiff } from '../src/world/mapData.js';
+import { changedTerrainBounds, chunkTouches } from '../src/world/terrainPaint.js';
 import * as TE from '../src/world/terrainEdit.js';
 import { History, pickAt, snapValue, nextId, clamp } from '../src/world/editorCore.js';
 import { checkWalkability } from '../src/world/check.js';
@@ -159,6 +160,15 @@ console.log('\nМир: ядро редактора');
   ok(log.join() === 'u2,u1,r1' && h.canUndo && h.canRedo, 'History: отмена и повтор идут в правильном порядке');
   h.push(op(3)); ok(!h.canRedo, 'History: новая правка сбрасывает «повтор»');
   h.push(op(4)); h.push(op(5)); h.push(op(6)); ok(h.undoStack.length === 3, 'History: глубина ограничена');
+  // группа: несколько правок отменяются и повторяются одним шагом, вложенные группы складываются в одну
+  const g = new History(); const glog = [];
+  const gop = (n) => ({ label: n, undo: () => glog.push('u' + n), redo: () => glog.push('r' + n) });
+  const outer = g.begin(); g.push(gop(1)); const inner = g.begin(); g.push(gop(2)); g.push(gop(3)); g.end(inner, 'внутри'); g.push(gop(4));
+  g.end(outer, 'перенос 4 объектов', { undo: () => glog.push('выбор'), redo: () => glog.push('снова') });
+  ok(g.undoStack.length === 1 && g.undoLabel === 'перенос 4 объектов', 'History: группа — один шаг с понятной подписью');
+  g.undo(); ok(glog.join() === 'u4,u3,u2,u1,выбор', 'History: группа отменяется в обратном порядке');
+  g.redo(); ok(glog.slice(5).join() === 'r1,r2,r3,r4,снова' && g.redoLabel === '', 'History: и повторяется в прямом');
+  const empty = g.begin(); g.end(empty, 'пусто'); ok(g.undoStack.length === 1, 'History: пустая группа в историю не попадает');
   const E = (id, x0, y0, x1, y1) => ({ id, bounds: () => ({ x0, y0, x1, y1 }) });
   const crown = E('crown', 0, 0, 200, 300), flower = E('flower', 80, 250, 120, 290), far = E('far', 500, 500, 520, 520);
   ok(pickAt([crown, flower, far], 100, 270).id === 'flower', 'pickAt: под кроной выбирается маленький цветок');
@@ -276,6 +286,19 @@ console.log('\nМир: геометрия правки линий и стен');
   ok(r3.w === 10 && r3.x === 290, 'resizeRect: размер не меньше 10 даже за противоположный край');
   ok(TE.pickRect([{ x: 0, y: 0, w: 1000, h: 1000 }, r], 150, 120).w === 200, 'pickRect: побеждает меньший прямоугольник');
   ok(TE.nextNoise([{ n: 3 }], [{ n: 9 }]) === 10, 'nextNoise: больше всех существующих');
+  // строка «не в игре: N» — сколько записей черновика отличаются от файла
+  const fileE = { v: 1, props: { a: { x: 1 } }, add: [{ id: 'n1', k: 'bush_01', x: 1, y: 2 }], pos: {}, roads: { r: { id: 'r', w: 100 } } };
+  ok(countEditDiff(fileE, structuredClone(fileE)) === 0, 'countEditDiff: тот же файл — 0');
+  const draftE = { ...structuredClone(fileE), props: { a: { x: 2 }, b: null }, add: [], cols: { c1: null } };
+  ok(countEditDiff(draftE, fileE) === 4, 'countEditDiff: изменённый, удалённый, убранная вставка, стена');
+  // перерисовка только задетых кусков: изменились — старый и новый прямоугольники линии, остальные не трогаются
+  const tA = buildTerrain({ ROADS: [{ id: 'a', kind: 'dirt', w: 100, n: 0, pts: [[100, 100], [600, 120]] }, { id: 'b', kind: 'dirt', w: 100, n: 1, pts: [[3000, 3000], [3500, 3000]] }], WATERS: [] });
+  ok(changedTerrainBounds(tA, buildTerrain({ ROADS: [{ id: 'a', kind: 'dirt', w: 100, n: 0, pts: [[100, 100], [600, 120]] }, { id: 'b', kind: 'dirt', w: 100, n: 1, pts: [[3000, 3000], [3500, 3000]] }], WATERS: [] })).length === 0, 'changedTerrainBounds: без правок перерисовывать нечего');
+  const tB = buildTerrain({ ROADS: [{ id: 'a', kind: 'dirt', w: 100, n: 0, pts: [[100, 1500], [600, 1520]] }, { id: 'b', kind: 'dirt', w: 100, n: 1, pts: [[3000, 3000], [3500, 3000]] }], WATERS: [] });
+  const dirty = changedTerrainBounds(tA, tB);
+  ok(dirty.length === 2 && dirty.some(b => chunkTouches(b, { x: 0, y: 0, w: 512, h: 512 })) && dirty.some(b => chunkTouches(b, { x: 0, y: 1536, w: 512, h: 512 })), 'changedTerrainBounds: старое и новое место перенесённой дороги');
+  ok(!dirty.some(b => chunkTouches(b, { x: 3072, y: 2560, w: 512, h: 512 })), 'changedTerrainBounds: кусок с нетронутой дорогой не перерисовывается');
+  ok(changedTerrainBounds(tA, buildTerrain({ ROADS: [tA.roads[1]].map(() => ({ id: 'b', kind: 'dirt', w: 100, n: 1, pts: [[3000, 3000], [3500, 3000]] })), WATERS: [] })).length === 1, 'changedTerrainBounds: удалённая дорога — её прямоугольник');
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты мира пройдены');

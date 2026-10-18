@@ -147,4 +147,41 @@ export function dressCityNeighborhoods({ colliders, props, roads, point, buildin
     [1870, 4510], [2240, 4430], [900, 5330], [1490, 5370], [2240, 5340],
     [900, 1860], [2250, 1710], [1440, 1200], [2000, 990], [1040, 890]])
     add('city_walk_lamp', x, y, { w: 42, h: 114, light: 36, solid: { w: 14, h: 10 } });
+
+  // Ornamental accents from the selected palette across all six city districts. Stable IDs
+  // so every existing tree, decoration, doorstep and route keeps its placement.
+  for (const [id, k, x, y, s] of [
+    ['plaza_lilac', 'city_walk_tree_plum', 1140, 3560, 1.4],
+    ['plaza_sage', 'city_walk_tree_sage', 1875, 3500, 1.4],
+    ['garden_amber', 'city_walk_tree_amber', 1925, 3760, 1.35],
+    ['market_sage', 'city_walk_tree_sage', 1300, 4265, 1.35],
+    ['bank_lilac', 'city_walk_tree_plum', 2310, 4305, 1.4],
+    ['north_west', 'city_walk_tree_plum', 1000, 425, 1.4],
+    ['north_south', 'city_walk_tree_sage', 1210, 950, 1.4],
+    ['north_east', 'city_walk_tree_plum', 2275, 1065, 1.4],
+    ['north_court', 'city_walk_tree_amber', 1920, 335, 1.35],
+    ['north_workshop', 'city_walk_tree_sage', 2305, 480, 1.4],
+    ['quarter_west', 'city_walk_tree_sage', 1055, 1340, 1.4],
+    ['quarter_cellar', 'city_walk_tree_plum', 1385, 1575, 1.4],
+    ['quarter_east', 'city_walk_tree_plum', 2200, 1500, 1.4],
+    ['quarter_south', 'city_walk_tree_amber', 2200, 1990, 1.35],
+    ['quarter_bridge', 'city_walk_tree_sage', 1750, 1825, 1.4],
+    ['archive_canal', 'city_walk_tree_plum', 1450, 2345, 1.4],
+    ['archive_west', 'city_walk_tree_sage', 805, 2830, 1.4],
+    ['archive_garden', 'city_walk_tree_plum', 1160, 2765, 1.4],
+    ['society_north', 'city_walk_tree_sage', 1745, 2525, 1.4],
+    ['society_east', 'city_walk_tree_amber', 2225, 2765, 1.35],
+    ['plaza_west', 'city_walk_tree_sage', 800, 3400, 1.4],
+    ['coven_garden', 'city_walk_tree_plum', 2125, 3330, 1.4],
+    ['plaza_east', 'city_walk_tree_plum', 2530, 3650, 1.4],
+    ['market_west', 'city_walk_tree_plum', 770, 4405, 1.4],
+    ['market_east', 'city_walk_tree_sage', 2460, 4290, 1.4],
+    ['market_south', 'city_walk_tree_amber', 1825, 4795, 1.35],
+    ['gate_west', 'city_walk_tree_sage', 935, 4980, 1.4],
+    ['warehouse_west', 'city_walk_tree_plum', 1215, 4780, 1.4],
+    ['warehouse_east', 'city_walk_tree_sage', 2270, 5160, 1.4],
+    ['gate_south', 'city_walk_tree_plum', 1340, 5385, 1.4],
+    ['warehouse_south', 'city_walk_tree_amber', 2020, 5350, 1.35],
+  ]) props.push({ id: 'city_ornamental_' + id, k, ...point(x, y), s,
+    solid: { w: 18, h: 10 }, ...(y < 2080 ? { frost: true } : {}) });
 }

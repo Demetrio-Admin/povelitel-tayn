@@ -258,7 +258,7 @@ console.log('\nГлава II: диалоги');
   const dlg = new DialogueSystem({ state: st, log: new QuestLog(st, bus), bus });
   const variant = (npc) => dlg.pick(npc)?.id;
   for (const k of ['prologue_seen', 'unlock_telekinesis_1', 'chapter_1_complete']) st.markEvent(k);
-  ok(DIALOGUES.mirra[1].nodes.start.choices.some(c => c.next === 'city'), 'в эпилоге Мирры есть «Что дальше? Город?»');
+  ok(DIALOGUES.mirra.find(v => v.id === 'mirra_epilogue').nodes.start.choices.some(c => c.next === 'city'), 'в эпилоге Мирры есть «Что дальше? Город?»');
   st.markEvent('ch2_city_arrived');
   ok(variant('ilaria') === 'ilaria_danger', 'Илария предупреждает о звере');
   st.markEvent('ch2_plaza_cleared');

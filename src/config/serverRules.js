@@ -101,6 +101,30 @@ export const EVENT_ACTIONS = {
   ch2_ice3_shard: { requires: ['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal'], blockedBy: ['ch2_ice3'], consume: { coins: GIFT_PRICES.storyIce3.coins }, unlock: { ice: 3 }, branch: { ice: 'shard' }, marks: ['ch2_ice3'] },
   ch2_epilogue: { requires: ['ch2_letters_read'] },
   chapter_2_complete: { requires: ['ch2_epilogue'], marks: ['title_frost_survivor'], sapphires: 50 },
+  // v0.38.0 — глава III «Безымянная роща» (docs/design/chapter-3-story-v0.1.md): разговоры, первый вход в рощу, имена.
+  // Эхо, плотина, колпаки, корни и замки — операции world (условия — у объектов, world.grove.js), игольники и страж — бои.
+  ch3_start: { requires: ['chapter_2_complete'] },
+  ch3_ilaria_talk: { requires: ['ch3_start'] },
+  ch3_severin_talk: { requires: ['ch3_ilaria_talk'] },
+  ch3_grove_arrived: { requires: ['ch3_leaf_read'] },
+  ch3_nerys_met: { requires: ['ch3_grove_arrived'] },
+  ch3_nameless_met: { requires: ['ch3_nerys_met'] },
+  // имя возвращают вместе с Отваром памяти — сервер забирает отвар
+  ch3_name_stream: { requires: ['ch3_echo_stream'], consume: { memory_draught: 1 } },
+  // ответ героя Иве — без ветвления, только отношение (как ответ Северину в главе II)
+  ch3_view_cage: { requires: ['ch3_jar_bird', 'ch3_jar_fox'], blockedBy: ['ch3_iva_met'] },
+  ch3_view_understand: { requires: ['ch3_jar_bird', 'ch3_jar_fox'], blockedBy: ['ch3_iva_met'] },
+  ch3_view_theft: { requires: ['ch3_jar_bird', 'ch3_jar_fox'], blockedBy: ['ch3_iva_met'] },
+  ch3_view_ask: { requires: ['ch3_jar_bird', 'ch3_jar_fox'], blockedBy: ['ch3_iva_met'] },
+  ch3_iva_met: { requires: ['ch3_jar_bird', 'ch3_jar_fox'] },
+  ch3_name_willow: { requires: ['ch3_echo_willow'], consume: { memory_draught: 1 } },
+  ch3_mirra_met: { requires: ['ch3_needle_3'] },
+  ch3_iva_refused: { requires: ['ch3_guardian_defeated', 'ch3_echo_vetla'] },
+  // последнее имя «не варят — его говорят»: говорит сама Ива, после боя с Отражением
+  ch3_name_vetla: { requires: ['ch3_reflection_defeated'] },
+  ch3_vetla_blessing: { requires: ['ch3_name_vetla'] },
+  ch3_epilogue: { requires: ['ch3_name_vetla'] },
+  chapter_3_complete: { requires: ['ch3_epilogue', 'ch3_vetla_blessing'], marks: ['title_grove_voice'], sapphires: 60 },
 };
 
 /**

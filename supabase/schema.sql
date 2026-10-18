@@ -119,7 +119,9 @@ insert into public.game_hero_levels (level, xp, max_hp, max_mana) values
   -- v0.10.0: уровни 6–10 (первая глава)
   (6, 650, 152, 125), (7, 940, 160, 135), (8, 1300, 170, 140), (9, 1750, 180, 145), (10, 2350, 190, 155),
   -- v0.18.0: уровни 11–15 (глава II)
-  (11, 3100, 202, 165), (12, 4000, 214, 175), (13, 5100, 226, 185), (14, 6400, 240, 195), (15, 7900, 255, 205)
+  (11, 3100, 202, 165), (12, 4000, 214, 175), (13, 5100, 226, 185), (14, 6400, 240, 195), (15, 7900, 255, 205),
+  -- v0.38.0: уровни 16–20 (глава III «Безымянная роща»)
+  (16, 9600, 270, 215), (17, 11500, 285, 225), (18, 13600, 300, 235), (19, 15900, 316, 245), (20, 18400, 332, 255)
   on conflict (level) do update set xp = excluded.xp, max_hp = excluded.max_hp, max_mana = excluded.max_mana;
 alter table public.game_hero_levels enable row level security;
 
@@ -1943,7 +1945,7 @@ begin
   end if;
   select data into duel from public.player_world where user_id=pf.id and kind='object' and key='duel';
   duel := public._duel_state(duel,(extract(epoch from now())*1000)::bigint,public._game_rules()->'duel');
-  chapters := jsonb_build_array(exists(select 1 from public.player_quests where user_id=pf.id and quest_id='chapter_1_complete' and status='done'),exists(select 1 from public.player_quests where user_id=pf.id and quest_id='chapter_2_complete' and status='done'));
+  chapters := jsonb_build_array(exists(select 1 from public.player_quests where user_id=pf.id and quest_id='chapter_1_complete' and status='done'),exists(select 1 from public.player_quests where user_id=pf.id and quest_id='chapter_2_complete' and status='done'),exists(select 1 from public.player_quests where user_id=pf.id and quest_id='chapter_3_complete' and status='done'));
   return jsonb_build_object('ok',true,'self',pf.id=uid,'playerId',pf.player_id::text,'hero',pf.hero_id,
     'nickname',coalesce(pf.nickname,case pf.hero_id when 'warlock' then 'Колдун' else 'Ведьма' end),
     'level',pr.hero_level,'xp',pr.hero_xp,

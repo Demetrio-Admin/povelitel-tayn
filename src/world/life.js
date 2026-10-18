@@ -102,7 +102,8 @@ export class LivingWorld {
   /** Forest and outdoor town share the same light ambient animations. */
   start(settings) {
     const s = this.scene;
-    if (this.running || !['forest','city'].includes(s.loc?.id)) return;
+    // v0.38.0: в Безымянной роще тишина — «живой мир» просыпается, только когда духу вернули имя
+    if (this.running || !(['forest','city'].includes(s.loc?.id) || (s.loc?.id === 'grove' && s.groveAwake))) return;
     if (settings && settings.get('anim') === false) return;
     this.running = true;
     this.items = [];

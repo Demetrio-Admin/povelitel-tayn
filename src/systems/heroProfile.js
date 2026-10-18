@@ -22,7 +22,7 @@ export function localHeroProfile(state, session = null) {
     amuletLevels: Object.fromEntries(Object.keys(AMULETS).map(id => [id, state.buildData().amuletLevels[id] || 0])),
     strongest: won.length ? { enemy: won[0], heroLevel: null, wonAt: null } : null,
     uniqueWins: won.length,
-    chapters: [state.hasEvent('chapter_1_complete'), state.hasEvent('chapter_2_complete')],
+    chapters: [state.hasEvent('chapter_1_complete'), state.hasEvent('chapter_2_complete'), state.hasEvent('chapter_3_complete')],
     duel: { rating: currentDuel?.rating ?? Math.round(DUEL.baseRating + ((duel?.rating ?? DUEL.baseRating) - DUEL.baseRating) / 2), wins: currentDuel?.wins || 0, losses: currentDuel?.losses || 0 },
     registeredAt: session?.meta?.registeredAt || null, lastSeenAt: session?.meta?.lastSeenAt || null,
     online: !!session?.ready, coven: null,

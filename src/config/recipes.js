@@ -87,6 +87,22 @@ RECIPES.amulet_storm_heart = { kind: 'amulet', chapter: 2, result: 'amulet_storm
  requires: ['chapter_2_complete'], requiresAbility: 'storm', crafted: 'amulet_storm_heart_crafted', blockedBy: ['amulet_storm_heart_crafted'],
  learn: 'Изучите Грозу I и завершите вторую главу: ремесленные ядра находятся в охраняемых запасах вылазок.',
  note: 'Кристалл удерживает грозовой заряд. Один экземпляр: дальше его улучшают за сапфиры.' };
+// ---- Глава III «Безымянная роща» (docs/design/chapter-3-story-v0.1.md §11) в системе ребаланса v0.39: каждый рецепт даёт ровно одну вещь,
+// за изготовление берётся плата монетами, как у рецептов главы II. Отвар памяти — сюжетный, нужен дважды (Звонец и Ракита; последнее имя
+// «не варят — его говорят»), поэтому варится повторно, пока не возвращено второе имя. where — какой котёл назвать в журнале.
+Object.assign(RECIPES, {
+  memory_draught: { kind: 'story', chapter: 3, result: 'memory_draught', amount: 1, needs: { memory_spark: 2, moon_herb: 1, glass_leaf: 1 },
+    requires: ['ch3_echo_stream'], crafted: 'memory_draught_crafted', blockedBy: ['ch3_name_willow'], where: 'котёл Нэрис или котёл Ивы',
+    note: 'Так поили рощу, когда она болела: память, лунный свет и стекло.', learn: 'Рецепт помнит дух рощи на Стеклянной опушке.' },
+  willow_tonic: { kind: 'potion', chapter: 3, result: 'willow_tonic', amount: 1, needs: { willow_bark: 2, moon_herb: 1, forest_mushroom: 1, coins: 20 },
+    requires: ['ch3_nerys_met'], note: 'Горькая ивовая кора с лунной травой: снимает холод и горение, возвращает часть здоровья.' },
+  glass_flask: { kind: 'potion', chapter: 3, result: 'glass_flask', amount: 1, needs: { glass_leaf: 2, rune_dust: 1, coins: 25 },
+    requires: ['ch3_dam_open'], note: 'Стеклянные листья в рунной пыли: разлетаются осколками и делают цель хрупкой.' },
+  amulet_vetla: { kind: 'amulet', chapter: 3, result: 'amulet_vetla', amount: 1,
+    needs: { cold_heart: 1, glass_leaf: 4, memory_spark: 3, willow_bark: 3, coins: 400 },
+    requires: ['ch3_name_vetla'], blockedBy: ['amulet_vetla_crafted'], crafted: 'amulet_vetla_crafted',
+    note: 'Холод Северина, отданный живой роще. Делается один раз — Сердце холода одно.' },
+});
 export const RECIPE_ORDER = Object.keys(RECIPES).filter(id => !['elixir_life', 'elixir_mana', 'crystal_guard'].includes(id));
 export const POTION_RECIPES = RECIPE_ORDER.filter(id => RECIPES[id].kind === 'potion');
 /** v0.19.0: разделы котла по порядку показа. */

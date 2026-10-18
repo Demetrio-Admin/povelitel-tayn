@@ -220,10 +220,13 @@ export class CombatManager {
       h.mana += gain;
       this.emit({ type: 'potion', id, kind: 'mana', amount: gain });
     } else if (e.type === 'damage') {
-      const dmg = this.enemy.takeDamage(e.amount, 'fire', 1);
+      // v0.38.0: school — чем бьёт склянка (Стеклянная склянка — осколками, как Телекинез); brittle — Хрупкость после удара
+      const school = e.school || 'fire';
+      const dmg = this.enemy.takeDamage(e.amount, school, 1);
       this.emit({ type: 'potion', id, kind: 'damage', amount: dmg });
-      this.emit({ type: 'damage', target: 'enemy', amount: dmg, school: 'fire' });
+      this.emit({ type: 'damage', target: 'enemy', amount: dmg, school });
       if (e.burn) { this.enemy.applyBurn(e.burn.dps, e.burn.durationSec); this.emit({ type: 'status', status: 'burn', sec: e.burn.durationSec }); }
+      if (e.brittle) { this.enemy.applyBrittle(e.brittle.bonus, e.brittle.sec); this.emit({ type: 'status', status: 'brittle', sec: e.brittle.sec, bonus: e.brittle.bonus }); }
     } else if (e.type === 'warm') {   // v0.19.0: Тёплый настой — холод слабее до конца боя, нынешний снимается
       if (this.chillResist >= e.resist) return { ok: false, reason: 'full' };
       this.chillResist = e.resist;

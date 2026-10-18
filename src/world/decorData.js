@@ -2,6 +2,7 @@
 import { CITY_COLLIDERS, CITY_ROOM_DECOR } from '../config/world.city.js';
 import { cityMapData, CITY_RECT } from '../config/city.plan.js';
 import { EXP_COLLIDERS } from '../config/world.expeditions.js';
+import { GROVE_COLLIDERS, GROVE_DECOR, GROVE_AWAKE } from '../config/world.grove.js';
 import { CONTENT_DECOR } from '../config/world.content.js';
 import { LOCATIONS, locationAt } from '../config/locations.js';
 import { mulberry32 } from './geometry.js';
@@ -65,6 +66,26 @@ export function expeditionForestDecor(loc) {
   return props;
 }
 
+/**
+ * v0.38.0: стеклянная чаща Безымянной рощи. Деревья-заполнители стоят внутри блоков 'trees' (проходимость задают блоки).
+ * Пока духу рощи не вернули имя, это стеклянные ивы; после — живые (два набора: until / requires, ExplorationScene.placePropView).
+ */
+export function groveForestDecor() {
+  const props = [];
+  let n = 0;
+  for (const c of GROVE_COLLIDERS.filter(c => c.kind === 'trees')) {
+    for (let y = c.y + 55; y < c.y + c.h; y += 88) {
+      for (let x = c.x + Math.min(45, c.w / 2); x < c.x + c.w - 20; x += 95) {
+        const v = n % 3 === 2 ? '02' : '01', flip = n % 2 === 0, dy = (n % 3) * 4;
+        props.push({ id: `grove_forest_${n}`, k: `glass_willow_${v}`, x, y: y + dy, flip, until: GROVE_AWAKE });
+        props.push({ id: `grove_forest_live_${n}`, k: `tree_willow_${v}`, x, y: y + dy, flip, requires: GROVE_AWAKE });
+        n++;
+      }
+    }
+  }
+  return props;
+}
+
 // v0.34.3: авторский декор раньше был целиком проходимым (solid: null) — герой шёл сквозь жителей, фонари, надгробия, бочки и ели.
 // Теперь у «стоячих» предметов и людей есть след у основания (прямоугольник у ног, центр по x). Плоское (ковры, следы, цветы,
 // вывески на стенах, пучки трав) и лес-заполнитель остаются проходимыми. Явное d.solid (в том числе null) важнее таблицы.
@@ -81,6 +102,10 @@ export const DECOR_SOLID = {
   city_equipment: { w: 100, h: 24 },
   rune_slab_01: { w: 70, h: 20 },
   bush_02: { w: 48, h: 22 },
+  // v0.38.0: глава III
+  glass_willow_01: { w: 34, h: 18 }, glass_willow_02: { w: 34, h: 18 }, tree_willow_01: { w: 34, h: 18 }, tree_willow_02: { w: 34, h: 18 },
+  grove_rakita_glass: { w: 170, h: 46 }, grove_rakita_alive: { w: 150, h: 40 }, iva_hut: { w: 220, h: 44 },
+  glass_jar_flower: { w: 40, h: 16 },
 };
 const decor = (d) => ({
   ...d, f: d.flip ? 1 : 0, s: d.scale || 1,
@@ -106,4 +131,6 @@ export const WORLD_DECOR = [
   ...CONTENT_DECOR.filter(d=>!(d.k==='frost_patch_01' && locationAt(d.x,d.y).id==='city')).map(decor),
   ...city,
   ...LOCATIONS.flatMap(loc=>expeditionForestDecor(loc).map(d=>decor({...d,fill:true}))),
+  ...groveForestDecor().map(d => decor({ ...d, fill: true })),   // v0.38.0: глава III
+  ...GROVE_DECOR.map(decor),
 ];

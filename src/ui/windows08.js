@@ -137,7 +137,7 @@ export const windows08 = {
         const step = quests.currentStep();
         if (step.craft) {
           const r = RECIPES[step.craft];
-          row(`Нужно для «${STORY_ITEMS[r.result]?.name || r.result}» (котёл Мирры):`, { style: { fontSize: UI.type.small, color: COLORS.textGold }, gap: 2 });
+          row(`Нужно для «${STORY_ITEMS[r.result]?.name || r.result}» (${r.where || 'котёл Мирры'}):`, { style: { fontSize: UI.type.small, color: COLORS.textGold }, gap: 2 });
           for (const [item, need] of Object.entries(r.needs)) {
             const have = services.state.item(item), okk = have >= need;
             row(`${okk ? '☑' : '☐'} ${ITEMS[item]?.name || item} ${Math.min(have, need)}/${need}${okk ? '' : ' — ' + (RESOURCE_WHERE[item] || 'в лесу')}`,

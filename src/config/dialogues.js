@@ -17,6 +17,7 @@ import { GIFT_PRICES } from './bag.js';
 // Род говорящего NPC не меняется: Мирра, Веда и Селена говорят о себе в женском роде при любом герое.
 // ID вариантов, событий, условий и наград общие — сюжетный маршрут один.
 import { fm } from '../state/hero.js';
+import { CH3_DIALOGUES } from './dialogues.ch3.js';
 
 const GOT_IT = fm('Поняла.', 'Понял.');
 
@@ -1156,3 +1157,7 @@ export const DIALOGUES = {
     },
   ],
 };
+
+// v0.38.0: глава III «Безымянная роща» (dialogues.ch3.js). Её варианты — первыми: берётся первый подходящий, а все они требуют
+// событий после главы II. Новые персонажи (Ива, Безымянная, Ветла) — только оттуда.
+for (const [npc, list] of Object.entries(CH3_DIALOGUES)) DIALOGUES[npc] = [...list, ...(DIALOGUES[npc] || [])];

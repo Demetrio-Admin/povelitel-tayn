@@ -181,7 +181,7 @@ export class SealSigilObject extends InteractiveObject {
   get markerColor() { return SEAL; }
   get label() { return 'Астрал'; }
   isDone() { return this.state.hasEvent(this.cfg.doneEvent); }
-  manaCost() { return this.abilities.isUnlocked('seal') && !this.isDone() ? WORLD_MANA_COST.seal : 0; }
+  manaCost() { return this.abilities.isUnlocked('seal') && !this.isDone() && !this.waiting() ? WORLD_MANA_COST.seal : 0; }
 
   async interact(abilityId) {
     if (!this.isAvailable()) return;
@@ -190,6 +190,8 @@ export class SealSigilObject extends InteractiveObject {
       this.scene.toast(this.cfg.lockedText || 'Угасший камень. Селена знает, как вернуть ему свет.', SEAL);
       return;
     }
+    // v0.38.0: waitEvent — знак виден, но поддаётся только после события (завеса Ивы держится, пока цел кокон)
+    if (this.waiting()) { this.scene.toast(this.cfg.lockedText || 'Пока рано.', SEAL); services.audio.play('locked'); return; }
     const r = await this.serverAct();   // v0.13.0: ману списывает сервер (операция world)
     if (!r || this.removed || !this.sprite.active) return;
     this.busy = true;

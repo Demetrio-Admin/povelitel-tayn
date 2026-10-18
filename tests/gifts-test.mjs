@@ -283,7 +283,7 @@ console.log('\n[v0.16.0] Слоты даров, пресет, амулеты');
   const { applyAction } = await import('../src/cloud/playerModel.js');
   ok(slotCount(1) === 3 && slotCount(10) === 3 && slotCount(15) === 3 && SLOT_RULES.base === 3, 'слотов даров три на любом уровне: с Льдом в главе II — выбор «3 из 4»');
   ok(slotCount(16, { base: 3, extraAtLevel: 16 }) === 4 && slotCount(15, { base: 3, extraAtLevel: 16 }) === 3, 'если позже дать 4-й слот уровнем, правило работает');
-  ok(AMULET_SLOTS === 2 && Object.keys(AMULETS).length === 10, 'два слота амулетов, десять моделей с Грозовым сердцем');
+  ok(AMULET_SLOTS === 2 && Object.keys(AMULETS).length === 11, 'два слота амулетов, одиннадцать моделей (с Грозовым сердцем и, с v0.38.0, Амулетом ветлы)');
   for (const [id, a] of Object.entries(AMULETS)) ok(a.text && a.tradeoff && ITEMS[id]?.name === a.name, `${id}: есть описание, цена и предмет в сумке`);
   const rules = buildSlotRules();
   const ctx = (o = {}) => ({ level: 3, unlocked: ['telekinesis', 'fire'], owns: (id) => id === 'amulet_focus', combat: false, ...o });
@@ -474,14 +474,16 @@ console.log('\n[v0.19.0] Экономика главы II: зелья, амул�
   const { RECIPES, RECIPE_ORDER } = await import('../src/config/recipes.js');
   const { SHOP, sellPrice } = await import('../src/config/shop.js');
   const { shopView } = await import('../src/systems/shopModel.js');
-  const { ASSETS } = await import('../src/config/assets.manifest.js').catch(() => ({}));
+  const { ASSETS, ASSET_FILES } = await import('../src/config/assets.manifest.js').catch(() => ({}));
   const { Alchemy } = await import('../src/systems/Alchemy.js');
-  ok(['frost_herb', 'ice_crystal', 'frost_shard', 'cold_heart'].every((k) => RESOURCES[k]) && Object.keys(RESOURCES).length === 9, 'четыре новых ресурса главы II (всего девять)');
+  ok(['frost_herb', 'ice_crystal', 'frost_shard', 'cold_heart'].every((k) => RESOURCES[k]) && Object.keys(RESOURCES).length === 13, 'четыре новых ресурса главы II (с главой III — тринадцать)');
   ok(['warm_potion', 'stabilizing_potion', 'brittle_flask', 'potion_crystal_shield', 'reinforced_resin', 'astral_lens', 'amulet_frost'].every((k) => RECIPES[k] && RECIPE_ORDER.includes(k)), 'семь новых рецептов');
   ok(RECIPES.amulet_frost.needs.coins === 250 && RECIPES.amulet_frost.needs.frost_shard === 1, 'Амулет инея: 250 монет и инеевый осколок');
   for (const k of [...Object.keys(RESOURCES), ...Object.keys(POTIONS), ...Object.keys(CRAFT_ITEMS), ...Object.values(AMULETS).map(a => a.icon)]) {
     const icon = RESOURCES[k]?.icon || POTIONS[k]?.icon || CRAFT_ITEMS[k]?.icon || k;
-    if (!fs.existsSync(new URL(`../public/assets/sprites/${icon}.png`, import.meta.url))) ok(false, `иконка ${icon} нарисована`);
+    // v0.38.0: иконка — файл из рабочего манифеста (глава III) или прежний PNG в sprites/
+    const file = ASSET_FILES[icon]?.split('?')[0];
+    if (!fs.existsSync(new URL(`../public/assets/sprites/${icon}.png`, import.meta.url)) && !(file && fs.existsSync(new URL(`../public/${file}`, import.meta.url)))) ok(false, `иконка ${icon} нарисована`);
   }
   ok(true, 'у всех новых предметов есть нарисованные иконки');
   // амулет: уровни

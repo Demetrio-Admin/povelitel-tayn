@@ -11,8 +11,11 @@ export const STORY_ITEMS = {
     purpose: 'Проявляет стёртое. Нужен у Древних ворот — после победы над Стражем.' },
   restoration_bundle: { name: 'Целебный сбор', icon: 'icon_bundle', color: 0x7be28a,
     purpose: 'Вылечит сердце рощи за воротами вместе с Астралом (20 маны).' },
+  // v0.38.0: глава III — отдаётся духу рощи вместе с именем (событие разговора, consume)
+  memory_draught: { name: 'Отвар памяти', icon: 'icon_memory_draught', color: 0xf3d9a4,
+    purpose: 'Поможет духу рощи удержать возвращённое имя. Отдать Безымянной, когда узнаете имя.' },
 };
-export const STORY_ITEM_ORDER = ['lunar_wick', 'revealing_compound', 'restoration_bundle'];
+export const STORY_ITEM_ORDER = ['lunar_wick', 'revealing_compound', 'restoration_bundle', 'memory_draught'];
 
 /**
  * Применение сюжетного предмета ({ op: 'use', item }): requires — нужные события, blockedBy — уже сделано,

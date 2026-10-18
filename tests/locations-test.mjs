@@ -6,6 +6,7 @@ import { LOCATIONS, locationAt, locationById, inLocation, touchesLocation, locat
 import { WORLD, INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
 import { CITY_START, FOREST_RETURN, EAST_X } from '../src/config/world.city.js';
 import { regionStart, FROSTWOOD_START, GRAVEYARD_START } from '../src/config/world.expeditions.js';
+import { GROVE_START, GROVE_GATE_IDS } from '../src/config/world.grove.js';
 import { STEP_GUIDE } from '../src/config/guidance.js';
 import { ASSET_FILES, DISPLAY_SIZE } from '../src/config/assets.manifest.js';
 import { buildTerrain } from '../src/world/terrain.js';
@@ -20,7 +21,7 @@ const ALL = [...INTERACTIVES, ...ENEMY_SPAWNS];
 
 console.log('\nЛокации: данные');
 {
-  ok(LOCATIONS.filter(l=>!l.interior).map(l => l.id).join() === 'forest,city,frostwood,graveyard', 'четыре локации: лес Мирры (гл. I), город (гл. II), две вылазки');
+  ok(LOCATIONS.filter(l=>!l.interior).map(l => l.id).join() === 'forest,city,grove,frostwood,graveyard', 'пять локаций: лес Мирры (гл. I), город (гл. II), Безымянная роща (гл. III), две вылазки');
   ok(new Set(LOCATIONS.map(l => l.id)).size === LOCATIONS.length && LOCATIONS.every(l => locationById(l.id) === l), 'id локаций уникальны');
   // прямоугольники не пересекаются и лежат внутри холста
   let overlap = false;
@@ -30,7 +31,7 @@ console.log('\nЛокации: данные');
   // каждый объект и враг — ровно в одной локации, и в той, где он был раньше (участок мира)
   const homeless = ALL.filter(o => LOCATIONS.filter(l => inLocation(o, l)).length !== 1);
   ok(!homeless.length, `каждый объект и враг — ровно в одной локации (${ALL.length})` + (homeless.length ? ': ' + homeless.map(o => o.id).join(', ') : ''));
-  const startOf = { ...Object.fromEntries(CITY_ROOMS.map(r=>[r.id,r.arrival])), forest: WORLD.playerStart, city: CITY_START, frostwood: FROSTWOOD_START, graveyard: GRAVEYARD_START };
+  const startOf = { ...Object.fromEntries(CITY_ROOMS.map(r=>[r.id,r.arrival])), forest: WORLD.playerStart, city: CITY_START, grove: GROVE_START, frostwood: FROSTWOOD_START, graveyard: GRAVEYARD_START };
   const wrong = ALL.filter(o => startOf[locationAt(o.x, o.y).id] !== regionStart(o, WORLD.playerStart, CITY_START, EAST_X));
   ok(!wrong.length, 'объекты остались в своих местах (лес, город, вылазки)' + (wrong.length ? ': ' + wrong.map(o => o.id).join(', ') : ''));
   for (const l of LOCATIONS.filter(l=>!l.interior)) {
@@ -52,10 +53,11 @@ console.log('\nЛокации: открытие и старые сохранен
   ok(locationOpen(locationById('forest'), has([])) && !locationOpen(locationById('city'), has([])), 'новичку открыт только лес Мирры');
   ok(locationOpen(locationById('city'), has(['ch2_start'])) && !locationOpen(locationById('frostwood'), has(['ch2_start'])), 'город — после проводов Мирры (ch2_start)');
   ok(['frostwood', 'graveyard'].every(id => locationOpen(locationById(id), has(['ch2_start', 'chapter_2_complete']))), 'вылазки — после главы II');
+  ok(!locationOpen(locationById('grove'), has(['chapter_2_complete', 'ch3_start'])) && locationOpen(locationById('grove'), has(['ch3_leaf_read'])), 'Безымянная роща — когда Астрал прочтёт стеклянный лист');
   ok(locationAt(WORLD.playerStart.x, WORLD.playerStart.y).id === 'forest' && locationAt(FOREST_RETURN.x, FOREST_RETURN.y).id === 'forest', 'старт и возврат в лес — в лесу Мирры');
   ok(locationAt(CITY_START.x, CITY_START.y).id === 'city' && locationAt(cityPoint(1500,2780).x,cityPoint(1500,2780).y).id === 'city', 'точки города — в городе');
   ok(locationAt(FROSTWOOD_START.x, FROSTWOOD_START.y).id === 'frostwood' && locationAt(GRAVEYARD_START.x, GRAVEYARD_START.y).id === 'graveyard', 'точки вылазок — в вылазках');
-  ok(locationAt(-50, -50).id === 'forest' && locationAt(9000, 100).id === 'city' && ['city', 'forest'].includes(locationAt(2400, 200).id), 'точка вне всех локаций (старое сохранение) — в ближайшей');
+  ok(locationAt(-50, -50).id === 'forest' && locationAt(8530, 100).id === 'city' && locationAt(9300, 300).id === 'grove' && ['city', 'forest'].includes(locationAt(2400, 200).id), 'точка вне всех локаций (старое сохранение) — в ближайшей');
   ok(STEP_GUIDE.ch2_road.targets.includes('exit_forest') && STEP_GUIDE.ch2_home.targets.includes('exit_city'), 'наведение главы II ведёт к выходам «Карта мира»');
 }
 
@@ -63,7 +65,7 @@ console.log('\nЛокации: проходимость (ворота откры
 {
   const LIVE = resolveMap({ storage: null, useDraft: false });
   const terrain = buildTerrain({ ROADS: LIVE.roads, WATERS: LIVE.waters });
-  const gates = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', 'frost_barrier', 'fq_water', 'lab_seal', 'final_ward'];
+  const gates = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', 'frost_barrier', 'fq_water', 'lab_seal', 'final_ward', ...GROVE_GATE_IDS];
   const solids = collectSolids({ colliders: LIVE.colliders, props: PROPS, interactives: INTERACTIVES, enemies: ENEMY_SPAWNS, waterRects: terrain.waterRects, skip: new Set(gates) });
   const grid = buildWalkGrid({ width: WORLD.width, height: WORLD.height, solids });
   for (const l of LOCATIONS.filter(l=>!l.interior)) {

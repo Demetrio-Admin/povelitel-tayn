@@ -132,7 +132,7 @@ export const QUEST_STEPS = [
   { id: 'ch2_brittle_craft', text: 'Сварите Флакон хрупкости в котле Нэрис', craft: 'brittle_flask', done: s => has(s, 'brittle_flask_crafted') || has(s, 'ch2_brittle_done') },
   { id: 'ch2_brittle_tell', text: 'Покажите Нэрис, чему научились', done: s => has(s, 'ch2_brittle_done') },
   { id: 'ch2_lab_lead',    text: 'Илария что-то нашла — поговорите с ней', done: s => has(s, 'ch2_lab_found') },
-  { id: 'ch2_lab_door',    text: 'Тайная лаборатория к югу от дороги: успокойте печать на двери Льдом', done: s => has(s, 'ch2_lab_open') },
+  { id: 'ch2_lab_door',    text: 'Тайная лаборатория за западной стеной: успокойте печать на двери Льдом', done: s => has(s, 'ch2_lab_open') },
   { id: 'ch2_lab_fight',   text: 'Обезвредьте добровольцев, потерявших контроль, и конструкт',
     progress: s => `${LAB_FIGHTS.filter(k => has(s, k)).length}/${LAB_FIGHTS.length}`, done: s => LAB_FIGHTS.every(k => has(s, k)) },
   { id: 'ch2_stabilize',   text: 'Сварите два Стабилизирующих настоя и отдайте их Тихону', craft: 'stabilizing_potion', done: s => has(s, 'ch2_stabilized') },

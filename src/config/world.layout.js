@@ -158,7 +158,7 @@ const BASE_INTERACTIVES = [
   { id: 'corrupted_roots', kind: 'fire', x: 400, y: 4120, texture: 'corrupted_roots_01',
     collide: { w: 200, h: 70 }, burnSec: 1.4, opensPath: 'west_forest',
     lockedEvent: 'fire_required_01', destroyEvent: 'fire_gate_open', panOnOpen: { x: 400, y: 3800 },
-    lockedText: 'Чёрные корни не поддаются. Нужен Огонь.' },
+    lockedText: 'Корни твёрдые и холодные, как железо. На коре — полустёртый знак. Здесь нужен Огонь.' },
   // C
   { id: 'trail_cache', kind: 'chest', x: 1660, y: 3640, texture: 'chest_01', reward: { items: { coins: 20 } }, collide: { w: 50, h: 24 } },
   // E / F

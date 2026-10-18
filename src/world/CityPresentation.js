@@ -24,11 +24,11 @@ export class CityPresentation {
   refresh() {
     const state = services.state;
     const editor = services.edit;
-    const thawed = state.hasEvent('ch2_severin_defeated');
+    const thawed = state.hasEvent('ch2_severin_defeated') || state.hasEvent('chapter_2_complete');
     const quarter = state.hasEvent('ch2_frost_wave') || editor;
     const finale = state.hasEvent('ch2_final_start') && !thawed;
-    this.frostFloors[0]?.setVisible(quarter || thawed).setAlpha((thawed ? 0.25 : 1)*(this.scene.groundViews.get('city_frost_quarter')?.g.alpha??1));
-    this.frostFloors[1]?.setVisible(finale || editor).setAlpha(0.65*(this.scene.groundViews.get('city_frost_plaza')?.g.alpha??1));
+    this.frostFloors[0]?.setVisible(quarter && !thawed).setAlpha(this.scene.groundViews.get('city_frost_quarter')?.g.alpha??1);
+    this.frostFloors[1]?.setVisible(!thawed && (finale || editor)).setAlpha(0.65*(this.scene.groundViews.get('city_frost_plaza')?.g.alpha??1));
     for (const im of this.scene.colliderObjects?.filter(im => ['city_house', 'city_frozen_house'].includes(im.texture?.key)) || []) {
       if (im.y < 2500 && this.scene.textures.exists('city_frozen_house')) {
         im.setTexture(quarter && !thawed ? 'city_frozen_house' : 'city_house');
@@ -49,6 +49,7 @@ export class CityPresentation {
     }
     // v0.37.0: gardens, trees and yard props of the frozen quarter share its frost until the thaw.
     for (const { p, img } of this.scene.propViews?.values() || []) {
+      if (p.k === 'frost_patch_01') img.setVisible(quarter && !thawed);
       if (!p.frost) continue;
       if (quarter && !thawed) img.setTint(0xc4dde8); else if (p.tint != null) img.setTint(p.tint); else img.clearTint();
     }

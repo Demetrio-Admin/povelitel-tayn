@@ -30,7 +30,7 @@ const load = async (k) => { if (!img[k] && ASSET_FILES[k]) img[k] = await loadIm
 const full = createCanvas(W, H), g = full.getContext('2d');
 g.fillStyle = g.createPattern(await load('grass_ground_01'), 'repeat'); g.fillRect(0, 0, W, H);
 const imgs = { dirt: await load('dirt_path_01'), stone: await load('stone_path_01'), water: await load('swamp_water_01') };
-for (const c of terrainChunks(terrain, W, H)) { const cv = createCanvas(c.w, c.h); paintTerrainChunk(cv.getContext('2d'), c, terrain, imgs); g.drawImage(cv, c.x, c.y); }
+for (const c of terrainChunks(terrain, W, H)) { const cv = createCanvas(c.w, c.h); paintTerrainChunk(cv.getContext('2d'), c, terrain, imgs, createCanvas); g.drawImage(cv, c.x, c.y); }
 // пол дома, стены
 for (const gr of GROUND) { const t = await load(gr.tex); g.fillStyle = g.createPattern(t, 'repeat'); g.fillRect(gr.x, gr.y, gr.w, gr.h); }
 for (const c of COLLIDERS) if (c.kind === 'trees') { g.fillStyle = '#172114'; g.fillRect(c.x, c.y, c.w, c.h); }

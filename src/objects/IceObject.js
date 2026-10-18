@@ -13,7 +13,13 @@ export class IceObject extends InteractiveObject {
   constructor(scene, cfg) {
     super(scene, cfg);
     this.ability = 'ice';
+    if (this.renderLayer === 'floor') this.sprite.setDepth(DEPTH.path + 1);
     if (this.saved.state === 'frozen') this.freezeView(false);
+  }
+
+  // Water and walkable ice coat the ground in both states, including after editor styling/refresh.
+  get renderLayer() {
+    return this.cfg.walkable && this.cfg.groundWhenFrozen !== false ? 'floor' : null;
   }
 
   get markerIcon() { return 'icon_ice'; }

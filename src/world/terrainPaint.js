@@ -163,7 +163,12 @@ function paintRoadFill(ctx, r, img) {
   ctx.restore();
 }
 
-/** Clip away same-material neighbours whenever either side requests a seamless join.
+const joinsRoad = (a, b) => a !== b && (a.seamless || b.seamless) &&
+  (a.kind === b.kind || (a.seamless && b.seamless));
+const overlapsRoad = (a, b) => a.bounds.x <= b.bounds.x1 + MARGIN && a.bounds.x1 >= b.bounds.x - MARGIN &&
+  a.bounds.y <= b.bounds.y1 + MARGIN && a.bounds.y1 >= b.bounds.y - MARGIN;
+
+/** Clip away adjoining roads, including the stone-to-dirt junction outside the city.
  * Separate even-odd clips also work for three-way overlaps, unlike a single even-odd union.
  * Fills share world-space texture coordinates, including across chunk boundaries.
  */
@@ -171,9 +176,7 @@ function paintRoadEdge(ctx, r, roads, chunk, index) {
   if (r.borderless) return;
   ctx.save();
   for (const other of roads) {
-    if (other === r || !(r.seamless || other.seamless) || other.kind !== r.kind) continue;
-    if (other.bounds.x > r.bounds.x1 + MARGIN || other.bounds.x1 < r.bounds.x - MARGIN ||
-        other.bounds.y > r.bounds.y1 + MARGIN || other.bounds.y1 < r.bounds.y - MARGIN) continue;
+    if (!joinsRoad(r, other) || !overlapsRoad(r, other)) continue;
     pathPoly(ctx, other.poly);
     ctx.rect(chunk.x - MARGIN, chunk.y - MARGIN, chunk.w + MARGIN * 2, chunk.h + MARGIN * 2);
     ctx.clip('evenodd');
@@ -200,7 +203,7 @@ function paintRoadEdge(ctx, r, roads, chunk, index) {
  * Рисует на ctx кусок мира chunk {x,y,w,h}. ctx уже имеет размер chunk.w × chunk.h.
  * imgs: { dirt, stone, water } — картинки текстур (или null: тогда однотонная заливка).
  */
-export function paintTerrainChunk(ctx, chunk, terrain, imgs = {}) {
+export function paintTerrainChunk(ctx, chunk, terrain, imgs = {}, createCanvas = null) {
   ctx.save();
   ctx.clearRect(0, 0, chunk.w, chunk.h);
   ctx.translate(-chunk.x, -chunk.y);
@@ -208,8 +211,27 @@ export function paintTerrainChunk(ctx, chunk, terrain, imgs = {}) {
   const roads = terrain.roads.map((r, i) => [r, r.n ?? i]).filter(([r]) => touches(r.bounds, chunk));
   roads.forEach(([r]) => paintRoadBase(ctx, r));
   const joined = roads.map(([r]) => r);
+  let blendCanvas;
   roads.forEach(([r, i]) => {
-    paintRoadFill(ctx, r, imgs[r.texture] || (r.kind === 'stone' ? imgs.stone : imgs.dirt));
+    const img = imgs[r.texture] || (r.kind === 'stone' ? imgs.stone : imgs.dirt);
+    const dirt = r.kind === 'stone' ? joined.filter(other => other.kind === 'dirt' && joinsRoad(r, other) && overlapsRoad(r, other)) : [];
+    // Cut the rounded stone end back to the dirt lane, with a short feathered transition.
+    // A separate chunk-sized layer keeps destination-out from erasing the underlying lane.
+    if (dirt.length && createCanvas) {
+      blendCanvas ||= createCanvas(chunk.w, chunk.h);
+      blendCanvas.width = chunk.w; blendCanvas.height = chunk.h;
+      const layer = blendCanvas.getContext('2d');
+      layer.save(); layer.translate(-chunk.x, -chunk.y);
+      paintRoadFill(layer, r, img);
+      layer.restore(); layer.save();
+      layer.globalCompositeOperation = 'destination-out';
+      layer.fillStyle = '#000'; layer.shadowColor = '#000'; layer.shadowBlur = 14;
+      for (const other of dirt) {
+        pathPoly(layer, other.poly.map(([x, y]) => [x - chunk.x, y - chunk.y])); layer.fill();
+      }
+      layer.restore();
+      ctx.drawImage(blendCanvas, chunk.x, chunk.y);
+    } else paintRoadFill(ctx, r, img);
     if (!r.seamless) paintRoadEdge(ctx, r, joined, chunk, i);
   });
   roads.forEach(([r, i]) => { if (r.seamless) paintRoadEdge(ctx, r, joined, chunk, i); });

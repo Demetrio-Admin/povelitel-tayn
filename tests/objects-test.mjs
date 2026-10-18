@@ -21,6 +21,7 @@ function go(x = 0, y = 0) {
       if (k === 'setPosition') return (a, b) => { t.x = a; t.y = b ?? t.y; return p; };
       if (k === 'setAlpha') return (a) => { t.alpha = a; return p; };
       if (k === 'setVisible') return (v) => { t.visible = v; return p; };
+      if (k === 'setDepth') return (v) => { t.depth = v; return p; };
       if (k === 'setText') return (v) => { t.text = v; return p; };
       if (k === 'setDisplaySize') return (w, h) => { t.displayWidth = w; t.displayHeight = h; return p; };
       if (k === 'destroy') return () => { t.active = false; };
@@ -345,6 +346,62 @@ console.log('\nПервая глава v0.10.0: алтарь, ворота, Ас
   ex.interact(null);
   ok(opened === 1, 'указатель «Карта мира»: кнопка действия открывает карту');
   off();
+}
+
+// Ground water/ice stays below the hero before and after freezing, scene styling and reload.
+{
+  const { IceObject } = await import('../src/objects/IceObject.js');
+  const { ExplorationScene } = await import('../src/scenes/ExplorationScene.js');
+  const { DEPTH } = await import('../src/config/game.config.js');
+  const { CITY_POSITIONS } = await import('../src/config/city.plan.js');
+  const { CITY_INTERACTIVES } = await import('../src/config/world.city.js');
+  const cfg = { ...CITY_INTERACTIVES.find(o => o.id === 'fq_water'), ...CITY_POSITIONS.fq_water };
+  const sc = mkScene(); sc.styleImage = () => {};
+  const water = new IceObject(sc, cfg);
+  ok(water.sprite.depth === DEPTH.path + 1 && water.blocker, 'лужа под героем, до заморозки проход закрыт');
+  ExplorationScene.prototype.styleEntity.call(sc, water);
+  ok(water.sprite.depth === DEPTH.path + 1, 'оформление редактора не поднимает лужу поверх героя');
+  water.saved.state = 'frozen'; water.freezeView(false);
+  ExplorationScene.prototype.styleEntity.call(sc, water);
+  ok(water.sprite.depth === DEPTH.path + 1 && !water.blocker, 'после заморозки и обновления лёд под героем, проход открыт');
+  sv.state.setObject(cfg.id, { state: 'frozen' });
+  const restored = new IceObject(sc, cfg);
+  ExplorationScene.prototype.styleEntity.call(sc, restored);
+  ok(restored.sprite.depth === DEPTH.path + 1 && !restored.blocker, 'перезагрузка сохраняет лёд на земле и открытый проход');
+  const sealCfg = { ...CITY_INTERACTIVES.find(o => o.id === 'lab_seal'), ...CITY_POSITIONS.lab_seal };
+  const seal = new IceObject(sc, sealCfg);
+  ExplorationScene.prototype.styleEntity.call(sc, seal);
+  ok(seal.sprite.depth === DEPTH.mainBase + sealCfg.y, 'объёмная дверь лаборатории сохраняет сортировку по высоте');
+  seal.saved.state = 'frozen'; seal.freezeView(false);
+  ExplorationScene.prototype.styleEntity.call(sc, seal);
+  ok(seal.sprite.depth === DEPTH.mainBase + sealCfg.y && !seal.blocker, 'после открытия дверь не превращается в напольную картинку');
+}
+
+// City frost appears with the cold wave and disappears completely at the end of the chapter.
+{
+  const { CityPresentation } = await import('../src/world/CityPresentation.js');
+  const events = [...sv.state.data.completedEvents], edit = sv.edit;
+  const floor = go(), plaza = go(), patch = go(), tree = go();
+  const sc = { groundViews: new Map([
+    ['city_frost_quarter', { img: floor, g: { alpha: 0.3 } }],
+    ['city_frost_plaza', { img: plaza, g: { alpha: 0.36 } }],
+  ]), colliderViews: new Map(), propViews: new Map([
+    ['patch', { p: { k: 'frost_patch_01' }, img: patch }],
+    ['tree', { p: { k: 'tree_dark_01', frost: true }, img: tree }],
+  ]) };
+  const presentation = Object.create(CityPresentation.prototype); presentation.scene = sc;
+  sv.edit = false; sv.state.data.completedEvents = [];
+  presentation.refresh();
+  ok(!floor.visible && !plaza.visible && !patch.visible, 'до волны холода нет инея');
+  sv.state.markEvent('ch2_frost_wave'); presentation.refresh();
+  ok(floor.visible && patch.visible && !plaza.visible, 'волна холода покрывает инеем квартал');
+  sv.state.markEvent('ch2_final_start'); presentation.refresh();
+  ok(plaza.visible, 'финал покрывает инеем площадь');
+  sv.state.markEvent('ch2_severin_defeated'); presentation.refresh();
+  ok(!floor.visible && !plaza.visible && !patch.visible, 'победа убирает весь иней, включая пятна');
+  sv.state.data.completedEvents = ['chapter_2_complete']; presentation.refresh();
+  ok(!floor.visible && !plaza.visible && !patch.visible, 'сохранение пройденной главы не возвращает иней');
+  sv.state.data.completedEvents = events; sv.edit = edit;
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Тесты объектов пройдены');

@@ -452,7 +452,7 @@ export class ExplorationScene extends Phaser.Scene {
       if (this.textures.exists(key)) this.textures.remove(key);
       const cv = document.createElement('canvas');
       cv.width = c.w; cv.height = c.h;
-      paintTerrainChunk(cv.getContext('2d'), c, this.terrain, imgs);
+      paintTerrainChunk(cv.getContext('2d'), c, this.terrain, imgs, () => document.createElement('canvas'));
       this.textures.addCanvas(key, cv);
       tiles.set(key, this.add.image(c.x, c.y, key).setOrigin(0).setDepth(DEPTH.path));
     }
@@ -648,7 +648,7 @@ export class ExplorationScene extends Phaser.Scene {
     o.baseScale={x:o.sprite.scaleX,y:o.sprite.scaleY};
     o.nameText?.setPosition(o.cfg.x,o.cfg.y-o.sprite.displayHeight-(o.cfg.elevated||0)-(o.npc?58:14));
     o.badge?.setPosition(o.cfg.x,o.cfg.y-o.sprite.displayHeight-(o.cfg.elevated||0)-8);
-    const layer=style.l;
+    const layer=style.l??o.renderLayer;
     if(layer==='floor')o.sprite.setDepth(DEPTH.path+1);
     else if(layer==='room-floor')o.sprite.setDepth(DEPTH.path+0.7);
     else if(layer==='back')o.sprite.setDepth(DEPTH.backDecor);

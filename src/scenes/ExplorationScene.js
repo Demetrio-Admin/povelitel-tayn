@@ -9,7 +9,7 @@ import Phaser from 'phaser';
 import { VIEW, CAMERA, PLAYER, DEPTH, COLORS, SAVE } from '../config/game.config.js';
 import { WORLD, ZONES, INTERACTIVES, ENEMY_SPAWNS } from '../config/world.layout.js';
 import { buildTerrain } from '../world/terrain.js';
-import { paintTerrainChunk, terrainChunks } from '../world/terrainPaint.js';
+import { paintTerrainChunk, terrainChunks, chunkTouches, changedTerrainBounds } from '../world/terrainPaint.js';
 import { applyPos } from '../world/mapData.js';
 import { propSolid, baseSolid } from '../world/solids.js';
 import { buildNav, findPath } from '../world/nav.js';
@@ -98,7 +98,7 @@ export class ExplorationScene extends Phaser.Scene {
     services.mode = 'exploration';
     this.random = rng(1337);
     // v0.27.0: сцена перезапускается при переходе между локациями — временное состояние прошлого запуска сбрасывается
-    this.speech = null; this.traveling = false; this.navCache = null; this.terrainImages = []; this.waterZones = []; this.colliderObjects = [];
+    this.speech = null; this.traveling = false; this.navCache = null; this.terrainImages = []; this.terrainTiles = new Map(); this.waterZones = []; this.colliderObjects = [];
     // v0.27.0: строится только текущая локация (глава или вылазка) — по положению героя; редактор карты (?edit) видит весь холст
     // v0.37.0: one-time move to the walkable town plan (player, safe point and pushed objects travel with the marker).
     migrateCitySave(state);
@@ -387,6 +387,7 @@ export class ExplorationScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------ мир
   buildGround() {
+    if (!this.loc) { this.buildEditorGround(); return; }
     const V = this.view, R = this.bounds;
     if(this.loc?.interior)this.add.rectangle(R.x,R.y-V.top,R.w,V.h,0x17120e).setOrigin(0).setDepth(DEPTH.ground);
     // v0.37.0: the town has its own calm, tended lawn; the forest keeps its wild grass.
@@ -401,26 +402,64 @@ export class ExplorationScene extends Phaser.Scene {
     this.add.rectangle(R.x, R.y - V.top, R.w, V.top, (this.loc?.interior?0x17120e:0x172114)).setOrigin(0).setDepth(DEPTH.path - 1);
   }
 
-  /** Дороги и вода: кривые формы рисуются кусками 512×512 и кладутся поверх травы. */
-  paintTerrain() {
+  /**
+   * The map editor (?edit) sees every location at once. Each one gets the same base as in the game (grass, the town lawn,
+   * dark bands, the dark floor of rooms) instead of one world-sized grass texture larger than a video card accepts.
+   */
+  buildEditorGround() {
+    for (const loc of LOCATIONS) {
+      const R = loc.rect, top = loc.extraTop || 0, bottom = loc.extraBottom || 0, dark = loc.interior ? 0x17120e : 0x172114;
+      if (loc.interior) this.add.rectangle(R.x, R.y - top, R.w, R.h + top + bottom, 0x17120e).setOrigin(0).setDepth(DEPTH.ground);
+      else this.tiledGround(R.x, R.y, R.w, R.h + bottom, loc.id === 'city' ? 'city_walk_lawn' : 'grass_ground_01');
+      if (bottom) this.add.rectangle(R.x, R.y + R.h, R.w, bottom, dark).setOrigin(0).setDepth(DEPTH.path - 1);
+      if (top) this.add.rectangle(R.x, R.y - top, R.w, top, dark).setOrigin(0).setDepth(DEPTH.path - 1);
+    }
+    this.paintTerrain();
+    this.rebuildGrounds(this.map.grounds);
+  }
+
+  /** Repeating fill from plain images: a TileSprite keeps a canvas as large as the whole area it covers. */
+  tiledGround(x, y, w, h, key) {
+    const src = this.textures.get(key).getSourceImage(), tw = src?.width || 512, th = src?.height || 512;
+    for (let ty = 0; ty < h; ty += th) {
+      for (let tx = 0; tx < w; tx += tw) {
+        const im = this.add.image(x + tx, y + ty, key).setOrigin(0).setDepth(DEPTH.ground);
+        if (tx + tw > w || ty + th > h) im.setCrop(0, 0, Math.min(tw, w - tx), Math.min(th, h - ty));
+      }
+    }
+  }
+
+  /**
+   * Дороги и вода: кривые формы рисуются кусками 512×512 и кладутся поверх травы.
+   * dirty — прямоугольники изменённых линий (правка в редакторе): перерисовываются только задетые ими куски,
+   * остальные остаются как есть. Без dirty рисуется всё.
+   */
+  paintTerrain(dirty = null) {
     const chunks = terrainChunks(this.terrain, WORLD.width, WORLD.height + EXTRA_BOTTOM).filter(c => touchesLocation(c, this.loc ? { rect: this.view } : null));
     const src = (k) => { try { return this.textures.get(k).getSourceImage(); } catch (e) { return null; } };
     const imgs = { dirt: src('dirt_path_01'), stone: src('stone_path_01'), water: src('swamp_water_01'),city_final_paving:src('city_final_paving'),city_walk_paving:src('city_walk_paving') };
     for (const road of this.terrain.roads) if (road.texture && !imgs[road.texture]) imgs[road.texture] = src(road.texture);
-    for (const im of this.terrainImages || []) im.destroy(); // перерисовка после правки в редакторе
-    this.terrainImages = [];
+    const tiles = this.terrainTiles ||= new Map();
+    const live = new Set(chunks.map(c => `terrain_${c.cx}_${c.cy}`));
+    for (const [key, im] of tiles) if (!dirty || !live.has(key)) { im.destroy(); tiles.delete(key); }
     for (const c of chunks) {
       const key = `terrain_${c.cx}_${c.cy}`;
+      if (dirty && tiles.has(key)) {
+        if (!dirty.some(b => chunkTouches(b, c))) continue;   // правка этот кусок не задела
+        // новый холст, как при загрузке: так тени и размытие совпадают с соседними кусками без шва
+        tiles.get(key).destroy(); tiles.delete(key);
+      }
       if (this.textures.exists(key)) this.textures.remove(key);
       const cv = document.createElement('canvas');
       cv.width = c.w; cv.height = c.h;
       paintTerrainChunk(cv.getContext('2d'), c, this.terrain, imgs);
       this.textures.addCanvas(key, cv);
-      this.terrainImages.push(this.add.image(c.x, c.y, key).setOrigin(0).setDepth(DEPTH.path));
+      tiles.set(key, this.add.image(c.x, c.y, key).setOrigin(0).setDepth(DEPTH.path));
     }
+    this.terrainImages = [...tiles.values()];
     // тексты кусков, которых больше нет (дорогу убрали), чистим
     for (const key of this.textures.getTextureKeys()) {
-      if (key.startsWith('terrain_') && !this.terrainImages.some(im => im.texture.key === key)) this.textures.remove(key);
+      if (key.startsWith('terrain_') && !tiles.has(key)) this.textures.remove(key);
     }
   }
 
@@ -440,9 +479,10 @@ export class ExplorationScene extends Phaser.Scene {
 
   /** После правки дорог и воды: форма, рисунок и коллизия воды пересобираются целиком. */
   rebuildTerrain(roads, waters) {
+    const before = this.terrain;
     this.map.roads = roads; this.map.waters = waters;
     this.terrain = buildTerrain({ ROADS: roads, WATERS: waters });
-    this.paintTerrain();
+    this.paintTerrain(before ? changedTerrainBounds(before, this.terrain) : null);
     this.buildWaterSolids();
   }
 

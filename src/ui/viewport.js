@@ -2,11 +2,12 @@ import Phaser from 'phaser';
 import { VIEW } from '../config/game.config.js';
 
 // Expand the visible map, keeping the authored 720×1280 UI and sprites at one uniform scale.
-export function viewportScaleMode(host) {
-  return host.clientWidth <= host.clientHeight ? Phaser.Scale.EXPAND : Phaser.Scale.FIT;
+// The map editor (?edit) has no HUD, so it always fills the free space instead of the portrait frame.
+export function viewportScaleMode(host, { editor = false } = {}) {
+  return editor || host.clientWidth <= host.clientHeight ? Phaser.Scale.EXPAND : Phaser.Scale.FIT;
 }
 
-export function bindBrowserViewport(game, host) {
+export function bindBrowserViewport(game, host, { editor = false } = {}) {
   const viewport = window.visualViewport;
   let frame = null, lastWidth = 0;
   const update = () => {
@@ -22,7 +23,7 @@ export function bindBrowserViewport(game, host) {
     style.setProperty('--viewport-height', `${viewport?.height || window.innerHeight}px`);
     style.setProperty('--viewport-left', `${viewport?.offsetLeft || 0}px`);
     style.setProperty('--viewport-top', `${viewport?.offsetTop || 0}px`);
-    const mode = viewportScaleMode(host);
+    const mode = viewportScaleMode(host, { editor });
     if (game.scale.scaleMode !== mode) {
       game.scale.scaleMode = mode;
       game.scale.displaySize.setAspectMode(mode === Phaser.Scale.FIT ? Phaser.Scale.FIT : 0);
@@ -31,6 +32,9 @@ export function bindBrowserViewport(game, host) {
     game.scale.refresh();
   };
   const schedule = () => { if (frame === null) frame = requestAnimationFrame(update); };
+  // The editor docks its panels around the map: the host can change size without a window resize.
+  const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null;
+  observer?.observe(host);
   window.addEventListener('resize', schedule);
   window.addEventListener('orientationchange', schedule);
   viewport?.addEventListener('resize', schedule);
@@ -40,6 +44,7 @@ export function bindBrowserViewport(game, host) {
   update();
   game.events.once('destroy', () => {
     if (frame !== null) cancelAnimationFrame(frame);
+    observer?.disconnect();
     window.removeEventListener('resize', schedule);
     window.removeEventListener('orientationchange', schedule);
     viewport?.removeEventListener('resize', schedule);

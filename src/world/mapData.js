@@ -107,8 +107,17 @@ export function diffPos(list, current) {
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
 
+// Базовые фигуры не меняются, а cityMapData() строит весь город заново (~0,3 с). Раньше это повторялось
+// при каждой правке в редакторе (сравнение с базой для черновика) — теперь база считается один раз.
+let BASE_TERRAIN = null, BASE_SHARED = null;
+const baseTerrainJson = () => (BASE_TERRAIN ||= JSON.stringify(buildBaseTerrain()));
+/** Та же база только для чтения (сравнение в diffTerrain): без копирования на каждую правку. */
+const baseTerrainShared = () => (BASE_SHARED ||= JSON.parse(baseTerrainJson()));
+
 /** Базовые списки с id и номером шума. Каждый раз новые копии: редактор их меняет. */
-export function baseTerrain() {
+export function baseTerrain() { return JSON.parse(baseTerrainJson()); }
+
+function buildBaseTerrain() {
   const city=cityMapData();
   return {
     roads: [...ROADS.map((r,i)=>({...clone(r),n:i})).filter(r => !r.pts?.some(p => p[0]>=1800 && p[0]<3600)),
@@ -163,7 +172,7 @@ export function diffList(base, current) {
 
 /** Правки дорог, воды и стен для файла; пустые разделы не пишутся, чтобы файл не раздувался. */
 export function diffTerrain({ roads, waters, colliders, grounds }) {
-  const b = baseTerrain();
+  const b = baseTerrainShared();
   const out = {};
   const r = diffList(b.roads, roads), w = diffList(b.waters, waters), c = diffList(b.cols, colliders);
   if (Object.keys(r).length) out.roads = r;
@@ -171,6 +180,21 @@ export function diffTerrain({ roads, waters, colliders, grounds }) {
   if (Object.keys(c).length) out.cols = c;
   if (grounds) { const g = diffList(b.grounds, grounds); if (Object.keys(g).length) out.grounds = g; }
   return out;
+}
+
+/**
+ * Сколько записей отличается между двумя наборами правок (результатами diffEdits + diffTerrain).
+ * Редактор так считает правки, которых ещё нет в файле игры world.edits.js.
+ */
+export function countEditDiff(a = {}, b = {}) {
+  let n = 0;
+  for (const k of ['props', 'pos', 'roads', 'waters', 'cols', 'grounds']) {
+    const x = a[k] || {}, y = b[k] || {};
+    for (const id of new Set([...Object.keys(x), ...Object.keys(y)])) if (JSON.stringify(x[id]) !== JSON.stringify(y[id])) n++;
+  }
+  const ax = new Map((a.add || []).map(p => [p.id, JSON.stringify(p)])), bx = new Map((b.add || []).map(p => [p.id, JSON.stringify(p)]));
+  for (const id of new Set([...ax.keys(), ...bx.keys()])) if (ax.get(id) !== bx.get(id)) n++;
+  return n;
 }
 
 export function loadDraft(storage) {

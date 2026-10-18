@@ -26,6 +26,7 @@ import { showLoadingScreen } from './ui/loadingScreen.js';
 import { bindBrowserViewport, viewportScaleMode } from './ui/viewport.js';
 
 const debug = new URLSearchParams(window.location.search).has('debug');
+const editor = new URLSearchParams(window.location.search).has('edit');   // map editor: the map fills the free space
 document.title = GAME_TITLE;
 
 const config = {
@@ -35,7 +36,7 @@ const config = {
   backgroundColor: VIEW.background,
   // Portrait screens show more map instead of letterboxing; wide screens retain the portrait frame.
   scale: {
-    mode: viewportScaleMode(document.getElementById('game')),
+    mode: viewportScaleMode(document.getElementById('game'), { editor }),
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: VIEW.width,
     height: VIEW.height,
@@ -57,7 +58,7 @@ showLoadingScreen();
 loadUIFont().then(() => {
   const game = new Phaser.Game(config);
   window.__game = game;
-  game.events.once(Phaser.Core.Events.READY, () => bindBrowserViewport(game, document.getElementById('game')));
+  game.events.once(Phaser.Core.Events.READY, () => bindBrowserViewport(game, document.getElementById('game'), { editor }));
 });
 
 }

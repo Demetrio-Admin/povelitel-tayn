@@ -78,7 +78,7 @@ export const windows09 = {
     const cur = vitals.hp(st), max = vitals.maxHp(st), coins = st.item('coins');
     const price = vitals.healPrice(cur, max);
     if (price <= 0) {
-      this.openModal({ title: 'Лечение у Мирры', color: 0x7be28a, text: fm('Ты цела, ведьма. Лечить нечего.', 'Ты цел, колдун. Лечить нечего.'), buttons: [{ label: 'Закрыть', primary: true }] });
+      this.openModal({ title: 'Лечение у Мирры', color: 0x7be28a, text: fm('Ты цела, ведьма. Лечить нечего — разве что любопытство.', 'Ты цел, колдун. Лечить нечего — разве что любопытство.'), buttons: [{ label: 'Закрыть', primary: true }] });
       return;
     }
     const head = `Здоровье: ${Math.ceil(cur)} / ${max}  →  ${max} / ${max}\nЦена: ${price} ${coinWord(price)}   ·   у вас: ${coins}`;

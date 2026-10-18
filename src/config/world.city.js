@@ -197,8 +197,8 @@ export const CITY_INTERACTIVES = [
   { id: 'npc_duelist', kind: 'npc', npc: 'duelist', x: 2640, y: 4040, texture: 'npc_duelist', collide: { w: 50, h: 24 }, radius: 140 },
   { id: 'plaza_trace', kind: 'seal_sigil', x: 2860, y: 3720, texture: 'city_frost_trace', litTexture: 'city_frost_trace', litTint: 0xe8d6ff, radius: 120,
     requiresEvent: 'ch2_met_ilaria', doneEvent: 'ch2_trace_astral', hint: 'Иней на камнях',
-    lockedText: 'Иней лёг узором — будто кто-то выжег его магией. Без Астрала не разобрать.',
-    doneTitle: 'След проявился', doneText: 'Астрал проявил под инеем знаки: руническая пыль, следы лунных осколков — и клеймо мастерской, которого вы никогда не видели.', doneButton: 'Дальше' },
+    lockedText: 'Иней лёг узором — слишком ровным для мороза. Без Астрала не разобрать.',
+    doneTitle: 'След проявился', doneText: 'Под Астралом иней расступился: руническая пыль, крошка лунных осколков — и клеймо мастерской. То же, что на игле из сердца рощи.', doneButton: 'Дальше' },
   { id: 'plaza_debris', kind: 'telekinesis', mode: 'push', weight: 'light', x: 2960, y: 3420, texture: 'city_crate', collide: { w: 70, h: 30 },
     target: { x: 3040, y: 3380 }, radius: 120, requiresEvent: 'ch2_met_ilaria', doneEvent: 'ch2_trace_debris', hint: 'Разбитый ящик',
     hiddenReward: { spawnPickup: { item: 'frost_herb', amount: 2 } } },
@@ -206,7 +206,7 @@ export const CITY_INTERACTIVES = [
   { id: 'archive_document', kind: 'seal_sigil', x: 2605, y: 2900, elevated: 50, texture: 'city_archive_document', litTexture: 'city_archive_document', litTint: 0xe8d6ff, radius: 110,
     requiresEvent: 'ch2_trace_found', doneEvent: 'ch2_archive_read', hint: 'Старый документ',
     lockedText: 'Пыльные папки о холодной магии. Илария скажет, что искать.',
-    doneTitle: 'Общество Преображения', doneText: 'Под Астралом выцветшие строки проступили снова. Ледяная магия в этих краях редка — а недавно все записи о ней забрал исследователь Общества Преображения. Подпись: Северин Вейр.', doneButton: 'К Обществу' },
+    doneTitle: 'Общество Преображения', doneText: 'Под Астралом строки проступили снова. Все записи о ледяной магии выданы на руки исследователю Общества Преображения. Получил: Северин Вейр.', doneButton: 'К Обществу' },
   // Общество Преображения
   { id: 'npc_severin', kind: 'npc', npc: 'severin', x: 3210, y: 2890, texture: 'npc_severin', collide: { w: 50, h: 24 }, radius: 140, hideEvent: 'ch2_final_start' },
 
@@ -217,12 +217,12 @@ export const CITY_INTERACTIVES = [
   { id: 'wh_equipment', kind: 'seal_sigil', x: 2700, y: 4930, texture: 'city_equipment', litTexture: 'city_equipment', litTint: 0xe8d6ff, radius: 110,
     requiresEvent: 'ch2_cargo_found', doneEvent: 'ch2_serials_read', hint: 'Оборудование с клеймом',
     lockedText: 'Ящик с инструментами под инеем. Сначала разберитесь со сборщиками.',
-    doneTitle: 'Списанное оборудование', doneText: 'Под Астралом проступили серийные номера и клеймо Общества Преображения. Рядом — печать: «Списано». Полгода назад. Кто-то пользуется оборудованием, которого официально нет.', doneButton: 'К Иларии' },
+    doneTitle: 'Списанное оборудование', doneText: 'Под Астралом проступили номера Общества Преображения — а рядом то самое клеймо, что на игле из сердца рощи. Печать: «Списано». Полгода назад.\n\nКто-то работает приборами, которых официально нет.', doneButton: 'К Иларии' },
 
   // ---- квест 7 «Чужими руками» → квест 8: ледяная стена на улице к Замёрзшему кварталу. Видна всегда, растапливается Огнём после волны холода.
   { id: 'frost_barrier', kind: 'fire', x: 2910, y: 2560, texture: 'ice_wall_01', collide: { w: 100, h: 60 }, radius: 130,
     waitEvent: 'ch2_frost_wave', destroyEvent: 'ch2_quarter_open', burnSec: 1.6, hint: 'Ледяная стена',
-    lockedText: 'Улицу к северному кварталу перегородила стена льда. Город запретил туда ходить — пока.',
+    lockedText: 'Улицу к Северному кварталу перегородила стена льда. Стража говорит: туда пока нельзя.',
     doneText: 'Лёд поплыл и осел. Путь в Замёрзший квартал открыт.' },
 
   // ---- квест 8 «То, что нельзя сжечь» — южная часть квартала
@@ -232,8 +232,8 @@ export const CITY_INTERACTIVES = [
   { id: 'npc_nerys', kind: 'npc', npc: 'nerys', x: 2800, y: 2230, texture: 'npc_nerys', collide: { w: 30, h: 14 }, radius: 140, requiresEvent: 'ch2_construct_unstable', hideEvent: 'ch2_final_start' },
   { id: 'fq_door', kind: 'seal_sigil', x: 3340, y: 2150, texture: 'frozen_door_01', litTexture: 'city_door_open', radius: 120,
     requiresEnemyDefeated: 'fq_collector', doneEvent: 'ch2_rescue_door', hint: 'Обледеневшая дверь',
-    lockedText: 'За дверью кто-то стучит. Сначала — сборщик рядом.',
-    doneTitle: 'Люди за дверью', doneText: 'Астрал показал узлы, на которых держится лёд. Нэрис разбила их одним касанием — и двое жителей вышли наружу, дрожа от холода.', doneButton: 'Дальше' },
+    lockedText: 'За дверью кто-то стучит — слабо, всё реже. Сначала — сборщик рядом.',
+    doneTitle: 'Люди за дверью', doneText: 'Астрал показал узлы, на которых держится лёд. Нэрис разбила их одним касанием, и наружу выбрались двое — старик и девочка с котёнком за пазухой.', doneButton: 'Дальше' },
   { id: 'fq_cellar', kind: 'telekinesis', mode: 'push', weight: 'medium', x: 2500, y: 2190, texture: 'city_crate', collide: { w: 70, h: 30 },
     target: { x: 2440, y: 2260 }, radius: 120, requiresEnemyDefeated: 'fq_critter', doneEvent: 'ch2_rescue_cellar', hint: 'Ящики над погребом',
     hiddenReward: { spawnPickup: { item: 'frost_herb', amount: 1 } } },
@@ -247,7 +247,7 @@ export const CITY_INTERACTIVES = [
   // ---- v0.22.0, квест 12 «Добровольцы»: тайная лаборатория к югу от дороги. Вход держит нестабильная печать — её успокаивает Лёд.
   { id: 'lab_seal', kind: 'ice', x: 2070, y: 4100, texture: 'city_lab_door', frozenTexture: 'city_lab_door_open', walkable: true, groundWhenFrozen: false, collide: { w: 100, h: 40 }, radius: 130,
     waitEvent: 'ch2_lab_found', doneEvent: 'ch2_lab_open', hint: 'Нестабильная печать',
-    lockedText: 'Старая дверь в склоне холма, на ней дрожит чужая печать. Что за ней — пока неизвестно.',
+    lockedText: 'Старая дверь в склоне холма. На ней дрожит чужая печать — будто ей холодно.',
     doneText: 'Лёд успокоил печать — магия замерла, и дверь подалась.' },
   { id: 'lab_herb_1', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 240, x: 1900, y: 4230, texture: 'city_frost_herb', radius: 90, requiresEvent: 'ch2_lab_open' },
   { id: 'lab_herb_2', kind: 'gather', res: 'frost_herb', amount: 1, respawnSec: 240, x: 2270, y: 4300, texture: 'city_frost_herb', radius: 90, requiresEvent: 'ch2_lab_open' },
@@ -257,7 +257,7 @@ export const CITY_INTERACTIVES = [
   { id: 'npc_tikhon', kind: 'npc', npc: 'tikhon', x: 1990, y: 4580, texture: 'npc_tikhon', collide: { w: 30, h: 14 }, radius: 130, requiresEvent: 'ch2_vol_1' },
   { id: 'lab_journal', kind: 'seal_sigil', x: 2180, y: 4675, elevated: 50, texture: 'city_lab_journal', litTexture: 'city_lab_journal', litTint: 0xe8d6ff, radius: 110,
     requiresEnemyDefeated: 'lab_construct', doneEvent: 'ch2_lab_journal', hint: 'Лабораторный журнал',
-    doneTitle: 'Журнал опытов', doneText: 'Астрал проявил стёртые страницы. «Испытуемый №4 — пришёл сам, хочет защищать семью». «Доза снижена по указанию С. В.». Подпись под отчётом — Северин Вейр. Он знал.', doneButton: 'К Иларии' },
+    doneTitle: 'Журнал опытов', doneText: 'Астрал проявил стёртые страницы. «Испытуемый №4 — пришёл сам, хочет защищать семью». «Доза снижена по указанию С. В.». «Заказчик торопит: сосуд должен выдержать». Подпись под отчётом — Северин Вейр.\n\nОн знал.', doneButton: 'К Иларии' },
 
   // ---- квест 15 «Город под инеем»: экзамен по четырём дарам на площади (даров — три из четырёх, слоты можно менять)
   { id: 'final_debris', kind: 'telekinesis', mode: 'push', weight: 'heavy', x: 2760, y: 3960, texture: 'city_debris', collide: { w: 70, h: 30 },
@@ -266,15 +266,15 @@ export const CITY_INTERACTIVES = [
     burnSec: 1.4, hint: 'Ледяная преграда', doneText: 'Преграда растаяла — улица к рынку свободна.' },
   // Existing id/event retained for saved games and server validation; the object is a damaged experimental device.
   { id: 'final_rift', kind: 'ice', x: 2520, y: 3880, texture: 'city_coolant', collide: { w: 80, h: 26 }, frozenTexture: 'city_coolant_stable', radius: 130, requiresEvent: 'ch2_final_start', doneEvent: 'ch2_fin_ice',
-    hint: 'Повреждённый резервуар', lockedText: 'Из треснувшего резервуара вырывается магический холод. Лёд стабилизирует прибор.', doneText: 'Лёд стянул трещины — резервуар затих.' },
+    hint: 'Повреждённый резервуар', lockedText: 'Из треснувшего резервуара рвётся магический холод. Лёд стабилизирует прибор.', doneText: 'Лёд стянул трещины — резервуар затих.' },
   { id: 'final_ward', kind: 'seal_sigil', x: 2640, y: 4130, texture: 'astral_ward_01', litTexture: 'astral_ward_01', collide: { w: 100, h: 30 }, opens: true, radius: 130,
     requiresEvent: 'ch2_final_start', doneEvent: 'ch2_fin_seal', hint: 'Астральный барьер',
-    lockedText: 'Дуэльный зал закрыт.',
+    lockedText: 'Дуэльный зал запечатан изнутри.',
     doneTitle: 'Барьер снят', doneText: 'Астрал нашёл швы барьера — и завеса рассыпалась искрами. Изнутри тянет холодом и голосом Северина.', doneButton: 'Дальше' },
   { id: 'npc_nerys_final', kind: 'npc', npc: 'nerys', x: 2800, y: 4040, texture: 'npc_nerys', collide: { w: 30, h: 14 }, radius: 140, requiresEvent: 'ch2_final_start' },
   { id: 'final_letters', kind: 'seal_sigil', x: 2510, y: 4280, texture: 'city_letters', litTexture: 'city_letters', litTint: 0xe8d6ff, radius: 110,
     requiresEnemyDefeated: 'final_severin', doneEvent: 'ch2_letters_read', hint: 'Зашифрованные письма',
-    doneTitle: 'Чужая рука', doneText: 'Под Астралом шифр поплыл. Деньги, материалы, старые схемы — всё это Северину передавал кто-то другой. Подписи нет. Только знак — тот самый стёртый узор с Древних ворот в лесу Мирры.', doneButton: 'К Иларии' },
+    doneTitle: 'Чужая рука', doneText: 'Под Астралом шифр поплыл. Деньги, материалы, старые схемы — всё это Северину присылал кто-то другой.\n\nПодписи нет. Вместо неё — знак защиты рощи с Древних ворот. А между листами — засушенный лист, прозрачный, как стекло.\n\nПоследняя строка: «Мне не нужна сила. Мне нужно, чтобы ничто больше не умирало».', doneButton: 'К Иларии' },
   { id: 'npc_severin_after', kind: 'npc', npc: 'severin', x: 2780, y: 4380, texture: 'npc_severin', collide: { w: 32, h: 14 }, radius: 130, requiresEvent: 'ch2_severin_defeated' },
   // ---- квест 14 «Не в одиночку»: Дом Ковенов
   { id: 'npc_rowena', kind: 'npc', npc: 'rowena', x: 3240, y: 4300, texture: 'npc_rowena', collide: { w: 50, h: 24 }, radius: 140 },

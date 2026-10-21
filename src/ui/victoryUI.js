@@ -40,8 +40,7 @@ export function showVictory({ result, heroId, audio, onClose } = {}) {
   if (view.heroXP) rewards.append(el('div', { class: 'victory-hero-xp' }, el('img', { src: asset('assets/ui/victory/experience.webp'), alt: '', draggable: 'false' }),
     text(`+${num(view.heroXP)} опыта ${view.hero.gender === 'male' ? 'героя' : 'героини'}`)));
   if (view.schools.length) {
-    if (amount(reward.sapphires)) loot.push({ id: 'sapphires', name: 'Сапфиры', icon: 'icon_sapphire', quantity: amount(reward.sapphires) });
-  const schools = el('div', { class: 'victory-schools', style: `--gift-columns:${Math.min(3, view.schools.length)}` });
+    const schools = el('div', { class: 'victory-schools', style: `--gift-columns:${Math.min(3, view.schools.length)}` });
     for (const row of view.schools) schools.append(el('div', { class: 'victory-school', 'data-school': row.id }, image(row.icon),
       el('div', {}, text(row.name, 'victory-school-name'), text(`+${num(row.xp)}`, 'victory-school-quantity'))));
     rewards.append(el('section', { class: 'victory-magic', 'aria-label': 'Опыт даров' }, el('h3', { text: 'Опыт даров' }), schools));

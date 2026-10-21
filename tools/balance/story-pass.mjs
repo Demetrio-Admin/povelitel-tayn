@@ -1,3 +1,4 @@
+import { INTERACTIVES } from '../../src/config/world.layout.js';
 // Deterministic economy check: no side quests, daily orders, paid gifts or repeated enemies.
 // Chapter I uses the normal resource route; chapter II runs authoritative actions and verified combat logs.
 import assert from 'node:assert/strict';
@@ -15,7 +16,7 @@ export async function storyPass() {
   const fights = [], payments = [], coinsAtStart = s.inventory.coins;
   const act = (op, args = {}) => {
     time += 300_000;
-    const r = applyAction(s, { op, ...args }, time); s = r.snapshot;
+    const r = applyAction(s, { op, ...args }, time, ()=>.999999); s = r.snapshot;
     assert.ok(r.result.ok, `${op} ${JSON.stringify(args)}: ${JSON.stringify(r.result)}`);
     return r.result;
   };
@@ -27,17 +28,18 @@ export async function storyPass() {
   const craft = recipe => {
     for (const [item, n] of Object.entries(serverRules().recipes[recipe].needs)) {
       const missing = Math.max(0, n - (s.inventory[item] || 0));
-      if (missing) buy(item, missing);
+      if (missing && item !== 'coins') {
+        const nodes = INTERACTIVES.filter(o => o.kind === 'gather' && o.res === item && (!o.requiresEvent || s.quests.includes(o.requiresEvent)));
+        for (let i=0; (s.inventory[item]||0)<n && nodes.length && i<100; i++) world(nodes[i%nodes.length].id);
+      }
+      const remain = Math.max(0,n-(s.inventory[item]||0));
+      if (remain) buy(item, remain);
     }
     return act('craft', { recipe });
   };
   const replenish = (target = 2) => {
-    while ((s.inventory.elixir_life || 0) < target) {
-      for (const [item, n] of Object.entries({ moon_herb: 2, forest_mushroom: 1 })) {
-        const missing = Math.max(0, n - (s.inventory[item] || 0));
-        if (missing) buy(item, missing);
-      }
-      craft('elixir_life');
+    while ((s.inventory.potion_life_medium || 0) < target) {
+      craft('potion_life_medium');
     }
   };
   const driver = (cm, input) => {
@@ -46,8 +48,10 @@ export async function storyPass() {
     const light = cm.fieldObjects.find(o => o.available && o.def.throwable && o.def.weight !== 'heavy');
     const crystal = cm.fieldObjects.find(o => o.available && o.def.breaksArmor);
     const throwAt = o => { if (o) input('s', o.id); return input('a', 'telekinesis'); };
-    if (cm.hero.hp < cm.hero.maxHp * .4) input('p', 'elixir_life');
-    if (cm.hero.mana < 20) input('p', 'elixir_mana');
+    if (cm.heroChill.left > 0 && !cm.chillResist) input('p','warm_potion');
+    if (cm.hero.hp < cm.hero.maxHp*.8) input('p','potion_crystal_shield');
+    if (cm.hero.hp < cm.hero.maxHp * .55) input('p', 'potion_life_medium');
+    if (cm.hero.mana < 20) for (const id of cm.potionSlots) if (id.includes('mana')) {input('p',id); break;}
     if (e.isPreparing && ready('telekinesis')) { throwAt(e.def.strongAttack.interruptBy.includes('telekinesis') ? light : heavy); return; }
     const soon = e.def.strongAttack && e.strongCd < 2.5;
     if (crystal && e.armorActive && ready('telekinesis') && !soon) { throwAt(crystal); return; }
@@ -58,16 +62,18 @@ export async function storyPass() {
   };
   const fight = (spawn, enemy) => {
     if (['wh_elite', 'fq_guardian', 'lab_construct', 'final_severin'].includes(spawn)) replenish(spawn === 'final_severin' ? 4 : 2);
-    act('combat_start', { spawn, enemy, balanceVersion: 30 });
+    if (spawn === 'final_severin') { craft('potion_mana_medium'); craft('warm_potion'); }
+    time += Math.max(0,(s.level>=14?205:185)-(s.mana||0))*2000;
+    act('combat_start', { spawn, enemy, balanceVersion: 40 });
     let best;
     for (let seed = 1; seed <= 8 && !best; seed++) {
       const play = playBot(s.combatCtx, { seed, policy: 'smart', driver });
       if (play.cm.result === 'victory') best = play;
     }
-    assert.ok(best, `${spawn}: no victory at level ${s.level}, life potions ${s.inventory.elixir_life || 0}`);
+    assert.ok(best, `${spawn}: no victory at level ${s.level}, life potions ${s.inventory.potion_life_medium || 0}`);
     time = s.combatSince + best.log.ticks * STEP * 1000 + 1000;
     const v = verifyCombat(s, best.log, time); assert.ok(v.ok, `${spawn}: ${v.reason}`);
-    s = combatApply(s, v.verdict, time).snapshot;
+    s = combatApply(s, v.verdict, time, ()=>.999999).snapshot;
     fights.push({ spawn, level: s.level, seconds: +best.cm.time.toFixed(1), potions: best.cm.stats.potions || 0, coins: v.verdict.reward?.items?.coins || 0 });
   };
   act('build_set', { amulets: ['amulet_forest'] });

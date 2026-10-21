@@ -1089,7 +1089,7 @@ export const DIALOGUES = {
       } },
     },
     {
-      id: 'rowena_supplies_ready', when: c => c.has('ch2_coven_met') && !c.has('ch2_coven_supplies') && c.item('crystal_guard') >= 1 && c.item('frost_herb') >= 2,
+      id: 'rowena_supplies_ready', when: c => c.has('ch2_coven_met') && !c.has('ch2_coven_supplies') && (c.item('crystal_guard') + c.item('potion_crystal_shield')) >= 1 && c.item('frost_herb') >= 2,
       nodes: { start: {
         lines: ['Кристальный покров и морозник? Как раз то, что нужно на стенах.'],
         choices: [{ label: 'Отдать покров и 2 морозника', do: [{ event: 'ch2_coven_supplies' }] }, { label: 'Потом.' }],

@@ -1,0 +1,236 @@
+{
+  "sourceCommit": "c0f2ea6549b953d9ce1f0705cd441f3d325c8b50",
+  "description": "Unchanged v38 engine, ordinary Arsonist V casts, including Duel v2.",
+  "cases": [
+    {
+      "ctx": {
+        "balanceVersion": 38,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire"
+          ],
+          "amulets": [],
+          "branches": {
+            "fire": "arsonist"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "spawn": "final_severin",
+        "enemy": "severin_boss"
+      },
+      "policy": "smart",
+      "result": {
+        "outcome": "defeat",
+        "time": 54.2999999999982,
+        "hp": 0,
+        "mana": 190.69450000000037,
+        "enemyHp": 573,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 6,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 259,
+          "autoDamage": 175
+        }
+      }
+    },
+    {
+      "ctx": {
+        "balanceVersion": 38,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire"
+          ],
+          "amulets": [],
+          "branches": {
+            "fire": "arsonist"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "spawn": "gy_warden",
+        "enemy": "barrow_warden"
+      },
+      "policy": "smart",
+      "result": {
+        "outcome": "defeat",
+        "time": 53.31666666666492,
+        "hp": 0,
+        "mana": 195.40333333333314,
+        "enemyHp": 1039,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 7,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 287,
+          "autoDamage": 100
+        }
+      }
+    },
+    {
+      "ctx": {
+        "balanceVersion": 38,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire"
+          ],
+          "amulets": [],
+          "branches": {
+            "fire": "arsonist"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "level": 15,
+            "abilities": {
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire"
+              ],
+              "amulets": [],
+              "branches": {
+                "fire": "arsonist"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "smart",
+      "result": {
+        "outcome": "victory",
+        "time": 11.300000000000141,
+        "hp": 4,
+        "mana": 190.90666666666652,
+        "enemyHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 2,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 251,
+          "autoDamage": 45
+        }
+      }
+    },
+    {
+      "ctx": {
+        "balanceVersion": 38,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire"
+          ],
+          "amulets": [],
+          "branches": {
+            "fire": "arsonist"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "level": 15,
+            "abilities": {
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire"
+              ],
+              "amulets": [],
+              "branches": {
+                "fire": "arsonist"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "idle",
+      "result": {
+        "outcome": "defeat",
+        "time": 12.016666666666843,
+        "hp": 0,
+        "mana": 205,
+        "enemyHp": 210,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 261,
+          "autoDamage": 45
+        }
+      }
+    }
+  ]
+}

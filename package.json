@@ -1,13 +1,13 @@
 {
   "name": "koldovstvo-magical-rpg",
-  "version": "0.38.1",
+  "version": "0.39.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host",
-    "test": "node tests/run-tests.js && node tests/hero-profile-test.mjs && node tests/bag-economy-test.mjs && node tests/shop-bag-combat-test.mjs && node tests/balance-v30-test.mjs && node tests/combat-replay-test.mjs && node tools/build-combat-function.mjs --check && node tests/world-test.js && node tests/editor-data-test.mjs && node tests/nav-test.mjs && node tests/city-layout-test.mjs && node --import ./tools/ui/register.mjs tests/editor-test.mjs && node tests/session-test.js && node tests/telemetry-test.mjs && node tests/gifts-test.mjs && node tests/chapter2-test.mjs && node --import ./tools/ui/register.mjs tests/nerys-gift-test.mjs && node tests/daily-test.mjs && node tests/expeditions-test.mjs && node tests/locations-test.mjs && node tests/ratings-test.mjs && node tests/life-test.mjs && node tests/covens-test.mjs && node tests/duel-test.mjs && node --import ./tools/ui/register.mjs tests/ui-smoke.mjs && node --import ./tools/ui/register.mjs tests/objects-test.mjs && node --import ./tools/ui/register.mjs tests/hero-test.mjs",
+    "test": "node tests/run-tests.js && node tests/hero-profile-test.mjs && node tests/bag-economy-test.mjs && node tests/shop-bag-combat-test.mjs && node tests/balance-v30-test.mjs && node tests/combat-replay-test.mjs && node tools/build-combat-function.mjs --check && node tests/world-test.js && node tests/editor-data-test.mjs && node tests/nav-test.mjs && node tests/city-layout-test.mjs && node --import ./tools/ui/register.mjs tests/editor-test.mjs && node tests/session-test.js && node tests/telemetry-test.mjs && node tests/gifts-test.mjs && node tests/chapter2-test.mjs && node --import ./tools/ui/register.mjs tests/nerys-gift-test.mjs && node tests/daily-test.mjs && node tests/expeditions-test.mjs && node tests/locations-test.mjs && node tests/ratings-test.mjs && node tests/life-test.mjs && node tests/covens-test.mjs && node tests/duel-test.mjs && node --import ./tools/ui/register.mjs tests/ui-smoke.mjs && node --import ./tools/ui/register.mjs tests/objects-test.mjs && node --import ./tools/ui/register.mjs tests/hero-test.mjs && node tests/rebalance-recovery-test.mjs && node tests/legacy-rebalance-compat-test.mjs && node tests/full-cycle-test.mjs && node tools/sql/gen-recovery-migration.mjs --check && node tests/duel-defender-test.mjs && node tests/burn-antiburn-test.mjs && node tests/storm-heart-test.mjs && node tests/duel-tempo-test.mjs && node tests/economy-progression-test.mjs",
     "ui:shots": "node --import ./tools/ui/register.mjs tools/ui/render-scenes.mjs",
     "e2e": "node tests/e2e/play.mjs",
     "test:db": "node tools/sql/security-test.mjs && node tools/sql/diff-test.mjs && node tools/sql/migration-test.mjs && node tools/sql/combat-test.mjs && node tools/sql/telemetry-test.mjs && node tools/sql/coven-test.mjs && node tools/sql/coven-cycles-test.mjs && node tools/sql/duel-test.mjs && node tools/sql/ratings-test.mjs && node tools/sql/rate-test.mjs && BACKEND=pg node tests/session-test.js",
@@ -46,7 +46,16 @@
     "test:city-rooms": "node tests/e2e/city-rooms.mjs",
     "test:city-graphics": "node tests/e2e/city-graphics.mjs",
     "test:city-houses": "node tests/e2e/city-houses.mjs",
-    "ui:city-cozy": "node tools/art/render-cozy-city.mjs"
+    "ui:city-cozy": "node tools/art/render-cozy-city.mjs",
+    "balance:full-cycle": "node tools/balance/full-cycle.mjs --all",
+    "test:rebalance": "node tests/rebalance-recovery-test.mjs && node tests/legacy-rebalance-compat-test.mjs && node tests/full-cycle-test.mjs && node tests/burn-antiburn-test.mjs && node tests/storm-heart-test.mjs",
+    "test:duel": "node tests/duel-test.mjs && node tests/duel-defender-test.mjs && node tests/duel-tempo-test.mjs",
+    "test:storm-heart": "node tests/storm-heart-test.mjs",
+    "balance:storm-heart": "node tools/balance/storm-heart.mjs",
+    "test:duel-tempo": "node tests/duel-tempo-test.mjs",
+    "balance:duel-tempo": "node tools/balance/duel-tempo.mjs",
+    "test:economy": "node tests/economy-progression-test.mjs",
+    "balance:economy": "node tools/balance/economy-report.mjs"
   },
   "dependencies": {
     "@fontsource/philosopher": "^5.2.8",

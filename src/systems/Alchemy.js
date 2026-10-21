@@ -42,6 +42,7 @@ export class Alchemy {
     const chk = this.check(recipeId);
     const has = (ev) => this.state.hasEvent(ev);
     if ((r.requires || []).some(ev => !has(ev))) return { state: 'locked', chk };
+    if (r.requiresAbility && !this.state.isUnlocked(r.requiresAbility)) return { state: 'locked', chk };
     if ((r.blockedBy || []).some(has)) return { state: this.state.item(r.result) > 0 ? 'have' : 'used', chk };
     return { state: chk.ok ? 'ready' : 'missing', chk };
   }

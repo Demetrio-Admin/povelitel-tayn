@@ -1,3 +1,4 @@
+import { SAPPHIRE_DROPS } from './sapphireDrops.js';
 // Правила, которые знает сервер (функция _game_rules() в supabase/schema.sql генерируется отсюда: node tools/sql/gen-rules.mjs;
 // тот же объект читает JS-зеркало cloud/playerModel.js). Только данные из конфигов — ничего не придумывается руками здесь.
 //
@@ -6,7 +7,7 @@
 //          смена ветки, опыт даров за магию в мире. Теперь это операции сервера (README «v0.15.0»).
 import { RECIPES } from './recipes.js';
 import { VITALS, HERO_RECOVERY } from './balance.hero.js';
-import { POTIONS } from './resources.js';
+import { POTIONS, POTION_PREFERENCE } from './resources.js';
 import { ZONES, INTERACTIVES, ENEMY_SPAWNS } from './world.layout.js';
 import { ABILITIES, WORLD_MANA_COST, WEIGHT_CLASSES, SCHOOL_XP_PER_USE } from './balance.abilities.js';
 import { UPGRADES, TIMER_MODE, EVENT_REWARDS, BRANCH_RESPEC, BALANCE_MIGRATION } from './balance.progression.js';
@@ -176,6 +177,7 @@ export function worldRules() {
       default: break;
     }
   }
+  world.fq_cauldron = { kind: 'loot', mark: 'looted', requires: ['ch2_nerys_met'], blockedBy: ['regen_potions_learned'], reward: {}, events: ['regen_potions_learned'] };
   return world;
 }
 
@@ -203,7 +205,7 @@ export function researchRules() {
     const r = up.requires || {};
     out[id] = {
       ability: up.ability, toLevel: up.toLevel, branch: up.branch || null, locked: !!up.locked,
-      heroLevel: r.heroLevel || 0, abilityLevel: r.abilityLevel || 0, event: r.event || null,
+      heroLevel: r.heroLevel || 0, abilityLevel: r.abilityLevel || 0, event: r.event || null, progressTier: r.progressTier || null, requiredBranch: r.branch || null,
       schoolXP: up.cost.schoolXP, items: { ...(up.cost.items || {}), coins: up.cost.coins || 0 }, sapphires: up.cost.sapphires || 0,
       durationMs: up.timerSec[TIMER_MODE] * 1000,
       startEvent: up.startEvent || null, completeEvent: up.completeEvent || null,
@@ -234,6 +236,7 @@ export function spawnStartRules() {
 export function serverRules() {
   const recipes = Object.fromEntries(Object.entries(RECIPES).map(([id, r]) => [id, {
     result: r.result, amount: r.amount, needs: r.needs, requires: r.requires || [], crafted: r.crafted || null, blockedBy: r.blockedBy || [],
+    ...(r.requiresAbility ? { requiresAbility: r.requiresAbility } : {}),
   }]));
   // v0.12.0: восстановление HP и маны считает сервер по времени (см. README «v0.12.0»)
   const house = ZONES.find(z => z.id === VITALS.houseZone);
@@ -244,7 +247,7 @@ export function serverRules() {
   };
   // зелья, которые пьются вне боя (op 'drink'): сколько долей максимума возвращают
   const potions = Object.fromEntries(Object.entries(POTIONS).filter(([, p]) => p.outside && (p.effect.type === 'heal' || p.effect.type === 'mana'))
-    .map(([id, p]) => [id, { kind: p.effect.type, amount: p.effect.amount }]));
+    .map(([id, p]) => [id, { kind: p.effect.type, ...(p.effect.flat != null ? { flat: p.effect.flat } : { amount: p.effect.amount }) }]));
   // v0.15.0
   const events = Object.fromEntries(Object.entries(EVENT_ACTIONS).map(([k, e]) => [k, {
     requires: e.requires || [], unlock: e.unlock || {},
@@ -254,7 +257,7 @@ export function serverRules() {
   }]));
   const eventRewards = Object.fromEntries(Object.entries(EVENT_REWARDS).map(([k, r]) => [k, grantOf(r)]));
   return {
-    balanceMigration: BALANCE_MIGRATION, recipes, uses: STORY_USES, firstCraft: FIRST_CRAFT, migration: MIGRATION_V10, vitals, potions, world: worldRules(),
+    sapphireDrops: SAPPHIRE_DROPS, balanceMigration: BALANCE_MIGRATION, recipes, uses: STORY_USES, firstCraft: FIRST_CRAFT, migration: MIGRATION_V10, vitals, potions, world: worldRules(),
     events, eventRewards, quests: questRules(), research: researchRules(), build: buildRules(), spawnStart: spawnStartRules(),
     sapphires: sapphireRules(), bag: bagRules(),
     shop: shopRules(),             // v0.19.0: торговец
@@ -262,6 +265,6 @@ export function serverRules() {
     covens: covenRules(),          // v0.25.0: Ковены (недельная цель)
     duel: duelRules(),             // v0.26.0: Магическая Дуэль
     ratings: ratingsRules(),       // v0.29.0: рейтинги (уровни монстров) и «в игре»
-    combatPotions: Object.keys(POTIONS),   // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
+    potionPreference: POTION_PREFERENCE, combatPotions: Object.keys(POTIONS),   // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
   };
 }

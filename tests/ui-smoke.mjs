@@ -469,6 +469,21 @@ await mute(async () => {
       cs.showDuelOutcome({ ok: true, verdict: { outcome: 'victory', duel: { delta: 16, opponent: 'Мирон' }, reward: { items: { coins: 30 } }, entry: { timeSec: 50 } } }, 50);
       sv.state.data.combatCtx = null;
     }
+    {
+      const { services: sv } = await import('../src/services.js');
+      const { TEMPO_PROFILES, tempoContext } = await import('../tools/balance/duel-tempo.mjs');
+      sv.state.data.combatCtx = tempoContext(TEMPO_PROFILES[0], TEMPO_PROFILES[0]);
+      const cs = new CombatScene(); cs.init({ spawnId:'duel',enemyType:'duel_mage',duel:true }); cs.create(); cs.started=true;
+      cs.cm.enemy.interruptProtectedUntil=3; cs.cm.duelBody.interruptProtectedUntil=3;
+      cs.cm.duelBattle.beginCast(cs.cm.duelBattle.defender,'fire');cs.processEvents();cs.updateHud();
+      ok(cs.statusText.text.includes('Устойчивость')&&cs.heroBuffText.text.includes('Устойчивость'), 'Дуэль: устойчивость показана у обеих сторон');
+      cs.cm.burnWard={left:20,resist:.6};cs.cm.shields.potion={left:12,amount:70};cs.updateHud();
+      ok(cs.heroBuffText.y+cs.heroBuffText.height<=1060, 'Дуэль: несколько статусов героя помещаются над кнопками даров');
+      ok(cs.warnHint.text.includes('Устойчивость'), 'Дуэль: предупреждение не обещает прервать защищённый дар');
+      cs.cm.enemy.interruptProtectedUntil=0;cs.updateHud();
+      ok(cs.warnHint.text==='Прервите Телекинезом!', 'Дуэль: после окончания защиты подсказка снова предлагает прерывание');
+      sv.state.data.combatCtx=null;
+    }
   } catch (e) { err = e; }
   ok(!err, 'бой: сцена и HUD врага строятся и обновляются' + (err ? ': ' + err.stack.split('\n').slice(0, 3).join(' | ') : ''));
 

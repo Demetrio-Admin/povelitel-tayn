@@ -17,7 +17,7 @@ const sql=(s,p=[])=>db.query(s,p);
 async function as(n,fn) { await db.exec('set role authenticated'); await sql("select set_config('request.jwt.claim.sub',$1,false)",[users[n]]);try{return await fn();}finally{await db.exec('reset role');} }
 const call=(n,op,args={},id=null)=>as(n,async()=>(await sql('select public.admin_request($1,$2::jsonb,$3::uuid) j',[op,JSON.stringify(args),id])).rows[0].j);
 const check=(v,label)=>{assert.ok(v,label);checks++;console.log('  ✓',label);};
-const migrate=()=>db.exec(readFileSync('supabase/migrations/20261008_test_admin.sql','utf8'));
+const migrate=async()=>{await db.exec(readFileSync('supabase/migrations/20261008_test_admin.sql','utf8'));await db.exec(readFileSync('supabase/migrations/20261021_rebalance_recovery.sql','utf8'));};
 async function change(n,target,op,args={},id=randomUUID()) { const p=await call(n,'player',{playerId:ids[target]}); return call(n,op,{playerId:ids[target],revision:p.revision,walletRevision:p.walletRevision,...args},id); }
 try {
   for (const f of ['tools/sql/auth-stub.sql','supabase/schema.sql','supabase/migrations/20261004_game_chat.sql','supabase/migrations/20261004_chat_roles_v2.sql','supabase/migrations/20261005_chat_amulet_catalog.sql','supabase/migrations/20261006_chat_catalog_ch2.sql','supabase/migrations/20261007_covens.sql','supabase/migrations/20261008_coven_cycles.sql']) await db.exec(readFileSync(f,'utf8'));
@@ -59,7 +59,7 @@ try {
   const sale=(await call('owner','ledger',{playerId:ids.player,source:'trade'})).rows;
   check(sale.length===2 && sale[0].operation===sale[1].operation && sale.some(r=>r.resource==='coins'&&r.delta===50)&&sale.some(r=>r.resource==='moon_herb'&&r.delta===-10),'sale links item withdrawal and coin income under one operation');
   const gathered=await act('world',{obj:'herb_g1'});check(gathered.action.ok&&(await call('owner','ledger',{playerId:ids.player,source:'gather'})).rows.length===1,'ordinary gathering classified and audited');
-  const crafted=await act('craft',{recipe:'elixir_life'});check(crafted.action.ok&&(await call('owner','ledger',{playerId:ids.player,source:'craft'})).rows.some(r=>r.resource==='elixir_life'&&r.delta>0),'crafting records ingredients and product');
+  const crafted=await act('craft',{recipe:'elixir_life'});check(crafted.action.ok&&(await call('owner','ledger',{playerId:ids.player,source:'craft'})).rows.some(r=>r.resource==='potion_life_small'&&r.delta>0),'crafting records ingredients and product');
   await sql("select public._unlock_ability($1,'telekinesis',1)",[users.player]);
   const begun=await act('combat_start',{spawn:'scavenger_01',enemy:'forest_scavenger',balanceVersion:30});check(begun.action.ok,'combat still starts after administration installed');
   const snap=(await sql('select public.combat_load($1) j',[users.player])).rows[0].j;

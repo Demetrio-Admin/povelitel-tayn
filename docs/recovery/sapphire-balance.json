@@ -1,0 +1,71 @@
+{
+  "assumptions": "No hourly or daily cap. One-pass probabilities are exact convolutions of independent server rolls; the two locations have hour-long boss/stash cooldowns. Respawn-only hourly figures exclude walking, fighting, recovery, mana and crafting and are not a playable earnings forecast. City uses the existing walking/trading/mana/bag route model, only the twelve new city points. All values are expectations; every award is an integer.",
+  "locations": [
+    {
+      "id": "fw_",
+      "onePass": {
+        "expected": 74,
+        "p10": 41,
+        "median": 78,
+        "p90": 94,
+        "min": 0,
+        "max": 132
+      },
+      "respawnOnlyHourlyCeiling": 165.1
+    },
+    {
+      "id": "gy_",
+      "onePass": {
+        "expected": 74,
+        "p10": 41,
+        "median": 78,
+        "p90": 94,
+        "min": 0,
+        "max": 132
+      },
+      "respawnOnlyHourlyCeiling": 172.3
+    }
+  ],
+  "city": [
+    {
+      "stage": "Город, лавка открыта",
+      "points": 7,
+      "expectedPerHour": 38.5,
+      "stockValue": 563
+    },
+    {
+      "stage": "После отчёта о грузе",
+      "points": 10,
+      "expectedPerHour": 46.4,
+      "stockValue": 780
+    },
+    {
+      "stage": "После встречи с Нэрис",
+      "points": 11,
+      "expectedPerHour": 47.5,
+      "stockValue": 820
+    },
+    {
+      "stage": "Квартал освобождён",
+      "points": 12,
+      "expectedPerHour": 48.6,
+      "stockValue": 878
+    }
+  ],
+  "prices": {
+    "bagExpansion": 300,
+    "stormUnlock": 1800,
+    "giftIV": 6000,
+    "giftV": 15000,
+    "onePremiumAmulet": 25200,
+    "stormIthroughV": 25400
+  },
+  "cityHoursAtLastStage": {
+    "bagExpansion": 6.2,
+    "stormUnlock": 37,
+    "giftIV": 123.5,
+    "giftV": 308.6,
+    "onePremiumAmulet": 518.5,
+    "stormIthroughV": 522.6
+  }
+}

@@ -1,3 +1,4 @@
+import { services } from '../services.js';
 import Phaser from 'phaser';
 import { MSG } from '../state/EventBus.js';
 
@@ -22,9 +23,9 @@ export class InputController {
     on('E', () => this.primary());
     on('SPACE', () => this.primary());
     on('ENTER', () => this.primary());
-    on('ONE', () => this.ability('telekinesis'));
-    on('TWO', () => this.ability('fire'));
-    on('THREE', () => this.ability('seal'));
+    on('ONE', () => this.ability(services.state.equippedGifts()[0]));
+    on('TWO', () => this.ability(services.state.equippedGifts()[1]));
+    on('THREE', () => this.ability(services.state.equippedGifts()[2]));
     on('Q', () => bus.emit(MSG.COMBAT_CYCLE));
     on('TAB', (e) => { e.preventDefault?.(); bus.emit(MSG.COMBAT_CYCLE); });
     on('B', () => !this.handlers.isModal?.() && bus.emit(MSG.OPEN_BAG));
@@ -40,6 +41,7 @@ export class InputController {
   }
 
   ability(id) {
+    if (!id) return;
     if (this.handlers.isModal?.()) return;
     this.bus.emit(MSG.ABILITY_USE, id);
   }

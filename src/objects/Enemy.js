@@ -1,9 +1,12 @@
+import { ENEMY_TACTICS } from '../config/enemyTactics.js';
 // Enemy — модель противника в бою (без рендеринга). Враг действует сам:
 // обычная атака по таймеру, сильная атака с подготовкой (cast warning), которую можно прервать.
 // Все числа — из ENEMIES (config/balance.enemies.js).
 
 export class Enemy {
-  constructor(id, def) {
+  constructor(id, def, modern = false) {
+    this.modern = modern; this.shield = 0; this.burnStacks = []; this.antiheal = 0;
+    this.tactic = modern && ENEMY_TACTICS[id] ? { ...ENEMY_TACTICS[id], left: 8, used: 0, channel: null } : null;
     this.id = id;
     this.baseDef = def;
     this.def = def;           // v0.10.0: действующие параметры (у врага с фазами — параметры текущей фазы)
@@ -59,8 +62,8 @@ export class Enemy {
   drainPhaseEvents() { const q = this.phaseEvents; this.phaseEvents = []; return q; }
 
   get alive() { return this.hp > 0; }
-  get isPreparing() { return this.prepLeft > 0; }
-  get prepProgress() { return this.def.strongAttack ? 1 - this.prepLeft / this.def.strongAttack.prepSec : 0; }
+  get isPreparing() { return this.prepLeft > 0 || !!this.tactic?.channel; }
+  get prepProgress() { if (this.tactic?.channel) return 1-this.tactic.channel.left/this.tactic.prep; return this.def.strongAttack ? 1 - this.prepLeft / this.def.strongAttack.prepSec : 0; }
   get hasArmor() { return !!this.def.armor; }
   get armorActive() { return this.hasArmor && this.armorDisabledLeft <= 0; }
   get defenseActive() { return (this.def.defense || 0) > 0 && this.defenseDisabledLeft <= 0; }
@@ -82,9 +85,10 @@ export class Enemy {
     return m;
   }
 
-  takeDamage(base, school, heroMult = 1) {
+  takeDamage(base, school, heroMult = 1, { shieldPierce = 0 } = {}) {
     if (!this.alive) return 0;
-    const dmg = Math.max(1, Math.round(base * heroMult * this.incomingMultiplier(school)));
+    let dmg = Math.max(1, Math.round(base * heroMult * this.incomingMultiplier(school)));
+    if (this.modern && this.shield > 0) { const absorbed = Math.min(this.shield, dmg - Math.round(dmg*shieldPierce)); this.shield -= absorbed; dmg -= absorbed; }
     this.hp = Math.max(0, this.hp - dmg);
     this.checkPhase();
     return dmg;
@@ -92,10 +96,22 @@ export class Enemy {
 
   outgoingDamage(base) {
     const m = this.weakened.left > 0 ? 1 - this.weakened.reduction : 1;
+    if (this.modern && this.weakened.once) this.weakened = { left: 0, reduction: 0 };
     return Math.round(base * m);
   }
 
-  applyBurn(dps, durationSec) {
+  detonateBurn() {
+    const amount = this.burnStacks.length ? this.burnStacks.reduce((n,b) => n+b.left*b.dps,0) : this.burn.left*this.burn.dps;
+    this.burnStacks = []; this.burn = { left: 0, dps: 0, tick: 0 }; return amount;
+  }
+  heal(amount) { const gain = Math.min(this.maxHp-this.hp, amount*(this.burning ? 1-Math.max(this.antiheal,this.fullBurnAntiheal && this.burnStacks.length>=this.fullBurnAntiheal.count ? this.fullBurnAntiheal.reduction : 0) : 1)); this.hp += gain; return gain; }
+  applyBurn(dps, durationSec, maxStacks = 1, antiheal = 0) {
+    if (this.modern && maxStacks > 1) {
+      if (this.burnStacks.length >= maxStacks) this.burnStacks.shift();
+      this.burnStacks.push({ left: durationSec, dps, tick: 1 });
+      this.burn = { left: durationSec, dps: 0, tick: Infinity }; this.antiheal = antiheal; return;
+    }
+    this.antiheal = antiheal;
     // повторный Огонь не складывает горение, а обновляет длительность
     const wasBurning = this.burning;
     this.burn.left = durationSec;
@@ -163,6 +179,11 @@ export class Enemy {
 
   /** Попытка прервать сильную атаку. tags — набор тегов действия игрока. */
   tryInterrupt(tags) {
+    if (this.tactic?.channel) {
+      const ok = tags.some(t => this.tactic.interruptBy.includes(t));
+      if (ok) { this.tactic.channel = null; this.tactic.left = this.tactic.cooldown; this.staggerLeft = this.def.staggerSec || 1; }
+      return { attempted: true, ok };
+    }
     if (!this.isPreparing) return { attempted: false };
     const allowed = this.def.strongAttack.interruptBy || [];
     const ok = tags.some(t => allowed.includes(t));
@@ -175,7 +196,7 @@ export class Enemy {
   }
 
   bind(sec) { this.staggerLeft = Math.max(this.staggerLeft, sec); }
-  weaken(reduction, sec) { this.weakened = { left: sec, reduction }; }
+  weaken(reduction, sec, once = false) { this.weakened = { left: sec, reduction, once }; }
 
   /**
    * Шаг ИИ. Возвращает массив действий:
@@ -186,13 +207,18 @@ export class Enemy {
     const out = [];
     if (!this.alive) return out;
 
+    if (this.modern) for (const b of this.burnStacks) {
+      const span = Math.min(dt, b.left); b.left -= span; b.tick -= span;
+      while (b.tick <= 1e-9 && this.alive) { b.tick += 1; out.push({ type: 'burnTick', damage: this.takeDamage(b.dps, 'fire', heroMult, { burnTick: true }) }); }
+    }
+    this.burnStacks = this.burnStacks.filter(b => b.left > 1e-9);
     // статусы
     if (this.burn.left > 0) {
       this.burn.left -= dt;
       this.burn.tick -= dt;
       while (this.burn.tick <= 0 && this.alive) {
         this.burn.tick += 1;
-        out.push({ type: 'burnTick', damage: this.takeDamage(this.burn.dps, 'fire', heroMult) });
+        out.push({ type: 'burnTick', damage: this.takeDamage(this.burn.dps, 'fire', heroMult, { burnTick: true }) });
       }
       if (this.burn.left <= 0) this.burn.left = 0;
     }
@@ -222,6 +248,19 @@ export class Enemy {
     if (this.staggerLeft > 0) { this.staggerLeft -= dt; return out; }
     dt = tdt;
 
+    const t = this.tactic;
+    if (t && !this.prepLeft) {
+      if (t.channel) {
+        t.channel.left -= dt;
+        if (t.channel.left <= 0) { if (t.kind === 'heal') this.heal(t.amount); else this.shield = Math.max(this.shield,t.amount); t.channel = null; t.left = t.cooldown; out.push({ type: 'recovery', kind: t.kind, amount: t.amount }); }
+        return out;
+      }
+      t.left -= dt;
+      if (t.used < t.uses && t.left <= 0 && (t.minPhase == null || this.phase >= t.minPhase) && this.hp < this.maxHp*t.below) {
+        t.used++; t.channel = { left: t.prep };
+        out.push({ type: 'strongStart', name: t.kind === 'heal' ? 'Восстановление' : 'Магический щит', prepSec: t.prep, hint: t.interruptBy.includes('telekinesis_heavy') ? 'Прервите тяжёлым броском!' : 'Прервите Телекинезом!', interruptBy: t.interruptBy }); return out;
+      }
+    }
     const strong = this.def.strongAttack;
     if (this.isPreparing) {
       this.prepLeft -= dt;

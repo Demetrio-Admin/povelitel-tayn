@@ -5,7 +5,7 @@ import { UPGRADES } from '../config/balance.progression.js';
 import { MSG } from '../state/EventBus.js';
 import { statsFor } from './abilityStats.js';
 
-export const ABILITY_ORDER = ['telekinesis', 'fire', 'seal', 'ice'];   // v0.18.0: + Лёд
+export const ABILITY_ORDER = ['telekinesis', 'fire', 'seal', 'ice', 'storm'];   // v0.18.0: + Лёд
 
 export class AbilitySystem {
   constructor(state, quests, bus) {
@@ -22,7 +22,7 @@ export class AbilitySystem {
 
   /** Параметры дара на текущей ступени с учётом выбранной ветки (или null). */
   stats(id) {
-    return statsFor(id, this.level(id), this.state.branchOf(id));
+    return statsFor(id, this.level(id), this.state.branchOf(id), this.state.data.combatCtx?.balanceVersion);
   }
 
   label(id) {

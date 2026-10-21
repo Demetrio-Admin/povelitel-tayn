@@ -421,14 +421,14 @@ export class UIScene extends Phaser.Scene {
       const st = prov ? prov(id) : { state: 'locked' };
       const locked = st.state === 'locked';
       b.lock.setVisible(locked);
-      b.icon.setAlpha(locked || st.state === 'benched' ? 0.3 : st.state === 'nomana' ? 0.45 : 1);   // дар вне боевого слота остаётся приглушённым
+      b.icon.setAlpha(locked || st.state === 'benched' ? 0.3 : st.state === 'nomana' ? 0.45 : st.state === 'casting' ? 0.55 : 1);
       setCraftMedallion(b.orb, locked);
       b.text.setText(locked ? ABILITIES[id].name : services.abilities.label(id));
       b.cd.clear();
       if (st.state === 'cooldown') {
         b.cd.fillStyle(0x000000, 0.6).slice(b.x, b.y, BTN_R - 3, Phaser.Math.DegToRad(-90), Phaser.Math.DegToRad(-90 + 360 * st.cdFrac), false).fillPath();
         b.cdText.setText(st.cdLeft.toFixed(st.cdLeft < 1 ? 1 : 0));
-      } else b.cdText.setText('');
+      } else b.cdText.setText(st.state === 'casting' ? '…' : '');
       if (st.suggested) b.glow.setAlpha(0.45 + Math.sin(time / 140) * 0.25);
       else if (!b.glow.isTweening) b.glow.setAlpha(Math.max(0, b.glow.alpha - 0.05));
     }

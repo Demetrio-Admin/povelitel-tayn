@@ -1,3 +1,4 @@
+import { addAdvancedAbilities } from './advancedAbilities.js';
 // Магические дары. Источник: Combat Math v0.1 §2–§5, Progression & Economy v0.1, Concept v0.1 §10.
 // levels[N] — параметры дара на ступени N. Логика читает только эти числа.
 
@@ -198,6 +199,8 @@ export const ABILITIES = {
   },
 };
 
+addAdvancedAbilities(ABILITIES);
+
 // v0.9 — цена магии в мире (мана за одно выполненное действие). Неуспешное действие бесплатно.
 export const WORLD_MANA_COST = {
   gather: 4,                                   // сбор узла: трава, грибы, смола, пыль, осколок
@@ -218,6 +221,6 @@ export const EXPLORATION_MAGIC = {
 
 // Магический опыт школы за использование дара (Progression & Economy: «Магический опыт школы»).
 export const SCHOOL_XP_PER_USE = {
-  exploration: { telekinesis: 6, fire: 6, seal: 6, ice: 6 },
-  combat: { telekinesis: 5, fire: 5, seal: 5, ice: 5 },
+  exploration: { telekinesis: 6, fire: 6, seal: 6, ice: 6, storm: 6 },
+  combat: { telekinesis: 5, fire: 5, seal: 5, ice: 5, storm: 5 },
 };

@@ -15,6 +15,7 @@ import { ARCHIVE_FILES, ARCHIVE_SIZES } from './city.archive.art.js';
 import { NEIGHBORHOOD_FILES, NEIGHBORHOOD_SIZES } from './city.neighborhoods.art.js';
 
 export const ASSET_FILES = {
+  icon_storm: 'assets/ui/storm.svg',
   welcome_cover: 'assets/ui/welcome-cover-v1.webp',
   welcome_settings: 'assets/ui/welcome-settings.svg',
   // Одобренный рисованный UI: тонкие медальоны без общей нижней рамки и меню.

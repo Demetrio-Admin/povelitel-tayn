@@ -1,0 +1,346 @@
+{
+  "sourceCommit": "966c2e476e6d83a7f06c4b4eede45a2f983d0002",
+  "description": "Actual v39 engine fingerprints before Storm Heart; normal bot and both Storm defender branches.",
+  "cases": [
+    {
+      "ctx": {
+        "balanceVersion": 39,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "fire": "arsonist",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "spawn": "gy_warden",
+        "enemy": "barrow_warden"
+      },
+      "result": {
+        "outcome": "victory",
+        "time": 38.01666666666579,
+        "hp": 92,
+        "mana": 11.39666666666568,
+        "enemyHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 20,
+            "fire": 5,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 163,
+          "autoDamage": 138
+        }
+      }
+    },
+    {
+      "ctx": {
+        "balanceVersion": 39,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "fire": "arsonist",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "fire": "arsonist",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "result": {
+        "outcome": "victory",
+        "time": 2.1499999999999972,
+        "hp": 255,
+        "mana": 133.1699999999999,
+        "enemyHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 2,
+          "damageTaken": 0,
+          "autoDamage": 12
+        }
+      }
+    },
+    {
+      "ctx": {
+        "balanceVersion": 39,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "fire": "arsonist",
+            "storm": "discharge"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "spawn": "gy_warden",
+        "enemy": "barrow_warden"
+      },
+      "result": {
+        "outcome": "victory",
+        "time": 38.01666666666579,
+        "hp": 92,
+        "mana": 11.39666666666568,
+        "enemyHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 20,
+            "fire": 5,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 163,
+          "autoDamage": 138
+        }
+      }
+    },
+    {
+      "ctx": {
+        "balanceVersion": 39,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "fire": "arsonist",
+            "storm": "discharge"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "fire": "arsonist",
+                "storm": "discharge"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "result": {
+        "outcome": "victory",
+        "time": 2.1499999999999972,
+        "hp": 255,
+        "mana": 133.1699999999999,
+        "enemyHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 2,
+          "damageTaken": 0,
+          "autoDamage": 12
+        }
+      }
+    }
+  ]
+}

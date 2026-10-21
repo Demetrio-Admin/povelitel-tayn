@@ -1,0 +1,5597 @@
+{
+  "date": "2026-10-21",
+  "kind": "deterministic closed-stock bot comparison, not player income",
+  "balanceVersions": [
+    38,
+    39
+  ],
+  "scenariosPerVersion": 60,
+  "cyclesPerVersion": 120,
+  "v39Fights": 3292,
+  "v39Defeats": 0,
+  "newPotionInFarmLoadout": false,
+  "comparisonSecondCycles": [
+    {
+      "profile": "story",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "wait",
+      "beforeCoins": 186.688812050225,
+      "afterCoins": 186.688812050225,
+      "beforeSapphires": 115.565947459449,
+      "afterSapphires": 115.565947459449,
+      "beforeCombatSeconds": 486.1666666666667,
+      "afterCombatSeconds": 486.1666666666667
+    },
+    {
+      "profile": "story",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "economy",
+      "beforeCoins": -204.48001600554167,
+      "afterCoins": -204.48001600554167,
+      "beforeSapphires": 123.22259788046377,
+      "afterSapphires": 123.22259788046377,
+      "beforeCombatSeconds": 669.6833333333334,
+      "afterCombatSeconds": 669.6833333333334
+    },
+    {
+      "profile": "story",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "drink",
+      "beforeCoins": -3057.6771367064416,
+      "afterCoins": -3057.6771367064416,
+      "beforeSapphires": 176.8451495045397,
+      "afterSapphires": 176.8451495045397,
+      "beforeCombatSeconds": 1104.0333333333328,
+      "afterCombatSeconds": 1104.0333333333328
+    },
+    {
+      "profile": "story",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "wait",
+      "beforeCoins": 222.21541434336484,
+      "afterCoins": 222.21541434336484,
+      "beforeSapphires": 115.565947459449,
+      "afterSapphires": 115.565947459449,
+      "beforeCombatSeconds": 486.1666666666667,
+      "afterCombatSeconds": 486.1666666666667
+    },
+    {
+      "profile": "story",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "economy",
+      "beforeCoins": -155.55015865293365,
+      "afterCoins": -155.55015865293365,
+      "beforeSapphires": 127.48199669155994,
+      "afterSapphires": 127.48199669155994,
+      "beforeCombatSeconds": 669.6833333333334,
+      "afterCombatSeconds": 669.6833333333334
+    },
+    {
+      "profile": "story",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "drink",
+      "beforeCoins": -2696.9219656560253,
+      "afterCoins": -2696.9219656560253,
+      "beforeSapphires": 196.54319845253326,
+      "afterSapphires": 196.54319845253326,
+      "beforeCombatSeconds": 1194.1666666666665,
+      "afterCombatSeconds": 1194.1666666666665
+    },
+    {
+      "profile": "story",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "wait",
+      "beforeCoins": 195.3334547376991,
+      "afterCoins": 195.3334547376991,
+      "beforeSapphires": 114.51767680924968,
+      "afterSapphires": 114.51767680924968,
+      "beforeCombatSeconds": 486.1666666666667,
+      "afterCombatSeconds": 486.1666666666667
+    },
+    {
+      "profile": "story",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "economy",
+      "beforeCoins": -191.43698553602528,
+      "afterCoins": -191.43698553602528,
+      "beforeSapphires": 122.12359422125759,
+      "afterSapphires": 122.12359422125759,
+      "beforeCombatSeconds": 669.6833333333334,
+      "afterCombatSeconds": 669.6833333333334
+    },
+    {
+      "profile": "story",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "drink",
+      "beforeCoins": -3006.3269073928395,
+      "afterCoins": -3006.3269073928395,
+      "beforeSapphires": 174.9601181023515,
+      "afterSapphires": 174.9601181023515,
+      "beforeCombatSeconds": 1104.0333333333328,
+      "afterCombatSeconds": 1104.0333333333328
+    },
+    {
+      "profile": "story",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "wait",
+      "beforeCoins": 230.41094132791972,
+      "afterCoins": 230.41094132791972,
+      "beforeSapphires": 114.51767680924968,
+      "afterSapphires": 114.51767680924968,
+      "beforeCombatSeconds": 486.1666666666667,
+      "afterCombatSeconds": 486.1666666666667
+    },
+    {
+      "profile": "story",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "economy",
+      "beforeCoins": -142.67586857398686,
+      "afterCoins": -142.67586857398686,
+      "beforeSapphires": 126.29203677601717,
+      "afterSapphires": 126.29203677601717,
+      "beforeCombatSeconds": 669.6833333333334,
+      "afterCombatSeconds": 669.6833333333334
+    },
+    {
+      "profile": "story",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "drink",
+      "beforeCoins": -2650.6003832522847,
+      "afterCoins": -2650.6003832522847,
+      "beforeSapphires": 194.41503877159633,
+      "afterSapphires": 194.41503877159633,
+      "beforeCombatSeconds": 1194.1666666666665,
+      "afterCombatSeconds": 1194.1666666666665
+    },
+    {
+      "profile": "prepared",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "wait",
+      "beforeCoins": 337.4648058138844,
+      "afterCoins": 337.4648058138844,
+      "beforeSapphires": 116.1523055695507,
+      "afterSapphires": 116.1523055695507,
+      "beforeCombatSeconds": 452.3333333333333,
+      "afterCombatSeconds": 452.3333333333333
+    },
+    {
+      "profile": "prepared",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "economy",
+      "beforeCoins": 554.6226998273993,
+      "afterCoins": 554.6226998273993,
+      "beforeSapphires": 167.0284043310538,
+      "afterSapphires": 167.0284043310538,
+      "beforeCombatSeconds": 996.683333333333,
+      "afterCombatSeconds": 996.683333333333
+    },
+    {
+      "profile": "prepared",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "drink",
+      "beforeCoins": -3185.879585572689,
+      "afterCoins": -3185.879585572689,
+      "beforeSapphires": 182.11315364789098,
+      "afterSapphires": 182.11315364789098,
+      "beforeCombatSeconds": 1092.333333333333,
+      "afterCombatSeconds": 1092.333333333333
+    },
+    {
+      "profile": "prepared",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "wait",
+      "beforeCoins": 349.36709149611687,
+      "afterCoins": 349.36709149611687,
+      "beforeSapphires": 116.1523055695507,
+      "afterSapphires": 116.1523055695507,
+      "beforeCombatSeconds": 452.3333333333333,
+      "afterCombatSeconds": 452.3333333333333
+    },
+    {
+      "profile": "prepared",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "economy",
+      "beforeCoins": 567.9996970604898,
+      "afterCoins": 567.9996970604898,
+      "beforeSapphires": 160.57049532476415,
+      "afterSapphires": 160.57049532476415,
+      "beforeCombatSeconds": 940.183333333333,
+      "afterCombatSeconds": 940.183333333333
+    },
+    {
+      "profile": "prepared",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "drink",
+      "beforeCoins": -3140.213132096301,
+      "afterCoins": -3140.213132096301,
+      "beforeSapphires": 208.5125097098203,
+      "afterSapphires": 208.5125097098203,
+      "beforeCombatSeconds": 1254.6666666666667,
+      "afterCombatSeconds": 1254.6666666666667
+    },
+    {
+      "profile": "prepared",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "wait",
+      "beforeCoins": 344.237143439889,
+      "afterCoins": 344.237143439889,
+      "beforeSapphires": 115.09133410189062,
+      "afterSapphires": 115.09133410189062,
+      "beforeCombatSeconds": 452.3333333333333,
+      "afterCombatSeconds": 452.3333333333333
+    },
+    {
+      "profile": "prepared",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "economy",
+      "beforeCoins": 558.7081772092572,
+      "afterCoins": 558.7081772092572,
+      "beforeSapphires": 165.29036628016968,
+      "afterSapphires": 165.29036628016968,
+      "beforeCombatSeconds": 996.683333333333,
+      "afterCombatSeconds": 996.683333333333
+    },
+    {
+      "profile": "prepared",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "drink",
+      "beforeCoins": -3131.9027189167523,
+      "afterCoins": -3131.9027189167523,
+      "beforeSapphires": 180.1242247957673,
+      "afterSapphires": 180.1242247957673,
+      "beforeCombatSeconds": 1092.333333333333,
+      "afterCombatSeconds": 1092.333333333333
+    },
+    {
+      "profile": "prepared",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "wait",
+      "beforeCoins": 355.9882105854274,
+      "afterCoins": 355.9882105854274,
+      "beforeSapphires": 115.09133410189062,
+      "afterSapphires": 115.09133410189062,
+      "beforeCombatSeconds": 452.3333333333333,
+      "afterCombatSeconds": 452.3333333333333
+    },
+    {
+      "profile": "prepared",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "economy",
+      "beforeCoins": 571.853746710311,
+      "afterCoins": 571.853746710311,
+      "beforeSapphires": 158.94068378263577,
+      "afterSapphires": 158.94068378263577,
+      "beforeCombatSeconds": 940.183333333333,
+      "afterCombatSeconds": 940.183333333333
+    },
+    {
+      "profile": "prepared",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "drink",
+      "beforeCoins": -3086.6244899263666,
+      "afterCoins": -3086.6244899263666,
+      "beforeSapphires": 206.1626720073289,
+      "afterSapphires": 206.1626720073289,
+      "beforeCombatSeconds": 1254.6666666666667,
+      "afterCombatSeconds": 1254.6666666666667
+    },
+    {
+      "profile": "developed",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "wait",
+      "beforeCoins": 274.6983080836732,
+      "afterCoins": 274.6983080836732,
+      "beforeSapphires": 116.32286379345673,
+      "afterSapphires": 116.32286379345673,
+      "beforeCombatSeconds": 345.05000000000007,
+      "afterCombatSeconds": 345.05000000000007
+    },
+    {
+      "profile": "developed",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "economy",
+      "beforeCoins": 175.28140936122324,
+      "afterCoins": 175.28140936122324,
+      "beforeSapphires": 125.6734633155941,
+      "afterSapphires": 125.6734633155941,
+      "beforeCombatSeconds": 455.83333333333337,
+      "afterCombatSeconds": 455.83333333333337
+    },
+    {
+      "profile": "developed",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "drink",
+      "beforeCoins": -3368.261714460104,
+      "afterCoins": -3368.261714460104,
+      "beforeSapphires": 205.21379229111096,
+      "afterSapphires": 205.21379229111096,
+      "beforeCombatSeconds": 833.133333333333,
+      "afterCombatSeconds": 833.133333333333
+    },
+    {
+      "profile": "developed",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "wait",
+      "beforeCoins": 297.75940061415446,
+      "afterCoins": 297.75940061415446,
+      "beforeSapphires": 116.32286379345673,
+      "afterSapphires": 116.32286379345673,
+      "beforeCombatSeconds": 345.05000000000007,
+      "afterCombatSeconds": 345.05000000000007
+    },
+    {
+      "profile": "developed",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "economy",
+      "beforeCoins": 144.4058020316814,
+      "afterCoins": 144.4058020316814,
+      "beforeSapphires": 126.20108954806668,
+      "afterSapphires": 126.20108954806668,
+      "beforeCombatSeconds": 405,
+      "afterCombatSeconds": 405
+    },
+    {
+      "profile": "developed",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "drink",
+      "beforeCoins": -2848.3080673691898,
+      "afterCoins": -2848.3080673691898,
+      "beforeSapphires": 219.14578431240412,
+      "afterSapphires": 219.14578431240412,
+      "beforeCombatSeconds": 889.9999999999995,
+      "afterCombatSeconds": 889.9999999999995
+    },
+    {
+      "profile": "developed",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "wait",
+      "beforeCoins": 282.03458100265874,
+      "afterCoins": 282.03458100265874,
+      "beforeSapphires": 115.29252111771399,
+      "afterSapphires": 115.29252111771399,
+      "beforeCombatSeconds": 345.05000000000007,
+      "afterCombatSeconds": 345.05000000000007
+    },
+    {
+      "profile": "developed",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "economy",
+      "beforeCoins": 183.63197336674878,
+      "afterCoins": 183.63197336674878,
+      "beforeSapphires": 124.55606449716136,
+      "afterSapphires": 124.55606449716136,
+      "beforeCombatSeconds": 455.83333333333337,
+      "afterCombatSeconds": 455.83333333333337
+    },
+    {
+      "profile": "developed",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "drink",
+      "beforeCoins": -3312.51024231436,
+      "afterCoins": -3312.51024231436,
+      "beforeSapphires": 202.94402780737815,
+      "afterSapphires": 202.94402780737815,
+      "beforeCombatSeconds": 833.133333333333,
+      "afterCombatSeconds": 833.133333333333
+    },
+    {
+      "profile": "developed",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "wait",
+      "beforeCoins": 304.8117205610682,
+      "afterCoins": 304.8117205610682,
+      "beforeSapphires": 115.29252111771399,
+      "afterSapphires": 115.29252111771399,
+      "beforeCombatSeconds": 345.05000000000007,
+      "afterCombatSeconds": 345.05000000000007
+    },
+    {
+      "profile": "developed",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "economy",
+      "beforeCoins": 153.42604834567882,
+      "afterCoins": 153.42604834567882,
+      "beforeSapphires": 125.03884997335068,
+      "afterSapphires": 125.03884997335068,
+      "beforeCombatSeconds": 405,
+      "afterCombatSeconds": 405
+    },
+    {
+      "profile": "developed",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "drink",
+      "beforeCoins": -2798.811470452199,
+      "afterCoins": -2798.811470452199,
+      "beforeSapphires": 216.66349080447563,
+      "afterSapphires": 216.66349080447563,
+      "beforeCombatSeconds": 889.9999999999995,
+      "afterCombatSeconds": 889.9999999999995
+    },
+    {
+      "profile": "specialist",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "wait",
+      "beforeCoins": 742.4184527468781,
+      "afterCoins": 787.4837489719475,
+      "beforeSapphires": 158.79909370887256,
+      "afterSapphires": 159.09791823037702,
+      "beforeCombatSeconds": 285.68333333333334,
+      "afterCombatSeconds": 285.18333333333334
+    },
+    {
+      "profile": "specialist",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "economy",
+      "beforeCoins": 718.9542013919523,
+      "afterCoins": 762.5926269452797,
+      "beforeSapphires": 164.9862579687901,
+      "afterSapphires": 165.28719009554052,
+      "beforeCombatSeconds": 325.51666666666665,
+      "afterCombatSeconds": 325.01666666666665
+    },
+    {
+      "profile": "specialist",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "drink",
+      "beforeCoins": -1368.1589502323436,
+      "afterCoins": -1162.9760698480582,
+      "beforeSapphires": 241.5835289223287,
+      "afterSapphires": 244.18805479285888,
+      "beforeCombatSeconds": 520.3499999999998,
+      "afterCombatSeconds": 509.1833333333331
+    },
+    {
+      "profile": "specialist",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "wait",
+      "beforeCoins": 742.4184527468781,
+      "afterCoins": 787.4837489719475,
+      "beforeSapphires": 158.79909370887256,
+      "afterSapphires": 159.09791823037702,
+      "beforeCombatSeconds": 285.68333333333334,
+      "afterCombatSeconds": 285.18333333333334
+    },
+    {
+      "profile": "specialist",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "economy",
+      "beforeCoins": 663.5334959430446,
+      "afterCoins": 706.1993787928443,
+      "beforeSapphires": 162.99689637183084,
+      "afterSapphires": 162.9745690513862,
+      "beforeCombatSeconds": 307.51666666666665,
+      "afterCombatSeconds": 307.01666666666665
+    },
+    {
+      "profile": "specialist",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "drink",
+      "beforeCoins": -1101.9927512192755,
+      "afterCoins": -997.6280746050656,
+      "beforeSapphires": 245.75544030535542,
+      "afterSapphires": 240.46326841974866,
+      "beforeCombatSeconds": 510.3499999999998,
+      "afterCombatSeconds": 509.1833333333331
+    },
+    {
+      "profile": "specialist",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "wait",
+      "beforeCoins": 744.1061864561887,
+      "afterCoins": 788.5797333978661,
+      "beforeSapphires": 157.13687482774253,
+      "afterSapphires": 157.42866808817163,
+      "beforeCombatSeconds": 285.68333333333334,
+      "afterCombatSeconds": 285.18333333333334
+    },
+    {
+      "profile": "specialist",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "economy",
+      "beforeCoins": 720.8906641670492,
+      "afterCoins": 763.9739941226145,
+      "beforeSapphires": 163.2952912370686,
+      "afterSapphires": 163.5893265445783,
+      "beforeCombatSeconds": 325.51666666666665,
+      "afterCombatSeconds": 325.01666666666665
+    },
+    {
+      "profile": "specialist",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "drink",
+      "beforeCoins": -1338.977464065051,
+      "afterCoins": -1135.7476043702272,
+      "beforeSapphires": 238.8599628692315,
+      "afterSapphires": 241.3554723077974,
+      "beforeCombatSeconds": 520.3499999999998,
+      "afterCombatSeconds": 509.1833333333331
+    },
+    {
+      "profile": "specialist",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "wait",
+      "beforeCoins": 744.1061864561887,
+      "afterCoins": 788.5797333978661,
+      "beforeSapphires": 157.13687482774253,
+      "afterSapphires": 157.42866808817163,
+      "beforeCombatSeconds": 285.68333333333334,
+      "afterCombatSeconds": 285.18333333333334
+    },
+    {
+      "profile": "specialist",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "economy",
+      "beforeCoins": 666.2097546481791,
+      "afterCoins": 708.3236692453222,
+      "beforeSapphires": 161.31140099348224,
+      "afterSapphires": 161.28959022636803,
+      "beforeCombatSeconds": 307.51666666666665,
+      "afterCombatSeconds": 307.01666666666665
+    },
+    {
+      "profile": "specialist",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "drink",
+      "beforeCoins": -1075.6259784705123,
+      "afterCoins": -972.9901581586071,
+      "beforeSapphires": 242.9067456451326,
+      "afterSapphires": 237.7224479335888,
+      "beforeCombatSeconds": 510.3499999999998,
+      "afterCombatSeconds": 509.1833333333331
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "wait",
+      "beforeCoins": 737.8930609192033,
+      "afterCoins": 785.176025526711,
+      "beforeSapphires": 165.03572436065704,
+      "afterSapphires": 163.99064569676628,
+      "beforeCombatSeconds": 347.83333333333337,
+      "afterCombatSeconds": 356.33333333333337
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "economy",
+      "beforeCoins": 768.7202881667009,
+      "afterCoins": 812.923026969789,
+      "beforeSapphires": 168.76257437437505,
+      "afterSapphires": 169.07372780222568,
+      "beforeCombatSeconds": 383.83333333333337,
+      "afterCombatSeconds": 383.33333333333337
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "drink",
+      "beforeCoins": -1481.7196097700344,
+      "afterCoins": -1247.8081006077489,
+      "beforeSapphires": 238.83788541685678,
+      "afterSapphires": 240.74920682942377,
+      "beforeCombatSeconds": 575.6666666666666,
+      "afterCombatSeconds": 564.3333333333334
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "wait",
+      "beforeCoins": 737.8930609192033,
+      "afterCoins": 785.176025526711,
+      "beforeSapphires": 165.03572436065704,
+      "afterSapphires": 163.99064569676628,
+      "beforeCombatSeconds": 347.83333333333337,
+      "afterCombatSeconds": 356.33333333333337
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "economy",
+      "beforeCoins": 768.7202881667009,
+      "afterCoins": 812.923026969789,
+      "beforeSapphires": 168.76257437437505,
+      "afterSapphires": 169.07372780222568,
+      "beforeCombatSeconds": 383.83333333333337,
+      "afterCombatSeconds": 383.33333333333337
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "drink",
+      "beforeCoins": -1156.857880497914,
+      "afterCoins": -1046.1850200364045,
+      "beforeSapphires": 249.59097677835908,
+      "afterSapphires": 247.19921026232257,
+      "beforeCombatSeconds": 595.5000000000001,
+      "afterCombatSeconds": 594.3333333333334
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "wait",
+      "beforeCoins": 739.6571661089694,
+      "afterCoins": 786.2860541734215,
+      "beforeSapphires": 163.27461514107995,
+      "afterSapphires": 162.28208120789,
+      "beforeCombatSeconds": 347.83333333333337,
+      "afterCombatSeconds": 356.33333333333337
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "economy",
+      "beforeCoins": 770.0347544474866,
+      "afterCoins": 813.6680318067097,
+      "beforeSapphires": 167.00480030307284,
+      "afterSapphires": 167.30872937755638,
+      "beforeCombatSeconds": 383.83333333333337,
+      "afterCombatSeconds": 383.33333333333337
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "drink",
+      "beforeCoins": -1450.8950035082546,
+      "afterCoins": -1219.3625756136687,
+      "beforeSapphires": 236.13583546040977,
+      "afterSapphires": 237.954697949294,
+      "beforeCombatSeconds": 575.6666666666666,
+      "afterCombatSeconds": 564.3333333333334
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "wait",
+      "beforeCoins": 739.6571661089694,
+      "afterCoins": 786.2860541734215,
+      "beforeSapphires": 163.27461514107995,
+      "afterSapphires": 162.28208120789,
+      "beforeCombatSeconds": 347.83333333333337,
+      "afterCombatSeconds": 356.33333333333337
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "economy",
+      "beforeCoins": 770.0347544474866,
+      "afterCoins": 813.6680318067097,
+      "beforeSapphires": 167.00480030307284,
+      "afterSapphires": 167.30872937755638,
+      "beforeCombatSeconds": 383.83333333333337,
+      "afterCombatSeconds": 383.33333333333337
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "drink",
+      "beforeCoins": -1129.6305078518774,
+      "afterCoins": -1020.4157446397662,
+      "beforeSapphires": 246.67739938602438,
+      "afterSapphires": 244.3145940571196,
+      "beforeCombatSeconds": 595.5000000000001,
+      "afterCombatSeconds": 594.3333333333334
+    }
+  ],
+  "v39Results": [
+    {
+      "profile": "story",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5234.244219726563,
+          "netCoins": 460,
+          "coinsPerHour": 316.37805392399315,
+          "sapphiresPerHour": 114.51509995292363,
+          "time": {
+            "walk": 555.0128936807276,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4022.064660335625,
+            "trade": 36,
+            "combat": 486.1666666666667,
+            "craft": 14
+          },
+          "expectedSapphires": 166.50000000000003,
+          "gathers": 91,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 7,
+          "sales": 669,
+          "purchases": 342,
+          "fees": 115,
+          "combatCoins": 248,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20460
+        },
+        {
+          "cycle": 2,
+          "seconds": 5167.958322753906,
+          "netCoins": 268,
+          "coinsPerHour": 186.688812050225,
+          "sapphiresPerHour": 115.565947459449,
+          "time": {
+            "walk": 545.555209444227,
+            "transition": 30,
+            "gather": 88,
+            "wait": 3968.2364476891403,
+            "trade": 36,
+            "combat": 486.1666666666667,
+            "craft": 14
+          },
+          "expectedSapphires": 165.90000000000003,
+          "gathers": 88,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 7,
+          "sales": 603,
+          "purchases": 342,
+          "fees": 115,
+          "combatCoins": 122,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 20728
+        }
+      ]
+    },
+    {
+      "profile": "story",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5453.609418945312,
+          "netCoins": -45,
+          "coinsPerHour": -29.70509758862225,
+          "sapphiresPerHour": 122.1209567532249,
+          "time": {
+            "walk": 637.1059693831412,
+            "transition": 35,
+            "gather": 96,
+            "wait": 3949.820118035039,
+            "trade": 36,
+            "combat": 669.6833333333334,
+            "craft": 30
+          },
+          "expectedSapphires": 185.0000000000001,
+          "gathers": 96,
+          "fights": 16,
+          "defeats": 0,
+          "crafts": 15,
+          "sales": 623,
+          "purchases": 691,
+          "fees": 265,
+          "combatCoins": 288,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 19955
+        },
+        {
+          "cycle": 2,
+          "seconds": 5387.323521972657,
+          "netCoins": -306,
+          "coinsPerHour": -204.48001600554167,
+          "sapphiresPerHour": 123.22259788046377,
+          "time": {
+            "walk": 627.6482851466405,
+            "transition": 35,
+            "gather": 93,
+            "wait": 3895.991905388554,
+            "trade": 36,
+            "combat": 669.6833333333334,
+            "craft": 30
+          },
+          "expectedSapphires": 184.40000000000012,
+          "gathers": 93,
+          "fights": 16,
+          "defeats": 0,
+          "crafts": 15,
+          "sales": 589,
+          "purchases": 792,
+          "fees": 265,
+          "combatCoins": 162,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 19649
+        }
+      ]
+    },
+    {
+      "profile": "story",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5061.8427583007815,
+          "netCoins": -3982,
+          "coinsPerHour": -2832.012111891877,
+          "sapphiresPerHour": 174.95604709327043,
+          "time": {
+            "walk": 1125.520584909029,
+            "transition": 100,
+            "gather": 114,
+            "wait": 2373.288840039062,
+            "trade": 123,
+            "combat": 1104.0333333333328,
+            "craft": 122
+          },
+          "expectedSapphires": 246.0000000000004,
+          "gathers": 114,
+          "fights": 32,
+          "defeats": 0,
+          "crafts": 61,
+          "sales": 688,
+          "purchases": 4041,
+          "fees": 1045,
+          "combatCoins": 416,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 16018
+        },
+        {
+          "cycle": 2,
+          "seconds": 4995.556861328125,
+          "netCoins": -4243,
+          "coinsPerHour": -3057.6771367064416,
+          "sapphiresPerHour": 176.8451495045397,
+          "time": {
+            "walk": 1116.0629006725283,
+            "transition": 100,
+            "gather": 111,
+            "wait": 2319.460627392578,
+            "trade": 123,
+            "combat": 1104.0333333333328,
+            "craft": 122
+          },
+          "expectedSapphires": 245.4000000000004,
+          "gathers": 111,
+          "fights": 32,
+          "defeats": 0,
+          "crafts": 61,
+          "sales": 654,
+          "purchases": 4142,
+          "fees": 1045,
+          "combatCoins": 290,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 11775
+        }
+      ]
+    },
+    {
+      "profile": "story",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5234.244219726563,
+          "netCoins": 511,
+          "coinsPerHour": 351.4547512068707,
+          "sapphiresPerHour": 114.51509995292363,
+          "time": {
+            "walk": 555.0128936807276,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4022.064660335625,
+            "trade": 36,
+            "combat": 486.1666666666667,
+            "craft": 14
+          },
+          "expectedSapphires": 166.50000000000003,
+          "gathers": 91,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 7,
+          "sales": 648,
+          "purchases": 240,
+          "fees": 145,
+          "combatCoins": 248,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20511
+        },
+        {
+          "cycle": 2,
+          "seconds": 5167.958322753906,
+          "netCoins": 319,
+          "coinsPerHour": 222.21541434336484,
+          "sapphiresPerHour": 115.565947459449,
+          "time": {
+            "walk": 545.555209444227,
+            "transition": 30,
+            "gather": 88,
+            "wait": 3968.2364476891403,
+            "trade": 36,
+            "combat": 486.1666666666667,
+            "craft": 14
+          },
+          "expectedSapphires": 165.90000000000003,
+          "gathers": 88,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 7,
+          "sales": 582,
+          "purchases": 240,
+          "fees": 145,
+          "combatCoins": 122,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 20830
+        }
+      ]
+    },
+    {
+      "profile": "story",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5273.609418945312,
+          "netCoins": -14,
+          "coinsPerHour": -9.557021765574682,
+          "sapphiresPerHour": 126.28921618795124,
+          "time": {
+            "walk": 637.1059693831412,
+            "transition": 35,
+            "gather": 96,
+            "wait": 3769.820118034722,
+            "trade": 36,
+            "combat": 669.6833333333334,
+            "craft": 30
+          },
+          "expectedSapphires": 185.0000000000001,
+          "gathers": 96,
+          "fights": 16,
+          "defeats": 0,
+          "crafts": 15,
+          "sales": 625,
+          "purchases": 552,
+          "fees": 375,
+          "combatCoins": 288,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 19986
+        },
+        {
+          "cycle": 2,
+          "seconds": 5207.323521972657,
+          "netCoins": -225,
+          "coinsPerHour": -155.55015865293365,
+          "sapphiresPerHour": 127.48199669155994,
+          "time": {
+            "walk": 627.6482851466405,
+            "transition": 35,
+            "gather": 93,
+            "wait": 3715.9919053882377,
+            "trade": 36,
+            "combat": 669.6833333333334,
+            "craft": 30
+          },
+          "expectedSapphires": 184.40000000000012,
+          "gathers": 93,
+          "fights": 16,
+          "defeats": 0,
+          "crafts": 15,
+          "sales": 568,
+          "purchases": 580,
+          "fees": 375,
+          "combatCoins": 162,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 19761
+        }
+      ]
+    },
+    {
+      "profile": "story",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5096.019857666016,
+          "netCoins": -3538,
+          "coinsPerHour": -2499.3623172091548,
+          "sapphiresPerHour": 194.41054542,
+          "time": {
+            "walk": 1301.3822627339628,
+            "transition": 120,
+            "gather": 134,
+            "wait": 2107.4709277670236,
+            "trade": 111,
+            "combat": 1194.1666666666665,
+            "craft": 128
+          },
+          "expectedSapphires": 275.2000000000003,
+          "gathers": 134,
+          "fights": 36,
+          "defeats": 0,
+          "crafts": 64,
+          "sales": 750,
+          "purchases": 3226,
+          "fees": 1510,
+          "combatCoins": 448,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 16462
+        },
+        {
+          "cycle": 2,
+          "seconds": 5029.733960693359,
+          "netCoins": -3768,
+          "coinsPerHour": -2696.9219656560253,
+          "sapphiresPerHour": 196.54319845253326,
+          "time": {
+            "walk": 1291.9245784974623,
+            "transition": 120,
+            "gather": 131,
+            "wait": 2050.6427151205394,
+            "trade": 114,
+            "combat": 1194.1666666666665,
+            "craft": 128
+          },
+          "expectedSapphires": 274.6000000000003,
+          "gathers": 131,
+          "fights": 36,
+          "defeats": 0,
+          "crafts": 64,
+          "sales": 702,
+          "purchases": 3282,
+          "fees": 1510,
+          "combatCoins": 322,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 12694
+        }
+      ]
+    },
+    {
+      "profile": "story",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5234.244219726563,
+          "netCoins": 460,
+          "coinsPerHour": 316.37805392399315,
+          "sapphiresPerHour": 114.51509995292363,
+          "time": {
+            "walk": 555.0128936807276,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4022.064660335625,
+            "trade": 36,
+            "combat": 486.1666666666667,
+            "craft": 14
+          },
+          "expectedSapphires": 166.50000000000003,
+          "gathers": 91,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 7,
+          "sales": 669,
+          "purchases": 342,
+          "fees": 115,
+          "combatCoins": 248,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20460
+        },
+        {
+          "cycle": 2,
+          "seconds": 5234.126439697266,
+          "netCoins": 284,
+          "coinsPerHour": 195.3334547376991,
+          "sapphiresPerHour": 114.51767680924968,
+          "time": {
+            "walk": 554.895113623968,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4022.064660335625,
+            "trade": 36,
+            "combat": 486.1666666666667,
+            "craft": 14
+          },
+          "expectedSapphires": 166.50000000000003,
+          "gathers": 91,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 7,
+          "sales": 619,
+          "purchases": 342,
+          "fees": 115,
+          "combatCoins": 122,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 20744
+        }
+      ]
+    },
+    {
+      "profile": "story",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5453.609418945312,
+          "netCoins": -45,
+          "coinsPerHour": -29.70509758862225,
+          "sapphiresPerHour": 122.1209567532249,
+          "time": {
+            "walk": 637.1059693831412,
+            "transition": 35,
+            "gather": 96,
+            "wait": 3949.820118035039,
+            "trade": 36,
+            "combat": 669.6833333333334,
+            "craft": 30
+          },
+          "expectedSapphires": 185.0000000000001,
+          "gathers": 96,
+          "fights": 16,
+          "defeats": 0,
+          "crafts": 15,
+          "sales": 623,
+          "purchases": 691,
+          "fees": 265,
+          "combatCoins": 288,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 19955
+        },
+        {
+          "cycle": 2,
+          "seconds": 5453.491638916015,
+          "netCoins": -290,
+          "coinsPerHour": -191.43698553602528,
+          "sapphiresPerHour": 122.12359422125759,
+          "time": {
+            "walk": 636.9881893263815,
+            "transition": 35,
+            "gather": 96,
+            "wait": 3949.820118035039,
+            "trade": 36,
+            "combat": 669.6833333333334,
+            "craft": 30
+          },
+          "expectedSapphires": 185.0000000000001,
+          "gathers": 96,
+          "fights": 16,
+          "defeats": 0,
+          "crafts": 15,
+          "sales": 605,
+          "purchases": 792,
+          "fees": 265,
+          "combatCoins": 162,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 19665
+        }
+      ]
+    },
+    {
+      "profile": "story",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5061.8427583007815,
+          "netCoins": -3982,
+          "coinsPerHour": -2832.012111891877,
+          "sapphiresPerHour": 174.95604709327043,
+          "time": {
+            "walk": 1125.520584909029,
+            "transition": 100,
+            "gather": 114,
+            "wait": 2373.288840039062,
+            "trade": 123,
+            "combat": 1104.0333333333328,
+            "craft": 122
+          },
+          "expectedSapphires": 246.0000000000004,
+          "gathers": 114,
+          "fights": 32,
+          "defeats": 0,
+          "crafts": 61,
+          "sales": 688,
+          "purchases": 4041,
+          "fees": 1045,
+          "combatCoins": 416,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 16018
+        },
+        {
+          "cycle": 2,
+          "seconds": 5061.724978271484,
+          "netCoins": -4227,
+          "coinsPerHour": -3006.3269073928395,
+          "sapphiresPerHour": 174.9601181023515,
+          "time": {
+            "walk": 1125.4028048522691,
+            "transition": 100,
+            "gather": 114,
+            "wait": 2373.288840039062,
+            "trade": 123,
+            "combat": 1104.0333333333328,
+            "craft": 122
+          },
+          "expectedSapphires": 246.0000000000004,
+          "gathers": 114,
+          "fights": 32,
+          "defeats": 0,
+          "crafts": 61,
+          "sales": 670,
+          "purchases": 4142,
+          "fees": 1045,
+          "combatCoins": 290,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 11791
+        }
+      ]
+    },
+    {
+      "profile": "story",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5234.244219726563,
+          "netCoins": 511,
+          "coinsPerHour": 351.4547512068707,
+          "sapphiresPerHour": 114.51509995292363,
+          "time": {
+            "walk": 555.0128936807276,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4022.064660335625,
+            "trade": 36,
+            "combat": 486.1666666666667,
+            "craft": 14
+          },
+          "expectedSapphires": 166.50000000000003,
+          "gathers": 91,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 7,
+          "sales": 648,
+          "purchases": 240,
+          "fees": 145,
+          "combatCoins": 248,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20511
+        },
+        {
+          "cycle": 2,
+          "seconds": 5234.126439697266,
+          "netCoins": 335,
+          "coinsPerHour": 230.41094132791972,
+          "sapphiresPerHour": 114.51767680924968,
+          "time": {
+            "walk": 554.895113623968,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4022.064660335625,
+            "trade": 36,
+            "combat": 486.1666666666667,
+            "craft": 14
+          },
+          "expectedSapphires": 166.50000000000003,
+          "gathers": 91,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 7,
+          "sales": 598,
+          "purchases": 240,
+          "fees": 145,
+          "combatCoins": 122,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 20846
+        }
+      ]
+    },
+    {
+      "profile": "story",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5273.609418945312,
+          "netCoins": -14,
+          "coinsPerHour": -9.557021765574682,
+          "sapphiresPerHour": 126.28921618795124,
+          "time": {
+            "walk": 637.1059693831412,
+            "transition": 35,
+            "gather": 96,
+            "wait": 3769.820118034722,
+            "trade": 36,
+            "combat": 669.6833333333334,
+            "craft": 30
+          },
+          "expectedSapphires": 185.0000000000001,
+          "gathers": 96,
+          "fights": 16,
+          "defeats": 0,
+          "crafts": 15,
+          "sales": 625,
+          "purchases": 552,
+          "fees": 375,
+          "combatCoins": 288,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 19986
+        },
+        {
+          "cycle": 2,
+          "seconds": 5273.491638916015,
+          "netCoins": -209,
+          "coinsPerHour": -142.67586857398686,
+          "sapphiresPerHour": 126.29203677601717,
+          "time": {
+            "walk": 636.9881893263815,
+            "transition": 35,
+            "gather": 96,
+            "wait": 3769.820118034722,
+            "trade": 36,
+            "combat": 669.6833333333334,
+            "craft": 30
+          },
+          "expectedSapphires": 185.0000000000001,
+          "gathers": 96,
+          "fights": 16,
+          "defeats": 0,
+          "crafts": 15,
+          "sales": 584,
+          "purchases": 580,
+          "fees": 375,
+          "combatCoins": 162,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 19777
+        }
+      ]
+    },
+    {
+      "profile": "story",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5096.019857666016,
+          "netCoins": -3538,
+          "coinsPerHour": -2499.3623172091548,
+          "sapphiresPerHour": 194.41054542,
+          "time": {
+            "walk": 1301.3822627339628,
+            "transition": 120,
+            "gather": 134,
+            "wait": 2107.4709277670236,
+            "trade": 111,
+            "combat": 1194.1666666666665,
+            "craft": 128
+          },
+          "expectedSapphires": 275.2000000000003,
+          "gathers": 134,
+          "fights": 36,
+          "defeats": 0,
+          "crafts": 64,
+          "sales": 750,
+          "purchases": 3226,
+          "fees": 1510,
+          "combatCoins": 448,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 16462
+        },
+        {
+          "cycle": 2,
+          "seconds": 5095.902077636719,
+          "netCoins": -3752,
+          "coinsPerHour": -2650.6003832522847,
+          "sapphiresPerHour": 194.41503877159633,
+          "time": {
+            "walk": 1301.2644826772032,
+            "transition": 120,
+            "gather": 134,
+            "wait": 2104.4709277670236,
+            "trade": 114,
+            "combat": 1194.1666666666665,
+            "craft": 128
+          },
+          "expectedSapphires": 275.2000000000003,
+          "gathers": 134,
+          "fights": 36,
+          "defeats": 0,
+          "crafts": 64,
+          "sales": 718,
+          "purchases": 3282,
+          "fees": 1510,
+          "combatCoins": 322,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 12710
+        }
+      ]
+    },
+    {
+      "profile": "prepared",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5208.155419677734,
+          "netCoins": 674,
+          "coinsPerHour": 465.88471435250267,
+          "sapphiresPerHour": 115.08873136452776,
+          "time": {
+            "walk": 555.0128936807276,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4033.8091933272317,
+            "trade": 36,
+            "combat": 452.3333333333333,
+            "craft": 10
+          },
+          "expectedSapphires": 166.50000000000003,
+          "gathers": 91,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 5,
+          "sales": 669,
+          "purchases": 158,
+          "fees": 85,
+          "combatCoins": 248,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20674
+        },
+        {
+          "cycle": 2,
+          "seconds": 5141.869522705078,
+          "netCoins": 482,
+          "coinsPerHour": 337.4648058138844,
+          "sapphiresPerHour": 116.1523055695507,
+          "time": {
+            "walk": 545.555209444227,
+            "transition": 30,
+            "gather": 88,
+            "wait": 3979.980980680747,
+            "trade": 36,
+            "combat": 452.3333333333333,
+            "craft": 10
+          },
+          "expectedSapphires": 165.90000000000003,
+          "gathers": 88,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 5,
+          "sales": 603,
+          "purchases": 158,
+          "fees": 85,
+          "combatCoins": 122,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 21156
+        }
+      ]
+    },
+    {
+      "profile": "prepared",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5116.205420410156,
+          "netCoins": 970,
+          "coinsPerHour": 682.5370979181781,
+          "sapphiresPerHour": 165.2865611350312,
+          "time": {
+            "walk": 827.312192100731,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3077.2098951694543,
+            "trade": 36,
+            "combat": 996.683333333333,
+            "craft": 18
+          },
+          "expectedSapphires": 234.90000000000035,
+          "gathers": 111,
+          "fights": 29,
+          "defeats": 0,
+          "crafts": 9,
+          "sales": 861,
+          "purchases": 118,
+          "fees": 165,
+          "combatCoins": 392,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20970
+        },
+        {
+          "cycle": 2,
+          "seconds": 5049.9195234375,
+          "netCoins": 778,
+          "coinsPerHour": 554.6226998273993,
+          "sapphiresPerHour": 167.0284043310538,
+          "time": {
+            "walk": 817.8545078642303,
+            "transition": 50,
+            "gather": 108,
+            "wait": 3023.38168252297,
+            "trade": 36,
+            "combat": 996.683333333333,
+            "craft": 18
+          },
+          "expectedSapphires": 234.30000000000035,
+          "gathers": 108,
+          "fights": 29,
+          "defeats": 0,
+          "crafts": 9,
+          "sales": 795,
+          "purchases": 118,
+          "fees": 165,
+          "combatCoins": 266,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 21748
+        }
+      ]
+    },
+    {
+      "profile": "prepared",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 4972.686022949219,
+          "netCoins": -4081,
+          "coinsPerHour": -2954.459608388195,
+          "sapphiresPerHour": 180.1199584824759,
+          "time": {
+            "walk": 1129.897271188514,
+            "transition": 100,
+            "gather": 114,
+            "wait": 2289.4554185709935,
+            "trade": 123,
+            "combat": 1092.333333333333,
+            "craft": 124
+          },
+          "expectedSapphires": 248.8000000000004,
+          "gathers": 114,
+          "fights": 33,
+          "defeats": 0,
+          "crafts": 62,
+          "sales": 688,
+          "purchases": 4123,
+          "fees": 1070,
+          "combatCoins": 424,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 15919
+        },
+        {
+          "cycle": 2,
+          "seconds": 4906.400125976563,
+          "netCoins": -4342,
+          "coinsPerHour": -3185.879585572689,
+          "sapphiresPerHour": 182.11315364789098,
+          "time": {
+            "walk": 1120.4395869520133,
+            "transition": 100,
+            "gather": 111,
+            "wait": 2235.6272059245093,
+            "trade": 123,
+            "combat": 1092.333333333333,
+            "craft": 124
+          },
+          "expectedSapphires": 248.20000000000041,
+          "gathers": 111,
+          "fights": 33,
+          "defeats": 0,
+          "crafts": 62,
+          "sales": 654,
+          "purchases": 4224,
+          "fees": 1070,
+          "combatCoins": 298,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 11577
+        }
+      ]
+    },
+    {
+      "profile": "prepared",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5208.155419677734,
+          "netCoins": 691,
+          "coinsPerHour": 477.6355157530851,
+          "sapphiresPerHour": 115.08873136452776,
+          "time": {
+            "walk": 555.0128936807276,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4033.8091933272317,
+            "trade": 36,
+            "combat": 452.3333333333333,
+            "craft": 10
+          },
+          "expectedSapphires": 166.50000000000003,
+          "gathers": 91,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 5,
+          "sales": 662,
+          "purchases": 124,
+          "fees": 95,
+          "combatCoins": 248,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20691
+        },
+        {
+          "cycle": 2,
+          "seconds": 5141.869522705078,
+          "netCoins": 499,
+          "coinsPerHour": 349.36709149611687,
+          "sapphiresPerHour": 116.1523055695507,
+          "time": {
+            "walk": 545.555209444227,
+            "transition": 30,
+            "gather": 88,
+            "wait": 3979.980980680747,
+            "trade": 36,
+            "combat": 452.3333333333333,
+            "craft": 10
+          },
+          "expectedSapphires": 165.90000000000003,
+          "gathers": 88,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 5,
+          "sales": 596,
+          "purchases": 124,
+          "fees": 95,
+          "combatCoins": 122,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 21190
+        }
+      ]
+    },
+    {
+      "profile": "prepared",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5193.753420410157,
+          "netCoins": 1001,
+          "coinsPerHour": 693.833478085184,
+          "sapphiresPerHour": 158.93707944548743,
+          "time": {
+            "walk": 812.7385223058719,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3229.831564749129,
+            "trade": 36,
+            "combat": 940.183333333333,
+            "craft": 14
+          },
+          "expectedSapphires": 229.30000000000032,
+          "gathers": 111,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 7,
+          "sales": 936,
+          "purchases": 156,
+          "fees": 155,
+          "combatCoins": 376,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21001
+        },
+        {
+          "cycle": 2,
+          "seconds": 5127.4675234375,
+          "netCoins": 809,
+          "coinsPerHour": 567.9996970604898,
+          "sapphiresPerHour": 160.57049532476415,
+          "time": {
+            "walk": 803.2808380693713,
+            "transition": 50,
+            "gather": 108,
+            "wait": 3176.0033521026444,
+            "trade": 36,
+            "combat": 940.183333333333,
+            "craft": 14
+          },
+          "expectedSapphires": 228.70000000000033,
+          "gathers": 108,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 7,
+          "sales": 870,
+          "purchases": 156,
+          "fees": 155,
+          "combatCoins": 250,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 21810
+        }
+      ]
+    },
+    {
+      "profile": "prepared",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 4952.323676757813,
+          "netCoins": -4032,
+          "coinsPerHour": -2930.9877438186372,
+          "sapphiresPerHour": 206.15776888565634,
+          "time": {
+            "walk": 1374.6895826936402,
+            "transition": 135,
+            "gather": 134,
+            "wait": 1793.9674269694813,
+            "trade": 120,
+            "combat": 1254.6666666666667,
+            "craft": 140
+          },
+          "expectedSapphires": 283.6000000000003,
+          "gathers": 134,
+          "fights": 39,
+          "defeats": 0,
+          "crafts": 70,
+          "sales": 744,
+          "purchases": 3598,
+          "fees": 1650,
+          "combatCoins": 472,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 15968
+        },
+        {
+          "cycle": 2,
+          "seconds": 4886.037779785156,
+          "netCoins": -4262,
+          "coinsPerHour": -3140.213132096301,
+          "sapphiresPerHour": 208.5125097098203,
+          "time": {
+            "walk": 1365.2318984571398,
+            "transition": 135,
+            "gather": 131,
+            "wait": 1737.1392143229968,
+            "trade": 123,
+            "combat": 1254.6666666666667,
+            "craft": 140
+          },
+          "expectedSapphires": 283.00000000000034,
+          "gathers": 131,
+          "fights": 39,
+          "defeats": 0,
+          "crafts": 70,
+          "sales": 696,
+          "purchases": 3654,
+          "fees": 1650,
+          "combatCoins": 346,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 11706
+        }
+      ]
+    },
+    {
+      "profile": "prepared",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5208.155419677734,
+          "netCoins": 674,
+          "coinsPerHour": 465.88471435250267,
+          "sapphiresPerHour": 115.08873136452776,
+          "time": {
+            "walk": 555.0128936807276,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4033.8091933272317,
+            "trade": 36,
+            "combat": 452.3333333333333,
+            "craft": 10
+          },
+          "expectedSapphires": 166.50000000000003,
+          "gathers": 91,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 5,
+          "sales": 669,
+          "purchases": 158,
+          "fees": 85,
+          "combatCoins": 248,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20674
+        },
+        {
+          "cycle": 2,
+          "seconds": 5208.037639648437,
+          "netCoins": 498,
+          "coinsPerHour": 344.237143439889,
+          "sapphiresPerHour": 115.09133410189062,
+          "time": {
+            "walk": 554.895113623968,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4033.8091933272317,
+            "trade": 36,
+            "combat": 452.3333333333333,
+            "craft": 10
+          },
+          "expectedSapphires": 166.50000000000003,
+          "gathers": 91,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 5,
+          "sales": 619,
+          "purchases": 158,
+          "fees": 85,
+          "combatCoins": 122,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 21172
+        }
+      ]
+    },
+    {
+      "profile": "prepared",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5116.205420410156,
+          "netCoins": 970,
+          "coinsPerHour": 682.5370979181781,
+          "sapphiresPerHour": 165.2865611350312,
+          "time": {
+            "walk": 827.312192100731,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3077.2098951694543,
+            "trade": 36,
+            "combat": 996.683333333333,
+            "craft": 18
+          },
+          "expectedSapphires": 234.90000000000035,
+          "gathers": 111,
+          "fights": 29,
+          "defeats": 0,
+          "crafts": 9,
+          "sales": 861,
+          "purchases": 118,
+          "fees": 165,
+          "combatCoins": 392,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20970
+        },
+        {
+          "cycle": 2,
+          "seconds": 5116.08764038086,
+          "netCoins": 794,
+          "coinsPerHour": 558.7081772092572,
+          "sapphiresPerHour": 165.29036628016968,
+          "time": {
+            "walk": 827.1944120439713,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3077.2098951694543,
+            "trade": 36,
+            "combat": 996.683333333333,
+            "craft": 18
+          },
+          "expectedSapphires": 234.90000000000035,
+          "gathers": 111,
+          "fights": 29,
+          "defeats": 0,
+          "crafts": 9,
+          "sales": 811,
+          "purchases": 118,
+          "fees": 165,
+          "combatCoins": 266,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 21764
+        }
+      ]
+    },
+    {
+      "profile": "prepared",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 4972.686022949219,
+          "netCoins": -4081,
+          "coinsPerHour": -2954.459608388195,
+          "sapphiresPerHour": 180.1199584824759,
+          "time": {
+            "walk": 1129.897271188514,
+            "transition": 100,
+            "gather": 114,
+            "wait": 2289.4554185709935,
+            "trade": 123,
+            "combat": 1092.333333333333,
+            "craft": 124
+          },
+          "expectedSapphires": 248.8000000000004,
+          "gathers": 114,
+          "fights": 33,
+          "defeats": 0,
+          "crafts": 62,
+          "sales": 688,
+          "purchases": 4123,
+          "fees": 1070,
+          "combatCoins": 424,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 15919
+        },
+        {
+          "cycle": 2,
+          "seconds": 4972.568242919921,
+          "netCoins": -4326,
+          "coinsPerHour": -3131.9027189167523,
+          "sapphiresPerHour": 180.1242247957673,
+          "time": {
+            "walk": 1129.7794911317542,
+            "transition": 100,
+            "gather": 114,
+            "wait": 2289.4554185709935,
+            "trade": 123,
+            "combat": 1092.333333333333,
+            "craft": 124
+          },
+          "expectedSapphires": 248.8000000000004,
+          "gathers": 114,
+          "fights": 33,
+          "defeats": 0,
+          "crafts": 62,
+          "sales": 670,
+          "purchases": 4224,
+          "fees": 1070,
+          "combatCoins": 298,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 11593
+        }
+      ]
+    },
+    {
+      "profile": "prepared",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5208.155419677734,
+          "netCoins": 691,
+          "coinsPerHour": 477.6355157530851,
+          "sapphiresPerHour": 115.08873136452776,
+          "time": {
+            "walk": 555.0128936807276,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4033.8091933272317,
+            "trade": 36,
+            "combat": 452.3333333333333,
+            "craft": 10
+          },
+          "expectedSapphires": 166.50000000000003,
+          "gathers": 91,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 5,
+          "sales": 662,
+          "purchases": 124,
+          "fees": 95,
+          "combatCoins": 248,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20691
+        },
+        {
+          "cycle": 2,
+          "seconds": 5208.037639648437,
+          "netCoins": 515,
+          "coinsPerHour": 355.9882105854274,
+          "sapphiresPerHour": 115.09133410189062,
+          "time": {
+            "walk": 554.895113623968,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4033.8091933272317,
+            "trade": 36,
+            "combat": 452.3333333333333,
+            "craft": 10
+          },
+          "expectedSapphires": 166.50000000000003,
+          "gathers": 91,
+          "fights": 11,
+          "defeats": 0,
+          "crafts": 5,
+          "sales": 612,
+          "purchases": 124,
+          "fees": 95,
+          "combatCoins": 122,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 21206
+        }
+      ]
+    },
+    {
+      "profile": "prepared",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5193.753420410157,
+          "netCoins": 1001,
+          "coinsPerHour": 693.833478085184,
+          "sapphiresPerHour": 158.93707944548743,
+          "time": {
+            "walk": 812.7385223058719,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3229.831564749129,
+            "trade": 36,
+            "combat": 940.183333333333,
+            "craft": 14
+          },
+          "expectedSapphires": 229.30000000000032,
+          "gathers": 111,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 7,
+          "sales": 936,
+          "purchases": 156,
+          "fees": 155,
+          "combatCoins": 376,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21001
+        },
+        {
+          "cycle": 2,
+          "seconds": 5193.6356403808595,
+          "netCoins": 825,
+          "coinsPerHour": 571.853746710311,
+          "sapphiresPerHour": 158.94068378263577,
+          "time": {
+            "walk": 812.6207422491123,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3229.831564749129,
+            "trade": 36,
+            "combat": 940.183333333333,
+            "craft": 14
+          },
+          "expectedSapphires": 229.30000000000032,
+          "gathers": 111,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 7,
+          "sales": 886,
+          "purchases": 156,
+          "fees": 155,
+          "combatCoins": 250,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 21826
+        }
+      ]
+    },
+    {
+      "profile": "prepared",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 4952.323676757813,
+          "netCoins": -4032,
+          "coinsPerHour": -2930.9877438186372,
+          "sapphiresPerHour": 206.15776888565634,
+          "time": {
+            "walk": 1374.6895826936402,
+            "transition": 135,
+            "gather": 134,
+            "wait": 1793.9674269694813,
+            "trade": 120,
+            "combat": 1254.6666666666667,
+            "craft": 140
+          },
+          "expectedSapphires": 283.6000000000003,
+          "gathers": 134,
+          "fights": 39,
+          "defeats": 0,
+          "crafts": 70,
+          "sales": 744,
+          "purchases": 3598,
+          "fees": 1650,
+          "combatCoins": 472,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 15968
+        },
+        {
+          "cycle": 2,
+          "seconds": 4952.205896728516,
+          "netCoins": -4246,
+          "coinsPerHour": -3086.6244899263666,
+          "sapphiresPerHour": 206.1626720073289,
+          "time": {
+            "walk": 1374.5718026368806,
+            "transition": 135,
+            "gather": 134,
+            "wait": 1790.9674269694813,
+            "trade": 123,
+            "combat": 1254.6666666666667,
+            "craft": 140
+          },
+          "expectedSapphires": 283.6000000000003,
+          "gathers": 134,
+          "fights": 39,
+          "defeats": 0,
+          "crafts": 70,
+          "sales": 712,
+          "purchases": 3654,
+          "fees": 1650,
+          "combatCoins": 346,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 11722
+        }
+      ]
+    },
+    {
+      "profile": "developed",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5373.926887451172,
+          "netCoins": 597,
+          "coinsPerHour": 399.93100855515274,
+          "sapphiresPerHour": 115.289994258529,
+          "time": {
+            "walk": 569.5865634755867,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4290.2903245606885,
+            "trade": 36,
+            "combat": 345.05000000000007,
+            "craft": 12
+          },
+          "expectedSapphires": 172.10000000000005,
+          "gathers": 91,
+          "fights": 13,
+          "defeats": 0,
+          "crafts": 6,
+          "sales": 683,
+          "purchases": 250,
+          "fees": 100,
+          "combatCoins": 264,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20597
+        },
+        {
+          "cycle": 2,
+          "seconds": 5307.640990478516,
+          "netCoins": 405,
+          "coinsPerHour": 274.6983080836732,
+          "sapphiresPerHour": 116.32286379345673,
+          "time": {
+            "walk": 560.128879239086,
+            "transition": 30,
+            "gather": 88,
+            "wait": 4236.462111914205,
+            "trade": 36,
+            "combat": 345.05000000000007,
+            "craft": 12
+          },
+          "expectedSapphires": 171.50000000000006,
+          "gathers": 88,
+          "fights": 13,
+          "defeats": 0,
+          "crafts": 6,
+          "sales": 617,
+          "purchases": 250,
+          "fees": 100,
+          "combatCoins": 138,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 21002
+        }
+      ]
+    },
+    {
+      "profile": "developed",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5508.962353515625,
+          "netCoins": 526,
+          "coinsPerHour": 343.73079329387167,
+          "sapphiresPerHour": 124.55340152435737,
+          "time": {
+            "walk": 645.3337180894755,
+            "transition": 35,
+            "gather": 96,
+            "wait": 4220.795302165352,
+            "trade": 36,
+            "combat": 455.83333333333337,
+            "craft": 20
+          },
+          "expectedSapphires": 190.60000000000014,
+          "gathers": 96,
+          "fights": 18,
+          "defeats": 0,
+          "crafts": 10,
+          "sales": 635,
+          "purchases": 223,
+          "fees": 190,
+          "combatCoins": 304,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20526
+        },
+        {
+          "cycle": 2,
+          "seconds": 5442.6764565429685,
+          "netCoins": 265,
+          "coinsPerHour": 175.28140936122324,
+          "sapphiresPerHour": 125.6734633155941,
+          "time": {
+            "walk": 635.8760338529748,
+            "transition": 35,
+            "gather": 93,
+            "wait": 4166.967089518867,
+            "trade": 36,
+            "combat": 455.83333333333337,
+            "craft": 20
+          },
+          "expectedSapphires": 190.00000000000014,
+          "gathers": 93,
+          "fights": 18,
+          "defeats": 0,
+          "crafts": 10,
+          "sales": 601,
+          "purchases": 324,
+          "fees": 190,
+          "combatCoins": 178,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 20791
+        }
+      ]
+    },
+    {
+      "profile": "developed",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5030.864489013672,
+          "netCoins": -4384,
+          "coinsPerHour": -3137.114910263509,
+          "sapphiresPerHour": 202.93927658547722,
+          "time": {
+            "walk": 1397.6287416335954,
+            "transition": 155,
+            "gather": 134,
+            "wait": 2224.102412304693,
+            "trade": 147,
+            "combat": 833.133333333333,
+            "craft": 140
+          },
+          "expectedSapphires": 283.6000000000003,
+          "gathers": 134,
+          "fights": 39,
+          "defeats": 0,
+          "crafts": 70,
+          "sales": 799,
+          "purchases": 4460,
+          "fees": 1195,
+          "combatCoins": 472,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 15616
+        },
+        {
+          "cycle": 2,
+          "seconds": 4964.578592041015,
+          "netCoins": -4645,
+          "coinsPerHour": -3368.261714460104,
+          "sapphiresPerHour": 205.21379229111096,
+          "time": {
+            "walk": 1388.1710573970947,
+            "transition": 155,
+            "gather": 131,
+            "wait": 2170.2741996582085,
+            "trade": 147,
+            "combat": 833.133333333333,
+            "craft": 140
+          },
+          "expectedSapphires": 283.0000000000003,
+          "gathers": 131,
+          "fights": 39,
+          "defeats": 0,
+          "crafts": 70,
+          "sales": 765,
+          "purchases": 4561,
+          "fees": 1195,
+          "combatCoins": 346,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 10971
+        }
+      ]
+    },
+    {
+      "profile": "developed",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5373.926887451172,
+          "netCoins": 631,
+          "coinsPerHour": 422.70764890837756,
+          "sapphiresPerHour": 115.289994258529,
+          "time": {
+            "walk": 569.5865634755867,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4290.2903245606885,
+            "trade": 36,
+            "combat": 345.05000000000007,
+            "craft": 12
+          },
+          "expectedSapphires": 172.10000000000005,
+          "gathers": 91,
+          "fights": 13,
+          "defeats": 0,
+          "crafts": 6,
+          "sales": 669,
+          "purchases": 182,
+          "fees": 120,
+          "combatCoins": 264,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20631
+        },
+        {
+          "cycle": 2,
+          "seconds": 5307.640990478516,
+          "netCoins": 439,
+          "coinsPerHour": 297.75940061415446,
+          "sapphiresPerHour": 116.32286379345673,
+          "time": {
+            "walk": 560.128879239086,
+            "transition": 30,
+            "gather": 88,
+            "wait": 4236.462111914205,
+            "trade": 36,
+            "combat": 345.05000000000007,
+            "craft": 12
+          },
+          "expectedSapphires": 171.50000000000006,
+          "gathers": 88,
+          "fights": 13,
+          "defeats": 0,
+          "crafts": 6,
+          "sales": 603,
+          "purchases": 182,
+          "fees": 120,
+          "combatCoins": 138,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 21070
+        }
+      ]
+    },
+    {
+      "profile": "developed",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5326.462353271484,
+          "netCoins": 422,
+          "coinsPerHour": 285.21744813739565,
+          "sapphiresPerHour": 125.03608508392946,
+          "time": {
+            "walk": 637.1059693831412,
+            "transition": 35,
+            "gather": 96,
+            "wait": 4097.3563841152045,
+            "trade": 36,
+            "combat": 405,
+            "craft": 20
+          },
+          "expectedSapphires": 185.0000000000001,
+          "gathers": 96,
+          "fights": 16,
+          "defeats": 0,
+          "crafts": 10,
+          "sales": 666,
+          "purchases": 282,
+          "fees": 250,
+          "combatCoins": 288,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20422
+        },
+        {
+          "cycle": 2,
+          "seconds": 5260.176456298828,
+          "netCoins": 211,
+          "coinsPerHour": 144.4058020316814,
+          "sapphiresPerHour": 126.20108954806668,
+          "time": {
+            "walk": 627.6482851466405,
+            "transition": 35,
+            "gather": 93,
+            "wait": 4043.52817146872,
+            "trade": 36,
+            "combat": 405,
+            "craft": 20
+          },
+          "expectedSapphires": 184.40000000000012,
+          "gathers": 93,
+          "fights": 16,
+          "defeats": 0,
+          "crafts": 10,
+          "sales": 609,
+          "purchases": 310,
+          "fees": 250,
+          "combatCoins": 162,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 20633
+        }
+      ]
+    },
+    {
+      "profile": "developed",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 4971.513726806641,
+          "netCoins": -3651,
+          "coinsPerHour": -2643.7823009778845,
+          "sapphiresPerHour": 216.65835783417788,
+          "time": {
+            "walk": 1456.6448861498093,
+            "transition": 155,
+            "gather": 142,
+            "wait": 2056.8688399089297,
+            "trade": 135,
+            "combat": 889.9999999999995,
+            "craft": 136
+          },
+          "expectedSapphires": 299.20000000000016,
+          "gathers": 142,
+          "fights": 42,
+          "defeats": 0,
+          "crafts": 68,
+          "sales": 797,
+          "purchases": 3344,
+          "fees": 1600,
+          "combatCoins": 496,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 16349
+        },
+        {
+          "cycle": 2,
+          "seconds": 4905.227829833984,
+          "netCoins": -3881,
+          "coinsPerHour": -2848.3080673691898,
+          "sapphiresPerHour": 219.14578431240412,
+          "time": {
+            "walk": 1447.1872019133089,
+            "transition": 155,
+            "gather": 139,
+            "wait": 2000.0406272624452,
+            "trade": 138,
+            "combat": 889.9999999999995,
+            "craft": 136
+          },
+          "expectedSapphires": 298.60000000000014,
+          "gathers": 139,
+          "fights": 42,
+          "defeats": 0,
+          "crafts": 68,
+          "sales": 749,
+          "purchases": 3400,
+          "fees": 1600,
+          "combatCoins": 370,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 12468
+        }
+      ]
+    },
+    {
+      "profile": "developed",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5373.926887451172,
+          "netCoins": 597,
+          "coinsPerHour": 399.93100855515274,
+          "sapphiresPerHour": 115.289994258529,
+          "time": {
+            "walk": 569.5865634755867,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4290.2903245606885,
+            "trade": 36,
+            "combat": 345.05000000000007,
+            "craft": 12
+          },
+          "expectedSapphires": 172.10000000000005,
+          "gathers": 91,
+          "fights": 13,
+          "defeats": 0,
+          "crafts": 6,
+          "sales": 683,
+          "purchases": 250,
+          "fees": 100,
+          "combatCoins": 264,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20597
+        },
+        {
+          "cycle": 2,
+          "seconds": 5373.809107421875,
+          "netCoins": 421,
+          "coinsPerHour": 282.03458100265874,
+          "sapphiresPerHour": 115.29252111771399,
+          "time": {
+            "walk": 569.468783418827,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4290.2903245606885,
+            "trade": 36,
+            "combat": 345.05000000000007,
+            "craft": 12
+          },
+          "expectedSapphires": 172.10000000000005,
+          "gathers": 91,
+          "fights": 13,
+          "defeats": 0,
+          "crafts": 6,
+          "sales": 633,
+          "purchases": 250,
+          "fees": 100,
+          "combatCoins": 138,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 21018
+        }
+      ]
+    },
+    {
+      "profile": "developed",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5508.962353515625,
+          "netCoins": 526,
+          "coinsPerHour": 343.73079329387167,
+          "sapphiresPerHour": 124.55340152435737,
+          "time": {
+            "walk": 645.3337180894755,
+            "transition": 35,
+            "gather": 96,
+            "wait": 4220.795302165352,
+            "trade": 36,
+            "combat": 455.83333333333337,
+            "craft": 20
+          },
+          "expectedSapphires": 190.60000000000014,
+          "gathers": 96,
+          "fights": 18,
+          "defeats": 0,
+          "crafts": 10,
+          "sales": 635,
+          "purchases": 223,
+          "fees": 190,
+          "combatCoins": 304,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20526
+        },
+        {
+          "cycle": 2,
+          "seconds": 5508.844573486328,
+          "netCoins": 281,
+          "coinsPerHour": 183.63197336674878,
+          "sapphiresPerHour": 124.55606449716136,
+          "time": {
+            "walk": 645.2159380327158,
+            "transition": 35,
+            "gather": 96,
+            "wait": 4220.795302165352,
+            "trade": 36,
+            "combat": 455.83333333333337,
+            "craft": 20
+          },
+          "expectedSapphires": 190.60000000000014,
+          "gathers": 96,
+          "fights": 18,
+          "defeats": 0,
+          "crafts": 10,
+          "sales": 617,
+          "purchases": 324,
+          "fees": 190,
+          "combatCoins": 178,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 20807
+        }
+      ]
+    },
+    {
+      "profile": "developed",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5030.864489013672,
+          "netCoins": -4384,
+          "coinsPerHour": -3137.114910263509,
+          "sapphiresPerHour": 202.93927658547722,
+          "time": {
+            "walk": 1397.6287416335954,
+            "transition": 155,
+            "gather": 134,
+            "wait": 2224.102412304693,
+            "trade": 147,
+            "combat": 833.133333333333,
+            "craft": 140
+          },
+          "expectedSapphires": 283.6000000000003,
+          "gathers": 134,
+          "fights": 39,
+          "defeats": 0,
+          "crafts": 70,
+          "sales": 799,
+          "purchases": 4460,
+          "fees": 1195,
+          "combatCoins": 472,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 15616
+        },
+        {
+          "cycle": 2,
+          "seconds": 5030.746708984375,
+          "netCoins": -4629,
+          "coinsPerHour": -3312.51024231436,
+          "sapphiresPerHour": 202.94402780737815,
+          "time": {
+            "walk": 1397.5109615768358,
+            "transition": 155,
+            "gather": 134,
+            "wait": 2224.102412304693,
+            "trade": 147,
+            "combat": 833.133333333333,
+            "craft": 140
+          },
+          "expectedSapphires": 283.6000000000003,
+          "gathers": 134,
+          "fights": 39,
+          "defeats": 0,
+          "crafts": 70,
+          "sales": 781,
+          "purchases": 4561,
+          "fees": 1195,
+          "combatCoins": 346,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 10987
+        }
+      ]
+    },
+    {
+      "profile": "developed",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5373.926887451172,
+          "netCoins": 631,
+          "coinsPerHour": 422.70764890837756,
+          "sapphiresPerHour": 115.289994258529,
+          "time": {
+            "walk": 569.5865634755867,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4290.2903245606885,
+            "trade": 36,
+            "combat": 345.05000000000007,
+            "craft": 12
+          },
+          "expectedSapphires": 172.10000000000005,
+          "gathers": 91,
+          "fights": 13,
+          "defeats": 0,
+          "crafts": 6,
+          "sales": 669,
+          "purchases": 182,
+          "fees": 120,
+          "combatCoins": 264,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20631
+        },
+        {
+          "cycle": 2,
+          "seconds": 5373.809107421875,
+          "netCoins": 455,
+          "coinsPerHour": 304.8117205610682,
+          "sapphiresPerHour": 115.29252111771399,
+          "time": {
+            "walk": 569.468783418827,
+            "transition": 30,
+            "gather": 91,
+            "wait": 4290.2903245606885,
+            "trade": 36,
+            "combat": 345.05000000000007,
+            "craft": 12
+          },
+          "expectedSapphires": 172.10000000000005,
+          "gathers": 91,
+          "fights": 13,
+          "defeats": 0,
+          "crafts": 6,
+          "sales": 619,
+          "purchases": 182,
+          "fees": 120,
+          "combatCoins": 138,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 21086
+        }
+      ]
+    },
+    {
+      "profile": "developed",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5326.462353271484,
+          "netCoins": 422,
+          "coinsPerHour": 285.21744813739565,
+          "sapphiresPerHour": 125.03608508392946,
+          "time": {
+            "walk": 637.1059693831412,
+            "transition": 35,
+            "gather": 96,
+            "wait": 4097.3563841152045,
+            "trade": 36,
+            "combat": 405,
+            "craft": 20
+          },
+          "expectedSapphires": 185.0000000000001,
+          "gathers": 96,
+          "fights": 16,
+          "defeats": 0,
+          "crafts": 10,
+          "sales": 666,
+          "purchases": 282,
+          "fees": 250,
+          "combatCoins": 288,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 20422
+        },
+        {
+          "cycle": 2,
+          "seconds": 5326.344573242188,
+          "netCoins": 227,
+          "coinsPerHour": 153.42604834567882,
+          "sapphiresPerHour": 125.03884997335068,
+          "time": {
+            "walk": 636.9881893263815,
+            "transition": 35,
+            "gather": 96,
+            "wait": 4097.3563841152045,
+            "trade": 36,
+            "combat": 405,
+            "craft": 20
+          },
+          "expectedSapphires": 185.0000000000001,
+          "gathers": 96,
+          "fights": 16,
+          "defeats": 0,
+          "crafts": 10,
+          "sales": 625,
+          "purchases": 310,
+          "fees": 250,
+          "combatCoins": 162,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 20649
+        }
+      ]
+    },
+    {
+      "profile": "developed",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 4971.513726806641,
+          "netCoins": -3651,
+          "coinsPerHour": -2643.7823009778845,
+          "sapphiresPerHour": 216.65835783417788,
+          "time": {
+            "walk": 1456.6448861498093,
+            "transition": 155,
+            "gather": 142,
+            "wait": 2056.8688399089297,
+            "trade": 135,
+            "combat": 889.9999999999995,
+            "craft": 136
+          },
+          "expectedSapphires": 299.20000000000016,
+          "gathers": 142,
+          "fights": 42,
+          "defeats": 0,
+          "crafts": 68,
+          "sales": 797,
+          "purchases": 3344,
+          "fees": 1600,
+          "combatCoins": 496,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 16349
+        },
+        {
+          "cycle": 2,
+          "seconds": 4971.395946777344,
+          "netCoins": -3865,
+          "coinsPerHour": -2798.811470452199,
+          "sapphiresPerHour": 216.66349080447563,
+          "time": {
+            "walk": 1456.5271060930497,
+            "transition": 155,
+            "gather": 142,
+            "wait": 2053.8688399089297,
+            "trade": 138,
+            "combat": 889.9999999999995,
+            "craft": 136
+          },
+          "expectedSapphires": 299.20000000000016,
+          "gathers": 142,
+          "fights": 42,
+          "defeats": 0,
+          "crafts": 68,
+          "sales": 765,
+          "purchases": 3400,
+          "fees": 1600,
+          "combatCoins": 370,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 12484
+        }
+      ]
+    },
+    {
+      "profile": "specialist",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5012.673686035157,
+          "netCoins": 1274,
+          "coinsPerHour": 914.9608147798019,
+          "sapphiresPerHour": 157.42496907357364,
+          "time": {
+            "walk": 770.3454699751985,
+            "transition": 45,
+            "gather": 106,
+            "wait": 3766.144884359007,
+            "trade": 36,
+            "combat": 285.18333333333334,
+            "craft": 4
+          },
+          "expectedSapphires": 219.20000000000027,
+          "gathers": 106,
+          "fights": 25,
+          "defeats": 0,
+          "crafts": 2,
+          "sales": 978,
+          "purchases": 34,
+          "fees": 30,
+          "combatCoins": 360,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21274
+        },
+        {
+          "cycle": 2,
+          "seconds": 4946.3877890625,
+          "netCoins": 1082,
+          "coinsPerHour": 787.4837489719475,
+          "sapphiresPerHour": 159.09791823037702,
+          "time": {
+            "walk": 760.8877857386979,
+            "transition": 45,
+            "gather": 103,
+            "wait": 3712.316671712523,
+            "trade": 36,
+            "combat": 285.18333333333334,
+            "craft": 4
+          },
+          "expectedSapphires": 218.60000000000028,
+          "gathers": 103,
+          "fights": 25,
+          "defeats": 0,
+          "crafts": 2,
+          "sales": 912,
+          "purchases": 34,
+          "fees": 30,
+          "combatCoins": 234,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22356
+        }
+      ]
+    },
+    {
+      "profile": "specialist",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5169.403685546875,
+          "netCoins": 1273,
+          "coinsPerHour": 886.5239162522829,
+          "sapphiresPerHour": 163.58559931473806,
+          "time": {
+            "walk": 827.312192100731,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3812.074828288897,
+            "trade": 36,
+            "combat": 325.01666666666665,
+            "craft": 8
+          },
+          "expectedSapphires": 234.90000000000035,
+          "gathers": 111,
+          "fights": 29,
+          "defeats": 0,
+          "crafts": 4,
+          "sales": 985,
+          "purchases": 34,
+          "fees": 70,
+          "combatCoins": 392,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21273
+        },
+        {
+          "cycle": 2,
+          "seconds": 5103.117788574219,
+          "netCoins": 1081,
+          "coinsPerHour": 762.5926269452797,
+          "sapphiresPerHour": 165.28719009554052,
+          "time": {
+            "walk": 817.8545078642303,
+            "transition": 50,
+            "gather": 108,
+            "wait": 3758.2466156424125,
+            "trade": 36,
+            "combat": 325.01666666666665,
+            "craft": 8
+          },
+          "expectedSapphires": 234.30000000000035,
+          "gathers": 108,
+          "fights": 29,
+          "defeats": 0,
+          "crafts": 4,
+          "sales": 919,
+          "purchases": 34,
+          "fees": 70,
+          "combatCoins": 266,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22354
+        }
+      ]
+    },
+    {
+      "profile": "specialist",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 4941.708656738281,
+          "netCoins": -1314,
+          "coinsPerHour": -957.2397582665764,
+          "sapphiresPerHour": 241.34971987345253,
+          "time": {
+            "walk": 1494.3951374923965,
+            "transition": 155,
+            "gather": 159,
+            "wait": 2421.130188509119,
+            "trade": 105,
+            "combat": 509.1833333333331,
+            "craft": 98
+          },
+          "expectedSapphires": 331.2999999999999,
+          "gathers": 159,
+          "fights": 48,
+          "defeats": 0,
+          "crafts": 49,
+          "sales": 938,
+          "purchases": 2016,
+          "fees": 780,
+          "combatCoins": 544,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 18686
+        },
+        {
+          "cycle": 2,
+          "seconds": 4875.422759765625,
+          "netCoins": -1575,
+          "coinsPerHour": -1162.9760698480582,
+          "sapphiresPerHour": 244.18805479285888,
+          "time": {
+            "walk": 1484.937453255896,
+            "transition": 155,
+            "gather": 156,
+            "wait": 2367.3019758626347,
+            "trade": 105,
+            "combat": 509.1833333333331,
+            "craft": 98
+          },
+          "expectedSapphires": 330.69999999999993,
+          "gathers": 156,
+          "fights": 48,
+          "defeats": 0,
+          "crafts": 49,
+          "sales": 904,
+          "purchases": 2117,
+          "fees": 780,
+          "combatCoins": 418,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 17111
+        }
+      ]
+    },
+    {
+      "profile": "specialist",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5012.673686035157,
+          "netCoins": 1274,
+          "coinsPerHour": 914.9608147798019,
+          "sapphiresPerHour": 157.42496907357364,
+          "time": {
+            "walk": 770.3454699751985,
+            "transition": 45,
+            "gather": 106,
+            "wait": 3766.144884359007,
+            "trade": 36,
+            "combat": 285.18333333333334,
+            "craft": 4
+          },
+          "expectedSapphires": 219.20000000000027,
+          "gathers": 106,
+          "fights": 25,
+          "defeats": 0,
+          "crafts": 2,
+          "sales": 978,
+          "purchases": 34,
+          "fees": 30,
+          "combatCoins": 360,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21274
+        },
+        {
+          "cycle": 2,
+          "seconds": 4946.3877890625,
+          "netCoins": 1082,
+          "coinsPerHour": 787.4837489719475,
+          "sapphiresPerHour": 159.09791823037702,
+          "time": {
+            "walk": 760.8877857386979,
+            "transition": 45,
+            "gather": 103,
+            "wait": 3712.316671712523,
+            "trade": 36,
+            "combat": 285.18333333333334,
+            "craft": 4
+          },
+          "expectedSapphires": 218.60000000000028,
+          "gathers": 103,
+          "fights": 25,
+          "defeats": 0,
+          "crafts": 2,
+          "sales": 912,
+          "purchases": 34,
+          "fees": 30,
+          "combatCoins": 234,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22356
+        }
+      ]
+    },
+    {
+      "profile": "specialist",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5118.117018798828,
+          "netCoins": 1183,
+          "coinsPerHour": 832.1028972877018,
+          "sapphiresPerHour": 161.28587856979738,
+          "time": {
+            "walk": 812.7385223058719,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3793.361830648852,
+            "trade": 36,
+            "combat": 307.01666666666665,
+            "craft": 8
+          },
+          "expectedSapphires": 229.30000000000032,
+          "gathers": 111,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 4,
+          "sales": 1003,
+          "purchases": 106,
+          "fees": 90,
+          "combatCoins": 376,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21183
+        },
+        {
+          "cycle": 2,
+          "seconds": 5051.8311218261715,
+          "netCoins": 991,
+          "coinsPerHour": 706.1993787928443,
+          "sapphiresPerHour": 162.9745690513862,
+          "time": {
+            "walk": 803.2808380693713,
+            "transition": 50,
+            "gather": 108,
+            "wait": 3739.5336180023673,
+            "trade": 36,
+            "combat": 307.01666666666665,
+            "craft": 8
+          },
+          "expectedSapphires": 228.70000000000033,
+          "gathers": 108,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 4,
+          "sales": 937,
+          "purchases": 106,
+          "fees": 90,
+          "combatCoins": 250,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22174
+        }
+      ]
+    },
+    {
+      "profile": "specialist",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5017.2291650390625,
+          "netCoins": -1180,
+          "coinsPerHour": -846.6824735853831,
+          "sapphiresPerHour": 237.71686737189603,
+          "time": {
+            "walk": 1499.4468032198354,
+            "transition": 165,
+            "gather": 159,
+            "wait": 2487.599030875684,
+            "trade": 99,
+            "combat": 509.1833333333331,
+            "craft": 98
+          },
+          "expectedSapphires": 331.2999999999999,
+          "gathers": 159,
+          "fights": 48,
+          "defeats": 0,
+          "crafts": 49,
+          "sales": 938,
+          "purchases": 1602,
+          "fees": 1060,
+          "combatCoins": 544,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 18820
+        },
+        {
+          "cycle": 2,
+          "seconds": 4950.943268066406,
+          "netCoins": -1372,
+          "coinsPerHour": -997.6280746050656,
+          "sapphiresPerHour": 240.46326841974866,
+          "time": {
+            "walk": 1489.989118983335,
+            "transition": 165,
+            "gather": 156,
+            "wait": 2433.7708182292,
+            "trade": 99,
+            "combat": 509.1833333333331,
+            "craft": 98
+          },
+          "expectedSapphires": 330.69999999999993,
+          "gathers": 156,
+          "fights": 48,
+          "defeats": 0,
+          "crafts": 49,
+          "sales": 872,
+          "purchases": 1602,
+          "fees": 1060,
+          "combatCoins": 418,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 17448
+        }
+      ]
+    },
+    {
+      "profile": "specialist",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5012.673686035157,
+          "netCoins": 1274,
+          "coinsPerHour": 914.9608147798019,
+          "sapphiresPerHour": 157.42496907357364,
+          "time": {
+            "walk": 770.3454699751985,
+            "transition": 45,
+            "gather": 106,
+            "wait": 3766.144884359007,
+            "trade": 36,
+            "combat": 285.18333333333334,
+            "craft": 4
+          },
+          "expectedSapphires": 219.20000000000027,
+          "gathers": 106,
+          "fights": 25,
+          "defeats": 0,
+          "crafts": 2,
+          "sales": 978,
+          "purchases": 34,
+          "fees": 30,
+          "combatCoins": 360,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21274
+        },
+        {
+          "cycle": 2,
+          "seconds": 5012.5559060058595,
+          "netCoins": 1098,
+          "coinsPerHour": 788.5797333978661,
+          "sapphiresPerHour": 157.42866808817163,
+          "time": {
+            "walk": 770.2276899184388,
+            "transition": 45,
+            "gather": 106,
+            "wait": 3766.144884359007,
+            "trade": 36,
+            "combat": 285.18333333333334,
+            "craft": 4
+          },
+          "expectedSapphires": 219.20000000000027,
+          "gathers": 106,
+          "fights": 25,
+          "defeats": 0,
+          "crafts": 2,
+          "sales": 928,
+          "purchases": 34,
+          "fees": 30,
+          "combatCoins": 234,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22372
+        }
+      ]
+    },
+    {
+      "profile": "specialist",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5169.403685546875,
+          "netCoins": 1273,
+          "coinsPerHour": 886.5239162522829,
+          "sapphiresPerHour": 163.58559931473806,
+          "time": {
+            "walk": 827.312192100731,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3812.074828288897,
+            "trade": 36,
+            "combat": 325.01666666666665,
+            "craft": 8
+          },
+          "expectedSapphires": 234.90000000000035,
+          "gathers": 111,
+          "fights": 29,
+          "defeats": 0,
+          "crafts": 4,
+          "sales": 985,
+          "purchases": 34,
+          "fees": 70,
+          "combatCoins": 392,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21273
+        },
+        {
+          "cycle": 2,
+          "seconds": 5169.285905517578,
+          "netCoins": 1097,
+          "coinsPerHour": 763.9739941226145,
+          "sapphiresPerHour": 163.5893265445783,
+          "time": {
+            "walk": 827.1944120439713,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3812.074828288897,
+            "trade": 36,
+            "combat": 325.01666666666665,
+            "craft": 8
+          },
+          "expectedSapphires": 234.90000000000035,
+          "gathers": 111,
+          "fights": 29,
+          "defeats": 0,
+          "crafts": 4,
+          "sales": 935,
+          "purchases": 34,
+          "fees": 70,
+          "combatCoins": 266,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22370
+        }
+      ]
+    },
+    {
+      "profile": "specialist",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 4941.708656738281,
+          "netCoins": -1314,
+          "coinsPerHour": -957.2397582665764,
+          "sapphiresPerHour": 241.34971987345253,
+          "time": {
+            "walk": 1494.3951374923965,
+            "transition": 155,
+            "gather": 159,
+            "wait": 2421.130188509119,
+            "trade": 105,
+            "combat": 509.1833333333331,
+            "craft": 98
+          },
+          "expectedSapphires": 331.2999999999999,
+          "gathers": 159,
+          "fights": 48,
+          "defeats": 0,
+          "crafts": 49,
+          "sales": 938,
+          "purchases": 2016,
+          "fees": 780,
+          "combatCoins": 544,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 18686
+        },
+        {
+          "cycle": 2,
+          "seconds": 4941.590876708984,
+          "netCoins": -1559,
+          "coinsPerHour": -1135.7476043702272,
+          "sapphiresPerHour": 241.3554723077974,
+          "time": {
+            "walk": 1494.2773574356368,
+            "transition": 155,
+            "gather": 159,
+            "wait": 2421.130188509119,
+            "trade": 105,
+            "combat": 509.1833333333331,
+            "craft": 98
+          },
+          "expectedSapphires": 331.2999999999999,
+          "gathers": 159,
+          "fights": 48,
+          "defeats": 0,
+          "crafts": 49,
+          "sales": 920,
+          "purchases": 2117,
+          "fees": 780,
+          "combatCoins": 418,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 17127
+        }
+      ]
+    },
+    {
+      "profile": "specialist",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5012.673686035157,
+          "netCoins": 1274,
+          "coinsPerHour": 914.9608147798019,
+          "sapphiresPerHour": 157.42496907357364,
+          "time": {
+            "walk": 770.3454699751985,
+            "transition": 45,
+            "gather": 106,
+            "wait": 3766.144884359007,
+            "trade": 36,
+            "combat": 285.18333333333334,
+            "craft": 4
+          },
+          "expectedSapphires": 219.20000000000027,
+          "gathers": 106,
+          "fights": 25,
+          "defeats": 0,
+          "crafts": 2,
+          "sales": 978,
+          "purchases": 34,
+          "fees": 30,
+          "combatCoins": 360,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21274
+        },
+        {
+          "cycle": 2,
+          "seconds": 5012.5559060058595,
+          "netCoins": 1098,
+          "coinsPerHour": 788.5797333978661,
+          "sapphiresPerHour": 157.42866808817163,
+          "time": {
+            "walk": 770.2276899184388,
+            "transition": 45,
+            "gather": 106,
+            "wait": 3766.144884359007,
+            "trade": 36,
+            "combat": 285.18333333333334,
+            "craft": 4
+          },
+          "expectedSapphires": 219.20000000000027,
+          "gathers": 106,
+          "fights": 25,
+          "defeats": 0,
+          "crafts": 2,
+          "sales": 928,
+          "purchases": 34,
+          "fees": 30,
+          "combatCoins": 234,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22372
+        }
+      ]
+    },
+    {
+      "profile": "specialist",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5118.117018798828,
+          "netCoins": 1183,
+          "coinsPerHour": 832.1028972877018,
+          "sapphiresPerHour": 161.28587856979738,
+          "time": {
+            "walk": 812.7385223058719,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3793.361830648852,
+            "trade": 36,
+            "combat": 307.01666666666665,
+            "craft": 8
+          },
+          "expectedSapphires": 229.30000000000032,
+          "gathers": 111,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 4,
+          "sales": 1003,
+          "purchases": 106,
+          "fees": 90,
+          "combatCoins": 376,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21183
+        },
+        {
+          "cycle": 2,
+          "seconds": 5117.999238769531,
+          "netCoins": 1007,
+          "coinsPerHour": 708.3236692453222,
+          "sapphiresPerHour": 161.28959022636803,
+          "time": {
+            "walk": 812.6207422491123,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3793.361830648852,
+            "trade": 36,
+            "combat": 307.01666666666665,
+            "craft": 8
+          },
+          "expectedSapphires": 229.30000000000032,
+          "gathers": 111,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 4,
+          "sales": 953,
+          "purchases": 106,
+          "fees": 90,
+          "combatCoins": 250,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22190
+        }
+      ]
+    },
+    {
+      "profile": "specialist",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5017.2291650390625,
+          "netCoins": -1180,
+          "coinsPerHour": -846.6824735853831,
+          "sapphiresPerHour": 237.71686737189603,
+          "time": {
+            "walk": 1499.4468032198354,
+            "transition": 165,
+            "gather": 159,
+            "wait": 2487.599030875684,
+            "trade": 99,
+            "combat": 509.1833333333331,
+            "craft": 98
+          },
+          "expectedSapphires": 331.2999999999999,
+          "gathers": 159,
+          "fights": 48,
+          "defeats": 0,
+          "crafts": 49,
+          "sales": 938,
+          "purchases": 1602,
+          "fees": 1060,
+          "combatCoins": 544,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 18820
+        },
+        {
+          "cycle": 2,
+          "seconds": 5017.111385009765,
+          "netCoins": -1356,
+          "coinsPerHour": -972.9901581586071,
+          "sapphiresPerHour": 237.7224479335888,
+          "time": {
+            "walk": 1499.3290231630758,
+            "transition": 165,
+            "gather": 159,
+            "wait": 2487.599030875684,
+            "trade": 99,
+            "combat": 509.1833333333331,
+            "craft": 98
+          },
+          "expectedSapphires": 331.2999999999999,
+          "gathers": 159,
+          "fights": 48,
+          "defeats": 0,
+          "crafts": 49,
+          "sales": 888,
+          "purchases": 1602,
+          "fees": 1060,
+          "combatCoins": 418,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 17464
+        }
+      ]
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5086.816162597656,
+          "netCoins": 1287,
+          "coinsPerHour": 910.8251314578645,
+          "sapphiresPerHour": 162.27832373215898,
+          "time": {
+            "walk": 812.7385223058719,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3714.7443082687532,
+            "trade": 36,
+            "combat": 356.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 229.30000000000032,
+          "gathers": 111,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 1011,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 376,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21287
+        },
+        {
+          "cycle": 2,
+          "seconds": 5020.530265625,
+          "netCoins": 1095,
+          "coinsPerHour": 785.176025526711,
+          "sapphiresPerHour": 163.99064569676628,
+          "time": {
+            "walk": 803.2808380693713,
+            "transition": 50,
+            "gather": 108,
+            "wait": 3660.9160956222695,
+            "trade": 36,
+            "combat": 356.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 228.70000000000033,
+          "gathers": 108,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 945,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 250,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22382
+        }
+      ]
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5114.7343525390625,
+          "netCoins": 1332,
+          "coinsPerHour": 937.5266963023331,
+          "sapphiresPerHour": 167.30487665995864,
+          "time": {
+            "walk": 834.8884002260376,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3693.512620362025,
+            "trade": 36,
+            "combat": 383.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 237.70000000000036,
+          "gathers": 111,
+          "fights": 30,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 1032,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 400,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21332
+        },
+        {
+          "cycle": 2,
+          "seconds": 5048.448455566407,
+          "netCoins": 1140,
+          "coinsPerHour": 812.923026969789,
+          "sapphiresPerHour": 169.07372780222568,
+          "time": {
+            "walk": 825.4307159895369,
+            "transition": 50,
+            "gather": 108,
+            "wait": 3639.68440771554,
+            "trade": 36,
+            "combat": 383.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 237.10000000000036,
+          "gathers": 108,
+          "fights": 30,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 966,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 274,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22472
+        }
+      ]
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 100,
+      "potion": "medium",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 4927.61032421875,
+          "netCoins": -1424,
+          "coinsPerHour": -1040.3420040753258,
+          "sapphiresPerHour": 237.94901034222855,
+          "time": {
+            "walk": 1480.927775605572,
+            "transition": 155,
+            "gather": 159,
+            "wait": 2366.3492169596393,
+            "trade": 102,
+            "combat": 564.3333333333334,
+            "craft": 100
+          },
+          "expectedSapphires": 325.6999999999999,
+          "gathers": 159,
+          "fights": 46,
+          "defeats": 0,
+          "crafts": 50,
+          "sales": 908,
+          "purchases": 2060,
+          "fees": 800,
+          "combatCoins": 528,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 18576
+        },
+        {
+          "cycle": 2,
+          "seconds": 4861.324427246093,
+          "netCoins": -1685,
+          "coinsPerHour": -1247.8081006077489,
+          "sapphiresPerHour": 240.74920682942377,
+          "time": {
+            "walk": 1471.4700913690715,
+            "transition": 155,
+            "gather": 156,
+            "wait": 2312.521004313155,
+            "trade": 102,
+            "combat": 564.3333333333334,
+            "craft": 100
+          },
+          "expectedSapphires": 325.0999999999999,
+          "gathers": 156,
+          "fights": 46,
+          "defeats": 0,
+          "crafts": 50,
+          "sales": 874,
+          "purchases": 2161,
+          "fees": 800,
+          "combatCoins": 402,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 16891
+        }
+      ]
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5086.816162597656,
+          "netCoins": 1287,
+          "coinsPerHour": 910.8251314578645,
+          "sapphiresPerHour": 162.27832373215898,
+          "time": {
+            "walk": 812.7385223058719,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3714.7443082687532,
+            "trade": 36,
+            "combat": 356.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 229.30000000000032,
+          "gathers": 111,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 1011,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 376,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21287
+        },
+        {
+          "cycle": 2,
+          "seconds": 5020.530265625,
+          "netCoins": 1095,
+          "coinsPerHour": 785.176025526711,
+          "sapphiresPerHour": 163.99064569676628,
+          "time": {
+            "walk": 803.2808380693713,
+            "transition": 50,
+            "gather": 108,
+            "wait": 3660.9160956222695,
+            "trade": 36,
+            "combat": 356.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 228.70000000000033,
+          "gathers": 108,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 945,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 250,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22382
+        }
+      ]
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5114.7343525390625,
+          "netCoins": 1332,
+          "coinsPerHour": 937.5266963023331,
+          "sapphiresPerHour": 167.30487665995864,
+          "time": {
+            "walk": 834.8884002260376,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3693.512620362025,
+            "trade": 36,
+            "combat": 383.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 237.70000000000036,
+          "gathers": 111,
+          "fights": 30,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 1032,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 400,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21332
+        },
+        {
+          "cycle": 2,
+          "seconds": 5048.448455566407,
+          "netCoins": 1140,
+          "coinsPerHour": 812.923026969789,
+          "sapphiresPerHour": 169.07372780222568,
+          "time": {
+            "walk": 825.4307159895369,
+            "transition": 50,
+            "gather": 108,
+            "wait": 3639.68440771554,
+            "trade": 36,
+            "combat": 383.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 237.10000000000036,
+          "gathers": 108,
+          "fights": 30,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 966,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 274,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22472
+        }
+      ]
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 100,
+      "potion": "regen",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 4921.641214355469,
+          "netCoins": -1219,
+          "coinsPerHour": -891.6537815068461,
+          "sapphiresPerHour": 244.3087473529832,
+          "time": {
+            "walk": 1524.1486593444547,
+            "transition": 165,
+            "gather": 162,
+            "wait": 2280.1592238769535,
+            "trade": 96,
+            "combat": 594.3333333333334,
+            "craft": 100
+          },
+          "expectedSapphires": 333.99999999999994,
+          "gathers": 162,
+          "fights": 48,
+          "defeats": 0,
+          "crafts": 50,
+          "sales": 935,
+          "purchases": 1618,
+          "fees": 1080,
+          "combatCoins": 544,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 18781
+        },
+        {
+          "cycle": 2,
+          "seconds": 4855.355317382812,
+          "netCoins": -1411,
+          "coinsPerHour": -1046.1850200364045,
+          "sapphiresPerHour": 247.19921026232257,
+          "time": {
+            "walk": 1514.6909751079543,
+            "transition": 165,
+            "gather": 159,
+            "wait": 2226.331011230469,
+            "trade": 96,
+            "combat": 594.3333333333334,
+            "craft": 100
+          },
+          "expectedSapphires": 333.3999999999999,
+          "gathers": 159,
+          "fights": 48,
+          "defeats": 0,
+          "crafts": 50,
+          "sales": 869,
+          "purchases": 1618,
+          "fees": 1080,
+          "combatCoins": 418,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 17370
+        }
+      ]
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5086.816162597656,
+          "netCoins": 1287,
+          "coinsPerHour": 910.8251314578645,
+          "sapphiresPerHour": 162.27832373215898,
+          "time": {
+            "walk": 812.7385223058719,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3714.7443082687532,
+            "trade": 36,
+            "combat": 356.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 229.30000000000032,
+          "gathers": 111,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 1011,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 376,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21287
+        },
+        {
+          "cycle": 2,
+          "seconds": 5086.698382568359,
+          "netCoins": 1111,
+          "coinsPerHour": 786.2860541734215,
+          "sapphiresPerHour": 162.28208120789,
+          "time": {
+            "walk": 812.6207422491123,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3714.7443082687532,
+            "trade": 36,
+            "combat": 356.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 229.30000000000032,
+          "gathers": 111,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 961,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 250,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22398
+        }
+      ]
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5114.7343525390625,
+          "netCoins": 1332,
+          "coinsPerHour": 937.5266963023331,
+          "sapphiresPerHour": 167.30487665995864,
+          "time": {
+            "walk": 834.8884002260376,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3693.512620362025,
+            "trade": 36,
+            "combat": 383.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 237.70000000000036,
+          "gathers": 111,
+          "fights": 30,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 1032,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 400,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21332
+        },
+        {
+          "cycle": 2,
+          "seconds": 5114.616572509765,
+          "netCoins": 1156,
+          "coinsPerHour": 813.6680318067097,
+          "sapphiresPerHour": 167.30872937755638,
+          "time": {
+            "walk": 834.7706201692779,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3693.512620362025,
+            "trade": 36,
+            "combat": 383.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 237.70000000000036,
+          "gathers": 111,
+          "fights": 30,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 982,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 274,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22488
+        }
+      ]
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 150,
+      "potion": "medium",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 4927.61032421875,
+          "netCoins": -1424,
+          "coinsPerHour": -1040.3420040753258,
+          "sapphiresPerHour": 237.94901034222855,
+          "time": {
+            "walk": 1480.927775605572,
+            "transition": 155,
+            "gather": 159,
+            "wait": 2366.3492169596393,
+            "trade": 102,
+            "combat": 564.3333333333334,
+            "craft": 100
+          },
+          "expectedSapphires": 325.6999999999999,
+          "gathers": 159,
+          "fights": 46,
+          "defeats": 0,
+          "crafts": 50,
+          "sales": 908,
+          "purchases": 2060,
+          "fees": 800,
+          "combatCoins": 528,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 18576
+        },
+        {
+          "cycle": 2,
+          "seconds": 4927.492544189453,
+          "netCoins": -1669,
+          "coinsPerHour": -1219.3625756136687,
+          "sapphiresPerHour": 237.954697949294,
+          "time": {
+            "walk": 1480.8099955488124,
+            "transition": 155,
+            "gather": 159,
+            "wait": 2366.3492169596393,
+            "trade": 102,
+            "combat": 564.3333333333334,
+            "craft": 100
+          },
+          "expectedSapphires": 325.6999999999999,
+          "gathers": 159,
+          "fights": 46,
+          "defeats": 0,
+          "crafts": 50,
+          "sales": 890,
+          "purchases": 2161,
+          "fees": 800,
+          "combatCoins": 402,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 16907
+        }
+      ]
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "wait",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5086.816162597656,
+          "netCoins": 1287,
+          "coinsPerHour": 910.8251314578645,
+          "sapphiresPerHour": 162.27832373215898,
+          "time": {
+            "walk": 812.7385223058719,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3714.7443082687532,
+            "trade": 36,
+            "combat": 356.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 229.30000000000032,
+          "gathers": 111,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 1011,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 376,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21287
+        },
+        {
+          "cycle": 2,
+          "seconds": 5086.698382568359,
+          "netCoins": 1111,
+          "coinsPerHour": 786.2860541734215,
+          "sapphiresPerHour": 162.28208120789,
+          "time": {
+            "walk": 812.6207422491123,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3714.7443082687532,
+            "trade": 36,
+            "combat": 356.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 229.30000000000032,
+          "gathers": 111,
+          "fights": 27,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 961,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 250,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22398
+        }
+      ]
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "economy",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 5114.7343525390625,
+          "netCoins": 1332,
+          "coinsPerHour": 937.5266963023331,
+          "sapphiresPerHour": 167.30487665995864,
+          "time": {
+            "walk": 834.8884002260376,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3693.512620362025,
+            "trade": 36,
+            "combat": 383.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 237.70000000000036,
+          "gathers": 111,
+          "fights": 30,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 1032,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 400,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 21332
+        },
+        {
+          "cycle": 2,
+          "seconds": 5114.616572509765,
+          "netCoins": 1156,
+          "coinsPerHour": 813.6680318067097,
+          "sapphiresPerHour": 167.30872937755638,
+          "time": {
+            "walk": 834.7706201692779,
+            "transition": 50,
+            "gather": 111,
+            "wait": 3693.512620362025,
+            "trade": 36,
+            "combat": 383.33333333333337,
+            "craft": 6
+          },
+          "expectedSapphires": 237.70000000000036,
+          "gathers": 111,
+          "fights": 30,
+          "defeats": 0,
+          "crafts": 3,
+          "sales": 982,
+          "purchases": 50,
+          "fees": 50,
+          "combatCoins": 274,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 22488
+        }
+      ]
+    },
+    {
+      "profile": "specialist_mana",
+      "capacity": 150,
+      "potion": "regen",
+      "policy": "drink",
+      "assumptions": {
+        "balanceVersion": 39,
+        "transition": 5,
+        "trade": 3,
+        "craft": 2,
+        "gather": 1,
+        "walkSpeed": 230,
+        "gatherSeconds": 1200,
+        "expeditionSeconds": 3600,
+        "initialAnalyticalCapital": 20000
+      },
+      "cycles": [
+        {
+          "cycle": 1,
+          "seconds": 4921.641214355469,
+          "netCoins": -1219,
+          "coinsPerHour": -891.6537815068461,
+          "sapphiresPerHour": 244.3087473529832,
+          "time": {
+            "walk": 1524.1486593444547,
+            "transition": 165,
+            "gather": 162,
+            "wait": 2280.1592238769535,
+            "trade": 96,
+            "combat": 594.3333333333334,
+            "craft": 100
+          },
+          "expectedSapphires": 333.99999999999994,
+          "gathers": 162,
+          "fights": 48,
+          "defeats": 0,
+          "crafts": 50,
+          "sales": 935,
+          "purchases": 1618,
+          "fees": 1080,
+          "combatCoins": 544,
+          "bagUsed": 24,
+          "rare": {
+            "crafting_core": 2,
+            "frost_shard": 2
+          },
+          "capital": 18781
+        },
+        {
+          "cycle": 2,
+          "seconds": 4921.523434326172,
+          "netCoins": -1395,
+          "coinsPerHour": -1020.4157446397662,
+          "sapphiresPerHour": 244.3145940571196,
+          "time": {
+            "walk": 1524.0308792876951,
+            "transition": 165,
+            "gather": 162,
+            "wait": 2280.1592238769535,
+            "trade": 96,
+            "combat": 594.3333333333334,
+            "craft": 100
+          },
+          "expectedSapphires": 333.99999999999994,
+          "gathers": 162,
+          "fights": 48,
+          "defeats": 0,
+          "crafts": 50,
+          "sales": 885,
+          "purchases": 1618,
+          "fees": 1080,
+          "combatCoins": 418,
+          "bagUsed": 28,
+          "rare": {
+            "crafting_core": 4,
+            "frost_shard": 4
+          },
+          "capital": 17386
+        }
+      ]
+    }
+  ]
+}

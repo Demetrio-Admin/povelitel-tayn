@@ -117,6 +117,25 @@ for (const [id, up] of Object.entries(UPGRADES)) {
 // Смена ветки: мгновенно, вне боя.
 export const BRANCH_RESPEC = { coins: 150 };
 
+// Advanced research follows already confirmed victories, never an invented trial.
+for (const [id, branches] of Object.entries({ telekinesis: ['lord','breaker'], fire: ['arsonist','blaster'], seal: ['seer','piercer'], ice: ['frost','shard'] })) {
+ for (const tier of [4,5]) for (const branch of branches) UPGRADES[`${id}_${tier}_${branch}`] = {
+  ability: id, toLevel: tier, branch, title: `${({telekinesis:'Телекинез',fire:'Огонь',seal:'Астрал',ice:'Лёд'})[id]} ${tier === 4 ? 'IV' : 'V'}`,
+  description: 'Продолжение выбранной ветки. Требует подтверждённых побед.',
+  requires: { heroLevel: tier === 4 ? 12 : 15, abilityLevel: tier - 1, progressTier: tier, branch },
+  cost: { schoolXP: tier === 4 ? 600 : 1200, sapphires: tier === 4 ? 6000 : 15000,
+   items: tier === 4 ? { lunar_shard: 6, rune_dust: 4, ice_crystal: 2 } : { lunar_shard: 10, rune_dust: 8, crafting_core: 2 } },
+  timerSec: { prototype: 120, live: tier === 4 ? 4*3600 : 8*3600 },
+ };
+}
+UPGRADES.storm_1 = { ability: 'storm', toLevel: 1, title: 'Гроза I', description: 'Пятая школа. Заряжается попаданиями других Даров; три активных слота сохраняются.', requires: { heroLevel: 12, event: 'ch2_quarter_cleared', progressTier: 4 }, cost: { schoolXP: 0, sapphires: 1800, items: { lunar_shard: 4, rune_dust: 3, ice_crystal: 2 } }, timerSec: { prototype: 60, live: 1800 } };
+for (const tier of [2,3,4,5]) for (const branch of tier >= 3 ? ['discharge','field'] : [null]) {
+ UPGRADES[`storm_${tier}${branch ? '_'+branch : ''}`] = { ability: 'storm', toLevel: tier, branch,
+ title: `Гроза ${['','','II','III','IV','V'][tier]}`, description: 'Развитие Грозы и полного разряда.',
+ requires: { heroLevel: tier >= 5 ? 15 : 12, abilityLevel: tier-1, progressTier: tier >= 4 ? tier : 4, ...(tier >= 4 ? { branch } : {}) },
+ cost: { schoolXP: [0,0,180,300,600,1200][tier], sapphires: [0,0,600,2000,6000,15000][tier], items: { lunar_shard: tier*2, rune_dust: tier } }, timerSec: { prototype: 90, live: [0,0,1800,3600,14400,28800][tier] } };
+}
+
 // Награды за события мира. topUpFor — гарантировать ресурсы на улучшение
 // (Blueprint, зона E: «игрок получает достаточно ресурсов для Телекинеза II»).
 export const EVENT_REWARDS = {

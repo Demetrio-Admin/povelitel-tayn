@@ -73,7 +73,7 @@ export const windows11 = {
 
           iy += title.height + 6;
           if (g.open) { const xp = text(px, iy, `Опыт дара: ${g.xp}`, { color: COLORS.textDim }); iy += xp.height + 8; }
-          if (!g.open) {
+          if (!g.open && g.id !== 'storm') {
             const t = text(px, iy, 'Дар откроется по ходу истории.', { color: COLORS.textDim });
             iy += t.height + 4;
           } else {
@@ -266,7 +266,7 @@ export const windows11 = {
     const r = await services.actions.amuletUpgrade(id);
     if (!r?.ok) {
       services.audio.play('locked');
-      this.toast({ missing: 'Не хватает монет или материалов — ничего не потрачено.', max: 'Амулет уже улучшен до предела.', combat: 'Улучшать можно только вне боя.' }[r?.reason] || sapphireFailText(r));
+      this.toast({ progress: 'Сначала нужна победа, указанная в требованиях улучшения.', missing: 'Не хватает монет или материалов — ничего не потрачено.', max: 'Амулет уже улучшен до предела.', combat: 'Улучшать можно только вне боя.' }[r?.reason] || sapphireFailText(r));
     } else { services.audio.play('unlock_magic'); this.toast(`Амулет улучшен до +${r.level ?? level}`, COLORS.gold); }
     if (this.modal) this.reopenModal();
   },

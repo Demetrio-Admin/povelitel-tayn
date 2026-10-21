@@ -103,7 +103,8 @@ try {
   console.log('✓ Veda consumes resources atomically; all nine sapphire sources total 150, with no repeat payout after retries or character reset.');
 } finally { await db.close(); }
 const lunar = [0,1,2,3,9].map(n=>amuletEffect('amulet_lunar',n).manaRescue.gainPct);
-assert.deepEqual(lunar,[.5,.6,.7,.8,.8]);
+assert.deepEqual(lunar,[.5,.6,.7,.8,1]);
+assert.deepEqual([0,1,2,3,9].map(n=>amuletEffect('amulet_lunar',n,false,false).manaRescue.gainPct),[.5,.6,.7,.8,.8]);
 const report = await storyPass();
 assert.ok(report.first.beforeTK>=195); assert.ok(report.payments.every(p=>p.before>=p.price)); assert.equal(report.final.level,15);
 assert.equal(report.fights.length,new Set(report.fights.map(f=>f.spawn)).size);

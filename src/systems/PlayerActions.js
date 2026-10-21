@@ -16,6 +16,8 @@
 import { applyAction, combatApply, toSnapshot, fromSnapshot } from '../cloud/playerModel.js';
 import { verifyCombat } from '../cloud/combatVerify.js';
 import { HERO_LEVELS } from '../config/balance.hero.js';
+import { COMBAT_BALANCE_VERSION } from '../config/combatVersions.js';
+import { DUEL_VERSION } from '../config/duelPacing.js';
 import { MSG } from '../state/EventBus.js';
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -123,7 +125,7 @@ export class PlayerActions {
   }
 
   /** v0.14.0: бой начался — сервер запоминает состояние героя; в ответе его HP и мана на старт боя (они же в state.data). */
-  combatStart(spawn, enemy) { return this.run({ op: 'combat_start', spawn, enemy, balanceVersion: 30 }); }
+  combatStart(spawn, enemy) { return this.run({ op: 'combat_start', spawn, enemy, balanceVersion: COMBAT_BALANCE_VERSION }); }
 
   /**
    * v0.14.0: запись боя на проверку. Успех: { ok, outcome: 'victory'|'defeat'|'retreat', verdict, outcome (изменения: опыт, уровни, предметы, события) }.
@@ -137,6 +139,7 @@ export class PlayerActions {
       const v = verifyCombat(snap, log, now);
       if (!v.ok) return { ok: false, reason: v.reason };
       const { snapshot, result } = combatApply(snap, v.verdict, now);
+      if (result.sapphires > 0) v.verdict.reward = { ...v.verdict.reward, sapphires: result.sapphires };
       if (result.ok) { this.state.setData(fromSnapshot(snapshot, this.state.data)); this.state.save(); return { ...result, verdict: v.verdict }; }
       return result;
     }, 'combat', { spawnId });
@@ -152,6 +155,7 @@ export class PlayerActions {
 
   heal() { return this.run({ op: 'heal' }); }
   /** v0.12.0: зелье из сумки вне боя (настой жизни, лунный эликсир). */
+  potionLoadout(potions) { return this.confirm({ op: 'potion_loadout', potions }); }
   drink(item) { return this.run({ op: 'drink', item }); }
   /** v0.12.0: бой закончился. С v0.14.0 сервер принимает так только отступление (outcome 'retreat'); победа и поражение — combatSubmit. */
   combatEnd(outcome, mana) { return this.run({ op: 'combat_end', outcome, mana }); }
@@ -185,5 +189,5 @@ export class PlayerActions {
   covenClaim() { return this.run({ op: 'coven_claim' }); }
   covenPayout() { return this.run({ op: 'coven_payout' }); }   // v0.33.0: сапфиры пятёрке лучших за прошлые циклы
   duelSeason() { return this.run({ op: 'duel_season' }); }   // v0.34.0: награда сапфирами за прошлый сезон арены (забирается при открытии окна)
-  duelStart() { return this.run({ op: 'duel_start', balanceVersion: 30 }); }   // v0.26.0: вызов на Дуэль (соперника подбирает сервер)
+  duelStart() { return this.run({ op: 'duel_start', balanceVersion: COMBAT_BALANCE_VERSION, duelVersion: DUEL_VERSION }); }   // соперника и версию фиксирует сервер
 }

@@ -64,6 +64,7 @@ export async function handle(req, env, fetchFn = fetch, now = Date.now) {
   const applied = await rpc('combat_apply', { uid: user.id, verdict: v.verdict });
   if (!applied.ok) return fail(500, 'server_error');
   const res = await applied.json();
+  if (res.action?.ok && res.action?.sapphires > 0) v.verdict.reward = { ...v.verdict.reward, sapphires: res.action.sapphires };
   return json(200, { ...res, action: { ...(res.action || {}), verdict: v.verdict }, meta: res.meta ?? meta });
 }
 

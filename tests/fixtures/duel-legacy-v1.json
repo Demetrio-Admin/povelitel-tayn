@@ -1,0 +1,1505 @@
+{
+  "sourceCommit": "47df7e8ee4eea533d4f0f1a394ae1fb1af84ddad",
+  "cases": [
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 29,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "rating": 1000,
+          "opponent": {
+            "name": "Legacy",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "idle",
+      "result": {
+        "outcome": "defeat",
+        "time": 40.08333333333234,
+        "hp": 0,
+        "mana": 205,
+        "enemyHp": 1058,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 282,
+          "autoDamage": 120
+        }
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 29,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "rating": 1000,
+          "opponent": {
+            "name": "Legacy",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "smart",
+      "result": {
+        "outcome": "victory",
+        "time": 39.99999999999901,
+        "hp": 24,
+        "mana": 55.00000000000796,
+        "enemyHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 15,
+            "fire": 5,
+            "seal": 4,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 231,
+          "autoDamage": 153
+        }
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 29,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "rating": 1000,
+          "opponent": {
+            "name": "Legacy",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "idle",
+      "result": {
+        "outcome": "defeat",
+        "time": 43.883333333332125,
+        "hp": 0,
+        "mana": 205,
+        "enemyHp": 947,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 290,
+          "autoDamage": 231
+        }
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 29,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "rating": 1000,
+          "opponent": {
+            "name": "Legacy",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "smart",
+      "result": {
+        "outcome": "victory",
+        "time": 33.16666666666607,
+        "hp": 84,
+        "mana": 80.64500000000301,
+        "enemyHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 4,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 0,
+          "damageTaken": 171,
+          "autoDamage": 176
+        }
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 30,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "rating": 1000,
+          "opponent": {
+            "name": "Legacy",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "idle",
+      "result": {
+        "outcome": "defeat",
+        "time": 40.08333333333234,
+        "hp": 0,
+        "mana": 205,
+        "enemyHp": 1058,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 282,
+          "autoDamage": 120
+        }
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 30,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "rating": 1000,
+          "opponent": {
+            "name": "Legacy",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "smart",
+      "result": {
+        "outcome": "victory",
+        "time": 39.99999999999901,
+        "hp": 24,
+        "mana": 71.99999999999818,
+        "enemyHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 15,
+            "fire": 5,
+            "seal": 4,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 231,
+          "autoDamage": 153
+        }
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 30,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "rating": 1000,
+          "opponent": {
+            "name": "Legacy",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "idle",
+      "result": {
+        "outcome": "defeat",
+        "time": 43.883333333332125,
+        "hp": 0,
+        "mana": 205,
+        "enemyHp": 947,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 290,
+          "autoDamage": 231
+        }
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 30,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "rating": 1000,
+          "opponent": {
+            "name": "Legacy",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "smart",
+      "result": {
+        "outcome": "victory",
+        "time": 33.16666666666607,
+        "hp": 84,
+        "mana": 102.95033333332606,
+        "enemyHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 4,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 0,
+          "damageTaken": 171,
+          "autoDamage": 176
+        }
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 38,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "rating": 1000,
+          "opponent": {
+            "name": "Legacy",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "idle",
+      "result": {
+        "outcome": "defeat",
+        "time": 40.08333333333234,
+        "hp": 0,
+        "mana": 205,
+        "enemyHp": 1058,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 282,
+          "autoDamage": 120
+        }
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 38,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "rating": 1000,
+          "opponent": {
+            "name": "Legacy",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "smart",
+      "result": {
+        "outcome": "victory",
+        "time": 35.99999999999924,
+        "hp": 62,
+        "mana": 73.16666666666595,
+        "enemyHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 14,
+            "fire": 5,
+            "seal": 4,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 193,
+          "autoDamage": 145
+        }
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 38,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "rating": 1000,
+          "opponent": {
+            "name": "Legacy",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "idle",
+      "result": {
+        "outcome": "defeat",
+        "time": 43.883333333332125,
+        "hp": 0,
+        "mana": 205,
+        "enemyHp": 926,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 290,
+          "autoDamage": 252
+        }
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 38,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "rating": 1000,
+          "opponent": {
+            "name": "Legacy",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "smart",
+      "result": {
+        "outcome": "victory",
+        "time": 29.33333333333295,
+        "hp": 97,
+        "mana": 121.9936666666606,
+        "enemyHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 3,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 0,
+          "damageTaken": 158,
+          "autoDamage": 168
+        }
+      }
+    }
+  ]
+}

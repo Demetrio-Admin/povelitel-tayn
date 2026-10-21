@@ -1,2 +1,2 @@
 // Версия клиента: показывается в меню и уходит в телеметрию. Меняется вместе с package.json.
-export const VERSION = '0.38.1';
+export const VERSION = '0.39.0';

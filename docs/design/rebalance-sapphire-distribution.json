@@ -1,0 +1,17 @@
+{
+  "frostwood": {
+    "mean": 73.94999999999997,
+    "median": 78,
+    "p10": 41,
+    "p90": 94,
+    "max": 132
+  },
+  "graveyard": {
+    "mean": 73.94999999999997,
+    "median": 78,
+    "p10": 41,
+    "p90": 94,
+    "max": 132
+  },
+  "note": "One complete expedition, not an hourly promise. Boss cooldown is one hour."
+}

@@ -211,6 +211,9 @@ export const windows08 = {
         });
         cy += 118;
         // v0.10.0: два раздела — зелья и предметы для главного задания; неизвестный рецепт показывает, откуда придёт знание
+        if (state.hasEvent('ch2_nerys_met') && !state.hasEvent('regen_potions_learned')) {
+          const b = addButton(this, x+w/2, cy+UI.touch.button/2, w, UI.touch.button, 'Изучить восстановительные составы', { primary: true, onPress: async () => { const r = await services.actions.world('fq_cauldron'); if (r?.ok) { this.closeModal(null); this.openCauldron(); } } }); c.add(b.parts); cy += UI.touch.button+18;
+        }
         let section = null;
         // v0.19.0: разделы по виду рецепта; рецепты главы II не показываются, пока неизвестны
         const list = alchemy.recipes().filter((r) => !(r.chapter >= 2 && alchemy.status(r.id).state === 'locked'))

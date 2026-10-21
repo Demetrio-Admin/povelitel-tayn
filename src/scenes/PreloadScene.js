@@ -201,6 +201,7 @@ const DRAWERS = {
   icon_coin: icon((g) => { g.fillStyle(0xa67c2e).fillCircle(32, 34, 22); g.fillStyle(COLORS.gold).fillCircle(32, 32, 22); g.fillStyle(0xf3d98a).fillCircle(32, 32, 12); }),
   icon_shard: icon((g) => { g.fillStyle(0x5fb8d9).fillTriangle(32, 4, 14, 32, 50, 32).fillTriangle(14, 32, 50, 32, 32, 60); g.fillStyle(0xbdeeff).fillTriangle(32, 10, 22, 32, 32, 32); }),
   icon_ember: icon((g) => { g.fillStyle(0x8a1f1a).fillCircle(32, 34, 20); g.fillStyle(0xff4a2b).fillCircle(30, 32, 12); g.fillStyle(0xffb36b).fillCircle(28, 30, 5); }),
+  icon_storm: icon((g) => { g.fillStyle(0xb3adff).beginPath().moveTo(38,6).lineTo(15,36).lineTo(30,36).lineTo(24,59).lineTo(51,25).lineTo(36,25).closePath().fillPath(); }),
   icon_core: icon((g) => { g.fillStyle(COLORS.seal, 0.4).fillCircle(32, 32, 28); g.fillStyle(0xff8a3a).fillCircle(32, 32, 16); g.fillStyle(0xffffff).fillCircle(28, 28, 5); }),
   icon_lock: icon((g) => { g.lineStyle(6, 0xbbbbbb).strokeCircle(32, 26, 12); g.fillStyle(0x999999).fillRoundedRect(14, 28, 36, 28, 6); g.fillStyle(0x333333).fillCircle(32, 40, 4); }),
 

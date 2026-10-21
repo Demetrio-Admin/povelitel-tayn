@@ -29,7 +29,7 @@ import { addButton } from '../ui/widgets.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
-const SCHOOL_COLOR = { telekinesis: COLORS.telekinesis, fire: COLORS.fire, seal: COLORS.seal, ice: COLORS.ice, auto: 0xf1e3c2 };
+const SCHOOL_COLOR = { telekinesis: COLORS.telekinesis, fire: COLORS.fire, seal: COLORS.seal, ice: COLORS.ice, storm: COLORS.storm, auto: 0xf1e3c2 };
 const ENEMY_POS = { x: VIEW.width / 2, y: 560 };
 const HERO_POS = { x: VIEW.width / 2, y: 1040 };
 const hex = c => '#' + c.toString(16).padStart(6, '0');
@@ -61,6 +61,7 @@ export class CombatScene extends Phaser.Scene {
     this.rec = new CombatRecorder();   // действия игрока по номеру шага: их сервер проигрывает заново
     this.acc = 0;
     this.def = this.cm.def;
+    this.enemyPos = this.cm.duelBattle ? { x: ENEMY_POS.x, y: 760 } : ENEMY_POS;
     this.started = false;
     this.ended = false;
     services.mode = 'combat';
@@ -142,19 +143,19 @@ export class CombatScene extends Phaser.Scene {
 
   buildEnemy() {
     const texture = this.spawn.texture || this.def.texture;
-    const s = this.add.image(ENEMY_POS.x, ENEMY_POS.y, texture).setOrigin(0.5, 1);
+    const s = this.add.image(this.enemyPos.x, this.enemyPos.y, texture).setOrigin(0.5, 1);
     applyDisplaySize(s, texture);
     const human = this.duel || ['severin_boss', 'volunteer'].includes(this.enemyType);
     const mul = human ? (this.duel ? 1.125 : 1.2) : this.def.tier === 'strong' ? 1.5 : 1.7;
-    s.setScale(s.scaleX * mul, s.scaleY * mul).setDepth(ENEMY_POS.y);
+    s.setScale(s.scaleX * mul, s.scaleY * mul).setDepth(this.enemyPos.y);
     this.enemySprite = s;
     this.enemyTint = this.def.tint || null;   // v0.10.0: Страж узла отличается оттенком от Лесного Стража
     if (this.enemyTint) s.setTint(this.enemyTint);
     this.enemyBase = { sx: s.scaleX, sy: s.scaleY };
-    this.add.image(ENEMY_POS.x, ENEMY_POS.y - 4, 'hero_shadow').setDisplaySize(s.displayWidth * 0.9, 34).setDepth(ENEMY_POS.y - 1);
+    this.add.image(this.enemyPos.x, this.enemyPos.y - 4, 'hero_shadow').setDisplaySize(s.displayWidth * 0.9, 34).setDepth(this.enemyPos.y - 1);
     this.idle = this.tweens.add({ targets: s, scaleY: s.scaleY * 1.04, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    this.prepGlow = this.add.image(ENEMY_POS.x, ENEMY_POS.y - s.displayHeight / 2, 'fx_glow').setTint(COLORS.danger).setBlendMode('ADD').setScale(3).setAlpha(0).setDepth(ENEMY_POS.y + 1);
-    this.armorGlow = this.add.image(ENEMY_POS.x, ENEMY_POS.y - s.displayHeight / 2, 'fx_ring').setTint(0x9f8bff).setScale(2.2, 2.6).setAlpha(this.cm.enemy.hasArmor ? 0.6 : 0).setDepth(ENEMY_POS.y + 2);
+    this.prepGlow = this.add.image(this.enemyPos.x, this.enemyPos.y - s.displayHeight / 2, 'fx_glow').setTint(COLORS.danger).setBlendMode('ADD').setScale(3).setAlpha(0).setDepth(this.enemyPos.y + 1);
+    this.armorGlow = this.add.image(this.enemyPos.x, this.enemyPos.y - s.displayHeight / 2, 'fx_ring').setTint(0x9f8bff).setScale(2.2, 2.6).setAlpha(this.cm.enemy.hasArmor ? 0.6 : 0).setDepth(this.enemyPos.y + 2);
   }
 
   buildHero() {
@@ -195,11 +196,18 @@ export class CombatScene extends Phaser.Scene {
 
   buildEnemyHud() {
     const W = VIEW.width;
-    const y = 222;   // под верхним HUD (HP/мана) и левее колонки «Меню»
-    this.add.text(W / 2, y - 14, `${this.def.name}\n${this.def.level ? `Ур. ${this.def.level} · ${this.def.difficulty === 'boss' ? 'Босс' : this.def.difficulty === 'elite' ? 'Элитный' : 'Обычный'}` : 'Магическая Дуэль'}`, { fontFamily: FONT, fontSize: UI.type.body, align: 'center', color: '#ffb3a8', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5, 1).setDepth(5000);
+    const equippedDuel = !!this.cm.duelBattle;
+    const y = equippedDuel ? 244 : 222;
+    const title = equippedDuel ? this.def.name : `${this.def.name}\n${this.def.level ? `Ур. ${this.def.level} · ${this.def.difficulty === 'boss' ? 'Босс' : this.def.difficulty === 'elite' ? 'Элитный' : 'Обычный'}` : 'Магическая Дуэль'}`;
+    const name = this.add.text(W / 2, y - 14, title, { fontFamily: FONT, fontSize: UI.type.body, align: 'center', color: '#ffb3a8', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5, 1).setDepth(5000);
+    if (equippedDuel) {
+      while (name.width > 620 && name.text.length > 2) name.setText(name.text.replace(/…$/, '').slice(0, -1) + '…');
+      this.enemyResourceText = this.add.text(W / 2, y + 26, '', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textGold, stroke: '#000', strokeThickness: 4, align: 'center' }).setOrigin(0.5, 0).setDepth(5000);
+      this.heroBuffText = this.add.text(584, 968, '', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textGold, stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 220 } }).setOrigin(0.5, 0).setDepth(5200);
+    }
     this.enemyHpBar = new UIBar(this, W / 2 - 260, y, 520, 34, 'hp', 5000);
     this.enemyHpText = this.add.text(W / 2, y, '', { fontFamily: FONT, fontSize: UI.type.small, color: '#fff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(5002);
-    this.statusText = this.add.text(W / 2, y + 26, '', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textGold, stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 620 } }).setOrigin(0.5, 0).setDepth(5000);
+    this.statusText = this.add.text(W / 2, y + (equippedDuel ? 68 : 26), '', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textGold, stroke: '#000', strokeThickness: 4, align: 'center', wordWrap: { width: 620 } }).setOrigin(0.5, 0).setDepth(5000);
 
     // предупреждение о сильной атаке (cast warning)
     this.warn = this.add.container(W / 2, 352).setDepth(5100).setVisible(false);
@@ -229,6 +237,7 @@ export class CombatScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-FOUR', () => this.onPotion([...this.potionViews.keys()][0]));
     this.input.keyboard?.on('keydown-FIVE', () => this.onPotion([...this.potionViews.keys()][1]));
     this.input.keyboard?.on('keydown-SIX', () => this.onPotion([...this.potionViews.keys()][2]));
+    this.input.keyboard?.on('keydown-SEVEN', () => this.onPotion([...this.potionViews.keys()][3]));
   }
 
   refreshPotions() {
@@ -294,7 +303,7 @@ export class CombatScene extends Phaser.Scene {
     const res = this.cm.useAbility(id);
     if (!res.ok) {
       if (res.reason === 'nomana' && this.sim.item('elixir_mana') > 0 && (this.cm.stats.potions || 0) < POTION_BATTLE_LIMIT) this.queueHint(COMBAT_HINTS.lowMana, 'lowMana');
-      const msg = { cooldown: 'Перезарядка…', nomana: 'Не хватает маны', locked: `${ABILITIES[id].name}: дар ещё не изучен`, benched: `${ABILITIES[id].name}: дар не в слоте — выберите слоты в «Дарах» вне боя` }[res.reason];
+      const msg = { cooldown: 'Перезарядка…', casting: 'Дождитесь завершения подготовки или оглушения', nomana: 'Не хватает маны', locked: `${ABILITIES[id].name}: дар ещё не изучен`, benched: `${ABILITIES[id].name}: дар не в слоте — выберите слоты в «Дарах» вне боя` }[res.reason];
       if (msg) this.toast(msg);
       services.audio.play('locked');
       return;
@@ -309,7 +318,7 @@ export class CombatScene extends Phaser.Scene {
     this.heroAnim.playCast(id);
     const from = obj ? this.fieldViews.get(obj.id).img : this.heroSprite;
     const sx = from.x, sy = from.y - from.displayHeight / 2;
-    const tx = ENEMY_POS.x, ty = ENEMY_POS.y - this.enemySprite.displayHeight / 2;
+    const tx = this.enemyPos.x, ty = this.enemyPos.y - this.enemySprite.displayHeight / 2;
     if (!obj) {
       for (let i = 0; i < 8; i++) {
         const d = this.add.image(sx, sy, 'fx_dot').setTint(color).setBlendMode('ADD').setScale(1.4 - i * 0.12).setDepth(6000);
@@ -352,22 +361,26 @@ export class CombatScene extends Phaser.Scene {
     this.enemyHpBar.setFraction(Math.max(0, e.hp / e.maxHp));
     this.enemyHpText.setText(`${Math.ceil(e.hp)} / ${e.maxHp}`);
     const st = [];
+    const own = [];
     if (e.actor) {
-      st.push(`Мана соперника ${Math.floor(e.actor.hero.mana)}/${e.actor.hero.maxMana}`);
-      if (e.actor.state.isEquipped('storm')) st.push(`Гроза соперника ${e.actor.stormCharges}/3`);
+      const resources = [`Мана ${Math.floor(e.actor.hero.mana)}/${e.actor.hero.maxMana}`];
+      if (e.actor.state.isEquipped('storm')) resources.push(`Гроза ${e.actor.stormCharges}/3`);
+      this.enemyResourceText.setText(resources.join('   ·   '));
     }
-    if (this.cm.modern && this.sim.isEquipped('storm')) st.push(`Гроза: ${this.cm.stormCharges}/3`);
+    if (this.cm.modern && this.sim.isEquipped('storm')) (e.actor ? own : st).push(`Ваша Гроза ${this.cm.stormCharges}/3`);
     if (e.shield > 0) st.push(`Щит ${Math.ceil(e.shield)}`);
-    if (this.cm.modern && Object.values(this.cm.shields).some(s=>s.amount>0)) st.push(`Ваш щит ${Math.ceil(Object.values(this.cm.shields).reduce((n,s)=>n+Math.max(0,s.amount),0))}`);
+    if (this.cm.modern && Object.values(this.cm.shields).some(s=>s.left>0&&s.amount>0)) (e.actor ? own : st).push(`Ваш щит ${Math.ceil(Object.values(this.cm.shields).reduce((n,s)=>n+(s.left>0?Math.max(0,s.amount):0),0))}`);
+    this.heroBuffText?.setText(own.join('\n'));
     if (e.hasArmor) st.push(e.armorActive ? `Броня −${Math.round(e.def.armor.value * 100)}%` : `Броня разбита ${e.armorDisabledLeft.toFixed(0)}с`);
     if (e.burning) st.push(`Горение ${e.burn.left.toFixed(0)}с`);
-    if (e.inPuddle) st.push(`Лужа смолы ${e.puddle.left.toFixed(0)}с`);
-    if (e.slowed) st.push(`Замедлен ${e.slow.left.toFixed(0)}с`);
+    if (e.inPuddle) st.push(`${e.actor ? 'Смола' : 'Лужа смолы'} ${e.puddle.left.toFixed(0)}с`);
+    if (e.slowed) st.push(`${e.actor ? 'Холод' : 'Замедлен'} ${e.slow.left.toFixed(0)}с`);
     if (e.isBrittle) st.push(`Хрупкость ${e.brittle.left.toFixed(0)}с`);
     if (e.vulnerable.left > 0) st.push(`Уязвим +${Math.round(e.vulnerable.bonus * 100)}% ${e.vulnerable.left.toFixed(0)}с`);
     if (e.staggerLeft > 0) st.push('Оглушён');
     if (e.defenseActive) st.push(`Защита −${Math.round(e.def.defense * 100)}%`);
     this.statusText.setText(st.join('   ·   '));
+    if (e.actor) this.warn.y = Math.max(496, this.statusText.y + this.statusText.height + 84);
     this.armorGlow.setAlpha(e.armorActive ? 0.45 + Math.sin(this.time.now / 300) * 0.15 : 0);
     this.enemySprite.setTint(e.burning ? 0xffb38a : e.staggerLeft > 0 ? 0xb0b0ff : 0xffffff);
 
@@ -396,7 +409,7 @@ export class CombatScene extends Phaser.Scene {
     this.hurtVig.setAlpha(Math.max(this.hurtFlash, pulse));
     // дрожь врага при попадании (только x — y и scale заняты другими анимациями)
     this.enemyShake = Math.max(0, this.enemyShake - delta / 220);
-    this.enemySprite.x = ENEMY_POS.x + Math.sin(this.time.now / 18) * 10 * this.enemyShake;
+    this.enemySprite.x = this.enemyPos.x + Math.sin(this.time.now / 18) * 10 * this.enemyShake;
     // обучение: замедление во время первого предупреждения
     if (this.timeScale < 1 && !this.cm.enemy.isPreparing) this.endSlowMo();
   }
@@ -416,10 +429,10 @@ export class CombatScene extends Phaser.Scene {
           if (ev.refused) { services.audio.play('locked'); this.toast('Тяжёлый камень — нужен Телекинез II', COLORS.danger); }
           break;
         case 'warning':
-          this.warnTitle.setText(`⚠ ${ev.name}!`);
+          this.warnTitle.setText(`${this.cm.duelBattle ? '' : '⚠ '}${ev.name}!`);
           this.warnHint.setText(ev.needsHeavy ? 'Выберите тяжёлый камень и нажмите Телекинез' : (ev.hint || ''));
           this.tweens.add({ targets: this.enemySprite, scaleX: this.enemyBase.sx * 1.1, duration: 200, yoyo: true });
-          this.tweens.add({ targets: this.warn, scale: { from: 1.25, to: 1 }, duration: 260, ease: 'Back.easeOut' });
+          this.tweens.add({ targets: this.warn, scale: { from: this.cm.duelBattle ? 1.06 : 1.25, to: 1 }, duration: 260, ease: 'Back.easeOut' });
           services.audio.play('warning');
           services.audio.vibrate(25);
           // v0.9: обучение прерыванию ведёт CombatTutorial (атака удерживается до действия игрока)
@@ -430,10 +443,10 @@ export class CombatScene extends Phaser.Scene {
             break;
           }
           if (ev.ok) {
-            this.floatText(ENEMY_POS.x, ENEMY_POS.y - this.enemySprite.displayHeight - 30, 'ПРЕРВАНО!', COLORS.telekinesis, 34);
-            this.tweens.add({ targets: this.enemySprite, y: ENEMY_POS.y - 24, duration: 120, yoyo: true });
+            this.floatText(this.enemyPos.x, this.enemyPos.y - this.enemySprite.displayHeight - 30, 'ПРЕРВАНО!', COLORS.telekinesis, 34);
+            this.tweens.add({ targets: this.enemySprite, y: this.enemyPos.y - 24, duration: 120, yoyo: true });
             this.cameras.main.shake(120, 0.006);
-            this.burst(ENEMY_POS.x, ENEMY_POS.y - this.enemySprite.displayHeight * 0.6, COLORS.telekinesis, 30);
+            this.burst(this.enemyPos.x, this.enemyPos.y - this.enemySprite.displayHeight * 0.6, COLORS.telekinesis, 30);
             services.audio.play('interrupt');
             services.audio.vibrate(50);
             this.freeze(110);
@@ -445,16 +458,16 @@ export class CombatScene extends Phaser.Scene {
           }
           break;
         case 'chain':   // v0.11.1: Телекинез III — второй бросок без перезарядки
-          this.floatText(ENEMY_POS.x - 120, ENEMY_POS.y + 40, 'ЕЩЁ БРОСОК!', COLORS.telekinesis, 28);
+          this.floatText(this.enemyPos.x - 120, this.enemyPos.y + 40, 'ЕЩЁ БРОСОК!', COLORS.telekinesis, 28);
           break;
         case 'chill':   // v0.18.0: холод врага — перезарядки и мана идут медленнее
           this.toast(`Холод: перезарядка и мана медленнее на ${Math.round(ev.pct * 100)}% (${ev.sec} с)`, COLORS.ice);
           break;
         case 'manaRescue':   // v0.16.0: Лунный амулет вернул ману
-          this.floatText(ENEMY_POS.x + 120, ENEMY_POS.y + 80, `Лунный амулет: +${ev.mana} маны`, COLORS.mana, 26);
+          this.floatText(this.enemyPos.x + 120, this.enemyPos.y + 80, `Лунный амулет: +${ev.mana} маны`, COLORS.mana, 26);
           break;
         case 'refund':  // ветка «Повелитель»: удачное прерывание вернуло ману и ускорило перезарядку
-          this.floatText(ENEMY_POS.x + 120, ENEMY_POS.y + 40, `+${ev.mana} маны · −${ev.cooldownSec} с`, COLORS.mana, 26);
+          this.floatText(this.enemyPos.x + 120, this.enemyPos.y + 40, `+${ev.mana} маны · −${ev.cooldownSec} с`, COLORS.mana, 26);
           break;
         case 'potion': this.onPotionEvent(ev); break;
         case 'objectUsed': this.animateObject(ev); break;
@@ -466,16 +479,16 @@ export class CombatScene extends Phaser.Scene {
           break;
         }
         case 'armorBroken':
-          this.floatText(ENEMY_POS.x, ENEMY_POS.y - 80, 'БРОНЯ РАЗБИТА!', 0xc9b5ff, 30);
+          this.floatText(this.enemyPos.x, this.enemyPos.y - 80, 'БРОНЯ РАЗБИТА!', 0xc9b5ff, 30);
           services.audio.play('armor_break');
           services.audio.vibrate(40);
           this.freeze(90);
-          this.burst(ENEMY_POS.x, ENEMY_POS.y - 120, 0xc9b5ff, 30);
+          this.burst(this.enemyPos.x, this.enemyPos.y - 120, 0xc9b5ff, 30);
           break;
         case 'armorBack': this.toast('Броня Стража восстановилась'); break;
         case 'flash':   // v0.16.0: Астрал III — вспышка снимает броню и кору на время
-          this.floatText(ENEMY_POS.x, ENEMY_POS.y - 100, 'ВСПЫШКА!', COLORS.seal, 30);
-          this.burst(ENEMY_POS.x, ENEMY_POS.y - 120, COLORS.seal, 24);
+          this.floatText(this.enemyPos.x, this.enemyPos.y - 100, 'ВСПЫШКА!', COLORS.seal, 30);
+          this.burst(this.enemyPos.x, this.enemyPos.y - 120, COLORS.seal, 24);
           break;
         case 'phase':   // v0.10.0: Страж узла сменил фазу — заметное изменение и короткое сообщение
           // сообщение — между врагом и героиней (не поверх врага и предупреждения сильного удара)
@@ -484,7 +497,7 @@ export class CombatScene extends Phaser.Scene {
           if (this.enemyType === 'severin_boss' && this.arenaArt) {
             this.arenaArt.setTint(ev.phase === 3 ? 0xe2d9ff : ev.phase === 2 ? 0xdceeff : 0xffffff);
           }
-          this.burst(ENEMY_POS.x, ENEMY_POS.y - this.enemySprite.displayHeight * 0.5, ev.tint || 0xffffff, 40);
+          this.burst(this.enemyPos.x, this.enemyPos.y - this.enemySprite.displayHeight * 0.5, ev.tint || 0xffffff, 40);
           this.cameras.main.shake(260, 0.01);
           services.audio.play('armor_break');
           services.audio.vibrate([40, 30, 60]);
@@ -495,12 +508,12 @@ export class CombatScene extends Phaser.Scene {
             if (label) this.floatText(HERO_POS.x, HERO_POS.y - 120, label, SCHOOL_COLOR[ev.status === 'burn' || ev.status === 'puddle' ? 'fire' : 'ice'], UI.type.combat);
             break;
           }
-          if (ev.status === 'vulnerable') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Уязвим!', COLORS.fire, UI.type.combat);
-          if (ev.status === 'slow') this.floatText(ENEMY_POS.x + 80, ENEMY_POS.y + 30, 'Замедлен', COLORS.ice, UI.type.combat);
-          if (ev.status === 'brittle') this.floatText(ENEMY_POS.x - 80, ENEMY_POS.y - 30, 'Хрупкость', COLORS.ice, UI.type.combat);
-          if (ev.status === 'shatter') { this.floatText(ENEMY_POS.x, ENEMY_POS.y - 110, 'РАСКОЛ!', COLORS.ice, 30); this.burst(ENEMY_POS.x, ENEMY_POS.y - 100, COLORS.ice, 26); }
-          if (ev.status === 'puddle') this.floatText(ENEMY_POS.x - 80, ENEMY_POS.y + 30, 'Лужа смолы', COLORS.fire, UI.type.combat);
-          if (ev.status === 'defenseOff') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Защита снята', COLORS.fire, UI.type.combat);
+          if (ev.status === 'vulnerable') this.floatText(this.enemyPos.x, this.enemyPos.y - 60, 'Уязвим!', COLORS.fire, UI.type.combat);
+          if (ev.status === 'slow') this.floatText(this.enemyPos.x + 80, this.enemyPos.y + 30, 'Замедлен', COLORS.ice, UI.type.combat);
+          if (ev.status === 'brittle') this.floatText(this.enemyPos.x - 80, this.enemyPos.y - 30, 'Хрупкость', COLORS.ice, UI.type.combat);
+          if (ev.status === 'shatter') { this.floatText(this.enemyPos.x, this.enemyPos.y - 110, 'РАСКОЛ!', COLORS.ice, 30); this.burst(this.enemyPos.x, this.enemyPos.y - 100, COLORS.ice, 26); }
+          if (ev.status === 'puddle') this.floatText(this.enemyPos.x - 80, this.enemyPos.y + 30, 'Лужа смолы', COLORS.fire, UI.type.combat);
+          if (ev.status === 'defenseOff') this.floatText(this.enemyPos.x, this.enemyPos.y - 60, 'Защита снята', COLORS.fire, UI.type.combat);
           break;
         case 'result': services.audio.lowHp = false; services.tutorial.hide(); this.timeScale = 1; this.endCombat(ev.result, ev.time); break;
         default: break;
@@ -513,7 +526,7 @@ export class CombatScene extends Phaser.Scene {
       const color = SCHOOL_COLOR[ev.school] || 0xffffff;
       const size = ev.tick ? UI.type.small : ev.school === 'auto' ? UI.type.body : UI.type.title;
       const jx = Phaser.Math.Between(-60, 60);
-      this.floatText(ENEMY_POS.x + jx, ENEMY_POS.y - this.enemySprite.displayHeight * 0.7, `${ev.amount}`, color, size);
+      this.floatText(this.enemyPos.x + jx, this.enemyPos.y - this.enemySprite.displayHeight * 0.7, `${ev.amount}`, color, size);
       const a = services.audio;
       if (ev.tick) a.play('burn_tick', { minGap: 300 });
       else if (ev.school === 'auto') a.play('auto_hit');
@@ -528,11 +541,11 @@ export class CombatScene extends Phaser.Scene {
       if (ev.school === 'auto') {
         this.heroAnim.playCast('auto');
         const d = this.add.image(HERO_POS.x, HERO_POS.y - 80, 'fx_dot').setTint(0xf1e3c2).setBlendMode('ADD').setDepth(6000);
-        this.tweens.add({ targets: d, x: ENEMY_POS.x, y: ENEMY_POS.y - 80, duration: 220, onComplete: () => d.destroy() });
+        this.tweens.add({ targets: d, x: this.enemyPos.x, y: this.enemyPos.y - 80, duration: 220, onComplete: () => d.destroy() });
       }
     } else {
       // атака врага: рывок вперёд и удар по героине
-      this.tweens.add({ targets: this.enemySprite, y: ENEMY_POS.y + (ev.strong ? 90 : 40), duration: 120, yoyo: true, ease: 'Quad.easeIn' });
+      this.tweens.add({ targets: this.enemySprite, y: this.enemyPos.y + (ev.strong ? 90 : 40), duration: 120, yoyo: true, ease: 'Quad.easeIn' });
       this.floatText(HERO_POS.x + 70, HERO_POS.y - 140, `−${ev.amount}`, COLORS.danger, ev.strong ? 40 : 28);
       this.heroAnim.playHurt(ev.strong);
       this.cameras.main.shake(ev.strong ? 300 : 120, ev.strong ? 0.014 : 0.004);
@@ -562,9 +575,9 @@ export class CombatScene extends Phaser.Scene {
       // бросок склянки: пламенный росчерк от героини к врагу
       for (let i = 0; i < 8; i++) {
         const d = this.add.image(HERO_POS.x, HERO_POS.y - 80, 'fx_dot').setTint(p.color).setBlendMode('ADD').setScale(1.3 - i * 0.12).setDepth(6000);
-        this.tweens.add({ targets: d, x: ENEMY_POS.x, y: ENEMY_POS.y - 80, delay: i * 25, duration: 260, onComplete: () => d.destroy() });
+        this.tweens.add({ targets: d, x: this.enemyPos.x, y: this.enemyPos.y - 80, delay: i * 25, duration: 260, onComplete: () => d.destroy() });
       }
-      this.time.delayedCall(280, () => this.burst(ENEMY_POS.x, ENEMY_POS.y - 80, p.color, 30));
+      this.time.delayedCall(280, () => this.burst(this.enemyPos.x, this.enemyPos.y - 80, p.color, 30));
     }
     this.toast(p.name, p.color);
   }
@@ -577,7 +590,7 @@ export class CombatScene extends Phaser.Scene {
       this.tweens.add({ targets: v.img, alpha: 0, scaleX: v.img.scaleX * 1.4, scaleY: v.img.scaleY * 1.4, duration: 250, onComplete: () => v.img.setVisible(false) });
       return;
     }
-    const target = ev.actor === 'enemy' ? HERO_POS : ENEMY_POS;
+    const target = ev.actor === 'enemy' ? HERO_POS : this.enemyPos;
     // бросок Телекинезом: подъём → полёт в цель
     this.tweens.chain({
       targets: v.img,
@@ -712,7 +725,7 @@ export class CombatScene extends Phaser.Scene {
       services.audio.setMusic(null);
       services.audio.play('victory');
       services.audio.vibrate([40, 40, 80]);
-      this.burst(ENEMY_POS.x, ENEMY_POS.y - 80, COLORS.gold, 40);
+      this.burst(this.enemyPos.x, this.enemyPos.y - 80, COLORS.gold, 40);
     } else {
       this.heroAnim.playDeath();
       services.audio.setMusic(null);

@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { ITEMS } from '../../src/config/balance.progression.js';
 const schema = fs.readFileSync('supabase/schema.sql','utf8');
 const fn = name => {
  const re = new RegExp(`create or replace function public\\.${name}\\([\\s\\S]*?\\$\\$;`);
@@ -21,6 +22,10 @@ for (const [name,args] of [['sync_player','jsonb'],['player_action','jsonb'],['c
 }
 sql += fn('_duel_snapshot')+'\n';
 const admin = fs.readFileSync('supabase/migrations/20261008_test_admin.sql','utf8').match(/insert into game_admin\.settings\(key,value\) values \('rules',[\s\S]*?;\n/)[0];
+const catalog = JSON.stringify(Object.fromEntries(Object.entries(ITEMS).map(([id,item]) => [id,item.name]))).replace(/'/g, "''");
+sql += `do $catalog$ begin if to_regprocedure('game_chat.catalog()') is not null then
+execute $ddl$create or replace function game_chat.catalog() returns jsonb language sql immutable set search_path='' as $$ select '${catalog}'::jsonb $$;$ddl$;
+end if; end $catalog$;\n`;
 sql += `do $admin$ begin if to_regclass('game_admin.settings') is not null then execute $ddl$${admin}$ddl$; end if; end $admin$;\ncommit;\n`;
 const path = 'supabase/migrations/20261021_rebalance_recovery.sql';
 if (process.argv.includes('--check')) { if (fs.readFileSync(path,'utf8')!==sql) throw new Error('Recovery migration is stale'); }

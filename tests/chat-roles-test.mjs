@@ -20,7 +20,8 @@ const migrate = async () => {
   await db.exec(readFileSync("supabase/migrations/20261004_chat_roles_v2.sql", "utf8"));
   await db.exec(readFileSync("supabase/migrations/20261005_chat_amulet_catalog.sql", "utf8"));
   await db.exec(readFileSync("supabase/migrations/20261006_chat_catalog_ch2.sql", "utf8"));   // v0.19.0
-  await db.exec(readFileSync("supabase/migrations/20261007_covens.sql", "utf8"));             // v0.25.0: Ковены и их чат
+  await db.exec(readFileSync("supabase/migrations/20261007_covens.sql", "utf8")); // Ковены и их чат
+  await db.exec(readFileSync("supabase/migrations/20261021_rebalance_recovery.sql", "utf8")); // Текущий каталог ребаланса
 };
 try {
   for (const f of ["tools/sql/auth-stub.sql", "supabase/schema.sql", "supabase/migrations/20261004_game_chat.sql"]) await db.exec(readFileSync(f, "utf8"));
@@ -32,7 +33,10 @@ try {
   }
   for (const n of names.slice(1, 6)) await sql("insert into game_chat.roles(user_id,roles) values($1,$2)", [users[n], [n]]);
   await sql("insert into game_chat.roles(user_id,roles) values($1,array['support','developer','moderator'])", [users.bob]);
-  await migrate(); await migrate();
+  await migrate();
+  const catalogAcl = (await sql("select proacl::text acl from pg_proc where oid='game_chat.catalog()'::regprocedure")).rows[0].acl;
+  await migrate();
+  check((await sql("select proacl::text acl from pg_proc where oid='game_chat.catalog()'::regprocedure")).rows[0].acl === catalogAcl, "rebalance catalog update preserves existing privileges on repeat");
   check((await call("bob", "bootstrap")).me.roles.join() === "developer", "legacy combined roles normalize to the highest one, repeatably");
   await sql("update game_chat.roles set roles='{}' where user_id=$1", [users.bob]);
   await assert.rejects(() => sql("update game_chat.roles set roles=array['support','moderator'] where user_id=$1", [users.bob]), /chat_one_role/); checks++;
@@ -142,6 +146,12 @@ try {
   await assert.rejects(() => as("player", () => sql("select game_chat.staff_player($1,$1)", [users.player])), /permission denied/); checks++;
   await db.exec(readFileSync("supabase/schema.sql", "utf8")); await migrate();
   check(await login("alice") === null && await login("alina") === "alice" && (await call("developer", "player_lookup", { playerId: me.alice.playerId })).inventory.coins === 111, "repeat installs preserve renamed login and inventory");
+  for (const item of ['potion_antiburn','amulet_storm_heart']) {
+    const before = await call('developer', 'player_lookup', { playerId: me.alice.playerId });
+    const requestId = randomUUID(), requestArgs = { playerId: before.playerId, revision: before.inventoryRevision, item, delta: 1, reason: 'New rebalance item' };
+    const grant = await call('developer', 'resources', requestArgs, requestId);
+    check(grant.inventory[item] === (before.inventory[item] || 0) + 1 && (await call('developer', 'resources', requestArgs, requestId)).inventory[item] === grant.inventory[item], 'new catalog item can be granted exactly once: ' + item);
+  }
   // Lost privileged responses must not replay after demotion.
   await sql("update game_chat.roles set roles='{}',revision=revision+1 where user_id=$1", [users.developer]);
   await assert.rejects(() => call("developer", "resources", args, request), /chat_forbidden/); checks++; // same UUID after demotion

@@ -316,6 +316,7 @@ function craft(s, id) {
   const r = typeof id === 'string' && Object.hasOwn(RULES.recipes, id) ? RULES.recipes[id] : null;
   if (!r) return { ok: false, reason: 'unknown' };
   if (!r.requires.every(ev => has(s, ev))) return { ok: false, reason: 'locked' };
+  if (r.requiresAbility && !(s.abilities?.[r.requiresAbility]?.unlocked && s.abilities[r.requiresAbility].level > 0)) return { ok: false, reason: 'locked' };
   if (r.blockedBy.some(ev => has(s, ev))) return { ok: false, reason: 'done' };
   const missing = Object.entries(r.needs).filter(([k, n]) => (s.inventory[k] || 0) < n).map(([k]) => k).sort();
   if (missing.length) return { ok: false, reason: 'missing', missing };

@@ -236,6 +236,7 @@ export function spawnStartRules() {
 export function serverRules() {
   const recipes = Object.fromEntries(Object.entries(RECIPES).map(([id, r]) => [id, {
     result: r.result, amount: r.amount, needs: r.needs, requires: r.requires || [], crafted: r.crafted || null, blockedBy: r.blockedBy || [],
+    ...(r.requiresAbility ? { requiresAbility: r.requiresAbility } : {}),
   }]));
   // v0.12.0: восстановление HP и маны считает сервер по времени (см. README «v0.12.0»)
   const house = ZONES.find(z => z.id === VITALS.houseZone);

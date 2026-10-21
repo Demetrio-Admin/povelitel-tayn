@@ -1,0 +1,3513 @@
+{
+  "date": "2026-10-21",
+  "balanceVersion": 40,
+  "kind": "deterministic local bot, not player win rates",
+  "assumptions": "Level 15, no potions. PvE: all gifts V, TK Breaker/Fire Arsonist or Fire Arsonist/Astral Seer, Lunar +5 companion. Duel: support gifts I, Storm V, Forest +5 companion so real charges/discharges occur before death. Offensive Duel probes retain all gifts V and Lunar +5. Baseline replaces Heart with Focus +5. Each replay verified by server engine. Attacker reacts every 10 fixed ticks; defender uses ordinary Duel AI.",
+  "pve": [
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": null,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 13,
+      "hp": 208,
+      "mana": 154.16666666666663,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 9,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": null,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 35.167,
+      "hp": 92,
+      "mana": 12.833333333332442,
+      "stormHits": 8,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 16,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 4
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": 0,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 20.5,
+      "hp": 169,
+      "mana": 92.91333333333716,
+      "stormHits": 6,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 12,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": 0,
+      "spawn": "gy_warden",
+      "outcome": "defeat",
+      "seconds": 56.15,
+      "hp": 0,
+      "mana": 20.569999999998366,
+      "stormHits": 8,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 20,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 4
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": 1,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 20.167,
+      "hp": 169,
+      "mana": 118.15333333333723,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 12,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": 1,
+      "spawn": "gy_warden",
+      "outcome": "defeat",
+      "seconds": 56.15,
+      "hp": 0,
+      "mana": 20.569999999998366,
+      "stormHits": 8,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 20,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 4
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": 2,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 20.167,
+      "hp": 169,
+      "mana": 118.15333333333723,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 12,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": 2,
+      "spawn": "gy_warden",
+      "outcome": "defeat",
+      "seconds": 56.15,
+      "hp": 0,
+      "mana": 20.569999999998366,
+      "stormHits": 8,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 20,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 4
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": 3,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 20,
+      "hp": 182,
+      "mana": 135.77333333333712,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 11,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": 3,
+      "spawn": "gy_warden",
+      "outcome": "defeat",
+      "seconds": 56.15,
+      "hp": 0,
+      "mana": 12.569999999998338,
+      "stormHits": 8,
+      "defenderStormHits": 0,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 21,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 4
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": 4,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 19.833,
+      "hp": 182,
+      "mana": 153.393333333337,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 14,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 10,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": 4,
+      "spawn": "gy_warden",
+      "outcome": "defeat",
+      "seconds": 56.15,
+      "hp": 0,
+      "mana": 16.569999999998267,
+      "stormHits": 8,
+      "defenderStormHits": 0,
+      "manaFromHeart": 28,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 21,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 4
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": 5,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 17.667,
+      "hp": 182,
+      "mana": 183.82000000000227,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 9,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "discharge",
+      "heartLevel": 5,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 43.167,
+      "hp": 43,
+      "mana": 20.599999999998634,
+      "stormHits": 10,
+      "defenderStormHits": 0,
+      "manaFromHeart": 60,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 19,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 5
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": null,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 19.833,
+      "hp": 204,
+      "mana": 170.76000000000369,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 10,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": null,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 59,
+      "hp": 26,
+      "mana": 2.7666666666647153,
+      "stormHits": 6,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 23,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 6
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": 0,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 23,
+      "hp": 191,
+      "mana": 109.98000000000377,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 12,
+        "fire": 3,
+        "seal": 0,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": 0,
+      "spawn": "gy_warden",
+      "outcome": "defeat",
+      "seconds": 66.367,
+      "hp": 0,
+      "mana": 12.759999999997838,
+      "stormHits": 6,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 24,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 6
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": 1,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 22.667,
+      "hp": 191,
+      "mana": 109.22000000000384,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 12,
+        "fire": 3,
+        "seal": 0,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": 1,
+      "spawn": "gy_warden",
+      "outcome": "defeat",
+      "seconds": 66.367,
+      "hp": 0,
+      "mana": 12.759999999997838,
+      "stormHits": 6,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 24,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 6
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": 2,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 22.667,
+      "hp": 191,
+      "mana": 109.22000000000384,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 12,
+        "fire": 3,
+        "seal": 0,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": 2,
+      "spawn": "gy_warden",
+      "outcome": "defeat",
+      "seconds": 66.367,
+      "hp": 0,
+      "mana": 12.759999999997838,
+      "stormHits": 6,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 24,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 6
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": 3,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 22,
+      "hp": 191,
+      "mana": 133.94000000000142,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 12,
+        "fire": 3,
+        "seal": 0,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": 3,
+      "spawn": "gy_warden",
+      "outcome": "defeat",
+      "seconds": 66.367,
+      "hp": 0,
+      "mana": 14.493333333331433,
+      "stormHits": 6,
+      "defenderStormHits": 0,
+      "manaFromHeart": 40,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 25,
+        "fire": 5,
+        "seal": 0,
+        "ice": 0,
+        "storm": 6
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": 4,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 21,
+      "hp": 191,
+      "mana": 135.66000000000076,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 28,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 12,
+        "fire": 3,
+        "seal": 0,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": 4,
+      "spawn": "gy_warden",
+      "outcome": "defeat",
+      "seconds": 62.967,
+      "hp": 0,
+      "mana": 3.573333333331557,
+      "stormHits": 6,
+      "defenderStormHits": 0,
+      "manaFromHeart": 56,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 27,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 6
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": 5,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 20.5,
+      "hp": 191,
+      "mana": 166.52000000000044,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 40,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 12,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "throws",
+      "branch": "field",
+      "heartLevel": 5,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 59.5,
+      "hp": 41,
+      "mana": 0.3999999999981796,
+      "stormHits": 7,
+      "defenderStormHits": 0,
+      "manaFromHeart": 80,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 26,
+        "fire": 4,
+        "seal": 0,
+        "ice": 0,
+        "storm": 7
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": null,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 21.667,
+      "hp": 169,
+      "mana": 139.22133333333977,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": null,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 30.167,
+      "hp": 105,
+      "mana": 97.63333333333196,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 4,
+        "seal": 4,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": 0,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 25.333,
+      "hp": 135,
+      "mana": 110.97600000000728,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 3,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": 0,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 32.833,
+      "hp": 105,
+      "mana": 65.76666666666517,
+      "stormHits": 6,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 5,
+        "seal": 4,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": 1,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 25.333,
+      "hp": 135,
+      "mana": 110.97600000000728,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 3,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": 1,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 32.833,
+      "hp": 105,
+      "mana": 65.76666666666517,
+      "stormHits": 6,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 5,
+        "seal": 4,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": 2,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 25.333,
+      "hp": 135,
+      "mana": 110.97600000000728,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 3,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": 2,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 32.833,
+      "hp": 105,
+      "mana": 65.76666666666517,
+      "stormHits": 6,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 5,
+        "seal": 4,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": 3,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 25.333,
+      "hp": 135,
+      "mana": 130.97600000000728,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 3,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": 3,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 32.833,
+      "hp": 105,
+      "mana": 95.76666666666517,
+      "stormHits": 6,
+      "defenderStormHits": 0,
+      "manaFromHeart": 30,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 5,
+        "seal": 4,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": 4,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 25.333,
+      "hp": 135,
+      "mana": 138.97600000000728,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 28,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 3,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": 4,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 32.833,
+      "hp": 105,
+      "mana": 107.76666666666517,
+      "stormHits": 6,
+      "defenderStormHits": 0,
+      "manaFromHeart": 42,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 5,
+        "seal": 4,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": 5,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 25.333,
+      "hp": 135,
+      "mana": 146.97600000000728,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 3,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "discharge",
+      "heartLevel": 5,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 32.667,
+      "hp": 105,
+      "mana": 131.13333333333185,
+      "stormHits": 4,
+      "defenderStormHits": 0,
+      "manaFromHeart": 40,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 5,
+        "seal": 4,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": null,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 24.333,
+      "hp": 143,
+      "mana": 167.17600000000732,
+      "stormHits": 1,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": null,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 32.833,
+      "hp": 135,
+      "mana": 125.76666666666517,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 5,
+        "seal": 4,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": 0,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 26.667,
+      "hp": 134,
+      "mana": 155.78933333334066,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 3,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": 0,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 44.833,
+      "hp": 81,
+      "mana": 131.36666666666463,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 6,
+        "seal": 5,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": 1,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 26.333,
+      "hp": 143,
+      "mana": 154.77600000000723,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 3,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": 1,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 44.017,
+      "hp": 81,
+      "mana": 128.26333333333133,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 6,
+        "seal": 5,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": 2,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 26.333,
+      "hp": 143,
+      "mana": 154.77600000000723,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 3,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": 2,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 43.833,
+      "hp": 81,
+      "mana": 127.56666666666467,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 6,
+        "seal": 5,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": 3,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 25.667,
+      "hp": 143,
+      "mana": 172.24266666667393,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 3,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": 3,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 42.667,
+      "hp": 81,
+      "mana": 153.1333333333314,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 30,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 6,
+        "seal": 5,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": 4,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 25.333,
+      "hp": 143,
+      "mana": 178.97600000000728,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 28,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 3,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": 4,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 41.667,
+      "hp": 117,
+      "mana": 161.33333333333144,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 42,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 6,
+        "seal": 5,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": 5,
+      "spawn": "fw_alpha",
+      "outcome": "victory",
+      "seconds": 25.333,
+      "hp": 143,
+      "mana": 190.97600000000728,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 40,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 3,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": null
+    },
+    {
+      "style": "caster",
+      "branch": "field",
+      "heartLevel": 5,
+      "spawn": "gy_warden",
+      "outcome": "victory",
+      "seconds": 35.667,
+      "hp": 126,
+      "mana": 195.43333333333283,
+      "stormHits": 3,
+      "defenderStormHits": 0,
+      "manaFromHeart": 60,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 5,
+        "seal": 4,
+        "ice": 0,
+        "storm": 3
+      },
+      "defenderUses": null
+    }
+  ],
+  "duels": [
+    {
+      "branch": "discharge",
+      "heartLevel": 0,
+      "kind": "equal",
+      "outcome": "victory",
+      "seconds": 10.483,
+      "hp": 16,
+      "mana": 128.8366666666662,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 0,
+      "kind": "attacker",
+      "outcome": "defeat",
+      "seconds": 6.967,
+      "hp": 0,
+      "mana": 153.47333333333302,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 0,
+      "kind": "defender",
+      "outcome": "victory",
+      "seconds": 6.017,
+      "hp": 202,
+      "mana": 149.86333333333306,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 0,
+      "kind": "different_branch",
+      "outcome": "victory",
+      "seconds": 12.633,
+      "hp": 31,
+      "mana": 137.0066666666661,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 0,
+      "kind": "caster_attacker",
+      "outcome": "victory",
+      "seconds": 11.467,
+      "hp": 13,
+      "mana": 134.5733333333328,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 0,
+      "kind": "caster_defender",
+      "outcome": "victory",
+      "seconds": 10.483,
+      "hp": 25,
+      "mana": 128.8366666666662,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 1,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 1,
+      "kind": "equal",
+      "outcome": "victory",
+      "seconds": 10.483,
+      "hp": 10,
+      "mana": 128.8366666666662,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 1,
+      "kind": "attacker",
+      "outcome": "defeat",
+      "seconds": 6.967,
+      "hp": 0,
+      "mana": 153.47333333333302,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 1,
+      "kind": "defender",
+      "outcome": "victory",
+      "seconds": 6.017,
+      "hp": 202,
+      "mana": 149.86333333333306,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 1,
+      "kind": "different_branch",
+      "outcome": "victory",
+      "seconds": 11.633,
+      "hp": 39,
+      "mana": 133.20666666666614,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 1,
+      "kind": "caster_attacker",
+      "outcome": "victory",
+      "seconds": 10.633,
+      "hp": 10,
+      "mana": 131.40666666666618,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 1,
+      "kind": "caster_defender",
+      "outcome": "victory",
+      "seconds": 10.483,
+      "hp": 19,
+      "mana": 128.8366666666662,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 1,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 2,
+      "kind": "equal",
+      "outcome": "victory",
+      "seconds": 10.483,
+      "hp": 4,
+      "mana": 128.8366666666662,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 2,
+      "kind": "attacker",
+      "outcome": "defeat",
+      "seconds": 6.967,
+      "hp": 0,
+      "mana": 153.47333333333302,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 2,
+      "kind": "defender",
+      "outcome": "victory",
+      "seconds": 6.017,
+      "hp": 202,
+      "mana": 149.86333333333306,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 2,
+      "kind": "different_branch",
+      "outcome": "victory",
+      "seconds": 10.483,
+      "hp": 58,
+      "mana": 128.8366666666662,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 2,
+      "kind": "caster_attacker",
+      "outcome": "victory",
+      "seconds": 10.633,
+      "hp": 4,
+      "mana": 131.40666666666618,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 2,
+      "kind": "caster_defender",
+      "outcome": "victory",
+      "seconds": 10.483,
+      "hp": 13,
+      "mana": 128.8366666666662,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 1,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 3,
+      "kind": "equal",
+      "outcome": "victory",
+      "seconds": 9.633,
+      "hp": 16,
+      "mana": 149.60666666666623,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 3,
+      "kind": "attacker",
+      "outcome": "defeat",
+      "seconds": 6.967,
+      "hp": 0,
+      "mana": 163.47333333333302,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 3,
+      "kind": "defender",
+      "outcome": "victory",
+      "seconds": 6.017,
+      "hp": 202,
+      "mana": 149.86333333333306,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 3,
+      "kind": "different_branch",
+      "outcome": "victory",
+      "seconds": 10.483,
+      "hp": 58,
+      "mana": 138.8366666666662,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 3,
+      "kind": "caster_attacker",
+      "outcome": "defeat",
+      "seconds": 10.017,
+      "hp": 0,
+      "mana": 159.06333333333288,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 1,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 3,
+      "kind": "caster_defender",
+      "outcome": "victory",
+      "seconds": 9.633,
+      "hp": 173,
+      "mana": 149.60666666666623,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 1,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 4,
+      "kind": "equal",
+      "outcome": "victory",
+      "seconds": 8.017,
+      "hp": 5,
+      "mana": 171.46333333333297,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 14,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 4,
+      "kind": "attacker",
+      "outcome": "defeat",
+      "seconds": 6.967,
+      "hp": 0,
+      "mana": 167.47333333333302,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 14,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 4,
+      "kind": "defender",
+      "outcome": "victory",
+      "seconds": 6.017,
+      "hp": 202,
+      "mana": 149.86333333333306,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 4,
+      "kind": "different_branch",
+      "outcome": "victory",
+      "seconds": 8.633,
+      "hp": 78,
+      "mana": 149.80666666666627,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 14,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 4,
+      "kind": "caster_attacker",
+      "outcome": "defeat",
+      "seconds": 8.017,
+      "hp": 0,
+      "mana": 191.46333333333297,
+      "stormHits": 0,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 1,
+        "seal": 1,
+        "ice": 0
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 4,
+      "kind": "caster_defender",
+      "outcome": "victory",
+      "seconds": 8.017,
+      "hp": 193,
+      "mana": 171.46333333333297,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 14,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 1,
+        "seal": 1,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 5,
+      "kind": "equal",
+      "outcome": "victory",
+      "seconds": 5.583,
+      "hp": 205,
+      "mana": 168.2166666666664,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 5,
+      "kind": "attacker",
+      "outcome": "victory",
+      "seconds": 5.583,
+      "hp": 191,
+      "mana": 168.2166666666664,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 5,
+      "kind": "defender",
+      "outcome": "victory",
+      "seconds": 6.017,
+      "hp": 202,
+      "mana": 149.86333333333306,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 5,
+      "kind": "different_branch",
+      "outcome": "victory",
+      "seconds": 5.583,
+      "hp": 205,
+      "mana": 168.2166666666664,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 5,
+      "kind": "caster_attacker",
+      "outcome": "defeat",
+      "seconds": 6.967,
+      "hp": 0,
+      "mana": 187.47333333333302,
+      "stormHits": 0,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 1,
+        "seal": 1,
+        "ice": 0
+      },
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 5,
+      "kind": "caster_defender",
+      "outcome": "victory",
+      "seconds": 5.583,
+      "hp": 198,
+      "mana": 168.2166666666664,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 1,
+        "seal": 1,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 0,
+      "kind": "equal",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 90,
+      "mana": 129.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 0,
+      "kind": "attacker",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 49,
+      "mana": 129.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 0,
+      "kind": "defender",
+      "outcome": "victory",
+      "seconds": 15.65,
+      "hp": 90,
+      "mana": 154.4699999999993,
+      "stormHits": 1,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 0,
+      "kind": "different_branch",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 2,
+      "mana": 129.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 0,
+      "kind": "caster_attacker",
+      "outcome": "defeat",
+      "seconds": 17.467,
+      "hp": 0,
+      "mana": 153.37333333333254,
+      "stormHits": 1,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 0,
+      "kind": "caster_defender",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 93,
+      "mana": 129.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 1,
+      "kind": "equal",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 88,
+      "mana": 129.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 1,
+      "kind": "attacker",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 49,
+      "mana": 129.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 1,
+      "kind": "defender",
+      "outcome": "victory",
+      "seconds": 15.65,
+      "hp": 88,
+      "mana": 154.4699999999993,
+      "stormHits": 1,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 1,
+      "kind": "different_branch",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 2,
+      "mana": 129.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 1,
+      "kind": "caster_attacker",
+      "outcome": "defeat",
+      "seconds": 17.467,
+      "hp": 0,
+      "mana": 153.37333333333254,
+      "stormHits": 1,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 1,
+      "kind": "caster_defender",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 91,
+      "mana": 129.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 2,
+      "kind": "equal",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 86,
+      "mana": 129.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 2,
+      "kind": "attacker",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 49,
+      "mana": 129.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 2,
+      "kind": "defender",
+      "outcome": "victory",
+      "seconds": 15.65,
+      "hp": 86,
+      "mana": 154.4699999999993,
+      "stormHits": 1,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 2,
+      "kind": "different_branch",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 2,
+      "mana": 129.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 2,
+      "kind": "caster_attacker",
+      "outcome": "defeat",
+      "seconds": 17.467,
+      "hp": 0,
+      "mana": 153.37333333333254,
+      "stormHits": 1,
+      "defenderStormHits": 2,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 2,
+      "kind": "caster_defender",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 89,
+      "mana": 129.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 3,
+      "kind": "equal",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 84,
+      "mana": 139.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 3,
+      "kind": "attacker",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 49,
+      "mana": 139.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 3,
+      "kind": "defender",
+      "outcome": "victory",
+      "seconds": 15.65,
+      "hp": 84,
+      "mana": 154.4699999999993,
+      "stormHits": 1,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 3,
+      "kind": "different_branch",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 2,
+      "mana": 139.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 3,
+      "kind": "caster_attacker",
+      "outcome": "defeat",
+      "seconds": 17.467,
+      "hp": 0,
+      "mana": 163.37333333333254,
+      "stormHits": 1,
+      "defenderStormHits": 2,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 3,
+      "kind": "caster_defender",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 87,
+      "mana": 139.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": 9.766666666666731,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 4,
+      "kind": "equal",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 78,
+      "mana": 143.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 14,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 4,
+      "kind": "attacker",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 49,
+      "mana": 143.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 14,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 4,
+      "kind": "defender",
+      "outcome": "victory",
+      "seconds": 15.65,
+      "hp": 78,
+      "mana": 154.4699999999993,
+      "stormHits": 1,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 4,
+      "kind": "different_branch",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 2,
+      "mana": 143.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 14,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 4,
+      "kind": "caster_attacker",
+      "outcome": "defeat",
+      "seconds": 17.467,
+      "hp": 0,
+      "mana": 167.37333333333254,
+      "stormHits": 1,
+      "defenderStormHits": 2,
+      "manaFromHeart": 14,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 4,
+      "kind": "caster_defender",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 81,
+      "mana": 143.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 14,
+      "defenderHeartRefundAt": 9.766666666666731,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 5,
+      "kind": "equal",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 71,
+      "mana": 149.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 5,
+      "kind": "attacker",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 49,
+      "mana": 149.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 5,
+      "kind": "defender",
+      "outcome": "victory",
+      "seconds": 15.65,
+      "hp": 71,
+      "mana": 154.4699999999993,
+      "stormHits": 1,
+      "defenderStormHits": 1,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 5,
+      "kind": "different_branch",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 2,
+      "mana": 149.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 2,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 5,
+      "kind": "caster_attacker",
+      "outcome": "defeat",
+      "seconds": 17.467,
+      "hp": 0,
+      "mana": 173.37333333333254,
+      "stormHits": 1,
+      "defenderStormHits": 2,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": 6.966666666666647,
+      "uses": {
+        "telekinesis": 0,
+        "fire": 3,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 5,
+      "kind": "caster_defender",
+      "outcome": "victory",
+      "seconds": 15.917,
+      "hp": 74,
+      "mana": 149.4833333333326,
+      "stormHits": 2,
+      "defenderStormHits": 1,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": 9.766666666666731,
+      "uses": {
+        "telekinesis": 4,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0,
+        "storm": 2
+      },
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 2,
+        "seal": 2,
+        "ice": 0,
+        "storm": 1
+      }
+    }
+  ],
+  "offensiveDuels": [
+    {
+      "branch": "discharge",
+      "heartLevel": 0,
+      "outcome": "victory",
+      "seconds": 0.75,
+      "hp": 255,
+      "mana": 127.84999999999997,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 1,
+      "outcome": "victory",
+      "seconds": 0.75,
+      "hp": 255,
+      "mana": 127.84999999999997,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 2,
+      "outcome": "victory",
+      "seconds": 0.75,
+      "hp": 255,
+      "mana": 127.84999999999997,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 3,
+      "outcome": "victory",
+      "seconds": 0.75,
+      "hp": 255,
+      "mana": 137.84999999999997,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 4,
+      "outcome": "victory",
+      "seconds": 0.75,
+      "hp": 255,
+      "mana": 141.84999999999997,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 14,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "discharge",
+      "heartLevel": 5,
+      "outcome": "victory",
+      "seconds": 0.75,
+      "hp": 255,
+      "mana": 147.84999999999997,
+      "stormHits": 2,
+      "defenderStormHits": 0,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 0,
+      "outcome": "victory",
+      "seconds": 1.133,
+      "hp": 255,
+      "mana": 123.30666666666662,
+      "stormHits": 1,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 1,
+      "outcome": "victory",
+      "seconds": 1.133,
+      "hp": 255,
+      "mana": 123.30666666666662,
+      "stormHits": 1,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 2,
+      "outcome": "victory",
+      "seconds": 1.133,
+      "hp": 255,
+      "mana": 123.30666666666662,
+      "stormHits": 1,
+      "defenderStormHits": 0,
+      "manaFromHeart": 0,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 3,
+      "outcome": "victory",
+      "seconds": 0.75,
+      "hp": 255,
+      "mana": 157.84999999999997,
+      "stormHits": 1,
+      "defenderStormHits": 0,
+      "manaFromHeart": 10,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 4,
+      "outcome": "victory",
+      "seconds": 0.75,
+      "hp": 255,
+      "mana": 161.84999999999997,
+      "stormHits": 1,
+      "defenderStormHits": 0,
+      "manaFromHeart": 14,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "branch": "field",
+      "heartLevel": 5,
+      "outcome": "victory",
+      "seconds": 0.75,
+      "hp": 255,
+      "mana": 167.84999999999997,
+      "stormHits": 1,
+      "defenderStormHits": 0,
+      "manaFromHeart": 20,
+      "defenderHeartRefundAt": null,
+      "uses": {
+        "telekinesis": 3,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      },
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 0,
+        "seal": 0,
+        "ice": 0
+      }
+    }
+  ],
+  "effectCurve": [
+    {
+      "upgrade": 0,
+      "stormDamageBonusPct": 15,
+      "fullStormMana": 0,
+      "refundIntervalSec": 12
+    },
+    {
+      "upgrade": 1,
+      "stormDamageBonusPct": 19,
+      "fullStormMana": 0,
+      "refundIntervalSec": 12
+    },
+    {
+      "upgrade": 2,
+      "stormDamageBonusPct": 24,
+      "fullStormMana": 0,
+      "refundIntervalSec": 12
+    },
+    {
+      "upgrade": 3,
+      "stormDamageBonusPct": 30,
+      "fullStormMana": 10,
+      "refundIntervalSec": 12
+    },
+    {
+      "upgrade": 4,
+      "stormDamageBonusPct": 43,
+      "fullStormMana": 14,
+      "refundIntervalSec": 12
+    },
+    {
+      "upgrade": 5,
+      "stormDamageBonusPct": 60,
+      "fullStormMana": 20,
+      "refundIntervalSec": 12
+    }
+  ]
+}

@@ -250,6 +250,10 @@ var MIGRATION_V10 = {
   notIf: ["restoration_bundle_crafted", "chapter_1_complete"]
 };
 
+// src/config/combatVersions.js
+var COMBAT_BALANCE_VERSION = 40;
+var combatBalanceVersion = (value) => [30, 38, 39, 40].includes(value) ? value : 29;
+
 // src/config/build.js
 var GIFT_IDS = ["telekinesis", "fire", "seal", "ice", "storm"];
 var SLOT_RULES = { base: 3, extraAtLevel: null };
@@ -294,9 +298,10 @@ Object.assign(AMULETS, {
   amulet_embers: { name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0423\u0433\u043B\u0435\u0439", icon: "icon_amulet_focus", rarity: "epic", text: "\u0423\u0441\u0438\u043B\u0438\u0432\u0430\u0435\u0442 \u041E\u0433\u043E\u043D\u044C, \u0433\u043E\u0440\u0435\u043D\u0438\u0435 \u0438 \u043B\u0443\u0436\u0443; \u043F\u043E\u0437\u0434\u043D\u0435\u0435 \u043F\u043E\u0434\u0430\u0432\u043B\u044F\u0435\u0442 \u043B\u0435\u0447\u0435\u043D\u0438\u0435 \u0433\u043E\u0440\u044F\u0449\u0435\u0439 \u0446\u0435\u043B\u0438.", tradeoff: "\u0421\u043F\u0435\u0446\u0438\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F \u041E\u0433\u043D\u044F.", effect: {} },
   amulet_breaker: { name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u041A\u0430\u043C\u043D\u0435\u043B\u043E\u043C\u0430", icon: "icon_amulet_focus", rarity: "epic", text: "\u0423\u0441\u0438\u043B\u0438\u0432\u0430\u0435\u0442 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u0431\u0440\u043E\u0441\u043E\u043A; \u043F\u043E\u0437\u0434\u043D\u0435\u0435 \u0434\u0430\u0451\u0442 \u0449\u0438\u0442 \u043F\u043E\u0441\u043B\u0435 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u044F.", tradeoff: "\u041D\u0443\u0436\u043D\u044B \u0442\u044F\u0436\u0451\u043B\u044B\u0435 \u043E\u0431\u044A\u0435\u043A\u0442\u044B \u0438 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u044F.", effect: {} },
   amulet_astral_eye: { name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0410\u0441\u0442\u0440\u0430\u043B\u044C\u043D\u043E\u0433\u043E \u043E\u043A\u0430", icon: "icon_amulet_lunar", rarity: "epic", text: "\u0423\u0441\u0438\u043B\u0438\u0432\u0430\u0435\u0442 \u0410\u0441\u0442\u0440\u0430\u043B \u0438 \u043F\u0440\u043E\u0434\u043B\u0435\u0432\u0430\u0435\u0442 \u0443\u0436\u0435 \u043E\u0442\u043A\u0440\u044B\u0442\u0443\u044E \u0432\u0441\u043F\u044B\u0448\u043A\u0443.", tradeoff: "\u041D\u0435 \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u0432\u0441\u043F\u044B\u0448\u043A\u0443 \u043D\u0430 I\u2013II.", effect: {} },
-  amulet_blizzard: { name: "\u0421\u0435\u0440\u0434\u0446\u0435 \u043C\u0435\u0442\u0435\u043B\u0438", icon: "icon_amulet_frost", rarity: "epic", text: "\u0423\u0441\u0438\u043B\u0438\u0432\u0430\u0435\u0442 \u041B\u0451\u0434 \u0438 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0443\u044E \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u044C.", tradeoff: "\u041D\u0435 \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u044C \u043D\u0430 \u041B\u044C\u0434\u0435 I.", effect: {} }
+  amulet_blizzard: { name: "\u0421\u0435\u0440\u0434\u0446\u0435 \u043C\u0435\u0442\u0435\u043B\u0438", icon: "icon_amulet_frost", rarity: "epic", text: "\u0423\u0441\u0438\u043B\u0438\u0432\u0430\u0435\u0442 \u041B\u0451\u0434 \u0438 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0443\u044E \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u044C.", tradeoff: "\u041D\u0435 \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u044C \u043D\u0430 \u041B\u044C\u0434\u0435 I.", effect: {} },
+  amulet_storm_heart: { name: "\u0413\u0440\u043E\u0437\u043E\u0432\u043E\u0435 \u0441\u0435\u0440\u0434\u0446\u0435", icon: "icon_amulet_lunar", rarity: "epic", text: "\u0423\u0441\u0438\u043B\u0438\u0432\u0430\u0435\u0442 \u0443\u0440\u043E\u043D \u0413\u0440\u043E\u0437\u044B. \u0421 +3 \u043F\u043E\u043B\u043D\u044B\u0439 \u0440\u0430\u0437\u0440\u044F\u0434 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u043C\u0430\u043D\u0443 \u043D\u0435 \u0447\u0430\u0449\u0435 \u0440\u0430\u0437\u0430 \u0432 12 \u0441.", tradeoff: "\u041D\u0443\u0436\u043D\u0430 \u0413\u0440\u043E\u0437\u0430 \u0432 \u0441\u043B\u043E\u0442\u0430\u0445; \u0434\u043B\u044F \u0432\u043E\u0437\u0432\u0440\u0430\u0442\u0430 \u043C\u0430\u043D\u044B \u2014 \u0442\u0440\u0438 \u0437\u0430\u0440\u044F\u0434\u0430 \u043E\u0442 \u0434\u0440\u0443\u0433\u0438\u0445 \u0414\u0430\u0440\u043E\u0432.", effect: {} }
 });
-for (const [id, a] of Object.entries(AMULETS)) a.currency = ["amulet_embers", "amulet_breaker", "amulet_astral_eye", "amulet_blizzard"].includes(id) ? "sapphires" : "coins";
+for (const [id, a] of Object.entries(AMULETS)) a.currency = ["amulet_embers", "amulet_breaker", "amulet_astral_eye", "amulet_blizzard", "amulet_storm_heart"].includes(id) ? "sapphires" : "coins";
 var AMULET_IDS = Object.keys(AMULETS);
 var AMULET_UPGRADES = [
   { coins: 1e3, items: { tree_resin: 2, rune_dust: 1 } },
@@ -328,7 +333,7 @@ function legacyAmuletEffect(id, level = 0, legacy = false) {
   if (e.slowBonus) out.slowBonus = r(e.slowBonus * k);
   return out;
 }
-function amuletEffect(id, level = 0, legacy = false, modern = true) {
+function amuletEffect(id, level = 0, legacy = false, modern = true, balanceVersion = COMBAT_BALANCE_VERSION) {
   if (!modern) return legacyAmuletEffect(id, level, legacy);
   const n = Math.max(0, Math.min(5, Math.trunc(level) || 0));
   const at = (a) => a[n];
@@ -351,6 +356,8 @@ function amuletEffect(id, level = 0, legacy = false, modern = true) {
       return { sealMult: 1 + at([0.12, 0.18, 0.26, 0.35, 0.5, 0.7]), flashBonus: at([0.5, 0.65, 0.8, 1, 1.4, 2]) };
     case "amulet_blizzard":
       return { iceMult: 1 + at([0.15, 0.19, 0.24, 0.3, 0.43, 0.6]), brittleBonus: at([0, 0, 0, 0.05, 0.1, 0.15]) };
+    case "amulet_storm_heart":
+      return balanceVersion >= 40 ? { stormMult: 1 + at([0.15, 0.19, 0.24, 0.3, 0.43, 0.6]), stormRefund: n >= 3 ? { mana: at([0, 0, 0, 10, 14, 20]), cooldownSec: 12 } : null } : {};
     default:
       return {};
   }
@@ -3047,6 +3054,19 @@ var amuletRecipes = {
   amulet_blizzard: [{ lunar_shard: 5, rune_dust: 5, ice_crystal: 4, frost_shard: 2 }, 1e3, "chapter_2_complete"]
 };
 for (const [id, [needs, coins, event]] of Object.entries(amuletRecipes)) RECIPES[id] = { kind: "amulet", chapter: 2, result: id, amount: 1, needs: { ...needs, coins }, requires: [event], crafted: `${id}_crafted`, blockedBy: [`${id}_crafted`] };
+RECIPES.amulet_storm_heart = {
+  kind: "amulet",
+  chapter: 2,
+  result: "amulet_storm_heart",
+  amount: 1,
+  needs: { ice_crystal: 4, lunar_shard: 4, rune_dust: 4, crafting_core: 1, coins: 600 },
+  requires: ["chapter_2_complete"],
+  requiresAbility: "storm",
+  crafted: "amulet_storm_heart_crafted",
+  blockedBy: ["amulet_storm_heart_crafted"],
+  learn: "\u0418\u0437\u0443\u0447\u0438\u0442\u0435 \u0413\u0440\u043E\u0437\u0443 I \u0438 \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u0435 \u0432\u0442\u043E\u0440\u0443\u044E \u0433\u043B\u0430\u0432\u0443: \u0440\u0435\u043C\u0435\u0441\u043B\u0435\u043D\u043D\u044B\u0435 \u044F\u0434\u0440\u0430 \u043D\u0430\u0445\u043E\u0434\u044F\u0442\u0441\u044F \u0432 \u043E\u0445\u0440\u0430\u043D\u044F\u0435\u043C\u044B\u0445 \u0437\u0430\u043F\u0430\u0441\u0430\u0445 \u0432\u044B\u043B\u0430\u0437\u043E\u043A.",
+  note: "\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u043B \u0443\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442 \u0433\u0440\u043E\u0437\u043E\u0432\u043E\u0439 \u0437\u0430\u0440\u044F\u0434. \u041E\u0434\u0438\u043D \u044D\u043A\u0437\u0435\u043C\u043F\u043B\u044F\u0440: \u0434\u0430\u043B\u044C\u0448\u0435 \u0435\u0433\u043E \u0443\u043B\u0443\u0447\u0448\u0430\u044E\u0442 \u0437\u0430 \u0441\u0430\u043F\u0444\u0438\u0440\u044B."
+};
 var RECIPE_ORDER = Object.keys(RECIPES).filter((id) => !["elixir_life", "elixir_mana", "crystal_guard"].includes(id));
 var POTION_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "potion");
 var STORY_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "story");
@@ -4214,7 +4234,8 @@ function serverRules() {
     needs: r.needs,
     requires: r.requires || [],
     crafted: r.crafted || null,
-    blockedBy: r.blockedBy || []
+    blockedBy: r.blockedBy || [],
+    ...r.requiresAbility ? { requiresAbility: r.requiresAbility } : {}
   }]));
   const house = ZONES.find((z) => z.id === VITALS.houseZone);
   const vitals = {
@@ -4271,10 +4292,6 @@ function serverRules() {
     // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
   };
 }
-
-// src/config/combatVersions.js
-var COMBAT_BALANCE_VERSION = 39;
-var combatBalanceVersion = (value) => [30, 38, 39].includes(value) ? value : 29;
 
 // src/cloud/playerModel.js
 var RULES = serverRules();
@@ -5167,7 +5184,7 @@ var CombatManager = class {
     };
     this.amulets = state.equippedAmulets ? state.equippedAmulets() : [];
     const lv = state.buildData ? state.buildData().amuletLevels || {} : {};
-    const effs = this.amulets.map((a) => amuletEffect(a, lv[a] || 0, legacy, this.modern));
+    const effs = this.amulets.map((a) => amuletEffect(a, lv[a] || 0, legacy, this.modern, this.balanceVersion));
     this.schoolMult = { fire: 1, seal: 1, ice: 1, storm: 1 };
     this.heavyMult = 1;
     this.burnMult = 1;
@@ -5178,9 +5195,12 @@ var CombatManager = class {
     this.stormCharges = 0;
     this.stormRefundAt = -Infinity;
     this.interruptWardAt = -Infinity;
+    this.stormAmuletRefund = effs.map((e) => e.stormRefund).find(Boolean) || null;
+    this.stormAmuletRefundAt = -Infinity;
     for (const e of effs) {
       this.schoolMult.fire *= e.fireMult || 1;
       this.schoolMult.seal *= e.sealMult || 1;
+      this.schoolMult.storm *= e.stormMult || 1;
       this.heavyMult *= e.heavyMult || 1;
       this.burnMult *= e.burnMult || 1;
       this.flashBonus += e.flashBonus || 0;
@@ -5553,7 +5573,7 @@ var CombatManager = class {
     const br = this.enemy.consumeBrittle();
     const base = s.damage * (1 + charges * s.chargeBonus) * (1 + br);
     const hit = (value) => {
-      const amount = this.dealAbilityDamage(value, "storm", this.hero.damageMult);
+      const amount = this.dealAbilityDamage(value, "storm", this.hero.damageMult * this.schoolMult.storm);
       this.emit({ type: "damage", target: "enemy", amount, school: "storm" });
     };
     hit(base);
@@ -5564,6 +5584,13 @@ var CombatManager = class {
         this.hero.mana = Math.min(this.hero.maxMana, this.hero.mana + s.stormField.mana);
         this.stormRefundAt = this.time;
       }
+    }
+    const refund = this.stormAmuletRefund;
+    if (full && this.lastDirectHit && refund && this.time >= this.stormAmuletRefundAt + refund.cooldownSec) {
+      const mana2 = Math.min(this.hero.maxMana - this.hero.mana, refund.mana);
+      this.hero.mana += mana2;
+      this.stormAmuletRefundAt = this.time;
+      if (mana2 > 0) this.emit({ type: "stormRefund", mana: mana2 });
     }
     this.emit({ type: "stormCharges", charges: 0, full });
   }

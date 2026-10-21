@@ -46,12 +46,15 @@ export class CombatManager {
     this.amulets = state.equippedAmulets ? state.equippedAmulets() : [];
     // v0.19.0: уровень улучшения амулета (+1…+3) усиливает его главное свойство (config/build.js amuletEffect)
     const lv = state.buildData ? state.buildData().amuletLevels || {} : {};
-    const effs = this.amulets.map(a => amuletEffect(a, lv[a] || 0, legacy, this.modern));
+    const effs = this.amulets.map(a => amuletEffect(a, lv[a] || 0, legacy, this.modern, this.balanceVersion));
     this.schoolMult = { fire: 1, seal: 1, ice: 1, storm: 1 };
     this.heavyMult = 1; this.burnMult = 1; this.flashBonus = 0; this.brittleBonus = 0; this.antiheal = 0; this.interruptShield = 0;
     this.stormCharges = 0; this.stormRefundAt = -Infinity; this.interruptWardAt = -Infinity;
+    this.stormAmuletRefund = effs.map(e => e.stormRefund).find(Boolean) || null;
+    this.stormAmuletRefundAt = -Infinity;
     for (const e of effs) {
       this.schoolMult.fire *= e.fireMult || 1; this.schoolMult.seal *= e.sealMult || 1;
+      this.schoolMult.storm *= e.stormMult || 1;
       this.heavyMult *= e.heavyMult || 1; this.burnMult *= e.burnMult || 1;
       this.flashBonus += e.flashBonus || 0; this.brittleBonus += e.brittleBonus || 0;
       this.antiheal = Math.max(this.antiheal, e.antiheal || 0); this.interruptShield = Math.max(this.interruptShield, e.interruptShield || 0);
@@ -386,11 +389,18 @@ export class CombatManager {
     const charges = this.stormCharges, full = charges === 3; this.stormCharges = 0;
     const br = this.enemy.consumeBrittle();
     const base = s.damage * (1 + charges * s.chargeBonus) * (1 + br);
-    const hit = value => { const amount = this.dealAbilityDamage(value, 'storm', this.hero.damageMult); this.emit({ type: 'damage', target: 'enemy', amount, school: 'storm' }); };
+    const hit = value => { const amount = this.dealAbilityDamage(value, 'storm', this.hero.damageMult * this.schoolMult.storm); this.emit({ type: 'damage', target: 'enemy', amount, school: 'storm' }); };
     hit(base); if (full && s.fullDischarge) hit(base * s.fullDischarge);
     if (full && s.stormField) {
       this.enemy.weaken(s.stormField.reduction, s.stormField.sec);
       if (s.stormField.mana && this.time >= this.stormRefundAt + 12) { this.hero.mana = Math.min(this.hero.maxMana, this.hero.mana + s.stormField.mana); this.stormRefundAt = this.time; }
+    }
+    const refund = this.stormAmuletRefund;
+    if (full && this.lastDirectHit && refund && this.time >= this.stormAmuletRefundAt + refund.cooldownSec) {
+      const mana = Math.min(this.hero.maxMana - this.hero.mana, refund.mana);
+      this.hero.mana += mana;
+      this.stormAmuletRefundAt = this.time;
+      if (mana > 0) this.emit({ type: 'stormRefund', mana });
     }
     this.emit({ type: 'stormCharges', charges: 0, full });
   }

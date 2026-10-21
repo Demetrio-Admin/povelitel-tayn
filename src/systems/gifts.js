@@ -167,6 +167,8 @@ export function amuletLine(e) {
   if (e.fireMult) out.push(`удар Огня +${p(e.fireMult-1)}`);
   if (e.burnMult) out.push(`горение и лужа +${p(e.burnMult-1)}`);
   if (e.sealMult) out.push(`Астрал +${p(e.sealMult-1)}`);
+  if (e.stormMult) out.push(`Гроза +${p(e.stormMult-1)}`);
+  if (e.stormRefund) out.push(`полный разряд возвращает ${e.stormRefund.mana} MP, не чаще раза в ${e.stormRefund.cooldownSec} с`);
   if (e.heavyMult) out.push(`тяжёлый бросок +${p(e.heavyMult-1)}`);
   if (e.flashBonus) out.push(`вспышка +${e.flashBonus} с`);
   if (e.gatherBonus) out.push(`дополнительный ингредиент ${p(e.gatherBonus)}`);

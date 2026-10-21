@@ -283,7 +283,7 @@ console.log('\n[v0.16.0] Слоты даров, пресет, амулеты');
   const { applyAction } = await import('../src/cloud/playerModel.js');
   ok(slotCount(1) === 3 && slotCount(10) === 3 && slotCount(15) === 3 && SLOT_RULES.base === 3, 'слотов даров три на любом уровне: с Льдом в главе II — выбор «3 из 4»');
   ok(slotCount(16, { base: 3, extraAtLevel: 16 }) === 4 && slotCount(15, { base: 3, extraAtLevel: 16 }) === 3, 'если позже дать 4-й слот уровнем, правило работает');
-  ok(AMULET_SLOTS === 2 && Object.keys(AMULETS).length === 9, 'два слота амулетов, четыре амулета (с v0.19.0 — и Амулет инея)');
+  ok(AMULET_SLOTS === 2 && Object.keys(AMULETS).length === 10, 'два слота амулетов, десять моделей с Грозовым сердцем');
   for (const [id, a] of Object.entries(AMULETS)) ok(a.text && a.tradeoff && ITEMS[id]?.name === a.name, `${id}: есть описание, цена и предмет в сумке`);
   const rules = buildSlotRules();
   const ctx = (o = {}) => ({ level: 3, unlocked: ['telekinesis', 'fire'], owns: (id) => id === 'amulet_focus', combat: false, ...o });

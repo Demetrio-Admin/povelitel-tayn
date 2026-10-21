@@ -1,3 +1,4 @@
+import { COMBAT_BALANCE_VERSION } from './combatVersions.js';
 // v0.16.0 — билд героя: слоты даров, один бесплатный пресет и амулеты.
 // Хранится в объекте мира 'player_build' ({ branches, slots, amulets, preset }); его пишет только сервер (операции build_set / build_preset),
 // поэтому он же попадает в боевой контекст, и сервер проигрывает бой с теми же слотами и амулетами.
@@ -51,8 +52,9 @@ Object.assign(AMULETS, {
   amulet_breaker: { name: 'Амулет Камнелома', icon: 'icon_amulet_focus', rarity: 'epic', text: 'Усиливает тяжёлый бросок; позднее даёт щит после прерывания.', tradeoff: 'Нужны тяжёлые объекты и прерывания.', effect: {} },
   amulet_astral_eye: { name: 'Амулет Астрального ока', icon: 'icon_amulet_lunar', rarity: 'epic', text: 'Усиливает Астрал и продлевает уже открытую вспышку.', tradeoff: 'Не открывает вспышку на I–II.', effect: {} },
   amulet_blizzard: { name: 'Сердце метели', icon: 'icon_amulet_frost', rarity: 'epic', text: 'Усиливает Лёд и существующую Хрупкость.', tradeoff: 'Не открывает Хрупкость на Льде I.', effect: {} },
+  amulet_storm_heart: { name: 'Грозовое сердце', icon: 'icon_amulet_lunar', rarity: 'epic', text: 'Усиливает урон Грозы. С +3 полный разряд возвращает ману не чаще раза в 12 с.', tradeoff: 'Нужна Гроза в слотах; для возврата маны — три заряда от других Даров.', effect: {} },
 });
-for (const [id,a] of Object.entries(AMULETS)) a.currency = ['amulet_embers','amulet_breaker','amulet_astral_eye','amulet_blizzard'].includes(id) ? 'sapphires' : 'coins';
+for (const [id,a] of Object.entries(AMULETS)) a.currency = ['amulet_embers','amulet_breaker','amulet_astral_eye','amulet_blizzard','amulet_storm_heart'].includes(id) ? 'sapphires' : 'coins';
 export const AMULET_IDS = Object.keys(AMULETS);
 
 /** v0.19.0: редкость амулета (подпись и цвет в окне). */
@@ -102,7 +104,7 @@ export function legacyAmuletEffect(id, level = 0, legacy = false) {
 }
 
 // Explicit curves preserve all four original models at +0…+3.
-export function amuletEffect(id, level = 0, legacy = false, modern = true) {
+export function amuletEffect(id, level = 0, legacy = false, modern = true, balanceVersion = COMBAT_BALANCE_VERSION) {
  if (!modern) return legacyAmuletEffect(id, level, legacy);
  const n = Math.max(0, Math.min(5, Math.trunc(level) || 0));
  const at = a => a[n];
@@ -116,6 +118,7 @@ export function amuletEffect(id, level = 0, legacy = false, modern = true) {
  case 'amulet_breaker': return { heavyMult: 1+at([.25,.33,.43,.55,.75,1]), interruptShield: at([0,0,0,25,35,50]) };
  case 'amulet_astral_eye': return { sealMult: 1+at([.12,.18,.26,.35,.5,.7]), flashBonus: at([.5,.65,.8,1,1.4,2]) };
  case 'amulet_blizzard': return { iceMult: 1+at([.15,.19,.24,.3,.43,.6]), brittleBonus: at([0,0,0,.05,.1,.15]) };
+ case 'amulet_storm_heart': return balanceVersion >= 40 ? { stormMult: 1+at([.15,.19,.24,.3,.43,.6]), stormRefund: n >= 3 ? { mana: at([0,0,0,10,14,20]), cooldownSec: 12 } : null } : {};
  default: return {};
  }
 }

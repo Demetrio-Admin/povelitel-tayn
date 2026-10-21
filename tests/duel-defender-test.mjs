@@ -15,7 +15,7 @@ const check = (value, message) => { assert.ok(value, message); checks++; };
 const abilities = level => Object.fromEntries(['telekinesis','fire','seal','ice','storm'].map(id => [id, { unlocked: true, level }]));
 const profile = (level = 5, slots = ['telekinesis','fire','storm'], branches = {}) => ({ level: 15, abilities: abilities(level), build: { slots, amulets: [], branches } });
 function context(opponent = profile(), player = profile()) {
-  return { spawn: 'duel', enemy: 'duel_mage', balanceVersion: 39, level: player.level, hp: 255, mana: 205, abilities: player.abilities, build: player.build,
+  return { spawn: 'duel', enemy: 'duel_mage', balanceVersion: 40, level: player.level, hp: 255, mana: 205, abilities: player.abilities, build: player.build,
     potions: { potion_life_medium: 3, potion_crystal_shield: 2, stabilizing_potion: 2 }, potionLoadout: ['potion_life_medium','potion_crystal_shield','stabilizing_potion'],
     duel: { version: 2, rating: 1000, opponent: { ...opponent, rating: 1000 } } };
 }
@@ -50,6 +50,7 @@ for (const id of AMULET_IDS) {
  if(e.sealMult)check(d.schoolMult.seal===e.sealMult&&d.flashBonus===e.flashBonus,id+' astral flash');
  if(e.iceMult)check(d.iceMult===e.iceMult&&(d.slowBonus=== (e.slowBonus||0))&&d.brittleBonus===(e.brittleBonus||0),id+' ice modifiers');
  if(e.manaRescue){d.hero.mana=10;d.checkManaRescue();check(d.hero.mana===205&&d.manaRescueUsed,id+' rescue once');d.hero.mana=10;d.checkManaRescue();check(d.hero.mana===10,'rescue cannot repeat');}
+ if(e.stormMult)check(d.schoolMult.storm===e.stormMult&&d.stormAmuletRefund.mana===e.stormRefund.mana,id+' Storm multiplier/refund');
  if(e.gatherBonus)check(d.hero.damageMult===1.48&&d.incomingMult===1,'gather-only amulet invents no combat bonus');
 }
 {
@@ -132,11 +133,11 @@ try {
   for(const gift of ['telekinesis','fire','storm'])await q('select _unlock_ability($1,$2,5)',[id,gift]);
  }
  await q("update profiles set nickname='Defender',nickname_normalized='defender' where id=$1",[opp]);
- const frozenBuild={slots:['telekinesis','fire','storm'],amulets:['amulet_embers'],amuletLevels:{amulet_embers:5},branches:{fire:'arsonist',telekinesis:'breaker',storm:'discharge'}};
+ const frozenBuild={slots:['telekinesis','fire','storm'],amulets:['amulet_embers','amulet_storm_heart'],amuletLevels:{amulet_embers:5,amulet_storm_heart:5},branches:{fire:'arsonist',telekinesis:'breaker',storm:'discharge'}};
  await q('select _merge_build($1,$2::jsonb)',[opp,JSON.stringify(frozenBuild)]);
  const act=async args=>(await as(uid,()=>q('select player_action($1::jsonb) j',[JSON.stringify({id:randomUUID(),...args})]))).rows[0].j;
- const started=await act({op:'duel_start',balanceVersion:39,duelVersion:2});
- check(started.action.ok&&started.combatCtx.balanceVersion===39&&started.combatCtx.duel.version===2&&!started.combatCtx.duel.opponent.ghost,'SQL chooses real opponent and stamps v2');
+ const started=await act({op:'duel_start',balanceVersion:40,duelVersion:2});
+ check(started.action.ok&&started.combatCtx.balanceVersion===40&&started.combatCtx.duel.version===2&&!started.combatCtx.duel.opponent.ghost,'SQL chooses real opponent and stamps v2');
  assert.deepEqual(started.combatCtx.duel.opponent.build,frozenBuild);checks++;
  await q("select _merge_build($1,'{\"branches\":{\"fire\":\"blaster\"},\"amuletLevels\":{\"amulet_embers\":0}}')",[opp]);
  const current=(await as(uid,()=>q('select get_player() j'))).rows[0].j;
@@ -152,4 +153,4 @@ try {
  const old=await act({op:'duel_start',balanceVersion:38});check(old.combatCtx.duel.version===1,'old clients retain old defender');
 }finally{await db.close()}
 console.log(`Duel defender: ${checks} checks passed; ${matrix.length} equal/different loadout replays.`);
-if(process.argv.includes('--report'))fs.writeFileSync('docs/design/duel-defender-results.json',JSON.stringify({date:'2026-10-21',balanceVersion:39,duelVersion:2,kind:'local deterministic bot, not player win-rate',profiles,matrix},null,2)+'\n');
+if(process.argv.includes('--report'))fs.writeFileSync('docs/design/duel-defender-results.json',JSON.stringify({date:'2026-10-21',balanceVersion:40,duelVersion:2,kind:'local deterministic bot, not player win-rate',profiles,matrix},null,2)+'\n');

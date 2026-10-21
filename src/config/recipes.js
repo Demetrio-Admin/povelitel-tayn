@@ -82,6 +82,11 @@ const amuletRecipes = {
  amulet_blizzard: [{ lunar_shard: 5, rune_dust: 5, ice_crystal: 4, frost_shard: 2 },1000,'chapter_2_complete'],
 };
 for (const [id,[needs,coins,event]] of Object.entries(amuletRecipes)) RECIPES[id] = { kind: 'amulet', chapter: 2, result: id, amount: 1, needs: { ...needs, coins }, requires: [event], crafted: `${id}_crafted`, blockedBy: [`${id}_crafted`] };
+RECIPES.amulet_storm_heart = { kind: 'amulet', chapter: 2, result: 'amulet_storm_heart', amount: 1,
+ needs: { ice_crystal: 4, lunar_shard: 4, rune_dust: 4, crafting_core: 1, coins: 600 },
+ requires: ['chapter_2_complete'], requiresAbility: 'storm', crafted: 'amulet_storm_heart_crafted', blockedBy: ['amulet_storm_heart_crafted'],
+ learn: 'Изучите Грозу I и завершите вторую главу: ремесленные ядра находятся в охраняемых запасах вылазок.',
+ note: 'Кристалл удерживает грозовой заряд. Один экземпляр: дальше его улучшают за сапфиры.' };
 export const RECIPE_ORDER = Object.keys(RECIPES).filter(id => !['elixir_life', 'elixir_mana', 'crystal_guard'].includes(id));
 export const POTION_RECIPES = RECIPE_ORDER.filter(id => RECIPES[id].kind === 'potion');
 /** v0.19.0: разделы котла по порядку показа. */

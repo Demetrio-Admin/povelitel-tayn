@@ -27,7 +27,7 @@ try {
  check(duelEnemyDef({level:15,name:'Гроза',abilities:{storm:{level:5,unlocked:true}},build:{slots:['storm']}}).strongAttack.damage>0,'storm snapshot remains valid in asynchronous duel');
  check(Object.values(RECIPES).every(r=>r.amount===1),'one craft always yields one item');
  check(RECIPES.potion_life_regen.needs.coins===25 && RECIPES.potion_mana_regen.needs.coins===30,'agreed regeneration fees');
- check(Object.keys(AMULETS).length===9 && AMULET_UPGRADES.map(x=>x.coins).join() === '1000,5000,15000,40000,100000','nine amulets and unchanged coin chain');
+ check(Object.keys(AMULETS).length===10 && AMULET_UPGRADES.map(x=>x.coins).join() === '1000,5000,15000,40000,100000','ten amulets and unchanged coin chain');
  check(CITY_GATHERING.length===12 && CITY_GATHERING.every(o=>o.texture in ASSET_FILES),'city nodes use real textures');
  check(['fw_cache','gy_cache'].every(id=>SAPPHIRE_DROPS.world[id].amount===25),'guarded expedition sapphires');
  check(Object.keys(UPGRADES).filter(k=>/^(telekinesis|fire|seal|ice)_[45]_/.test(k)).length===16,'16 advanced studies');

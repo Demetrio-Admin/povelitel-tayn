@@ -467,6 +467,9 @@ export class CombatScene extends Phaser.Scene {
         case 'manaRescue':   // v0.16.0: Лунный амулет вернул ману
           this.floatText(this.enemyPos.x + 120, this.enemyPos.y + 80, `Лунный амулет: +${ev.mana} маны`, COLORS.mana, 26);
           break;
+        case 'stormRefund':
+          this.floatText(HERO_POS.x - 60, HERO_POS.y - 150, `Грозовое сердце: +${ev.mana} MP`, COLORS.mana, 26);
+          break;
         case 'refund':  // ветка «Повелитель»: удачное прерывание вернуло ману и ускорило перезарядку
           this.floatText(this.enemyPos.x + 120, this.enemyPos.y + 40, `+${ev.mana} маны · −${ev.cooldownSec} с`, COLORS.mana, 26);
           break;

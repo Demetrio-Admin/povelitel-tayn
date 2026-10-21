@@ -22,7 +22,7 @@ export class AbilitySystem {
 
   /** Параметры дара на текущей ступени с учётом выбранной ветки (или null). */
   stats(id) {
-    return statsFor(id, this.level(id), this.state.branchOf(id));
+    return statsFor(id, this.level(id), this.state.branchOf(id), this.state.data.combatCtx?.balanceVersion);
   }
 
   label(id) {

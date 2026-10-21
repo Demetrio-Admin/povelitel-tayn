@@ -370,6 +370,7 @@ export class CombatScene extends Phaser.Scene {
     if (this.cm.modern && this.sim.isEquipped('storm')) (e.actor ? own : st).push(`Ваша Гроза ${this.cm.stormCharges}/3`);
     if (e.shield > 0) st.push(`Щит ${Math.ceil(e.shield)}`);
     if (this.cm.modern && Object.values(this.cm.shields).some(s=>s.left>0&&s.amount>0)) (e.actor ? own : st).push(`Ваш щит ${Math.ceil(Object.values(this.cm.shields).reduce((n,s)=>n+(s.left>0?Math.max(0,s.amount):0),0))}`);
+    if (this.cm.burnWard?.left > 0) (e.actor ? own : st).push(`От горения −60% · ${Math.ceil(this.cm.burnWard.left)}с`);
     this.heroBuffText?.setText(own.join('\n'));
     if (e.hasArmor) st.push(e.armorActive ? `Броня −${Math.round(e.def.armor.value * 100)}%` : `Броня разбита ${e.armorDisabledLeft.toFixed(0)}с`);
     if (e.burning) st.push(`Горение ${e.burn.left.toFixed(0)}с`);
@@ -568,9 +569,9 @@ export class CombatScene extends Phaser.Scene {
     } else if (ev.kind === 'mana') {
       this.floatText(HERO_POS.x - 60, HERO_POS.y - 150, `+${ev.amount}`, COLORS.mana, 36);
       this.burst(HERO_POS.x, HERO_POS.y - 70, COLORS.mana, 26);
-    } else if (ev.kind === 'warm' || ev.kind === 'guard') {   // v0.19.0: на себя — свечение вокруг героя
+    } else if (ev.kind === 'warm' || ev.kind === 'guard' || ev.kind === 'antiburn') {   // на себя — свечение вокруг героя
       this.burst(HERO_POS.x, HERO_POS.y - 70, p.color, 30);
-      this.floatText(HERO_POS.x - 60, HERO_POS.y - 150, ev.kind === 'warm' ? 'Тепло' : `Защита ${ev.sec} с`, p.color, 30);
+      this.floatText(HERO_POS.x - 60, HERO_POS.y - 150, ev.kind === 'warm' ? 'Тепло' : ev.kind === 'antiburn' ? `От горения ${ev.sec} с` : `Защита ${ev.sec} с`, p.color, 30);
     } else {
       // бросок склянки: пламенный росчерк от героини к врагу
       for (let i = 0; i < 8; i++) {

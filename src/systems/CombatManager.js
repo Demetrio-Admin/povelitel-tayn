@@ -18,11 +18,13 @@ export class CombatManager {
    * @param {import('./AbilitySystem.js').AbilitySystem} o.abilities
    */
   constructor({ enemyType, enemyDef = null, state, abilities }) {
+    this.balanceVersion = state.data.combatCtx?.balanceVersion || 29;
     this.modern = (state.data.combatCtx?.balanceVersion || 0) >= 38;
     this.potionSlots = state.data.combatCtx?.potionLoadout || potionLoadout(state.data.inventory, state.data.worldObjects?.player_build);
     this.potionUses = { restore: 0, tactical: 0 };
     this.potionCooldown = { restore: state.data.combatCtx?.potionCooldown || 0, tactical: 0 };
     this.regeneration = {};
+    this.burnWard = null;
     this.shields = {};
     this.state = state;
     this.abilities = abilities;
@@ -203,6 +205,7 @@ export class CombatManager {
       if (this.potionCooldown[p.category] > 0) return { ok: false, reason: 'cooldown' };
     } else if ((this.stats.potions || 0) >= POTION_BATTLE_LIMIT) return { ok: false, reason: 'limit' };
     const h = this.hero, e = p.effect;
+    if (e.type === 'antiburn' && this.balanceVersion < 39) return { ok: false, reason: 'unknown' };
     if (e.type === 'heal') {
       if (h.hp >= h.maxHp) return { ok: false, reason: 'full' };
       let gain = Math.min(h.maxHp - h.hp, potionGain(e, h.maxHp));
@@ -232,6 +235,11 @@ export class CombatManager {
       this.emit({ type: 'potion', id, kind: 'heal', amount: gain });
       if (this.modern) this.heroBurn = null;
       if (this.duelBody) this.duelBody.cleanse();
+    } else if (e.type === 'antiburn') {
+      this.heroBurn = null;
+      if (this.duelBody) this.duelBody.clearBurn();
+      this.burnWard = { left: e.sec, resist: e.resist };
+      this.emit({ type: 'potion', id, kind: 'antiburn', sec: e.sec });
     } else if (e.type === 'brittle') {   // Флакон Хрупкости
       this.enemy.applyBrittle(e.bonus, e.sec);
       this.emit({ type: 'potion', id, kind: 'brittle' });
@@ -436,7 +444,13 @@ export class CombatManager {
         else h[key] = Math.min(max, h[key] + gain);
         r.left = Math.max(0, r.left - dt); if (!r.left) delete this.regeneration[kind];
       }
-      if (this.heroBurn?.left > 0) { this.hitHero(this.heroBurn.rate * Math.min(dt, this.heroBurn.left), false, 'Горение', true); this.heroBurn.left = Math.max(0,this.heroBurn.left-dt); }
+      if (this.heroBurn?.left > 0) {
+        const span = Math.min(dt, this.heroBurn.left);
+        const protectedSpan = Math.min(span, Math.max(0, this.burnWard?.left || 0));
+        this.hitHero(this.heroBurn.rate * (span - protectedSpan * (this.burnWard?.resist || 0)), false, 'Горение', true);
+        this.heroBurn.left = Math.max(0, this.heroBurn.left - dt);
+      }
+      if (this.burnWard) { this.burnWard.left = Math.max(0, this.burnWard.left - dt); if (this.burnWard.left < 1e-9) this.burnWard = null; }
       for (const shield of Object.values(this.shields)) { shield.left -= dt; if (shield.left <= 0) shield.amount = 0; }
     }
     // v0.18.0: под холодом врага мана и перезарядки героя идут медленнее

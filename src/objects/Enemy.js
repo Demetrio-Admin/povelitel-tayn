@@ -209,7 +209,7 @@ export class Enemy {
 
     if (this.modern) for (const b of this.burnStacks) {
       const span = Math.min(dt, b.left); b.left -= span; b.tick -= span;
-      while (b.tick <= 1e-9 && this.alive) { b.tick += 1; out.push({ type: 'burnTick', damage: this.takeDamage(b.dps, 'fire', heroMult) }); }
+      while (b.tick <= 1e-9 && this.alive) { b.tick += 1; out.push({ type: 'burnTick', damage: this.takeDamage(b.dps, 'fire', heroMult, { burnTick: true }) }); }
     }
     this.burnStacks = this.burnStacks.filter(b => b.left > 1e-9);
     // статусы
@@ -218,7 +218,7 @@ export class Enemy {
       this.burn.tick -= dt;
       while (this.burn.tick <= 0 && this.alive) {
         this.burn.tick += 1;
-        out.push({ type: 'burnTick', damage: this.takeDamage(this.burn.dps, 'fire', heroMult) });
+        out.push({ type: 'burnTick', damage: this.takeDamage(this.burn.dps, 'fire', heroMult, { burnTick: true }) });
       }
       if (this.burn.left <= 0) this.burn.left = 0;
     }

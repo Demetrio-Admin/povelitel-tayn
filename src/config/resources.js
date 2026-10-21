@@ -48,13 +48,15 @@ Object.assign(POTIONS, {
   potion_life_regen: fixed('Восстанавливающее зелье здоровья', 'heal', 30, 'icon_potion_life', { regen: { rate: 15, sec: 6 } }),
   potion_mana_regen: fixed('Восстанавливающее зелье маны', 'mana', 20, 'icon_potion_mana', { regen: { rate: 10, sec: 10 } }),
   potion_crystal_shield: { name: 'Кристальный щит', icon: 'icon_potion_guard', color: 0x7fb8ff, category: 'tactical', effect: { type: 'shield', amount: 70, sec: 12 }, text: 'Поглощает до 70 урона за 12 с.' },
+  potion_antiburn: { name: 'Защита от горения', icon: 'icon_potion_stable', color: 0x83d8ed, category: 'tactical', effect: { type: 'antiburn', resist: 0.6, sec: 20 },
+    text: 'Снимает горение. На 20 с снижает урон нового горения на 60%. Не защищает от прямого Огня и лужи смолы. Только в бою.' },
 });
 for (const p of Object.values(POTIONS)) p.category ??= ['heal', 'mana'].includes(p.effect.type) ? 'restore' : 'tactical';
 export const POTION_CATEGORIES = { restore: { limit: 3, cooldown: 10 }, tactical: { limit: 2, cooldown: 12 } };
 export const POTION_SLOTS = 4;
 export const potionGain = (effect, max) => effect.flat ?? Math.round(max * effect.amount);
 export const POTION_PREFERENCE = ['potion_life_large', 'potion_life_medium', 'potion_life_regen', 'potion_life_small', 'elixir_life',
-    'potion_mana_large', 'potion_mana_medium', 'potion_mana_regen', 'potion_mana_small', 'elixir_mana', 'warm_potion', 'potion_crystal_shield', 'crystal_guard', 'resin_flask', 'brittle_flask', 'stabilizing_potion'];
+    'potion_mana_large', 'potion_mana_medium', 'potion_mana_regen', 'potion_mana_small', 'elixir_mana', 'warm_potion', 'potion_crystal_shield', 'crystal_guard', 'resin_flask', 'brittle_flask', 'stabilizing_potion', 'potion_antiburn'];
 export function potionLoadout(inventory, build) {
   if (Array.isArray(build?.potions)) return [...new Set(build.potions)].filter(id => POTIONS[id]).slice(0, POTION_SLOTS);
   const preference = POTION_PREFERENCE;

@@ -65,6 +65,9 @@ Object.assign(RECIPES, {
   potion_life_regen: brew('potion_life_regen', { moon_herb: 1, forest_mushroom: 2, frost_herb: 1 }, 25, ['regen_potions_learned']),
   potion_mana_regen: brew('potion_mana_regen', { moon_herb: 2, rune_dust: 1, frost_herb: 1 }, 30, ['regen_potions_learned']),
   potion_crystal_shield: brew('potion_crystal_shield', { ice_crystal: 1, forest_mushroom: 1, tree_resin: 1 }, 20, ['ch2_quarter_cleared']),
+  // Graveyard wisps become available after chapter II; their strong hit burns the hero.
+  potion_antiburn: { ...brew('potion_antiburn', { frost_herb: 2, forest_mushroom: 1, ice_crystal: 1 }, 15, ['chapter_2_complete']),
+    note: 'Морозник и кристалл гасят пламя на коже. Защищает от нового горения, пока действует настой.' },
 });
 RECIPES.crystal_guard = { ...RECIPES.potion_crystal_shield };
 for (const [id, fee] of Object.entries({ warm_potion: 10, stabilizing_potion: 15, brittle_flask: 15 })) RECIPES[id].needs.coins = fee;

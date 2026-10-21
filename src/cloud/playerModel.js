@@ -26,6 +26,7 @@ import { serverRules } from '../config/serverRules.js';
 import { checkBuild, slotCount, defaultSlots, progressGate, amuletEffect } from '../config/build.js';
 
 import { potionLoadout } from '../config/resources.js';
+import { combatBalanceVersion } from '../config/combatVersions.js';
 const RULES = serverRules();
 /**
  * Ключи объектов мира, состояние которых пишет только сервер: всё, что есть в RULES.world (с v0.15.0 и магия — сервер ставит mark),
@@ -826,7 +827,8 @@ function duelStart(s, nowMs, balanceVersion, duelVersion) {
   s.objects.duel = st;
   const opponent = duelGhostOf(s, st.rating);
   s.combatSince = s.vitalsAt;
-  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), balanceVersion: balanceVersion === 38 ? 38 : balanceVersion === 30 ? 30 : 29, duel: { version: balanceVersion === 38 && duelVersion === 2 ? 2 : 1, opponent, rating: st.rating, season: st.season } };
+  const version = combatBalanceVersion(balanceVersion);
+  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), balanceVersion: version, duel: { version: version >= 38 && duelVersion === 2 ? 2 : 1, opponent, rating: st.rating, season: st.season } };
   return { ok: true, opponent, rating: st.rating, left: D.attemptsPerDay - st.used };
 }
 
@@ -834,7 +836,8 @@ function duelStart(s, nowMs, balanceVersion, duelVersion) {
 function combatStart(s, action = {}) {
   if (!isId(action.spawn) || !isId(action.enemy)) return { ok: false, reason: 'bad_spawn' };
   if (s.combatSince == null) s.combatSince = s.vitalsAt;
-  s.combatCtx = { ...combatCtxOf(s, action.spawn, action.enemy), ...(action.balanceVersion === 38 ? { sapphireDrops: 1 } : {}), balanceVersion: action.balanceVersion === 38 ? 38 : action.balanceVersion === 30 ? 30 : 29 };
+  const version = combatBalanceVersion(action.balanceVersion);
+  s.combatCtx = { ...combatCtxOf(s, action.spawn, action.enemy), ...(version >= 38 ? { sapphireDrops: 1 } : {}), balanceVersion: version };
   // v0.15.0: событие «встреча началась» (combat_intro_01 и др.) ставит сервер, если место боя уже открыто
   const ss = Object.hasOwn(RULES.spawnStart, action.spawn) ? RULES.spawnStart[action.spawn] : null;
   if (ss && (!ss.requires || has(s, ss.requires))) setEvent(s, ss.event);

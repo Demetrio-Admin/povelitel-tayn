@@ -139,7 +139,15 @@ Object.assign(POTIONS, {
   potion_mana_large: fixed("\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u044C\u043D\u043E\u0435 \u0437\u0435\u043B\u044C\u0435 \u043C\u0430\u043D\u044B", "mana", 150, "icon_potion_mana"),
   potion_life_regen: fixed("\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u0430\u0432\u043B\u0438\u0432\u0430\u044E\u0449\u0435\u0435 \u0437\u0435\u043B\u044C\u0435 \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u044F", "heal", 30, "icon_potion_life", { regen: { rate: 15, sec: 6 } }),
   potion_mana_regen: fixed("\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u0430\u0432\u043B\u0438\u0432\u0430\u044E\u0449\u0435\u0435 \u0437\u0435\u043B\u044C\u0435 \u043C\u0430\u043D\u044B", "mana", 20, "icon_potion_mana", { regen: { rate: 10, sec: 10 } }),
-  potion_crystal_shield: { name: "\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0439 \u0449\u0438\u0442", icon: "icon_potion_guard", color: 8370431, category: "tactical", effect: { type: "shield", amount: 70, sec: 12 }, text: "\u041F\u043E\u0433\u043B\u043E\u0449\u0430\u0435\u0442 \u0434\u043E 70 \u0443\u0440\u043E\u043D\u0430 \u0437\u0430 12 \u0441." }
+  potion_crystal_shield: { name: "\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0439 \u0449\u0438\u0442", icon: "icon_potion_guard", color: 8370431, category: "tactical", effect: { type: "shield", amount: 70, sec: 12 }, text: "\u041F\u043E\u0433\u043B\u043E\u0449\u0430\u0435\u0442 \u0434\u043E 70 \u0443\u0440\u043E\u043D\u0430 \u0437\u0430 12 \u0441." },
+  potion_antiburn: {
+    name: "\u0417\u0430\u0449\u0438\u0442\u0430 \u043E\u0442 \u0433\u043E\u0440\u0435\u043D\u0438\u044F",
+    icon: "icon_potion_stable",
+    color: 8640749,
+    category: "tactical",
+    effect: { type: "antiburn", resist: 0.6, sec: 20 },
+    text: "\u0421\u043D\u0438\u043C\u0430\u0435\u0442 \u0433\u043E\u0440\u0435\u043D\u0438\u0435. \u041D\u0430 20 \u0441 \u0441\u043D\u0438\u0436\u0430\u0435\u0442 \u0443\u0440\u043E\u043D \u043D\u043E\u0432\u043E\u0433\u043E \u0433\u043E\u0440\u0435\u043D\u0438\u044F \u043D\u0430 60%. \u041D\u0435 \u0437\u0430\u0449\u0438\u0449\u0430\u0435\u0442 \u043E\u0442 \u043F\u0440\u044F\u043C\u043E\u0433\u043E \u041E\u0433\u043D\u044F \u0438 \u043B\u0443\u0436\u0438 \u0441\u043C\u043E\u043B\u044B. \u0422\u043E\u043B\u044C\u043A\u043E \u0432 \u0431\u043E\u044E."
+  }
 });
 for (const p of Object.values(POTIONS)) p.category ??= ["heal", "mana"].includes(p.effect.type) ? "restore" : "tactical";
 var POTION_CATEGORIES = { restore: { limit: 3, cooldown: 10 }, tactical: { limit: 2, cooldown: 12 } };
@@ -161,7 +169,8 @@ var POTION_PREFERENCE = [
   "crystal_guard",
   "resin_flask",
   "brittle_flask",
-  "stabilizing_potion"
+  "stabilizing_potion",
+  "potion_antiburn"
 ];
 function potionLoadout(inventory, build) {
   if (Array.isArray(build?.potions)) return [...new Set(build.potions)].filter((id) => POTIONS[id]).slice(0, POTION_SLOTS);
@@ -643,7 +652,8 @@ function addAdvancedAbilities(abilities) {
     },
     fire: {
       4: { arsonist: { burn: { dps: 6, durationSec: 10 }, burnStacks: 2 }, blaster: { burn: { dps: 5, durationSec: 11 }, detonate: 1 } },
-      5: { arsonist: { burn: { dps: 7, durationSec: 12 }, burnStacks: 3, fullBurnAntiheal: 0.3 }, blaster: { burn: { dps: 6, durationSec: 12 }, detonate: 1.75 } }
+      // More than two ordinary 8s cooldowns: three independent layers can actually overlap.
+      5: { arsonist: { burn: { dps: 7, durationSec: 18 }, burnStacks: 3, fullBurnAntiheal: 0.3 }, blaster: { burn: { dps: 6, durationSec: 12 }, detonate: 1.75 } }
     },
     seal: {
       4: { seer: { flash: { sec: 5, vulnerability: 0.2 } }, piercer: { shieldPierce: 0.5 } },
@@ -3017,7 +3027,12 @@ Object.assign(RECIPES, {
   potion_mana_large: brew("potion_mana_large", { rune_dust: 3, lunar_shard: 2, ice_crystal: 1 }, 50, ["ch2_lab_open"]),
   potion_life_regen: brew("potion_life_regen", { moon_herb: 1, forest_mushroom: 2, frost_herb: 1 }, 25, ["regen_potions_learned"]),
   potion_mana_regen: brew("potion_mana_regen", { moon_herb: 2, rune_dust: 1, frost_herb: 1 }, 30, ["regen_potions_learned"]),
-  potion_crystal_shield: brew("potion_crystal_shield", { ice_crystal: 1, forest_mushroom: 1, tree_resin: 1 }, 20, ["ch2_quarter_cleared"])
+  potion_crystal_shield: brew("potion_crystal_shield", { ice_crystal: 1, forest_mushroom: 1, tree_resin: 1 }, 20, ["ch2_quarter_cleared"]),
+  // Graveyard wisps become available after chapter II; their strong hit burns the hero.
+  potion_antiburn: {
+    ...brew("potion_antiburn", { frost_herb: 2, forest_mushroom: 1, ice_crystal: 1 }, 15, ["chapter_2_complete"]),
+    note: "\u041C\u043E\u0440\u043E\u0437\u043D\u0438\u043A \u0438 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B \u0433\u0430\u0441\u044F\u0442 \u043F\u043B\u0430\u043C\u044F \u043D\u0430 \u043A\u043E\u0436\u0435. \u0417\u0430\u0449\u0438\u0449\u0430\u0435\u0442 \u043E\u0442 \u043D\u043E\u0432\u043E\u0433\u043E \u0433\u043E\u0440\u0435\u043D\u0438\u044F, \u043F\u043E\u043A\u0430 \u0434\u0435\u0439\u0441\u0442\u0432\u0443\u0435\u0442 \u043D\u0430\u0441\u0442\u043E\u0439."
+  }
 });
 RECIPES.crystal_guard = { ...RECIPES.potion_crystal_shield };
 for (const [id, fee] of Object.entries({ warm_potion: 10, stabilizing_potion: 15, brittle_flask: 15 })) RECIPES[id].needs.coins = fee;
@@ -4257,6 +4272,10 @@ function serverRules() {
   };
 }
 
+// src/config/combatVersions.js
+var COMBAT_BALANCE_VERSION = 39;
+var combatBalanceVersion = (value) => [30, 38, 39].includes(value) ? value : 29;
+
 // src/cloud/playerModel.js
 var RULES = serverRules();
 var ABILITY_IDS = ["telekinesis", "fire", "seal", "ice", "storm"];
@@ -4615,7 +4634,7 @@ var Enemy = class {
       b.tick -= span;
       while (b.tick <= 1e-9 && this.alive) {
         b.tick += 1;
-        out.push({ type: "burnTick", damage: this.takeDamage(b.dps, "fire", heroMult) });
+        out.push({ type: "burnTick", damage: this.takeDamage(b.dps, "fire", heroMult, { burnTick: true }) });
       }
     }
     this.burnStacks = this.burnStacks.filter((b) => b.left > 1e-9);
@@ -4624,7 +4643,7 @@ var Enemy = class {
       this.burn.tick -= dt;
       while (this.burn.tick <= 0 && this.alive) {
         this.burn.tick += 1;
-        out.push({ type: "burnTick", damage: this.takeDamage(this.burn.dps, "fire", heroMult) });
+        out.push({ type: "burnTick", damage: this.takeDamage(this.burn.dps, "fire", heroMult, { burnTick: true }) });
       }
       if (this.burn.left <= 0) this.burn.left = 0;
     }
@@ -4843,7 +4862,7 @@ function applyBranch(base, branch) {
   for (const [k, v] of Object.entries(branch.mul || {})) if (typeof out[k] === "number") out[k] = Math.round(out[k] * v * 100) / 100;
   return out;
 }
-function statsFor(id, level, branchId = null) {
+function statsFor(id, level, branchId = null, balanceVersion = COMBAT_BALANCE_VERSION) {
   if (!level) return null;
   const def = ABILITIES[id];
   if (!def) return null;
@@ -4851,7 +4870,9 @@ function statsFor(id, level, branchId = null) {
   const base = def.levels[Math.min(level, max)];
   const branch = branchId ? def.branches?.[branchId] : null;
   const result = branch && level >= (branch.fromLevel || 1) ? { ...applyBranch(base, branch), branch: branchId } : { ...base };
-  return { ...result, ...base.advancedBranches?.[branchId] || {} };
+  const stats = { ...result, ...base.advancedBranches?.[branchId] || {} };
+  if (balanceVersion < 39 && id === "fire" && level >= 5 && branchId === "arsonist") stats.burn = { ...stats.burn, durationSec: 12 };
+  return stats;
 }
 
 // src/systems/AbilitySystem.js
@@ -4875,7 +4896,7 @@ var AbilitySystem = class {
   }
   /** Параметры дара на текущей ступени с учётом выбранной ветки (или null). */
   stats(id) {
-    return statsFor(id, this.level(id), this.state.branchOf(id));
+    return statsFor(id, this.level(id), this.state.branchOf(id), this.state.data.combatCtx?.balanceVersion);
   }
   label(id) {
     const s = this.stats(id);
@@ -4949,16 +4970,21 @@ var DuelBody = class extends Enemy {
   }
   takeDamage(base, school, mult = 1, options = {}) {
     if (!this.alive) return 0;
+    if (options.burnTick && this.actor.burnWard?.left > 0) base *= 1 - this.actor.burnWard.resist;
     return this.actor.hitHero(base * mult * this.incomingMultiplier(school), false, void 0, false, { ...options, silent: true });
   }
   applySlow(pct, sec) {
     super.applySlow(pct, sec);
     this.actor.chillHero({ pct, sec });
   }
-  cleanse() {
+  clearBurn() {
     this.burnStacks = [];
     this.burn = { left: 0, dps: 0, tick: 0 };
     this.antiheal = 0;
+    this.fullBurnAntiheal = null;
+  }
+  cleanse() {
+    this.clearBurn();
     this.slow = { left: 0, pct: 0 };
   }
   tryInterrupt(tags) {
@@ -4986,7 +5012,7 @@ var DuelBattle = class {
     state.data.heroLevel = opponent.level;
     for (const [id, a] of Object.entries(opponent.abilities)) if (a.unlocked && a.level > 0) state.unlockAbility(id, a.level);
     state.data.worldObjects = { player_build: structuredClone(opponent.build) };
-    state.data.combatCtx = { balanceVersion: 38, potionLoadout: [] };
+    state.data.combatCtx = { balanceVersion: hero.state.data.combatCtx.balanceVersion, potionLoadout: [] };
     const stats = state.heroStats();
     state.data.hp = stats.maxHp;
     state.data.mana = stats.maxMana;
@@ -5114,11 +5140,13 @@ var CombatManager = class {
    * @param {import('./AbilitySystem.js').AbilitySystem} o.abilities
    */
   constructor({ enemyType, enemyDef = null, state, abilities }) {
+    this.balanceVersion = state.data.combatCtx?.balanceVersion || 29;
     this.modern = (state.data.combatCtx?.balanceVersion || 0) >= 38;
     this.potionSlots = state.data.combatCtx?.potionLoadout || potionLoadout(state.data.inventory, state.data.worldObjects?.player_build);
     this.potionUses = { restore: 0, tactical: 0 };
     this.potionCooldown = { restore: state.data.combatCtx?.potionCooldown || 0, tactical: 0 };
     this.regeneration = {};
+    this.burnWard = null;
     this.shields = {};
     this.state = state;
     this.abilities = abilities;
@@ -5332,6 +5360,7 @@ var CombatManager = class {
       if (this.potionCooldown[p.category] > 0) return { ok: false, reason: "cooldown" };
     } else if ((this.stats.potions || 0) >= POTION_BATTLE_LIMIT) return { ok: false, reason: "limit" };
     const h = this.hero, e = p.effect;
+    if (e.type === "antiburn" && this.balanceVersion < 39) return { ok: false, reason: "unknown" };
     if (e.type === "heal") {
       if (h.hp >= h.maxHp) return { ok: false, reason: "full" };
       let gain = Math.min(h.maxHp - h.hp, potionGain(e, h.maxHp));
@@ -5365,6 +5394,11 @@ var CombatManager = class {
       this.emit({ type: "potion", id, kind: "heal", amount: gain });
       if (this.modern) this.heroBurn = null;
       if (this.duelBody) this.duelBody.cleanse();
+    } else if (e.type === "antiburn") {
+      this.heroBurn = null;
+      if (this.duelBody) this.duelBody.clearBurn();
+      this.burnWard = { left: e.sec, resist: e.resist };
+      this.emit({ type: "potion", id, kind: "antiburn", sec: e.sec });
     } else if (e.type === "brittle") {
       this.enemy.applyBrittle(e.bonus, e.sec);
       this.emit({ type: "potion", id, kind: "brittle" });
@@ -5581,8 +5615,14 @@ var CombatManager = class {
         if (!r.left) delete this.regeneration[kind];
       }
       if (this.heroBurn?.left > 0) {
-        this.hitHero(this.heroBurn.rate * Math.min(dt, this.heroBurn.left), false, "\u0413\u043E\u0440\u0435\u043D\u0438\u0435", true);
+        const span = Math.min(dt, this.heroBurn.left);
+        const protectedSpan = Math.min(span, Math.max(0, this.burnWard?.left || 0));
+        this.hitHero(this.heroBurn.rate * (span - protectedSpan * (this.burnWard?.resist || 0)), false, "\u0413\u043E\u0440\u0435\u043D\u0438\u0435", true);
         this.heroBurn.left = Math.max(0, this.heroBurn.left - dt);
+      }
+      if (this.burnWard) {
+        this.burnWard.left = Math.max(0, this.burnWard.left - dt);
+        if (this.burnWard.left < 1e-9) this.burnWard = null;
       }
       for (const shield of Object.values(this.shields)) {
         shield.left -= dt;
@@ -5834,7 +5874,7 @@ function startState(ctx, nowMs = Date.now()) {
   snap.inventory = { ...ctx.potions };
   snap.hp = ctx.hp;
   snap.mana = ctx.mana;
-  snap.combatCtx = { ...ctx, balanceVersion: ctx.balanceVersion === 38 ? 38 : ctx.balanceVersion === 30 ? 30 : 29 };
+  snap.combatCtx = { ...ctx, balanceVersion: combatBalanceVersion(ctx.balanceVersion) };
   snap.objects = ctx.build ? { player_build: JSON.parse(JSON.stringify(ctx.build)) } : {};
   const st = new GameState(null, () => nowMs);
   st.setData(fromSnapshot(snap));

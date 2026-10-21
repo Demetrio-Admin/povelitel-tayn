@@ -20,6 +20,7 @@ import { EVENT_REWARDS } from '../config/balance.progression.js';
 import { HERO_RECOVERY } from '../config/balance.hero.js';
 import { COMBAT_TUTORIAL } from '../config/story.js';
 import { DUEL, duelEnemyDef, ratingDelta } from '../config/duel.js';
+import { combatBalanceVersion } from '../config/combatVersions.js';
 
 /** Сколько секунд боя можно «набрать» сверх реального времени с момента combat_start (часы клиента и сервера расходятся). */
 export const SLACK_SEC = 10;
@@ -39,7 +40,7 @@ export function startState(ctx, nowMs = Date.now()) {
   snap.inventory = { ...ctx.potions };
   snap.hp = ctx.hp; snap.mana = ctx.mana;
   // Contexts from pre-v0.30 clients use the old mana/amulet physics. The server stamps the selected version.
-  snap.combatCtx = { ...ctx, balanceVersion: ctx.balanceVersion === 38 ? 38 : ctx.balanceVersion === 30 ? 30 : 29 };
+  snap.combatCtx = { ...ctx, balanceVersion: combatBalanceVersion(ctx.balanceVersion) };
   snap.objects = ctx.build ? { player_build: JSON.parse(JSON.stringify(ctx.build)) } : {};
   const st = new GameState(null, () => nowMs);
   st.setData(fromSnapshot(snap));

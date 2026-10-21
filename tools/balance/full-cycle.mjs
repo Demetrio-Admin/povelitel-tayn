@@ -16,6 +16,7 @@ import { collectSolids } from '../../src/world/solids.js';
 import { PROPS, resolveMap } from '../../src/world/mapData.js';
 import { bagData, bagUsed } from '../../src/config/bag.js';
 import { POTIONS } from '../../src/config/resources.js';
+import { COMBAT_BALANCE_VERSION } from '../../src/config/combatVersions.js';
 const R=serverRules(), nodes=new Map(INTERACTIVES.map(o=>[o.id,o])), enemies=new Map(ENEMY_SPAWNS.map(o=>[o.id,o]));
 const merchant=nodes.get('npc_merchant');
 const profiles={
@@ -37,7 +38,7 @@ function pathLength(from,to){
  let d=0,p=from;for(const n of r.points){d+=Math.hypot(n.x-p.x,n.y-p.y);p=n;}
  const result={seconds:d/PLAYER.speed,end:r.end};lengths.set(key,result);return result;
 }
-export function simulate({profile='prepared',capacity=100,potion='medium',policy='economy',cycles=2,capital=20000,gatherSeconds=1200,expeditionSeconds=3600}={}){
+export function simulate({profile='prepared',capacity=100,potion='medium',policy='economy',cycles=2,capital=20000,gatherSeconds=1200,expeditionSeconds=3600,balanceVersion=COMBAT_BALANCE_VERSION}={}){
  const p=profiles[profile];assert.ok(p,'profile');let s=emptySnapshot(),now=2e12,position={x:merchant.x,y:merchant.y};
  const life=`potion_life_${potion}`,mana=`potion_mana_${potion}`,target={[life]:6,[mana]:6,warm_potion:4,potion_crystal_shield:4};
  s.level=15;s.xp=7900;s.hp=255;s.mana=205;s.vitalsAt=now;s.pos={...position};s.wallet.sapphires=0;
@@ -68,7 +69,7 @@ export function simulate({profile='prepared',capacity=100,potion='medium',policy
   if((s.inventory[life]||0)<1||(policy==='drink'&&(s.inventory[mana]||0)<1))service();go(o);
   const want=policy==='wait'?205:policy==='economy'?130:35;if(s.mana<want)tick((want-s.mana)/.5);
   const region=locationAt(o.x,o.y).id;const slots=profile.startsWith('specialist')?(region==='graveyard'?['telekinesis','seal','storm']:['telekinesis','fire','storm']):['telekinesis','ice',region==='graveyard'?'seal':'fire'];
-  assert.ok(act('build_set',{slots}).ok);const start=act('combat_start',{spawn:o.id,enemy:o.enemy,balanceVersion:38});assert.ok(start.ok);
+  assert.ok(act('build_set',{slots}).ok);const start=act('combat_start',{spawn:o.id,enemy:o.enemy,balanceVersion});assert.ok(start.ok);
   const driver=(cm,input)=>{const e=cm.enemy,ready=id=>cm.abilityState(id).state==='ready',isBoss=['frost_alpha','barrow_warden'].includes(o.enemy);
    if((cm.heroChill.left>0&&!cm.chillResist)&&(isBoss||policy==='drink'))input('p','warm_potion');
    if(isBoss&&cm.hero.hp<cm.hero.maxHp*.8)input('p','potion_crystal_shield');
@@ -110,6 +111,6 @@ export function simulate({profile='prepared',capacity=100,potion='medium',policy
   for(const[id,n]of Object.entries(target))assert.equal(s.inventory[id],n,'closed potion stock '+id);assert.equal(s.hp,255);assert.equal(s.mana,205);assert.equal(Object.keys(bagData(s.objects).pending).length,0);assert.ok(bagUsed(s.inventory)<=capacity);
   rows.push({cycle:cycle+1,seconds,netCoins:net,coinsPerHour:net*3600/seconds,sapphiresPerHour:metrics.expectedSapphires*3600/seconds,...metrics,bagUsed:bagUsed(s.inventory),rare:{crafting_core:s.inventory.crafting_core||0,frost_shard:s.inventory.frost_shard||0},capital:s.inventory.coins});
  }
- return {profile,capacity,potion,policy,assumptions:{transition:5,trade:3,craft:2,gather:1,walkSpeed:PLAYER.speed,gatherSeconds,expeditionSeconds,initialAnalyticalCapital:capital},cycles:rows};
+ return {profile,capacity,potion,policy,assumptions:{balanceVersion,transition:5,trade:3,craft:2,gather:1,walkSpeed:PLAYER.speed,gatherSeconds,expeditionSeconds,initialAnalyticalCapital:capital},cycles:rows};
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){const all=process.argv.includes('--all'),results=[];for(const profile of all?PROFILE_IDS:['prepared'])for(const capacity of all?[100,150]:[100])for(const potion of all?['medium','regen']:['medium'])for(const policy of all?['wait','economy','drink']:['economy']){const r=simulate({profile,capacity,potion,policy});results.push(r);console.error(profile,capacity,potion,policy,r.cycles.at(-1).coinsPerHour.toFixed(1));}console.log(JSON.stringify(results,null,2));}
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){const all=process.argv.includes('--all'),results=[];const versionArg=process.argv.find(s=>s.startsWith('--balance-version='));const balanceVersion=versionArg?Number(versionArg.split('=')[1]):COMBAT_BALANCE_VERSION;assert.ok([38,39].includes(balanceVersion),'supported analysis version');for(const profile of all?PROFILE_IDS:['prepared'])for(const capacity of all?[100,150]:[100])for(const potion of all?['medium','regen']:['medium'])for(const policy of all?['wait','economy','drink']:['economy']){const r=simulate({profile,capacity,potion,policy,balanceVersion});results.push(r);console.error(profile,capacity,potion,policy,r.cycles.at(-1).coinsPerHour.toFixed(1));}console.log(JSON.stringify(results,null,2));}

@@ -8,7 +8,8 @@ export function addAdvancedAbilities(abilities) {
     },
     fire: {
       4: { arsonist: { burn: { dps: 6, durationSec: 10 }, burnStacks: 2 }, blaster: { burn: { dps: 5, durationSec: 11 }, detonate: 1 } },
-      5: { arsonist: { burn: { dps: 7, durationSec: 12 }, burnStacks: 3, fullBurnAntiheal: .3 }, blaster: { burn: { dps: 6, durationSec: 12 }, detonate: 1.75 } },
+      // More than two ordinary 8s cooldowns: three independent layers can actually overlap.
+      5: { arsonist: { burn: { dps: 7, durationSec: 18 }, burnStacks: 3, fullBurnAntiheal: .3 }, blaster: { burn: { dps: 6, durationSec: 12 }, detonate: 1.75 } },
     },
     seal: {
       4: { seer: { flash: { sec: 5, vulnerability: .2 } }, piercer: { shieldPierce: .5 } },

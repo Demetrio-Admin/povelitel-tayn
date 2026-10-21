@@ -17,11 +17,16 @@ class DuelBody extends Enemy {
   get prepProgress() { return this.pending ? 1 - this.pending.left / this.pending.duration : 0; }
   takeDamage(base, school, mult = 1, options = {}) {
     if (!this.alive) return 0;
+    if (options.burnTick && this.actor.burnWard?.left > 0) base *= 1 - this.actor.burnWard.resist;
     return this.actor.hitHero(base * mult * this.incomingMultiplier(school), false, undefined, false, { ...options, silent: true });
   }
   applySlow(pct, sec) { super.applySlow(pct, sec); this.actor.chillHero({ pct, sec }); }
-  cleanse() {
+  clearBurn() {
     this.burnStacks = []; this.burn = { left: 0, dps: 0, tick: 0 }; this.antiheal = 0;
+    this.fullBurnAntiheal = null;
+  }
+  cleanse() {
+    this.clearBurn();
     this.slow = { left: 0, pct: 0 };
   }
   tryInterrupt(tags) {
@@ -44,7 +49,7 @@ export class DuelBattle {
     state.data.heroLevel = opponent.level;
     for (const [id, a] of Object.entries(opponent.abilities)) if (a.unlocked && a.level > 0) state.unlockAbility(id, a.level);
     state.data.worldObjects = { player_build: structuredClone(opponent.build) };
-    state.data.combatCtx = { balanceVersion: 38, potionLoadout: [] };
+    state.data.combatCtx = { balanceVersion: hero.state.data.combatCtx.balanceVersion, potionLoadout: [] };
     const stats = state.heroStats();
     state.data.hp = stats.maxHp;
     state.data.mana = stats.maxMana;

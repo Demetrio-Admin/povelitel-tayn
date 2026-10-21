@@ -16,6 +16,7 @@
 import { applyAction, combatApply, toSnapshot, fromSnapshot } from '../cloud/playerModel.js';
 import { verifyCombat } from '../cloud/combatVerify.js';
 import { HERO_LEVELS } from '../config/balance.hero.js';
+import { COMBAT_BALANCE_VERSION } from '../config/combatVersions.js';
 import { MSG } from '../state/EventBus.js';
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -123,7 +124,7 @@ export class PlayerActions {
   }
 
   /** v0.14.0: бой начался — сервер запоминает состояние героя; в ответе его HP и мана на старт боя (они же в state.data). */
-  combatStart(spawn, enemy) { return this.run({ op: 'combat_start', spawn, enemy, balanceVersion: 38 }); }
+  combatStart(spawn, enemy) { return this.run({ op: 'combat_start', spawn, enemy, balanceVersion: COMBAT_BALANCE_VERSION }); }
 
   /**
    * v0.14.0: запись боя на проверку. Успех: { ok, outcome: 'victory'|'defeat'|'retreat', verdict, outcome (изменения: опыт, уровни, предметы, события) }.
@@ -187,5 +188,5 @@ export class PlayerActions {
   covenClaim() { return this.run({ op: 'coven_claim' }); }
   covenPayout() { return this.run({ op: 'coven_payout' }); }   // v0.33.0: сапфиры пятёрке лучших за прошлые циклы
   duelSeason() { return this.run({ op: 'duel_season' }); }   // v0.34.0: награда сапфирами за прошлый сезон арены (забирается при открытии окна)
-  duelStart() { return this.run({ op: 'duel_start', balanceVersion: 38, duelVersion: 2 }); }   // соперника и версию фиксирует сервер
+  duelStart() { return this.run({ op: 'duel_start', balanceVersion: COMBAT_BALANCE_VERSION, duelVersion: 2 }); }   // соперника и версию фиксирует сервер
 }

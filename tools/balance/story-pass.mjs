@@ -64,7 +64,7 @@ export async function storyPass() {
     if (['wh_elite', 'fq_guardian', 'lab_construct', 'final_severin'].includes(spawn)) replenish(spawn === 'final_severin' ? 4 : 2);
     if (spawn === 'final_severin') { craft('potion_mana_medium'); craft('warm_potion'); }
     time += Math.max(0,(s.level>=14?205:185)-(s.mana||0))*2000;
-    act('combat_start', { spawn, enemy, balanceVersion: 38 });
+    act('combat_start', { spawn, enemy, balanceVersion: 39 });
     let best;
     for (let seed = 1; seed <= 8 && !best; seed++) {
       const play = playBot(s.combatCtx, { seed, policy: 'smart', driver });

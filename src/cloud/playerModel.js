@@ -816,7 +816,7 @@ export function duelGhostOf(s, rating) {
   return { name: 'Тень дуэлянта', ghost: true, level: s.level, hero: null, abilities, build: s.objects?.player_build ?? null, rating };
 }
 /** Вызов на Дуэль: попытка списывается сразу; сервер запоминает героя и соперника (бой проверяется как обычный). */
-function duelStart(s, nowMs, balanceVersion) {
+function duelStart(s, nowMs, balanceVersion, duelVersion) {
   const D = RULES.duel;
   if (!has(s, D.requires)) return { ok: false, reason: 'locked' };
   if (s.combatSince != null) return { ok: false, reason: 'combat' };
@@ -826,7 +826,7 @@ function duelStart(s, nowMs, balanceVersion) {
   s.objects.duel = st;
   const opponent = duelGhostOf(s, st.rating);
   s.combatSince = s.vitalsAt;
-  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), balanceVersion: balanceVersion === 38 ? 38 : balanceVersion === 30 ? 30 : 29, duel: { opponent, rating: st.rating, season: st.season } };
+  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), balanceVersion: balanceVersion === 38 ? 38 : balanceVersion === 30 ? 30 : 29, duel: { version: balanceVersion === 38 && duelVersion === 2 ? 2 : 1, opponent, rating: st.rating, season: st.season } };
   return { ok: true, opponent, rating: st.rating, left: D.attemptsPerDay - st.used };
 }
 
@@ -990,7 +990,7 @@ function applyActionUnchecked(snap, action = {}, nowMs = null, random = Math.ran
   if (op === 'amulet_upgrade') return { snapshot: s, result: amuletUpgrade(s, action.amulet) };
   // v0.25.0: Ковены живут в отдельных таблицах (миграция 20261007_covens.sql) — JS-зеркало о них не знает и отвечает как сервер
   // игроку без ковена (или базе без миграции): 'no_coven'
-  if (op === 'duel_start') return { snapshot: s, result: duelStart(s, num(nowMs) ? nowMs : Date.now(), action.balanceVersion) };   // v0.26.0
+  if (op === 'duel_start') return { snapshot: s, result: duelStart(s, num(nowMs) ? nowMs : Date.now(), action.balanceVersion, action.duelVersion) };
   if (op === 'coven_give' || op === 'coven_claim' || op === 'coven_payout') return { snapshot: s, result: { ok: false, reason: 'no_coven' } };
   if (op === 'duel_season') return { snapshot: s, result: { ok: false, reason: 'offline' } };   // v0.34.0: сапфиры арены — только на сервере
   if (op === 'daily_take') return { snapshot: s, result: dailyTake(s, action.offer, num(nowMs) ? nowMs : Date.now()) };   // v0.23.0

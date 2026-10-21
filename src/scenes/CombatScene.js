@@ -56,7 +56,7 @@ export class CombatScene extends Phaser.Scene {
     // Настоящее состояние игры (сумка, опыт, HP) бой не трогает: итог — HP, мана, зелья, награда — приходит в ответе сервера.
     const ctx = state.data.combatCtx;
     this.sim = ctx ? startState(ctx, state.now()) : Object.assign(new GameState(null, () => state.now()), { data: JSON.parse(JSON.stringify(state.data)) });
-    const duelDef = this.duel && ctx?.duel?.opponent ? duelEnemyDef(ctx.duel.opponent) : null;
+    const duelDef = this.duel && ctx?.duel?.opponent ? duelEnemyDef(ctx.duel.opponent, ctx.duel.version) : null;
     this.cm = new CombatManager({ enemyType: this.enemyType, enemyDef: duelDef, state: this.sim, abilities: new AbilitySystem(this.sim, null, null) });
     this.rec = new CombatRecorder();   // действия игрока по номеру шага: их сервер проигрывает заново
     this.acc = 0;
@@ -352,6 +352,10 @@ export class CombatScene extends Phaser.Scene {
     this.enemyHpBar.setFraction(Math.max(0, e.hp / e.maxHp));
     this.enemyHpText.setText(`${Math.ceil(e.hp)} / ${e.maxHp}`);
     const st = [];
+    if (e.actor) {
+      st.push(`Мана соперника ${Math.floor(e.actor.hero.mana)}/${e.actor.hero.maxMana}`);
+      if (e.actor.state.isEquipped('storm')) st.push(`Гроза соперника ${e.actor.stormCharges}/3`);
+    }
     if (this.cm.modern && this.sim.isEquipped('storm')) st.push(`Гроза: ${this.cm.stormCharges}/3`);
     if (e.shield > 0) st.push(`Щит ${Math.ceil(e.shield)}`);
     if (this.cm.modern && Object.values(this.cm.shields).some(s=>s.amount>0)) st.push(`Ваш щит ${Math.ceil(Object.values(this.cm.shields).reduce((n,s)=>n+Math.max(0,s.amount),0))}`);
@@ -421,6 +425,10 @@ export class CombatScene extends Phaser.Scene {
           // v0.9: обучение прерыванию ведёт CombatTutorial (атака удерживается до действия игрока)
           break;
         case 'interrupt':
+          if (ev.target === 'hero') {
+            if (ev.ok) this.floatText(HERO_POS.x, HERO_POS.y - 150, 'ПРЕРВАНО!', COLORS.telekinesis, 30);
+            break;
+          }
           if (ev.ok) {
             this.floatText(ENEMY_POS.x, ENEMY_POS.y - this.enemySprite.displayHeight - 30, 'ПРЕРВАНО!', COLORS.telekinesis, 34);
             this.tweens.add({ targets: this.enemySprite, y: ENEMY_POS.y - 24, duration: 120, yoyo: true });
@@ -482,6 +490,11 @@ export class CombatScene extends Phaser.Scene {
           services.audio.vibrate([40, 30, 60]);
           break;
         case 'status':
+          if (ev.target === 'hero') {
+            const label = { vulnerable: 'Уязвимость', slow: 'Замедление', brittle: 'Хрупкость', shatter: 'РАСКОЛ!', burn: 'Горение', puddle: 'Лужа смолы' }[ev.status];
+            if (label) this.floatText(HERO_POS.x, HERO_POS.y - 120, label, SCHOOL_COLOR[ev.status === 'burn' || ev.status === 'puddle' ? 'fire' : 'ice'], UI.type.combat);
+            break;
+          }
           if (ev.status === 'vulnerable') this.floatText(ENEMY_POS.x, ENEMY_POS.y - 60, 'Уязвим!', COLORS.fire, UI.type.combat);
           if (ev.status === 'slow') this.floatText(ENEMY_POS.x + 80, ENEMY_POS.y + 30, 'Замедлен', COLORS.ice, UI.type.combat);
           if (ev.status === 'brittle') this.floatText(ENEMY_POS.x - 80, ENEMY_POS.y - 30, 'Хрупкость', COLORS.ice, UI.type.combat);
@@ -564,12 +577,13 @@ export class CombatScene extends Phaser.Scene {
       this.tweens.add({ targets: v.img, alpha: 0, scaleX: v.img.scaleX * 1.4, scaleY: v.img.scaleY * 1.4, duration: 250, onComplete: () => v.img.setVisible(false) });
       return;
     }
-    // бросок Телекинезом: подъём → полёт во врага
+    const target = ev.actor === 'enemy' ? HERO_POS : ENEMY_POS;
+    // бросок Телекинезом: подъём → полёт в цель
     this.tweens.chain({
       targets: v.img,
       tweens: [
         { y: v.img.y - 40, duration: 100 },
-        { x: ENEMY_POS.x, y: ENEMY_POS.y - 60, scaleX: v.img.scaleX * 0.8, scaleY: v.img.scaleY * 0.8, duration: 160, ease: 'Quad.easeIn' },
+        { x: target.x, y: target.y - 60, scaleX: v.img.scaleX * 0.8, scaleY: v.img.scaleY * 0.8, duration: 160, ease: 'Quad.easeIn' },
         { alpha: 0, duration: 120 },
       ],
       onComplete: () => v.img.setVisible(false),

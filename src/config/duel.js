@@ -3,7 +3,7 @@
 // Сила не выравнивается: развитый герой сильнее — так задумано. Рейтинг быстро разводит игроков по лигам.
 // Если подходящих соперников нет — «Тень дуэлянта»: зеркальный слепок самого игрока (тот же уровень, дары и рейтинг).
 import { HERO_LEVELS } from './balance.hero.js';
-import { GIFT_IDS, SLOT_RULES } from './build.js';
+import { GIFT_IDS, SLOT_RULES, AMULETS, AMULET_SLOTS } from './build.js';
 import { HEROES, DEFAULT_HERO_ID } from './heroes.js';
 
 export const DUEL = {
@@ -79,7 +79,8 @@ const PRIORITY = ['storm', 'fire', 'ice', 'seal', 'telekinesis'];
  * Здоровье — от уровня и амулетов; обычный удар — от уровня (Лёд в слотах — холодит); сильный удар — главный дар (самый развитый);
  * Астрал в слотах — барьер (защита 20%), Телекинез III — кристальная броня; к дарам, которых нет в его слотах, соперник уязвим (+25%).
  */
-export function duelEnemyDef(opp) {
+export function duelEnemyDef(opp, version = 1) {
+  if (version === 2) return equippedDefender(opp);
   const lv = levelRow(opp.level), mult = lv.damageMult;
   const slots = duelSlots(opp);
   const amulets = Array.isArray(opp.build?.amulets) ? opp.build.amulets.slice(0, 2) : [];
@@ -105,6 +106,25 @@ export function duelEnemyDef(opp) {
     arena: 'duel',
     duel: { slots, main },
   };
+}
+
+// Only newly stamped duel contexts use the real fighter. The legacy profile above is frozen for replay.
+function equippedDefender(opp) {
+  const lv = levelRow(opp.level);
+  const abilities = Object.fromEntries(GIFT_IDS.map(id => {
+    const a = opp.abilities?.[id];
+    return [id, { unlocked: a?.unlocked === true, level: Number.isInteger(a?.level) ? Math.max(0, Math.min(5, a.level)) : 0 }];
+  }));
+  const slots = [...new Set(duelSlots({ abilities, build: opp.build }))];
+  const amulets = [...new Set(Array.isArray(opp.build?.amulets) ? opp.build.amulets : [])].filter(id => AMULETS[id]).slice(0, AMULET_SLOTS);
+  const build = { slots, amulets, branches: { ...opp.build?.branches }, amuletLevels: Object.fromEntries(amulets.map(id => {
+    const n = opp.build?.amuletLevels?.[id];
+    return [id, Number.isInteger(n) ? Math.max(0, Math.min(5, n)) : 0];
+  })) };
+  const hero = HEROES.find(h => h.id === opp.hero) || HEROES.find(h => h.id === DEFAULT_HERO_ID);
+  return { name: opp.name || 'Тень дуэлянта', texture: hero.textures.down, tier: 'strong', hp: lv.maxHp,
+    normalAttack: null, strongAttack: null, defense: 0, weaknesses: {}, rewards: {}, arena: 'duel',
+    duel: { version: 2, slots, opponent: { level: lv.level, abilities, build } } };
 }
 
 /** Для сервера (_game_rules). */

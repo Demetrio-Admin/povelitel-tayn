@@ -133,7 +133,7 @@ function verifyDuel(snap, ctx, log, nowMs) {
   if (ctx.enemy !== 'duel_mage' || !d || typeof d !== 'object' || !d.opponent || typeof d.opponent !== 'object') return fail('bad_spawn');
   if (log.ticks * STEP > (nowMs - snap.combatSince) / 1000 + SLACK_SEC) return fail('too_fast');
   const st = startState(ctx, nowMs);
-  const cm = new CombatManager({ enemyType: 'duel_mage', enemyDef: duelEnemyDef(d.opponent), state: st, abilities: new AbilitySystem(st, null, null) });
+  const cm = new CombatManager({ enemyType: 'duel_mage', enemyDef: duelEnemyDef(d.opponent, d.version), state: st, abilities: new AbilitySystem(st, null, null) });
   const run = replayCombat(cm, log);
   if (run.held > 0) return fail('bad_log');
   const outcome = cm.result || 'retreat';

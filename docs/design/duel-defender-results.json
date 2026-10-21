@@ -1,0 +1,386 @@
+{
+  "date": "2026-10-21",
+  "kind": "local deterministic bot, not player win-rate",
+  "profiles": [
+    {
+      "level": 15,
+      "abilities": {
+        "telekinesis": {
+          "unlocked": true,
+          "level": 1
+        },
+        "fire": {
+          "unlocked": true,
+          "level": 1
+        },
+        "seal": {
+          "unlocked": true,
+          "level": 1
+        },
+        "ice": {
+          "unlocked": true,
+          "level": 1
+        },
+        "storm": {
+          "unlocked": true,
+          "level": 1
+        }
+      },
+      "build": {
+        "slots": [
+          "telekinesis",
+          "fire",
+          "storm"
+        ],
+        "amulets": [],
+        "branches": {}
+      }
+    },
+    {
+      "level": 15,
+      "abilities": {
+        "telekinesis": {
+          "unlocked": true,
+          "level": 3
+        },
+        "fire": {
+          "unlocked": true,
+          "level": 3
+        },
+        "seal": {
+          "unlocked": true,
+          "level": 3
+        },
+        "ice": {
+          "unlocked": true,
+          "level": 3
+        },
+        "storm": {
+          "unlocked": true,
+          "level": 3
+        }
+      },
+      "build": {
+        "slots": [
+          "telekinesis",
+          "fire",
+          "ice"
+        ],
+        "amulets": [],
+        "branches": {
+          "telekinesis": "lord",
+          "fire": "blaster",
+          "ice": "shard"
+        }
+      }
+    },
+    {
+      "level": 15,
+      "abilities": {
+        "telekinesis": {
+          "unlocked": true,
+          "level": 5
+        },
+        "fire": {
+          "unlocked": true,
+          "level": 5
+        },
+        "seal": {
+          "unlocked": true,
+          "level": 5
+        },
+        "ice": {
+          "unlocked": true,
+          "level": 5
+        },
+        "storm": {
+          "unlocked": true,
+          "level": 5
+        }
+      },
+      "build": {
+        "slots": [
+          "telekinesis",
+          "fire",
+          "storm"
+        ],
+        "amulets": [],
+        "branches": {
+          "telekinesis": "breaker",
+          "fire": "arsonist",
+          "storm": "discharge"
+        }
+      }
+    },
+    {
+      "level": 15,
+      "abilities": {
+        "telekinesis": {
+          "unlocked": true,
+          "level": 5
+        },
+        "fire": {
+          "unlocked": true,
+          "level": 5
+        },
+        "seal": {
+          "unlocked": true,
+          "level": 5
+        },
+        "ice": {
+          "unlocked": true,
+          "level": 5
+        },
+        "storm": {
+          "unlocked": true,
+          "level": 5
+        }
+      },
+      "build": {
+        "slots": [
+          "seal",
+          "ice",
+          "storm"
+        ],
+        "amulets": [],
+        "branches": {
+          "seal": "seer",
+          "ice": "frost",
+          "storm": "field"
+        }
+      }
+    }
+  ],
+  "matrix": [
+    {
+      "attacker": 0,
+      "defender": 0,
+      "outcome": "victory",
+      "seconds": 14,
+      "heroHp": 114,
+      "defenderHp": 0,
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 2,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "attacker": 0,
+      "defender": 1,
+      "outcome": "defeat",
+      "seconds": 7,
+      "heroHp": 0,
+      "defenderHp": 156,
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 1,
+        "seal": 0,
+        "ice": 1
+      }
+    },
+    {
+      "attacker": 0,
+      "defender": 2,
+      "outcome": "defeat",
+      "seconds": 4.5,
+      "heroHp": 0,
+      "defenderHp": 156,
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "attacker": 0,
+      "defender": 3,
+      "outcome": "defeat",
+      "seconds": 17.8,
+      "heroHp": 0,
+      "defenderHp": 12,
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 0,
+        "seal": 2,
+        "ice": 3,
+        "storm": 1
+      }
+    },
+    {
+      "attacker": 1,
+      "defender": 0,
+      "outcome": "victory",
+      "seconds": 6.1,
+      "heroHp": 192,
+      "defenderHp": 0,
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "attacker": 1,
+      "defender": 1,
+      "outcome": "victory",
+      "seconds": 6.4,
+      "heroHp": 84,
+      "defenderHp": 0,
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 1
+      }
+    },
+    {
+      "attacker": 1,
+      "defender": 2,
+      "outcome": "defeat",
+      "seconds": 5.2,
+      "heroHp": 0,
+      "defenderHp": 29,
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "attacker": 1,
+      "defender": 3,
+      "outcome": "victory",
+      "seconds": 10,
+      "heroHp": 197,
+      "defenderHp": 0,
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 0,
+        "seal": 1,
+        "ice": 2
+      }
+    },
+    {
+      "attacker": 2,
+      "defender": 0,
+      "outcome": "victory",
+      "seconds": 4.3,
+      "heroHp": 246,
+      "defenderHp": 0,
+      "defenderUses": {
+        "telekinesis": 1,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "attacker": 2,
+      "defender": 1,
+      "outcome": "victory",
+      "seconds": 4.3,
+      "heroHp": 160,
+      "defenderHp": 0,
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 1
+      }
+    },
+    {
+      "attacker": 2,
+      "defender": 2,
+      "outcome": "victory",
+      "seconds": 4.3,
+      "heroHp": 132,
+      "defenderHp": 0,
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0
+      }
+    },
+    {
+      "attacker": 2,
+      "defender": 3,
+      "outcome": "victory",
+      "seconds": 4.3,
+      "heroHp": 246,
+      "defenderHp": 0,
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 0,
+        "seal": 1,
+        "ice": 1
+      }
+    },
+    {
+      "attacker": 3,
+      "defender": 0,
+      "outcome": "victory",
+      "seconds": 14.6,
+      "heroHp": 132,
+      "defenderHp": 0,
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "attacker": 3,
+      "defender": 1,
+      "outcome": "defeat",
+      "seconds": 14.7,
+      "heroHp": 0,
+      "defenderHp": 14,
+      "defenderUses": {
+        "telekinesis": 3,
+        "fire": 1,
+        "seal": 0,
+        "ice": 1
+      }
+    },
+    {
+      "attacker": 3,
+      "defender": 2,
+      "outcome": "defeat",
+      "seconds": 7.3,
+      "heroHp": 0,
+      "defenderHp": 138,
+      "defenderUses": {
+        "telekinesis": 2,
+        "fire": 1,
+        "seal": 0,
+        "ice": 0,
+        "storm": 1
+      }
+    },
+    {
+      "attacker": 3,
+      "defender": 3,
+      "outcome": "defeat",
+      "seconds": 17.3,
+      "heroHp": 0,
+      "defenderHp": 34,
+      "defenderUses": {
+        "telekinesis": 0,
+        "fire": 0,
+        "seal": 1,
+        "ice": 2,
+        "storm": 1
+      }
+    }
+  ]
+}

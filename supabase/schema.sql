@@ -1371,7 +1371,7 @@ begin
         'potionLoadout', _potion_loadout(uid), 'potionCooldown', _potion_cooldown(uid,extract(epoch from pr.vitals_at)*1000),
           'potions', (select jsonb_object_agg(p, _inv(uid, p)) from jsonb_array_elements_text(rules -> 'combatPotions') p),
           'build', (select data from player_world where user_id = uid and kind = 'object' and key = 'player_build'),
-          'duel', jsonb_build_object('opponent', u, 'rating', sp -> 'rating', 'season', sp -> 'season'));
+          'duel', jsonb_build_object('version', case when action->'balanceVersion'='38'::jsonb and action->'duelVersion'='2'::jsonb then 2 else 1 end, 'opponent', u, 'rating', sp -> 'rating', 'season', sp -> 'season'));
         res := jsonb_build_object('ok', true, 'opponent', u, 'rating', sp -> 'rating', 'left', (m ->> 'attemptsPerDay')::numeric - (sp ->> 'used')::numeric);
         if coalesce((v ->> 'fresh')::boolean, false) then res := res || jsonb_build_object('seasonReward', v); end if;
       end if;

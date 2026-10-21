@@ -3360,7 +3360,8 @@ var SIGNATURE = {
   telekinesis: { name: "\u041A\u0430\u043C\u0435\u043D\u043D\u044B\u0439 \u0433\u0440\u0430\u0434", damage: 25, prepSec: 2, cooldownSec: 9, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" }
 };
 var PRIORITY = ["storm", "fire", "ice", "seal", "telekinesis"];
-function duelEnemyDef(opp) {
+function duelEnemyDef(opp, version = 1) {
+  if (version === 2) return equippedDefender(opp);
   const lv = levelRow(opp.level), mult = lv.damageMult;
   const slots = duelSlots(opp);
   const amulets = Array.isArray(opp.build?.amulets) ? opp.build.amulets.slice(0, 2) : [];
@@ -3385,6 +3386,33 @@ function duelEnemyDef(opp) {
     rewards: {},
     arena: "duel",
     duel: { slots, main }
+  };
+}
+function equippedDefender(opp) {
+  const lv = levelRow(opp.level);
+  const abilities = Object.fromEntries(GIFT_IDS.map((id) => {
+    const a = opp.abilities?.[id];
+    return [id, { unlocked: a?.unlocked === true, level: Number.isInteger(a?.level) ? Math.max(0, Math.min(5, a.level)) : 0 }];
+  }));
+  const slots = [...new Set(duelSlots({ abilities, build: opp.build }))];
+  const amulets = [...new Set(Array.isArray(opp.build?.amulets) ? opp.build.amulets : [])].filter((id) => AMULETS[id]).slice(0, AMULET_SLOTS);
+  const build = { slots, amulets, branches: { ...opp.build?.branches }, amuletLevels: Object.fromEntries(amulets.map((id) => {
+    const n = opp.build?.amuletLevels?.[id];
+    return [id, Number.isInteger(n) ? Math.max(0, Math.min(5, n)) : 0];
+  })) };
+  const hero = HEROES.find((h) => h.id === opp.hero) || HEROES.find((h) => h.id === DEFAULT_HERO_ID);
+  return {
+    name: opp.name || "\u0422\u0435\u043D\u044C \u0434\u0443\u044D\u043B\u044F\u043D\u0442\u0430",
+    texture: hero.textures.down,
+    tier: "strong",
+    hp: lv.maxHp,
+    normalAttack: null,
+    strongAttack: null,
+    defense: 0,
+    weaknesses: {},
+    rewards: {},
+    arena: "duel",
+    duel: { version: 2, slots, opponent: { level: lv.level, abilities, build } }
   };
 }
 function duelRules() {
@@ -4902,6 +4930,181 @@ var AbilitySystem = class {
   }
 };
 
+// src/systems/DuelBattle.js
+var DuelBody = class extends Enemy {
+  constructor(actor, name) {
+    super("duel_fighter", { name, hp: actor.hero.maxHp, normalAttack: null, strongAttack: null, arena: "duel" }, true);
+    this.actor = actor;
+    this.pending = null;
+    Object.defineProperty(this, "hp", { get: () => actor.hero.hp, set: (n) => {
+      actor.hero.hp = n;
+    } });
+    Object.defineProperty(this, "shield", { get: () => Object.values(actor.shields).reduce((n, s) => n + (s.left > 0 ? Math.max(0, s.amount) : 0), 0) });
+  }
+  get isPreparing() {
+    return !this.updatingStatuses && !!this.pending;
+  }
+  get prepProgress() {
+    return this.pending ? 1 - this.pending.left / this.pending.duration : 0;
+  }
+  takeDamage(base, school, mult = 1, options = {}) {
+    if (!this.alive) return 0;
+    return this.actor.hitHero(base * mult * this.incomingMultiplier(school), false, void 0, false, { ...options, silent: true });
+  }
+  applySlow(pct, sec) {
+    super.applySlow(pct, sec);
+    this.actor.chillHero({ pct, sec });
+  }
+  cleanse() {
+    this.burnStacks = [];
+    this.burn = { left: 0, dps: 0, tick: 0 };
+    this.antiheal = 0;
+    this.slow = { left: 0, pct: 0 };
+  }
+  tryInterrupt(tags) {
+    if (!this.pending) return { attempted: false };
+    const ok = tags.includes("telekinesis");
+    if (ok) {
+      this.pending = null;
+      this.staggerLeft = 1;
+    }
+    return { attempted: true, ok };
+  }
+  update(dt, mult) {
+    this.updatingStatuses = true;
+    try {
+      return super.update(dt, mult);
+    } finally {
+      this.updatingStatuses = false;
+    }
+  }
+};
+var DuelBattle = class {
+  constructor(hero, opponent) {
+    this.hero = hero;
+    const state = new GameState(null, () => 0);
+    state.data.heroLevel = opponent.level;
+    for (const [id, a] of Object.entries(opponent.abilities)) if (a.unlocked && a.level > 0) state.unlockAbility(id, a.level);
+    state.data.worldObjects = { player_build: structuredClone(opponent.build) };
+    state.data.combatCtx = { balanceVersion: 38, potionLoadout: [] };
+    const stats = state.heroStats();
+    state.data.hp = stats.maxHp;
+    state.data.mana = stats.maxMana;
+    const defender = new hero.constructor({ enemyType: "duel_target", enemyDef: { hp: hero.hero.maxHp, arena: "duel" }, state, abilities: new AbilitySystem(state, null, null) });
+    defender.hero.maxHp = hero.def.hp;
+    defender.hero.hp = hero.def.hp;
+    this.defender = defender;
+    hero.duelBody = new DuelBody(hero, "\u0413\u0435\u0440\u043E\u0439");
+    defender.duelBody = new DuelBody(defender, hero.def.name);
+    hero.enemy = defender.duelBody;
+    defender.enemy = hero.duelBody;
+    hero.fieldObjects = hero.fieldObjects.filter((o) => !o.def.breaksArmor);
+    defender.fieldObjects = hero.fieldObjects;
+    this.thinkLeft = 0.35;
+    this.cursor = 0;
+  }
+  beginCast(actor, id) {
+    const paid = actor.payAbility(id);
+    if (!paid.ok) return paid;
+    const duration = actor === this.hero ? paid.stats.castSec : Math.max(0.65, paid.stats.castSec);
+    actor.duelBody.pending = { id, stats: paid.stats, left: duration, duration, selected: actor.selectedId };
+    actor.duelBody.def.strongAttack = { name: paid.stats.label, hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!", interruptBy: ["telekinesis"] };
+    if (actor === this.defender) this.hero.emit({ type: "warning", name: paid.stats.label, prepSec: duration, hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!", needsHeavy: false });
+    actor.commit();
+    return { ok: true };
+  }
+  advanceCast(actor, dt) {
+    const p = actor.duelBody.pending;
+    if (!p || actor.duelBody.staggerLeft > 0) return;
+    p.left -= dt * (actor.heroChill.left > 0 ? 1 - actor.heroChill.pct : 1);
+    if (p.left > 1e-9) return;
+    actor.duelBody.pending = null;
+    const selected = actor.selectedId;
+    actor.selectedId = p.selected;
+    actor.resolveAbility(p.id, p.stats);
+    actor.selectedId = actor.fieldObjects.some((o) => o.id === selected && o.available) ? selected : null;
+  }
+  think() {
+    const a = this.defender, target = a.enemy;
+    if (a.duelBody.pending || a.duelBody.staggerLeft > 0) return;
+    const slots = a.state.equippedGifts();
+    let ready = slots.filter((id2) => a.abilityState(id2).state === "ready");
+    if (!ready.length) return;
+    let id;
+    if (target.isPreparing && ready.includes("telekinesis")) id = "telekinesis";
+    else if (ready.includes("storm") && a.stormCharges === 3) id = "storm";
+    else {
+      if (slots.some((g) => g !== "storm")) ready = ready.filter((g) => g !== "storm");
+      for (let n = 0; n < slots.length; n++) {
+        const i = (this.cursor + n) % slots.length;
+        if (ready.includes(slots[i])) {
+          id = slots[i];
+          this.cursor = (i + 1) % slots.length;
+          break;
+        }
+      }
+    }
+    if (!id) return;
+    if (id === "telekinesis") {
+      const objects = a.fieldObjects.filter((o) => o.available && o.def.throwable && a.canLift(o));
+      a.selectedId = (objects.find((o) => o.def.weight === "heavy") || objects[0])?.id || null;
+    }
+    this.beginCast(a, id);
+  }
+  forwardEvents() {
+    for (const ev of this.defender.drainEvents()) {
+      if (ev.type === "damage" && ev.target === "enemy") this.hero.emit({ ...ev, target: "hero" });
+      else if (ev.type === "objectUsed") this.hero.emit({ ...ev, actor: "enemy" });
+      else if (ev.type === "status" || ev.type === "interrupt") this.hero.emit({ ...ev, target: "hero" });
+    }
+  }
+  tick(dt, { holdEnemy = false } = {}) {
+    const h = this.hero, d = this.defender;
+    if (holdEnemy) return;
+    for (const a of [h, d]) a.tickResources(dt);
+    h.time += dt;
+    d.time = h.time;
+    for (const [body, source, target] of [[h.duelBody, d, "hero"], [d.duelBody, h, "enemy"]]) {
+      for (const ev of body.update(dt, source.hero.damageMult)) {
+        if (ev.type === "burnTick") h.emit({ type: "damage", target, amount: ev.damage, school: "fire", tick: true, puddle: !!ev.puddle });
+      }
+    }
+    for (const o of h.fieldObjects) {
+      if (o.available || o.gone) continue;
+      o.respawnLeft -= dt;
+      if (o.respawnLeft <= 0) {
+        o.available = true;
+        h.emit({ type: "objectRespawn", id: o.id });
+      }
+    }
+    for (const a of [h, d]) {
+      if (h.hero.hp <= 0 || d.hero.hp <= 0) break;
+      this.advanceCast(a, dt);
+      if (h.hero.hp <= 0 || d.hero.hp <= 0) break;
+      if (a.duelBody.staggerLeft > 0) continue;
+      a.hero.autoTimer -= dt * (a.heroChill.left > 0 ? 1 - a.heroChill.pct : 1);
+      if (a.hero.autoTimer <= 0) {
+        a.hero.autoTimer += HERO_BASE.autoAttack.intervalSec;
+        const amount = a.enemy.takeDamage(a.duelBody.outgoingDamage(HERO_BASE.autoAttack.damage), "auto", a.hero.damageMult);
+        a.stats.autoDamage += amount;
+        a.emit({ type: "damage", target: "enemy", amount, school: "auto" });
+      }
+    }
+    h.checkResult();
+    d.checkResult();
+    if (!h.result) {
+      this.thinkLeft -= dt;
+      if (this.thinkLeft <= 0) {
+        this.thinkLeft += 0.35;
+        this.think();
+      }
+    }
+    this.forwardEvents();
+    h.commit();
+    d.commit();
+  }
+};
+
 // src/systems/CombatManager.js
 var CombatManager = class {
   /**
@@ -4980,6 +5183,7 @@ var CombatManager = class {
     this.result = null;
     this.queue = [];
     this.stats = { abilityUses: { telekinesis: 0, fire: 0, seal: 0, ice: 0 }, interrupts: 0, damageTaken: 0, autoDamage: 0 };
+    if (this.modern && this.def.duel?.version === 2) this.duelBattle = new DuelBattle(this, this.def.duel.opponent);
   }
   emit(e) {
     this.queue.push(e);
@@ -5029,6 +5233,7 @@ var CombatManager = class {
     const s = this.abilities.stats(id);
     if (!s || !this.abilities.isUnlocked(id)) return { id, state: "locked" };
     if (this.state.isEquipped && !this.state.isEquipped(id)) return { id, state: "benched" };
+    if (this.duelBody?.pending || this.duelBody?.staggerLeft > 0) return { id, state: "casting" };
     const cd = this.cooldowns[id];
     if (cd > 0) return { id, state: "cooldown", cdLeft: cd, cdFrac: cd / s.cooldownSec };
     if (this.hero.mana < s.manaCost) return { id, state: "nomana" };
@@ -5036,16 +5241,26 @@ var CombatManager = class {
   }
   // ---------- действия игрока ----------
   useAbility(id) {
+    if (this.duelBattle) return this.duelBattle.beginCast(this, id);
+    const paid = this.payAbility(id);
+    if (!paid.ok) return paid;
+    this.resolveAbility(id, paid.stats);
+    return { ok: true };
+  }
+  payAbility(id) {
     if (this.result) return { ok: false, reason: "over" };
     const st = this.abilityState(id);
     if (st.state !== "ready") return { ok: false, reason: st.state };
     const s = this.abilities.stats(id);
-    this.lastDirectHit = false;
     this.hero.mana -= s.manaCost;
     this.checkManaRescue();
     this.cooldowns[id] = this.startCooldown(id, s);
     this.stats.abilityUses[id] = (this.stats.abilityUses[id] || 0) + 1;
     this.abilities.grantUseXP(id, "combat");
+    return { ok: true, stats: s };
+  }
+  resolveAbility(id, s) {
+    this.lastDirectHit = false;
     if (id === "telekinesis") this.castTelekinesis(s);
     else if (id === "fire") this.castFire(s);
     else if (id === "seal") this.castSeal(s);
@@ -5119,8 +5334,9 @@ var CombatManager = class {
     const h = this.hero, e = p.effect;
     if (e.type === "heal") {
       if (h.hp >= h.maxHp) return { ok: false, reason: "full" };
-      const gain = Math.min(h.maxHp - h.hp, potionGain(e, h.maxHp));
-      h.hp += gain;
+      let gain = Math.min(h.maxHp - h.hp, potionGain(e, h.maxHp));
+      if (this.duelBody) gain = this.duelBody.heal(gain);
+      else h.hp += gain;
       this.emit({ type: "potion", id, kind: "heal", amount: gain });
     } else if (e.type === "mana") {
       if (h.mana >= h.maxMana) return { ok: false, reason: "full" };
@@ -5139,14 +5355,16 @@ var CombatManager = class {
       if (this.chillResist >= e.resist) return { ok: false, reason: "full" };
       this.chillResist = e.resist;
       this.heroChill = { left: 0, pct: 0 };
+      if (this.duelBody) this.duelBody.slow = { left: 0, pct: 0 };
       this.emit({ type: "potion", id, kind: "warm" });
     } else if (e.type === "cleanse") {
       const gain = Math.min(h.maxHp - h.hp, this.modern ? 40 : Math.round(h.maxHp * e.heal));
-      if (gain <= 0 && !(this.heroChill.left > 0) && !(this.heroBurn?.left > 0)) return { ok: false, reason: "full" };
+      if (gain <= 0 && !(this.heroChill.left > 0) && !(this.heroBurn?.left > 0) && !this.duelBody?.burning) return { ok: false, reason: "full" };
       h.hp += gain;
       this.heroChill = { left: 0, pct: 0 };
       this.emit({ type: "potion", id, kind: "heal", amount: gain });
       if (this.modern) this.heroBurn = null;
+      if (this.duelBody) this.duelBody.cleanse();
     } else if (e.type === "brittle") {
       this.enemy.applyBrittle(e.bonus, e.sec);
       this.emit({ type: "potion", id, kind: "brittle" });
@@ -5176,6 +5394,7 @@ var CombatManager = class {
   }
   dealAbilityDamage(base, school, mult, options) {
     if (this.enemy.alive && base > 0) this.lastDirectHit = true;
+    if (this.duelBody) base = this.duelBody.outgoingDamage(base);
     return this.enemy.takeDamage(base, school, mult, options);
   }
   castTelekinesis(s) {
@@ -5348,14 +5567,16 @@ var CombatManager = class {
    * holdEnemy (v0.9, обучение): враг, его подготовка атаки и автоатака героини стоят, а мана героини, перезарядка даров
    * и возврат предметов поля идут — нужное действие никогда не блокируется. Восстановление маны в бою — только здесь.
    */
-  tick(dt, { holdEnemy = false } = {}) {
-    if (this.result) return;
+  // Shared hero clocks for PvE and both actors in the versioned Duel.
+  tickResources(dt) {
     const h = this.hero;
     if (this.modern) {
       for (const id of Object.keys(this.potionCooldown)) this.potionCooldown[id] = Math.max(0, this.potionCooldown[id] - dt);
       for (const [kind, r] of Object.entries(this.regeneration)) {
         const key = kind === "heal" ? "hp" : "mana", max = kind === "heal" ? h.maxHp : h.maxMana;
-        h[key] = Math.min(max, h[key] + r.rate * Math.min(dt, r.left));
+        const gain = r.rate * Math.min(dt, r.left);
+        if (kind === "heal" && this.duelBody) this.duelBody.heal(gain);
+        else h[key] = Math.min(max, h[key] + gain);
         r.left = Math.max(0, r.left - dt);
         if (!r.left) delete this.regeneration[kind];
       }
@@ -5393,6 +5614,12 @@ var CombatManager = class {
         this.chain = null;
       }
     }
+  }
+  tick(dt, { holdEnemy = false } = {}) {
+    if (this.result) return;
+    if (this.duelBattle) return this.duelBattle.tick(dt, { holdEnemy });
+    this.tickResources(dt);
+    const h = this.hero;
     if (holdEnemy) {
       for (const o of this.fieldObjects) {
         if (o.available || o.gone) continue;
@@ -5457,17 +5684,19 @@ var CombatManager = class {
     this.heroChill = { left: Math.max(this.heroChill.left, c.sec), pct: Math.max(this.heroChill.left > 0 ? this.heroChill.pct : 0, pct) };
     this.emit({ type: "chill", sec: c.sec, pct });
   }
-  hitHero(damage, strong, name, periodic = false) {
+  hitHero(damage, strong, name, periodic = false, { shieldPierce = 0, silent = false } = {}) {
     damage = periodic ? damage * this.incomingMult : Math.max(1, Math.round(damage * this.incomingMult * (this.guard?.left > 0 ? this.guard.mult : 1)));
+    const bypass = Math.round(damage * shieldPierce);
     if (this.modern) for (const shield of Object.values(this.shields)) {
       if (!(shield.left > 0 && shield.amount > 0)) continue;
-      const absorbed = Math.min(shield.amount, damage);
+      const absorbed = Math.min(shield.amount, damage - bypass);
       shield.amount -= absorbed;
       damage -= absorbed;
     }
     this.hero.hp = Math.max(0, this.hero.hp - damage);
     this.stats.damageTaken += damage;
-    this.emit({ type: "damage", target: "hero", amount: damage, strong, name });
+    if (!silent) this.emit({ type: "damage", target: "hero", amount: damage, strong, name });
+    return damage;
   }
   checkResult() {
     if (this.result) return;
@@ -5682,7 +5911,7 @@ function verifyDuel(snap, ctx, log, nowMs) {
   if (ctx.enemy !== "duel_mage" || !d || typeof d !== "object" || !d.opponent || typeof d.opponent !== "object") return fail2("bad_spawn");
   if (log.ticks * STEP > (nowMs - snap.combatSince) / 1e3 + SLACK_SEC) return fail2("too_fast");
   const st = startState(ctx, nowMs);
-  const cm = new CombatManager({ enemyType: "duel_mage", enemyDef: duelEnemyDef(d.opponent), state: st, abilities: new AbilitySystem(st, null, null) });
+  const cm = new CombatManager({ enemyType: "duel_mage", enemyDef: duelEnemyDef(d.opponent, d.version), state: st, abilities: new AbilitySystem(st, null, null) });
   const run = replayCombat(cm, log);
   if (run.held > 0) return fail2("bad_log");
   const outcome = cm.result || "retreat";

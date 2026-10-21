@@ -51,8 +51,35 @@ Object.assign(RECIPES, {
     note: 'Первый амулет Льда. Нужен один: дальше его улучшают.' },
 });
 
-export const RECIPE_ORDER = ['elixir_life', 'elixir_mana', 'resin_flask', 'warm_potion', 'stabilizing_potion', 'brittle_flask', 'crystal_guard',
-  'lunar_wick', 'revealing_compound', 'restoration_bundle', 'reinforced_resin', 'astral_lens', 'amulet_frost'];
+// New recipes replace manufacture of legacy percentage flasks. Old stock remains usable.
+RECIPES.elixir_life.result = 'potion_life_small'; RECIPES.elixir_life.needs = { moon_herb: 1, forest_mushroom: 1 };
+RECIPES.elixir_mana.result = 'potion_mana_small';
+const brew = (result, needs, coins, requires = []) => ({ kind: 'potion', chapter: requires.length ? 2 : 1, result, amount: 1, needs: { ...needs, ...(coins ? { coins } : {}) }, requires });
+Object.assign(RECIPES, {
+  potion_life_small: brew('potion_life_small', { moon_herb: 1, forest_mushroom: 1 }, 0),
+  potion_mana_small: brew('potion_mana_small', { moon_herb: 1, rune_dust: 1 }, 0),
+  potion_life_medium: brew('potion_life_medium', { moon_herb: 2, forest_mushroom: 2, tree_resin: 1 }, 15, ['ch2_city_arrived']),
+  potion_mana_medium: brew('potion_mana_medium', { rune_dust: 2, lunar_shard: 1 }, 20, ['ch2_city_arrived']),
+  potion_life_large: brew('potion_life_large', { moon_herb: 3, forest_mushroom: 2, reinforced_resin: 1 }, 40, ['ch2_lab_open']),
+  potion_mana_large: brew('potion_mana_large', { rune_dust: 3, lunar_shard: 2, ice_crystal: 1 }, 50, ['ch2_lab_open']),
+  potion_life_regen: brew('potion_life_regen', { moon_herb: 1, forest_mushroom: 2, frost_herb: 1 }, 25, ['regen_potions_learned']),
+  potion_mana_regen: brew('potion_mana_regen', { moon_herb: 2, rune_dust: 1, frost_herb: 1 }, 30, ['regen_potions_learned']),
+  potion_crystal_shield: brew('potion_crystal_shield', { ice_crystal: 1, forest_mushroom: 1, tree_resin: 1 }, 20, ['ch2_quarter_cleared']),
+});
+RECIPES.crystal_guard = { ...RECIPES.potion_crystal_shield };
+for (const [id, fee] of Object.entries({ warm_potion: 10, stabilizing_potion: 15, brittle_flask: 15 })) RECIPES[id].needs.coins = fee;
+const amuletRecipes = {
+ amulet_focus: [{ lunar_shard: 3, rune_dust: 2, reinforced_resin: 1 },200,'ch2_city_arrived'],
+ amulet_forest: [{ forest_mushroom: 4, tree_resin: 3, moon_herb: 2 },200,'ch2_city_arrived'],
+ amulet_lunar: [{ lunar_shard: 5, rune_dust: 3, reinforced_resin: 1 },400,'ch2_city_arrived'],
+ amulet_tracker: [{ moon_herb: 3, forest_mushroom: 3, tree_resin: 2, rune_dust: 1 },250,'ch2_city_arrived'],
+ amulet_embers: [{ crimson_ember: 4, reinforced_resin: 2, lunar_shard: 2 },350,'ch2_cargo_found'],
+ amulet_breaker: [{ reinforced_resin: 3, lunar_shard: 3, rune_dust: 2 },350,'ch2_cargo_reported'],
+ amulet_astral_eye: [{ rune_dust: 5, lunar_shard: 4, ice_crystal: 1 },450,'ch2_cargo_reported'],
+ amulet_blizzard: [{ lunar_shard: 5, rune_dust: 5, ice_crystal: 4, frost_shard: 2 },1000,'chapter_2_complete'],
+};
+for (const [id,[needs,coins,event]] of Object.entries(amuletRecipes)) RECIPES[id] = { kind: 'amulet', chapter: 2, result: id, amount: 1, needs: { ...needs, coins }, requires: [event], crafted: `${id}_crafted`, blockedBy: [`${id}_crafted`] };
+export const RECIPE_ORDER = Object.keys(RECIPES).filter(id => !['elixir_life', 'elixir_mana', 'crystal_guard'].includes(id));
 export const POTION_RECIPES = RECIPE_ORDER.filter(id => RECIPES[id].kind === 'potion');
 /** v0.19.0: разделы котла по порядку показа. */
 export const RECIPE_SECTIONS = { potion: 'Зелья', story: 'Для главного задания', component: 'Компоненты', tool: 'Инструменты', amulet: 'Амулеты' };

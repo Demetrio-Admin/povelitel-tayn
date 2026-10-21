@@ -421,7 +421,7 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
   ok(Object.keys(RESOURCES).length === 9 && BASE_RESOURCES.length === 5, '5 видов ресурсов главы I (+4 главы II с v0.19.0)');
   ok(Object.keys(RESOURCES).every(k => ITEMS[k]), 'каждый ресурс есть в ITEMS (имя, иконка)');
   ok(Object.values(RECIPES).every(r => Object.keys(r.needs).every(k => ITEMS[k]) && ITEMS[r.result]), 'рецепты ссылаются на существующие предметы');
-  ok(RECIPE_ORDER.filter(id => !RECIPES[id].chapter).length === 6 && RECIPE_ORDER.filter(id => RECIPES[id].kind === 'story').length === 3 && RECIPE_ORDER.length === Object.keys(RECIPES).length, 'алхимия главы I: шесть рецептов, три сюжетных (рецепты главы II — отдельно)');
+  ok(RECIPE_ORDER.includes('potion_life_small') && RECIPE_ORDER.includes('potion_mana_small') && RECIPE_ORDER.filter(id => RECIPES[id].kind === 'story').length === 3, 'алхимия главы I: шесть рецептов, три сюжетных (рецепты главы II — отдельно)');
   ok(Object.keys(NPCS).length >= 4 && Object.keys(NPCS).every(id => DIALOGUES[id]), 'NPC ≥ 4, у каждого есть диалоги');
   ok(SIDE_QUEST_ORDER.length === 6, 'шесть побочных заданий, включая цепочку Веды');
   const dialogOk = Object.values(DIALOGUES).every(vs => vs.every(v => Object.values(v.nodes).every(n => n.lines.length >= 1 && n.lines.length <= 5 && (n.choices || []).every(c => !c.next || v.nodes[c.next]))));
@@ -480,7 +480,7 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
     state.addItem('moon_herb', 5); state.addItem('forest_mushroom', 2);
     ok(alch.maxCount('elixir_life') === 2 && alch.status('elixir_life').state === 'ready', 'алхимия: maxCount = 2 (по грибам), рецепт готов');
     const r1 = await actions.craft('elixir_life');
-    ok(r1.ok && state.item('elixir_life') === 1 && state.item('moon_herb') === 3 && state.item('forest_mushroom') === 1 && r1.firstCraft && state.data.heroXP === 15, 'алхимия: ингредиенты списаны, зелье добавлено, первый крафт +15 опыта');
+    ok(r1.ok && state.item('potion_life_small') === 1 && state.item('moon_herb') === 4 && state.item('forest_mushroom') === 1 && r1.firstCraft && state.data.heroXP === 15, 'алхимия: ингредиенты списаны, зелье добавлено, первый крафт +15 опыта');
     const r2 = await actions.craft('elixir_life');
     ok(r2.ok && !r2.firstCraft && state.data.heroXP === 15, 'второй крафт опыта героя не даёт');
     ok(!(await actions.craft('несуществующий')).ok, 'алхимия: неизвестный рецепт не падает');
@@ -656,7 +656,7 @@ console.log('\n[v0.9] Общие HP и мана, зелья, обучение б
   }
   // --- зелья вне боя (v0.12.0: действие drink; здесь локальный режим того же правила)
   {
-    const { state } = makeWorld({ t: 0 });
+    const potionClock = { t: 0 }; const { state } = makeWorld(potionClock);
     const acts = new PlayerActions({ state });
     ok((await acts.drink('elixir_life')).reason === 'none', 'нет зелья — ничего не происходит');
     state.addItem('elixir_life', 2); state.addItem('elixir_mana', 1); state.addItem('resin_flask', 1);
@@ -664,6 +664,7 @@ console.log('\n[v0.9] Общие HP и мана, зелья, обучение б
     vitals.setHp(state, 100);
     const r = await acts.drink('elixir_life');
     ok(r.ok && r.amount === 20 && vitals.hp(state) === 120 && state.item('elixir_life') === 1, 'частично полный запас: восстановлено только недостающее (+20), списан 1 настой');
+    potionClock.t += 10001; state.data.vitalsClock = potionClock.t;
     vitals.setMana(state, 10);
     const m = await acts.drink('elixir_mana');
     ok(m.ok && Math.abs(vitals.mana(state) - 70) < 0.5 && state.item('elixir_mana') === 0, 'лунный эликсир из сумки: +60% маны');

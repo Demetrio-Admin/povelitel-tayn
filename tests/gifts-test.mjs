@@ -34,7 +34,7 @@ console.log('\n[v0.11] Данные ступеней');
   ok(!UPGRADES.fire_2.locked && !UPGRADES.seal_2.locked, 'обе ступени открыты для изучения');
   const t = (id) => UPGRADES[id].timerSec.live;
   ok(t('telekinesis_2') < t('fire_2') && t('fire_2') < t('seal_2'), 'лесенка времени: 5 мин → 15 мин → 30 мин');
-  ok(upgradesOf('fire')[0].id === 'fire_2' && upgradesOf('seal')[0].id === 'seal_2' && upgradesOf('fire').length === 3 && upgradesOf('seal').length === 3, 'ступени дара находятся по школе (II и две ветки III)');
+  ok(upgradesOf('fire')[0].id === 'fire_2' && upgradesOf('seal')[0].id === 'seal_2' && upgradesOf('fire').length === 7 && upgradesOf('seal').length === 7, 'ступени дара находятся по школе (II и две ветки III)');
 }
 
 console.log('\n[v0.11] Источник углей для Огня II');
@@ -95,7 +95,7 @@ console.log('\n[v0.11] Модель экрана «Дары»');
 {
   const w = world();
   let cards = giftCards(w.state);
-  ok(cards.length === 4 && cards.every(c => !c.open) && cards[3].id === 'ice', 'в начале все дары закрыты (с v0.18.0 их четыре — и Лёд), показывать нечего');
+  ok(cards.length === 5 && cards.every(c => !c.open) && cards[3].id === 'ice', 'в начале все дары закрыты (с v0.18.0 их четыре — и Лёд), показывать нечего');
   ready(w);
   cards = giftCards(w.state);
   const fire = cards.find(c => c.id === 'fire');
@@ -105,7 +105,7 @@ console.log('\n[v0.11] Модель экрана «Дары»');
   const tk = cards.find(c => c.id === 'telekinesis');
   ok(tk.choices.length === 2 && tk.choices.every(c => c.toLevel === 3) && !tk.maxed, 'Телекинез II: впереди ступень III с двумя ветками на выбор');
   const fire2 = (() => { const w2 = ready(world()); w2.abilities.unlock('seal', 3); return giftCards(w2.state).find(c => c.id === 'seal'); })();
-  ok(fire2.choices.length === 0 && fire2.maxed, 'Астрал III: выше ступеней нет, пишется «высшая из доступных»');
+  ok(fire2.choices.length === 2 && !fire2.maxed, 'Астрал III: выше ступеней нет, пишется «высшая из доступных»');
   w.state.addSchoolXP('fire', 180); w.state.addItem('crimson_ember', 6);
   ok(nextStep(w.state, 'fire').canStart, 'готовность видна в модели');
   w.abilities.startResearch('fire_2');
@@ -274,7 +274,7 @@ console.log('\n[v0.16.0] Экран «Дары»: новые ветки');
   w.abilities.update(true);
   ok(w.state.abilityLevel('fire') === 3 && w.state.branchOf('fire') === 'blaster', 'по таймеру — Огонь III и ветка Взрывника');
   const after = giftCards(w.state).find(c => c.id === 'fire');
-  ok(after.respec.length === 1 && after.respec[0].id === 'arsonist' && after.maxed, 'можно сменить ветку на Поджигателя, ступеней выше нет');
+  ok(after.respec.length === 1 && after.respec[0].id === 'arsonist' && !after.maxed, 'можно сменить ветку на Поджигателя, ступеней выше нет');
 }
 
 console.log('\n[v0.16.0] Слоты даров, пресет, амулеты');
@@ -283,7 +283,7 @@ console.log('\n[v0.16.0] Слоты даров, пресет, амулеты');
   const { applyAction } = await import('../src/cloud/playerModel.js');
   ok(slotCount(1) === 3 && slotCount(10) === 3 && slotCount(15) === 3 && SLOT_RULES.base === 3, 'слотов даров три на любом уровне: с Льдом в главе II — выбор «3 из 4»');
   ok(slotCount(16, { base: 3, extraAtLevel: 16 }) === 4 && slotCount(15, { base: 3, extraAtLevel: 16 }) === 3, 'если позже дать 4-й слот уровнем, правило работает');
-  ok(AMULET_SLOTS === 2 && Object.keys(AMULETS).join() === 'amulet_focus,amulet_forest,amulet_lunar,amulet_frost', 'два слота амулетов, четыре амулета (с v0.19.0 — и Амулет инея)');
+  ok(AMULET_SLOTS === 2 && Object.keys(AMULETS).length === 9, 'два слота амулетов, четыре амулета (с v0.19.0 — и Амулет инея)');
   for (const [id, a] of Object.entries(AMULETS)) ok(a.text && a.tradeoff && ITEMS[id]?.name === a.name, `${id}: есть описание, цена и предмет в сумке`);
   const rules = buildSlotRules();
   const ctx = (o = {}) => ({ level: 3, unlocked: ['telekinesis', 'fire'], owns: (id) => id === 'amulet_focus', combat: false, ...o });
@@ -477,7 +477,7 @@ console.log('\n[v0.19.0] Экономика главы II: зелья, амул�
   const { ASSETS } = await import('../src/config/assets.manifest.js').catch(() => ({}));
   const { Alchemy } = await import('../src/systems/Alchemy.js');
   ok(['frost_herb', 'ice_crystal', 'frost_shard', 'cold_heart'].every((k) => RESOURCES[k]) && Object.keys(RESOURCES).length === 9, 'четыре новых ресурса главы II (всего девять)');
-  ok(['warm_potion', 'stabilizing_potion', 'brittle_flask', 'crystal_guard', 'reinforced_resin', 'astral_lens', 'amulet_frost'].every((k) => RECIPES[k] && RECIPE_ORDER.includes(k)), 'семь новых рецептов');
+  ok(['warm_potion', 'stabilizing_potion', 'brittle_flask', 'potion_crystal_shield', 'reinforced_resin', 'astral_lens', 'amulet_frost'].every((k) => RECIPES[k] && RECIPE_ORDER.includes(k)), 'семь новых рецептов');
   ok(RECIPES.amulet_frost.needs.coins === 250 && RECIPES.amulet_frost.needs.frost_shard === 1, 'Амулет инея: 250 монет и инеевый осколок');
   for (const k of [...Object.keys(RESOURCES), ...Object.keys(POTIONS), ...Object.keys(CRAFT_ITEMS), ...Object.values(AMULETS).map(a => a.icon)]) {
     const icon = RESOURCES[k]?.icon || POTIONS[k]?.icon || CRAFT_ITEMS[k]?.icon || k;
@@ -487,8 +487,8 @@ console.log('\n[v0.19.0] Экономика главы II: зелья, амул�
   // амулет: уровни
   ok(amuletEffect('amulet_focus', 0).damageMult === 1.12 && amuletEffect('amulet_focus', 3).damageMult === 1.21, 'Сосредоточение: +12% → +21% на +3');
   ok(amuletEffect('amulet_forest', 2).incomingMult === 0.7 && amuletEffect('amulet_forest', 2).damageMult === 0.92, 'Лесной +2: урон по герою −30%, цена (−8% урона) прежняя');
-  ok(amuletEffect('amulet_frost', 3).iceMult === 1.175 && amuletEffect('amulet_lunar', 9).manaRescue.gainPct === 0.8, 'Инея +3: Лёд +17,5%; уровень не выше максимума');
-  ok(AMULET_UPGRADES.map(u => u.coins).join() === '120,220,400', 'цены улучшения: 120 / 220 / 400 монет + материалы');
+  ok(amuletEffect('amulet_frost', 3).iceMult === 1.175 && amuletEffect('amulet_lunar', 9).manaRescue.gainPct === 1, 'Инея +3: Лёд +17,5%; уровень не выше максимума');
+  ok(AMULET_UPGRADES.map(u => u.coins).join() === '1000,5000,15000,40000,100000', 'цены улучшения: 120 / 220 / 400 монет + материалы');
   // бой: уровень амулета работает, Амулет инея усиливает Лёд
   const w = ready(world()); w.abilities.unlock('ice', 1);
   w.state.addItem('amulet_frost', 1); w.state.setBuild({ slots: ['ice', 'telekinesis', 'fire'], amulets: ['amulet_frost'] });

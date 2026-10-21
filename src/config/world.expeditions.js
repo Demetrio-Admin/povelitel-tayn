@@ -53,7 +53,7 @@ const EXP_OBJECT_LIST = [
   { id: 'fw_crystal_1', kind: 'gather', res: 'ice_crystal', amount: 1, respawnSec: 900, x: 5150, y: 2250, texture: 'ice_crystal_node_01', collide: { w: 50, h: 18 }, radius: 90 },
   { id: 'fw_crystal_2', kind: 'gather', res: 'ice_crystal', amount: 1, respawnSec: 900, x: 3850, y: 600, texture: 'ice_crystal_node_01', collide: { w: 50, h: 18 }, radius: 90 },
   { id: 'fw_cache', kind: 'stash', guard: 'fw_alpha', x: 4500, y: 450, texture: 'city_wolf_cache', collide: { w: 70, h: 22 }, emptyTexture: 'city_wolf_cache_empty', radius: 110,
-    items: { frost_shard: 1, ice_crystal: 1 }, hint: 'Логово вожака', label: 'Забрать добычу', guardText: 'Логово стережёт Вожак метели.' },
+    items: { crafting_core: 1, frost_shard: 1, ice_crystal: 1 }, hint: 'Логово вожака', label: 'Забрать добычу', guardText: 'Логово стережёт Вожак метели.' },
   // Старое кладбище: сбор
   { id: 'gy_dust_1', kind: 'gather', res: 'rune_dust', amount: 1, respawnSec: 300, x: 4100, y: 4800, texture: 'rune_sigil_01', radius: 90 },
   { id: 'gy_dust_2', kind: 'gather', res: 'rune_dust', amount: 1, respawnSec: 300, x: 5100, y: 3950, texture: 'rune_sigil_01', radius: 90 },
@@ -61,7 +61,7 @@ const EXP_OBJECT_LIST = [
   { id: 'gy_mush_2', kind: 'gather', res: 'forest_mushroom', amount: 1, respawnSec: 300, x: 3900, y: 4100, texture: 'mushrooms_brown_01', radius: 90 },
   { id: 'gy_shard_1', kind: 'gather', res: 'lunar_shard', amount: 1, respawnSec: 900, x: 3900, y: 3300, texture: 'field_crystal', collide: { w: 60, h: 20 }, radius: 90 },
   { id: 'gy_cache', kind: 'stash', guard: 'gy_warden', x: 4800, y: 3050, texture: 'city_grave_cache', collide: { w: 60, h: 22 }, emptyTexture: 'city_grave_cache_empty', radius: 110,
-    items: { frost_shard: 1, lunar_shard: 2 }, hint: 'Сокровище кургана', label: 'Забрать добычу', guardText: 'Сокровище стережёт Страж кургана.' },
+    items: { crafting_core: 1, frost_shard: 1, lunar_shard: 2 }, hint: 'Сокровище кургана', label: 'Забрать добычу', guardText: 'Сокровище стережёт Страж кургана.' },
 ];
 export const EXP_INTERACTIVES = EXP_OBJECT_LIST.map(o => (o.kind === 'exit' ? o : { ...o, requiresEvent: OPEN }));
 

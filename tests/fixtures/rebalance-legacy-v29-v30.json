@@ -1,0 +1,1580 @@
+{
+  "sourceCommit": "b7d70ac2252b7d6270b1a191c8abd6f82662dc52",
+  "cases": [
+    {
+      "type": "forest_scavenger",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 2.166666666666664,
+        "hp": 255,
+        "mana": 135.50000000000148,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 0,
+          "autoDamage": 8
+        }
+      }
+    },
+    {
+      "type": "forest_scavenger",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 0.3333333333333333,
+        "hp": 255,
+        "mana": 136.00000000000023,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 0,
+          "autoDamage": 0
+        }
+      }
+    },
+    {
+      "type": "forest_scavenger",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 2.166666666666664,
+        "hp": 255,
+        "mana": 137.23333333333323,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 0,
+          "autoDamage": 8
+        }
+      }
+    },
+    {
+      "type": "forest_scavenger",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 0.3333333333333333,
+        "hp": 255,
+        "mana": 136.26666666666665,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 0,
+          "autoDamage": 0
+        }
+      }
+    },
+    {
+      "type": "young_scavenger",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 0.49999999999999994,
+        "hp": 255,
+        "mana": 130.50000000000034,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 0,
+          "autoDamage": 0
+        }
+      }
+    },
+    {
+      "type": "young_scavenger",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 0.16666666666666666,
+        "hp": 255,
+        "mana": 153.5000000000001,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 0,
+          "autoDamage": 0
+        }
+      }
+    },
+    {
+      "type": "young_scavenger",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 0.49999999999999994,
+        "hp": 255,
+        "mana": 130.89999999999998,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 0,
+          "autoDamage": 0
+        }
+      }
+    },
+    {
+      "type": "young_scavenger",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 0.16666666666666666,
+        "hp": 255,
+        "mana": 153.63333333333333,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 0,
+          "autoDamage": 0
+        }
+      }
+    },
+    {
+      "type": "frost_critter",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 11.666666666666826,
+        "hp": 248,
+        "mana": 78.73500000000267,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 5,
+            "fire": 2,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 1,
+          "damageTaken": 7,
+          "autoDamage": 40
+        }
+      }
+    },
+    {
+      "type": "frost_critter",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 10.333333333333426,
+        "hp": 241,
+        "mana": 56.62499999999915,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 2,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 1,
+          "damageTaken": 14,
+          "autoDamage": 40
+        }
+      }
+    },
+    {
+      "type": "frost_critter",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 11.666666666666826,
+        "hp": 248,
+        "mana": 87.46433333333198,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 5,
+            "fire": 2,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 1,
+          "damageTaken": 7,
+          "autoDamage": 40
+        }
+      }
+    },
+    {
+      "type": "frost_critter",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 10.333333333333426,
+        "hp": 241,
+        "mana": 63.99166666666497,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 2,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 1,
+          "damageTaken": 14,
+          "autoDamage": 40
+        }
+      }
+    },
+    {
+      "type": "frost_collector",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 18.50000000000023,
+        "hp": 234,
+        "mana": 205,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 8,
+            "fire": 2,
+            "seal": 0,
+            "ice": 3
+          },
+          "interrupts": 1,
+          "damageTaken": 21,
+          "autoDamage": 60
+        }
+      }
+    },
+    {
+      "type": "frost_collector",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 14.83333333333365,
+        "hp": 216,
+        "mana": 205,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 2,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 0,
+          "damageTaken": 39,
+          "autoDamage": 47
+        }
+      }
+    },
+    {
+      "type": "frost_collector",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 18.50000000000023,
+        "hp": 234,
+        "mana": 43.69299999999669,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 8,
+            "fire": 2,
+            "seal": 0,
+            "ice": 3
+          },
+          "interrupts": 1,
+          "damageTaken": 21,
+          "autoDamage": 60
+        }
+      }
+    },
+    {
+      "type": "frost_collector",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 14.83333333333365,
+        "hp": 216,
+        "mana": 204.75966666666358,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 2,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 0,
+          "damageTaken": 39,
+          "autoDamage": 47
+        }
+      }
+    },
+    {
+      "type": "frost_collector_elite",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 30.016666666666243,
+        "hp": 223,
+        "mana": 138.8400000000052,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 10,
+            "fire": 4,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 2,
+          "damageTaken": 32,
+          "autoDamage": 102
+        }
+      }
+    },
+    {
+      "type": "frost_collector_elite",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 26.33333333333312,
+        "hp": 194,
+        "mana": 98.61000000000229,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 9,
+            "fire": 3,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 1,
+          "damageTaken": 61,
+          "autoDamage": 86
+        }
+      }
+    },
+    {
+      "type": "frost_collector_elite",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 30.016666666666243,
+        "hp": 223,
+        "mana": 152.33966666666709,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 10,
+            "fire": 4,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 2,
+          "damageTaken": 32,
+          "autoDamage": 102
+        }
+      }
+    },
+    {
+      "type": "frost_collector_elite",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 26.33333333333312,
+        "hp": 194,
+        "mana": 104.37266666666721,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 9,
+            "fire": 3,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 1,
+          "damageTaken": 61,
+          "autoDamage": 86
+        }
+      }
+    },
+    {
+      "type": "ice_guardian",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 30.99999999999952,
+        "hp": 210,
+        "mana": 87.77250000000532,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 12,
+            "fire": 4,
+            "seal": 0,
+            "ice": 5
+          },
+          "interrupts": 0,
+          "damageTaken": 45,
+          "autoDamage": 76
+        }
+      }
+    },
+    {
+      "type": "ice_guardian",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 30.99999999999952,
+        "hp": 202,
+        "mana": 60.90750000000132,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 12,
+            "fire": 3,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 1,
+          "damageTaken": 53,
+          "autoDamage": 72
+        }
+      }
+    },
+    {
+      "type": "ice_guardian",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 30.99999999999952,
+        "hp": 210,
+        "mana": 96.06633333333315,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 12,
+            "fire": 4,
+            "seal": 0,
+            "ice": 5
+          },
+          "interrupts": 0,
+          "damageTaken": 45,
+          "autoDamage": 76
+        }
+      }
+    },
+    {
+      "type": "ice_guardian",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 30.99999999999952,
+        "hp": 202,
+        "mana": 71.01616666666749,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 12,
+            "fire": 3,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 1,
+          "damageTaken": 53,
+          "autoDamage": 72
+        }
+      }
+    },
+    {
+      "type": "volunteer",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 23.83333333333326,
+        "hp": 231,
+        "mana": 177.70500000000362,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 8,
+            "fire": 3,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 1,
+          "damageTaken": 24,
+          "autoDamage": 77
+        }
+      }
+    },
+    {
+      "type": "volunteer",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 18.333333333333574,
+        "hp": 211,
+        "mana": 152.50000000000125,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 8,
+            "fire": 2,
+            "seal": 0,
+            "ice": 3
+          },
+          "interrupts": 1,
+          "damageTaken": 44,
+          "autoDamage": 63
+        }
+      }
+    },
+    {
+      "type": "volunteer",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 23.83333333333326,
+        "hp": 231,
+        "mana": 179.95966666666317,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 8,
+            "fire": 3,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 1,
+          "damageTaken": 24,
+          "autoDamage": 77
+        }
+      }
+    },
+    {
+      "type": "volunteer",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 18.333333333333574,
+        "hp": 211,
+        "mana": 153.96666666666658,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 8,
+            "fire": 2,
+            "seal": 0,
+            "ice": 3
+          },
+          "interrupts": 1,
+          "damageTaken": 44,
+          "autoDamage": 63
+        }
+      }
+    },
+    {
+      "type": "experimental_construct",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 36.016666666665905,
+        "hp": 215,
+        "mana": 102.5525000000046,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 12,
+            "fire": 4,
+            "seal": 0,
+            "ice": 5
+          },
+          "interrupts": 2,
+          "damageTaken": 40,
+          "autoDamage": 102
+        }
+      }
+    },
+    {
+      "type": "experimental_construct",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 36.99999999999918,
+        "hp": 149,
+        "mana": 128.49750000000438,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 13,
+            "fire": 4,
+            "seal": 0,
+            "ice": 5
+          },
+          "interrupts": 0,
+          "damageTaken": 106,
+          "autoDamage": 90,
+          "potions": 1
+        }
+      }
+    },
+    {
+      "type": "experimental_construct",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 36.016666666665905,
+        "hp": 215,
+        "mana": 119.70883333333424,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 12,
+            "fire": 4,
+            "seal": 0,
+            "ice": 5
+          },
+          "interrupts": 2,
+          "damageTaken": 40,
+          "autoDamage": 102
+        }
+      }
+    },
+    {
+      "type": "experimental_construct",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 36.99999999999918,
+        "hp": 149,
+        "mana": 19.49683333333408,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 13,
+            "fire": 4,
+            "seal": 0,
+            "ice": 5
+          },
+          "interrupts": 0,
+          "damageTaken": 106,
+          "autoDamage": 90
+        }
+      }
+    },
+    {
+      "type": "severin_boss",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 61.49999999999779,
+        "hp": 182,
+        "mana": 137.52000000000447,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 22,
+            "fire": 7,
+            "seal": 0,
+            "ice": 8
+          },
+          "interrupts": 2,
+          "damageTaken": 73,
+          "autoDamage": 171,
+          "potions": 2
+        }
+      }
+    },
+    {
+      "type": "severin_boss",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 56.01666666666477,
+        "hp": 211,
+        "mana": 100.70750000000005,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 18,
+            "fire": 6,
+            "seal": 0,
+            "ice": 7
+          },
+          "interrupts": 0,
+          "damageTaken": 159,
+          "autoDamage": 154,
+          "potions": 3
+        }
+      }
+    },
+    {
+      "type": "severin_boss",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 61.49999999999779,
+        "hp": 182,
+        "mana": 45.32533333333104,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 22,
+            "fire": 7,
+            "seal": 0,
+            "ice": 8
+          },
+          "interrupts": 2,
+          "damageTaken": 73,
+          "autoDamage": 171,
+          "potions": 1
+        }
+      }
+    },
+    {
+      "type": "severin_boss",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 56.01666666666477,
+        "hp": 211,
+        "mana": 126.2294999999987,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 18,
+            "fire": 6,
+            "seal": 0,
+            "ice": 7
+          },
+          "interrupts": 0,
+          "damageTaken": 159,
+          "autoDamage": 154,
+          "potions": 3
+        }
+      }
+    },
+    {
+      "type": "frost_wolf",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 18.016666666666925,
+        "hp": 228,
+        "mana": 57.72000000000125,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 2,
+            "seal": 0,
+            "ice": 3
+          },
+          "interrupts": 1,
+          "damageTaken": 27,
+          "autoDamage": 72
+        }
+      }
+    },
+    {
+      "type": "frost_wolf",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 13.1666666666669,
+        "hp": 219,
+        "mana": 204.53999999999792,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 2,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 1,
+          "damageTaken": 36,
+          "autoDamage": 48
+        }
+      }
+    },
+    {
+      "type": "frost_wolf",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 18.016666666666925,
+        "hp": 228,
+        "mana": 70.44533333333021,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 2,
+            "seal": 0,
+            "ice": 3
+          },
+          "interrupts": 1,
+          "damageTaken": 27,
+          "autoDamage": 72
+        }
+      }
+    },
+    {
+      "type": "frost_wolf",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 13.1666666666669,
+        "hp": 219,
+        "mana": 198.21733333333032,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 2,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 1,
+          "damageTaken": 36,
+          "autoDamage": 48
+        }
+      }
+    },
+    {
+      "type": "frost_alpha",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 43.49999999999881,
+        "hp": 193,
+        "mana": 38.400000000008376,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 15,
+            "fire": 5,
+            "seal": 0,
+            "ice": 6
+          },
+          "interrupts": 2,
+          "damageTaken": 62,
+          "autoDamage": 161
+        }
+      }
+    },
+    {
+      "type": "frost_alpha",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 40.66666666666564,
+        "hp": 125,
+        "mana": 128.42000000000488,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 13,
+            "fire": 4,
+            "seal": 0,
+            "ice": 5
+          },
+          "interrupts": 0,
+          "damageTaken": 130,
+          "autoDamage": 152,
+          "potions": 1
+        }
+      }
+    },
+    {
+      "type": "frost_alpha",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 43.49999999999881,
+        "hp": 193,
+        "mana": 53.373333333333036,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 15,
+            "fire": 5,
+            "seal": 0,
+            "ice": 6
+          },
+          "interrupts": 2,
+          "damageTaken": 62,
+          "autoDamage": 161
+        }
+      }
+    },
+    {
+      "type": "frost_alpha",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 40.66666666666564,
+        "hp": 125,
+        "mana": 19.398666666667708,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 13,
+            "fire": 4,
+            "seal": 0,
+            "ice": 5
+          },
+          "interrupts": 0,
+          "damageTaken": 130,
+          "autoDamage": 152
+        }
+      }
+    },
+    {
+      "type": "grave_wisp",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 32.49999999999944,
+        "hp": 205,
+        "mana": 92.50000000000853,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 13,
+            "fire": 4,
+            "seal": 0,
+            "ice": 5
+          },
+          "interrupts": 1,
+          "damageTaken": 50,
+          "autoDamage": 64
+        }
+      }
+    },
+    {
+      "type": "grave_wisp",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 27.166666666666405,
+        "hp": 189,
+        "mana": 49.50000000000392,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 11,
+            "fire": 4,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 2,
+          "damageTaken": 66,
+          "autoDamage": 52
+        }
+      }
+    },
+    {
+      "type": "grave_wisp",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 32.49999999999944,
+        "hp": 205,
+        "mana": 103.49999999999852,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 13,
+            "fire": 4,
+            "seal": 0,
+            "ice": 5
+          },
+          "interrupts": 1,
+          "damageTaken": 50,
+          "autoDamage": 64
+        }
+      }
+    },
+    {
+      "type": "grave_wisp",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 27.166666666666405,
+        "hp": 189,
+        "mana": 59.76666666666608,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 11,
+            "fire": 4,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 2,
+          "damageTaken": 66,
+          "autoDamage": 52
+        }
+      }
+    },
+    {
+      "type": "grave_hound",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 20.500000000000117,
+        "hp": 225,
+        "mana": 196.5000000000049,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 8,
+            "fire": 3,
+            "seal": 0,
+            "ice": 3
+          },
+          "interrupts": 1,
+          "damageTaken": 30,
+          "autoDamage": 80
+        }
+      }
+    },
+    {
+      "type": "grave_hound",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 16.333333333333687,
+        "hp": 204,
+        "mana": 171.00000000000136,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 7,
+            "fire": 2,
+            "seal": 0,
+            "ice": 3
+          },
+          "interrupts": 1,
+          "damageTaken": 51,
+          "autoDamage": 64
+        }
+      }
+    },
+    {
+      "type": "grave_hound",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 20.500000000000117,
+        "hp": 225,
+        "mana": 197.89999999999907,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 8,
+            "fire": 3,
+            "seal": 0,
+            "ice": 3
+          },
+          "interrupts": 1,
+          "damageTaken": 30,
+          "autoDamage": 80
+        }
+      }
+    },
+    {
+      "type": "grave_hound",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 16.333333333333687,
+        "hp": 204,
+        "mana": 172.5999999999999,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 7,
+            "fire": 2,
+            "seal": 0,
+            "ice": 3
+          },
+          "interrupts": 1,
+          "damageTaken": 51,
+          "autoDamage": 64
+        }
+      }
+    },
+    {
+      "type": "barrow_warden",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 59.33333333333125,
+        "hp": 176,
+        "mana": 60.500000000004974,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 24,
+            "fire": 8,
+            "seal": 0,
+            "ice": 9
+          },
+          "interrupts": 1,
+          "damageTaken": 79,
+          "autoDamage": 176,
+          "potions": 2
+        }
+      }
+    },
+    {
+      "type": "barrow_warden",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 50.1666666666651,
+        "hp": 106,
+        "mana": 54.500000000003325,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 20,
+            "fire": 6,
+            "seal": 0,
+            "ice": 8
+          },
+          "interrupts": 0,
+          "damageTaken": 149,
+          "autoDamage": 148,
+          "potions": 2
+        }
+      }
+    },
+    {
+      "type": "barrow_warden",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 59.33333333333125,
+        "hp": 176,
+        "mana": 105.466666666664,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 24,
+            "fire": 8,
+            "seal": 0,
+            "ice": 9
+          },
+          "interrupts": 1,
+          "damageTaken": 79,
+          "autoDamage": 176,
+          "potions": 2
+        }
+      }
+    },
+    {
+      "type": "barrow_warden",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 50.1666666666651,
+        "hp": 106,
+        "mana": 83.16666666666507,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 20,
+            "fire": 6,
+            "seal": 0,
+            "ice": 8
+          },
+          "interrupts": 0,
+          "damageTaken": 149,
+          "autoDamage": 148,
+          "potions": 2
+        }
+      }
+    },
+    {
+      "type": "rootling",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 5.166666666666654,
+        "hp": 255,
+        "mana": 144.50000000000352,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 0,
+          "autoDamage": 16
+        }
+      }
+    },
+    {
+      "type": "rootling",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 0.49999999999999994,
+        "hp": 255,
+        "mana": 118.50000000000034,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 0,
+          "autoDamage": 0
+        }
+      }
+    },
+    {
+      "type": "rootling",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 5.166666666666654,
+        "hp": 255,
+        "mana": 148.6333333333331,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 0,
+          "autoDamage": 16
+        }
+      }
+    },
+    {
+      "type": "rootling",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 0.49999999999999994,
+        "hp": 255,
+        "mana": 118.89999999999998,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 0,
+          "autoDamage": 0
+        }
+      }
+    },
+    {
+      "type": "forest_guardian",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 21.833333333333375,
+        "hp": 225,
+        "mana": 145.00000000000364,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 9,
+            "fire": 3,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 0,
+          "damageTaken": 30,
+          "autoDamage": 40
+        }
+      }
+    },
+    {
+      "type": "forest_guardian",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 18.166666666666917,
+        "hp": 216,
+        "mana": 128.50000000000261,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 8,
+            "fire": 3,
+            "seal": 0,
+            "ice": 3
+          },
+          "interrupts": 0,
+          "damageTaken": 39,
+          "autoDamage": 36
+        }
+      }
+    },
+    {
+      "type": "forest_guardian",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 21.833333333333375,
+        "hp": 225,
+        "mana": 159.96666666666567,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 9,
+            "fire": 3,
+            "seal": 0,
+            "ice": 4
+          },
+          "interrupts": 0,
+          "damageTaken": 30,
+          "autoDamage": 40
+        }
+      }
+    },
+    {
+      "type": "forest_guardian",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 18.166666666666917,
+        "hp": 216,
+        "mana": 131.5666666666665,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 8,
+            "fire": 3,
+            "seal": 0,
+            "ice": 3
+          },
+          "interrupts": 0,
+          "damageTaken": 39,
+          "autoDamage": 36
+        }
+      }
+    },
+    {
+      "type": "node_guardian",
+      "version": 29,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 37.83333333333247,
+        "hp": 211,
+        "mana": 20.00000000000375,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 15,
+            "fire": 5,
+            "seal": 0,
+            "ice": 6
+          },
+          "interrupts": 1,
+          "damageTaken": 44,
+          "autoDamage": 88
+        }
+      }
+    },
+    {
+      "type": "node_guardian",
+      "version": 29,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 32.49999999999944,
+        "hp": 203,
+        "mana": 130.50000000000617,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 13,
+            "fire": 4,
+            "seal": 0,
+            "ice": 5
+          },
+          "interrupts": 2,
+          "damageTaken": 52,
+          "autoDamage": 86,
+          "potions": 1
+        }
+      }
+    },
+    {
+      "type": "node_guardian",
+      "version": 30,
+      "branch": false,
+      "result": {
+        "result": "victory",
+        "time": 37.83333333333247,
+        "hp": 211,
+        "mana": 47.766666666664946,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 15,
+            "fire": 5,
+            "seal": 0,
+            "ice": 6
+          },
+          "interrupts": 1,
+          "damageTaken": 44,
+          "autoDamage": 88
+        }
+      }
+    },
+    {
+      "type": "node_guardian",
+      "version": 30,
+      "branch": true,
+      "result": {
+        "result": "victory",
+        "time": 32.49999999999944,
+        "hp": 203,
+        "mana": 22.033333333332507,
+        "enemy": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 13,
+            "fire": 4,
+            "seal": 0,
+            "ice": 5
+          },
+          "interrupts": 2,
+          "damageTaken": 52,
+          "autoDamage": 86
+        }
+      }
+    }
+  ]
+}

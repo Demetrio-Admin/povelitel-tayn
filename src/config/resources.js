@@ -27,15 +27,51 @@ export const POTIONS = {
   warm_potion: { name: 'Тёплый настой', icon: 'icon_potion_warm', color: 0xffb36a, effect: { type: 'warm', resist: 0.6 },
     text: 'До конца боя холод врага слабее на 60%, а нынешний холод снимается. Только в бою.' },
   stabilizing_potion: { name: 'Стабилизирующий настой', icon: 'icon_potion_stable', color: 0xa8e6d8, effect: { type: 'cleanse', heal: 0.15 },
-    text: 'Снимает холод и возвращает 15% здоровья. Нужен и по сюжету — помочь пострадавшим.' },
+    text: 'Снимает холод и горение, возвращает 40 HP. Только в бою. Нужен и по сюжету — помочь пострадавшим.' },
   brittle_flask: { name: 'Флакон Хрупкости', icon: 'icon_potion_brittle', color: 0x9fe6ff, effect: { type: 'brittle', bonus: 0.4, sec: 5 },
     text: 'Делает врага хрупким на 5 с: следующий удар даров +40%. Только в бою.' },
   crystal_guard: { name: 'Кристальная защита', icon: 'icon_potion_guard', color: 0x7fb8ff, effect: { type: 'guard', incoming: 0.75, sec: 12 },
     text: 'Двенадцать секунд получаемый урон −25%. Только в бою.' },
 };
 
+// Fixed restoration is separate from legacy inventory; old flasks retain their effects.
+const fixed = (name, kind, amount, icon, extra = {}) => ({ name, icon, color: kind === 'heal' ? 0xe0566a : 0x6ab4ff,
+  category: 'restore', outside: !extra.regen, effect: { type: kind, flat: amount, ...extra },
+  text: `+${amount} ${kind === 'heal' ? 'HP' : 'MP'}${extra.regen ? ` сразу, затем +${extra.regen.rate}/с ${extra.regen.sec} с. Только в бою` : ''}.` });
+Object.assign(POTIONS, {
+  potion_life_small: fixed('Малое зелье здоровья', 'heal', 60, 'icon_potion_life'),
+  potion_life_medium: fixed('Густое зелье здоровья', 'heal', 100, 'icon_potion_life'),
+  potion_life_large: fixed('Большое зелье здоровья', 'heal', 160, 'icon_potion_life'),
+  potion_mana_small: fixed('Малое зелье маны', 'mana', 60, 'icon_potion_mana'),
+  potion_mana_medium: fixed('Насыщенное зелье маны', 'mana', 100, 'icon_potion_mana'),
+  potion_mana_large: fixed('Кристальное зелье маны', 'mana', 150, 'icon_potion_mana'),
+  potion_life_regen: fixed('Восстанавливающее зелье здоровья', 'heal', 30, 'icon_potion_life', { regen: { rate: 15, sec: 6 } }),
+  potion_mana_regen: fixed('Восстанавливающее зелье маны', 'mana', 20, 'icon_potion_mana', { regen: { rate: 10, sec: 10 } }),
+  potion_crystal_shield: { name: 'Кристальный щит', icon: 'icon_potion_guard', color: 0x7fb8ff, category: 'tactical', effect: { type: 'shield', amount: 70, sec: 12 }, text: 'Поглощает до 70 урона за 12 с.' },
+});
+for (const p of Object.values(POTIONS)) p.category ??= ['heal', 'mana'].includes(p.effect.type) ? 'restore' : 'tactical';
+export const POTION_CATEGORIES = { restore: { limit: 3, cooldown: 10 }, tactical: { limit: 2, cooldown: 12 } };
+export const POTION_SLOTS = 4;
+export const potionGain = (effect, max) => effect.flat ?? Math.round(max * effect.amount);
+export const POTION_PREFERENCE = ['potion_life_large', 'potion_life_medium', 'potion_life_regen', 'potion_life_small', 'elixir_life',
+    'potion_mana_large', 'potion_mana_medium', 'potion_mana_regen', 'potion_mana_small', 'elixir_mana', 'warm_potion', 'potion_crystal_shield', 'crystal_guard', 'resin_flask', 'brittle_flask', 'stabilizing_potion'];
+export function potionLoadout(inventory, build) {
+  if (Array.isArray(build?.potions)) return [...new Set(build.potions)].filter(id => POTIONS[id]).slice(0, POTION_SLOTS);
+  const preference = POTION_PREFERENCE;
+
+  const out = [], kinds = new Set();
+  for (const id of preference) {
+    if (!(inventory?.[id] > 0)) continue;
+    const kind = POTIONS[id].effect.type;
+    if (['heal', 'mana'].includes(kind) && kinds.has(kind)) continue;
+    out.push(id); kinds.add(kind); if (out.length === POTION_SLOTS) break;
+  }
+  return out;
+}
+
 /** v0.19.0: промежуточные компоненты и инструменты (не пьются, а идут в крафт или применяются в мире). */
 export const CRAFT_ITEMS = {
+  crafting_core: { name: 'Ремесленное ядро', icon: 'icon_core', color: 0xc9a2ff, text: 'Повторяемый трофей охраняемых запасов вылазок. Не сюжетное ядро.' },
   reinforced_resin: { name: 'Усиленная смола', icon: 'icon_reinforced_resin', color: 0xe8a04a, text: 'Компонент для сильных предметов и улучшения амулетов.' },
   astral_lens: { name: 'Астральная линза', icon: 'icon_astral_lens', color: 0x9fb4ff, text: 'Несколько зарядов: показывает тайники и скрытые магические следы (в городе и вылазках).' },
 };
@@ -50,7 +86,7 @@ export const RESOURCE_ITEMS = {
 export const RESOURCE_ORDER = ['moon_herb', 'forest_mushroom', 'tree_resin', 'rune_dust', 'lunar_shard', 'frost_herb', 'ice_crystal', 'frost_shard', 'cold_heart'];
 /** v0.19.0: ресурсы главы I — их сумка показывает всегда; новые — когда они уже есть. */
 export const BASE_RESOURCES = ['moon_herb', 'forest_mushroom', 'tree_resin', 'rune_dust', 'lunar_shard'];
-export const POTION_ORDER = ['elixir_life', 'elixir_mana', 'resin_flask', 'warm_potion', 'stabilizing_potion', 'brittle_flask', 'crystal_guard'];
+export const POTION_ORDER = Object.keys(POTIONS);
 
 /** Сколько зелий можно выпить за один бой (чтобы зелья помогали, а не отменяли бой). */
 export const POTION_BATTLE_LIMIT = 4;

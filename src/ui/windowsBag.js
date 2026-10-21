@@ -3,7 +3,7 @@ import { UI } from '../config/ui.config.js';
 import { BAG, bagView, takesBagSpace, GIFT_PRICES } from '../config/bag.js';
 import { ITEMS } from '../config/balance.progression.js';
 import { ABILITIES } from '../config/balance.abilities.js';
-import { RESOURCES, POTIONS, CRAFT_ITEMS, RESOURCE_ORDER, POTION_ORDER } from '../config/resources.js';
+import { RESOURCES, POTIONS, CRAFT_ITEMS, RESOURCE_ORDER, POTION_ORDER, potionLoadout } from '../config/resources.js';
 import { STORY_ITEMS } from '../config/storyItems.js';
 import { AMULETS } from '../config/build.js';
 import { services } from '../services.js';
@@ -95,13 +95,13 @@ export const windowsBag = {
     const bv = buildView(services.state);
     text(this, c, x, y + 22, `Дары в бою: ${bv.slotsUsed} из ${bv.slotCount}`, w / 2 - 6, { fontSize: UI.type.body });
     button(this, c, x + w * 0.75 + 2, y, w / 2 - 8, 'Боевой набор', () => this.openBattleSets()); y += UI.touch.button + 14;
-    const summaries = { telekinesis: 'Поднимает и бросает предметы.', fire: 'Урон огнём и горение.', seal: 'Пробивает защиту противника.', ice: 'Замедление и Хрупкость.' };
+    const summaries = { telekinesis: 'Поднимает и бросает предметы.', fire: 'Урон огнём и горение.', seal: 'Пробивает защиту противника.', ice: 'Замедление и Хрупкость.', storm: 'Заряды от других Даров и полный разряд.' };
     for (const g of giftCards(services.state)) {
       const h = 168, color = COLORS[ABILITIES[g.id].color];
       const plate = this.add.graphics().setPosition(x + w / 2, y + h / 2); drawPlate(plate, w, h, { accent: g.open ? color : 0x6a5a48, fill: 0x21161a, alpha: 0.85 }); c.add(plate);
       c.add(fit(this.add.image(x + 46, y + 72, `icon_${g.id}`), 80).setAlpha(g.open ? 1 : 0.4));
       text(this, c, x + 104, y + 10, `${g.name}${g.open ? ` ${ROMAN[g.level]}` : ' · закрыт'}`, w - 120, { fontSize: UI.type.heading, fontStyle: 'bold', color: g.open ? hex(color) : COLORS.textDim });
-      text(this, c, x + 104, y + 48, g.open ? summaries[g.id] : 'Откроется по сюжету.', w - 120);
+      text(this, c, x + 104, y + 48, g.open ? summaries[g.id] : g.id === 'storm' ? 'Изучается после Ледяного стража. Открой «Подробнее».' : 'Откроется по сюжету.', w - 120);
       const bw = (w - 126) / 2;
       button(this, c, x + 104 + bw / 2, y + 78, bw, g.equipped ? 'Убрать' : 'В бой', () => this.changeSlot(g.id), !g.equipped, g.open);
       button(this, c, x + 116 + bw * 1.5, y + 78, bw, 'Подробнее', () => { this.closeModal(null); this.openGiftDetails(g.id); });
@@ -135,6 +135,11 @@ export const windowsBag = {
     this.closeModal(null);
     this.openModal({ title: it.name || 'Предмет', color: it.color || COLORS.gold, text: `Количество: ${have}${pending ? ' · награда' : ''}\n\n${it.hint || it.text || it.purpose || ''}${story ? '\n\nНе занимает место в сумке.' : '\n\n1 штука занимает 1 место.'}`,
       buttons: [
+        ...(POTIONS[id] && !pending ? [{ label: potionLoadout(state.data.inventory, state.getObject('player_build')).includes(id) ? 'Убрать из быстрых' : 'В быстрые (до 4)', onClick: async () => {
+          const cur = potionLoadout(state.data.inventory, state.getObject('player_build'));
+          if (!cur.includes(id) && cur.length >= 4) { this.toast('Сначала убери один из четырёх быстрых типов.'); return; }
+          await services.actions.potionLoadout(cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]); this.openBag(tab);
+        } }] : []),
         ...(pending ? [{ label: 'Забрать', primary: true, onClick: () => this.chooseBagQuantity(id, 'claim', true) }] : POTIONS[id]?.outside ? [{ label: 'Выпить', primary: true, onClick: async () => { await this.drinkFromBag(id); if (!this.modal) this.openBag(tab); } }] : []),
         ...(!story ? [{ label: 'Выбросить', onClick: () => this.chooseBagQuantity(id, 'discard', pending) }] : []),
         { label: 'Назад', onClick: () => this.openBag(tab) },

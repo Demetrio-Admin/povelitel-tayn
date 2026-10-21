@@ -16,6 +16,7 @@ export function victoryViewModel({ reward = {}, levelUps = [], seconds = 0, inte
   const loot = Object.entries(reward.items || {}).filter(([, n]) => amount(n) > 0)
     .sort(([a], [b]) => (a === 'coins' ? -1 : b === 'coins' ? 1 : 0))
     .map(([id, n]) => ({ id, name: ITEMS[id]?.name || id, icon: ITEMS[id]?.icon || 'icon_lock', quantity: amount(n) }));
+  if (amount(reward.sapphires)) loot.push({ id: 'sapphires', name: 'Сапфиры', icon: 'icon_sapphire', quantity: amount(reward.sapphires) });
   const schools = Object.entries(reward.schoolXP || {}).filter(([id, n]) => ABILITIES[id] && amount(n) > 0)
     .map(([id, n]) => ({ id, name: ABILITIES[id].name, icon: `icon_${id}`, xp: amount(n) }));
   return { hero, loot, schools, heroXP: amount(reward.heroXP),
@@ -39,7 +40,8 @@ export function showVictory({ result, heroId, audio, onClose } = {}) {
   if (view.heroXP) rewards.append(el('div', { class: 'victory-hero-xp' }, el('img', { src: asset('assets/ui/victory/experience.webp'), alt: '', draggable: 'false' }),
     text(`+${num(view.heroXP)} опыта ${view.hero.gender === 'male' ? 'героя' : 'героини'}`)));
   if (view.schools.length) {
-    const schools = el('div', { class: 'victory-schools', style: `--gift-columns:${Math.min(3, view.schools.length)}` });
+    if (amount(reward.sapphires)) loot.push({ id: 'sapphires', name: 'Сапфиры', icon: 'icon_sapphire', quantity: amount(reward.sapphires) });
+  const schools = el('div', { class: 'victory-schools', style: `--gift-columns:${Math.min(3, view.schools.length)}` });
     for (const row of view.schools) schools.append(el('div', { class: 'victory-school', 'data-school': row.id }, image(row.icon),
       el('div', {}, text(row.name, 'victory-school-name'), text(`+${num(row.xp)}`, 'victory-school-quantity'))));
     rewards.append(el('section', { class: 'victory-magic', 'aria-label': 'Опыт даров' }, el('h3', { text: 'Опыт даров' }), schools));

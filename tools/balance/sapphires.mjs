@@ -1,0 +1,4 @@
+import {SAPPHIRE_DROPS as D}from'../../src/config/sapphireDrops.js';
+const convolve=(dist,r)=>{const next=new Map();for(const[n,p]of dist)for(const[x,q]of [[0,1-r.chance],[r.amount,r.chance]])next.set(n+x,(next.get(n+x)||0)+p*q);return next;};
+function expedition(prefix,boss,cache){const ids=[...Object.keys(D.combat).filter(id=>id.startsWith(prefix))];let dist=new Map([[0,1]]);for(const id of ids)dist=convolve(dist,D.combat[id]);for(const[id,r]of Object.entries(D.world))if(id.startsWith(prefix))dist=convolve(dist,r);const sorted=[...dist].sort(([a],[b])=>a-b);const quantile=q=>{let n=0;for(const[x,p]of sorted){n+=p;if(n>=q)return x;}};return{mean:sorted.reduce((n,[x,p])=>n+x*p,0),median:quantile(.5),p10:quantile(.1),p90:quantile(.9),max:sorted.at(-1)[0]};}
+console.log(JSON.stringify({frostwood:expedition('fw_'),graveyard:expedition('gy_'),note:'One complete expedition, not an hourly promise. Boss cooldown is one hour.'},null,2));

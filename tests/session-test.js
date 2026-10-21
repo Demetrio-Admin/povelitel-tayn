@@ -604,6 +604,7 @@ console.log('\nv0.12.0. HP и мана на сервере: восстановл
   const dh = await acts.drink('elixir_life');
   ok(dh.ok && dh.kind === 'heal' && near(dh.amount, 20, 1) && st.item('elixir_life') === 1 && near(st.data.hp, 120), 'настой жизни: добавлено только недостающее, списан один');
   ok((await acts.drink('resin_flask')).reason === 'unknown' && (await acts.drink('nonsense')).reason === 'unknown', 'боевая склянка и выдуманный предмет вне боя не работают');
+  srv.advance(10001);
   await setVitals(d, { hp: 120, mana: 10 });
   const dm = await acts.drink('elixir_mana');
   ok(dm.ok && near(dm.amount, 60, 1) && near(st.data.mana, 70), 'лунный эликсир: +60% маны');

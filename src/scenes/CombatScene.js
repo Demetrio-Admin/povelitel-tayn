@@ -215,7 +215,7 @@ export class CombatScene extends Phaser.Scene {
   /** Круглые кнопки зелий слева над панелью даров: показываются только те, что есть в сумке. */
   buildPotions() {
     this.potionViews = new Map();
-    POTION_ORDER.forEach((id, i) => {
+    (this.cm.modern ? this.cm.potionSlots : POTION_ORDER).forEach((id, i) => {
       const p = POTIONS[id], x = 68 + i * 114, y = 1028;
       const ring = this.add.circle(x, y, UI.touch.potionRadius, 0x1a120d, 0.92).setStrokeStyle(3, p.color).setDepth(5200);
       const icon = this.add.image(x, y - 2, p.icon).setDepth(5201);
@@ -226,9 +226,9 @@ export class CombatScene extends Phaser.Scene {
       this.potionViews.set(id, { ring, icon, badge, hit });
     });
     this.refreshPotions();
-    this.input.keyboard?.on('keydown-FOUR', () => this.onPotion('elixir_life'));
-    this.input.keyboard?.on('keydown-FIVE', () => this.onPotion('elixir_mana'));
-    this.input.keyboard?.on('keydown-SIX', () => this.onPotion('resin_flask'));
+    this.input.keyboard?.on('keydown-FOUR', () => this.onPotion([...this.potionViews.keys()][0]));
+    this.input.keyboard?.on('keydown-FIVE', () => this.onPotion([...this.potionViews.keys()][1]));
+    this.input.keyboard?.on('keydown-SIX', () => this.onPotion([...this.potionViews.keys()][2]));
   }
 
   refreshPotions() {
@@ -238,7 +238,10 @@ export class CombatScene extends Phaser.Scene {
     for (const [id, v] of this.potionViews) {
       const n = this.sim.item(id);
       for (const o of [v.ring, v.icon, v.badge, v.hit]) o.setVisible(n > 0);
-      v.badge.setText(String(n));
+      const cd = this.cm.modern ? this.cm.potionCooldown[POTIONS[id].category] : 0;
+      const limited = this.cm.modern && this.cm.potionUses[POTIONS[id].category] >= (POTIONS[id].category === 'restore' ? 3 : 2);
+      v.badge.setText(limited ? '—' : cd > 0 ? `${Math.ceil(cd)}с` : String(n));
+      v.ring.setAlpha(limited || cd > 0 ? .45 : 1);
       const i = shown.indexOf(id);
       if (i >= 0) { const x = 68 + i * step; v.ring.x = x; v.icon.x = x; v.badge.x = x + 30; v.hit.x = x; }
     }
@@ -248,7 +251,7 @@ export class CombatScene extends Phaser.Scene {
     if (!this.canAct()) return;
     const res = this.cm.usePotion(id);
     if (!res.ok) {
-      const msg = { full: id === 'elixir_life' ? 'Здоровье уже полное' : 'Мана уже полная', none: 'Таких зелий нет', limit: 'Больше зелий за бой не выпить' }[res.reason];
+      const msg = { full: POTIONS[id]?.effect.type === 'heal' ? 'Здоровье уже полное' : 'Эффект уже действует или запас полный', none: 'Таких зелий нет', limit: 'Лимит этой категории на бой исчерпан', cooldown: 'Категория зелий ещё восстанавливается', benched: 'Этот тип не выбран перед боем' }[res.reason];
       if (msg) this.toast(msg);
       services.audio.play('locked');
       return;
@@ -344,10 +347,14 @@ export class CombatScene extends Phaser.Scene {
   }
 
   updateHud() {
+    this.refreshPotions();
     const e = this.cm.enemy;
     this.enemyHpBar.setFraction(Math.max(0, e.hp / e.maxHp));
     this.enemyHpText.setText(`${Math.ceil(e.hp)} / ${e.maxHp}`);
     const st = [];
+    if (this.cm.modern && this.sim.isEquipped('storm')) st.push(`Гроза: ${this.cm.stormCharges}/3`);
+    if (e.shield > 0) st.push(`Щит ${Math.ceil(e.shield)}`);
+    if (this.cm.modern && Object.values(this.cm.shields).some(s=>s.amount>0)) st.push(`Ваш щит ${Math.ceil(Object.values(this.cm.shields).reduce((n,s)=>n+Math.max(0,s.amount),0))}`);
     if (e.hasArmor) st.push(e.armorActive ? `Броня −${Math.round(e.def.armor.value * 100)}%` : `Броня разбита ${e.armorDisabledLeft.toFixed(0)}с`);
     if (e.burning) st.push(`Горение ${e.burn.left.toFixed(0)}с`);
     if (e.inPuddle) st.push(`Лужа смолы ${e.puddle.left.toFixed(0)}с`);

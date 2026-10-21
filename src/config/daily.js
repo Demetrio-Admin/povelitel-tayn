@@ -29,7 +29,7 @@ export const DAILY_POOL = {
   society_dust: { giver: 'Общество Преображения', title: 'Пыль для приборов', text: 'Честная часть Общества чинит свои приборы — им нужна руническая пыль.',
     goal: { type: 'deliver', items: { rune_dust: 2 } }, reward: { heroXP: 40, coins: 30, items: { lunar_shard: 1 } } },
   healer_elixirs: { giver: 'Лекарь у фонтана', title: 'Настои для обмороженных', text: 'После волны холода у лекаря очередь. Два настоя жизни спасут чей-то вечер.',
-    goal: { type: 'deliver', items: { elixir_life: 2 } }, reward: { heroXP: 50, coins: 40 } },
+    goal: { type: 'deliver', items: { potion_life_small: 2 } }, reward: { heroXP: 50, coins: 40 } },
   coven_mushrooms: { giver: 'Ровена, Ковен', title: 'Грибы для оберегов', text: 'Ковен плетёт обереги для стен. Нужны лесные грибы.',
     goal: { type: 'deliver', items: { forest_mushroom: 3 } }, reward: { heroXP: 35, coins: 25, items: { frost_herb: 1 } } },
   hunt_collectors: { giver: 'Складской квартал', title: 'Сборщики вернулись', text: 'На складах и в Замёрзшем квартале снова бродят морозные сборщики. Отгоните двоих.',

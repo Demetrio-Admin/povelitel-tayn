@@ -53,6 +53,7 @@ export const COLORS = {
   telekinesis: 0x4fe3c1,
   fire: 0xff6a2b,
   seal: 0x7d8bff,
+  storm: 0xb3adff,
   ice: 0x9fe6ff,    // v0.18.0: Лёд — светлый ледяной голубой   // v0.10.1: Астрал — холодный бирюзово-фиолетовый
   neutral: 0xe8c56a,
   gold: 0xd9b45a,

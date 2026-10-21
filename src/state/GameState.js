@@ -8,7 +8,7 @@ import { WORLD } from '../config/world.layout.js';
 import { SAVE } from '../config/game.config.js';
 import { materialize } from './vitals.js';
 import { DEFAULT_HERO_ID } from '../config/heroes.js';
-import { GIFT_IDS, AMULETS, AMULET_UPGRADES, slotCount, defaultSlots, checkBuild, buildSlotRules } from '../config/build.js';
+import { GIFT_IDS, AMULETS, AMULET_UPGRADES, slotCount, defaultSlots, checkBuild, buildSlotRules, progressGate } from '../config/build.js';
 import { SAPPHIRES } from '../config/sapphires.js';
 import { BAG, bagView, takesBagSpace } from '../config/bag.js';
 
@@ -25,8 +25,9 @@ export function createDefaultState(heroId = DEFAULT_HERO_ID) {
     telekinesisLevel: 0,
     fireLevel: 0,
     sealLevel: 0,
+    stormLevel: 0,
     iceLevel: 0,   // v0.18.0
-    schoolXP: { telekinesis: 0, fire: 0, seal: 0, ice: 0 },
+    schoolXP: { telekinesis: 0, fire: 0, seal: 0, ice: 0, storm: 0 },
     unlockedAbilities: [],
     completedEvents: [BALANCE_MIGRATION.event],
     openedPaths: [],
@@ -237,7 +238,7 @@ export class GameState {
     if (r.abilityLevel) checks.push({ label: `${up.ability} ${r.abilityLevel}`, have: this.abilityLevel(up.ability), need: r.abilityLevel, hidden: true });
     checks.push({ label: 'Опыт дара', have: this.data.schoolXP[up.ability] || 0, need: up.cost.schoolXP });
     for (const [k, v] of Object.entries(up.cost.items || {})) checks.push({ label: k, item: k, have: this.item(k), need: v });
-    const eventOk = !r.event || this.hasEvent(r.event);
+    const eventOk = (!r.event || this.hasEvent(r.event)) && (!r.progressTier || progressGate(this.data.defeatedEnemies, r.progressTier)) && (!r.branch || this.branchOf(up.ability) === r.branch);
     const ok = eventOk && checks.every(c => c.have >= c.need);
     return { ok, reason: ok ? 'ready' : (eventOk ? 'missing' : 'event'), checks };
   }

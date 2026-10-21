@@ -4,9 +4,9 @@ import { ABILITIES } from '../config/balance.abilities.js';
 import { UPGRADES, ITEMS, TIMER_MODE, BRANCH_RESPEC } from '../config/balance.progression.js';
 import { SAPPHIRES } from '../config/sapphires.js';
 import { statsFor } from './abilityStats.js';
-import { AMULETS, AMULET_IDS, AMULET_SLOTS, GIFT_IDS, AMULET_UPGRADES, RARITY, amuletEffect } from '../config/build.js';
+import { AMULETS, AMULET_IDS, AMULET_SLOTS, GIFT_IDS, AMULET_UPGRADES, RARITY, amuletEffect, amuletUpgradeCost, progressGate } from '../config/build.js';
 
-export const GIFT_ORDER = ['telekinesis', 'fire', 'seal', 'ice'];
+export const GIFT_ORDER = ['telekinesis', 'fire', 'seal', 'ice', 'storm'];
 const WEIGHT_RU = { light: 'лёгкие', medium: 'лёгкие и средние', heavy: 'любые, включая тяжёлые' };
 const pct = (v) => `${Math.round(v * 100)}%`;
 const num = (v) => String(Math.round(v * 10) / 10).replace('.', ',');
@@ -19,7 +19,7 @@ export function statLines(id, level, branchId = null) {
   if (id === 'telekinesis') {
     out.push(`Поднимает: ${WEIGHT_RU[s.maxWeight] || s.maxWeight}`);
     if (s.throwDamageBonus) out.push(`Урон бросками +${pct(s.throwDamageBonus)}`);
-    if (s.doubleCast) out.push(`Два броска подряд: второй в течение ${num(s.doubleCast.windowSec)} с без перезарядки`);
+    if (s.doubleCast) out.push(`${s.doubleCast.count === 3 ? "Три применения подряд" : "Два броска подряд"}: окно ${num(s.doubleCast.windowSec)} с без перезарядки`);
     if (s.interruptRefund) out.push(`Удачное прерывание: +${pct(s.interruptRefund.manaPct)} маны, перезарядка −${s.interruptRefund.cooldownSec} с`);
   } else if (id === 'fire') {
     out.push(`Горение: ${s.burn.dps} урона в секунду, ${num(s.burn.durationSec)} с (всего ${Math.round(s.burn.dps * s.burn.durationSec)})`);
@@ -32,6 +32,19 @@ export function statLines(id, level, branchId = null) {
     if (s.brittle) out.push(`Хрупкость ${num(s.brittle.sec)} с: следующий удар Телекинеза, Огня или Астрала +${pct(s.brittle.bonus)}, тяжёлый бросок разбивает броню`);
     if (s.shatter) out.push(`Удар Льда по хрупкой цели: урон ×${num(s.shatter.mult)}`);
   }
+  if (s.interruptWard) out.push(`Прерывание: щит ${s.interruptWard.amount} на ${s.interruptWard.sec} с, интервал ${s.interruptWard.cooldown} с`);
+  if (s.nextThrowBonus) out.push(`Следующий бросок после прерывания +${pct(s.nextThrowBonus)}`);
+  if (s.thirdThrowBonus) out.push(`Третье применение серии +${pct(s.thirdThrowBonus)}`);
+  if (s.burnStacks) out.push(`До ${s.burnStacks} независимых слоёв горения`);
+  if (s.fullBurnAntiheal) out.push(`При полном горении лечение цели −${pct(s.fullBurnAntiheal)}`);
+  if (s.detonate) out.push(`Подрыв оставшегося горения ×${num(s.detonate)}`);
+  if (s.shieldPierce) out.push(`Мимо поглощающего щита проходит ${pct(s.shieldPierce)} урона`);
+  if (s.shieldDamage) out.push(`По цели со щитом урон +${pct(s.shieldDamage)}`);
+  if (s.comboMana) out.push(`Первое попадание другого Дара после вспышки возвращает ${s.comboMana} MP`);
+  if (s.frostWeaken) out.push(`Первый удар замедленной цели слабее на ${pct(s.frostWeaken)}`);
+  if (s.fullDischarge) out.push(`Полный разряд: дополнительный удар на ${pct(s.fullDischarge)}`);
+  if (s.stormField) out.push(`Полный разряд: урон цели −${pct(s.stormField.reduction)} на ${s.stormField.sec} с${s.stormField.mana ? `, возврат ${s.stormField.mana} MP раз в 12 с` : ''}`);
+  if (id === 'storm') out.push('До 3 зарядов: один за применение другого Дара, периодический урон зарядов не даёт.', `Каждый заряд: урон +${pct(s.chargeBonus)}`);
   return out;
 }
 
@@ -49,7 +62,8 @@ function stepCard(state, id, up) {
   const need = [];
   const r = up.requires || {};
   if (r.heroLevel) need.push({ label: `Уровень героя ${r.heroLevel}`, have: state.data.heroLevel, need: r.heroLevel });
-  if (r.event && !state.hasEvent(r.event)) need.push({ label: 'Пробудить Лунный алтарь', have: 0, need: 1 });
+  if (r.event && !state.hasEvent(r.event)) need.push({ label: r.event, have: 0, need: 1 });
+  if (r.progressTier) need.push({ label: r.progressTier === 4 ? 'Победить Ледяного стража' : 'Победить Северина и босса вылазки', have: progressGate(state.data.defeatedEnemies, r.progressTier) ? 1 : 0, need: 1 });
   need.push({ label: 'Опыт дара', have: state.data.schoolXP[id] || 0, need: up.cost.schoolXP });
   if (up.cost.coins) need.push({ label: 'Монеты', item: 'coins', have: state.item('coins'), need: up.cost.coins });
   if (up.cost.sapphires) need.push({ label: 'Сапфиры', have: state.sapphires(), need: up.cost.sapphires });
@@ -103,8 +117,8 @@ export function giftCards(state) {
       xp: state.data.schoolXP[id] || 0,
       branch: open && state.branchOf(id) ? { id: state.branchOf(id), ...pickBranch(id, state.branchOf(id)) } : null,
       now: open ? statLines(id, level, state.branchOf(id)) : [],
-      choices: open ? nextChoices(state, id) : [],
-      next: open ? nextStep(state, id) : null,
+      choices: (open || id === 'storm') ? nextChoices(state, id) : [],
+      next: (open || id === 'storm') ? nextStep(state, id) : null,
       respec: open ? respecOptions(state, id) : [],
       maxed: open && !upgradesOf(id).some((u) => u.toLevel > level),
     };
@@ -125,12 +139,13 @@ export function buildView(state) {
     amuletSlots: AMULET_SLOTS,
     amulets: AMULET_IDS.filter((id) => state.item(id) >= 1).map((id) => {
       const level = state.buildData().amuletLevels[id] || 0;
-      const up = AMULET_UPGRADES[level] || null;   // v0.19.0: следующее улучшение (null — максимум)
-      const need = up ? [{ id: 'coins', name: ITEMS.coins.name, have: state.item('coins'), need: up.coins },
+      const up = amuletUpgradeCost(id, level);   // v0.19.0: следующее улучшение (null — максимум)
+      const need = up ? [{ id: 'coins', name: ITEMS.coins.name, have: state.item('coins'), need: up.coins }, { id: 'sapphires', name: 'Сапфиры', have: state.sapphires(), need: up.sapphires || 0 },
         ...Object.entries(up.items).map(([k, n]) => ({ id: k, name: ITEMS[k]?.name || k, have: state.item(k), need: n }))].map((n) => ({ ...n, ok: n.have >= n.need })) : [];
+      if (up) need.push({ id: 'progress', name: level+1 === 5 ? 'Победить Северина и босса вылазки' : ['','Падальщик','Лесной Страж','Страж узла','Ледяной страж'][level+1], have: progressGate(state.data.defeatedEnemies, level+1) ? 1 : 0, need: 1, ok: progressGate(state.data.defeatedEnemies, level+1) });
       return { id, name: AMULETS[id].name, text: AMULETS[id].text, tradeoff: AMULETS[id].tradeoff, equipped: worn.includes(id),
         rarity: AMULETS[id].rarity, rarityName: RARITY[AMULETS[id].rarity]?.name, rarityColor: RARITY[AMULETS[id].rarity]?.color,
-        level, maxLevel: AMULET_UPGRADES.length, effect: amuletEffect(id, level), next: up ? { level: level + 1, need, canPay: need.every((n) => n.ok) } : null };
+        level, maxLevel: AMULET_UPGRADES.length, effect: amuletEffect(id, level), next: up ? { level: level + 1, need, canPay: need.every((n) => n.ok) && progressGate(state.data.defeatedEnemies, level + 1) } : null };
     }),
     hasPreset: !!state.buildData().preset,
     // v0.17.0: пресеты по номерам и следующий, который можно открыть за сапфиры
@@ -149,6 +164,15 @@ export function amuletLine(e) {
   if (e.incomingMult) out.push(`получаемый урон −${p(1 - e.incomingMult)}`);
   if (e.manaRescue) out.push(`раз за бой при мане ниже ${p(e.manaRescue.below)} возвращает ${p(e.manaRescue.gainPct)}`);
   if (e.iceMult) out.push(`удар Льда +${p(e.iceMult - 1)}`);
+  if (e.fireMult) out.push(`удар Огня +${p(e.fireMult-1)}`);
+  if (e.burnMult) out.push(`горение и лужа +${p(e.burnMult-1)}`);
+  if (e.sealMult) out.push(`Астрал +${p(e.sealMult-1)}`);
+  if (e.heavyMult) out.push(`тяжёлый бросок +${p(e.heavyMult-1)}`);
+  if (e.flashBonus) out.push(`вспышка +${e.flashBonus} с`);
+  if (e.gatherBonus) out.push(`дополнительный ингредиент ${p(e.gatherBonus)}`);
+  if (e.antiheal) out.push(`лечение горящей цели −${p(e.antiheal)}`);
+  if (e.interruptShield) out.push(`щит после прерывания ${e.interruptShield}`);
+  if (e.brittleBonus) out.push(`Хрупкость +${p(e.brittleBonus)}`);
   if (e.slowBonus) out.push(`замедление Льдом +${p(e.slowBonus)}`);
   return out.join(', ');
 }

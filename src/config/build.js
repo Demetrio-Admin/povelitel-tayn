@@ -5,7 +5,7 @@
 // SQL (supabase/schema.sql) повторяет их в тех же порядке проверок (проверяет tools/sql/diff-test.mjs).
 
 /** Дары, которые можно ставить в слоты (порядок — порядок по умолчанию и на экране). */
-export const GIFT_IDS = ['telekinesis', 'fire', 'seal', 'ice'];   // v0.18.0: + Лёд
+export const GIFT_IDS = ['telekinesis', 'fire', 'seal', 'ice', 'storm'];   // v0.18.0: + Лёд
 
 /**
  * Слоты даров: три. Четвёртый дар (Лёд) приходит в главе II на 11 уровне, и с ним начинается выбор «3 из 4»
@@ -45,6 +45,14 @@ export const AMULETS = {
     effect: { iceMult: 1.1, slowBonus: 0.05 },
   },
 };
+Object.assign(AMULETS, {
+  amulet_tracker: { name: 'Амулет Следопыта', icon: 'icon_amulet_forest', rarity: 'rare', text: 'Шанс дополнительного обычного ингредиента при сборе.', tradeoff: 'Не усиливает бой и не умножает сапфиры.', effect: { gatherBonus: 0.1 } },
+  amulet_embers: { name: 'Амулет Углей', icon: 'icon_amulet_focus', rarity: 'epic', text: 'Усиливает Огонь, горение и лужу; позднее подавляет лечение горящей цели.', tradeoff: 'Специализация Огня.', effect: {} },
+  amulet_breaker: { name: 'Амулет Камнелома', icon: 'icon_amulet_focus', rarity: 'epic', text: 'Усиливает тяжёлый бросок; позднее даёт щит после прерывания.', tradeoff: 'Нужны тяжёлые объекты и прерывания.', effect: {} },
+  amulet_astral_eye: { name: 'Амулет Астрального ока', icon: 'icon_amulet_lunar', rarity: 'epic', text: 'Усиливает Астрал и продлевает уже открытую вспышку.', tradeoff: 'Не открывает вспышку на I–II.', effect: {} },
+  amulet_blizzard: { name: 'Сердце метели', icon: 'icon_amulet_frost', rarity: 'epic', text: 'Усиливает Лёд и существующую Хрупкость.', tradeoff: 'Не открывает Хрупкость на Льде I.', effect: {} },
+});
+for (const [id,a] of Object.entries(AMULETS)) a.currency = ['amulet_embers','amulet_breaker','amulet_astral_eye','amulet_blizzard'].includes(id) ? 'sapphires' : 'coins';
 export const AMULET_IDS = Object.keys(AMULETS);
 
 /** v0.19.0: редкость амулета (подпись и цвет в окне). */
@@ -60,25 +68,56 @@ export const RARITY = {
  * (+3 — на 75%); цена-недостаток не меняется. Цена уровня N — AMULET_UPGRADES[N − 1]: монеты + материалы.
  */
 export const AMULET_UPGRADES = [
-  { coins: 120, items: { tree_resin: 2, rune_dust: 1 } },
-  { coins: 220, items: { ice_crystal: 2, rune_dust: 2 } },
-  { coins: 400, items: { frost_shard: 2, lunar_shard: 3 } },
+ { coins: 1000, items: { tree_resin: 2, rune_dust: 1 } },
+ { coins: 5000, items: { ice_crystal: 2, rune_dust: 2 } },
+ { coins: 15000, items: { frost_shard: 2, lunar_shard: 3 } },
+ { coins: 40000, items: { reinforced_resin: 3, lunar_shard: 6, crafting_core: 2 } },
+ { coins: 100000, items: { reinforced_resin: 6, rune_dust: 12, frost_shard: 4, crafting_core: 4 } },
 ];
+export const SAPPHIRE_AMULET_PRICES = [300, 900, 2500, 6500, 15000];
+export const amuletUpgradeCost = (id,level) => level >= 5 ? null : AMULETS[id]?.currency === 'sapphires' ? { sapphires: SAPPHIRE_AMULET_PRICES[level], coins: 0, items: {} } : AMULET_UPGRADES[level];
+export function progressGate(enemies, tier) {
+ const won = id => enemies.includes(id);
+ if (tier === 1) return won('scavenger_01');
+ if (tier === 2) return won('forest_guardian_01');
+ if (tier === 3) return won('node_trial');
+ if (tier === 4) return won('fq_guardian');
+ return won('final_severin') && (won('fw_alpha') || won('gy_warden'));
+}
 export const AMULET_LEVEL_STEP = 0.25;
 
 /** Действующие числа амулета с учётом уровня улучшения (одна функция для боя и окна). */
-export function amuletEffect(id, level = 0, legacy = false) {
+export function legacyAmuletEffect(id, level = 0, legacy = false) {
   const e = AMULETS[id]?.effect;
   if (!e) return {};
-  const k = 1 + AMULET_LEVEL_STEP * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length));
+  const k = 1 + AMULET_LEVEL_STEP * Math.max(0, Math.min(level || 0, 3));
   const r = (v) => Math.round(v * 1000) / 1000;
   const out = { ...e };
   if (e.damageMult && e.damageMult > 1) out.damageMult = r(1 + (e.damageMult - 1) * k);
   if (e.incomingMult) out.incomingMult = r(1 - (1 - e.incomingMult) * k);
-  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: legacy ? r(e.manaRescue.gainPct * k) : r(e.manaRescue.gainPct + 0.1 * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length))) };
+  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: legacy ? r(e.manaRescue.gainPct * k) : r(e.manaRescue.gainPct + 0.1 * Math.max(0, Math.min(level || 0, 3))) };
   if (e.iceMult) out.iceMult = r(1 + (e.iceMult - 1) * k);
   if (e.slowBonus) out.slowBonus = r(e.slowBonus * k);
   return out;
+}
+
+// Explicit curves preserve all four original models at +0…+3.
+export function amuletEffect(id, level = 0, legacy = false, modern = true) {
+ if (!modern) return legacyAmuletEffect(id, level, legacy);
+ const n = Math.max(0, Math.min(5, Math.trunc(level) || 0));
+ const at = a => a[n];
+ switch (id) {
+ case 'amulet_focus': return { damageMult: 1 + at([.12,.15,.18,.21,.25,.30]) };
+ case 'amulet_forest': return { incomingMult: at([.8,.75,.7,.65,.625,.6]), damageMult: .92 };
+ case 'amulet_lunar': return { manaRescue: { below: .2, gainPct: at([.5,.6,.7,.8,.9,1]) } };
+ case 'amulet_frost': return { iceMult: 1 + at([.1,.125,.15,.175,.23,.3]), slowBonus: at([.05,.063,.075,.088,.095,.1]) };
+ case 'amulet_tracker': return { gatherBonus: at([.1,.12,.15,.18,.21,.25]) };
+ case 'amulet_embers': return { fireMult: 1+at([.12,.17,.23,.3,.43,.6]), burnMult: 1+at([.2,.25,.32,.4,.58,.8]), antiheal: at([0,0,0,.25,.32,.4]) };
+ case 'amulet_breaker': return { heavyMult: 1+at([.25,.33,.43,.55,.75,1]), interruptShield: at([0,0,0,25,35,50]) };
+ case 'amulet_astral_eye': return { sealMult: 1+at([.12,.18,.26,.35,.5,.7]), flashBonus: at([.5,.65,.8,1,1.4,2]) };
+ case 'amulet_blizzard': return { iceMult: 1+at([.15,.19,.24,.3,.43,.6]), brittleBonus: at([0,0,0,.05,.1,.15]) };
+ default: return {};
+ }
 }
 
 /** Сколько слотов даров у героя этого уровня. */
@@ -123,5 +162,5 @@ export function checkBuild(c, want, rules) {
 /** Правила для сервера и клиента из этого файла. */
 export function buildSlotRules() {
   return { slots: { ...SLOT_RULES }, amuletSlots: AMULET_SLOTS, amulets: [...AMULET_IDS], gifts: [...GIFT_IDS],
-    amuletUpgrades: AMULET_UPGRADES.map((u) => ({ coins: u.coins, items: { ...u.items } })) };
+    amuletCurrencies: Object.fromEntries(Object.entries(AMULETS).map(([id,a]) => [id,a.currency])), sapphireAmuletPrices: SAPPHIRE_AMULET_PRICES, amuletUpgrades: AMULET_UPGRADES.map((u) => ({ coins: u.coins, items: { ...u.items } })) };
 }

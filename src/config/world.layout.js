@@ -1,3 +1,4 @@
+import { CITY_GATHERING } from './cityGathering.js';
 import { cityZoneData, CITY_PORTALS, plannedObject } from './city.plan.js';
 // Структура первой локации. Источник: First Location Production Blueprint v0.1 §1–§6.
 // Одна карта, разбитая на зоны. Мир собирается из отдельных объектов (конструктор).
@@ -195,7 +196,7 @@ for (const o of BASE_INTERACTIVES) {
   const extra = CACHE_RESOURCE_REWARDS[o.id];
   if (extra) o.reward = { ...o.reward, items: { ...(o.reward.items || {}), ...extra } };
 }
-export const INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES, ...EXP_INTERACTIVES, ...CITY_PORTALS].map(plannedObject);
+export const INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES, ...CITY_GATHERING, ...EXP_INTERACTIVES, ...CITY_PORTALS].map(plannedObject);
 
 // Враги-триггеры на карте. Бой начинается при входе в радиус.
 const BASE_ENEMY_SPAWNS = [

@@ -104,7 +104,7 @@ var POTIONS = {
     icon: "icon_potion_stable",
     color: 11069144,
     effect: { type: "cleanse", heal: 0.15 },
-    text: "\u0421\u043D\u0438\u043C\u0430\u0435\u0442 \u0445\u043E\u043B\u043E\u0434 \u0438 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 15% \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u044F. \u041D\u0443\u0436\u0435\u043D \u0438 \u043F\u043E \u0441\u044E\u0436\u0435\u0442\u0443 \u2014 \u043F\u043E\u043C\u043E\u0447\u044C \u043F\u043E\u0441\u0442\u0440\u0430\u0434\u0430\u0432\u0448\u0438\u043C."
+    text: "\u0421\u043D\u0438\u043C\u0430\u0435\u0442 \u0445\u043E\u043B\u043E\u0434 \u0438 \u0433\u043E\u0440\u0435\u043D\u0438\u0435, \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 40 HP. \u0422\u043E\u043B\u044C\u043A\u043E \u0432 \u0431\u043E\u044E. \u041D\u0443\u0436\u0435\u043D \u0438 \u043F\u043E \u0441\u044E\u0436\u0435\u0442\u0443 \u2014 \u043F\u043E\u043C\u043E\u0447\u044C \u043F\u043E\u0441\u0442\u0440\u0430\u0434\u0430\u0432\u0448\u0438\u043C."
   },
   brittle_flask: {
     name: "\u0424\u043B\u0430\u043A\u043E\u043D \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u0438",
@@ -121,7 +121,64 @@ var POTIONS = {
     text: "\u0414\u0432\u0435\u043D\u0430\u0434\u0446\u0430\u0442\u044C \u0441\u0435\u043A\u0443\u043D\u0434 \u043F\u043E\u043B\u0443\u0447\u0430\u0435\u043C\u044B\u0439 \u0443\u0440\u043E\u043D \u221225%. \u0422\u043E\u043B\u044C\u043A\u043E \u0432 \u0431\u043E\u044E."
   }
 };
+var fixed = (name, kind, amount, icon, extra = {}) => ({
+  name,
+  icon,
+  color: kind === "heal" ? 14702186 : 6993151,
+  category: "restore",
+  outside: !extra.regen,
+  effect: { type: kind, flat: amount, ...extra },
+  text: `+${amount} ${kind === "heal" ? "HP" : "MP"}${extra.regen ? ` \u0441\u0440\u0430\u0437\u0443, \u0437\u0430\u0442\u0435\u043C +${extra.regen.rate}/\u0441 ${extra.regen.sec} \u0441. \u0422\u043E\u043B\u044C\u043A\u043E \u0432 \u0431\u043E\u044E` : ""}.`
+});
+Object.assign(POTIONS, {
+  potion_life_small: fixed("\u041C\u0430\u043B\u043E\u0435 \u0437\u0435\u043B\u044C\u0435 \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u044F", "heal", 60, "icon_potion_life"),
+  potion_life_medium: fixed("\u0413\u0443\u0441\u0442\u043E\u0435 \u0437\u0435\u043B\u044C\u0435 \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u044F", "heal", 100, "icon_potion_life"),
+  potion_life_large: fixed("\u0411\u043E\u043B\u044C\u0448\u043E\u0435 \u0437\u0435\u043B\u044C\u0435 \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u044F", "heal", 160, "icon_potion_life"),
+  potion_mana_small: fixed("\u041C\u0430\u043B\u043E\u0435 \u0437\u0435\u043B\u044C\u0435 \u043C\u0430\u043D\u044B", "mana", 60, "icon_potion_mana"),
+  potion_mana_medium: fixed("\u041D\u0430\u0441\u044B\u0449\u0435\u043D\u043D\u043E\u0435 \u0437\u0435\u043B\u044C\u0435 \u043C\u0430\u043D\u044B", "mana", 100, "icon_potion_mana"),
+  potion_mana_large: fixed("\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u044C\u043D\u043E\u0435 \u0437\u0435\u043B\u044C\u0435 \u043C\u0430\u043D\u044B", "mana", 150, "icon_potion_mana"),
+  potion_life_regen: fixed("\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u0430\u0432\u043B\u0438\u0432\u0430\u044E\u0449\u0435\u0435 \u0437\u0435\u043B\u044C\u0435 \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u044F", "heal", 30, "icon_potion_life", { regen: { rate: 15, sec: 6 } }),
+  potion_mana_regen: fixed("\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u0430\u0432\u043B\u0438\u0432\u0430\u044E\u0449\u0435\u0435 \u0437\u0435\u043B\u044C\u0435 \u043C\u0430\u043D\u044B", "mana", 20, "icon_potion_mana", { regen: { rate: 10, sec: 10 } }),
+  potion_crystal_shield: { name: "\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0439 \u0449\u0438\u0442", icon: "icon_potion_guard", color: 8370431, category: "tactical", effect: { type: "shield", amount: 70, sec: 12 }, text: "\u041F\u043E\u0433\u043B\u043E\u0449\u0430\u0435\u0442 \u0434\u043E 70 \u0443\u0440\u043E\u043D\u0430 \u0437\u0430 12 \u0441." }
+});
+for (const p of Object.values(POTIONS)) p.category ??= ["heal", "mana"].includes(p.effect.type) ? "restore" : "tactical";
+var POTION_CATEGORIES = { restore: { limit: 3, cooldown: 10 }, tactical: { limit: 2, cooldown: 12 } };
+var POTION_SLOTS = 4;
+var potionGain = (effect, max) => effect.flat ?? Math.round(max * effect.amount);
+var POTION_PREFERENCE = [
+  "potion_life_large",
+  "potion_life_medium",
+  "potion_life_regen",
+  "potion_life_small",
+  "elixir_life",
+  "potion_mana_large",
+  "potion_mana_medium",
+  "potion_mana_regen",
+  "potion_mana_small",
+  "elixir_mana",
+  "warm_potion",
+  "potion_crystal_shield",
+  "crystal_guard",
+  "resin_flask",
+  "brittle_flask",
+  "stabilizing_potion"
+];
+function potionLoadout(inventory, build) {
+  if (Array.isArray(build?.potions)) return [...new Set(build.potions)].filter((id) => POTIONS[id]).slice(0, POTION_SLOTS);
+  const preference = POTION_PREFERENCE;
+  const out = [], kinds = /* @__PURE__ */ new Set();
+  for (const id of preference) {
+    if (!(inventory?.[id] > 0)) continue;
+    const kind = POTIONS[id].effect.type;
+    if (["heal", "mana"].includes(kind) && kinds.has(kind)) continue;
+    out.push(id);
+    kinds.add(kind);
+    if (out.length === POTION_SLOTS) break;
+  }
+  return out;
+}
 var CRAFT_ITEMS = {
+  crafting_core: { name: "\u0420\u0435\u043C\u0435\u0441\u043B\u0435\u043D\u043D\u043E\u0435 \u044F\u0434\u0440\u043E", icon: "icon_core", color: 13214463, text: "\u041F\u043E\u0432\u0442\u043E\u0440\u044F\u0435\u043C\u044B\u0439 \u0442\u0440\u043E\u0444\u0435\u0439 \u043E\u0445\u0440\u0430\u043D\u044F\u0435\u043C\u044B\u0445 \u0437\u0430\u043F\u0430\u0441\u043E\u0432 \u0432\u044B\u043B\u0430\u0437\u043E\u043A. \u041D\u0435 \u0441\u044E\u0436\u0435\u0442\u043D\u043E\u0435 \u044F\u0434\u0440\u043E." },
   reinforced_resin: { name: "\u0423\u0441\u0438\u043B\u0435\u043D\u043D\u0430\u044F \u0441\u043C\u043E\u043B\u0430", icon: "icon_reinforced_resin", color: 15245386, text: "\u041A\u043E\u043C\u043F\u043E\u043D\u0435\u043D\u0442 \u0434\u043B\u044F \u0441\u0438\u043B\u044C\u043D\u044B\u0445 \u043F\u0440\u0435\u0434\u043C\u0435\u0442\u043E\u0432 \u0438 \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F \u0430\u043C\u0443\u043B\u0435\u0442\u043E\u0432." },
   astral_lens: { name: "\u0410\u0441\u0442\u0440\u0430\u043B\u044C\u043D\u0430\u044F \u043B\u0438\u043D\u0437\u0430", icon: "icon_astral_lens", color: 10466559, text: "\u041D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0437\u0430\u0440\u044F\u0434\u043E\u0432: \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442 \u0442\u0430\u0439\u043D\u0438\u043A\u0438 \u0438 \u0441\u043A\u0440\u044B\u0442\u044B\u0435 \u043C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u0441\u043B\u0435\u0434\u044B (\u0432 \u0433\u043E\u0440\u043E\u0434\u0435 \u0438 \u0432\u044B\u043B\u0430\u0437\u043A\u0430\u0445)." }
 };
@@ -130,6 +187,7 @@ var RESOURCE_ITEMS = {
   ...Object.fromEntries(Object.entries(POTIONS).map(([id, r]) => [id, { name: r.name, icon: r.icon }])),
   ...Object.fromEntries(Object.entries(CRAFT_ITEMS).map(([id, r]) => [id, { name: r.name, icon: r.icon }]))
 };
+var POTION_ORDER = Object.keys(POTIONS);
 var POTION_BATTLE_LIMIT = 4;
 
 // src/config/storyItems.js
@@ -184,7 +242,7 @@ var MIGRATION_V10 = {
 };
 
 // src/config/build.js
-var GIFT_IDS = ["telekinesis", "fire", "seal", "ice"];
+var GIFT_IDS = ["telekinesis", "fire", "seal", "ice", "storm"];
 var SLOT_RULES = { base: 3, extraAtLevel: null };
 var AMULET_SLOTS = 2;
 var AMULETS = {
@@ -222,25 +280,71 @@ var AMULETS = {
     effect: { iceMult: 1.1, slowBonus: 0.05 }
   }
 };
+Object.assign(AMULETS, {
+  amulet_tracker: { name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0421\u043B\u0435\u0434\u043E\u043F\u044B\u0442\u0430", icon: "icon_amulet_forest", rarity: "rare", text: "\u0428\u0430\u043D\u0441 \u0434\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0433\u043E \u043E\u0431\u044B\u0447\u043D\u043E\u0433\u043E \u0438\u043D\u0433\u0440\u0435\u0434\u0438\u0435\u043D\u0442\u0430 \u043F\u0440\u0438 \u0441\u0431\u043E\u0440\u0435.", tradeoff: "\u041D\u0435 \u0443\u0441\u0438\u043B\u0438\u0432\u0430\u0435\u0442 \u0431\u043E\u0439 \u0438 \u043D\u0435 \u0443\u043C\u043D\u043E\u0436\u0430\u0435\u0442 \u0441\u0430\u043F\u0444\u0438\u0440\u044B.", effect: { gatherBonus: 0.1 } },
+  amulet_embers: { name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0423\u0433\u043B\u0435\u0439", icon: "icon_amulet_focus", rarity: "epic", text: "\u0423\u0441\u0438\u043B\u0438\u0432\u0430\u0435\u0442 \u041E\u0433\u043E\u043D\u044C, \u0433\u043E\u0440\u0435\u043D\u0438\u0435 \u0438 \u043B\u0443\u0436\u0443; \u043F\u043E\u0437\u0434\u043D\u0435\u0435 \u043F\u043E\u0434\u0430\u0432\u043B\u044F\u0435\u0442 \u043B\u0435\u0447\u0435\u043D\u0438\u0435 \u0433\u043E\u0440\u044F\u0449\u0435\u0439 \u0446\u0435\u043B\u0438.", tradeoff: "\u0421\u043F\u0435\u0446\u0438\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u044F \u041E\u0433\u043D\u044F.", effect: {} },
+  amulet_breaker: { name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u041A\u0430\u043C\u043D\u0435\u043B\u043E\u043C\u0430", icon: "icon_amulet_focus", rarity: "epic", text: "\u0423\u0441\u0438\u043B\u0438\u0432\u0430\u0435\u0442 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u0431\u0440\u043E\u0441\u043E\u043A; \u043F\u043E\u0437\u0434\u043D\u0435\u0435 \u0434\u0430\u0451\u0442 \u0449\u0438\u0442 \u043F\u043E\u0441\u043B\u0435 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u044F.", tradeoff: "\u041D\u0443\u0436\u043D\u044B \u0442\u044F\u0436\u0451\u043B\u044B\u0435 \u043E\u0431\u044A\u0435\u043A\u0442\u044B \u0438 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u044F.", effect: {} },
+  amulet_astral_eye: { name: "\u0410\u043C\u0443\u043B\u0435\u0442 \u0410\u0441\u0442\u0440\u0430\u043B\u044C\u043D\u043E\u0433\u043E \u043E\u043A\u0430", icon: "icon_amulet_lunar", rarity: "epic", text: "\u0423\u0441\u0438\u043B\u0438\u0432\u0430\u0435\u0442 \u0410\u0441\u0442\u0440\u0430\u043B \u0438 \u043F\u0440\u043E\u0434\u043B\u0435\u0432\u0430\u0435\u0442 \u0443\u0436\u0435 \u043E\u0442\u043A\u0440\u044B\u0442\u0443\u044E \u0432\u0441\u043F\u044B\u0448\u043A\u0443.", tradeoff: "\u041D\u0435 \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u0432\u0441\u043F\u044B\u0448\u043A\u0443 \u043D\u0430 I\u2013II.", effect: {} },
+  amulet_blizzard: { name: "\u0421\u0435\u0440\u0434\u0446\u0435 \u043C\u0435\u0442\u0435\u043B\u0438", icon: "icon_amulet_frost", rarity: "epic", text: "\u0423\u0441\u0438\u043B\u0438\u0432\u0430\u0435\u0442 \u041B\u0451\u0434 \u0438 \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044E\u0449\u0443\u044E \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u044C.", tradeoff: "\u041D\u0435 \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u0425\u0440\u0443\u043F\u043A\u043E\u0441\u0442\u044C \u043D\u0430 \u041B\u044C\u0434\u0435 I.", effect: {} }
+});
+for (const [id, a] of Object.entries(AMULETS)) a.currency = ["amulet_embers", "amulet_breaker", "amulet_astral_eye", "amulet_blizzard"].includes(id) ? "sapphires" : "coins";
 var AMULET_IDS = Object.keys(AMULETS);
 var AMULET_UPGRADES = [
-  { coins: 120, items: { tree_resin: 2, rune_dust: 1 } },
-  { coins: 220, items: { ice_crystal: 2, rune_dust: 2 } },
-  { coins: 400, items: { frost_shard: 2, lunar_shard: 3 } }
+  { coins: 1e3, items: { tree_resin: 2, rune_dust: 1 } },
+  { coins: 5e3, items: { ice_crystal: 2, rune_dust: 2 } },
+  { coins: 15e3, items: { frost_shard: 2, lunar_shard: 3 } },
+  { coins: 4e4, items: { reinforced_resin: 3, lunar_shard: 6, crafting_core: 2 } },
+  { coins: 1e5, items: { reinforced_resin: 6, rune_dust: 12, frost_shard: 4, crafting_core: 4 } }
 ];
+var SAPPHIRE_AMULET_PRICES = [300, 900, 2500, 6500, 15e3];
+function progressGate(enemies, tier) {
+  const won = (id) => enemies.includes(id);
+  if (tier === 1) return won("scavenger_01");
+  if (tier === 2) return won("forest_guardian_01");
+  if (tier === 3) return won("node_trial");
+  if (tier === 4) return won("fq_guardian");
+  return won("final_severin") && (won("fw_alpha") || won("gy_warden"));
+}
 var AMULET_LEVEL_STEP = 0.25;
-function amuletEffect(id, level = 0, legacy = false) {
+function legacyAmuletEffect(id, level = 0, legacy = false) {
   const e = AMULETS[id]?.effect;
   if (!e) return {};
-  const k = 1 + AMULET_LEVEL_STEP * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length));
+  const k = 1 + AMULET_LEVEL_STEP * Math.max(0, Math.min(level || 0, 3));
   const r = (v) => Math.round(v * 1e3) / 1e3;
   const out = { ...e };
   if (e.damageMult && e.damageMult > 1) out.damageMult = r(1 + (e.damageMult - 1) * k);
   if (e.incomingMult) out.incomingMult = r(1 - (1 - e.incomingMult) * k);
-  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: legacy ? r(e.manaRescue.gainPct * k) : r(e.manaRescue.gainPct + 0.1 * Math.max(0, Math.min(level || 0, AMULET_UPGRADES.length))) };
+  if (e.manaRescue) out.manaRescue = { ...e.manaRescue, gainPct: legacy ? r(e.manaRescue.gainPct * k) : r(e.manaRescue.gainPct + 0.1 * Math.max(0, Math.min(level || 0, 3))) };
   if (e.iceMult) out.iceMult = r(1 + (e.iceMult - 1) * k);
   if (e.slowBonus) out.slowBonus = r(e.slowBonus * k);
   return out;
+}
+function amuletEffect(id, level = 0, legacy = false, modern = true) {
+  if (!modern) return legacyAmuletEffect(id, level, legacy);
+  const n = Math.max(0, Math.min(5, Math.trunc(level) || 0));
+  const at = (a) => a[n];
+  switch (id) {
+    case "amulet_focus":
+      return { damageMult: 1 + at([0.12, 0.15, 0.18, 0.21, 0.25, 0.3]) };
+    case "amulet_forest":
+      return { incomingMult: at([0.8, 0.75, 0.7, 0.65, 0.625, 0.6]), damageMult: 0.92 };
+    case "amulet_lunar":
+      return { manaRescue: { below: 0.2, gainPct: at([0.5, 0.6, 0.7, 0.8, 0.9, 1]) } };
+    case "amulet_frost":
+      return { iceMult: 1 + at([0.1, 0.125, 0.15, 0.175, 0.23, 0.3]), slowBonus: at([0.05, 0.063, 0.075, 0.088, 0.095, 0.1]) };
+    case "amulet_tracker":
+      return { gatherBonus: at([0.1, 0.12, 0.15, 0.18, 0.21, 0.25]) };
+    case "amulet_embers":
+      return { fireMult: 1 + at([0.12, 0.17, 0.23, 0.3, 0.43, 0.6]), burnMult: 1 + at([0.2, 0.25, 0.32, 0.4, 0.58, 0.8]), antiheal: at([0, 0, 0, 0.25, 0.32, 0.4]) };
+    case "amulet_breaker":
+      return { heavyMult: 1 + at([0.25, 0.33, 0.43, 0.55, 0.75, 1]), interruptShield: at([0, 0, 0, 25, 35, 50]) };
+    case "amulet_astral_eye":
+      return { sealMult: 1 + at([0.12, 0.18, 0.26, 0.35, 0.5, 0.7]), flashBonus: at([0.5, 0.65, 0.8, 1, 1.4, 2]) };
+    case "amulet_blizzard":
+      return { iceMult: 1 + at([0.15, 0.19, 0.24, 0.3, 0.43, 0.6]), brittleBonus: at([0, 0, 0, 0.05, 0.1, 0.15]) };
+    default:
+      return {};
+  }
 }
 var slotCount = (level, rules = SLOT_RULES) => rules.base + (rules.extraAtLevel != null && (level || 0) >= rules.extraAtLevel ? 1 : 0);
 var defaultSlots = (unlocked, count, gifts = GIFT_IDS) => gifts.filter((g) => unlocked.includes(g)).slice(0, count);
@@ -274,6 +378,8 @@ function buildSlotRules() {
     amuletSlots: AMULET_SLOTS,
     amulets: [...AMULET_IDS],
     gifts: [...GIFT_IDS],
+    amuletCurrencies: Object.fromEntries(Object.entries(AMULETS).map(([id, a]) => [id, a.currency])),
+    sapphireAmuletPrices: SAPPHIRE_AMULET_PRICES,
     amuletUpgrades: AMULET_UPGRADES.map((u) => ({ coins: u.coins, items: { ...u.items } }))
   };
 }
@@ -434,6 +540,35 @@ for (const [id, up] of Object.entries(UPGRADES)) {
   Object.assign(up.cost, id === "telekinesis_2" ? GIFT_PRICES.storyTelekinesis : up.toLevel === 2 ? GIFT_PRICES.tier2 : GIFT_PRICES.tier3);
 }
 var BRANCH_RESPEC = { coins: 150 };
+for (const [id, branches] of Object.entries({ telekinesis: ["lord", "breaker"], fire: ["arsonist", "blaster"], seal: ["seer", "piercer"], ice: ["frost", "shard"] })) {
+  for (const tier of [4, 5]) for (const branch of branches) UPGRADES[`${id}_${tier}_${branch}`] = {
+    ability: id,
+    toLevel: tier,
+    branch,
+    title: `${{ telekinesis: "\u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437", fire: "\u041E\u0433\u043E\u043D\u044C", seal: "\u0410\u0441\u0442\u0440\u0430\u043B", ice: "\u041B\u0451\u0434" }[id]} ${tier === 4 ? "IV" : "V"}`,
+    description: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u0435 \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u043E\u0439 \u0432\u0435\u0442\u043A\u0438. \u0422\u0440\u0435\u0431\u0443\u0435\u0442 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0451\u043D\u043D\u044B\u0445 \u043F\u043E\u0431\u0435\u0434.",
+    requires: { heroLevel: tier === 4 ? 12 : 15, abilityLevel: tier - 1, progressTier: tier, branch },
+    cost: {
+      schoolXP: tier === 4 ? 600 : 1200,
+      sapphires: tier === 4 ? 6e3 : 15e3,
+      items: tier === 4 ? { lunar_shard: 6, rune_dust: 4, ice_crystal: 2 } : { lunar_shard: 10, rune_dust: 8, crafting_core: 2 }
+    },
+    timerSec: { prototype: 120, live: tier === 4 ? 4 * 3600 : 8 * 3600 }
+  };
+}
+UPGRADES.storm_1 = { ability: "storm", toLevel: 1, title: "\u0413\u0440\u043E\u0437\u0430 I", description: "\u041F\u044F\u0442\u0430\u044F \u0448\u043A\u043E\u043B\u0430. \u0417\u0430\u0440\u044F\u0436\u0430\u0435\u0442\u0441\u044F \u043F\u043E\u043F\u0430\u0434\u0430\u043D\u0438\u044F\u043C\u0438 \u0434\u0440\u0443\u0433\u0438\u0445 \u0414\u0430\u0440\u043E\u0432; \u0442\u0440\u0438 \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0445 \u0441\u043B\u043E\u0442\u0430 \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F.", requires: { heroLevel: 12, event: "ch2_quarter_cleared", progressTier: 4 }, cost: { schoolXP: 0, sapphires: 1800, items: { lunar_shard: 4, rune_dust: 3, ice_crystal: 2 } }, timerSec: { prototype: 60, live: 1800 } };
+for (const tier of [2, 3, 4, 5]) for (const branch of tier >= 3 ? ["discharge", "field"] : [null]) {
+  UPGRADES[`storm_${tier}${branch ? "_" + branch : ""}`] = {
+    ability: "storm",
+    toLevel: tier,
+    branch,
+    title: `\u0413\u0440\u043E\u0437\u0430 ${["", "", "II", "III", "IV", "V"][tier]}`,
+    description: "\u0420\u0430\u0437\u0432\u0438\u0442\u0438\u0435 \u0413\u0440\u043E\u0437\u044B \u0438 \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0440\u0430\u0437\u0440\u044F\u0434\u0430.",
+    requires: { heroLevel: tier >= 5 ? 15 : 12, abilityLevel: tier - 1, progressTier: tier >= 4 ? tier : 4, ...tier >= 4 ? { branch } : {} },
+    cost: { schoolXP: [0, 0, 180, 300, 600, 1200][tier], sapphires: [0, 0, 600, 2e3, 6e3, 15e3][tier], items: { lunar_shard: tier * 2, rune_dust: tier } },
+    timerSec: { prototype: 90, live: [0, 0, 1800, 3600, 14400, 28800][tier] }
+  };
+}
 var EVENT_REWARDS = {
   unlock_telekinesis_1: { coins: 50 },
   first_world_interaction: { heroXP: 10 },
@@ -497,6 +632,46 @@ var BALANCE_MIGRATION = {
   },
   sapphires: { ch2_quarter_cleared: 10, ch2_coven_ready: 10 }
 };
+
+// src/config/advancedAbilities.js
+function addAdvancedAbilities(abilities) {
+  const b = abilities;
+  const overlays = {
+    telekinesis: {
+      4: { lord: { interruptWard: { amount: 40, sec: 8, cooldown: 12 } }, breaker: { doubleCast: { windowSec: 2.5, count: 3 } } },
+      5: { lord: { interruptWard: { amount: 80, sec: 8, cooldown: 12 }, nextThrowBonus: 0.5 }, breaker: { doubleCast: { windowSec: 2.5, count: 3 }, thirdThrowBonus: 0.8 } }
+    },
+    fire: {
+      4: { arsonist: { burn: { dps: 6, durationSec: 10 }, burnStacks: 2 }, blaster: { burn: { dps: 5, durationSec: 11 }, detonate: 1 } },
+      5: { arsonist: { burn: { dps: 7, durationSec: 12 }, burnStacks: 3, fullBurnAntiheal: 0.3 }, blaster: { burn: { dps: 6, durationSec: 12 }, detonate: 1.75 } }
+    },
+    seal: {
+      4: { seer: { flash: { sec: 5, vulnerability: 0.2 } }, piercer: { shieldPierce: 0.5 } },
+      5: { seer: { flash: { sec: 6, vulnerability: 0.25 }, comboMana: 10 }, piercer: { shieldPierce: 0.75, shieldDamage: 0.4 } }
+    },
+    ice: {
+      4: { frost: { slow: { pct: 0.6, sec: 6 }, frostWeaken: 0.3 }, shard: { brittle: { sec: 5, bonus: 0.9 }, shatter: { mult: 2.6 } } },
+      5: { frost: { slow: { pct: 0.65, sec: 6 }, frostWeaken: 0.4 }, shard: { brittle: { sec: 5, bonus: 1.1 }, shatter: { mult: 3 } } }
+    }
+  };
+  for (const [id, levels] of Object.entries(overlays)) for (const [lv, branches] of Object.entries(levels)) {
+    b[id].levels[lv] = { ...b[id].levels[3], label: `${b[id].name} ${Number(lv) === 4 ? "IV" : "V"}`, advancedBranches: branches };
+  }
+  b.storm = { name: "\u0413\u0440\u043E\u0437\u0430", color: "storm", levels: {}, branches: {
+    discharge: { name: "\u0420\u0430\u0437\u0440\u044F\u0434", fromLevel: 3, text: "\u041F\u043E\u043B\u043D\u044B\u0439 \u0440\u0430\u0437\u0440\u044F\u0434 \u043D\u0430\u043D\u043E\u0441\u0438\u0442 \u0434\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u0435\u043B\u044C\u043D\u044B\u0439 \u0443\u0434\u0430\u0440.", tradeoff: "\u041D\u0443\u0436\u043D\u044B \u0442\u0440\u0438 \u0437\u0430\u0440\u044F\u0434\u0430 \u043E\u0442 \u0434\u0440\u0443\u0433\u0438\u0445 \u0414\u0430\u0440\u043E\u0432." },
+    field: { name: "\u041F\u043E\u043B\u0435", fromLevel: 3, text: "\u041F\u043E\u043B\u043D\u044B\u0439 \u0440\u0430\u0437\u0440\u044F\u0434 \u043E\u0441\u043B\u0430\u0431\u043B\u044F\u0435\u0442 \u043F\u0440\u043E\u0442\u0438\u0432\u043D\u0438\u043A\u0430.", tradeoff: "\u041C\u0435\u043D\u044C\u0448\u0435 \u043F\u0440\u044F\u043C\u043E\u0433\u043E \u0443\u0440\u043E\u043D\u0430, \u0447\u0435\u043C \u0443 \u0420\u0430\u0437\u0440\u044F\u0434\u0430." }
+  } };
+  for (let lv = 1; lv <= 5; lv++) b.storm.levels[lv] = {
+    label: `\u0413\u0440\u043E\u0437\u0430 ${["", "I", "II", "III", "IV", "V"][lv]}`,
+    damage: 12 + lv * 4,
+    manaCost: 16 + lv * 2,
+    cooldownSec: 8,
+    castSec: 0.25,
+    chargeBonus: 0.2 + lv * 0.05,
+    maxCharges: 3,
+    advancedBranches: lv >= 3 ? { discharge: { fullDischarge: [0.5, 0.75, 1][lv - 3] }, field: { stormField: { reduction: [0.15, 0.2, 0.3][lv - 3], sec: [4, 6, 8][lv - 3], mana: lv === 5 ? 20 : 0 } } } : {}
+  };
+}
 
 // src/config/balance.abilities.js
 var WEIGHT_CLASSES = ["light", "medium", "heavy"];
@@ -745,6 +920,7 @@ var ABILITIES = {
     }
   }
 };
+addAdvancedAbilities(ABILITIES);
 var WORLD_MANA_COST = {
   gather: 4,
   // сбор узла: трава, грибы, смола, пыль, осколок
@@ -760,8 +936,8 @@ var WORLD_MANA_COST = {
   // v0.18.0: заморозить воду, механизм, нестабильный предмет
 };
 var SCHOOL_XP_PER_USE = {
-  exploration: { telekinesis: 6, fire: 6, seal: 6, ice: 6 },
-  combat: { telekinesis: 5, fire: 5, seal: 5, ice: 5 }
+  exploration: { telekinesis: 6, fire: 6, seal: 6, ice: 6, storm: 6 },
+  combat: { telekinesis: 5, fire: 5, seal: 5, ice: 5, storm: 5 }
 };
 
 // src/config/city.plan.js
@@ -986,6 +1162,23 @@ var CITY_CANAL = {
   pts: [[P(600, 2130).x, P(600, 2130).y], [P(2680, 2130).x, P(2680, 2130).y]],
   gaps: [[P(1505, 0).x, P(1615, 0).x]]
 };
+
+// src/config/cityGathering.js
+var rows = [
+  ["moon_01", "moon_herb", 1320, 4580, 180, "ch2_city_arrived", "moon_plant_01"],
+  ["moon_02", "moon_herb", 1900, 4590, 180, "ch2_city_arrived", "moon_plant_01"],
+  ["moon_03", "moon_herb", 1700, 3070, 180, "ch2_city_arrived", "moon_plant_01"],
+  ["mushrooms_brown_01", "forest_mushroom", 1180, 4780, 240, "ch2_city_arrived", "mushrooms_brown_01"],
+  ["mushroom_02", "forest_mushroom", 1850, 3900, 240, "ch2_city_arrived", "mushrooms_brown_01"],
+  ["resin_01", "tree_resin", 1220, 3950, 240, "ch2_city_arrived", "resin_log_01"],
+  ["resin_02", "tree_resin", 1820, 2740, 240, "ch2_city_arrived", "resin_log_01"],
+  ["dust_01", "rune_dust", 1370, 2880, 360, "ch2_cargo_reported", "rune_sigil_01"],
+  ["dust_02", "rune_dust", 1800, 3270, 360, "ch2_cargo_reported", "rune_sigil_01"],
+  ["lunar_01", "lunar_shard", 1450, 2590, 900, "ch2_cargo_reported", "field_crystal"],
+  ["frost_01", "frost_herb", 1800, 1880, 300, "ch2_nerys_met", "city_frost_herb"],
+  ["ice_01", "ice_crystal", 1900, 900, 1200, "ch2_quarter_cleared", "ice_crystal_node_01"]
+];
+var CITY_GATHERING = rows.map(([id, res, x, y, respawnSec, requiresEvent, texture]) => ({ id: `city_gather_${id}`, kind: "gather", res, amount: 1, ...cityPoint(x, y), respawnSec, requiresEvent, texture, radius: 110 }));
 
 // src/config/heroes.js
 var DEFAULT_HERO_ID = "witch";
@@ -1571,7 +1764,7 @@ var EXP_OBJECT_LIST = [
     collide: { w: 70, h: 22 },
     emptyTexture: "city_wolf_cache_empty",
     radius: 110,
-    items: { frost_shard: 1, ice_crystal: 1 },
+    items: { crafting_core: 1, frost_shard: 1, ice_crystal: 1 },
     hint: "\u041B\u043E\u0433\u043E\u0432\u043E \u0432\u043E\u0436\u0430\u043A\u0430",
     label: "\u0417\u0430\u0431\u0440\u0430\u0442\u044C \u0434\u043E\u0431\u044B\u0447\u0443",
     guardText: "\u041B\u043E\u0433\u043E\u0432\u043E \u0441\u0442\u0435\u0440\u0435\u0436\u0451\u0442 \u0412\u043E\u0436\u0430\u043A \u043C\u0435\u0442\u0435\u043B\u0438."
@@ -1592,7 +1785,7 @@ var EXP_OBJECT_LIST = [
     collide: { w: 60, h: 22 },
     emptyTexture: "city_grave_cache_empty",
     radius: 110,
-    items: { frost_shard: 1, lunar_shard: 2 },
+    items: { crafting_core: 1, frost_shard: 1, lunar_shard: 2 },
     hint: "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u0435 \u043A\u0443\u0440\u0433\u0430\u043D\u0430",
     label: "\u0417\u0430\u0431\u0440\u0430\u0442\u044C \u0434\u043E\u0431\u044B\u0447\u0443",
     guardText: "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u0435 \u0441\u0442\u0435\u0440\u0435\u0436\u0451\u0442 \u0421\u0442\u0440\u0430\u0436 \u043A\u0443\u0440\u0433\u0430\u043D\u0430."
@@ -2148,7 +2341,7 @@ for (const o of BASE_INTERACTIVES) {
   const extra = CACHE_RESOURCE_REWARDS[o.id];
   if (extra) o.reward = { ...o.reward, items: { ...o.reward.items || {}, ...extra } };
 }
-var INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES, ...EXP_INTERACTIVES, ...CITY_PORTALS].map(plannedObject);
+var INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES, ...CITY_GATHERING, ...EXP_INTERACTIVES, ...CITY_PORTALS].map(plannedObject);
 var BASE_ENEMY_SPAWNS = [
   { id: "scavenger_01", enemy: "forest_scavenger", x: 1250, y: 3010, radius: 180, startEvent: "combat_intro_01" },
   {
@@ -2249,9 +2442,10 @@ function createDefaultState(heroId = DEFAULT_HERO_ID) {
     telekinesisLevel: 0,
     fireLevel: 0,
     sealLevel: 0,
+    stormLevel: 0,
     iceLevel: 0,
     // v0.18.0
-    schoolXP: { telekinesis: 0, fire: 0, seal: 0, ice: 0 },
+    schoolXP: { telekinesis: 0, fire: 0, seal: 0, ice: 0, storm: 0 },
     unlockedAbilities: [],
     completedEvents: [BALANCE_MIGRATION.event],
     openedPaths: [],
@@ -2512,7 +2706,7 @@ var GameState = class {
     if (r.abilityLevel) checks.push({ label: `${up.ability} ${r.abilityLevel}`, have: this.abilityLevel(up.ability), need: r.abilityLevel, hidden: true });
     checks.push({ label: "\u041E\u043F\u044B\u0442 \u0434\u0430\u0440\u0430", have: this.data.schoolXP[up.ability] || 0, need: up.cost.schoolXP });
     for (const [k, v] of Object.entries(up.cost.items || {})) checks.push({ label: k, item: k, have: this.item(k), need: v });
-    const eventOk = !r.event || this.hasEvent(r.event);
+    const eventOk = (!r.event || this.hasEvent(r.event)) && (!r.progressTier || progressGate(this.data.defeatedEnemies, r.progressTier)) && (!r.branch || this.branchOf(up.ability) === r.branch);
     const ok = eventOk && checks.every((c) => c.have >= c.need);
     return { ok, reason: ok ? "ready" : eventOk ? "missing" : "event", checks };
   }
@@ -2660,6 +2854,29 @@ var GameState = class {
   }
 };
 
+// src/config/sapphireDrops.js
+var city = new Set([...CITY_INTERACTIVES, ...CITY_GATHERING].map((o) => o.id));
+var expedition = new Set(EXP_INTERACTIVES.map((o) => o.id));
+var SAPPHIRE_DROPS = { world: {}, combat: {} };
+for (const o of INTERACTIVES) {
+  const c = city.has(o.id), e = expedition.has(o.id);
+  if (o.kind === "gather") SAPPHIRE_DROPS.world[o.id] = { chance: e ? 0.15 : c ? 0.12 : 0.1, amount: e ? 6 : c ? 3 : 2 };
+  if (o.kind === "stash") SAPPHIRE_DROPS.world[o.id] = { chance: e ? 0.8 : 0.4, amount: e ? 25 : 5 };
+  if (o.kind === "chest" && !o.reward?.sapphires) SAPPHIRE_DROPS.world[o.id] = { chance: c ? 0.3 : 0.2, amount: c ? 10 : 5 };
+}
+SAPPHIRE_DROPS.world.fq_cauldron = { chance: 1, amount: 20 };
+for (const o of ENEMY_SPAWNS) {
+  let rule;
+  if (["frost_alpha", "barrow_warden", "severin_boss"].includes(o.enemy)) rule = [0.85, 45];
+  else if (["node_guardian", "frost_collector_elite", "ice_guardian", "experimental_construct"].includes(o.enemy)) rule = [0.6, 12];
+  else if (o.enemy === "forest_guardian") rule = [0.5, 8];
+  else if (o.enemy === "rootling") rule = [0.25, 3];
+  else if (/^(fw_|gy_)/.test(o.id)) rule = [0.35, 8];
+  else if (["forest_scavenger", "young_scavenger"].includes(o.enemy)) rule = [0.2, 2];
+  else rule = [0.3, 4];
+  SAPPHIRE_DROPS.combat[o.id] = { chance: rule[0], amount: rule[1] };
+}
+
 // src/config/recipes.js
 var RECIPES = {
   elixir_life: {
@@ -2787,21 +3004,35 @@ Object.assign(RECIPES, {
     note: "\u041F\u0435\u0440\u0432\u044B\u0439 \u0430\u043C\u0443\u043B\u0435\u0442 \u041B\u044C\u0434\u0430. \u041D\u0443\u0436\u0435\u043D \u043E\u0434\u0438\u043D: \u0434\u0430\u043B\u044C\u0448\u0435 \u0435\u0433\u043E \u0443\u043B\u0443\u0447\u0448\u0430\u044E\u0442."
   }
 });
-var RECIPE_ORDER = [
-  "elixir_life",
-  "elixir_mana",
-  "resin_flask",
-  "warm_potion",
-  "stabilizing_potion",
-  "brittle_flask",
-  "crystal_guard",
-  "lunar_wick",
-  "revealing_compound",
-  "restoration_bundle",
-  "reinforced_resin",
-  "astral_lens",
-  "amulet_frost"
-];
+RECIPES.elixir_life.result = "potion_life_small";
+RECIPES.elixir_life.needs = { moon_herb: 1, forest_mushroom: 1 };
+RECIPES.elixir_mana.result = "potion_mana_small";
+var brew = (result, needs, coins, requires = []) => ({ kind: "potion", chapter: requires.length ? 2 : 1, result, amount: 1, needs: { ...needs, ...coins ? { coins } : {} }, requires });
+Object.assign(RECIPES, {
+  potion_life_small: brew("potion_life_small", { moon_herb: 1, forest_mushroom: 1 }, 0),
+  potion_mana_small: brew("potion_mana_small", { moon_herb: 1, rune_dust: 1 }, 0),
+  potion_life_medium: brew("potion_life_medium", { moon_herb: 2, forest_mushroom: 2, tree_resin: 1 }, 15, ["ch2_city_arrived"]),
+  potion_mana_medium: brew("potion_mana_medium", { rune_dust: 2, lunar_shard: 1 }, 20, ["ch2_city_arrived"]),
+  potion_life_large: brew("potion_life_large", { moon_herb: 3, forest_mushroom: 2, reinforced_resin: 1 }, 40, ["ch2_lab_open"]),
+  potion_mana_large: brew("potion_mana_large", { rune_dust: 3, lunar_shard: 2, ice_crystal: 1 }, 50, ["ch2_lab_open"]),
+  potion_life_regen: brew("potion_life_regen", { moon_herb: 1, forest_mushroom: 2, frost_herb: 1 }, 25, ["regen_potions_learned"]),
+  potion_mana_regen: brew("potion_mana_regen", { moon_herb: 2, rune_dust: 1, frost_herb: 1 }, 30, ["regen_potions_learned"]),
+  potion_crystal_shield: brew("potion_crystal_shield", { ice_crystal: 1, forest_mushroom: 1, tree_resin: 1 }, 20, ["ch2_quarter_cleared"])
+});
+RECIPES.crystal_guard = { ...RECIPES.potion_crystal_shield };
+for (const [id, fee] of Object.entries({ warm_potion: 10, stabilizing_potion: 15, brittle_flask: 15 })) RECIPES[id].needs.coins = fee;
+var amuletRecipes = {
+  amulet_focus: [{ lunar_shard: 3, rune_dust: 2, reinforced_resin: 1 }, 200, "ch2_city_arrived"],
+  amulet_forest: [{ forest_mushroom: 4, tree_resin: 3, moon_herb: 2 }, 200, "ch2_city_arrived"],
+  amulet_lunar: [{ lunar_shard: 5, rune_dust: 3, reinforced_resin: 1 }, 400, "ch2_city_arrived"],
+  amulet_tracker: [{ moon_herb: 3, forest_mushroom: 3, tree_resin: 2, rune_dust: 1 }, 250, "ch2_city_arrived"],
+  amulet_embers: [{ crimson_ember: 4, reinforced_resin: 2, lunar_shard: 2 }, 350, "ch2_cargo_found"],
+  amulet_breaker: [{ reinforced_resin: 3, lunar_shard: 3, rune_dust: 2 }, 350, "ch2_cargo_reported"],
+  amulet_astral_eye: [{ rune_dust: 5, lunar_shard: 4, ice_crystal: 1 }, 450, "ch2_cargo_reported"],
+  amulet_blizzard: [{ lunar_shard: 5, rune_dust: 5, ice_crystal: 4, frost_shard: 2 }, 1e3, "chapter_2_complete"]
+};
+for (const [id, [needs, coins, event]] of Object.entries(amuletRecipes)) RECIPES[id] = { kind: "amulet", chapter: 2, result: id, amount: 1, needs: { ...needs, coins }, requires: [event], crafted: `${id}_crafted`, blockedBy: [`${id}_crafted`] };
+var RECIPE_ORDER = Object.keys(RECIPES).filter((id) => !["elixir_life", "elixir_mana", "crystal_guard"].includes(id));
 var POTION_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "potion");
 var STORY_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "story");
 
@@ -2950,7 +3181,7 @@ var DAILY_POOL = {
     giver: "\u041B\u0435\u043A\u0430\u0440\u044C \u0443 \u0444\u043E\u043D\u0442\u0430\u043D\u0430",
     title: "\u041D\u0430\u0441\u0442\u043E\u0438 \u0434\u043B\u044F \u043E\u0431\u043C\u043E\u0440\u043E\u0436\u0435\u043D\u043D\u044B\u0445",
     text: "\u041F\u043E\u0441\u043B\u0435 \u0432\u043E\u043B\u043D\u044B \u0445\u043E\u043B\u043E\u0434\u0430 \u0443 \u043B\u0435\u043A\u0430\u0440\u044F \u043E\u0447\u0435\u0440\u0435\u0434\u044C. \u0414\u0432\u0430 \u043D\u0430\u0441\u0442\u043E\u044F \u0436\u0438\u0437\u043D\u0438 \u0441\u043F\u0430\u0441\u0443\u0442 \u0447\u0435\u0439-\u0442\u043E \u0432\u0435\u0447\u0435\u0440.",
-    goal: { type: "deliver", items: { elixir_life: 2 } },
+    goal: { type: "deliver", items: { potion_life_small: 2 } },
     reward: { heroXP: 50, coins: 40 }
   },
   coven_mushrooms: {
@@ -3122,12 +3353,13 @@ function duelSlots(opp) {
   return (slots.length ? slots : open).slice(0, SLOT_RULES.base);
 }
 var SIGNATURE = {
+  storm: { name: "\u0413\u0440\u043E\u0437\u043E\u0432\u043E\u0439 \u0440\u0430\u0437\u0440\u044F\u0434", damage: 27, prepSec: 2.2, cooldownSec: 10, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
   fire: { name: "\u041E\u0433\u043D\u0435\u043D\u043D\u044B\u0439 \u0448\u0430\u0440", damage: 26, prepSec: 2, cooldownSec: 9, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
   ice: { name: "\u041B\u0435\u0434\u044F\u043D\u043E\u0435 \u043A\u043E\u043F\u044C\u0451", damage: 24, prepSec: 2.2, cooldownSec: 10, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" },
   seal: { name: "\u0410\u0441\u0442\u0440\u0430\u043B\u044C\u043D\u044B\u0439 \u0443\u0434\u0430\u0440", damage: 28, prepSec: 2.4, cooldownSec: 10, interruptBy: ["telekinesis_heavy"], hint: "\u0411\u0440\u043E\u0441\u044C\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C!" },
   telekinesis: { name: "\u041A\u0430\u043C\u0435\u043D\u043D\u044B\u0439 \u0433\u0440\u0430\u0434", damage: 25, prepSec: 2, cooldownSec: 9, interruptBy: ["telekinesis"], hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!" }
 };
-var PRIORITY = ["fire", "ice", "seal", "telekinesis"];
+var PRIORITY = ["storm", "fire", "ice", "seal", "telekinesis"];
 function duelEnemyDef(opp) {
   const lv = levelRow(opp.level), mult = lv.damageMult;
   const slots = duelSlots(opp);
@@ -3875,6 +4107,7 @@ function worldRules() {
         break;
     }
   }
+  world.fq_cauldron = { kind: "loot", mark: "looted", requires: ["ch2_nerys_met"], blockedBy: ["regen_potions_learned"], reward: {}, events: ["regen_potions_learned"] };
   return world;
 }
 function questRules() {
@@ -3906,6 +4139,8 @@ function researchRules() {
       heroLevel: r.heroLevel || 0,
       abilityLevel: r.abilityLevel || 0,
       event: r.event || null,
+      progressTier: r.progressTier || null,
+      requiredBranch: r.branch || null,
       schoolXP: up.cost.schoolXP,
       items: { ...up.cost.items || {}, coins: up.cost.coins || 0 },
       sapphires: up.cost.sapphires || 0,
@@ -3947,7 +4182,7 @@ function serverRules() {
     defeatHpFraction: HERO_RECOVERY.defeatHpFraction,
     staleCombatSec: VITALS.staleCombatSec
   };
-  const potions = Object.fromEntries(Object.entries(POTIONS).filter(([, p]) => p.outside && (p.effect.type === "heal" || p.effect.type === "mana")).map(([id, p]) => [id, { kind: p.effect.type, amount: p.effect.amount }]));
+  const potions = Object.fromEntries(Object.entries(POTIONS).filter(([, p]) => p.outside && (p.effect.type === "heal" || p.effect.type === "mana")).map(([id, p]) => [id, { kind: p.effect.type, ...p.effect.flat != null ? { flat: p.effect.flat } : { amount: p.effect.amount } }]));
   const events = Object.fromEntries(Object.entries(EVENT_ACTIONS).map(([k, e]) => [k, {
     requires: e.requires || [],
     unlock: e.unlock || {},
@@ -3961,6 +4196,7 @@ function serverRules() {
   }]));
   const eventRewards = Object.fromEntries(Object.entries(EVENT_REWARDS).map(([k, r]) => [k, grantOf(r)]));
   return {
+    sapphireDrops: SAPPHIRE_DROPS,
     balanceMigration: BALANCE_MIGRATION,
     recipes,
     uses: STORY_USES,
@@ -3987,6 +4223,7 @@ function serverRules() {
     // v0.26.0: Магическая Дуэль
     ratings: ratingsRules(),
     // v0.29.0: рейтинги (уровни монстров) и «в игре»
+    potionPreference: POTION_PREFERENCE,
     combatPotions: Object.keys(POTIONS)
     // v0.19.0: какие расходники бой запоминает в начале и списывает по итогам
   };
@@ -3994,8 +4231,8 @@ function serverRules() {
 
 // src/cloud/playerModel.js
 var RULES = serverRules();
-var ABILITY_IDS = ["telekinesis", "fire", "seal", "ice"];
-var SCHOOL_IDS = ["telekinesis", "fire", "seal", "ice"];
+var ABILITY_IDS = ["telekinesis", "fire", "seal", "ice", "storm"];
+var SCHOOL_IDS = ["telekinesis", "fire", "seal", "ice", "storm"];
 var num = (v) => typeof v === "number" && Number.isFinite(v) && Math.abs(v) < 1e15;
 var isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var uniq = (a) => [...new Set(a)];
@@ -4092,9 +4329,23 @@ function fillDefaults(raw) {
   };
 }
 
+// src/config/enemyTactics.js
+var ENEMY_TACTICS = {
+  frost_collector_elite: { kind: "shield", amount: 60, uses: 2, prep: 2.4, below: 0.9, cooldown: 15, interruptBy: ["telekinesis"] },
+  experimental_construct: { kind: "shield", amount: 80, uses: 2, prep: 2.6, below: 0.9, cooldown: 16, interruptBy: ["telekinesis_heavy"] },
+  frost_alpha: { kind: "heal", amount: 60, uses: 3, prep: 2.6, below: 0.75, cooldown: 16, interruptBy: ["telekinesis_heavy"] },
+  barrow_warden: { kind: "shield", amount: 100, uses: 2, prep: 2.8, below: 0.8, cooldown: 18, interruptBy: ["telekinesis_heavy"] },
+  severin_boss: { minPhase: 2, kind: "heal", amount: 65, uses: 2, prep: 2.8, below: 0.4, cooldown: 18, interruptBy: ["telekinesis_heavy"] }
+};
+
 // src/objects/Enemy.js
 var Enemy = class {
-  constructor(id, def) {
+  constructor(id, def, modern = false) {
+    this.modern = modern;
+    this.shield = 0;
+    this.burnStacks = [];
+    this.antiheal = 0;
+    this.tactic = modern && ENEMY_TACTICS[id] ? { ...ENEMY_TACTICS[id], left: 8, used: 0, channel: null } : null;
     this.id = id;
     this.baseDef = def;
     this.def = def;
@@ -4152,9 +4403,10 @@ var Enemy = class {
     return this.hp > 0;
   }
   get isPreparing() {
-    return this.prepLeft > 0;
+    return this.prepLeft > 0 || !!this.tactic?.channel;
   }
   get prepProgress() {
+    if (this.tactic?.channel) return 1 - this.tactic.channel.left / this.tactic.prep;
     return this.def.strongAttack ? 1 - this.prepLeft / this.def.strongAttack.prepSec : 0;
   }
   get hasArmor() {
@@ -4189,18 +4441,43 @@ var Enemy = class {
     if (this.vulnerable.left > 0) m *= 1 + this.vulnerable.bonus;
     return m;
   }
-  takeDamage(base, school, heroMult = 1) {
+  takeDamage(base, school, heroMult = 1, { shieldPierce = 0 } = {}) {
     if (!this.alive) return 0;
-    const dmg = Math.max(1, Math.round(base * heroMult * this.incomingMultiplier(school)));
+    let dmg = Math.max(1, Math.round(base * heroMult * this.incomingMultiplier(school)));
+    if (this.modern && this.shield > 0) {
+      const absorbed = Math.min(this.shield, dmg - Math.round(dmg * shieldPierce));
+      this.shield -= absorbed;
+      dmg -= absorbed;
+    }
     this.hp = Math.max(0, this.hp - dmg);
     this.checkPhase();
     return dmg;
   }
   outgoingDamage(base) {
     const m = this.weakened.left > 0 ? 1 - this.weakened.reduction : 1;
+    if (this.modern && this.weakened.once) this.weakened = { left: 0, reduction: 0 };
     return Math.round(base * m);
   }
-  applyBurn(dps, durationSec) {
+  detonateBurn() {
+    const amount = this.burnStacks.length ? this.burnStacks.reduce((n, b) => n + b.left * b.dps, 0) : this.burn.left * this.burn.dps;
+    this.burnStacks = [];
+    this.burn = { left: 0, dps: 0, tick: 0 };
+    return amount;
+  }
+  heal(amount) {
+    const gain = Math.min(this.maxHp - this.hp, amount * (this.burning ? 1 - Math.max(this.antiheal, this.fullBurnAntiheal && this.burnStacks.length >= this.fullBurnAntiheal.count ? this.fullBurnAntiheal.reduction : 0) : 1));
+    this.hp += gain;
+    return gain;
+  }
+  applyBurn(dps, durationSec, maxStacks = 1, antiheal = 0) {
+    if (this.modern && maxStacks > 1) {
+      if (this.burnStacks.length >= maxStacks) this.burnStacks.shift();
+      this.burnStacks.push({ left: durationSec, dps, tick: 1 });
+      this.burn = { left: durationSec, dps: 0, tick: Infinity };
+      this.antiheal = antiheal;
+      return;
+    }
+    this.antiheal = antiheal;
     const wasBurning = this.burning;
     this.burn.left = durationSec;
     this.burn.dps = dps;
@@ -4271,6 +4548,15 @@ var Enemy = class {
   }
   /** Попытка прервать сильную атаку. tags — набор тегов действия игрока. */
   tryInterrupt(tags) {
+    if (this.tactic?.channel) {
+      const ok2 = tags.some((t) => this.tactic.interruptBy.includes(t));
+      if (ok2) {
+        this.tactic.channel = null;
+        this.tactic.left = this.tactic.cooldown;
+        this.staggerLeft = this.def.staggerSec || 1;
+      }
+      return { attempted: true, ok: ok2 };
+    }
     if (!this.isPreparing) return { attempted: false };
     const allowed = this.def.strongAttack.interruptBy || [];
     const ok = tags.some((t) => allowed.includes(t));
@@ -4284,8 +4570,8 @@ var Enemy = class {
   bind(sec) {
     this.staggerLeft = Math.max(this.staggerLeft, sec);
   }
-  weaken(reduction, sec) {
-    this.weakened = { left: sec, reduction };
+  weaken(reduction, sec, once = false) {
+    this.weakened = { left: sec, reduction, once };
   }
   /**
    * Шаг ИИ. Возвращает массив действий:
@@ -4295,6 +4581,16 @@ var Enemy = class {
   update(dt, heroMult = 1) {
     const out = [];
     if (!this.alive) return out;
+    if (this.modern) for (const b of this.burnStacks) {
+      const span = Math.min(dt, b.left);
+      b.left -= span;
+      b.tick -= span;
+      while (b.tick <= 1e-9 && this.alive) {
+        b.tick += 1;
+        out.push({ type: "burnTick", damage: this.takeDamage(b.dps, "fire", heroMult) });
+      }
+    }
+    this.burnStacks = this.burnStacks.filter((b) => b.left > 1e-9);
     if (this.burn.left > 0) {
       this.burn.left -= dt;
       this.burn.tick -= dt;
@@ -4348,6 +4644,27 @@ var Enemy = class {
       return out;
     }
     dt = tdt;
+    const t = this.tactic;
+    if (t && !this.prepLeft) {
+      if (t.channel) {
+        t.channel.left -= dt;
+        if (t.channel.left <= 0) {
+          if (t.kind === "heal") this.heal(t.amount);
+          else this.shield = Math.max(this.shield, t.amount);
+          t.channel = null;
+          t.left = t.cooldown;
+          out.push({ type: "recovery", kind: t.kind, amount: t.amount });
+        }
+        return out;
+      }
+      t.left -= dt;
+      if (t.used < t.uses && t.left <= 0 && (t.minPhase == null || this.phase >= t.minPhase) && this.hp < this.maxHp * t.below) {
+        t.used++;
+        t.channel = { left: t.prep };
+        out.push({ type: "strongStart", name: t.kind === "heal" ? "\u0412\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435" : "\u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0438\u0439 \u0449\u0438\u0442", prepSec: t.prep, hint: t.interruptBy.includes("telekinesis_heavy") ? "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0442\u044F\u0436\u0451\u043B\u044B\u043C \u0431\u0440\u043E\u0441\u043A\u043E\u043C!" : "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!", interruptBy: t.interruptBy });
+        return out;
+      }
+    }
     const strong = this.def.strongAttack;
     if (this.isPreparing) {
       this.prepLeft -= dt;
@@ -4501,14 +4818,16 @@ function applyBranch(base, branch) {
 function statsFor(id, level, branchId = null) {
   if (!level) return null;
   const def = ABILITIES[id];
+  if (!def) return null;
   const max = Math.max(...Object.keys(def.levels).map(Number));
   const base = def.levels[Math.min(level, max)];
   const branch = branchId ? def.branches?.[branchId] : null;
-  return branch && level >= (branch.fromLevel || 1) ? { ...applyBranch(base, branch), branch: branchId } : base;
+  const result = branch && level >= (branch.fromLevel || 1) ? { ...applyBranch(base, branch), branch: branchId } : { ...base };
+  return { ...result, ...base.advancedBranches?.[branchId] || {} };
 }
 
 // src/systems/AbilitySystem.js
-var ABILITY_ORDER = ["telekinesis", "fire", "seal", "ice"];
+var ABILITY_ORDER = ["telekinesis", "fire", "seal", "ice", "storm"];
 var AbilitySystem = class {
   constructor(state, quests, bus2) {
     this.state = state;
@@ -4592,11 +4911,18 @@ var CombatManager = class {
    * @param {import('./AbilitySystem.js').AbilitySystem} o.abilities
    */
   constructor({ enemyType, enemyDef = null, state, abilities }) {
+    this.modern = (state.data.combatCtx?.balanceVersion || 0) >= 38;
+    this.potionSlots = state.data.combatCtx?.potionLoadout || potionLoadout(state.data.inventory, state.data.worldObjects?.player_build);
+    this.potionUses = { restore: 0, tactical: 0 };
+    this.potionCooldown = { restore: state.data.combatCtx?.potionCooldown || 0, tactical: 0 };
+    this.regeneration = {};
+    this.shields = {};
     this.state = state;
     this.abilities = abilities;
+    this.enemyType = enemyType;
     this.def = enemyDef || ENEMIES[enemyType];
     if (!this.def) throw new Error(`Unknown enemy type ${enemyType}`);
-    this.enemy = new Enemy(enemyType, this.def);
+    this.enemy = new Enemy(enemyType, this.def, this.modern);
     const hs = state.heroStats();
     const legacy = state.data.combatCtx?.balanceVersion === 29;
     this.hero = {
@@ -4610,7 +4936,27 @@ var CombatManager = class {
     };
     this.amulets = state.equippedAmulets ? state.equippedAmulets() : [];
     const lv = state.buildData ? state.buildData().amuletLevels || {} : {};
-    const effs = this.amulets.map((a) => amuletEffect(a, lv[a] || 0, legacy));
+    const effs = this.amulets.map((a) => amuletEffect(a, lv[a] || 0, legacy, this.modern));
+    this.schoolMult = { fire: 1, seal: 1, ice: 1, storm: 1 };
+    this.heavyMult = 1;
+    this.burnMult = 1;
+    this.flashBonus = 0;
+    this.brittleBonus = 0;
+    this.antiheal = 0;
+    this.interruptShield = 0;
+    this.stormCharges = 0;
+    this.stormRefundAt = -Infinity;
+    this.interruptWardAt = -Infinity;
+    for (const e of effs) {
+      this.schoolMult.fire *= e.fireMult || 1;
+      this.schoolMult.seal *= e.sealMult || 1;
+      this.heavyMult *= e.heavyMult || 1;
+      this.burnMult *= e.burnMult || 1;
+      this.flashBonus += e.flashBonus || 0;
+      this.brittleBonus += e.brittleBonus || 0;
+      this.antiheal = Math.max(this.antiheal, e.antiheal || 0);
+      this.interruptShield = Math.max(this.interruptShield, e.interruptShield || 0);
+    }
     let dm = 1, inc = 1, im = 1, sb = 0;
     for (const e of effs) {
       if (e.damageMult) dm *= e.damageMult;
@@ -4694,15 +5040,22 @@ var CombatManager = class {
     const st = this.abilityState(id);
     if (st.state !== "ready") return { ok: false, reason: st.state };
     const s = this.abilities.stats(id);
+    this.lastDirectHit = false;
     this.hero.mana -= s.manaCost;
     this.checkManaRescue();
     this.cooldowns[id] = this.startCooldown(id, s);
-    this.stats.abilityUses[id]++;
+    this.stats.abilityUses[id] = (this.stats.abilityUses[id] || 0) + 1;
     this.abilities.grantUseXP(id, "combat");
     if (id === "telekinesis") this.castTelekinesis(s);
     else if (id === "fire") this.castFire(s);
     else if (id === "seal") this.castSeal(s);
     else if (id === "ice") this.castIce(s);
+    else if (id === "storm") this.castStorm(s);
+    if (this.modern && this.lastDirectHit && id !== "storm" && this.abilities.isUnlocked("storm") && this.state.isEquipped("storm")) this.stormCharges = Math.min(3, this.stormCharges + 1);
+    if (this.modern && this.lastDirectHit && id !== "seal" && this.comboMana) {
+      this.hero.mana = Math.min(this.hero.maxMana, this.hero.mana + this.comboMana);
+      this.comboMana = 0;
+    }
     this.flushPhases();
     this.checkResult();
     this.commit();
@@ -4715,10 +5068,17 @@ var CombatManager = class {
   startCooldown(id, s) {
     if (!s.doubleCast) return s.cooldownSec;
     if (this.chain && this.chain.id === id) {
-      this.chain = null;
-      return s.cooldownSec;
+      this.chain.used++;
+      this.lastChainHit = this.chain.used;
+      if (this.chain.used >= (s.doubleCast.count || 2)) {
+        this.chain = null;
+        return s.cooldownSec;
+      }
+      this.chain.left = s.doubleCast.windowSec;
+      return 0;
     }
-    this.chain = { id, left: s.doubleCast.windowSec, window: s.doubleCast.windowSec, cooldownSec: s.cooldownSec };
+    this.lastChainHit = 1;
+    this.chain = { id, used: 1, left: s.doubleCast.windowSec, window: s.doubleCast.windowSec, cooldownSec: s.cooldownSec };
     this.emit({ type: "chain", id, sec: s.doubleCast.windowSec });
     return 0;
   }
@@ -4750,16 +5110,21 @@ var CombatManager = class {
     const p = POTIONS[id];
     if (!p) return { ok: false, reason: "unknown" };
     if (this.state.item(id) < 1) return { ok: false, reason: "none" };
-    if ((this.stats.potions || 0) >= POTION_BATTLE_LIMIT) return { ok: false, reason: "limit" };
+    if (this.modern) {
+      if (!this.potionSlots.includes(id)) return { ok: false, reason: "benched" };
+      const category = POTION_CATEGORIES[p.category];
+      if (this.potionUses[p.category] >= category.limit) return { ok: false, reason: "limit" };
+      if (this.potionCooldown[p.category] > 0) return { ok: false, reason: "cooldown" };
+    } else if ((this.stats.potions || 0) >= POTION_BATTLE_LIMIT) return { ok: false, reason: "limit" };
     const h = this.hero, e = p.effect;
     if (e.type === "heal") {
       if (h.hp >= h.maxHp) return { ok: false, reason: "full" };
-      const gain = Math.min(h.maxHp - h.hp, Math.round(h.maxHp * e.amount));
+      const gain = Math.min(h.maxHp - h.hp, potionGain(e, h.maxHp));
       h.hp += gain;
       this.emit({ type: "potion", id, kind: "heal", amount: gain });
     } else if (e.type === "mana") {
       if (h.mana >= h.maxMana) return { ok: false, reason: "full" };
-      const gain = Math.min(h.maxMana - h.mana, Math.round(h.maxMana * e.amount));
+      const gain = Math.min(h.maxMana - h.mana, potionGain(e, h.maxMana));
       h.mana += gain;
       this.emit({ type: "potion", id, kind: "mana", amount: gain });
     } else if (e.type === "damage") {
@@ -4776,19 +5141,28 @@ var CombatManager = class {
       this.heroChill = { left: 0, pct: 0 };
       this.emit({ type: "potion", id, kind: "warm" });
     } else if (e.type === "cleanse") {
-      const gain = Math.min(h.maxHp - h.hp, Math.round(h.maxHp * e.heal));
-      if (gain <= 0 && !(this.heroChill.left > 0)) return { ok: false, reason: "full" };
+      const gain = Math.min(h.maxHp - h.hp, this.modern ? 40 : Math.round(h.maxHp * e.heal));
+      if (gain <= 0 && !(this.heroChill.left > 0) && !(this.heroBurn?.left > 0)) return { ok: false, reason: "full" };
       h.hp += gain;
       this.heroChill = { left: 0, pct: 0 };
       this.emit({ type: "potion", id, kind: "heal", amount: gain });
+      if (this.modern) this.heroBurn = null;
     } else if (e.type === "brittle") {
       this.enemy.applyBrittle(e.bonus, e.sec);
       this.emit({ type: "potion", id, kind: "brittle" });
       this.emit({ type: "status", status: "brittle", sec: e.sec, bonus: e.bonus });
+    } else if (e.type === "shield") {
+      this.shields.potion = { amount: e.amount, left: e.sec };
+      this.emit({ type: "potion", id, kind: "guard", sec: e.sec });
     } else if (e.type === "guard") {
       this.guard = { left: e.sec, mult: e.incoming };
       this.emit({ type: "potion", id, kind: "guard", sec: e.sec });
     } else return { ok: false, reason: "unknown" };
+    if (this.modern) {
+      this.potionUses[p.category]++;
+      this.potionCooldown[p.category] = POTION_CATEGORIES[p.category].cooldown;
+      if (e.regen) this.regeneration[e.type] = { left: e.regen.sec, rate: e.regen.rate };
+    }
     this.state.removeItem(id, 1);
     this.stats.potions = (this.stats.potions || 0) + 1;
     this.flushPhases();
@@ -4798,9 +5172,14 @@ var CombatManager = class {
   }
   /** Расходники, которые есть в сумке (для кнопок боя): [{ id, count }]. */
   potionsAvailable() {
-    return Object.keys(POTIONS).map((id) => ({ id, count: this.state.item(id) })).filter((p) => p.count > 0);
+    return (this.modern ? this.potionSlots : Object.keys(POTIONS)).map((id) => ({ id, count: this.state.item(id) })).filter((p) => p.count > 0);
+  }
+  dealAbilityDamage(base, school, mult, options) {
+    if (this.enemy.alive && base > 0) this.lastDirectHit = true;
+    return this.enemy.takeDamage(base, school, mult, options);
   }
   castTelekinesis(s) {
+    const priorThrowBonus = this.nextThrowBonus || 0;
     const obj = this.selectedObject();
     const tags = ["telekinesis"];
     if (obj && obj.def.breaksArmor) {
@@ -4814,11 +5193,12 @@ var CombatManager = class {
       this.handleInterrupt(tags);
       return;
     }
+    if (this.modern) this.nextThrowBonus = 0;
     let base = s.damage;
     if (obj && obj.def.throwable && this.canLift(obj)) {
       const heavy = obj.def.weight === "heavy";
       if (heavy) {
-        base *= 1 + s.heavyObjectBonus;
+        base *= (1 + s.heavyObjectBonus) * this.heavyMult;
         tags.push("telekinesis_heavy");
       }
       base *= 1 + (s.throwDamageBonus || 0);
@@ -4835,18 +5215,30 @@ var CombatManager = class {
       this.emit({ type: "status", status: "shatter", bonus: br });
       if (tags.includes("telekinesis_heavy") && this.enemy.armorActive && this.enemy.breakArmor()) this.emit({ type: "armorBroken", sec: this.enemy.def.armor.disabledSec });
     }
-    const dmg = this.enemy.takeDamage(base, "telekinesis", this.hero.damageMult);
+    if (this.modern && priorThrowBonus) {
+      base *= 1 + priorThrowBonus;
+    }
+    if (this.modern && this.lastChainHit === 3) base *= 1 + (s.thirdThrowBonus || 0);
+    const dmg = this.dealAbilityDamage(base, "telekinesis", this.hero.damageMult);
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "telekinesis", heavy: tags.includes("telekinesis_heavy") });
   }
   castFire(s) {
     const br = this.enemy.consumeBrittle();
     if (br) this.emit({ type: "status", status: "shatter", bonus: br });
-    const dmg = this.enemy.takeDamage(s.damage * (1 + br), "fire", this.hero.damageMult);
+    if (this.modern && s.detonate) {
+      const remaining = this.enemy.detonateBurn();
+      if (remaining > 0) {
+        const amount = this.dealAbilityDamage(remaining * s.detonate, "fire", this.hero.damageMult);
+        this.emit({ type: "damage", target: "enemy", amount, school: "fire" });
+      }
+    }
+    const dmg = this.dealAbilityDamage(s.damage * (1 + br), "fire", this.hero.damageMult * this.schoolMult.fire);
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "fire" });
-    this.enemy.applyBurn(s.burn.dps, s.burn.durationSec);
+    this.enemy.applyBurn(s.burn.dps * this.burnMult, s.burn.durationSec, this.modern ? s.burnStacks || 1 : 1, this.modern ? this.antiheal : 0);
+    if (this.modern) this.enemy.fullBurnAntiheal = s.fullBurnAntiheal ? { count: s.burnStacks, reduction: s.fullBurnAntiheal } : null;
     this.emit({ type: "status", status: "burn", sec: s.burn.durationSec });
     if (s.puddle) {
-      this.enemy.applyPuddle(s.puddle.dps, s.puddle.durationSec);
+      this.enemy.applyPuddle(s.puddle.dps * this.burnMult, s.puddle.durationSec);
       this.emit({ type: "status", status: "puddle", sec: s.puddle.durationSec });
     }
     for (const e of this.enemy.onFireHit()) this.emit({ type: "status", status: e.type, sec: e.sec, bonus: e.bonus });
@@ -4856,14 +5248,15 @@ var CombatManager = class {
   castSeal(s) {
     const br = this.enemy.consumeBrittle();
     if (br) this.emit({ type: "status", status: "shatter", bonus: br });
-    const dmg = this.enemy.takeDamage(s.damage * (1 + br), "seal", this.hero.damageMult);
+    const dmg = this.dealAbilityDamage(s.damage * (1 + br) * (this.modern && this.enemy.shield > 0 ? 1 + (s.shieldDamage || 0) : 1), "seal", this.hero.damageMult * this.schoolMult.seal, { shieldPierce: this.modern ? s.shieldPierce || 0 : 0 });
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "seal" });
     if (s.flash && this.enemy.alive) {
-      for (const e of this.enemy.flash(s.flash.sec, s.flash.vulnerability || 0)) {
+      for (const e of this.enemy.flash(s.flash.sec + this.flashBonus, s.flash.vulnerability || 0)) {
         if (e.type === "vulnerable") this.emit({ type: "status", status: "vulnerable", sec: e.sec, bonus: e.bonus });
         else this.emit(e);
       }
     }
+    if (this.modern && s.comboMana) this.comboMana = s.comboMana;
   }
   /** v0.16.0: Лунный амулет — один раз за бой, когда маны меньше below от максимума, возвращает gainPct максимума. */
   checkManaRescue() {
@@ -4886,7 +5279,7 @@ var CombatManager = class {
       shattered = true;
       this.emit({ type: "status", status: "shatter", bonus: s.shatter.mult - 1, ice: true });
     }
-    const dmg = this.enemy.takeDamage(base * this.iceMult, "ice", this.hero.damageMult);
+    const dmg = this.dealAbilityDamage(base * this.iceMult, "ice", this.hero.damageMult);
     this.emit({ type: "damage", target: "enemy", amount: dmg, school: "ice" });
     if (!this.enemy.alive) return;
     if (s.slow) {
@@ -4895,10 +5288,31 @@ var CombatManager = class {
       this.emit({ type: "status", status: "slow", sec: s.slow.sec, pct });
     }
     if (s.brittle && !shattered) {
-      this.enemy.applyBrittle(s.brittle.bonus, s.brittle.sec);
+      this.enemy.applyBrittle(s.brittle.bonus + this.brittleBonus, s.brittle.sec);
       this.emit({ type: "status", status: "brittle", sec: s.brittle.sec, bonus: s.brittle.bonus });
     }
+    if (this.modern && s.frostWeaken) this.enemy.weaken(s.frostWeaken, s.slow.sec, true);
     if (s.interruptsNormalCast) this.handleInterrupt(["ice"]);
+  }
+  castStorm(s) {
+    const charges = this.stormCharges, full = charges === 3;
+    this.stormCharges = 0;
+    const br = this.enemy.consumeBrittle();
+    const base = s.damage * (1 + charges * s.chargeBonus) * (1 + br);
+    const hit = (value) => {
+      const amount = this.dealAbilityDamage(value, "storm", this.hero.damageMult);
+      this.emit({ type: "damage", target: "enemy", amount, school: "storm" });
+    };
+    hit(base);
+    if (full && s.fullDischarge) hit(base * s.fullDischarge);
+    if (full && s.stormField) {
+      this.enemy.weaken(s.stormField.reduction, s.stormField.sec);
+      if (s.stormField.mana && this.time >= this.stormRefundAt + 12) {
+        this.hero.mana = Math.min(this.hero.maxMana, this.hero.mana + s.stormField.mana);
+        this.stormRefundAt = this.time;
+      }
+    }
+    this.emit({ type: "stormCharges", charges: 0, full });
   }
   handleInterrupt(tags) {
     const r = this.enemy.tryInterrupt(tags);
@@ -4907,6 +5321,15 @@ var CombatManager = class {
       this.stats.interrupts++;
       this.emit({ type: "interrupt", ok: true });
       this.refundInterrupt();
+      if (this.modern) {
+        const s = this.abilities.stats("telekinesis");
+        if (this.time >= this.interruptWardAt + 12 && (s?.interruptWard || this.interruptShield)) {
+          if (s?.interruptWard) this.shields.lord = { amount: s.interruptWard.amount, left: s.interruptWard.sec };
+          if (this.interruptShield) this.shields.breaker = { amount: this.interruptShield, left: 6 };
+          this.interruptWardAt = this.time;
+        }
+        if (s?.nextThrowBonus) this.nextThrowBonus = s.nextThrowBonus;
+      }
     } else this.emit({ type: "interrupt", ok: false, hint: this.enemy.def.strongAttack?.hint });
   }
   /** Ветка «Повелитель»: удачное прерывание возвращает часть маны и сокращает перезарядку Телекинеза. */
@@ -4928,6 +5351,23 @@ var CombatManager = class {
   tick(dt, { holdEnemy = false } = {}) {
     if (this.result) return;
     const h = this.hero;
+    if (this.modern) {
+      for (const id of Object.keys(this.potionCooldown)) this.potionCooldown[id] = Math.max(0, this.potionCooldown[id] - dt);
+      for (const [kind, r] of Object.entries(this.regeneration)) {
+        const key = kind === "heal" ? "hp" : "mana", max = kind === "heal" ? h.maxHp : h.maxMana;
+        h[key] = Math.min(max, h[key] + r.rate * Math.min(dt, r.left));
+        r.left = Math.max(0, r.left - dt);
+        if (!r.left) delete this.regeneration[kind];
+      }
+      if (this.heroBurn?.left > 0) {
+        this.hitHero(this.heroBurn.rate * Math.min(dt, this.heroBurn.left), false, "\u0413\u043E\u0440\u0435\u043D\u0438\u0435", true);
+        this.heroBurn.left = Math.max(0, this.heroBurn.left - dt);
+      }
+      for (const shield of Object.values(this.shields)) {
+        shield.left -= dt;
+        if (shield.left <= 0) shield.amount = 0;
+      }
+    }
     let hdt = dt;
     if (this.heroChill.left > 0) {
       hdt = dt * (1 - this.heroChill.pct);
@@ -4990,6 +5430,7 @@ var CombatManager = class {
         case "strongHit":
           this.hitHero(a.damage, true, a.name);
           this.chillHero(a.chill);
+          if (this.modern && this.enemyType === "grave_wisp") this.heroBurn = { left: 6, rate: 3 };
           break;
         case "strongStart":
           this.emit({ type: "warning", name: a.name, prepSec: a.prepSec, hint: a.hint, needsHeavy: a.interruptBy.includes("telekinesis_heavy") && !a.interruptBy.includes("telekinesis") });
@@ -5016,8 +5457,14 @@ var CombatManager = class {
     this.heroChill = { left: Math.max(this.heroChill.left, c.sec), pct: Math.max(this.heroChill.left > 0 ? this.heroChill.pct : 0, pct) };
     this.emit({ type: "chill", sec: c.sec, pct });
   }
-  hitHero(damage, strong, name) {
-    damage = Math.max(1, Math.round(damage * this.incomingMult * (this.guard?.left > 0 ? this.guard.mult : 1)));
+  hitHero(damage, strong, name, periodic = false) {
+    damage = periodic ? damage * this.incomingMult : Math.max(1, Math.round(damage * this.incomingMult * (this.guard?.left > 0 ? this.guard.mult : 1)));
+    if (this.modern) for (const shield of Object.values(this.shields)) {
+      if (!(shield.left > 0 && shield.amount > 0)) continue;
+      const absorbed = Math.min(shield.amount, damage);
+      shield.amount -= absorbed;
+      damage -= absorbed;
+    }
     this.hero.hp = Math.max(0, this.hero.hp - damage);
     this.stats.damageTaken += damage;
     this.emit({ type: "damage", target: "hero", amount: damage, strong, name });
@@ -5158,7 +5605,7 @@ function startState(ctx, nowMs = Date.now()) {
   snap.inventory = { ...ctx.potions };
   snap.hp = ctx.hp;
   snap.mana = ctx.mana;
-  snap.combatCtx = { ...ctx, balanceVersion: ctx.balanceVersion === 30 ? 30 : 29 };
+  snap.combatCtx = { ...ctx, balanceVersion: ctx.balanceVersion === 38 ? 38 : ctx.balanceVersion === 30 ? 30 : 29 };
   snap.objects = ctx.build ? { player_build: JSON.parse(JSON.stringify(ctx.build)) } : {};
   const st = new GameState(null, () => nowMs);
   st.setData(fromSnapshot(snap));
@@ -5192,6 +5639,7 @@ function verifyCombat(snap, rawLog, nowMs) {
   if (outcome === "retreat") return { ok: true, verdict };
   verdict.potions = {};
   for (const id of COMBAT_POTIONS) add(verdict.potions, id, (ctx.potions[id] || 0) - st.item(id));
+  verdict.potionCooldown = cm.potionCooldown?.restore || 0;
   const reward = { heroXP: 0, schoolXP: {}, items: {} };
   mergeReward(reward, { schoolXP: { ...st.data.schoolXP } });
   if (outcome === "victory") {
@@ -5242,6 +5690,7 @@ function verifyDuel(snap, ctx, log, nowMs) {
   if (outcome === "retreat") return { ok: true, verdict };
   verdict.potions = {};
   for (const id of COMBAT_POTIONS) add(verdict.potions, id, (ctx.potions[id] || 0) - st.item(id));
+  verdict.potionCooldown = cm.potionCooldown?.restore || 0;
   const win = outcome === "victory";
   const reward = { heroXP: 0, schoolXP: {}, items: {} };
   mergeReward(reward, { schoolXP: { ...st.data.schoolXP } });
@@ -5306,6 +5755,7 @@ async function handle(req, env, fetchFn = fetch, now = Date.now) {
   const applied = await rpc("combat_apply", { uid: user.id, verdict: v.verdict });
   if (!applied.ok) return fail(500, "server_error");
   const res = await applied.json();
+  if (res.action?.ok && res.action?.sapphires > 0) v.verdict.reward = { ...v.verdict.reward, sapphires: res.action.sapphires };
   return json(200, { ...res, action: { ...res.action || {}, verdict: v.verdict }, meta: res.meta ?? meta });
 }
 var D = globalThis.Deno;

@@ -66,12 +66,13 @@ export function duelSlots(opp) {
 }
 
 const SIGNATURE = {
+  storm: { name: 'Грозовой разряд', damage: 27, prepSec: 2.2, cooldownSec: 10, interruptBy: ['telekinesis'], hint: 'Прервите Телекинезом!' },
   fire: { name: 'Огненный шар', damage: 26, prepSec: 2.0, cooldownSec: 9, interruptBy: ['telekinesis'], hint: 'Прервите Телекинезом!' },
   ice: { name: 'Ледяное копьё', damage: 24, prepSec: 2.2, cooldownSec: 10, interruptBy: ['telekinesis'], hint: 'Прервите Телекинезом!' },
   seal: { name: 'Астральный удар', damage: 28, prepSec: 2.4, cooldownSec: 10, interruptBy: ['telekinesis_heavy'], hint: 'Бросьте тяжёлый камень!' },
   telekinesis: { name: 'Каменный град', damage: 25, prepSec: 2.0, cooldownSec: 9, interruptBy: ['telekinesis'], hint: 'Прервите Телекинезом!' },
 };
-const PRIORITY = ['fire', 'ice', 'seal', 'telekinesis'];
+const PRIORITY = ['storm', 'fire', 'ice', 'seal', 'telekinesis'];
 
 /**
  * Боевой профиль соперника из его слепка — для боя на устройстве и для проверки на сервере (одна функция).

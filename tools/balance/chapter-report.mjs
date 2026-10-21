@@ -1,3 +1,4 @@
+import { potionLoadout } from '../../src/config/resources.js';
 // Отчёт баланса первой главы (v0.10.0) на РЕАЛЬНЫХ конфигах и боевом движке игры (без браузера).
 //   node tools/balance/chapter-report.mjs            — таблица трёх сценариев ТЗ §18 (markdown)
 //   node tools/balance/chapter-report.mjs --log      — плюс пошаговый журнал контрольного маршрута
@@ -34,8 +35,8 @@ function bot(cm) {
   const heavy = cm.fieldObjects.find(o => o.available && o.def.weight === 'heavy' && o.def.throwable && cm.canLift(o));
   const light = cm.fieldObjects.find(o => o.available && o.def.weight !== 'heavy' && o.def.throwable);
   const crystal = cm.fieldObjects.find(o => o.available && o.def.breaksArmor);
-  if (cm.hero.hp < cm.hero.maxHp * 0.4 && cm.state.item('elixir_life') > 0) cm.usePotion('elixir_life');
-  if (cm.hero.mana < 20 && cm.state.item('elixir_mana') > 0) cm.usePotion('elixir_mana');
+  if (cm.hero.hp < cm.hero.maxHp * 0.55) for (const id of ['potion_life_small','elixir_life']) if (cm.potionSlots.includes(id) && cm.state.item(id)>0) { cm.usePotion(id); break; }
+  if (cm.hero.mana < 20) for (const id of ['potion_mana_small','elixir_mana']) if (cm.potionSlots.includes(id) && cm.state.item(id)>0) { cm.usePotion(id); break; }
   if (cm.state.item('resin_flask') > 0 && e.hp > 120 && !e.isPreparing && (cm.stats.potions || 0) < 3) cm.usePotion('resin_flask');
   if (e.isPreparing) {
     const needsHeavy = !sa.interruptBy.includes('telekinesis');
@@ -83,6 +84,7 @@ export function run(scenario) {
   const use = async (id) => { const r = await actions.use(id); track(); assert.ok(r.ok, `Применить ${id}: ${r.reason}`); return r.ok; };
   const fight = (spawn, type, { lose = false } = {}) => {
     if (!lose) ready(ENEMIES[type].tier === 'strong' ? 0.9 : 0.5);
+    state.data.combatCtx = { balanceVersion: 38, potionLoadout: potionLoadout(state.data.inventory,state.getObject('player_build')) };
     const cm = new CombatManager({ enemyType: type, state, abilities });
     const manaBefore = Math.round(cm.hero.mana);
     let t = 0;
@@ -100,6 +102,7 @@ export function run(scenario) {
       const lost = Math.min(state.item('coins'), 5); if (lost) state.removeItem('coins', lost);
       vitals.afterDefeat(state, cm.hero.mana);
     }
+    state.data.combatCtx = null;
     track();
     L(`    бой ${spawn}: ${cm.result} за ${rec.sec} с, мана до боя ${manaBefore}, HP после ${rec.hpLeft}, зелий ${rec.potions}`);
     minutes += Math.max(rec.sec, 15) / 60;
@@ -167,6 +170,7 @@ export function run(scenario) {
     if (scenario === 'defeats') { fight('forest_guardian_01', 'forest_guardian', { lose: true }); heal(); }
     let g = 0; while (!state.isEnemyDefeated('forest_guardian_01') && g++ < 3) if (!fight('forest_guardian_01', 'forest_guardian')) heal();
     ev('guardian_defeated'); state.openPath('gate_path');
+    if (state.item('amulet_forest')) await actions.confirm({ op: 'build_set', amulets: ['amulet_forest'] });
     await use('revealing_compound');
     if (scenario !== 'main') { log.accept('sq_dust'); sq('sq_dust'); }               // Селена: −1 пыль (на F по модели)
     abilities.unlock('seal', 1); ev('unlock_seal_1');
@@ -177,7 +181,7 @@ export function run(scenario) {
     // ---------- G. Связка (5 мин)
     stage('G. Связка');
     await craft('restoration_bundle');
-    await craft('elixir_life');
+    await craft('elixir_life'); await craft('elixir_life'); await craft('elixir_mana');
     rest(5 * 60, true);
     // ---------- I. Испытание и ремонт (6 мин)
     stage('I. Испытание и ремонт');

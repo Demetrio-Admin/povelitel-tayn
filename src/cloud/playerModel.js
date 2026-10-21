@@ -1,3 +1,4 @@
+import { rollSapphires } from '../config/sapphireDrops.js';
 import { BAG, bagData, bagUsed, takesBagSpace } from '../config/bag.js';
 // Модель игрока на сервере и способ её менять. Без Phaser и DOM.
 //
@@ -22,17 +23,18 @@ import { BAG, bagData, bagUsed, takesBagSpace } from '../config/bag.js';
 import { createDefaultState } from '../state/GameState.js';
 import { HERO_LEVELS, HEALING } from '../config/balance.hero.js';
 import { serverRules } from '../config/serverRules.js';
-import { checkBuild, slotCount, defaultSlots } from '../config/build.js';
+import { checkBuild, slotCount, defaultSlots, progressGate, amuletEffect } from '../config/build.js';
 
+import { potionLoadout } from '../config/resources.js';
 const RULES = serverRules();
 /**
  * Ключи объектов мира, состояние которых пишет только сервер: всё, что есть в RULES.world (с v0.15.0 и магия — сервер ставит mark),
  * победы над врагами rep:* (по ним открываются запасы) и build — ветки даров (player_build).
  */
-export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build' || k === 'player_bag' || k === 'daily' || k === 'duel');   // v0.23.0: + доска поручений; v0.26.0: + Дуэль
+export const serverOwnedObject = (k) => typeof k === 'string' && (Object.hasOwn(RULES.world, k) || k.startsWith('rep:') || k === 'player_build' || k === 'sapphire_receipts' || k === 'potion_state' || k === 'player_bag' || k === 'daily' || k === 'duel');   // v0.23.0: + доска поручений; v0.26.0: + Дуэль
 
-export const ABILITY_IDS = ['telekinesis', 'fire', 'seal', 'ice'];   // v0.18.0: + Лёд
-export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal', 'ice'];
+export const ABILITY_IDS = ['telekinesis', 'fire', 'seal', 'ice', 'storm'];   // v0.18.0: + Лёд
+export const SCHOOL_IDS = ['telekinesis', 'fire', 'seal', 'ice', 'storm'];
 
 /** Пределы, которые сервер проверяет у каждого patch (защита от явных подделок; см. раздел «Доверие клиенту» в README). */
 export const LIMITS = {
@@ -368,7 +370,8 @@ function eventAct(s, key) {
   if (has(s, key)) return { ok: false, reason: 'already' };
   if ((r.blockedBy || []).some(ev => has(s, ev))) return { ok: false, reason: 'done' };
   if (!r.requires.every(ev => has(s, ev))) return { ok: false, reason: 'locked' };
-  const consume = r.consume || {};
+  const consume = { ...(r.consume || {}) };
+  if (key === 'ch2_coven_supplies' && !(s.inventory.crystal_guard > 0) && s.inventory.potion_crystal_shield > 0) { delete consume.crystal_guard; consume.potion_crystal_shield = 1; }
   if (!Object.entries(consume).every(([k, v]) => (s.inventory[k] || 0) >= v)) return { ok: false, reason: 'missing' };
   for (const [k, v] of Object.entries(consume)) addItem(s, k, -v);
   setEvent(s, key);
@@ -412,7 +415,7 @@ function researchStart(s, id) {
   if (up.locked) return { ok: false, reason: 'locked' };
   if ((s.abilities[up.ability]?.level || 0) >= up.toLevel) return { ok: false, reason: 'done' };
   if (s.research) return { ok: false, reason: s.research.upgradeId === id ? 'in_progress' : 'busy' };
-  if (up.event && !has(s, up.event)) return { ok: false, reason: 'event' };
+  if ((up.event && !has(s, up.event)) || (up.progressTier && !progressGate(s.enemies, up.progressTier)) || (up.requiredBranch && buildObj(s).branches?.[up.ability] !== up.requiredBranch)) return { ok: false, reason: 'event' };
   const enough = s.level >= up.heroLevel && (s.abilities[up.ability]?.level || 0) >= up.abilityLevel
     && (s.school[up.ability] || 0) >= up.schoolXP && Object.entries(up.items).every(([k, n]) => (s.inventory[k] || 0) >= n);
   if (!enough) return { ok: false, reason: 'missing' };
@@ -588,10 +591,13 @@ function amuletUpgrade(s, id) {
   const levels = isObj(o.amuletLevels) ? o.amuletLevels : {};
   const cur = Number.isInteger(levels[id]) && levels[id] > 0 ? Math.min(levels[id], B.amuletUpgrades.length) : 0;
   if (cur >= B.amuletUpgrades.length) return { ok: false, reason: 'max' };
-  const cost = B.amuletUpgrades[cur];
+  if (!progressGate(s.enemies, cur + 1)) return { ok: false, reason: 'progress' };
+  const cost = B.amuletCurrencies[id] === 'sapphires' ? { coins: 0, items: {}, sapphires: B.sapphireAmuletPrices[cur] } : B.amuletUpgrades[cur];
+  if (walletOf(s.wallet).sapphires < (cost.sapphires || 0)) return { ok: false, reason: 'sapphires', need: cost.sapphires };
   const need = { coins: cost.coins, ...cost.items };
   if (!Object.entries(need).every(([k, v]) => (s.inventory[k] || 0) >= v)) return { ok: false, reason: 'missing' };
   for (const [k, v] of Object.entries(need)) addItem(s, k, -v);
+  spend(s, cost.sapphires || 0);
   s.objects.player_build = { ...o, amuletLevels: { ...levels, [id]: cur + 1 } };
   return { ok: true, amulet: id, level: cur + 1 };
 }
@@ -686,12 +692,14 @@ function drink(s, item) {
   if (!u) return { ok: false, reason: 'unknown' };
   if (s.combatSince != null) return { ok: false, reason: 'combat' };
   if ((s.inventory[item] || 0) < 1) return { ok: false, reason: 'none' };
+  if ((s.objects.potion_state?.restoreReadyAt || 0) > (s.vitalsAt || 0)) return { ok: false, reason: 'cooldown' };
   const mx = maxVitals(s.level);
   const key = u.kind === 'heal' ? 'hp' : 'mana';
   const cur = num(s[key]) ? clamp(s[key], 0, mx[key]) : mx[key];
   if (cur >= mx[key]) return { ok: false, reason: 'full', kind: u.kind };
   addItem(s, item, -1);
-  s[key] = Math.min(mx[key], cur + Math.round(mx[key] * u.amount));
+  s[key] = Math.min(mx[key], cur + (u.flat ?? Math.round(mx[key] * u.amount)));
+  s.objects.potion_state = { restoreReadyAt: (s.vitalsAt || 0) + 10000 };
   return { ok: true, kind: u.kind, amount: s[key] - cur };
 }
 
@@ -700,7 +708,7 @@ function drink(s, item) {
  * неизвестный объект → бой → закрыто (события, побеждённые враги, состояние «родителя», дар и его ступень) → уже сделано / ещё не выросло → мана.
  * Время «сейчас» — vitalsAt (после advanceVitals это момент сервера).
  */
-function worldAct(s, id) {
+function worldAct(s, id, random = Math.random) {
   const r = typeof id === 'string' && Object.hasOwn(RULES.world, id) ? RULES.world[id] : null;
   if (!r) return { ok: false, reason: 'unknown' };
   if (s.combatSince != null) return { ok: false, reason: 'combat' };
@@ -737,6 +745,8 @@ function worldAct(s, id) {
   }
   if (r.kind === 'gather') {
     addItem(s, r.item, r.amount);
+    const build = buildObj(s), level = build.amuletLevels?.amulet_tracker || 0;
+    if (build.amulets?.includes('amulet_tracker') && (s.inventory.amulet_tracker || 0) > 0 && random() < amuletEffect('amulet_tracker',level).gatherBonus && bagUsed(s.inventory) < bagData(s.objects).capacity) addItem(s,r.item,1);
     s.objects[id] = { state: 'picked', t: now };
   } else if (r.kind === 'loot') {
     grant(s, r.reward);
@@ -752,7 +762,9 @@ function worldAct(s, id) {
   for (const [k, n] of Object.entries(r.school || {})) if (n > 0) s.school[k] = clamp((s.school[k] || 0) + n, 0, LIMITS.maxCounter);
   for (const ev of r.events || []) setEvent(s, ev);
   if (r.path) openPath(s, r.path);
-  return { ok: true, kind: r.kind, id, mana: r.mana || 0 };
+  const sapphires = rollSapphires('world',id,random);
+  if (sapphires) s.wallet = { ...walletOf(s.wallet), sapphires: walletOf(s.wallet).sapphires+sapphires };
+  return { ok: true, kind: r.kind, id, mana: r.mana || 0, ...(sapphires ? { sapphires } : {}) };
 }
 
 /** Зелья, которые можно выпить в бою (как POTIONS в config/resources.js; их набор фиксирован серверной схемой). */
@@ -773,6 +785,8 @@ export function combatCtxOf(s, spawn, enemy) {
     hp: num(s.hp) ? clamp(s.hp, 0, mx.hp) : mx.hp,
     mana: num(s.mana) ? clamp(s.mana, 0, mx.mana) : mx.mana,
     potions,
+    potionLoadout: potionLoadout(s.inventory, s.objects?.player_build),
+    potionCooldown: Math.max(0, ((s.objects.potion_state?.restoreReadyAt || 0) - (s.vitalsAt || 0)) / 1000),
     build: s.objects?.player_build ?? null,
   };
 }
@@ -812,7 +826,7 @@ function duelStart(s, nowMs, balanceVersion) {
   s.objects.duel = st;
   const opponent = duelGhostOf(s, st.rating);
   s.combatSince = s.vitalsAt;
-  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), balanceVersion: balanceVersion === 30 ? 30 : 29, duel: { opponent, rating: st.rating, season: st.season } };
+  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), balanceVersion: balanceVersion === 38 ? 38 : balanceVersion === 30 ? 30 : 29, duel: { opponent, rating: st.rating, season: st.season } };
   return { ok: true, opponent, rating: st.rating, left: D.attemptsPerDay - st.used };
 }
 
@@ -820,7 +834,7 @@ function duelStart(s, nowMs, balanceVersion) {
 function combatStart(s, action = {}) {
   if (!isId(action.spawn) || !isId(action.enemy)) return { ok: false, reason: 'bad_spawn' };
   if (s.combatSince == null) s.combatSince = s.vitalsAt;
-  s.combatCtx = { ...combatCtxOf(s, action.spawn, action.enemy), balanceVersion: action.balanceVersion === 30 ? 30 : 29 };
+  s.combatCtx = { ...combatCtxOf(s, action.spawn, action.enemy), ...(action.balanceVersion === 38 ? { sapphireDrops: 1 } : {}), balanceVersion: action.balanceVersion === 38 ? 38 : action.balanceVersion === 30 ? 30 : 29 };
   // v0.15.0: событие «встреча началась» (combat_intro_01 и др.) ставит сервер, если место боя уже открыто
   const ss = Object.hasOwn(RULES.spawnStart, action.spawn) ? RULES.spawnStart[action.spawn] : null;
   if (ss && (!ss.requires || has(s, ss.requires))) setEvent(s, ss.event);
@@ -853,7 +867,7 @@ function combatEnd(s, action) {
  * опыт даров за применения и победу, предметы и монеты), штраф монет, победа на месте, путь, события, состояние возобновляемого места, запись истории.
  * Зелья: в сумке остаётся не больше, чем было в начале боя минус выпитое (так списание не удваивается, даже если клиент уже сообщил о нём).
  */
-export function combatApply(snap, v, nowMs = null) {
+export function combatApply(snap, v, nowMs = null, random = Math.random) {
   const s = JSON.parse(JSON.stringify(snap));
   if (num(nowMs)) advanceVitals(s, nowMs);
   const res = (r) => ({ snapshot: s, result: r });
@@ -861,6 +875,9 @@ export function combatApply(snap, v, nowMs = null) {
   if (s.combatSince == null || !ctx) return res({ ok: false, reason: 'no_combat' });
   if (!isObj(v) || !['victory', 'defeat', 'retreat'].includes(v.outcome)) return res({ ok: false, reason: 'bad_verdict' });
   if (v.since !== s.combatSince || v.spawn !== ctx.spawn) return res({ ok: false, reason: 'stale' });
+  let activeSapphires = 0;
+  if (v.outcome === 'victory' && ctx.spawn !== 'duel' && ctx.sapphireDrops === 1) { activeSapphires = rollSapphires('combat',ctx.spawn,random); if (activeSapphires) s.wallet = { ...walletOf(s.wallet), sapphires: walletOf(s.wallet).sapphires + activeSapphires }; }
+  if (v.outcome !== 'retreat' && ctx.balanceVersion >= 38) s.objects.potion_state = { restoreReadyAt: (num(nowMs) ? nowMs : s.vitalsAt || 0) + Math.max(0,Math.min(10,v.potionCooldown || 0))*1000 };
   const mx0 = maxVitals(s.level);
   const cur = num(s.hp) ? clamp(s.hp, 0, mx0.hp) : mx0.hp;
   if (ctx.spawn === 'duel') {
@@ -905,7 +922,7 @@ export function combatApply(snap, v, nowMs = null) {
   if (v.outcome !== 'retreat' && num(v.mana)) s.mana = clamp(v.mana, 0, mx.mana);
   s.combatSince = null;
   s.combatCtx = null;
-  return res({ ok: true, outcome: v.outcome });
+  return res({ ok: true, outcome: v.outcome, ...(activeSapphires ? { sapphires: activeSapphires } : {}) });
 }
 
 /** Разовая миграция v0.10: ядро Стража тем, кто победил его до главы и не имеет ядра (флаг — всегда). */
@@ -940,7 +957,7 @@ function migrateV10(s) {
  *   v0.16.0: { op: 'build_set', slots?, amulets? } — слоты даров и амулеты; { op: 'build_preset', mode: 'save' | 'load' } — один бесплатный пресет
  * nowMs — время сервера: перед любым действием HP и мана восстанавливаются до него (как player_action).
  */
-function applyActionUnchecked(snap, action = {}, nowMs = null) {
+function applyActionUnchecked(snap, action = {}, nowMs = null, random = Math.random) {
   const s = JSON.parse(JSON.stringify(snap));
   if (num(nowMs)) advanceVitals(s, nowMs);
   const op = isObj(action) ? action.op : null;
@@ -949,7 +966,7 @@ function applyActionUnchecked(snap, action = {}, nowMs = null) {
   if (op === 'use') return { snapshot: s, result: useItem(s, action.item) };
   if (op === 'migrate_v10') return { snapshot: s, result: migrateV10(s) };
   if (op === 'drink') return { snapshot: s, result: drink(s, action.item) };
-  if (op === 'world') return { snapshot: s, result: worldAct(s, action.obj) };
+  if (op === 'world') return { snapshot: s, result: worldAct(s, action.obj, random) };
   if (op === 'combat_start') return { snapshot: s, result: combatStart(s, action) };
   if (op === 'combat_end') return { snapshot: s, result: combatEnd(s, action) };
   if (op === 'event') return { snapshot: s, result: eventAct(s, action.key) };
@@ -963,6 +980,13 @@ function applyActionUnchecked(snap, action = {}, nowMs = null) {
   if (op === 'bank_welcome') return { snapshot: s, result: bankWelcome(s) };
   if (op === 'shop_buy') return { snapshot: s, result: shopBuy(s, action.item, action.qty) };
   if (op === 'shop_sell') return { snapshot: s, result: shopSell(s, action.item, action.qty) };
+  if (op === 'potion_loadout') {
+    const ids = action.potions;
+    if (s.combatSince != null) return { snapshot: s, result: { ok: false, reason: 'combat' } };
+    if (!Array.isArray(ids) || ids.length > 4 || new Set(ids).size !== ids.length || ids.some(id => !COMBAT_POTIONS.includes(id))) return { snapshot: s, result: { ok: false, reason: 'bad' } };
+    s.objects.player_build = { ...s.objects.player_build, potions: [...ids] };
+    return { snapshot: s, result: { ok: true } };
+  }
   if (op === 'amulet_upgrade') return { snapshot: s, result: amuletUpgrade(s, action.amulet) };
   // v0.25.0: Ковены живут в отдельных таблицах (миграция 20261007_covens.sql) — JS-зеркало о них не знает и отвечает как сервер
   // игроку без ковена (или базе без миграции): 'no_coven'
@@ -1012,8 +1036,8 @@ export function fillDefaults(raw) {
 }
 
 /** Failed inventory actions roll back their mana, coins, ingredients and world marks. */
-export function applyAction(snap, action = {}, nowMs = null) {
-  try { return applyActionUnchecked(snap, action, nowMs); }
+export function applyAction(snap, action = {}, nowMs = null, random = Math.random) {
+  try { return applyActionUnchecked(snap, action, nowMs, random); }
   catch (error) {
     if (!(error instanceof BagFull)) throw error;
     return { snapshot: JSON.parse(JSON.stringify(snap)), result: { ok: false, reason: 'bag_full' } };

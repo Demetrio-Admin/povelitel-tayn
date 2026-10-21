@@ -16,8 +16,10 @@ export function applyBranch(base, branch) {
 export function statsFor(id, level, branchId = null) {
   if (!level) return null;
   const def = ABILITIES[id];
+  if (!def) return null;
   const max = Math.max(...Object.keys(def.levels).map(Number));
   const base = def.levels[Math.min(level, max)];
   const branch = branchId ? def.branches?.[branchId] : null;
-  return branch && level >= (branch.fromLevel || 1) ? { ...applyBranch(base, branch), branch: branchId } : base;
+  const result = branch && level >= (branch.fromLevel || 1) ? { ...applyBranch(base, branch), branch: branchId } : { ...base };
+  return { ...result, ...(base.advancedBranches?.[branchId] || {}) };
 }

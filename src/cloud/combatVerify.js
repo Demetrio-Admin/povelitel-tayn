@@ -39,7 +39,7 @@ export function startState(ctx, nowMs = Date.now()) {
   snap.inventory = { ...ctx.potions };
   snap.hp = ctx.hp; snap.mana = ctx.mana;
   // Contexts from pre-v0.30 clients use the old mana/amulet physics. The server stamps the selected version.
-  snap.combatCtx = { ...ctx, balanceVersion: ctx.balanceVersion === 30 ? 30 : 29 };
+  snap.combatCtx = { ...ctx, balanceVersion: ctx.balanceVersion === 38 ? 38 : ctx.balanceVersion === 30 ? 30 : 29 };
   snap.objects = ctx.build ? { player_build: JSON.parse(JSON.stringify(ctx.build)) } : {};
   const st = new GameState(null, () => nowMs);
   st.setData(fromSnapshot(snap));
@@ -88,6 +88,7 @@ export function verifyCombat(snap, rawLog, nowMs) {
   // зелья: сколько выпито (сумка стартового состояния минус остаток)
   verdict.potions = {};
   for (const id of COMBAT_POTIONS) add(verdict.potions, id, (ctx.potions[id] || 0) - st.item(id));
+  verdict.potionCooldown = cm.potionCooldown?.restore || 0;
 
   // опыт даров за применения в бою — всегда (и при поражении), как раньше (CombatManager.useAbility)
   const reward = { heroXP: 0, schoolXP: {}, items: {} };
@@ -140,6 +141,7 @@ function verifyDuel(snap, ctx, log, nowMs) {
   if (outcome === 'retreat') return { ok: true, verdict };
   verdict.potions = {};
   for (const id of COMBAT_POTIONS) add(verdict.potions, id, (ctx.potions[id] || 0) - st.item(id));
+  verdict.potionCooldown = cm.potionCooldown?.restore || 0;
   const win = outcome === 'victory';
   const reward = { heroXP: 0, schoolXP: {}, items: {} };
   mergeReward(reward, { schoolXP: { ...st.data.schoolXP } });

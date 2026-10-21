@@ -1,22 +1,27 @@
-// Version 2 Duel: two ordinary CombatManager actors share an arena. Only one is driven by AI.
+// Versioned Duel: two ordinary CombatManager actors share an arena. Only one is driven by AI.
 // Damage, branches, amulets, resource clocks and charges remain in the shared combat engine.
 import { Enemy } from '../objects/Enemy.js';
 import { GameState } from '../state/GameState.js';
 import { AbilitySystem } from './AbilitySystem.js';
 import { HERO_BASE } from '../config/balance.hero.js';
+import { DUEL_PACING } from '../config/duelPacing.js';
 
 class DuelBody extends Enemy {
-  constructor(actor, name) {
+  constructor(actor, name, pacing) {
     super('duel_fighter', { name, hp: actor.hero.maxHp, normalAttack: null, strongAttack: null, arena: 'duel' }, true);
     this.actor = actor;
+    this.pacing = pacing;
+    this.interruptProtectedUntil = -Infinity;
     this.pending = null;
     Object.defineProperty(this, 'hp', { get: () => actor.hero.hp, set: n => { actor.hero.hp = n; } });
     Object.defineProperty(this, 'shield', { get: () => Object.values(actor.shields).reduce((n, s) => n + (s.left > 0 ? Math.max(0, s.amount) : 0), 0) });
   }
   get isPreparing() { return !this.updatingStatuses && !!this.pending; }
   get prepProgress() { return this.pending ? 1 - this.pending.left / this.pending.duration : 0; }
+  get interruptGraceLeft() { return Math.max(0, this.interruptProtectedUntil - this.actor.time); }
   takeDamage(base, school, mult = 1, options = {}) {
     if (!this.alive) return 0;
+    if (this.pacing) base *= this.pacing.damageMultiplier;
     if (options.burnTick && this.actor.burnWard?.left > 0) base *= 1 - this.actor.burnWard.resist;
     return this.actor.hitHero(base * mult * this.incomingMultiplier(school), false, undefined, false, { ...options, silent: true });
   }
@@ -31,8 +36,12 @@ class DuelBody extends Enemy {
   }
   tryInterrupt(tags) {
     if (!this.pending) return { attempted: false };
+    if (this.interruptGraceLeft > 1e-9) return { attempted: true, ok: false, hint: `Устойчивость: повторное прерывание недоступно ещё ${Math.ceil(this.interruptGraceLeft)} с` };
     const ok = tags.includes('telekinesis');
-    if (ok) { this.pending = null; this.staggerLeft = 1; }
+    if (ok) {
+      this.pending = null; this.staggerLeft = 1;
+      if (this.pacing) this.interruptProtectedUntil = this.actor.time + this.pacing.interruptGraceSec;
+    }
     return { attempted: true, ok };
   }
   update(dt, mult) {
@@ -45,6 +54,7 @@ class DuelBody extends Enemy {
 export class DuelBattle {
   constructor(hero, opponent) {
     this.hero = hero;
+    this.pacing = hero.def.duel.version === 3 ? DUEL_PACING : null;
     const state = new GameState(null, () => 0);
     state.data.heroLevel = opponent.level;
     for (const [id, a] of Object.entries(opponent.abilities)) if (a.unlocked && a.level > 0) state.unlockAbility(id, a.level);
@@ -57,8 +67,8 @@ export class DuelBattle {
     defender.hero.maxHp = hero.def.hp;
     defender.hero.hp = hero.def.hp;
     this.defender = defender;
-    hero.duelBody = new DuelBody(hero, 'Герой');
-    defender.duelBody = new DuelBody(defender, hero.def.name);
+    hero.duelBody = new DuelBody(hero, 'Герой', this.pacing);
+    defender.duelBody = new DuelBody(defender, hero.def.name, this.pacing);
     hero.enemy = defender.duelBody;
     defender.enemy = hero.duelBody;
     // Shared, finite objects: neither side can throw a stone the other just used.
@@ -71,10 +81,12 @@ export class DuelBattle {
   beginCast(actor, id) {
     const paid = actor.payAbility(id);
     if (!paid.ok) return paid;
-    const duration = actor === this.hero ? paid.stats.castSec : Math.max(.65, paid.stats.castSec);
+    const minimum = id === 'telekinesis' ? this.pacing?.telekinesisCastSec : this.pacing?.minCastSec;
+    const duration = this.pacing ? Math.max(minimum, paid.stats.castSec) : actor === this.hero ? paid.stats.castSec : Math.max(.65, paid.stats.castSec);
     actor.duelBody.pending = { id, stats: paid.stats, left: duration, duration, selected: actor.selectedId };
-    actor.duelBody.def.strongAttack = { name: paid.stats.label, hint: 'Прервите Телекинезом!', interruptBy: ['telekinesis'] };
-    if (actor === this.defender) this.hero.emit({ type: 'warning', name: paid.stats.label, prepSec: duration, hint: 'Прервите Телекинезом!', needsHeavy: false });
+    const hint = actor.duelBody.interruptGraceLeft > 1e-9 ? 'Устойчивость к прерыванию — дождитесь окончания защиты' : 'Прервите Телекинезом!';
+    actor.duelBody.def.strongAttack = { name: paid.stats.label, hint, interruptBy: ['telekinesis'] };
+    if (actor === this.defender) this.hero.emit({ type: 'warning', name: paid.stats.label, prepSec: duration, hint, needsHeavy: false });
     actor.commit();
     return { ok: true };
   }

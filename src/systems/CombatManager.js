@@ -77,7 +77,7 @@ export class CombatManager {
     this.result = null; // 'victory' | 'defeat'
     this.queue = [];
     this.stats = { abilityUses: { telekinesis: 0, fire: 0, seal: 0, ice: 0 }, interrupts: 0, damageTaken: 0, autoDamage: 0 };
-    if (this.modern && this.def.duel?.version === 2) this.duelBattle = new DuelBattle(this, this.def.duel.opponent);
+    if (this.modern && [2, 3].includes(this.def.duel?.version)) this.duelBattle = new DuelBattle(this, this.def.duel.opponent);
   }
 
   emit(e) { this.queue.push(e); }
@@ -422,7 +422,7 @@ export class CombatManager {
         if (s?.nextThrowBonus) this.nextThrowBonus = s.nextThrowBonus;
       }
     }
-    else this.emit({ type: 'interrupt', ok: false, hint: this.enemy.def.strongAttack?.hint });
+    else this.emit({ type: 'interrupt', ok: false, hint: r.hint || this.enemy.def.strongAttack?.hint });
   }
 
   /** Ветка «Повелитель»: удачное прерывание возвращает часть маны и сокращает перезарядку Телекинеза. */

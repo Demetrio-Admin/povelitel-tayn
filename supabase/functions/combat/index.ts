@@ -3396,7 +3396,7 @@ var SIGNATURE = {
 };
 var PRIORITY = ["storm", "fire", "ice", "seal", "telekinesis"];
 function duelEnemyDef(opp, version = 1) {
-  if (version === 2) return equippedDefender(opp);
+  if (version === 2 || version === 3) return equippedDefender(opp, version);
   const lv = levelRow(opp.level), mult = lv.damageMult;
   const slots = duelSlots(opp);
   const amulets = Array.isArray(opp.build?.amulets) ? opp.build.amulets.slice(0, 2) : [];
@@ -3423,7 +3423,7 @@ function duelEnemyDef(opp, version = 1) {
     duel: { slots, main }
   };
 }
-function equippedDefender(opp) {
+function equippedDefender(opp, version) {
   const lv = levelRow(opp.level);
   const abilities = Object.fromEntries(GIFT_IDS.map((id) => {
     const a = opp.abilities?.[id];
@@ -3447,7 +3447,7 @@ function equippedDefender(opp) {
     weaknesses: {},
     rewards: {},
     arena: "duel",
-    duel: { version: 2, slots, opponent: { level: lv.level, abilities, build } }
+    duel: { version, slots, opponent: { level: lv.level, abilities, build } }
   };
 }
 function duelRules() {
@@ -4293,6 +4293,9 @@ function serverRules() {
   };
 }
 
+// src/config/duelPacing.js
+var DUEL_PACING = Object.freeze({ damageMultiplier: 0.4, minCastSec: 0.8, telekinesisCastSec: 0.35, interruptGraceSec: 3 });
+
 // src/cloud/playerModel.js
 var RULES = serverRules();
 var ABILITY_IDS = ["telekinesis", "fire", "seal", "ice", "storm"];
@@ -4970,9 +4973,11 @@ var AbilitySystem = class {
 
 // src/systems/DuelBattle.js
 var DuelBody = class extends Enemy {
-  constructor(actor, name) {
+  constructor(actor, name, pacing) {
     super("duel_fighter", { name, hp: actor.hero.maxHp, normalAttack: null, strongAttack: null, arena: "duel" }, true);
     this.actor = actor;
+    this.pacing = pacing;
+    this.interruptProtectedUntil = -Infinity;
     this.pending = null;
     Object.defineProperty(this, "hp", { get: () => actor.hero.hp, set: (n) => {
       actor.hero.hp = n;
@@ -4985,8 +4990,12 @@ var DuelBody = class extends Enemy {
   get prepProgress() {
     return this.pending ? 1 - this.pending.left / this.pending.duration : 0;
   }
+  get interruptGraceLeft() {
+    return Math.max(0, this.interruptProtectedUntil - this.actor.time);
+  }
   takeDamage(base, school, mult = 1, options = {}) {
     if (!this.alive) return 0;
+    if (this.pacing) base *= this.pacing.damageMultiplier;
     if (options.burnTick && this.actor.burnWard?.left > 0) base *= 1 - this.actor.burnWard.resist;
     return this.actor.hitHero(base * mult * this.incomingMultiplier(school), false, void 0, false, { ...options, silent: true });
   }
@@ -5006,10 +5015,12 @@ var DuelBody = class extends Enemy {
   }
   tryInterrupt(tags) {
     if (!this.pending) return { attempted: false };
+    if (this.interruptGraceLeft > 1e-9) return { attempted: true, ok: false, hint: `\u0423\u0441\u0442\u043E\u0439\u0447\u0438\u0432\u043E\u0441\u0442\u044C: \u043F\u043E\u0432\u0442\u043E\u0440\u043D\u043E\u0435 \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u0435 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u0435\u0449\u0451 ${Math.ceil(this.interruptGraceLeft)} \u0441` };
     const ok = tags.includes("telekinesis");
     if (ok) {
       this.pending = null;
       this.staggerLeft = 1;
+      if (this.pacing) this.interruptProtectedUntil = this.actor.time + this.pacing.interruptGraceSec;
     }
     return { attempted: true, ok };
   }
@@ -5025,6 +5036,7 @@ var DuelBody = class extends Enemy {
 var DuelBattle = class {
   constructor(hero, opponent) {
     this.hero = hero;
+    this.pacing = hero.def.duel.version === 3 ? DUEL_PACING : null;
     const state = new GameState(null, () => 0);
     state.data.heroLevel = opponent.level;
     for (const [id, a] of Object.entries(opponent.abilities)) if (a.unlocked && a.level > 0) state.unlockAbility(id, a.level);
@@ -5037,8 +5049,8 @@ var DuelBattle = class {
     defender.hero.maxHp = hero.def.hp;
     defender.hero.hp = hero.def.hp;
     this.defender = defender;
-    hero.duelBody = new DuelBody(hero, "\u0413\u0435\u0440\u043E\u0439");
-    defender.duelBody = new DuelBody(defender, hero.def.name);
+    hero.duelBody = new DuelBody(hero, "\u0413\u0435\u0440\u043E\u0439", this.pacing);
+    defender.duelBody = new DuelBody(defender, hero.def.name, this.pacing);
     hero.enemy = defender.duelBody;
     defender.enemy = hero.duelBody;
     hero.fieldObjects = hero.fieldObjects.filter((o) => !o.def.breaksArmor);
@@ -5049,10 +5061,12 @@ var DuelBattle = class {
   beginCast(actor, id) {
     const paid = actor.payAbility(id);
     if (!paid.ok) return paid;
-    const duration = actor === this.hero ? paid.stats.castSec : Math.max(0.65, paid.stats.castSec);
+    const minimum = id === "telekinesis" ? this.pacing?.telekinesisCastSec : this.pacing?.minCastSec;
+    const duration = this.pacing ? Math.max(minimum, paid.stats.castSec) : actor === this.hero ? paid.stats.castSec : Math.max(0.65, paid.stats.castSec);
     actor.duelBody.pending = { id, stats: paid.stats, left: duration, duration, selected: actor.selectedId };
-    actor.duelBody.def.strongAttack = { name: paid.stats.label, hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!", interruptBy: ["telekinesis"] };
-    if (actor === this.defender) this.hero.emit({ type: "warning", name: paid.stats.label, prepSec: duration, hint: "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!", needsHeavy: false });
+    const hint = actor.duelBody.interruptGraceLeft > 1e-9 ? "\u0423\u0441\u0442\u043E\u0439\u0447\u0438\u0432\u043E\u0441\u0442\u044C \u043A \u043F\u0440\u0435\u0440\u044B\u0432\u0430\u043D\u0438\u044E \u2014 \u0434\u043E\u0436\u0434\u0438\u0442\u0435\u0441\u044C \u043E\u043A\u043E\u043D\u0447\u0430\u043D\u0438\u044F \u0437\u0430\u0449\u0438\u0442\u044B" : "\u041F\u0440\u0435\u0440\u0432\u0438\u0442\u0435 \u0422\u0435\u043B\u0435\u043A\u0438\u043D\u0435\u0437\u043E\u043C!";
+    actor.duelBody.def.strongAttack = { name: paid.stats.label, hint, interruptBy: ["telekinesis"] };
+    if (actor === this.defender) this.hero.emit({ type: "warning", name: paid.stats.label, prepSec: duration, hint, needsHeavy: false });
     actor.commit();
     return { ok: true };
   }
@@ -5231,7 +5245,7 @@ var CombatManager = class {
     this.result = null;
     this.queue = [];
     this.stats = { abilityUses: { telekinesis: 0, fire: 0, seal: 0, ice: 0 }, interrupts: 0, damageTaken: 0, autoDamage: 0 };
-    if (this.modern && this.def.duel?.version === 2) this.duelBattle = new DuelBattle(this, this.def.duel.opponent);
+    if (this.modern && [2, 3].includes(this.def.duel?.version)) this.duelBattle = new DuelBattle(this, this.def.duel.opponent);
   }
   emit(e) {
     this.queue.push(e);
@@ -5610,7 +5624,7 @@ var CombatManager = class {
         }
         if (s?.nextThrowBonus) this.nextThrowBonus = s.nextThrowBonus;
       }
-    } else this.emit({ type: "interrupt", ok: false, hint: this.enemy.def.strongAttack?.hint });
+    } else this.emit({ type: "interrupt", ok: false, hint: r.hint || this.enemy.def.strongAttack?.hint });
   }
   /** Ветка «Повелитель»: удачное прерывание возвращает часть маны и сокращает перезарядку Телекинеза. */
   refundInterrupt() {

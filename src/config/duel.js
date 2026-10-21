@@ -80,7 +80,7 @@ const PRIORITY = ['storm', 'fire', 'ice', 'seal', 'telekinesis'];
  * Астрал в слотах — барьер (защита 20%), Телекинез III — кристальная броня; к дарам, которых нет в его слотах, соперник уязвим (+25%).
  */
 export function duelEnemyDef(opp, version = 1) {
-  if (version === 2) return equippedDefender(opp);
+  if (version === 2 || version === 3) return equippedDefender(opp, version);
   const lv = levelRow(opp.level), mult = lv.damageMult;
   const slots = duelSlots(opp);
   const amulets = Array.isArray(opp.build?.amulets) ? opp.build.amulets.slice(0, 2) : [];
@@ -109,7 +109,7 @@ export function duelEnemyDef(opp, version = 1) {
 }
 
 // Only newly stamped duel contexts use the real fighter. The legacy profile above is frozen for replay.
-function equippedDefender(opp) {
+function equippedDefender(opp, version) {
   const lv = levelRow(opp.level);
   const abilities = Object.fromEntries(GIFT_IDS.map(id => {
     const a = opp.abilities?.[id];
@@ -124,7 +124,7 @@ function equippedDefender(opp) {
   const hero = HEROES.find(h => h.id === opp.hero) || HEROES.find(h => h.id === DEFAULT_HERO_ID);
   return { name: opp.name || 'Тень дуэлянта', texture: hero.textures.down, tier: 'strong', hp: lv.maxHp,
     normalAttack: null, strongAttack: null, defense: 0, weaknesses: {}, rewards: {}, arena: 'duel',
-    duel: { version: 2, slots, opponent: { level: lv.level, abilities, build } } };
+    duel: { version, slots, opponent: { level: lv.level, abilities, build } } };
 }
 
 /** Для сервера (_game_rules). */

@@ -1,0 +1,7427 @@
+{
+  "sourceCommit": "d1bcbcee6aef659a8d14fec6c4f7d79168f7c7ce",
+  "description": "Actual v2/balance40 engine before Duel pacing changes; all 64 aggressive profile pairs.",
+  "cases": [
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "fire": "arsonist",
+            "storm": "discharge"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "throw_storm_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "fire": "arsonist",
+                "storm": "discharge"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 147.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 291,
+          "autoDamage": 0
+        },
+        "heroStormHits": 2,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "fire": "arsonist",
+            "storm": "discharge"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "piercing_shards_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "seal",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_astral_eye"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_astral_eye": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "seal": "piercer",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 147.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 291,
+          "autoDamage": 0
+        },
+        "heroStormHits": 2,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "fire": "arsonist",
+            "storm": "discharge"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "spell_storm_v",
+            "level": 15,
+            "abilities": {
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "seal",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "fire": "arsonist",
+                "seal": "seer",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 147.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 291,
+          "autoDamage": 0
+        },
+        "heroStormHits": 2,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "fire": "arsonist",
+            "storm": "discharge"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "defensive_lord_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "frost"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 147.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 282,
+          "autoDamage": 0
+        },
+        "heroStormHits": 2,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "fire": "arsonist",
+            "storm": "discharge"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "frost_field_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_storm_heart"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_storm_heart": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "ice": "frost",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 147.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 282,
+          "autoDamage": 0
+        },
+        "heroStormHits": 2,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "fire": "arsonist",
+            "storm": "discharge"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "basic_i",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 1,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 1,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 1,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [],
+              "amuletLevels": {},
+              "branches": {}
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 147.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 291,
+          "autoDamage": 0
+        },
+        "heroStormHits": 2,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "fire": "arsonist",
+            "storm": "discharge"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "developed_iii",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_focus"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 1,
+                "amulet_focus": 1
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 147.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 350,
+          "autoDamage": 0
+        },
+        "heroStormHits": 2,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "fire": "arsonist",
+            "storm": "discharge"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "heavy_throw_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_breaker"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_breaker": 5
+              },
+              "branches": {
+                "telekinesis": "breaker"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 147.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 291,
+          "autoDamage": 0
+        },
+        "heroStormHits": 2,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "seal",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_astral_eye"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_astral_eye": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "seal": "piercer",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "throw_storm_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "fire": "arsonist",
+                "storm": "discharge"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.8000000000000008,
+        "hp": 255,
+        "mana": 130.03999999999996,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 305,
+          "autoDamage": 0
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "seal",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_astral_eye"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_astral_eye": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "seal": "piercer",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "piercing_shards_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "seal",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_astral_eye"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_astral_eye": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "seal": "piercer",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.8000000000000008,
+        "hp": 255,
+        "mana": 130.03999999999996,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 305,
+          "autoDamage": 0
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "seal",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_astral_eye"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_astral_eye": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "seal": "piercer",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "spell_storm_v",
+            "level": 15,
+            "abilities": {
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "seal",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "fire": "arsonist",
+                "seal": "seer",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.8000000000000008,
+        "hp": 255,
+        "mana": 130.03999999999996,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 305,
+          "autoDamage": 0
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "seal",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_astral_eye"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_astral_eye": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "seal": "piercer",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "defensive_lord_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "frost"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 8.366666666666662,
+        "hp": 0,
+        "mana": 129.5548333333323,
+        "defenderHp": 59,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 0,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 258,
+          "autoDamage": 12
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 196,
+          "autoDamage": 24
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "seal",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_astral_eye"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_astral_eye": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "seal": "piercer",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "frost_field_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_storm_heart"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_storm_heart": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "ice": "frost",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 4.516666666666656,
+        "hp": 0,
+        "mana": 140.70533333333293,
+        "defenderHp": 64,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 372,
+          "autoDamage": 7
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 1,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 191,
+          "autoDamage": 8
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 1
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "seal",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_astral_eye"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_astral_eye": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "seal": "piercer",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "basic_i",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 1,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 1,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 1,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [],
+              "amuletLevels": {},
+              "branches": {}
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.8000000000000008,
+        "hp": 255,
+        "mana": 130.03999999999996,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 305,
+          "autoDamage": 0
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "seal",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_astral_eye"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_astral_eye": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "seal": "piercer",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "developed_iii",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_focus"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 1,
+                "amulet_focus": 1
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 6.033333333333317,
+        "hp": 74,
+        "mana": 130.2420000000005,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 0,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 181,
+          "autoDamage": 18
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 277,
+          "autoDamage": 18
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "seal",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_astral_eye"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_astral_eye": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "seal": "piercer",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "heavy_throw_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_breaker"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_breaker": 5
+              },
+              "branches": {
+                "telekinesis": "breaker"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.8000000000000008,
+        "hp": 255,
+        "mana": 130.03999999999996,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 305,
+          "autoDamage": 0
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "seal",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "fire": "arsonist",
+            "seal": "seer",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "throw_storm_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "fire": "arsonist",
+                "storm": "discharge"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 3.1166666666666605,
+        "hp": 0,
+        "mana": 166.8433333333332,
+        "defenderHp": 135,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 337,
+          "autoDamage": 11
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 120,
+          "autoDamage": 9
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 2
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "seal",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "fire": "arsonist",
+            "seal": "seer",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "piercing_shards_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "seal",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_astral_eye"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_astral_eye": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "seal": "piercer",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 2.416666666666663,
+        "hp": 0,
+        "mana": 164.18333333333322,
+        "defenderHp": 135,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 331,
+          "autoDamage": 11
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 0,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 120,
+          "autoDamage": 12
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "seal",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "fire": "arsonist",
+            "seal": "seer",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "spell_storm_v",
+            "level": 15,
+            "abilities": {
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "seal",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "fire": "arsonist",
+                "seal": "seer",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 8.466666666666667,
+        "hp": 18,
+        "mana": 171.17333333333295,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 2,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 237,
+          "autoDamage": 42
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 2,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 274,
+          "autoDamage": 42
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "seal",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "fire": "arsonist",
+            "seal": "seer",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "defensive_lord_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "frost"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 7.666666666666645,
+        "hp": 0,
+        "mana": 172.89483333333234,
+        "defenderHp": 129,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 279,
+          "autoDamage": 11
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 126,
+          "autoDamage": 24
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "seal",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "fire": "arsonist",
+            "seal": "seer",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "frost_field_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_storm_heart"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_storm_heart": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "ice": "frost",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 3.1166666666666605,
+        "hp": 0,
+        "mana": 165.1143333333331,
+        "defenderHp": 183,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 370,
+          "autoDamage": 7
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 0,
+            "seal": 0,
+            "ice": 1,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 72,
+          "autoDamage": 8
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 1
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "seal",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "fire": "arsonist",
+            "seal": "seer",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "basic_i",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 1,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 1,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 1,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [],
+              "amuletLevels": {},
+              "branches": {}
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 8.466666666666667,
+        "hp": 71,
+        "mana": 171.17333333333295,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 2,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 184,
+          "autoDamage": 42
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 274,
+          "autoDamage": 36
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "seal",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "fire": "arsonist",
+            "seal": "seer",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "developed_iii",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_focus"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 1,
+                "amulet_focus": 1
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 6.966666666666647,
+        "hp": 0,
+        "mana": 179.1806666666674,
+        "defenderHp": 94,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 293,
+          "autoDamage": 24
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 161,
+          "autoDamage": 27
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "fire",
+            "seal",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_storm_heart",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_storm_heart": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "fire": "arsonist",
+            "seal": "seer",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "heavy_throw_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_breaker"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_breaker": 5
+              },
+              "branches": {
+                "telekinesis": "breaker"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 2.0166666666666644,
+        "hp": 0,
+        "mana": 162.66333333333324,
+        "defenderHp": 154,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 265,
+          "autoDamage": 11
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 101,
+          "autoDamage": 12
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "frost"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "throw_storm_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "fire": "arsonist",
+                "storm": "discharge"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 3.1166666666666605,
+        "hp": 0,
+        "mana": 158.8433333333332,
+        "defenderHp": 127,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 308,
+          "autoDamage": 8
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 128,
+          "autoDamage": 5
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 2
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "frost"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "piercing_shards_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "seal",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_astral_eye"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_astral_eye": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "seal": "piercer",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 3.816666666666658,
+        "hp": 0,
+        "mana": 160.9713333333334,
+        "defenderHp": 119,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 308,
+          "autoDamage": 8
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 1,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 136,
+          "autoDamage": 7
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "frost"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "spell_storm_v",
+            "level": 15,
+            "abilities": {
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "seal",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "fire": "arsonist",
+                "seal": "seer",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 9.633333333333391,
+        "hp": 92,
+        "mana": 125.60666666666623,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 2,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 163,
+          "autoDamage": 32
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 2,
+            "seal": 1,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 258,
+          "autoDamage": 26
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "frost"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "defensive_lord_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "frost"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 11.516666666666818,
+        "hp": 0,
+        "mana": 145.30866666666515,
+        "defenderHp": 99,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 281,
+          "autoDamage": 13
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 2,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 0,
+          "damageTaken": 156,
+          "autoDamage": 25
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "frost"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "frost_field_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_storm_heart"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_storm_heart": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "ice": "frost",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 4.016666666666658,
+        "hp": 0,
+        "mana": 158.31133333333293,
+        "defenderHp": 172,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 256,
+          "autoDamage": 5
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 1,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 83,
+          "autoDamage": 10
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 1
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "frost"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "basic_i",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 1,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 1,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 1,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [],
+              "amuletLevels": {},
+              "branches": {}
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 7.816666666666644,
+        "hp": 177,
+        "mana": 141.70333333333298,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 5,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 78,
+          "autoDamage": 24
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 271,
+          "autoDamage": 10
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "frost"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "developed_iii",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_focus"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 1,
+                "amulet_focus": 1
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 10.300000000000091,
+        "hp": 37,
+        "mana": 125.84733333333392,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 2,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 218,
+          "autoDamage": 24
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 1,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 0,
+          "damageTaken": 257,
+          "autoDamage": 30
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_lunar"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_lunar": 5
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "frost"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "heavy_throw_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_breaker"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_breaker": 5
+              },
+              "branches": {
+                "telekinesis": "breaker"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 8.366666666666662,
+        "hp": 0,
+        "mana": 150.79333333333295,
+        "defenderHp": 13,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 268,
+          "autoDamage": 32
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 5,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 242,
+          "autoDamage": 28
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_storm_heart"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_storm_heart": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "ice": "frost",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "throw_storm_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "fire": "arsonist",
+                "storm": "discharge"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 167.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 266,
+          "autoDamage": 0
+        },
+        "heroStormHits": 1,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_storm_heart"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_storm_heart": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "ice": "frost",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "piercing_shards_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "seal",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_astral_eye"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_astral_eye": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "seal": "piercer",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 167.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 266,
+          "autoDamage": 0
+        },
+        "heroStormHits": 1,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_storm_heart"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_storm_heart": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "ice": "frost",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "spell_storm_v",
+            "level": 15,
+            "abilities": {
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "seal",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "fire": "arsonist",
+                "seal": "seer",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 167.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 266,
+          "autoDamage": 0
+        },
+        "heroStormHits": 1,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_storm_heart"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_storm_heart": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "ice": "frost",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "defensive_lord_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "frost"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 12.916666666666888,
+        "hp": 0,
+        "mana": 141.76416666666503,
+        "defenderHp": 88,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 2,
+          "damageTaken": 275,
+          "autoDamage": 8
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 2,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 1,
+          "damageTaken": 167,
+          "autoDamage": 19
+        },
+        "heroStormHits": 1,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_storm_heart"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_storm_heart": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "ice": "frost",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "frost_field_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_storm_heart"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_storm_heart": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "ice": "frost",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 11.866666666666836,
+        "hp": 0,
+        "mana": 139.50316666666518,
+        "defenderHp": 43,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 2,
+          "damageTaken": 264,
+          "autoDamage": 11
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 0,
+            "seal": 0,
+            "ice": 2,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 212,
+          "autoDamage": 14
+        },
+        "heroStormHits": 1,
+        "defenderStormHits": 1
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_storm_heart"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_storm_heart": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "ice": "frost",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "basic_i",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 1,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 1,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 1,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [],
+              "amuletLevels": {},
+              "branches": {}
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 167.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 266,
+          "autoDamage": 0
+        },
+        "heroStormHits": 1,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_storm_heart"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_storm_heart": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "ice": "frost",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "developed_iii",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_focus"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 1,
+                "amulet_focus": 1
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 6.549999999999982,
+        "hp": 170,
+        "mana": 133.81266666666733,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 85,
+          "autoDamage": 18
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 258,
+          "autoDamage": 8
+        },
+        "heroStormHits": 1,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 5,
+            "unlocked": true
+          },
+          "storm": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "ice",
+            "storm"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_storm_heart"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 5,
+            "amulet_storm_heart": 5
+          },
+          "branches": {
+            "telekinesis": "breaker",
+            "ice": "frost",
+            "storm": "field"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "heavy_throw_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_breaker"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_breaker": 5
+              },
+              "branches": {
+                "telekinesis": "breaker"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 0.7500000000000007,
+        "hp": 255,
+        "mana": 167.84999999999997,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 1,
+          "damageTaken": 0,
+          "autoDamage": 0
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 266,
+          "autoDamage": 0
+        },
+        "heroStormHits": 1,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 1,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 1,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 1,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [],
+          "amuletLevels": {},
+          "branches": {}
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "throw_storm_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "fire": "arsonist",
+                "storm": "discharge"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 3.1166666666666605,
+        "hp": 0,
+        "mana": 158.8433333333332,
+        "defenderHp": 140,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 337,
+          "autoDamage": 9
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 115,
+          "autoDamage": 9
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 2
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 1,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 1,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 1,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [],
+          "amuletLevels": {},
+          "branches": {}
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "piercing_shards_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "seal",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_astral_eye"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_astral_eye": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "seal": "piercer",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 2.416666666666663,
+        "hp": 0,
+        "mana": 156.18333333333322,
+        "defenderHp": 146,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 331,
+          "autoDamage": 9
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 0,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 109,
+          "autoDamage": 12
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 1,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 1,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 1,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [],
+          "amuletLevels": {},
+          "branches": {}
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "spell_storm_v",
+            "level": 15,
+            "abilities": {
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "seal",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "fire": "arsonist",
+                "seal": "seer",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 9.066666666666697,
+        "hp": 0,
+        "mana": 143.45333333333292,
+        "defenderHp": 44,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 2,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 274,
+          "autoDamage": 36
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 2,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 211,
+          "autoDamage": 42
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 1,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 1,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 1,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [],
+          "amuletLevels": {},
+          "branches": {}
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "defensive_lord_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "frost"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 7.666666666666645,
+        "hp": 0,
+        "mana": 164.89483333333234,
+        "defenderHp": 174,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 279,
+          "autoDamage": 9
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 81,
+          "autoDamage": 24
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 1,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 1,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 1,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [],
+          "amuletLevels": {},
+          "branches": {}
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "frost_field_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_storm_heart"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_storm_heart": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "ice": "frost",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 3.1166666666666605,
+        "hp": 0,
+        "mana": 157.1143333333331,
+        "defenderHp": 186,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 370,
+          "autoDamage": 5
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 0,
+            "seal": 0,
+            "ice": 1,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 69,
+          "autoDamage": 8
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 1
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 1,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 1,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 1,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [],
+          "amuletLevels": {},
+          "branches": {}
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "basic_i",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 1,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 1,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 1,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [],
+              "amuletLevels": {},
+              "branches": {}
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 10.483333333333434,
+        "hp": 35,
+        "mana": 134.8366666666662,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 2,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 220,
+          "autoDamage": 45
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 2,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 256,
+          "autoDamage": 45
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 1,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 1,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 1,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [],
+          "amuletLevels": {},
+          "branches": {}
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "developed_iii",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_focus"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 1,
+                "amulet_focus": 1
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 6.966666666666647,
+        "hp": 0,
+        "mana": 157.1806666666674,
+        "defenderHp": 126,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 293,
+          "autoDamage": 21
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 129,
+          "autoDamage": 27
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 1,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 1,
+            "unlocked": true
+          },
+          "seal": {
+            "level": 1,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "seal"
+          ],
+          "amulets": [],
+          "amuletLevels": {},
+          "branches": {}
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "heavy_throw_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_breaker"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_breaker": 5
+              },
+              "branches": {
+                "telekinesis": "breaker"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 2.0166666666666644,
+        "hp": 0,
+        "mana": 154.66333333333324,
+        "defenderHp": 146,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 1,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 265,
+          "autoDamage": 9
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 109,
+          "autoDamage": 12
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_focus"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 1,
+            "amulet_focus": 1
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "throw_storm_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "fire": "arsonist",
+                "storm": "discharge"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 3.1166666666666605,
+        "hp": 0,
+        "mana": 158.8433333333332,
+        "defenderHp": 111,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 386,
+          "autoDamage": 9
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 144,
+          "autoDamage": 7
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 2
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_focus"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 1,
+            "amulet_focus": 1
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "piercing_shards_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "seal",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_astral_eye"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_astral_eye": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "seal": "piercer",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 3.1166666666666605,
+        "hp": 0,
+        "mana": 158.8433333333332,
+        "defenderHp": 111,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 275,
+          "autoDamage": 9
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 0,
+            "seal": 1,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 144,
+          "autoDamage": 9
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_focus"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 1,
+            "amulet_focus": 1
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "spell_storm_v",
+            "level": 15,
+            "abilities": {
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "seal",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "fire": "arsonist",
+                "seal": "seer",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 8.016666666666644,
+        "hp": 86,
+        "mana": 149.46333333333297,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 169,
+          "autoDamage": 36
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 259,
+          "autoDamage": 24
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_focus"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 1,
+            "amulet_focus": 1
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "defensive_lord_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "frost"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 10.466666666666766,
+        "hp": 0,
+        "mana": 143.91216666666534,
+        "defenderHp": 103,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 255,
+          "autoDamage": 16
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 1,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 0,
+          "damageTaken": 152,
+          "autoDamage": 30
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_focus"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 1,
+            "amulet_focus": 1
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "frost_field_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_storm_heart"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_storm_heart": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "ice": "frost",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 3.1166666666666605,
+        "hp": 0,
+        "mana": 157.1143333333331,
+        "defenderHp": 167,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 278,
+          "autoDamage": 6
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 0,
+            "seal": 0,
+            "ice": 1,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 88,
+          "autoDamage": 6
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 1
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_focus"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 1,
+            "amulet_focus": 1
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "basic_i",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 1,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 1,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 1,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [],
+              "amuletLevels": {},
+              "branches": {}
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 7.816666666666644,
+        "hp": 148,
+        "mana": 141.70333333333298,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 5,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 107,
+          "autoDamage": 27
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 278,
+          "autoDamage": 21
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_focus"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 1,
+            "amulet_focus": 1
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "developed_iii",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_focus"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 1,
+                "amulet_focus": 1
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 8.416666666666664,
+        "hp": 0,
+        "mana": 148.69066666666734,
+        "defenderHp": 67,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 259,
+          "autoDamage": 21
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 188,
+          "autoDamage": 28
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 3,
+            "unlocked": true
+          },
+          "fire": {
+            "level": 3,
+            "unlocked": true
+          },
+          "ice": {
+            "level": 3,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis",
+            "fire",
+            "ice"
+          ],
+          "amulets": [
+            "amulet_forest",
+            "amulet_focus"
+          ],
+          "amuletLevels": {
+            "amulet_forest": 1,
+            "amulet_focus": 1
+          },
+          "branches": {
+            "telekinesis": "lord",
+            "fire": "blaster",
+            "ice": "shard"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "heavy_throw_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_breaker"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_breaker": 5
+              },
+              "branches": {
+                "telekinesis": "breaker"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 4.016666666666658,
+        "hp": 0,
+        "mana": 162.26333333333315,
+        "defenderHp": 94,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 261,
+          "autoDamage": 18
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 161,
+          "autoDamage": 18
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_breaker"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_breaker": 5
+          },
+          "branches": {
+            "telekinesis": "breaker"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "throw_storm_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "fire": "arsonist",
+                "storm": "discharge"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 4.516666666666656,
+        "hp": 0,
+        "mana": 168.16333333333313,
+        "defenderHp": 86,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 339,
+          "autoDamage": 24
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 1,
+            "seal": 0,
+            "ice": 0,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 169,
+          "autoDamage": 9
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 2
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_breaker"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_breaker": 5
+          },
+          "branches": {
+            "telekinesis": "breaker"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "piercing_shards_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "seal",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_astral_eye"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_astral_eye": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "seal": "piercer",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 4.516666666666656,
+        "hp": 0,
+        "mana": 167.63133333333337,
+        "defenderHp": 86,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 494,
+          "autoDamage": 24
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 1,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 169,
+          "autoDamage": 12
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_breaker"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_breaker": 5
+          },
+          "branches": {
+            "telekinesis": "breaker"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "spell_storm_v",
+            "level": 15,
+            "abilities": {
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "fire",
+                "seal",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_storm_heart",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_storm_heart": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "fire": "arsonist",
+                "seal": "seer",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 5.983333333333317,
+        "hp": 239,
+        "mana": 119.7366666666664,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 16,
+          "autoDamage": 24
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 0,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 314,
+          "autoDamage": 16
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_breaker"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_breaker": 5
+          },
+          "branches": {
+            "telekinesis": "breaker"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "defensive_lord_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_lunar"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_lunar": 5
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "frost"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 11.516666666666818,
+        "hp": 0,
+        "mana": 125.9021666666653,
+        "defenderHp": 155,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 2,
+          "damageTaken": 260,
+          "autoDamage": 12
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 5,
+            "fire": 1,
+            "seal": 0,
+            "ice": 2
+          },
+          "interrupts": 1,
+          "damageTaken": 100,
+          "autoDamage": 31
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_breaker"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_breaker": 5
+          },
+          "branches": {
+            "telekinesis": "breaker"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "frost_field_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 5,
+                "unlocked": true
+              },
+              "storm": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "ice",
+                "storm"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_storm_heart"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 5,
+                "amulet_storm_heart": 5
+              },
+              "branches": {
+                "telekinesis": "breaker",
+                "ice": "frost",
+                "storm": "field"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 4.516666666666656,
+        "hp": 0,
+        "mana": 164.70533333333293,
+        "defenderHp": 160,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 322,
+          "autoDamage": 7
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 1,
+            "storm": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 95,
+          "autoDamage": 8
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 1
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_breaker"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_breaker": 5
+          },
+          "branches": {
+            "telekinesis": "breaker"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "basic_i",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 1,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 1,
+                "unlocked": true
+              },
+              "seal": {
+                "level": 1,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "seal"
+              ],
+              "amulets": [],
+              "amuletLevels": {},
+              "branches": {}
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "victory",
+        "time": 5.983333333333317,
+        "hp": 205,
+        "mana": 119.7366666666664,
+        "defenderHp": 0,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 2,
+          "damageTaken": 50,
+          "autoDamage": 24
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 2,
+            "fire": 1,
+            "seal": 1,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 314,
+          "autoDamage": 9
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_breaker"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_breaker": 5
+          },
+          "branches": {
+            "telekinesis": "breaker"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "developed_iii",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 3,
+                "unlocked": true
+              },
+              "fire": {
+                "level": 3,
+                "unlocked": true
+              },
+              "ice": {
+                "level": 3,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis",
+                "fire",
+                "ice"
+              ],
+              "amulets": [
+                "amulet_forest",
+                "amulet_focus"
+              ],
+              "amuletLevels": {
+                "amulet_forest": 1,
+                "amulet_focus": 1
+              },
+              "branches": {
+                "telekinesis": "lord",
+                "fire": "blaster",
+                "ice": "shard"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 8.366666666666662,
+        "hp": 0,
+        "mana": 126.50066666666734,
+        "defenderHp": 8,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 6,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 256,
+          "autoDamage": 27
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 4,
+            "fire": 1,
+            "seal": 0,
+            "ice": 1
+          },
+          "interrupts": 0,
+          "damageTaken": 247,
+          "autoDamage": 27
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    },
+    {
+      "ctx": {
+        "spawn": "duel",
+        "enemy": "duel_mage",
+        "balanceVersion": 40,
+        "level": 15,
+        "hp": 255,
+        "mana": 205,
+        "abilities": {
+          "telekinesis": {
+            "level": 5,
+            "unlocked": true
+          }
+        },
+        "build": {
+          "slots": [
+            "telekinesis"
+          ],
+          "amulets": [
+            "amulet_focus",
+            "amulet_breaker"
+          ],
+          "amuletLevels": {
+            "amulet_focus": 5,
+            "amulet_breaker": 5
+          },
+          "branches": {
+            "telekinesis": "breaker"
+          }
+        },
+        "potions": {},
+        "potionLoadout": [],
+        "duel": {
+          "version": 2,
+          "rating": 1000,
+          "opponent": {
+            "id": "heavy_throw_v",
+            "level": 15,
+            "abilities": {
+              "telekinesis": {
+                "level": 5,
+                "unlocked": true
+              }
+            },
+            "build": {
+              "slots": [
+                "telekinesis"
+              ],
+              "amulets": [
+                "amulet_focus",
+                "amulet_breaker"
+              ],
+              "amuletLevels": {
+                "amulet_focus": 5,
+                "amulet_breaker": 5
+              },
+              "branches": {
+                "telekinesis": "breaker"
+              }
+            },
+            "rating": 1000
+          }
+        }
+      },
+      "policy": "aggressive",
+      "result": {
+        "outcome": "defeat",
+        "time": 3.1166666666666605,
+        "hp": 0,
+        "mana": 162.8433333333332,
+        "defenderHp": 98,
+        "stats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 1,
+          "damageTaken": 266,
+          "autoDamage": 12
+        },
+        "defenderStats": {
+          "abilityUses": {
+            "telekinesis": 3,
+            "fire": 0,
+            "seal": 0,
+            "ice": 0
+          },
+          "interrupts": 0,
+          "damageTaken": 157,
+          "autoDamage": 12
+        },
+        "heroStormHits": 0,
+        "defenderStormHits": 0
+      }
+    }
+  ]
+}

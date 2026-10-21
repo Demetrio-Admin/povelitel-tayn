@@ -27,6 +27,7 @@ import { checkBuild, slotCount, defaultSlots, progressGate, amuletEffect } from 
 
 import { potionLoadout } from '../config/resources.js';
 import { combatBalanceVersion } from '../config/combatVersions.js';
+import { duelVersionFor } from '../config/duelPacing.js';
 const RULES = serverRules();
 /**
  * Ключи объектов мира, состояние которых пишет только сервер: всё, что есть в RULES.world (с v0.15.0 и магия — сервер ставит mark),
@@ -829,7 +830,7 @@ function duelStart(s, nowMs, balanceVersion, duelVersion) {
   const opponent = duelGhostOf(s, st.rating);
   s.combatSince = s.vitalsAt;
   const version = combatBalanceVersion(balanceVersion);
-  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), balanceVersion: version, duel: { version: version >= 38 && duelVersion === 2 ? 2 : 1, opponent, rating: st.rating, season: st.season } };
+  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), balanceVersion: version, duel: { version: duelVersionFor(version, duelVersion), opponent, rating: st.rating, season: st.season } };
   return { ok: true, opponent, rating: st.rating, left: D.attemptsPerDay - st.used };
 }
 

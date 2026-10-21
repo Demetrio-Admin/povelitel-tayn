@@ -6,6 +6,7 @@ import { MSG } from '../state/EventBus.js';
 import { DUEL, LEAGUES, leagueOf, seasonEndMs, seasonSapphires, promoSapphires } from '../config/duel.js';
 import { sapphires as sapphireText } from '../systems/wallet.js';
 import { duelStateOf } from '../cloud/playerModel.js';
+import { DUEL_PACING_TEXT } from '../config/duelPacing.js';
 
 const FONT = UI.font;
 const SH = UI.shadow;
@@ -38,8 +39,9 @@ export const windows26 = {
         text(`Рейтинг: ${d.rating} · ${lg.name}${next ? ` (до лиги «${next.name}» — ${next.from - d.rating})` : ''}`, { fontSize: UI.type.body, fontStyle: 'bold', color: COLORS.textGold });
         text(`Победы: ${d.wins} · поражения: ${d.losses} · лучший рейтинг сезона: ${d.best}`);
         text(`Попыток сегодня: ${left} из ${DUEL.attemptsPerDay}. Награда: победа — ${DUEL.reward.victory.coins} монет и ${DUEL.reward.victory.heroXP} опыта, поражение — ${DUEL.reward.defeat.coins} монет.`);
-        text('Соперник — слепок другого героя под управлением ИИ: его уровень, дары, ветки и амулеты. К дарам, которых нет в его слотах, он уязвим. '
+        text('Соперник — слепок другого героя под управлением ИИ: его уровень, дары, ветки и амулеты. '
           + 'Здоровье после Дуэли не теряется; выпитые зелья — тратятся.', { color: COLORS.textDim });
+        text(DUEL_PACING_TEXT, { color: COLORS.textDim });
         // v0.34.0: сапфиры арены
         text('Награды арены', { fontSize: UI.type.body, fontStyle: 'bold', color: COLORS.textGold });
         text(`Итог сезона — по лиге в его конце, если в сезоне не меньше ${need} боёв: ${LEAGUES.map((l) => `${l.name} ${seasonSapphires(l.id)}`).join(' · ')}.`);

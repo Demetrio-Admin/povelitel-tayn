@@ -370,8 +370,10 @@ export class CombatScene extends Phaser.Scene {
     if (this.cm.modern && this.sim.isEquipped('storm')) (e.actor ? own : st).push(`Ваша Гроза ${this.cm.stormCharges}/3`);
     if (e.shield > 0) st.push(`Щит ${Math.ceil(e.shield)}`);
     if (this.cm.modern && Object.values(this.cm.shields).some(s=>s.left>0&&s.amount>0)) (e.actor ? own : st).push(`Ваш щит ${Math.ceil(Object.values(this.cm.shields).reduce((n,s)=>n+(s.left>0?Math.max(0,s.amount):0),0))}`);
-    if (this.cm.burnWard?.left > 0) (e.actor ? own : st).push(`От горения −60% · ${Math.ceil(this.cm.burnWard.left)}с`);
+    if (this.cm.burnWard?.left > 0) (e.actor ? own : st).push(e.actor ? `От горения ${Math.ceil(this.cm.burnWard.left)}с` : `От горения −60% · ${Math.ceil(this.cm.burnWard.left)}с`);
+    if (this.cm.duelBody?.interruptGraceLeft > 1e-9) own.push(`Устойчивость ${Math.ceil(this.cm.duelBody.interruptGraceLeft)}с`);
     this.heroBuffText?.setText(own.join('\n'));
+    if (this.cm.duelBattle?.pacing && this.heroBuffText) this.heroBuffText.y = Math.min(968, 1060 - this.heroBuffText.height);
     if (e.hasArmor) st.push(e.armorActive ? `Броня −${Math.round(e.def.armor.value * 100)}%` : `Броня разбита ${e.armorDisabledLeft.toFixed(0)}с`);
     if (e.burning) st.push(`Горение ${e.burn.left.toFixed(0)}с`);
     if (e.inPuddle) st.push(`${e.actor ? 'Смола' : 'Лужа смолы'} ${e.puddle.left.toFixed(0)}с`);
@@ -379,6 +381,7 @@ export class CombatScene extends Phaser.Scene {
     if (e.isBrittle) st.push(`Хрупкость ${e.brittle.left.toFixed(0)}с`);
     if (e.vulnerable.left > 0) st.push(`Уязвим +${Math.round(e.vulnerable.bonus * 100)}% ${e.vulnerable.left.toFixed(0)}с`);
     if (e.staggerLeft > 0) st.push('Оглушён');
+    if (e.interruptGraceLeft > 1e-9) st.push(`Устойчивость ${Math.ceil(e.interruptGraceLeft)}с`);
     if (e.defenseActive) st.push(`Защита −${Math.round(e.def.defense * 100)}%`);
     this.statusText.setText(st.join('   ·   '));
     if (e.actor) this.warn.y = Math.max(496, this.statusText.y + this.statusText.height + 84);
@@ -386,6 +389,7 @@ export class CombatScene extends Phaser.Scene {
     this.enemySprite.setTint(e.burning ? 0xffb38a : e.staggerLeft > 0 ? 0xb0b0ff : 0xffffff);
 
     if (e.isPreparing) {
+      if (this.cm.duelBattle?.pacing) this.warnHint.setText(e.interruptGraceLeft > 1e-9 ? 'Устойчивость к прерыванию — дождитесь окончания защиты' : 'Прервите Телекинезом!');
       this.warn.setVisible(true);
       this.warnBar.width = 520 * (1 - e.prepProgress);
       this.prepGlow.setAlpha(0.35 + Math.sin(this.time.now / 80) * 0.15);

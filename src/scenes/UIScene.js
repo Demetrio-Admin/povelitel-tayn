@@ -524,7 +524,7 @@ export class UIScene extends Phaser.Scene {
     services.modalOpen = true;
     this.resetJoystick();
     if (!opts.silent) services.audio.play(opts.final ? 'victory' : 'modal_open');
-    const color = opts.color ?? COLORS.gold, pw = 664, cw = pw - 80;
+    const color = opts.color ?? COLORS.gold, pw = 664, inset = opts.worldMap ? 16 : 32, cw = opts.worldMap ? pw - 32 : pw - 80;
     const left = (W - pw) / 2;
     // c — окно целиком; затемнение лежит в c отдельно от body (всё остальное), чтобы при смене вкладки оно не мигало
     const c = this.add.container(0, 0).setDepth(10000);
@@ -545,7 +545,7 @@ export class UIScene extends Phaser.Scene {
     const tabBlock = opts.tabs?.length ? Math.ceil(opts.tabs.length / 2) * (btnH + 12) + 12 : 0;
     // topTabs — вкладки одной строкой под заголовком (Журнал); tabs — крупные кнопки внизу (котёл, сумка)
     const topTabH = opts.topTabs?.length ? TOP_TAB_H + 22 : 0;
-    const headerH = 32 + title.height + 30 + topTabH, footerH = btnBlock + 70 + tabBlock;
+    const headerH = 32 + title.height + 30 + topTabH, footerH = btnBlock + (opts.worldMap ? 58 : 70) + tabBlock;
     // fullHeight — окно всегда одной высоты (Журнал): вкладки не «прыгают» при переключении
     const viewH = opts.fullHeight ? H - 112 - headerH - footerH : Math.min(contentH, H - 112 - headerH - footerH);
     const ph = headerH + viewH + footerH;
@@ -554,8 +554,9 @@ export class UIScene extends Phaser.Scene {
     title.setY(top + 32);
     c.add([overlay, body]);
     body.add([panel, title, addDivider(this, W / 2, top + headerH - 16 - topTabH, pw - 100, color)]);
-    const scroll = addScrollViewport(this, body, content, { x: left + 32, y: top + headerH, width: cw, height: viewH, contentHeight: contentH });
+    const scroll = addScrollViewport(this, body, content, { x: left + inset, y: top + headerH, width: cw, height: viewH, contentHeight: contentH });
     if (scroll.max) body.add(this.add.text(W / 2, top + headerH + viewH + 18, '↕ Проведите по содержимому', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim }).setOrigin(0.5));
+    if (opts.worldMap && !scroll.max) body.add(addDivider(this, W / 2, top + ph - btnBlock - 48, pw - 100, color));
     const by0 = top + ph - 24 - btnBlock + btnH / 2;
     const bw = vertical ? pw - 80 : (pw - 64 - (buttons.length - 1) * 16) / buttons.length;
     const views = buttons.map((b, i) => {

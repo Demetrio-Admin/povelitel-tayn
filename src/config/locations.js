@@ -1,3 +1,4 @@
+import { WORLD_MAP_POINTS } from './worldMap.js';
 import { CITY_RECT, CITY_ROOMS } from './city.plan.js';
 // v0.27.0 — локации и карта мира. Каждая глава — отдельная локация (свой мирок): загружается только она, камера и герой не выходят
 // за её края, соседей не видно. Между локациями ходят только через карту мира, и только у выхода — указателя «Карта мира» на краю
@@ -16,7 +17,7 @@ export const LOCATIONS = [
     id: 'forest', name: 'Лес Мирры', subtitle: 'Глава I', exit: 'exit_forest',
     rect: { x: 0, y: 0, w: 1800, h: 5400 }, extraTop: 340, extraBottom: 500,   // тёмный лес за краями (только картинка)
     arrival: FOREST_RETURN,
-    map: { x: 150, y: 525 },
+    map: WORLD_MAP_POINTS.forest,
     text: 'Дом Мирры, Лунный алтарь, древний круг Огня и старый лес за Древними воротами.',
   },
   {
@@ -24,7 +25,7 @@ export const LOCATIONS = [
     rect: CITY_RECT, extraTop: 140, extraBottom: 240,
     arrival: CITY_START,
     requires: 'ch2_start', lockedText: 'Дорогу в город покажет Мирра после главы I.',
-    map: { x: 330, y: 346 },
+    map: WORLD_MAP_POINTS.city,
     text: 'Город под инеем: площадь, Архив, Общество Преображения, Замёрзший квартал, Дуэльный зал и Дом Ковенов.',
   },
   {
@@ -33,7 +34,7 @@ export const LOCATIONS = [
     rect: GROVE_RECT, extraTop: 300, extraBottom: 300,
     arrival: GROVE_START,
     requires: 'ch3_leaf_read', lockedText: 'Места без имени нет на картах. Сначала узнайте, куда ведёт подпись «Садовница».',
-    map: { x: 112, y: 214 },
+    map: WORLD_MAP_POINTS.grove,
     text: 'Ивовая роща из стекла: время здесь остановлено уже сорок лет. Сухая балка, Стеклянная опушка, Сад под колпаками, '
       + 'Корни Ракиты и Сердце рощи. Стеклянных зверей колют Лёд и Телекинез, эхо пробивает Астрал, а Огонь берёт стекло только там, где вещам вернули имя.',
   },
@@ -42,7 +43,7 @@ export const LOCATIONS = [
     rect: FROSTWOOD_RECT, painted: true,
     arrival: FROSTWOOD_START,
     requires: 'chapter_2_complete', lockedText: 'Вылазки откроются после главы II.',
-    map: { x: 470, y: 170 },
+    map: WORLD_MAP_POINTS.frostwood,
     text: 'Волки и Вожак метели. Холод им не страшен — Лёд бьёт слабее, а вот Огонь они не любят.\n'
       + 'Внутри: морозник и ледяные кристаллы, четыре волчицы, Вожак метели и его логово (инеевый осколок). Звери возвращаются через 10 минут, вожак — через час.',
   },
@@ -51,7 +52,7 @@ export const LOCATIONS = [
     rect: GRAVEYARD_RECT, painted: true,
     arrival: GRAVEYARD_START,
     requires: 'chapter_2_complete', lockedText: 'Вылазки откроются после главы II.',
-    map: { x: 470, y: 600 },
+    map: WORLD_MAP_POINTS.graveyard,
     text: 'Могильные огоньки, псы и Страж кургана. Огонь здесь почти бесполезен; Астрал пробивает и защиту огоньков, и броню стража. Псам нипочём Телекинез.\n'
       + 'Внутри: руническая пыль, грибы и лунный осколок, четверо противников, Страж кургана и его сокровище. Противники возвращаются через 10 минут, страж — через час.',
   },

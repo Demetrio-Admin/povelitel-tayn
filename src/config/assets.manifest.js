@@ -7,6 +7,7 @@
 // Pivot всех объектов мира — нижний центр (origin 0.5, 1). Размер на экране задаётся DISPLAY_SIZE,
 // поэтому исходники можно делать крупнее (например 512×512).
 
+import { WORLD_MAP, WORLD_MAP_FILES } from './worldMap.js';
 import { ROOM_FILES } from './city.rooms.js';
 import { CHAPTER2_FILES, CHAPTER2_SIZES } from './chapter2.art.generated.js';
 import { CITY_INTERIOR_FILES, CITY_INTERIOR_SIZES } from './city.interiors.generated.js';
@@ -114,11 +115,15 @@ Object.assign(DISPLAY_SIZE, ARCHIVE_SIZES);
 Object.assign(ASSET_FILES, NEIGHBORHOOD_FILES);
 Object.assign(DISPLAY_SIZE, NEIGHBORHOOD_SIZES);
 // v0.38.0: глава III «Безымянная роща» — прототипная графика, нарисованная кодом (tools/art/ch3_grove_art.py).
-// Карта мира с рощей тоже оттуда: та же карта, на северо-западе — поляна со стеклянными ивами.
+// Финальная рисованная карта переопределяется после пакета главы III.
 Object.assign(ASSET_FILES, CITY_LIFE_FILES);   // прототипы «живого города» (tools/art/city_life_art.py)
 Object.assign(DISPLAY_SIZE, CITY_LIFE_SIZES);
 Object.assign(ASSET_FILES, CHAPTER3_FILES);
 Object.assign(DISPLAY_SIZE, CHAPTER3_SIZES);
+Object.assign(ASSET_FILES, WORLD_MAP_FILES);
+DISPLAY_SIZE.world_map_01 = [WORLD_MAP.width, WORLD_MAP.height];
+for (const key of Object.keys(WORLD_MAP_FILES).filter(k => k.startsWith('map_marker_'))) DISPLAY_SIZE[key] = [96, 96];
+DISPLAY_SIZE.map_current_ribbon = [130, 42];
 
 /** Рисунки-заглушки, не готовые к релизу. Оба героя используют финальные PNG.
  *  v0.38.0: вся графика главы III пока прототипная (список финальной — docs/design/chapter-3-art-inventory-v0.1.md). */

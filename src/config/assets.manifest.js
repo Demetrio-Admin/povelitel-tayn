@@ -18,6 +18,7 @@ import { CHAPTER3_FILES, CHAPTER3_SIZES } from './chapter3.art.generated.js';
 import { CITY_LIFE_FILES, CITY_LIFE_SIZES } from './cityLife.art.generated.js';
 
 export const ASSET_FILES = {
+  graveyard_painted: 'assets/graveyard/spirit-cemetery-v1.webp',
   ...ROOM_FILES,
   icon_storm: 'assets/ui/storm.svg',
   welcome_cover: 'assets/ui/welcome-cover-v1.webp',

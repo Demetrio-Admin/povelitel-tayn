@@ -32,6 +32,7 @@ import { windows26 } from '../ui/windows26.js';
 import { windows27 } from '../ui/windows27.js';
 import { windows28 } from '../ui/windows28.js';
 import { windowsAmulets } from '../ui/windowsAmulets.js';
+import { windowsJournal } from '../ui/windowsJournal.js';
 import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from '../ui/noticeClose.js';
 import { addCraftMedallion, setCraftMedallion } from '../ui/witchcraftUI.js';
@@ -47,6 +48,7 @@ const BTN_Y = UI.dock.buttonY;
 const BTN_R = 58;
 const TOAST_DEPTH = 20000;   // сообщения («не хватает…») лежат выше окон (10000), меню (9400+) и всего остального
 const TOAST_TOP_OVER_MODAL = 24;   // верх стопки, когда открыто окно или меню
+const TOP_TAB_H = 68;        // высота вкладок одной строкой под заголовком окна (Журнал)
 const SWAP_MS = 170;         // длительность плавной смены вкладки в окне
 const hex = c => '#' + c.toString(16).padStart(6, '0');
 const fmtTime = (ms) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
@@ -541,14 +543,17 @@ export class UIScene extends Phaser.Scene {
     const vertical = !!opts.vertical;
     const btnBlock = vertical ? buttons.length * (btnH + 16) - 16 : btnH;
     const tabBlock = opts.tabs?.length ? Math.ceil(opts.tabs.length / 2) * (btnH + 12) + 12 : 0;
-    const headerH = 32 + title.height + 30, footerH = btnBlock + (opts.worldMap ? 58 : 70) + tabBlock;
-    const viewH = Math.min(contentH, H - 112 - headerH - footerH);
+    // topTabs — вкладки одной строкой под заголовком (Журнал); tabs — крупные кнопки внизу (котёл, сумка)
+    const topTabH = opts.topTabs?.length ? TOP_TAB_H + 22 : 0;
+    const headerH = 32 + title.height + 30 + topTabH, footerH = btnBlock + (opts.worldMap ? 58 : 70) + tabBlock;
+    // fullHeight — окно всегда одной высоты (Журнал): вкладки не «прыгают» при переключении
+    const viewH = opts.fullHeight ? H - 112 - headerH - footerH : Math.min(contentH, H - 112 - headerH - footerH);
     const ph = headerH + viewH + footerH;
     const top = Math.max(56, (H - ph) / 2 - 24);
     const panel = addPanel(this, left, top, pw, ph, { accent: color, seed: 3 });
     title.setY(top + 32);
     c.add([overlay, body]);
-    body.add([panel, title, addDivider(this, W / 2, top + headerH - 16, pw - 100, color)]);
+    body.add([panel, title, addDivider(this, W / 2, top + headerH - 16 - topTabH, pw - 100, color)]);
     const scroll = addScrollViewport(this, body, content, { x: left + inset, y: top + headerH, width: cw, height: viewH, contentHeight: contentH });
     if (scroll.max) body.add(this.add.text(W / 2, top + headerH + viewH + 18, '↕ Проведите по содержимому', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim }).setOrigin(0.5));
     if (opts.worldMap && !scroll.max) body.add(addDivider(this, W / 2, top + ph - btnBlock - 48, pw - 100, color));
@@ -563,6 +568,15 @@ export class UIScene extends Phaser.Scene {
       });
       body.add(btn.parts); return { b, ...btn };
     });
+    if (opts.topTabs?.length) {
+      const n = opts.topTabs.length, gap = 10, tw = (pw - 64 - (n - 1) * gap) / n, ty = top + headerH - topTabH + TOP_TAB_H / 2 - 6;
+      opts.topTabs.forEach((tab, i) => {
+        const bt = addButton(this, left + 32 + tw / 2 + i * (tw + gap), ty, tw, TOP_TAB_H, tab.label, {
+          primary: !!tab.selected, accent: tab.selected ? color : null, fontSize: UI.type.body,
+          onPress: () => { if (!tab.selected) { services.audio.play('ui_click'); this.switchModal(tab.onClick); } },
+        }); body.add(bt.parts);
+      });
+    }
     if (opts.tabs?.length) {
       const tw = (pw - 80) / 2, tabTop = top + ph - 24 - btnBlock - tabBlock;
       opts.tabs.forEach((tab, i) => {
@@ -921,4 +935,4 @@ export class UIScene extends Phaser.Scene {
   }
 }
 
-Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11, windows17, windows19, windows23, windows26, windows27, windowsBag, windows28, windowsAmulets);
+Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11, windows17, windows19, windows23, windows26, windows27, windowsBag, windows28, windowsAmulets, windowsJournal);

@@ -240,6 +240,16 @@ await mute(async () => {
     ok(h.journalBadge.visible && h.journalBadgeText.text === String(sv.log.activeCount()), 'Журнал: значок с реальным числом заданий (' + h.journalBadgeText.text + ')');
     h.journalBtn.hit.emit('pointerdown');
     ok(h.modal?.opts?.title === 'Журнал', 'кнопка «Журнал» открывает полный журнал');
+    ok(h.modal.opts.buttons.length === 1 && h.modal.opts.buttons[0].label === 'Закрыть', 'в Журнале только «Закрыть» — кнопки «Сумка» нет');
+    ok(h.modal.opts.topTabs?.map(t => t.label.split(' ')[0]).join('|') === 'Цель|Задания|Памятка', 'Журнал: три вкладки в одной строке');
+    for (const [i, tab] of ['goal', 'quests', 'tips'].entries()) {
+      h.modal.opts.topTabs[i].onClick && (h.modal.opts.topTabs[i].selected || h.switchModal(h.modal.opts.topTabs[i].onClick));
+      ok(h.journalTab === tab && h.modal?.opts?.title === 'Журнал' && h.modal.opts.topTabs[i].selected, 'Журнал: вкладка «' + tab + '» открывается');
+    }
+    h.closeModal(null);
+    h.openJournal('quests'); ok(h.journalTab === 'quests' && h.modal.opts.topTabs[1].selected, 'Журнал открывается на указанной вкладке');
+    h.closeModal(null);
+    h.openJournal({ junk: 1 }); ok(h.modal?.opts?.topTabs?.some(t => t.selected), 'мусор вместо вкладки не роняет окно');
     h.closeModal(null);
     // смена цели — временное уведомление, без повтора на каждом обновлении
     h.goalBanner?.destroy(); h.goalBanner = null;

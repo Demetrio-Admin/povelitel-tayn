@@ -572,6 +572,18 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
   }
 }
 
+console.log('\n[журнал] подписи вкладок, прогресс, заказчик');
+{
+  const { journalTabLabels, parseProgress, questGiverLine } = await import('../src/ui/windowsJournal.js');
+  const { SIDE_QUESTS } = await import('../src/config/quests.js');
+  ok(JSON.stringify(parseProgress('2/3')) === '{"have":2,"need":3}' && parseProgress('нет') === null && parseProgress(null) === null, 'прогресс шага «2/3» разбирается, мусор — null');
+  ok(questGiverLine(SIDE_QUESTS.sq_herbs).startsWith('Веда · '), 'заказчик и место: «' + questGiverLine(SIDE_QUESTS.sq_herbs) + '»');
+  const fake = (act, ready) => ({ active: () => act, status: id => (ready.includes(id) ? 'ready' : 'active') });
+  ok(journalTabLabels(fake([], [])).quests === 'Задания', 'нет заданий — «Задания» без числа');
+  ok(journalTabLabels(fake(['a', 'b'], [])).quests === 'Задания · 2', 'два в работе — «Задания · 2»');
+  ok(journalTabLabels(fake(['a', 'b'], ['a'])).quests === 'Задания ✓', 'есть что сдать — «Задания ✓»');
+}
+
 console.log('\n[v0.8.2] Опыт до следующего уровня');
 {
   const { xpProgress } = await import('../src/state/heroProgress.js');

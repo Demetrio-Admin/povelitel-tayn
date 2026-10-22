@@ -36,6 +36,7 @@ Scope: adapt the supplied map artwork to the existing playable world-map modal. 
 - UI smoke re-run after final layout changes: passed. Existing map test now locates the target that contains the label instead of assuming the old tiny zone center.
 - `npm run build`: passed after final code changes. Existing large-chunk warning remains.
 - Combat bundle freshness and `git diff --check`: passed.
+- Integrated the concurrent journal update from main (`3fd4e6b`), retaining top tabs/full-height journal behavior and map-specific spacing. Re-ran core state tests, UI smoke (including journal) and the production build after resolving the shared modal code; all passed.
 - Test gap: this pass renders one Cloud Browser viewport and its portrait Phaser surface; no physical mobile device session or online-account travel was run. Existing state/UI tests cover travel permission and emitted destination.
 
 ## Findings / checklist

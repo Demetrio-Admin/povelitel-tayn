@@ -35,7 +35,6 @@ var HERO_LEVELS = [
   { level: 19, xp: 15900, maxHp: 316, maxMana: 245, manaRegen: 4, damageMult: 1.72, note: "\u0427\u0435\u0442\u044B\u0440\u0435 \u0437\u0430\u043C\u043A\u0430" },
   { level: 20, xp: 18400, maxHp: 332, maxMana: 255, manaRegen: 4, damageMult: 1.78, note: "\u0424\u0438\u043D\u0430\u043B \u0433\u043B\u0430\u0432\u044B III" }
 ];
-var HERO_LEVEL_CAP_BEFORE_CH3 = { level: 15, event: "ch3_start" };
 var HERO_RECOVERY = {
   // Смерть не наказывает сильно (Combat Math §10).
   restoreHpAfterVictory: true,
@@ -3137,7 +3136,6 @@ var GameState = class {
     for (; ; ) {
       const next = HERO_LEVELS.find((r) => r.level === this.data.heroLevel + 1);
       if (!next || this.data.heroXP < next.xp) break;
-      if (next.level > HERO_LEVEL_CAP_BEFORE_CH3.level && !this.hasEvent(HERO_LEVEL_CAP_BEFORE_CH3.event)) break;
       if (!gained.length) materialize(this);
       this.data.heroLevel = next.level;
       gained.push(next);

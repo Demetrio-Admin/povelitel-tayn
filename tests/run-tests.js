@@ -579,8 +579,6 @@ console.log('\n[v0.8.2] Опыт до следующего уровня');
   state.addHeroXP(1); ok(state.data.heroLevel === 8 && state.heroStats().maxMana === 140, '1300 — уровень 8: 140 маны');
   state.addHeroXP(1800); ok(state.data.heroLevel === 11 && state.heroStats().maxHp === 202, '3100 — уровень 11 (глава II): 202 HP');
   state.addHeroXP(50000); x = xpProgress(state);
-  ok(x.level === 15 && state.heroStats().maxHp === 255, 'до начала главы III уровень не выше 15, опыт копится (ch3_start снимает границу)');
-  state.markEvent('ch3_start'); state.addHeroXP(0); x = xpProgress(state);
   ok(x.level === 20 && x.max && x.progress === 1 && x.caption === 'Максимальный уровень' && state.heroStats().maxHp === 332, 'уровень 20 — максимальный (глава III): 332 HP');
   ok(x.remaining === 0 && !/NaN|null|21/.test(x.caption), 'после максимума нет 21-го уровня, NaN и отрицательных чисел');
   state.data.heroLevel = 2; state.data.heroXP = 10; x = xpProgress(state);   // повреждённое сохранение: опыт меньше порога

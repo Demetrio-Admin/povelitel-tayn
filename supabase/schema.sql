@@ -503,8 +503,7 @@ begin
   if coalesce((reward ->> 'heroXP')::numeric, 0) > 0 or coalesce((reward -> 'topUp' ->> 'heroXP')::numeric, 0) > 0 then
     before := pr.hero_level;
     pr.hero_xp := _clamp(greatest(pr.hero_xp + coalesce((reward ->> 'heroXP')::numeric, 0), coalesce((reward -> 'topUp' ->> 'heroXP')::numeric, 0)), 0, 100000000);
-    -- v0.40: уровни 16–20 открывает глава III (событие ch3_start); до неё опыт копится, а уровень не выше 15
-    lvl := greatest(pr.hero_level, coalesce((select max(level) from game_hero_levels where xp <= pr.hero_xp and (level <= 15 or _has_event(uid, 'ch3_start'))), 1));
+    lvl := greatest(pr.hero_level, coalesce((select max(level) from game_hero_levels where xp <= pr.hero_xp), 1));
     if lvl > before then
       select max_hp, max_mana into mx_hp, mx_mana from game_hero_levels where level = before;
       if pr.hp is null then pr.hp := mx_hp; end if;

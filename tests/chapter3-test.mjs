@@ -11,11 +11,11 @@ import { AMULETS } from '../src/config/build.js';
 import { POTIONS, RESOURCES } from '../src/config/resources.js';
 import { RECIPES } from '../src/config/recipes.js';
 import { ENEMIES } from '../src/config/balance.enemies.js';
-import { HERO_LEVELS, HERO_LEVEL_CAP_BEFORE_CH3 } from '../src/config/balance.hero.js';
+import { HERO_LEVELS } from '../src/config/balance.hero.js';
 import { CHAPTER3_FILES } from '../src/config/chapter3.art.generated.js';
 import { GROVE_INTERACTIVES, GROVE_ENEMIES } from '../src/config/world.grove.js';
 import { serverRules } from '../src/config/serverRules.js';
-import { applyAction, emptySnapshot, levelForXp } from '../src/cloud/playerModel.js';
+import { levelForXp } from '../src/cloud/playerModel.js';
 import { chapter3Pass } from '../tools/balance/chapter3-pass.mjs';
 
 let failures = 0;
@@ -78,25 +78,14 @@ console.log('\nГлава III: арт');
   ok(fs.existsSync('docs/design/chapter-3-art/contact-sheet.png'), 'контактный лист арта на месте');
 }
 
-console.log('\nГлава III: уровень героя до рощи не выше 15');
+console.log('\nГлава III: уровни героя 16–20');
 {
   ok(HERO_LEVELS.at(-1).level === 20 && HERO_LEVELS.at(-1).xp === 18400, 'таблица уровней доходит до 20');
-  const s = emptySnapshot();
-  s.level = 15; s.xp = 12000; s.quests = ['chapter_2_complete'];   // накоплено повторными боями глав I–II
-  let r = applyAction(s, { op: 'event', key: 'ch2_next' }, 2e12, () => .999999);
-  const farm = emptySnapshot(); farm.level = 15; farm.xp = 12000; farm.quests = ['chapter_2_complete'];
-  const before = applyAction(farm, { op: 'event', key: 'unlock_fire_1' }, 2e12, () => .999999);   // любая награда с опытом
-  ok(levelForXp(12000) === 17, 'по таблице 12000 опыта — это 17 уровень');
-  ok(before.snapshot.level === 15 || !before.result.ok, 'до ch3_start опыт копится, а уровень остаётся 15 (сервер)');
+  ok(HERO_LEVELS.slice(15).every((r, i) => r.level === 16 + i && r.maxHp > HERO_LEVELS[14 + i].maxHp && r.maxMana > HERO_LEVELS[14 + i].maxMana), 'здоровье и мана растут с каждым уровнем 16–20');
+  ok(levelForXp(9600) === 16 && levelForXp(18399) === 19 && levelForXp(18400) === 20 && levelForXp(1e7) === 20, 'пороги 16–20 и потолок 20');
   const st = new GameState(mem(), () => 1e12);
   st.data.heroLevel = 15; st.data.heroXP = 7900;
-  ok(st.addHeroXP(5000).length === 0 && st.data.heroLevel === HERO_LEVEL_CAP_BEFORE_CH3.level, 'клиент: до ch3_start уровень не выше 15');
-  st.markEvent('ch3_start');
-  ok(st.addHeroXP(10).length >= 1 && st.data.heroLevel >= 16, 'клиент: после ch3_start уровни 16+ открываются');
-  const go = emptySnapshot(); go.level = 15; go.xp = 12000; go.quests = ['chapter_2_complete'];
-  const started = applyAction(go, { op: 'event', key: 'ch3_start' }, 2e12, () => .999999);
-  ok(started.result.ok && started.snapshot.level >= 16, 'сервер: событие ch3_start снимает границу');
-  void r;
+  ok(st.addHeroXP(10500).length === 5 && st.data.heroLevel === 20, 'клиент: уровни 16–20 открываются опытом');
 }
 
 console.log('\nГлава III: сквозное прохождение');

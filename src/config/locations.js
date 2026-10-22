@@ -9,6 +9,7 @@ import { CITY_START, FOREST_RETURN } from './world.city.js';
 import { FROSTWOOD_START, GRAVEYARD_START } from './world.expeditions.js';
 import { GROVE_RECT, GROVE_START } from './world.grove.js';
 import { GRAVEYARD_RECT } from './graveyard.plan.js';
+import { FROSTWOOD_RECT } from './frostwood.plan.js';
 
 export const LOCATIONS = [
   {
@@ -38,7 +39,7 @@ export const LOCATIONS = [
   },
   {
     id: 'frostwood', name: 'Морозный лес', subtitle: 'Вылазка', exit: 'exit_frostwood', expedition: true,
-    rect: { x: 3600, y: 0, w: 1800, h: 2650 },
+    rect: FROSTWOOD_RECT, painted: true,
     arrival: FROSTWOOD_START,
     requires: 'chapter_2_complete', lockedText: 'Вылазки откроются после главы II.',
     map: { x: 470, y: 170 },

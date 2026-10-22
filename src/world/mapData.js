@@ -7,6 +7,7 @@ import { COLLIDERS, CLEARINGS, GROUND } from '../config/world.layout.js';
 import { PROP_DEFS } from './propDefs.js';
 import { WORLD_DECOR } from './decorData.js';
 import { graveyardMapData, legacyGraveyardPoint, withoutLegacyGraveyard } from '../config/graveyard.plan.js';
+import { frostwoodMapData, legacyFrostwoodPoint, withoutLegacyFrostwood } from '../config/frostwood.plan.js';
 
 /**
  * v0.10.0: базовая расстановка без твёрдых объектов на полянах CLEARINGS (поляна узла за воротами).
@@ -15,7 +16,7 @@ import { graveyardMapData, legacyGraveyardPoint, withoutLegacyGraveyard } from '
 const inClearing = (p) => CLEARINGS.some(r => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h);
 const LEGACY_PROPS = [...RAW_PROPS.filter(p => !(inClearing(p) && !p.fill && PROP_DEFS[p.k]?.solid)), ...WORLD_DECOR];
 const oldCityRect = r => r.x >= 1800 && r.x < 3600 && r.y + (r.h || 0) >= 1300;
-export const PROPS = [...LEGACY_PROPS.filter(p => !legacyCityPoint(p) && !legacyGraveyardPoint(p)), ...cityMapData().props];
+export const PROPS = [...LEGACY_PROPS.filter(p => !legacyCityPoint(p) && !legacyGraveyardPoint(p) && !legacyFrostwoodPoint(p)), ...cityMapData().props];
 
 export const DRAFT_KEY = 'witch_rpg_map_draft_v1';
 
@@ -121,12 +122,13 @@ export function baseTerrain() { return JSON.parse(baseTerrainJson()); }
 function buildBaseTerrain() {
   const city=cityMapData();
   const graveyard=graveyardMapData();
+  const frostwood=frostwoodMapData();
   return {
     roads: [...ROADS.map((r,i)=>({...clone(r),n:i})).filter(r => !r.pts?.some(p => p[0]>=1800 && p[0]<3600)),
       ...city.roads.map((r,i)=>({...clone(r),n:100+i}))],
     waters: [...WATERS.map((w,i)=>({...clone(w),n:i})),...(city.waters||[]).map((w,i)=>({...clone(w),n:200+i}))],
-    cols: [...COLLIDERS.map((c,i)=>({...clone(c),id:`c${i}`})).filter(c=>!oldCityRect(c)).map(withoutLegacyGraveyard).filter(Boolean),...city.colliders,...graveyard.colliders],
-    grounds: [...GROUND.map((g,i)=>({...clone(g),id:`g${i}`})).filter(g=>!oldCityRect(g) && !legacyGraveyardPoint(g)),...city.grounds,...graveyard.grounds],
+    cols: [...COLLIDERS.map((c,i)=>({...clone(c),id:`c${i}`})).filter(c=>!oldCityRect(c)).map(withoutLegacyGraveyard).filter(Boolean).map(withoutLegacyFrostwood).filter(Boolean),...city.colliders,...graveyard.colliders,...frostwood.colliders],
+    grounds: [...GROUND.map((g,i)=>({...clone(g),id:`g${i}`})).filter(g=>!oldCityRect(g) && !legacyGraveyardPoint(g) && !legacyFrostwoodPoint(g)),...city.grounds,...graveyard.grounds,...frostwood.grounds],
   };
 }
 

@@ -838,16 +838,16 @@ export const DIALOGUES = {
           'Обоз ночевал на складах, а утром — пусто. Сторож божится, что видел ледяных чудищ. А сторож у меня непьющий.',
           'Найдёте груз — Борис в долгу не останется. Борис вообще в долгах не живёт.',
         ],
-        choices: [{ label: 'Найду.', do: [{ event: 'ch2_cargo_start' }] }, { label: 'Посмотреть товар', do: [{ event: 'ch2_cargo_start' }, { shop: true }] }],
+        choices: [{ label: 'Найду.', do: [{ event: 'ch2_cargo_start' }] }, { label: 'Посмотреть товар', do: [{ event: 'ch2_cargo_start' }, { shop: true }] }, { label: 'Амулеты', when: c => c.has('ch2_city_arrived'), do: [{ amulets: true }] }],
       } },
     },
     {
       id: 'merchant_cargo_active', when: c => c.has('ch2_cargo_start') && !c.has('ch2_cargo_found'),
-      nodes: { start: { lines: ['Склады — у самых ворот, за моим двором. Чудищ не жалейте — груз жалейте!'], choices: [{ label: 'Посмотреть товар', do: [{ shop: true }] }, BYE] } },
+      nodes: { start: { lines: ['Склады — у самых ворот, за моим двором. Чудищ не жалейте — груз жалейте!'], choices: [{ label: 'Посмотреть товар', do: [{ shop: true }] }, { label: 'Амулеты', when: c => c.has('ch2_city_arrived'), do: [{ amulets: true }] }, BYE] } },
     },
     {
       id: 'merchant_shop', repeat: true, when: c => c.has('city_merchant_open'),
-      nodes: { start: { lines: ['Что сегодня берём?'], choices: [{ label: 'Посмотреть товар', do: [{ shop: true }] }, BYE] } },
+      nodes: { start: { lines: ['Что сегодня берём? Травы, смола, пыль — или амулет: мастер у меня на жалованье, только материалы приноси.'], choices: [{ label: 'Посмотреть товар', do: [{ shop: true }] }, { label: 'Амулеты', when: c => c.has('ch2_city_arrived'), do: [{ amulets: true }] }, BYE] } },
     },
     {
       id: 'merchant_default', repeat: true, when: () => true,

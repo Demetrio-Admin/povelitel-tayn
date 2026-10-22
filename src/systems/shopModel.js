@@ -23,3 +23,17 @@ export function shopQuote(view, kind, item, qty) {
   return { max, total: Number.isInteger(qty) && qty > 0 ? qty * price : 0,
     allowed: view.open && Number.isInteger(qty) && qty > 0 && qty <= max };
 }
+
+/** Строки списка для вкладки: в «Продать» сверху то, что есть в сумке (порядок внутри групп — как в прайсе); в «Купить» — порядок прайса. */
+export function shopRowsFor(view, kind) {
+  return kind === 'sell' ? [...view.rows].sort((a, b) => Number(b.canSell) - Number(a.canSell)) : view.rows;
+}
+
+/** При открытии: «Продать», если есть что продать, иначе «Купить» — пустую вкладку продажи показывать незачем. */
+export const shopDefaultKind = (view) => (view.rows.some(r => r.canSell) ? 'sell' : 'buy');
+
+/** Какой товар выбран в вкладке: прежний, если с ним можно сделать сделку, иначе первый, с которым можно. */
+export function shopPick(view, kind, current) {
+  const rows = shopRowsFor(view, kind), usable = r => (kind === 'sell' ? r.canSell : r.canBuy), cur = rows.find(r => r.id === current);
+  return (cur && usable(cur) ? cur : rows.find(usable) || rows[0])?.id;
+}

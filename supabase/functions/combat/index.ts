@@ -5666,6 +5666,8 @@ var MSG = {
   // v0.20.0: переход между лесом и городом ({ x, y, text })
   OPEN_SHOP: "ui:open-shop",
   // v0.20.0: лавка торговца (из диалога)
+  OPEN_AMULETS: "ui:open-amulets",
+  // окно «Амулеты»: создание амулетов (из диалога Бориса)
   OPEN_DAILY: "ui:open-daily",
   // v0.23.0: доска поручений
   OPEN_COVENS: "ui:open-covens",

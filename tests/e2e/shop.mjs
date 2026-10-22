@@ -30,11 +30,9 @@ try {
     });
     assert.deepEqual(bounded, { inside: true, overflow: false, submitInside: true });
     assert.equal(await page.locator('.shop-product').count(), 7); assert.equal(await page.getByRole('tab', { name: 'Продать', exact: true }).getAttribute('aria-selected'), 'true');
-    await page.getByRole('button', { name: 'Шаг 100', exact: true }).tap(); await page.getByRole('button', { name: 'Увеличить количество', exact: true }).tap();
-    assert.equal(await page.getByRole('textbox', { name: 'Количество', exact: true }).inputValue(), '101');
+    await page.getByRole('button', { name: 'Добавить 10', exact: true }).tap(); await page.getByRole('button', { name: 'Увеличить количество', exact: true }).tap();
+    assert.equal(await page.getByRole('textbox', { name: 'Количество', exact: true }).inputValue(), '12');
     await page.getByRole('button', { name: 'Уменьшить количество', exact: true }).tap();
-    assert.equal(await page.getByRole('textbox', { name: 'Количество', exact: true }).inputValue(), '1');
-    await page.getByRole('button', { name: 'Шаг 10', exact: true }).tap(); await page.getByRole('button', { name: 'Увеличить количество', exact: true }).tap();
     assert.equal(await page.getByRole('textbox', { name: 'Количество', exact: true }).inputValue(), '11');
     await page.getByRole('textbox', { name: 'Количество', exact: true }).fill('0');
     assert.equal(await page.locator('.shop-submit').isDisabled(), true);
@@ -61,7 +59,7 @@ try {
     assert.equal(await page.evaluate(() => window.__witch.modalOpen), false); assert.equal(await page.evaluate(() => window.__game.scene.getScene('UIScene').modal), null);
     await page.evaluate(() => window.__game.scene.getScene('UIScene').openShop('Лавка Бориса')); await page.getByRole('dialog', { name: 'Лавка Бориса', exact: true }).waitFor();
     await page.keyboard.press('Escape'); assert.equal(await page.locator('.shop-window').count(), 0);
-    console.log(`✓ Shop ${width}×${height}: bounded window, touch 1/10/100 steps, sell 100/all, buy 10, totals, scroll, X/Escape, reopen.`);
+    console.log(`✓ Shop ${width}×${height}: bounded window, touch −1/+1/+10 and all, sell 100/all, buy 10, totals, scroll, X/Escape, reopen.`);
     await page.close();
   }
   assert.deepEqual(errors, []); console.log('✓ No page or console errors.');

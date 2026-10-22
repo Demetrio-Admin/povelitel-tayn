@@ -31,6 +31,7 @@ import { windows23 } from '../ui/windows23.js';
 import { windows26 } from '../ui/windows26.js';
 import { windows27 } from '../ui/windows27.js';
 import { windows28 } from '../ui/windows28.js';
+import { windowsAmulets } from '../ui/windowsAmulets.js';
 import * as vitals from '../state/vitals.js';
 import { addNoticeClose } from '../ui/noticeClose.js';
 import { addCraftMedallion, setCraftMedallion } from '../ui/witchcraftUI.js';
@@ -109,6 +110,7 @@ export class UIScene extends Phaser.Scene {
     bus.on(MSG.OPEN_UPGRADE, this.openUpgrade, this);
     bus.on(MSG.OPEN_BAG, this.openBag, this);
     bus.on(MSG.OPEN_SHOP, () => this.openShop('Лавка Бориса'), this);   // v0.20.0
+    bus.on(MSG.OPEN_AMULETS, this.openAmulets, this);   // создание амулетов (раньше — в котле)
     bus.on(MSG.OPEN_WALLET, () => this.openWallet(), this);
     bus.on(MSG.OPEN_DAILY, () => this.openDaily(), this);   // v0.23.0: доска поручений
     bus.on(MSG.OPEN_COVENS, () => this.openCovens(), this);   // v0.25.0: Ковены
@@ -843,4 +845,4 @@ export class UIScene extends Phaser.Scene {
   }
 }
 
-Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11, windows17, windows19, windows23, windows26, windows27, windowsBag, windows28);
+Object.assign(UIScene.prototype, windows08, hud082, windows09, windows11, windows17, windows19, windows23, windows26, windows27, windowsBag, windows28, windowsAmulets);

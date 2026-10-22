@@ -95,6 +95,10 @@ await mute(async () => {
     ui.onSideQuest('sq_herbs', 'ready'); ui.onGuideHint('Книга лежит в центре дома.'); ui.onGuidePointer({ x: 300, y: 200, angle: 1 }); ui.onGuidePointer(null);
     ui.openJournal(); ui.update(8000, 16); ui.closeModal(null);
     ui.openAlchemy(); ui.craftRecipe('elixir_life'); ui.craftRecipe('resin_flask'); ui.update(8100, 16); ui.closeModal(null);
+    // котёл: вкладки; амулеты — в отдельном окне, и варить их можно только оттуда
+    for (const tab of ['restore', 'other', 'special', 'нет такой вкладки']) { ui.openAlchemy(tab); ui.update(8110, 16); ui.closeModal(null); }
+    ui.openAlchemy(); ok(ui.modal?.opts.title === 'Котёл Мирры' && ui.modal.opts.tabs?.length === 3, 'котёл: три вкладки'); ui.closeModal(null);
+    ui.openAmulets(); ok(ui.modal?.opts.title === 'Амулеты', 'окно «Амулеты» открывается'); ui.update(8120, 16); ui.closeModal(null);
     ui.openBag(); ui.closeModal(null);
     // v0.23.0: доска поручений — закрытая и открытая (взять поручение, сдать)
     ui.openDaily(); ui.closeModal(null);
@@ -156,6 +160,7 @@ await mute(async () => {
       // v0.10.0: новые переходы диалог → котёл (фитиль у Мирры, связка после Печати)
       ['mirra', ['prologue_seen', 'unlock_telekinesis_1', 'mirra_starter_kit', 'first_world_interaction', 'mirra_taught_alchemy', 'lunar_quest_start', 'lunar_quest_complete', 'unlock_seal_1'], 'Сварить сбор', MSG.OPEN_ALCHEMY, 'Котёл Мирры'],
       ['selena', ['lunar_quest_start', 'sq_dust_done', 'dlg:selena_wick'], 'Открыть алтарь', MSG.OPEN_UPGRADE, 'Изучение: Телекинез II'],
+      ['merchant', ['ch2_city_arrived', 'city_merchant_open'], 'Амулеты', MSG.OPEN_AMULETS, 'Амулеты'],
     ];
     sv.bus.offContext(ui);
     for (const [npc, events, answer, event, title] of cases) {
@@ -166,7 +171,7 @@ await mute(async () => {
       let emissions = 0, closedFirst = false;
       const off = sv.bus.on(event, () => { emissions++; });
       // Observer runs before the registered UI listener, so it sees the unlocked state.
-      const original = event === MSG.OPEN_ALCHEMY ? 'openAlchemy' : event === MSG.OPEN_JOURNAL ? 'openJournal' : event === MSG.OPEN_HEAL ? 'openHeal' : 'openUpgrade';
+      const original = event === MSG.OPEN_ALCHEMY ? 'openAlchemy' : event === MSG.OPEN_AMULETS ? 'openAmulets' : event === MSG.OPEN_JOURNAL ? 'openJournal' : event === MSG.OPEN_HEAL ? 'openHeal' : 'openUpgrade';
       sv.bus.off(event, dialogUI[original], dialogUI);
       const inspect = (...args) => {
         closedFirst = dialogUI.dlg === null && dialogUI.modal === null && !sv.modalOpen;

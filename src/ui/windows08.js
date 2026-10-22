@@ -7,7 +7,8 @@ import { ABILITIES } from '../config/balance.abilities.js';
 import { ENEMIES } from '../config/balance.enemies.js';
 import { ITEMS } from '../config/balance.progression.js';
 import { RESOURCES, POTIONS, RESOURCE_ORDER, POTION_ORDER, BASE_RESOURCES, CRAFT_ITEMS } from '../config/resources.js';
-import { RECIPES, RECIPE_SECTIONS } from '../config/recipes.js';
+import { RECIPES } from '../config/recipes.js';
+import { alchemyTabsView } from '../systems/alchemyTabs.js';
 import { AMULETS, RARITY } from '../config/build.js';
 import { STORY_ITEMS, STORY_ITEM_ORDER } from '../config/storyItems.js';
 import { RESOURCE_WHERE } from '../config/guidance.js';
@@ -193,9 +194,17 @@ export const windows08 = {
   },
 
   // ================================================================== алхимия
-  openAlchemy() {
+  /**
+   * Котёл: вкладки «Здоровье и мана» / «Другие зелья» / «Особое» (раскладка и порядок — systems/alchemyTabs.js).
+   * Внутри вкладки рецепты идут от сильного эффекта к слабому. Амулеты в котле не варят — для них окно «Амулеты» (windowsAmulets.js).
+   * tab — название вкладки; шина сообщений может передать сюда что угодно, поэтому берём только строку.
+   */
+  openAlchemy(tab) {
     if (this.mode !== 'exploration' || this.modal) return;
     const { alchemy, state } = services;
+    const tabs = alchemyTabsView(alchemy);
+    const active = tabs.find(t => t.id === (typeof tab === 'string' ? tab : this.alchemyTab)) || tabs[0] || { id: 'restore', hint: '', groups: [] };
+    this.alchemyTab = active.id;
     const content = {
       height: 0,
       build: (c, x, y, w) => {
@@ -210,65 +219,68 @@ export const windows08 = {
           label(this, c, cx, cy + 68, `${state.item(id)}`, { fontSize: UI.type.body, fontStyle: 'bold' }).setOrigin(0.5, 0);
         });
         cy += 118;
-        // v0.10.0: два раздела — зелья и предметы для главного задания; неизвестный рецепт показывает, откуда придёт знание
-        if (state.hasEvent('ch2_nerys_met') && !state.hasEvent('regen_potions_learned')) {
-          const b = addButton(this, x+w/2, cy+UI.touch.button/2, w, UI.touch.button, 'Изучить восстановительные составы', { primary: true, onPress: async () => { const r = await services.actions.world('fq_cauldron'); if (r?.ok) { this.closeModal(null); this.openCauldron(); } } }); c.add(b.parts); cy += UI.touch.button+18;
+        // восстановительные составы относятся к первой вкладке — кнопка изучения стоит там, где потом появятся рецепты
+        if (active.id === 'restore' && state.hasEvent('ch2_nerys_met') && !state.hasEvent('regen_potions_learned')) {
+          const b = addButton(this, x+w/2, cy+UI.touch.button/2, w, UI.touch.button, 'Изучить восстановительные составы', { primary: true, onPress: async () => { const r = await services.actions.world('fq_cauldron'); if (r?.ok) { this.closeModal(null); this.openAlchemy(); } } }); c.add(b.parts); cy += UI.touch.button+18;
         }
-        let section = null;
-        // v0.19.0: разделы по виду рецепта; рецепты главы II не показываются, пока неизвестны
-        const list = alchemy.recipes().filter((r) => !(r.chapter >= 2 && alchemy.status(r.id).state === 'locked'))
-          .sort((a, b) => Object.keys(RECIPE_SECTIONS).indexOf(a.kind) - Object.keys(RECIPE_SECTIONS).indexOf(b.kind));
-        for (const r of list) {
-          if (r.kind !== section) {
-            section = r.kind;
-            const t = label(this, c, x, cy + 4, RECIPE_SECTIONS[section] || 'Рецепты', { fontSize: UI.type.heading, fontStyle: 'bold', color: COLORS.textGold });
-            cy = t.y + t.height + 14;
-          }
-          const story = r.kind === 'story' || r.kind === 'garden' || r.kind === 'companion';
-          const p = craftInfo(r);
-          const st = alchemy.status(r.id), chk = st.chk;
-          const canCraft = st.state === 'ready';
-          const name = label(this, c, x + 104, cy + 18, p.name, { fontSize: UI.type.heading, fontStyle: 'bold', color: hex(p.color), wordWrap: { width: w - 128 } });
-          const descText = story ? (st.state === 'locked' ? r.learn : p.purpose) : p.text;
-          const desc = label(this, c, x + 104, name.y + name.height + 8, descText, { fontSize: UI.type.small, color: COLORS.textDim, wordWrap: { width: w - 128 }, lineSpacing: 3 });
-          let ingY = Math.max(cy + 126, desc.y + desc.height + 34);
-          const top = cy;
-          c.add(fit(this.add.image(x + 50, cy + 62, p.icon), UI.icon.potion));
-          if (st.state !== 'locked') {
-            // ингредиенты по три в ряд: у связки их пять — шрифт не уменьшаем, переносим строку
-            const perRow = 3, ingredientStep = w / perRow;
-            chk.needs.forEach((n, i) => {
-              const ix = x + 20 + (i % perRow) * ingredientStep, iy = ingY + Math.floor(i / perRow) * 62;
-              c.add(fit(this.add.image(ix + 24, iy, ITEMS[n.id]?.icon || 'icon_shard'), UI.icon.ingredient));
-              label(this, c, ix + 58, iy, `${n.have}/${n.need}`, { fontSize: UI.type.small, fontStyle: 'bold', color: n.ok ? '#9be8a0' : '#ff8a7a' }).setOrigin(0, 0.5);
-            });
-            ingY += (Math.ceil(chk.needs.length / perRow) - 1) * 62;
-          } else ingY = desc.y + desc.height - 20;
-          const ch = ingY - top + (st.state === 'locked' ? 40 : 142);
-          const g = this.add.graphics().setPosition(x + w / 2, top + ch / 2);
-          drawPlate(g, w, ch, { accent: canCraft ? p.color : 0x6a5a48, fill: 0x20160f, alpha: 0.9, radius: 12 });
-          c.add(g); c.sendToBack(g);   // фон позади уже размещённых подписей
-          if (st.state !== 'locked') {
-            const note = st.state === 'have' ? 'Готово — в сумке' : st.state === 'used' ? 'Задача выполнена' : `В сумке: ${state.item(r.result)}`;
-            label(this, c, x + 20, top + ch - 66, note, { fontSize: UI.type.small, color: st.state === 'have' ? '#9be8a0' : COLORS.textDim }).setOrigin(0, 0.5);
-            if (st.state === 'ready' || st.state === 'missing') {
-              const b = addButton(this, x + w - 132, top + ch - 62, 224, UI.touch.button, r.kind === 'amulet' ? 'Создать' : r.kind === 'garden' ? 'Вырастить' : r.kind === 'companion' ? 'Позвать' : r.kind === 'potion' || r.kind === 'story' ? 'Сварить' : 'Изготовить', {
-                primary: canCraft, accent: canCraft ? p.color : null, fontSize: UI.type.body,
-                onPress: () => { if (this.modal?.scroll?.canTap()) this.craftRecipe(r.id); },
-              });
-              if (!canCraft) b.text.setAlpha(0.65);
-              c.add(b.parts);
-            }
-          }
-          cy = top + ch + 18;
+        for (const group of active.groups) {
+          const t = label(this, c, x, cy + 4, group.title, { fontSize: UI.type.heading, fontStyle: 'bold', color: COLORS.textGold });
+          cy = t.y + t.height + 14;
+          for (const r of group.recipes) cy = this.alchemyCard(c, x, cy, w, r);
         }
         return cy - y - 10;
       },
     };
     this.openModal({
-      title: 'Котёл Мирры', color: 0x8fe39a, text: 'То, что собрано в лесу, помогает готовиться к следующему выходу. Настой и эликсир можно выпить и из сумки, смоляная склянка — для боя.', content,
+      title: 'Котёл Мирры', color: 0x8fe39a, text: active.hint, content,
+      tabs: tabs.length > 1 ? tabs.map(t => ({ label: t.label, selected: t.id === active.id, onClick: () => this.openAlchemy(t.id) })) : undefined,
       buttons: [{ label: 'Закрыть', primary: true }],
     });
+  },
+
+  /** Карточка одного рецепта (котёл и окно «Амулеты»): значок, название, описание, ингредиенты «есть/нужно», кнопка. Возвращает y под карточкой. */
+  alchemyCard(c, x, cy, w, r) {
+    const { alchemy, state } = services;
+    const story = r.kind === 'story' || r.kind === 'garden' || r.kind === 'companion';
+    const p = craftInfo(r);
+    const st = alchemy.status(r.id), chk = st.chk;
+    const canCraft = st.state === 'ready';
+    const name = label(this, c, x + 104, cy + 18, p.name, { fontSize: UI.type.heading, fontStyle: 'bold', color: hex(p.color), wordWrap: { width: w - 128 } });
+    const descText = story ? (st.state === 'locked' ? r.learn : p.purpose) : p.text;
+    const desc = label(this, c, x + 104, name.y + name.height + 8, descText, { fontSize: UI.type.small, color: COLORS.textDim, wordWrap: { width: w - 128 }, lineSpacing: 3 });
+    let ingY = Math.max(cy + 126, desc.y + desc.height + 34);
+    const top = cy;
+    c.add(fit(this.add.image(x + 50, cy + 62, p.icon), UI.icon.potion));
+    if (st.state !== 'locked') {
+      // ингредиенты по три в ряд: у связки их пять — шрифт не уменьшаем, переносим строку
+      const perRow = 3, ingredientStep = w / perRow;
+      chk.needs.forEach((n, i) => {
+        const ix = x + 20 + (i % perRow) * ingredientStep, iy = ingY + Math.floor(i / perRow) * 62;
+        c.add(fit(this.add.image(ix + 24, iy, ITEMS[n.id]?.icon || 'icon_shard'), UI.icon.ingredient));
+        label(this, c, ix + 58, iy, `${n.have}/${n.need}`, { fontSize: UI.type.small, fontStyle: 'bold', color: n.ok ? '#9be8a0' : '#ff8a7a' }).setOrigin(0, 0.5);
+      });
+      ingY += (Math.ceil(chk.needs.length / perRow) - 1) * 62;
+    } else ingY = desc.y + desc.height - 20;
+    const ch = ingY - top + (st.state === 'locked' ? 40 : 142);
+    const g = this.add.graphics().setPosition(x + w / 2, top + ch / 2);
+    drawPlate(g, w, ch, { accent: canCraft ? p.color : 0x6a5a48, fill: 0x20160f, alpha: 0.9, radius: 12 });
+    c.add(g); c.sendToBack(g);   // фон позади уже размещённых подписей
+    if (st.state !== 'locked') {
+      const amulet = r.kind === 'amulet';
+      const have = state.item(r.result), batch = r.kind === 'potion' && canCraft ? alchemy.maxCount(r.id) : 0;
+      const note = st.state === 'have' ? (amulet ? 'Создан — лежит в сумке' : 'Готово — в сумке') : st.state === 'used' ? (amulet ? 'Создан раньше' : 'Задача выполнена')
+        : `В сумке: ${have}${batch > 1 ? ` · хватит на ${batch}` : ''}`;
+      label(this, c, x + 20, top + ch - 66, note, { fontSize: UI.type.small, color: st.state === 'have' ? '#9be8a0' : COLORS.textDim }).setOrigin(0, 0.5);
+      if (st.state === 'ready' || st.state === 'missing') {
+        const b = addButton(this, x + w - 132, top + ch - 62, 224, UI.touch.button, amulet ? 'Создать' : r.kind === 'garden' ? 'Вырастить' : r.kind === 'companion' ? 'Позвать' : r.kind === 'potion' || r.kind === 'story' ? 'Сварить' : 'Изготовить', {
+          primary: canCraft, accent: canCraft ? p.color : null, fontSize: UI.type.body,
+          onPress: () => { if (this.modal?.scroll?.canTap()) this.craftRecipe(r.id); },
+        });
+        if (!canCraft) b.text.setAlpha(0.65);
+        c.add(b.parts);
+      }
+    }
+    return top + ch + 18;
   },
 
   /** v0.10.0: изготовление — атомарная операция (сервер / JS-зеркало); при нехватке ничего не тратится. */
@@ -290,8 +302,8 @@ export const windows08 = {
       this.reopenModal();
       return;
     }
-    services.audio.play('brew');
-    this.toast(`Сварено: ${p.name}`, p.color);
+    services.audio.play(r.kind === 'amulet' ? 'unlock_magic' : 'brew');
+    this.toast(`${({ amulet: 'Создано', component: 'Изготовлено', tool: 'Изготовлено', garden: 'Готово', companion: 'Готово' })[r.kind] || 'Сварено'}: ${p.name}`, p.color);
     if (res.firstCraft) this.toast('Первое зелье своими руками: +15 опыта', COLORS.gold);
     for (const lv of res.outcome?.levelUps || []) this.toast(`★ Новый уровень ${lv.level}!`, COLORS.gold);
     services.bus.emit(MSG.CRAFTED, { recipeId: id, result: r.result, amount: r.amount });

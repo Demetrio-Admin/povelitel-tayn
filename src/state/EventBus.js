@@ -50,6 +50,7 @@ export const MSG = {
   UNLOCK_GIFT: 'story:unlock-gift',   // v0.21.0: (id) — сюжетный дар из диалога (Лёд I у Нэрис)
   TRAVEL: 'world:travel',            // v0.20.0: переход между лесом и городом ({ x, y, text })
   OPEN_SHOP: 'ui:open-shop',         // v0.20.0: лавка торговца (из диалога)
+  OPEN_AMULETS: 'ui:open-amulets',   // окно «Амулеты»: создание амулетов (из диалога Бориса)
   OPEN_DAILY: 'ui:open-daily',       // v0.23.0: доска поручений
   OPEN_COVENS: 'ui:open-covens',     // v0.25.0: окно Ковенов
   OPEN_MAP: 'ui:open-map',           // v0.27.0: карта мира ({ exit } — открыта у выхода, можно отправиться; без exit — только посмотреть)

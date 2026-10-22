@@ -172,6 +172,7 @@ export class DialogueSystem {
       else if (e.kit) this.pendingAfter.push(() => this.bus?.emit(MSG.STARTER_KIT));
       else if (e.seal) this.pendingAfter.push(() => this.bus?.emit(MSG.UNLOCK_SEAL));   // v0.10.0
       else if (e.shop) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_SHOP));       // v0.20.0: лавка
+      else if (e.amulets) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_AMULETS)); // окно «Амулеты»
       else if (e.bank) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_WALLET));     // v0.20.0: банк (кошелёк)
       else if (e.gifts) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_GIFTS));
       else if (e.covens) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_COVENS));   // v0.25.0

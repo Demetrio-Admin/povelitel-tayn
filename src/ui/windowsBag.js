@@ -112,7 +112,7 @@ export const windowsBag = {
   bagAmuletRows(c, x, y, w) {
     const bv = buildView(services.state), worn = bv.amulets.filter(a => a.equipped).length;
     const heading = text(this, c, x, y, `Надето амулетов: ${worn} из ${bv.amuletSlots}`, w, { fontSize: UI.type.body, color: COLORS.textGold }); y += heading.height + 18;
-    if (!bv.amulets.length) { const t = text(this, c, x, y + 12, 'Амулетов пока нет. Выполняйте задания, побеждайте сильных противников и создавайте их в котле.', w, { color: COLORS.textDim }); return y + t.height + 36; }
+    if (!bv.amulets.length) { const t = text(this, c, x, y + 12, 'Амулетов пока нет. Выполняйте задания, побеждайте сильных противников и заказывайте их у Бориса.', w, { color: COLORS.textDim }); return y + t.height + 36; }
     for (const am of bv.amulets) {
       const top = y, plate = this.add.graphics(); c.add(plate); c.sendToBack(plate);
       c.add(fit(this.add.image(x + 44, y + 54, AMULETS[am.id].icon), 76));

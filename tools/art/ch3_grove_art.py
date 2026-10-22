@@ -28,7 +28,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 OUT = os.path.join(ROOT, 'public', 'assets', 'chapter3')
 DOCS = os.path.join(ROOT, 'docs', 'design', 'chapter-3-art')
 CONFIG = os.path.join(ROOT, 'src', 'config', 'chapter3.art.generated.js')
-VERSION = 'ch3-proto-2'
+VERSION = 'ch3-proto-3'
 
 FILES, SIZES, SHEET = {}, {}, []
 
@@ -944,8 +944,9 @@ def main():
     register('iva_hut', iva_hut(), size=(300, 197))
     register('grove_stream_glass', P.stream_strip(False), size=(1300, 130))
     register('grove_stream_water', P.stream_strip(True), size=(1300, 130))
-    register('grove_rift', rift_strip(), size=(1300, 90))
-    register('glass_roots_tile', glass_roots(w=256, h=160, seed=5, tile=True) if False else roots_tile(), name='glass_roots_tile')
+    register('grove_rift', __import__('ch3_ground').rift_strip(), size=(1300, 90))
+    import ch3_ground
+    register('glass_roots_tile', ch3_ground.roots_tile(), name='glass_roots_tile')
     register('glass_thicket_tile', P.thicket_tile(), name='glass_thicket_tile')
     glass_ground, dry_ground = P.ground_tiles()
     register('glass_ground_01', glass_ground, name='glass_ground')
@@ -971,7 +972,7 @@ def main():
     register('icon_willow_bark', P.icon_bark(), height=64)
     register('icon_vetla_seed', icon_seed(), height=64)
     for kind in ('leaf', 'bark', 'spark', 'moon'):
-        register(f'garden_bed_{kind}', P.garden_bed(kind), height=84)
+        register(f'garden_bed_{kind}', P.garden_bed(kind), height=88)
     register('companion_robin', P.companion_robin(), height=40)
     register('companion_fox', P.companion_fox(), height=46)
     register('icon_companion_robin', P.icon_companion('robin'), height=64)

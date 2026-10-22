@@ -404,7 +404,7 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
   const { RESOURCES, POTIONS, BASE_RESOURCES } = await import('../src/config/resources.js');
   const { NPCS } = await import('../src/config/npcs.js');
   const { DIALOGUES } = await import('../src/config/dialogues.js');
-  const { STEP_GUIDE, HERO_LINES } = await import('../src/config/guidance.js');
+  const { STEP_GUIDE, HERO_LINES, IDLE } = await import('../src/config/guidance.js');
   const { CONTENT_INTERACTIVES, CONTENT_ENEMIES } = await import('../src/config/world.content.js');
   const { ITEMS } = await import('../src/config/balance.progression.js');
   const { QUEST_STEPS } = await import('../src/config/events.js');
@@ -546,8 +546,22 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
     const { state, quests, guide } = mk();
     ok(guide.objective().text.length > 3 && guide.objective().stepId === 'book', 'цель: «' + guide.objective().full + '»');
     ok(guide.targetId(() => false) === 'magic_book', 'цель шага «book» — книга');
-    let hint = null; for (let t = 0; t < 100 && !hint; t++) hint = guide.tick(1);
-    ok(hint && hint.hint, 'застряли 45 с → подсказка: «' + (hint && hint.hint) + '»');
+    let hint = null; let waited = 0; for (; waited < 200 && !hint; waited++) hint = guide.tick(1);
+    ok(hint && hint.hint && waited >= 75, 'застряли 75 с → подсказка (не раньше): «' + (hint && hint.hint) + '» через ' + waited + ' с');
+    // дальше — не чаще раза в IDLE.hintEverySec, не больше maxMsgsPerStep, повторов нет
+    let more = [], gap = 0;
+    for (let t = 0; t < 3000; t++) { const h2 = guide.tick(1); gap++; if (h2) { more.push({ text: h2.hint, gap }); gap = 0; } }
+    ok(more.length === IDLE.maxMsgsPerStep - 1, 'на шаг — не больше ' + IDLE.maxMsgsPerStep + ' подсказок (после первой ещё ' + more.length + ')');
+    ok(more.every(m => m.gap >= IDLE.hintEverySec) && more.every(m => m.text !== hint.hint), 'следующая — не раньше ' + IDLE.hintEverySec + ' с и с другим текстом');
+    ok(guide.tick(1) === null, 'после лимита подсказки больше не приходят');
+    // после перезапуска игры показанные подсказки шага не возвращаются
+    const again = new GuidanceSystem({ state, quests, log: guide.log, bus: null });
+    let back = null; for (let t = 0; t < 3000 && !back; t++) back = again.tick(1);
+    ok(back === null, 'показанные подсказки шага не возвращаются после перезапуска');
+    ok(again.pointerActive(), 'зато стрелка к цели остаётся (она тихая)');
+    // другое сообщение на экране → подсказка «застряли» молчит
+    { const w = mk(); w.guide.hush(); let h3 = null; for (let t = 0; t < IDLE.quietSec - 1 && !h3; t++) h3 = w.guide.tick(1); ok(h3 === null, 'после реплики/плашки подсказка молчит quietSec секунд');
+      w.guide.idle = 500; w.guide.sinceHint = 500; w.guide.quiet = 3; ok(w.guide.tick(1) === null, 'пока тишина не кончилась, подсказки нет'); }
     guide.noteProgress();
     ok(guide.tick(1) === null, 'прогресс сбрасывает ожидание');
     ok(guide.lineFor({ item: 'moon_herb' }) && guide.lineFor({ item: 'moon_herb' }) === null, 'реплика героини на предмет — один раз');

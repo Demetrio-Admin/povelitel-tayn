@@ -5,12 +5,12 @@ import { MSG } from '../state/EventBus.js';
 
 // тексты подсказок; target — что подсветить в UI
 export const HINTS = {
-  move:        { text: 'Проведите пальцем по экрану, чтобы идти\n(на ПК — WASD или стрелки)', target: 'swipe', ttl: 0 },
-  interact:    { text: 'Нажмите кнопку действия (E / Пробел)', target: 'context', ttl: 9000 },
-  telekinesis: { text: 'Бирюзовый знак — цель для Телекинеза.\nНажмите кнопку дара (1)', target: 'telekinesis', ttl: 9000 },
-  combat_warning: { text: 'Сейчас! Прервите атаку Телекинезом', target: 'telekinesis', ttl: 0 },
-  fire:        { text: 'Новый дар! Огонь сжигает корни и зажигает факелы (2)', target: 'fire', ttl: 9000 },
-  bag:         { text: 'В сумке — ресурсы, расходники, дары и амулеты (B)', target: 'bag', ttl: 6000 },
+  move:        { text: 'Чтобы идти, ведите пальцем по экрану.\nНа компьютере — клавиши WASD или стрелки.', target: 'swipe', ttl: 0 },
+  interact:    { text: 'Рядом можно действовать. Нажмите круглую кнопку справа внизу\n(на компьютере — E или Пробел).', target: 'context', ttl: 8000 },
+  telekinesis: { text: 'Бирюзовый знак значит: этот предмет можно сдвинуть или бросить.\nНажмите кнопку Телекинеза (на компьютере — 1).', target: 'telekinesis', ttl: 8000 },
+  combat_warning: { text: 'Враг замахивается! Нажмите Телекинез, чтобы сбить удар.', target: 'telekinesis', ttl: 0 },
+  fire:        { text: 'Новый дар — Огонь: он сжигает чёрные корни и зажигает факелы.\nКнопка Огня рядом с Телекинезом (на компьютере — 2).', target: 'fire', ttl: 8000 },
+  bag:         { text: 'В сумке лежат травы, зелья, дары и амулеты.\nОткройте её кнопкой внизу (на компьютере — B).', target: 'bag', ttl: 6000 },
 };
 
 export class TutorialSystem {

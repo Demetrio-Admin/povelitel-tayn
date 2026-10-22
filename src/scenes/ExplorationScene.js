@@ -848,6 +848,7 @@ export class ExplorationScene extends Phaser.Scene {
   heroSay(text, ms = 3400) {
     text = T(text);   // v0.9.2: варианты для ведьмы / колдуна
     if (!text || this.editor || !this.player) return;
+    services.guidance?.hush();   // пока героиня говорит, подсказки «если застряли» молчат
     if (this.speech) { this.speech.c.destroy(); this.speech = null; }
     const t = this.add.text(0, 0, text, { fontFamily: UI.font, fontSize: UI.type.body, color: '#fff7e0', align: 'center', wordWrap: { width: 360 }, lineSpacing: 3 }).setOrigin(0.5);
     const w = Math.max(120, t.width + 40), h = t.height + 24;
@@ -972,7 +973,7 @@ export class ExplorationScene extends Phaser.Scene {
     const h = g.tick(dt);
     const stepNow = g.step().id;
     if (this.hintStep !== stepNow) { this.hintStep = stepNow; this.bus.emit(MSG.GUIDE_HINT, null); }
-    if (h) { this.heroSay(h.hint, 6200); this.bus.emit(MSG.GUIDE_HINT, h.hint); }
+    if (h && services.settings?.get('hints') !== false) { this.heroSay(h.hint, 6200); this.bus.emit(MSG.GUIDE_HINT, h.hint); }   // настройка «Подсказки» выключает и их
 
     // подсветка цели и стрелка
     const id = this.guideTarget();

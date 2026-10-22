@@ -17,6 +17,7 @@ export class GuidanceSystem {
     this.sinceHint = 0;
     this.pointerOn = false;
     this.forceT = 0;        // секунды принудительной стрелки (намёк после события)
+    this.quiet = 0;         // секунды тишины после другого сообщения (см. hush)
   }
 
   // ---------- цель ----------
@@ -71,7 +72,26 @@ export class GuidanceSystem {
   /** Любое значимое действие игрока (предмет, событие, разговор) сбрасывает ожидание. */
   noteProgress() { this.idle = 0; this.sinceHint = 0; }
 
-  resetStep() { this.idle = 0; this.sinceHint = 0; this.hintsShown = 0; this.pointerOn = false; this.bus?.emit(MSG.GUIDE_POINTER, null); }
+  /** Сколько подсказок шага уже было показано (хранится в сохранении, чтобы они не возвращались после перезапуска). */
+  shownFor(stepId) {
+    const prefix = `gh:${stepId}:`;
+    return (this.state.data.tutorial || []).filter(k => typeof k === 'string' && k.startsWith(prefix)).length;
+  }
+  markShown(stepId, n) {
+    if (!Array.isArray(this.state.data.tutorial)) this.state.data.tutorial = [];
+    const key = `gh:${stepId}:${n}`;
+    if (!this.state.data.tutorial.includes(key)) this.state.data.tutorial.push(key);
+  }
+
+  /** Другое сообщение уже на экране (реплика, плашка цели, подсказка-окно): подсказки «застряли» молчат quietSec секунд. */
+  hush(sec = IDLE.quietSec) { this.quiet = Math.max(this.quiet, sec); }
+
+  resetStep() {
+    this.idle = 0; this.sinceHint = 0; this.pointerOn = false;
+    this.hintsShown = this.shownFor(this.step().id);
+    if (this.hintsShown >= IDLE.pointerAfterHints) this.pointerOn = true;
+    this.bus?.emit(MSG.GUIDE_POINTER, null);
+  }
 
   /**
    * dt — секунды игры без окон и боя. Возвращает { hint } когда пора показать подсказку, иначе null.
@@ -79,16 +99,19 @@ export class GuidanceSystem {
    */
   tick(dt) {
     this.forceT = Math.max(0, this.forceT - dt);
+    this.quiet = Math.max(0, this.quiet - dt);
     const s = this.step();
     if (s.id !== this.stepId) { this.stepId = s.id; this.resetStep(); }
     this.idle += dt;
     const hints = this.hints();
-    if (!hints.length || this.hintsShown >= IDLE.maxMsgsPerStep) return null;
-    const due = this.hintsShown === 0 ? IDLE.firstHintSec : IDLE.hintEverySec;
+    // каждая подсказка шага звучит один раз: дальше по списку, последняя не повторяется
+    if (!hints.length || this.hintsShown >= IDLE.maxMsgsPerStep || this.hintsShown >= hints.length) return null;
     this.sinceHint += dt;
-    if (this.idle >= IDLE.firstHintSec && this.sinceHint >= due) {
-      const text = hints[Math.min(this.hintsShown, hints.length - 1)];
+    const due = this.hintsShown === 0 ? IDLE.firstHintSec : IDLE.hintEverySec;
+    if (this.idle >= IDLE.firstHintSec && this.sinceHint >= due && this.quiet <= 0) {
+      const text = hints[this.hintsShown];
       this.hintsShown++;
+      this.markShown(s.id, this.hintsShown);
       this.sinceHint = 0;
       if (this.hintsShown >= IDLE.pointerAfterHints) this.pointerOn = true;
       return { hint: text, level: this.hintsShown };

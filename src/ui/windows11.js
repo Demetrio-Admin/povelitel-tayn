@@ -9,7 +9,8 @@ import { speedupOptions, sapphires, sapphireFailText } from '../systems/wallet.j
 import { GIFT_PRICES } from '../config/bag.js';
 import { SAPPHIRES } from '../config/sapphires.js';
 import { ROMAN } from '../objects/InteractiveObject.js';
-import { UPGRADES } from '../config/balance.progression.js';
+import { UPGRADES, ITEMS } from '../config/balance.progression.js';
+import { RESOURCE_WHERE } from '../config/guidance.js';
 import { ABILITIES } from '../config/balance.abilities.js';
 import { addButton, drawPlate } from './widgets.js';
 
@@ -279,7 +280,8 @@ export const windows11 = {
 
   startGiftResearch(upgradeId) {
     const up = UPGRADES[upgradeId];
-    if (!services.state.upgradeStatus(upgradeId).ok) { this.toast('Не хватает требований для улучшения.'); return; }
+    const status = services.state.upgradeStatus(upgradeId);
+    if (!status.ok) { services.audio.play('locked'); this.toast(upgradeLackText(status), COLORS.danger); return; }
     this.closeModal(null);
     this.openModal({
       title: `Изучить ${up.title}?`, color: COLORS[ABILITIES[up.ability].color],
@@ -299,3 +301,16 @@ export const windows11 = {
     if (!this.modal) this.openGiftDetails(up.ability);
   },
 };
+
+/** Что именно мешает изучению: «Не хватает: Монеты 40/100, Лунный осколок 1/3 …» (+ где искать первый ресурс). */
+export function upgradeLackText(status) {
+  if (status.reason === 'event') return 'Сначала выполните условие улучшения — оно указано в требованиях.';
+  if (status.reason === 'in_progress') return 'Это улучшение уже изучается.';
+  if (status.reason === 'busy') return 'Сейчас изучается другое улучшение — дождитесь его конца.';
+  const lack = (status.checks || []).filter(c => !c.hidden && c.have < c.need)
+    .map(c => ({ ...c, label: c.item && c.item !== 'coins' ? (ITEMS[c.item]?.name || c.label) : c.label }));
+  if (!lack.length) return 'Улучшение пока недоступно.';
+  const first = lack.find(c => RESOURCE_WHERE[c.item]);
+  return 'Не хватает: ' + lack.map(c => `${c.label} ${c.have}/${c.need}`).join(', ') + '.'
+    + (first ? `\nГде взять ${String(first.label).toLowerCase()}: ${RESOURCE_WHERE[first.item]}.` : '');
+}

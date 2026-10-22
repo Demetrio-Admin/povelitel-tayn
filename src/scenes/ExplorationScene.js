@@ -110,6 +110,7 @@ export class ExplorationScene extends Phaser.Scene {
     state.data.player={...p};
     this.loc = services.edit ? null : locationAt(p.x, p.y);
     if (this.loc && !inLocation(p, this.loc)) { p = { ...this.loc.arrival }; state.data.player = { ...p }; }   // старое сохранение за краем локации
+    services.audio?.setArea(this.loc);   // у города и рощи своя музыка (иначе — лесная)
     const R = this.loc ? this.loc.rect : { x: 0, y: 0, w: WORLD.width, h: WORLD.height };
     const top = this.loc ? (this.loc.extraTop || 0) : EXTRA_TOP, bottom = this.loc ? (this.loc.extraBottom || 0) : EXTRA_BOTTOM;
     this.bounds = R;

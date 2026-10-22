@@ -1,5 +1,5 @@
-// AudioManager — процедурный звук на Web Audio (без файлов). Все эффекты и две музыкальные петли
-// синтезируются на лету. Когда появятся настоящие звуки, достаточно заменить рецепт
+// AudioManager — процедурный звук на Web Audio (без файлов). Все эффекты и музыкальные темы
+// (лес, город, роща, бой) синтезируются на лету. Когда появятся настоящие звуки, достаточно заменить рецепт
 // в SFX на проигрывание буфера — вызовы audio.play('fire_hit') по коду останутся теми же.
 //
 // Браузеры (особенно iOS) разрешают звук только после жеста пользователя: unlock() вызывается
@@ -8,12 +8,36 @@
 const PENTA = [0, 3, 5, 7, 10]; // минорная пентатоника
 const midi = n => 440 * Math.pow(2, (n - 69) / 12);
 
+/** Музыкальная тема прогулки по локации: лес (по умолчанию, вылазки тоже), город (и его комнаты), Безымянная роща. */
+export function musicThemeFor(loc) {
+  if (!loc) return 'forest';
+  if (loc.id === 'city' || loc.parent === 'city') return 'city';
+  if (loc.id === 'grove') return 'grove';
+  return 'forest';
+}
+
+// Город под инеем: мягкий вальсовый ход в ре миноре — лютня-арпеджио, «колокольчик» мелодии, тёплый бас. Мелодия задана нотами:
+// 8 тактов по 8 восьмых (null — пауза), первые четыре — вопрос, вторые — ответ; аккорды Dm – B♭ – F – C.
+const CITY_CHORDS = [[50, 'm'], [46, 'M'], [53, 'M'], [48, 'M']];
+const CITY_MELODY = [
+  [69, null, 72, null, 74, null, 72, 69], [70, null, null, null, 69, null, 65, null],
+  [72, null, 69, null, 65, null, 69, 72], [67, null, null, null, 64, null, null, null],
+  [74, null, 72, null, 69, null, 72, null], [74, null, 70, null, 74, null, 77, null],
+  [77, null, 72, null, 69, null, 72, null], [76, null, 72, null, 67, null, null, null],
+];
+const CITY_ARP = [0, 1, 2, 1, 2, 1, 2, 1];
+// Безымянная роща: время остановилось — тянущиеся «стеклянные» тона, лидийский лад, биения двойных голосов и тикающие часы, которые то и дело замирают.
+const GROVE_ROOTS = [40, 37, 33, 35];           // E, C#, A, B
+const GROVE_SCALE = [0, 2, 4, 6, 7, 9, 11];     // E лидийский
+
 export class AudioManager {
   constructor(settings) {
     this.settings = settings;
     this.ctx = null;
     this.unlocked = false;
     this.musicMode = null;   // 'explore' | 'combat' | 'menu' | null
+    this.musicTheme = null;  // какая именно тема играет: forest | city | grove | combat
+    this.area = 'forest';    // тема прогулки в текущей локации (см. setArea)
     this.wantedMusic = null;
     this.last = {};          // анти-спам: время последнего запуска каждого звука
     this.step = 0;
@@ -144,9 +168,11 @@ export class AudioManager {
   setMusic(mode) {
     this.wantedMusic = mode;
     if (!this.ready) return;
-    if (mode === this.musicMode) return;
+    const theme = mode === 'explore' ? this.area : mode;
+    if (mode === this.musicMode && theme === this.musicTheme) return;
     this.stopMusic();
     this.musicMode = mode;
+    this.musicTheme = theme;
     if (!mode) return;
     const c = this.ctx;
     this.musicOut = c.createGain();
@@ -154,10 +180,20 @@ export class AudioManager {
     this.musicOut.gain.exponentialRampToValueAtTime(1, c.currentTime + 1.5);
     this.musicOut.connect(this.musicBus);
     this.musicOut.connect(this.delay);
-    this.startWind(mode === 'combat' ? 0.025 : 0.06);
+    if (theme === 'city') this.startWind(0.03, 380, 0.7);
+    else if (theme === 'grove') this.startWind(0.04, 1300, 2.5);
+    else this.startWind(mode === 'combat' ? 0.025 : 0.06);
     this.step = 0;
     this.nextNoteAt = c.currentTime + 0.3;
     this.timer = setInterval(() => this.schedule(), 100);
+  }
+
+  /** Тема прогулки для локации; если сейчас играет прогулочная музыка и тема другая — плавно сменить. */
+  setArea(loc) {
+    const area = typeof loc === 'string' ? loc : musicThemeFor(loc);
+    if (area === this.area) return;
+    this.area = area;
+    if (this.musicMode === 'explore') this.setMusic('explore');
   }
 
   stopMusic() {
@@ -173,12 +209,13 @@ export class AudioManager {
     if (this.wind) { try { this.wind.stop(c.currentTime + 1.2); } catch (e) { /* already stopped */ } this.wind = null; }
     this.musicOut = null;
     this.musicMode = null;
+    this.musicTheme = null;
   }
 
-  startWind(vol) {
+  startWind(vol, freq = 500, q = 0.7) {
     const c = this.ctx;
     const s = c.createBufferSource(); s.buffer = this.noiseBuf; s.loop = true;
-    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 500; f.Q.value = 0.7;
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
     const lfo = c.createOscillator(); lfo.frequency.value = 0.07;
     const lfoG = c.createGain(); lfoG.gain.value = 300;
     lfo.connect(lfoG); lfoG.connect(f.frequency);
@@ -194,7 +231,10 @@ export class AudioManager {
     const c = this.ctx;
     while (this.nextNoteAt < c.currentTime + 0.4) {
       const at = Math.max(0, this.nextNoteAt - c.currentTime);
-      if (this.musicMode === 'combat') this.combatStep(at); else this.ambientStep(at);
+      if (this.musicTheme === 'combat') this.combatStep(at);
+      else if (this.musicTheme === 'city') this.cityStep(at);
+      else if (this.musicTheme === 'grove') this.groveStep(at);
+      else this.ambientStep(at);
       this.step++;
     }
   }
@@ -213,6 +253,52 @@ export class AudioManager {
       this.tone({ f: midi(n) * 2, dur: 0.6, a: 0.01, vol: 0.015, type: 'sine', at, out: this.musicOut });
     }
     this.nextNoteAt += beat;
+  }
+
+  // город: мягкий вальсовый ход (≈96 уд/мин), лютня-арпеджио, колокольчик мелодии и тёплый бас
+  cityStep(at) {
+    const eighth = 60 / 96 / 2;
+    const s = this.step, k = s % 8, bar = Math.floor(s / 8) % 8;
+    const [root, quality] = CITY_CHORDS[bar % 4];
+    const triad = quality === 'm' ? [0, 3, 7] : [0, 4, 7];
+    if (k === 0) {
+      for (const iv of [...triad, 12]) this.tone({ f: midi(root + iv), dur: eighth * 7.5, a: 0.5, vol: 0.026, type: 'triangle', at, out: this.musicOut, detune: (Math.random() - 0.5) * 6 });
+      this.tone({ f: midi(root - 12), dur: 0.95, a: 0.01, vol: 0.11, type: 'sine', at, out: this.musicOut });
+    } else if (k === 4) {
+      this.tone({ f: midi(root - 5), dur: 0.7, a: 0.01, vol: 0.07, type: 'sine', at, out: this.musicOut });
+    }
+    this.tone({ f: midi(root + 12 + triad[CITY_ARP[k]]), dur: 0.45, a: 0.004, vol: k % 2 ? 0.026 : 0.034, type: 'triangle', at, out: this.musicOut });
+    const m = CITY_MELODY[bar][k];
+    if (m) {
+      this.tone({ f: midi(m), dur: 0.8, a: 0.008, vol: 0.075, type: 'triangle', at, out: this.musicOut });
+      this.tone({ f: midi(m + 12), dur: 0.35, a: 0.008, vol: 0.02, type: 'sine', at, out: this.musicOut });
+    }
+    if (k === 2 || k === 6) this.noise({ dur: 0.02, vol: 0.012, type: 'highpass', f: 7000, at, out: this.musicOut });   // иней под ногами
+    if (bar === 7 && k === 7 && Math.random() < 0.5) this.tone({ f: midi(86), dur: 2.2, a: 0.01, vol: 0.03, type: 'sine', at, out: this.musicOut });
+    this.nextNoteAt += eighth;
+  }
+
+  // роща: время остановилось — медленные «стеклянные» тона, двойные голоса с биением и тикающие часы, которые замирают
+  groveStep(at) {
+    const stepLen = 1.2;
+    const s = this.step, k = s % 8, phrase = Math.floor(s / 8) % 4;
+    const root = GROVE_ROOTS[phrase];
+    if (k === 0) {
+      this.tone({ f: midi(root), dur: stepLen * 8, a: 3, vol: 0.05, type: 'triangle', at, out: this.musicOut });
+      this.tone({ f: midi(root + 7), dur: stepLen * 8, a: 3.4, vol: 0.035, type: 'sine', at, out: this.musicOut });
+      this.tone({ f: midi(root + 14), dur: stepLen * 8, a: 3.8, vol: 0.022, type: 'sine', at, out: this.musicOut });
+      for (const iv of [24, 31]) for (const d of [-7, 7]) this.tone({ f: midi(root + iv), dur: stepLen * 7, a: 3, vol: 0.011, type: 'sine', at, out: this.musicOut, detune: d });
+    }
+    if (Math.random() < (k % 2 === 0 ? 0.5 : 0.2)) {
+      const n = 64 + GROVE_SCALE[Math.floor(Math.random() * GROVE_SCALE.length)] + (Math.random() < 0.4 ? 12 : 0);
+      this.tone({ f: midi(n), dur: 3.2, a: 0.02, vol: 0.05, type: 'sine', at, out: this.musicOut });
+      this.tone({ f: midi(n) * 2.756, dur: 1.4, a: 0.01, vol: 0.011, type: 'sine', at, out: this.musicOut });
+    }
+    if (phrase % 2 === 0 && k < 6) {   // часы идут шесть тиков и замирают на две доли
+      this.noise({ dur: 0.025, vol: 0.03, f: 2400, q: 6, at, out: this.musicOut });
+      this.tone({ f: 1800, dur: 0.02, a: 0.002, vol: 0.01, type: 'sine', at, out: this.musicOut });
+    }
+    this.nextNoteAt += stepLen;
   }
 
   // боевая пульсация: барабан + остинато баса

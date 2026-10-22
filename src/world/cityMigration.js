@@ -57,14 +57,16 @@ export function migrateWarehouseSave(state) {
 
 /** One-time relocation to the approved room layouts; ordinary progress is untouched. */
 export function migratePaintedRooms(state) {
-  if(state.getObject('city_interiors')?.version>=1)return false;
+  const version=state.getObject('city_interiors')?.version||0;
+  if(version>=2)return false;
   for(const field of ['player','safePoint']){
     const p=state.data[field];if(!p)continue;
     const old=LEGACY_ROOM_RECTS.find(r=>inRect(p,r));
-    const room=old&&CITY_ROOMS.find(r=>r.key===old.key&&r.painted);
+    // Version 1 already migrated the first eight rooms. Only the two new homes change now.
+    const room=old&&CITY_ROOMS.find(r=>r.key===old.key&&r.painted&&(version<1||['cellar','rescue'].includes(r.key)));
     if(room)state.data[field]={...room.arrival};
   }
   const cargo=state.getObject('wh_cargo');
-  if(cargo?.state==='moved')Object.assign(cargo,INTERACTIVES.find(o=>o.id==='wh_cargo').target);
-  state.setObject('city_interiors',{version:1});return true;
+  if(version<1&&cargo?.state==='moved')Object.assign(cargo,INTERACTIVES.find(o=>o.id==='wh_cargo').target);
+  state.setObject('city_interiors',{version:2});return true;
 }

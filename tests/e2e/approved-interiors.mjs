@@ -14,7 +14,7 @@ try{
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.goto('http://127.0.0.1:5198/?reset&skipmenu');await page.waitForFunction(()=>window.__game?.scene.getScene('ExplorationScene')?.player);
  await page.evaluate(()=>{const w=window.__witch;for(const e of ['prologue_seen','chapter_1_complete','ch2_start','ch2_city_arrived','ch2_cargo_start','ch2_lab_open','ch2_fin_seal','ch2_rescue_cellar','ch2_rescue_door'])w.state.markEvent(e);w.settings.set('hints',false);w.tutorial.hide();});
- for(const key of ['bank','archive','society','lab','duel','coven','warehouse_a','warehouse_b']){
+ for(const key of ['bank','archive','society','lab','duel','coven','warehouse_a','warehouse_b','cellar','rescue']){
   await page.evaluate(key=>{const u=window.__game.scene.getScene('UIScene');u.closeDialogue(true);u.closeModal(null);window.__game.scene.getScene('ExplorationScene').travelToLocation('city_'+key);},key);
   await page.waitForFunction(key=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city_'+key&&window.__witch.mode==='exploration',key);
   await page.waitForFunction(()=>!window.__game.scene.getScene('ExplorationScene').cameras.main.fadeEffect.isRunning);
@@ -30,10 +30,19 @@ try{
    }
   }
   await page.setViewportSize({width:390,height:844});await page.waitForTimeout(200);
-  const bottom=await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),r=s.loc.rect,c=s.map.colliders.find(c=>c.id===s.loc.id+'_wall_back');s.player.stop();s.player.setPosition(r.x+r.w/2,c.y+c.h+90);return c.y+c.h;});
+  const bottom=await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),r=s.loc.rect,c=s.map.colliders.find(c=>c.id===s.loc.id+'_wall_back'),home=['city_cellar','city_rescue'].includes(s.loc.id);s.player.stop();s.player.setPosition(r.x+r.w*(home?.3:.5),c.y+c.h+90);return c.y+c.h;});
   await page.keyboard.down('ArrowUp');
   try{await page.waitForFunction(y=>window.__game.scene.getScene('ExplorationScene').player.y<=y+25,bottom,{timeout:10000});await page.waitForTimeout(250);assert.ok(await page.evaluate(y=>window.__game.scene.getScene('ExplorationScene').player.y>=y+21,bottom),key+' wall stops live keyboard movement');}
   finally{await page.keyboard.up('ArrowUp');}
+  if(['cellar','rescue'].includes(key)){
+   // Exercise table and bed collisions with live movement as well as camera bounds.
+   for(const index of (key==='rescue'?[1,4]:[1])){
+    const base=await page.evaluate(index=>{const s=window.__game.scene.getScene('ExplorationScene'),c=s.map.colliders.find(c=>c.id===s.loc.id+'_furniture_'+index);s.player.stop();s.player.setPosition(c.x+(index===4?20:c.w/2),c.y+c.h+90);return c.y+c.h;},index);
+    await page.keyboard.down('ArrowUp');
+    try{await page.waitForFunction(y=>window.__game.scene.getScene('ExplorationScene').player.y<=y+25,base,{timeout:10000});await page.waitForTimeout(250);assert.ok(await page.evaluate(y=>window.__game.scene.getScene('ExplorationScene').player.y>=y+21,base),key+' furniture stops live keyboard movement');}
+    finally{await page.keyboard.up('ArrowUp');}
+   }
+  }
   await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),r=s.loc.rect;s.player.stop();s.player.setPosition(r.x+r.w/2,r.y+r.h*.61);s.cameras.main.centerOn(s.player.x,s.player.y-s.followOffsetY);const u=window.__game.scene.getScene('UIScene');u.toasts.forEach(t=>t.destroy());u.toasts=[];u.goalBanner?.setVisible(false);u.zoneBanner?.setVisible(false);u.hintPlate?.setVisible(false);});
   await page.waitForTimeout(250);await page.screenshot({path:path.join(out,key+'.png')});
   console.log('✓',key,'physics + camera at 4 viewports, 5 positions including tables/edges');

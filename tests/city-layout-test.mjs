@@ -225,7 +225,23 @@ for(const [id,table] of [['archive_document','room_desk'],['lab_journal','room_j
  const o=byId(id),c=m.colliders.find(c=>c.id===table);assert.ok(Math.abs(o.y-(c.y+c.h+1))<1e-8);assert.ok(o.elevated>0);
 }
 for(const id of ['npc_severin_archive','ch3_glass_leaf'])assert.equal(locationAt(byId(id).x,byId(id).y).id,'city_archive','chapter III stays in archive');
-console.log('✓ Eight approved interiors: art, walls, live quest objects and idempotent save migration.');
+console.log('✓ Ten approved interiors: art, walls, live quest objects and idempotent save migration.');
+
+// Existing v1 saves only relocate the newly painted homes; earlier rooms and moved cargo stay put.
+for(const key of ['cellar','rescue','bank','warehouse_b']){
+ const r=CITY_ROOMS.find(r=>r.key===key),old=LEGACY_ROOM_RECTS.find(r=>r.key===key),saved=new GameState();
+ saved.setObject('city_layout',{version:4});saved.setObject('city_warehouses',{version:1});saved.setObject('city_interiors',{version:1});
+ saved.data.player={x:old.x+old.w-40,y:old.y+old.h-40};saved.data.safePoint={...saved.data.player};
+ saved.setObject('wh_cargo',{state:'moved',x:11000,y:5600});
+ saved.markEvent('ch2_rescue_cellar');saved.markEvent('ch2_rescue_door');
+ const position={...saved.data.player},progress=JSON.stringify([saved.data.inventory,saved.data.completedEvents,saved.getObject('wh_cargo')]);
+ assert.equal(migrateCitySave(saved),true);
+ assert.deepEqual(saved.data.player,['cellar','rescue'].includes(key)?r.arrival:position);
+ assert.deepEqual(saved.data.safePoint,saved.data.player);
+ assert.equal(saved.getObject('city_interiors').version,2);
+ assert.equal(JSON.stringify([saved.data.inventory,saved.data.completedEvents,saved.getObject('wh_cargo')]),progress);
+ const once=JSON.stringify(saved.data);assert.equal(migrateCitySave(saved),false);assert.equal(JSON.stringify(saved.data),once);
+}
 
 // A pushed live crate must fit between the painted shelf bases at its saved destination.
 {

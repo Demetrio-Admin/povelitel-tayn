@@ -1,5 +1,6 @@
 import { ROOM_WIDTH, ROOM_HEIGHT } from '../config/city.rooms.js';
 import { migrateCitySave } from '../world/cityMigration.js';
+import { migrateGraveyardSave } from '../world/graveyardMigration.js';
 import { CITY_WITCH_SPRITES } from '../config/city.witch.art.js';
 import { buildingDoor, linkBuildingPortals } from '../world/buildingGeometry.js';
 import { RoomDoor } from '../objects/RoomDoor.js';
@@ -106,6 +107,7 @@ export class ExplorationScene extends Phaser.Scene {
     // v0.27.0: строится только текущая локация (глава или вылазка) — по положению героя; редактор карты (?edit) видит весь холст
     // v0.37.0: one-time move to the walkable town plan (player, safe point and pushed objects travel with the marker).
     migrateCitySave(state);
+    migrateGraveyardSave(state);
     let p = this.fixStartPosition(state.data.player);
     state.data.player={...p};
     this.loc = services.edit ? null : locationAt(p.x, p.y);
@@ -152,8 +154,9 @@ export class ExplorationScene extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBounds(this.view.x, this.view.y, this.view.w, this.view.h);   // v0.27.0: камера — только своя локация
     const followSize = () => {
-      // Cover the painted room on tall and wide viewports. Bounds clamp before any unpainted area is visible.
-      cam.setZoom(this.loc?.painted ? Math.max(cam.width / R.w, cam.height / R.h) : 1);
+      // Cover painted locations at every aspect ratio; large outdoor maps retain
+      // the normal hero scale and scroll instead of shrinking to a whole-map view.
+      cam.setZoom(this.loc?.painted ? Math.max(1, cam.width / R.w, cam.height / R.h) : 1);
       this.followOffsetY = (CAMERA.heroScreenY - 0.5) * cam.height / cam.zoom + PLAYER.displayHeight * 0.4;
       this.follow();
     };

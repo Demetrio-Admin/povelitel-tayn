@@ -400,23 +400,9 @@ def icon_bark():
 
 
 def ground_tiles():
-    snow = Image.open(os.path.join(ROOT, 'public/assets/chapter2/snow_ground.webp')).convert('RGBA')
-    glass = gradient_map(snow, [(0, (112, 132, 150)), (0.4, (156, 180, 196)), (0.75, (204, 222, 234)), (1, (244, 250, 252))], amount=0.9)
-    n = tileable_noise(512, 2, seed=7)
-    g = tileable_noise(512, 7, seed=11)
-    arr = np.asarray(glass).astype(np.float32)
-    lil = np.array([196, 186, 232], np.float32)
-    mint = np.array([170, 214, 214], np.float32)
-    for ch in range(3):
-        arr[:, :, ch] = arr[:, :, ch] * (1 - 0.2 * n) + lil[ch] * 0.2 * n
-        arr[:, :, ch] = arr[:, :, ch] * (1 - 0.16 * (1 - n)) + mint[ch] * 0.16 * (1 - n)
-    glints = np.clip((g - 0.84) / 0.1, 0, 1) * 0.65
-    for ch in range(3):
-        arr[:, :, ch] = arr[:, :, ch] + (255 - arr[:, :, ch]) * glints
-    glass = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), 'RGBA')
-    grave = Image.open(os.path.join(ROOT, 'public/assets/chapter2/grave_ground.webp')).convert('RGBA')
-    dry = gradient_map(grave, [(0, (86, 70, 50)), (0.4, (142, 122, 88)), (0.75, (190, 170, 128)), (1, (228, 212, 172))], amount=0.82)
-    return glass.convert('RGB'), dry.convert('RGB')
+    """v3: painted plates of frosted glass and cracked clay (ch3_ground.py) instead of re-coloured chapter II noise."""
+    import ch3_ground
+    return ch3_ground.glass_ground(), ch3_ground.dry_ground()
 
 
 # ============================================================================ stream strips
@@ -501,19 +487,8 @@ def stream_strip(water=False):
 
 
 def thicket_tile(w=256, h=160):
-    """Seamless row of glass spires cut from the painted ice wall (two staggered rows)."""
-    wall = _unleaf(src('chapter2/ice_wall.webp'))
-    wall = tint(wall, LILAC_STOPS, 0.78)
-    wall = trim(wall, 0)
-    piece = fit_h(wall, 118)
-    canvas = Image.new('RGBA', (w, h), (0, 0, 0, 0))
-    for dx, y, scale in ((-0.15, h - piece.height + 18, 0.82), (0.45, h - piece.height + 2, 1.0)):
-        pw = int(piece.width * scale)
-        pic = piece.resize((pw, int(piece.height * scale)), Image.LANCZOS)
-        x = int(dx * w)
-        for k in (-1, 0, 1):
-            canvas.alpha_composite(pic, (x + k * w, h - pic.height - (0 if scale == 1.0 else 6))) if -pw < x + k * w < w else None
-    return sparkle(canvas, seed=4, n=14)
+    import ch3_ground
+    return ch3_ground.thicket_tile(w, h)
 
 
 # ============================================================================ garden of Vetla and companions
@@ -533,64 +508,8 @@ def _textured(mask_img, tex, mul=1.0, tint_rgb=None):
 
 
 def garden_bed(kind):
-    """A raised bed of the Vetla garden: plank frame, dark soil, and what grows in it (kind: leaf / bark / spark / moon)."""
-    from ch3_trees import sapling
-    w, h = 170, 130
-    cx = w / 2
-    wood = src('chapter2/wood_floor.webp').resize((128, 128), Image.LANCZOS)
-    soil = src('chapter2/grave_ground.webp').resize((128, 128), Image.LANCZOS)
-    shadow = Canvas(w, h)
-    shadow.ellipse(cx, h - 12, 76, 13, hexrgb('#000000', 80))
-    out = shadow.result()
-    # back rim, soil, front planks (drawn as flat masks, then textured)
-    back = Canvas(w, h)
-    back.poly([(10, h - 50), (w - 10, h - 50), (w - 4, h - 70), (4, h - 70)], hexrgb('#ffffff'))
-    top = Canvas(w, h)
-    top.poly([(14, h - 52), (w - 14, h - 52), (w - 9, h - 68), (9, h - 68)], hexrgb('#ffffff'))
-    front = Canvas(w, h)
-    front.poly([(8, h - 50), (w - 8, h - 50), (w - 8, h - 16), (8, h - 16)], hexrgb('#ffffff'))
-    left = Canvas(w, h)
-    left.poly([(8, h - 52), (16, h - 60), (16, h - 26), (8, h - 18)], hexrgb('#ffffff'))
-    soil_mask = Canvas(w, h)
-    soil_mask.poly([(16, h - 52), (w - 16, h - 52), (w - 11, h - 67), (11, h - 67)], hexrgb('#ffffff'))
-    out.alpha_composite(outline(_textured(back.result(), wood, 0.62), (44, 30, 22), px=2, soft=0.4))
-    out.alpha_composite(_textured(soil_mask.result(), soil, 0.52, (60, 44, 30)))
-    plants = Image.new('RGBA', (w, h), (0, 0, 0, 0))
-    base_y = h - 58
-    if kind == 'leaf':
-        sp = glass_sprig()
-        sp = fit_h(sp, 74)
-        plants.alpha_composite(sp, (int(cx - sp.width / 2), base_y - sp.height + 6))
-    elif kind == 'bark':
-        sp = sapling(seed=7, w=120, h=150)
-        sp = fit_h(sp, 84)
-        plants.alpha_composite(sp, (int(cx - sp.width / 2), base_y - sp.height + 6))
-    elif kind == 'spark':
-        c = Canvas(w, h)
-        rnd = random.Random(12)
-        for i, (dx, dy, r) in enumerate([(-30, 26, 6), (-6, 40, 8), (22, 30, 6), (40, 50, 5), (-48, 46, 5)]):
-            c.line([(cx + dx, base_y), (cx + dx + rnd.uniform(-3, 3), base_y - dy + 6)], hexrgb('#6f9a52'), 2.4)
-            c.ellipse(cx + dx, base_y - dy, r + 2, r + 2, hexrgb('#ffe9b4', 235))
-            c.ellipse(cx + dx - 1, base_y - dy - 1, r * 0.5, r * 0.5, hexrgb('#ffffff'))
-        plants = glow(outline(c.result(), (70, 50, 24), px=1, soft=0.4), (255, 200, 110), radius=7, strength=0.8)
-    else:   # moon
-        cr = src('chapter2/ice_crystal.webp')
-        cr = gradient_map(cr, [(0, (46, 40, 90)), (0.5, (160, 150, 232)), (1, (250, 246, 255))], amount=0.9)
-        cr = fit_h(trim(cr, 1), 62)
-        plants.alpha_composite(cr, (int(cx - cr.width / 2), base_y - cr.height + 10))
-        plants = glow(plants, (190, 170, 255), radius=6, strength=0.5)
-    out.alpha_composite(plants)
-    out.alpha_composite(outline(_textured(front.result(), wood, 0.9), (44, 30, 22), px=2, soft=0.4))
-    # plank seams on the front face
-    seams = Canvas(w, h)
-    for x in (w * 0.34, w * 0.67):
-        seams.line([(x, h - 50), (x, h - 16)], hexrgb('#3a2616', 200), 1.6)
-    seams.line([(8, h - 33), (w - 8, h - 33)], hexrgb('#3a2616', 140), 1.2)
-    sl = seams.result()
-    sa = np.minimum(np.asarray(sl.split()[3]).astype(np.float32), np.asarray(front.result().split()[3]).astype(np.float32))
-    arr = np.asarray(sl).astype(np.float32); arr[:, :, 3] = sa
-    out.alpha_composite(Image.fromarray(arr.astype(np.uint8), 'RGBA'))
-    return trim(out, 1)
+    import ch3_ground
+    return ch3_ground.garden_bed(kind)
 
 
 def companion_robin():

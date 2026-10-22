@@ -627,7 +627,7 @@ export class ExplorationScene extends Phaser.Scene {
           const wall = keep(this.add.tileSprite(c.x,c.y-30,c.w,c.h+30,c.tex || (locationAt(c.x+c.w/2,c.y+c.h/2).id==='city'?'city_wall':'wall_ruin_01'))
             .setOrigin(0).setTileScale(locationAt(c.x+c.w/2,c.y+c.h/2).id==='city'?0.25:0.5).setDepth(bottomDepth));
           this.colliderViews.set(c.id,{c,img:wall});
-          keep(this.add.rectangle(c.x,c.y-30,c.w,c.h+30).setOrigin(0).setStrokeStyle(3,0x2f2d33).setDepth(bottomDepth+1));
+          if(!c.noOutline)keep(this.add.rectangle(c.x,c.y-30,c.w,c.h+30).setOrigin(0).setStrokeStyle(3,0x2f2d33).setDepth(bottomDepth+1));   // v0.40: рисованные полосы рощи — без рамки
           break;
         }
         default: break;

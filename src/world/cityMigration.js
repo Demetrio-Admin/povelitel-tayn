@@ -1,7 +1,7 @@
 // v0.37.0: однократный перенос сохранения на прогулочный план города (city_layout.version = 4).
 // Позиция героя, точка возрождения и сдвинутые Телекинезом предметы переносятся вместе с маркером версии —
 // поэтому перезагрузка или повторный вход в сцену ничего не двигает второй раз. Прогресс, предметы и события не трогаются.
-import { cityArrival, CITY_LAYOUT_VERSION, CITY_POSITIONS, V3_CITY, legacyCityPoint } from '../config/city.plan.js';
+import { cityArrival, CITY_LAYOUT_VERSION, CITY_POSITIONS, CITY_ROOMS, V3_CITY, legacyCityPoint } from '../config/city.plan.js';
 import { INTERACTIVES } from '../config/world.layout.js';
 
 const inRect = (p, r) => p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h;
@@ -16,7 +16,7 @@ export function cityLayoutOf(state) {
 /** Returns true when the save was moved to the current plan. */
 export function migrateCitySave(state) {
   const layout = cityLayoutOf(state);
-  if (layout >= CITY_LAYOUT_VERSION) return false;
+  if (layout >= CITY_LAYOUT_VERSION) return migrateWarehouseSave(state);
   const has = k => state.hasEvent(k);
   if (state.data.player) state.data.player = { ...cityArrival(state.data.player, has, layout) };
   if (state.data.safePoint) state.data.safePoint = { ...cityArrival(state.data.safePoint, has, layout) };
@@ -28,5 +28,25 @@ export function migrateCitySave(state) {
     if (cfg?.target) Object.assign(o, { x: cfg.target.x, y: cfg.target.y });
   }
   state.setObject('city_layout', { version: CITY_LAYOUT_VERSION });
+  migrateWarehouseSave(state);
+  return true;
+}
+
+/** Split the old shared hall once, without resetting story, battles or inventory. */
+export function migrateWarehouseSave(state) {
+  if (state.getObject('city_warehouses')?.version >= 1) return false;
+  const oldHall = { x: 10200, y: 5200, w: 1440, h: 1680 };
+  for (const field of ['player', 'safePoint']) {
+    const p = state.data[field];
+    if (!p || !inRect(p, oldHall)) continue;
+    const key = p.x < 10920 ? 'warehouse_a' : 'warehouse_b';
+    state.data[field] = { ...CITY_ROOMS.find(r => r.key === key).arrival };
+  }
+  const cargo = state.getObject('wh_cargo');
+  if (cargo?.state === 'moved' && Number.isFinite(cargo.x) && Number.isFinite(cargo.y) && inRect(cargo, oldHall)) {
+    const target = INTERACTIVES.find(o => o.id === 'wh_cargo').target;
+    Object.assign(cargo, target);
+  }
+  state.setObject('city_warehouses', { version: 1 });
   return true;
 }

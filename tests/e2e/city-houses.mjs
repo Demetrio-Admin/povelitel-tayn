@@ -48,12 +48,12 @@ try{
   const rescue=BUILDINGS.find(b=>b.id==='rescue');
   await move(rescue.door.x,rescue.door.y+150);await shot('rescue-frozen');
   assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').colliderViews.get('city_plan_building_rescue').img.tintTopLeft),0xb6dbea);
-  for(const key of (process.env.HOUSE_ROOMS?process.env.HOUSE_ROOMS.split(','):['society','coven','lab','duel','warehouse','cellar','rescue'])){
-   const door=key==='warehouse'?'warehouse_a':key;
+  for(const key of (process.env.HOUSE_ROOMS?process.env.HOUSE_ROOMS.split(','):['society','coven','lab','duel','warehouse_a','warehouse_b','cellar','rescue'])){
+   const door=key;
    await page.evaluate(id=>{const s=window.__game.scene.getScene('ExplorationScene'),d=s.objects.find(o=>o.id===id);s.player.stop();s.player.setPosition(d.x,d.y+12);for(const e of s.enemies)e.grace=60000;},'door_'+door);
    await settle();await page.keyboard.press('Space');await ready('city_'+key);
    const r=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').loc.rect);
-   await move(r.x+r.w/2,r.y+({society:790,coven:800,lab:1510,duel:1140,warehouse:1120,cellar:790,rescue:790})[key]);
+   await move(r.x+r.w/2,r.y+({society:790,coven:800,lab:1510,duel:1140,warehouse_a:700,warehouse_b:800,cellar:790,rescue:790})[key]);
    await shot(key+'-room');
    if(key==='society'||key==='coven'){
     const npc=key==='society'?'severin':'rowena';await click('npc_'+npc);

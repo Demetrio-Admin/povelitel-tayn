@@ -50,15 +50,32 @@ try{
   await atDoor('door_lab');await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id==='door_lab').interact());
   assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').loc.id),'city');
   await page.evaluate(()=>{for(const e of ['ch2_lab_open','ch2_fin_seal','ch2_rescue_cellar','ch2_rescue_door'])window.__witch.state.markEvent(e);window.__game.scene.getScene('ExplorationScene').refreshAll();});
-  for(const [door,loc,exit] of [['lab','city_lab','lab'],['society','city_society','society'],['coven','city_coven','coven'],['duel','city_duel','duel'],['cellar','city_cellar','cellar'],['rescue','city_rescue','rescue'],['warehouse_a','city_warehouse','warehouse_a'],['warehouse_b','city_warehouse','warehouse_b']]){
+  for(const [door,loc,exit] of [['lab','city_lab','lab'],['society','city_society','society'],['coven','city_coven','coven'],['duel','city_duel','duel'],['cellar','city_cellar','cellar'],['rescue','city_rescue','rescue'],['warehouse_a','city_warehouse_a','warehouse_a'],['warehouse_b','city_warehouse_b','warehouse_b']]){
     console.log('Room',viewport.width,door);await atDoor('door_'+door);await page.evaluate(id=>window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id===id).interact(),'door_'+door);
     await page.waitForFunction(loc=>window.__game.scene.getScene('ExplorationScene').loc.id===loc && window.__witch.mode==='exploration',loc);
     assert.equal(await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),r=s.loc.rect,b=s.cameras.main._bounds;return b.x===r.x && b.width===r.w && b.y===r.y-s.loc.extraTop && b.height===r.h+s.loc.extraTop+s.loc.extraBottom && [...s.objects,...s.enemies].every(o=>o.cfg.x>=r.x && o.cfg.x<r.x+r.w && o.cfg.y>=r.y && o.cfg.y<r.y+r.h);}),true,'camera and objects stay inside '+loc);
+    if(door.startsWith('warehouse_')){
+      assert.deepEqual(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.filter(o=>o.id.startsWith('room_exit_')).map(o=>o.id)),['room_exit_'+door],'only its own exit is present');
+      // Exercise the actual Arcade collision against the visible wall face.
+      const wall=await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),r=s.loc.rect,c=s.map.colliders.find(c=>c.id==='room_back_wall_'+s.loc.key);for(const e of s.enemies)e.grace=60000;s.player.stop();s.player.setPosition(r.x+r.w/2,c.y+c.h+90);return {bottom:c.y+c.h};});
+      await page.keyboard.down('ArrowUp');
+      try{
+        await page.waitForFunction(y=>window.__game.scene.getScene('ExplorationScene').player.y<=y+25,wall.bottom,{timeout:10000});
+        await page.waitForTimeout(400);
+        assert.ok(await page.evaluate(y=>window.__game.scene.getScene('ExplorationScene').player.y>=y+21,wall.bottom),'keyboard cannot enter the wall face');
+      }finally{await page.keyboard.up('ArrowUp');}
+      await page.screenshot({path:path.join(out,viewport.width+'-'+door+'-wall.png')});
+      await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene');s.player.stop();s.player.setPosition(s.loc.arrival.x,s.loc.arrival.y);s.savePosition();history.replaceState({},'','/?skipmenu');});
+      await page.reload();await page.waitForFunction(loc=>window.__game?.scene.getScene('ExplorationScene')?.loc?.id===loc && window.__witch.mode==='exploration',loc);
+      assert.deepEqual(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.filter(o=>o.id.startsWith('room_exit_')).map(o=>o.id)),['room_exit_'+door],'reload preserves the separate room');
+      await page.evaluate(()=>{for(const e of window.__game.scene.getScene('ExplorationScene').enemies)e.grace=60000;});
+      await page.screenshot({path:path.join(out,viewport.width+'-'+door+'-entry.png')});
+    }
     if(door==='warehouse_a' && viewport.width===390){
       await page.evaluate(()=>{const w=window.__witch,s=window.__game.scene.getScene('ExplorationScene');w.state.markEvent('ch2_cargo_start');w.abilities.unlock('telekinesis',1);w.state.data.hp=100;w.state.data.mana=100;s.refreshAll();s.startCombat(s.enemies.find(e=>e.id==='wh_collector_1'),{manual:true});});
       await page.waitForFunction(()=>window.__game.scene.isActive('CombatScene') && window.__game.scene.getScene('CombatScene').started);
       const coins=await page.evaluate(()=>window.__witch.state.item('coins'));
-      await page.reload();await page.waitForFunction(()=>window.__game?.scene.getScene('ExplorationScene')?.loc?.id==='city_warehouse' && window.__witch.mode==='exploration',null,{timeout:120000});
+      await page.reload();await page.waitForFunction(()=>window.__game?.scene.getScene('ExplorationScene')?.loc?.id==='city_warehouse_a' && window.__witch.mode==='exploration',null,{timeout:120000});
       assert.equal(await page.evaluate(()=>window.__witch.state.getObject('enc:wh_collector_1').state),'lost');
       assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').enemies.find(e=>e.id==='wh_collector_1').awaitingRetry),true);
       assert.equal(await page.evaluate(()=>window.__witch.state.item('coins')),coins,'interrupted combat grants no reward');

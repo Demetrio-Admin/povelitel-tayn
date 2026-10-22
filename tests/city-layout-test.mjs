@@ -121,9 +121,20 @@ for(const b of BUILDINGS.filter(b=>!b.id.startsWith('north_'))){
   assert.deepEqual(exit.target,{x:b.door.x,y:b.door.y+100},'exit returns to its own house: '+b.id);
   assert.equal(locationAt(exit.target.x,exit.target.y).id,'city');
 }
-assert.equal(CITY_ROOMS.length,9);
+assert.equal(CITY_ROOMS.length,10);
 assert.equal(CITY_PORTALS.filter(o=>o.id.startsWith('door_warehouse')).length,2);
-assert.equal(objects.find(o=>o.id==='door_warehouse_a').room,objects.find(o=>o.id==='door_warehouse_b').room);
+assert.notEqual(objects.find(o=>o.id==='door_warehouse_a').room,objects.find(o=>o.id==='door_warehouse_b').room);
+assert.equal(locationAt(byId('wh_equipment').x,byId('wh_equipment').y).id,'city_warehouse_a');
+for(const id of ['wh_collector_2','wh_elite','wh_cargo'])
+ assert.equal(locationAt(byId(id).x,byId(id).y).id,'city_warehouse_b',id+' belongs to B');
+assert.equal(locationAt(byId('wh_collector_1').x,byId('wh_collector_1').y).id,'city_warehouse_a');
+for(const r of CITY_ROOMS){
+ const mural=m.props.find(p=>p.id==='room_decor_'+r.key+'_back_wall');
+ const face=m.colliders.find(c=>c.id==='room_back_wall_'+r.key);
+ assert.ok(face && face.y+face.h===mural.y,'full wall face blocks feet: '+r.id);
+ const path=findPath(grids(r,GATE_IDS),r.arrival,{x:mural.x,y:mural.y-40});
+ assert.ok(path.end.y>=mural.y+22,'tap cannot route onto wall: '+r.id);
+}
 assert.equal(objects.find(o=>o.id==='npc_banker').x,10560);
 assert.equal(m.colliders.find(o=>o.id==='c105').x,3600,'stable expedition collider id');
 assert.equal(CITY_PORTALS.some(o=>o.id.includes('north_')),false);
@@ -161,6 +172,20 @@ assert.deepEqual({x:st.getObject('fq_cellar').x,y:st.getObject('fq_cellar').y},d
 assert.equal(st.getObject('city_layout').version,4);
 assert.deepEqual({inv:JSON.stringify(st.data.inventory),ev:st.data.completedEvents},before,'progress untouched');
 const once=JSON.stringify(st.data);assert.equal(migrateCitySave(st),false);assert.equal(JSON.stringify(st.data),once,'second load moves nothing');
+// Saved feet, respawn and telekinetic cargo from either half of the old shared hall.
+for(const [x,key] of [[10500,'warehouse_a'],[11340,'warehouse_b']]){
+ const saved=new GameState();saved.setObject('city_layout',{version:4});
+ saved.data.player={x,y:6700};saved.data.safePoint={x,y:6500};
+ saved.setObject('wh_cargo',{state:'moved',x:11390,y:5610});
+ saved.markEnemyDefeated('wh_elite');saved.markEvent('ch2_cargo_found');
+ const progress=JSON.stringify([saved.data.inventory,saved.data.completedEvents,saved.getObject('enc:wh_elite')]);
+ assert.equal(migrateCitySave(saved),true);
+ assert.deepEqual(saved.data.player,CITY_ROOMS.find(r=>r.key===key).arrival);
+ assert.deepEqual(saved.data.safePoint,saved.data.player);
+ assert.deepEqual({x:saved.getObject('wh_cargo').x,y:saved.getObject('wh_cargo').y},byId('wh_cargo').target);
+ assert.equal(JSON.stringify([saved.data.inventory,saved.data.completedEvents,saved.getObject('enc:wh_elite')]),progress);
+ const migrated=JSON.stringify(saved.data);assert.equal(migrateCitySave(saved),false);assert.equal(JSON.stringify(saved.data),migrated);
+}
 const fresh=new GameState();fresh.data.player={x:900,y:5200};assert.equal(migrateCitySave(fresh),true);assert.deepEqual(fresh.data.player,{x:900,y:5200});
 const oldSave=createDefaultState();oldSave.player=v3(2210,2790);
 const synced=fromSnapshot(applyPatch(toSnapshot(oldSave),{pos:front('bank'),objects:{city_layout:{version:4}}}));

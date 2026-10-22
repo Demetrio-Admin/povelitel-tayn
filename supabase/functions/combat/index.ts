@@ -986,12 +986,13 @@ var layouts = [
   ["lab", "\u0422\u0430\u0439\u043D\u0430\u044F \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u044F", 10200, 2600, 960, 2160],
   ["duel", "\u041C\u0430\u0433\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u0414\u0443\u044D\u043B\u044C", 11800, 2600, 1080, 1680],
   ["coven", "\u0414\u043E\u043C \u041A\u043E\u0432\u0435\u043D\u043E\u0432", 13400, 2600, 840, 1440],
-  ["warehouse", "\u0421\u043A\u043B\u0430\u0434\u0441\u043A\u043E\u0439 \u043A\u043E\u043C\u043F\u043B\u0435\u043A\u0441", 10200, 5200, 1440, 1680],
+  ["warehouse_a", "\u0421\u043A\u043B\u0430\u0434 \u0410", 10200, 5200, 720, 1100],
+  ["warehouse_b", "\u0421\u043A\u043B\u0430\u0434 \u0411", 11040, 5200, 720, 1200],
   ["cellar", "\u0414\u043E\u043C \u0441 \u043F\u043E\u0433\u0440\u0435\u0431\u043E\u043C", 11800, 5200, 720, 1440],
   ["rescue", "\u0414\u043E\u043C \u0437\u0430 \u043B\u0435\u0434\u044F\u043D\u043E\u0439 \u0434\u0432\u0435\u0440\u044C\u044E", 13400, 5200, 720, 1440]
 ];
 var CITY_ROOMS = layouts.map(([key, name, x, y, w, h]) => {
-  const doors = BUILDINGS.filter((b) => key === "warehouse" ? b.id.startsWith("warehouse_") : b.id === key);
+  const doors = BUILDINGS.filter((b) => b.id === key);
   return {
     id: "city_" + key,
     key,
@@ -1011,8 +1012,8 @@ var CITY_ROOMS = layouts.map(([key, name, x, y, w, h]) => {
 var room = (key) => CITY_ROOMS.find((r) => r.key === key);
 var rp = (key, x, y) => ({ x: room(key).rect.x + x, y: room(key).rect.y + y });
 var CITY_PORTALS = BUILDINGS.filter((b) => !b.id.startsWith("north_")).flatMap((b) => {
-  const key = b.id.startsWith("warehouse_") ? "warehouse" : b.id, r = room(key);
-  const entryX = key === "warehouse" ? b.id === "warehouse_a" ? 300 : 1140 : r.rect.w / 2;
+  const key = b.id, r = room(key);
+  const entryX = r.rect.w / 2;
   const inside = rp(key, entryX, r.rect.h - 180);
   return [
     {
@@ -1101,13 +1102,13 @@ var CITY_POSITIONS = Object.fromEntries([
   ["lab_cauldron", rp("lab", 820, 1880)],
   ["npc_tikhon", rp("lab", 240, 1540)],
   ["lab_journal", { ...rp("lab", 710, 1786), elevated: 41 }],
-  ["wh_cargo", rp("warehouse", 1110, 440)],
-  ["wh_equipment", rp("warehouse", 400, 630)],
+  ["wh_cargo", rp("warehouse_b", 540, 360)],
+  ["wh_equipment", rp("warehouse_a", 540, 420)],
   ["final_letters", { ...rp("duel", 840, 626), elevated: 41 }],
   ["npc_severin_after", rp("duel", 770, 820)],
-  ["wh_collector_1", rp("warehouse", 430, 1160)],
-  ["wh_collector_2", rp("warehouse", 1050, 900)],
-  ["wh_elite", rp("warehouse", 790, 490)],
+  ["wh_collector_1", rp("warehouse_a", 360, 610)],
+  ["wh_collector_2", rp("warehouse_b", 260, 800)],
+  ["wh_elite", rp("warehouse_b", 430, 530)],
   ["vol_1", rp("lab", 390, 1240)],
   ["vol_2", rp("lab", 680, 960)],
   ["lab_construct", rp("lab", 480, 450)],
@@ -1138,7 +1139,7 @@ var CITY_SPOTS = {
   yard: P(1720, 1e3)
 };
 function cityZoneData() {
-  const roomZones = CITY_ROOMS.map((r) => ({ id: { archive: "AR", society: "SO", lab: "LB", duel: "DU", coven: "CV", bank: "BK", warehouse: "WH", cellar: "RC", rescue: "RD" }[r.key], name: r.name, ...r.rect, interior: true, safePoint: r.arrival }));
+  const roomZones = CITY_ROOMS.map((r) => ({ id: { archive: "AR", society: "SO", lab: "LB", duel: "DU", coven: "CV", bank: "BK", warehouse_a: "WH", warehouse_b: "WB", cellar: "RC", rescue: "RD" }[r.key], name: r.name, ...r.rect, interior: true, safePoint: r.arrival }));
   const zone = (id, name, x, y, w, h, safePoint) => ({ id, name, ...P(x, y), w, h, safePoint });
   return [
     ...roomZones,

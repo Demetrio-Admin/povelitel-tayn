@@ -201,7 +201,7 @@ try {
           window.__witch.state.setObject('lab_seal', { state: 'frozen' }); window.__witch.state.setObject('fq_door', { state: 'destroyed' }); window.__witch.state.setObject('final_ward', { state: 'done' });
           window.__game.scene.getScene('ExplorationScene').refreshAll(); });
         for (const b of BUILDINGS.filter(b => !b.id.startsWith('north_'))) {
-          const room = 'city_' + (b.id.startsWith('warehouse_') ? 'warehouse' : b.id);
+          const room = 'city_' + b.id;
           await page.evaluate(id => { const s = window.__game.scene.getScene('ExplorationScene'), d = s.objects.find(o => o.id === id); s.player.stop(); s.player.setPosition(d.x, d.y + 60); }, 'door_' + b.id);
           await page.waitForFunction(id => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === id, 'door_' + b.id);
           await page.keyboard.press('Space'); await ready(room);

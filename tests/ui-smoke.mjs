@@ -98,6 +98,23 @@ await mute(async () => {
     // котёл: вкладки; амулеты — в отдельном окне, и варить их можно только оттуда
     for (const tab of ['restore', 'other', 'special', 'нет такой вкладки']) { ui.openAlchemy(tab); ui.update(8110, 16); ui.closeModal(null); }
     ui.openAlchemy(); ok(ui.modal?.opts.title === 'Котёл Мирры' && ui.modal.opts.tabs?.length === 3, 'котёл: три вкладки'); ui.closeModal(null);
+    {   // смена вкладки не закрывает окно: затемнение то же, окно не «закрывалось и открывалось», старое содержимое убрано
+      const { MSG: M } = await import('../src/state/EventBus.js');
+      const seen = []; const on = e => () => seen.push(e);
+      ui.bus.on(M.MODAL_CLOSED, on('closed')); ui.bus.on(M.MODAL_OPEN, on('open'));
+      ui.openAlchemy('restore'); seen.length = 0;
+      const first = ui.modal, overlay = first.overlay;
+      ui.switchModal(ui.modal.opts.tabs[1].onClick);
+      ok(ui.modal && ui.modal !== first && ui.modal.overlay === overlay && !overlay.destroyed, 'вкладка: затемнение осталось тем же');
+      ok(first.container.destroyed && first.discarded, 'вкладка: старое содержимое убрано после смены');
+      ok(seen.length === 0, 'вкладка: окно не закрывалось и не открывалось заново');
+      ui.switchModal(() => {});   // onClick ничего не открыл — обычное закрытие
+      ok(!ui.modal && overlay.destroyed && seen.join() === 'closed', 'вкладка: если нового окна нет — окно закрывается');
+      ui.openAlchemy(); const second = ui.modal; seen.length = 0;
+      ui.reopenModal();
+      ok(ui.modal !== second && second.container.destroyed && ui.modal.overlay === second.overlay && seen.length === 0, 'обновление окна: без мигания и событий');
+      ui.closeModal(null);
+    }
     ui.openAmulets(); ok(ui.modal?.opts.title === 'Амулеты', 'окно «Амулеты» открывается'); ui.update(8120, 16); ui.closeModal(null);
     ui.openBag(); ui.closeModal(null);
     // v0.23.0: доска поручений — закрытая и открытая (взять поручение, сдать)

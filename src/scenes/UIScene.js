@@ -45,6 +45,7 @@ const H = VIEW.height;
 const BAR_Y = 1096;          // верх зоны нижних кнопок (касания ниже — только кнопки)
 const BTN_Y = UI.dock.buttonY;
 const BTN_R = 58;
+const SWAP_MS = 170;         // длительность плавной смены вкладки в окне
 const hex = c => '#' + c.toString(16).padStart(6, '0');
 const fmtTime = (ms) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
@@ -63,6 +64,7 @@ export class UIScene extends Phaser.Scene {
     this.mode = 'exploration';
     this.modal = null;
     this.modalQueue = [];
+    this.swapping = null;
     this.shuttingDown = false;
     this.toasts = [];
     this.touch = null;
@@ -501,7 +503,8 @@ export class UIScene extends Phaser.Scene {
   /** opts: { title, text, color, buttons: [{ label, primary, onClick }] } */
   openModal(opts) {
     if (this.modal) { this.modalQueue.push(opts); return; }
-    if (opts.victory) { this.openVictory(opts); return; }
+    const swap = this.swapping; this.swapping = null;   // окно, которое сейчас сменяется этим (вкладка / обновление)
+    if (opts.victory) { this.dropSwap(swap); this.openVictory(opts); return; }
     // v0.9.2: заголовок, текст и кнопки могут иметь варианты для ведьмы / колдуна
     opts = { ...opts, title: T(opts.title), text: T(opts.text), buttons: opts.buttons?.map(b => ({ ...b, label: T(b.label) })) };
     services.modalOpen = true;
@@ -509,8 +512,10 @@ export class UIScene extends Phaser.Scene {
     if (!opts.silent) services.audio.play(opts.final ? 'victory' : 'modal_open');
     const color = opts.color ?? COLORS.gold, pw = 664, cw = pw - 80;
     const left = (W - pw) / 2;
+    // c — окно целиком; затемнение лежит в c отдельно от body (всё остальное), чтобы при смене вкладки оно не мигало
     const c = this.add.container(0, 0).setDepth(10000);
-    const overlay = this.add.rectangle(0, 0, W, H, 0x000000, 0.66).setOrigin(0).setInteractive();
+    const overlay = swap?.overlay ?? this.add.rectangle(0, 0, W, H, 0x000000, 0.66).setOrigin(0).setInteractive();
+    const body = this.add.container(0, 0);
     const title = this.add.text(W / 2, 0, opts.title || '', { fontFamily: FONT, fontSize: UI.type.title, fontStyle: 'bold', color: hex(color), align: 'center', wordWrap: { width: pw - 64 }, shadow: SH }).setOrigin(0.5, 0);
     const content = this.add.container(0, 0);
     let contentH = 0;
@@ -530,9 +535,10 @@ export class UIScene extends Phaser.Scene {
     const top = Math.max(56, (H - ph) / 2 - 24);
     const panel = addPanel(this, left, top, pw, ph, { accent: color, seed: 3 });
     title.setY(top + 32);
-    c.add([overlay, panel, title, addDivider(this, W / 2, top + headerH - 16, pw - 100, color)]);
-    const scroll = addScrollViewport(this, c, content, { x: left + 32, y: top + headerH, width: cw, height: viewH, contentHeight: contentH });
-    if (scroll.max) c.add(this.add.text(W / 2, top + headerH + viewH + 18, '↕ Проведите по содержимому', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim }).setOrigin(0.5));
+    c.add([overlay, body]);
+    body.add([panel, title, addDivider(this, W / 2, top + headerH - 16, pw - 100, color)]);
+    const scroll = addScrollViewport(this, body, content, { x: left + 32, y: top + headerH, width: cw, height: viewH, contentHeight: contentH });
+    if (scroll.max) body.add(this.add.text(W / 2, top + headerH + viewH + 18, '↕ Проведите по содержимому', { fontFamily: FONT, fontSize: UI.type.small, color: COLORS.textDim }).setOrigin(0.5));
     const by0 = top + ph - 24 - btnBlock + btnH / 2;
     const bw = vertical ? pw - 80 : (pw - 64 - (buttons.length - 1) * 16) / buttons.length;
     const views = buttons.map((b, i) => {
@@ -542,21 +548,81 @@ export class UIScene extends Phaser.Scene {
         primary: !!b.primary, accent: b.primary ? color : null, fontSize: UI.type.body,
         onPress: () => { services.audio.play(b.primary ? 'ui_click' : 'ui_back'); this.closeModal(b); },
       });
-      c.add(btn.parts); return { b, ...btn };
+      body.add(btn.parts); return { b, ...btn };
     });
     if (opts.tabs?.length) {
       const tw = (pw - 80) / 2, tabTop = top + ph - 24 - btnBlock - tabBlock;
       opts.tabs.forEach((tab, i) => {
         const bt = addButton(this, left + 36 + tw / 2 + (i % 2) * (tw + 8), tabTop + Math.floor(i / 2) * (btnH + 12) + btnH / 2, tw, btnH, tab.label, {
           primary: !!tab.selected, accent: tab.selected ? color : null, fontSize: UI.type.body,
-          onPress: () => { this.closeModal({ onClick: tab.onClick }); },
-        }); c.add(bt.parts);
+          onPress: () => { if (!tab.selected) this.switchModal(tab.onClick); },
+        }); body.add(bt.parts);
       });
     }
-    c.setAlpha(0);
-    this.tweens.add({ targets: c, alpha: 1, duration: 150 });
-    this.modal = { container: c, buttons, views, scroll, top, height: ph, final: !!opts.final, tempKeys: [panel.texKey], opts };
-    this.bus.emit(MSG.MODAL_OPEN);
+    this.modal = { swapFrom: swap?.from, container: c, body, overlay, buttons, views, scroll, top, height: ph, final: !!opts.final, tempKeys: [panel.texKey], opts };
+    if (!swap) {
+      c.setAlpha(0);
+      this.tweens.add({ targets: c, alpha: 1, duration: 150 });
+      this.bus.emit(MSG.MODAL_OPEN);
+    } else if (swap.instant) {
+      this.discardModalParts(swap.from);   // обновление того же окна: старое убираем в тот же кадр — мигать нечему
+    } else {
+      // смена вкладки: затемнение остаётся на месте, старое содержимое растворяется, новое проявляется
+      body.setAlpha(0);
+      this.tweens.add({ targets: body, alpha: 1, duration: SWAP_MS });
+      this.tweens.add({ targets: swap.from.body, alpha: 0, duration: SWAP_MS, onComplete: () => this.discardModalParts(swap.from) });
+    }
+  }
+
+  /** Убрать то, что осталось от старого окна после замены (прокрутка, объекты, текстуры панели — кроме тех, что берёт новое окно). */
+  discardModalParts(old) {
+    if (!old || old.discarded) return;
+    old.discarded = true;
+    this.tweens.killTweensOf(old.body);
+    old.scroll?.destroy();
+    old.container.destroy();
+    const keep = new Set(this.modal?.tempKeys || []);
+    for (const k of old.tempKeys || []) if (!keep.has(k)) releaseTexture(this, k);
+  }
+
+  /** Заменить открытое окно новым: окно считается тем же (без звука, без MODAL_CLOSED/OPEN). */
+  startSwap(instant) {
+    const old = this.modal;
+    if (!old?.opts || old.dom || !old.body) return null;
+    this.discardModalParts(old.swapFrom);   // прошлая смена ещё не закончилась — завершить сразу
+    old.scroll?.destroy();
+    old.scroll = null;
+    // старое окно ещё видно, но уже ничего не нажимает
+    const off = o => { if (o.input) o.disableInteractive?.(); if (Array.isArray(o.list)) o.list.forEach(off); };
+    off(old.body);
+    old.container.remove(old.overlay, false);
+    this.swapping = { from: old, overlay: old.overlay, instant };
+    this.modal = null;
+    services.modalOpen = false;
+    return old;
+  }
+
+  /** Нажата вкладка: onClick открывает новое окно (openModal), а старое плавно сменяется им. Если нового окна не открылось — обычное закрытие. */
+  switchModal(onClick) {
+    if (!this.startSwap(false)) { this.closeModal({ onClick }); return; }
+    const swap = this.swapping;
+    onClick?.();
+    if (this.swapping === swap) {   // onClick ничего не открыл
+      this.swapping = null;
+      this.dropSwap(swap);
+    }
+  }
+
+  /** Окно закрывается насовсем (замены не вышло): убрать старое, сообщить о закрытии, показать следующее из очереди. */
+  dropSwap(swap) {
+    if (!swap) return;
+    swap.from.container.add(swap.overlay);
+    this.discardModalParts(swap.from);
+    if (!this.modal) {
+      services.modalOpen = false;
+      this.bus.emit(MSG.MODAL_CLOSED);
+      if (!this.shuttingDown && this.modalQueue.length) this.openModal(this.modalQueue.shift());
+    }
   }
 
   openVictory(opts) {
@@ -580,13 +646,9 @@ export class UIScene extends Phaser.Scene {
     if (!this.modal?.opts || this.modal.dom) return;
     const opts = this.modal.opts;
     const offset = this.modal.scroll?.offset || 0;
-    this.modal.scroll?.destroy();
-    this.modal.container.destroy();
-    for (const k of this.modal.tempKeys || []) releaseTexture(this, k);
-    this.modal = null;
-    services.modalOpen = false;
+    if (!this.startSwap(true)) return;
     this.openModal({ ...opts, silent: true });
-    this.modal.scroll?.scrollTo(offset);
+    this.modal?.scroll?.scrollTo(offset);
   }
 
   pressModalButton(primary) {
@@ -607,6 +669,7 @@ export class UIScene extends Phaser.Scene {
     if (this.modal.menu) { this.closeMenu(); return; }
     if (this.modal.dialogue) { this.closeDialogue(true); return; }
     const { container, tempKeys, scroll } = this.modal;
+    this.discardModalParts(this.modal.swapFrom);
     scroll?.destroy();
     container.destroy();
     for (const k of tempKeys || []) releaseTexture(this, k);   // панели окон разного размера не копим

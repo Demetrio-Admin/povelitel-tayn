@@ -42,6 +42,7 @@
     "test:cauldron": "node tests/alchemy-tabs-test.mjs",
     "test:music": "node tests/music-themes-test.mjs",
     "test:toast:browser": "node tests/e2e/toast-over-windows.mjs",
+    "test:journal:browser": "node tests/e2e/journal.mjs",
     "test:city-life": "node tests/city-life-test.mjs && node tests/e2e/city-life.mjs",
     "test:shop:browser": "node tests/e2e/shop.mjs",
     "test:admin": "node tools/build-admin-config.mjs --check && node tests/admin-service-test.mjs && node tests/admin-db-test.mjs",

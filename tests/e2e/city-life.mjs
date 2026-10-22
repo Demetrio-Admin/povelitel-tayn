@@ -57,7 +57,7 @@ const info = (page) => page.evaluate(() => {
   const v = s.cameras.main.worldView;
   return {
     running: !!C?.running, lite: !!s.life?.lite, routes: C?.routes.length ?? 0, roofs: C?.roofs.length ?? 0,
-    walkers: (C?.walkers || []).map(w => ({ kind: w.kind, variant: w.variant, x: Math.round(w.img.x), y: Math.round(w.img.y), mode: w.mode, frame: w.frame, onScreen: w.img.x > v.x && w.img.x < v.right && w.img.y > v.y && w.img.y < v.bottom, d: Math.round(Math.hypot(h.x - w.img.x, h.y - w.img.y)) })),
+    walkers: (C?.walkers || []).map(w => ({ id: (w.__id ??= (window.__wid = (window.__wid || 0) + 1)), facing: w.facing, tex: w.img.texture.key, hx: w.hx, hy: w.hy, waiting: w.wait > 0, angle: Math.round(w.img.angle), target: w.img.angle, flip: w.img.flipX, kind: w.kind, variant: w.variant, x: Math.round(w.img.x), y: Math.round(w.img.y), mode: w.mode, frame: w.frame, onScreen: w.img.x > v.x && w.img.x < v.right && w.img.y > v.y && w.img.y < v.bottom, d: Math.round(Math.hypot(h.x - w.img.x, h.y - w.img.y)) })),
     crows: (C?.crows || []).map(c => ({ state: c.state, x: Math.round(c.img.x), y: Math.round(c.img.y), tex: c.img.texture.key })),
     puffs: (C?.puffs || []).filter(p => p.img.visible).length, flakes: (C?.flakes || []).filter(f => f.img.visible).length,
     flights: window.__flights, chat: !!C?.chat, bubble: C?.chat?.bubble?.text ?? null,
@@ -91,12 +91,69 @@ try {
     }
     console.log('  [info]', JSON.stringify({ maxSeen, sawChat, sawBubbleText, minHeroDist, variants: [...variants] }));
     assert.ok(maxSeen.person >= 1, 'горожане появляются'); ok(`горожан одновременно до ${maxSeen.person}`);
-    assert.ok(maxSeen.cat + maxSeen.dog >= 1, 'появляются кошки и собаки'); ok(`зверей одновременно до ${maxSeen.cat + maxSeen.dog}`);
+    // (кошки и собаки на месте у дома могут и не появиться: рядом с героиней улицы не годятся — их проверяет прогулка ниже)
     assert.ok(sawChat, 'жители у дома разговаривают'); ok('жители разговаривают');
     assert.ok(maxSeen.puffs > 0, 'идёт дым из труб'); ok(`дым: клубов до ${maxSeen.puffs}`);
     const last = await info(page);
     assert.ok(last.flights >= 1, `вороны перелетают с крыши на крышу (${last.flights})`); ok(`перелётов ворон: ${last.flights}`);
     assert.equal(last.flakes, 0, 'снега после оттаивания нет'); ok('снега нет');
+
+    // ---------- героиня идёт по городу: прохожие не толпятся вокруг неё, идут правильной стороной, звери смотрят мордой по ходу
+    {
+      const spots = await page.evaluate(() => {
+        const s = window.__game.scene.getScene('ExplorationScene'), C = s.life.city, out = [];
+        for (const r of C.routes.slice(0, 12)) { const mid = r.pts[Math.floor(r.pts.length / 2)]; out.push([Math.round(mid[0]), Math.round(mid[1])]); }
+        return out;
+      });
+      assert.ok(spots.length >= 6, 'есть улицы для прогулки');
+      const seen = { up: 0, down: 0, petVertical: 0, pets: 0, crowdMax: 0, nearMin: 1e9, badFacing: [], badAngle: [] };
+      const back = tex => /^cl_(man|woman)_[ab]_b_\d$/.test(tex);
+      for (const [x, y] of spots) {
+        await page.evaluate(([x, y]) => { const s = window.__game.scene.getScene('ExplorationScene'); s.player.setPosition(x, y); const c = s.cameras.main; c.stopFollow(); c.centerOn(x, y); c.preRender(); }, [x, y]);   // камера в headless не успевает за героиней сама
+        for (let i = 0; i < 40; i++) {
+          await simulate(page, 0.5);
+          const st = await info(page);
+          if (i >= 8) {   // первые секунды после «телепорта» не считаем: герой мог встать прямо на чьём-то пути
+            seen.crowdMax = Math.max(seen.crowdMax, st.walkers.filter(w => w.d < 380).length);
+            for (const w of st.walkers) if (w.kind === 'person') seen.nearMin = Math.min(seen.nearMin, w.d);
+          }
+          for (const w of st.walkers) {
+            // снимки крупным планом: человек, идущий вверх (спиной), и зверь на вертикальной улице
+            const shot = async (name) => {
+              await page.waitForTimeout(700);   // дать настоящему Phaser дорисовать кадр с этим состоянием
+              const at = await page.evaluate((id) => {
+                const sc = window.__game.scene.getScene('ExplorationScene'), cam = sc.cameras.main, W = sc.city?.walkers || sc.life.city.walkers;
+                const t = W.find(x => x.__id === id); if (!t) return null;
+                const r = window.__game.canvas.getBoundingClientRect(), k = r.width / window.__game.config.width;
+                return { x: r.left + (t.img.x - cam.worldView.x) * cam.zoom * k, y: r.top + (t.img.y - cam.worldView.y) * cam.zoom * k, k: cam.zoom * k };
+              }, w.id);
+              if (!(at && at.x > 50 && at.x < 340 && at.y > 140 && at.y < 780)) return false;
+              await page.screenshot({ path: `${out}/${name}.png`, clip: { x: at.x - 70, y: at.y - 150, width: 140, height: 190 } });
+              return true;
+            };
+            if (w.onScreen && w.kind === 'person' && w.hy < -0.7 && !w.waiting && !seen.shotBack) seen.shotBack = await shot('closeup-person-back');
+            if (w.onScreen && w.kind === 'person' && w.hy > 0.7 && !w.waiting && !seen.shotFront) seen.shotFront = await shot('closeup-person-front');
+            if (w.onScreen && w.kind !== 'person' && w.mode === 'run' && Math.abs(w.hy) > 0.8 && !seen.shotPet) seen.shotPet = await shot('closeup-pet-vertical');
+            if (w.kind !== 'person') seen.pets++;
+            if (w.waiting || w.hy === undefined) continue;
+            if (w.kind === 'person') {
+              if (w.hy < -0.55) { seen.up++; if (!back(w.tex)) seen.badFacing.push(`${w.variant}: идёт вверх (hy ${w.hy.toFixed(2)}), но кадр ${w.tex}`); }
+              else if (w.hy > -0.15) { seen.down++; if (back(w.tex)) seen.badFacing.push(`${w.variant}: идёт вниз/вбок (hy ${w.hy.toFixed(2)}), но кадр ${w.tex}`); }
+            } else if (w.mode !== 'sit' && Math.abs(w.hy) > 0.8) {
+              seen.petVertical++;
+              if (Math.abs(w.angle) < 40) seen.badAngle.push(`${w.variant}: по вертикали, угол ${w.angle}`);
+            }
+          }
+        }
+      }
+      console.log('  [info] прогулка', JSON.stringify({ ...seen, badFacing: seen.badFacing.length, badAngle: seen.badAngle.length }));
+      assert.ok(seen.up > 5 && seen.down > 5, `видели ходьбу вверх и вниз (${seen.up}/${seen.down})`); ok(`горожане: вверх ${seen.up} / вниз ${seen.down} замеров`);
+      assert.deepEqual(seen.badFacing.slice(0, 5), [], 'идущий вверх повёрнут спиной, вниз — лицом'); ok('вверх — спиной, вниз — лицом');
+      assert.ok(seen.pets > 0, 'звери встречаются во время прогулки'); ok(`звери встречены (${seen.pets} замеров)`);
+      assert.ok(seen.petVertical > 10 && seen.badAngle.length <= seen.petVertical * 0.08, `зверь на вертикальной улице повёрнут мордой по ходу, а не боком (${seen.badAngle.length} из ${seen.petVertical} не успели довернуть)`); ok(`звери повёрнуты по ходу (замеров по вертикали: ${seen.petVertical})`);
+      assert.ok(seen.crowdMax <= 3, `возле героини не толпа (макс. ${seen.crowdMax} в радиусе 380 px)`); ok(`рядом с героиней не больше ${seen.crowdMax}`);
+      assert.ok(seen.nearMin >= 85, `прохожие не лезут на героиню (ближе всего ${seen.nearMin} px)`); ok(`ближе всего прохожий подошёл на ${seen.nearMin} px`);
+    }
     assert.deepEqual(errors, [], 'ошибок страницы нет'); ok('ошибок страницы нет');
     // объекты не копятся: ещё 20 с, число не растёт заметно
     const before = (await info(page)).objs; await simulate(page, 90); const after = await info(page);

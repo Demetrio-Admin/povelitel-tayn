@@ -78,5 +78,25 @@
     ],
     "file": "coven-v1.webp",
     "workflow": "ImageGen clean plate from approved concept; actors and UI removed; WebP encoding only"
+  },
+  "cellar": {
+    "concept": "docs/design/city-interiors/cellar-approved.png",
+    "source_sha256": "830f9abcfce07efe69fc36c7eb98b8761384e38588cdf1150b05745beca6fea0",
+    "size": [
+      853,
+      1844
+    ],
+    "file": "cellar-v1.webp",
+    "workflow": "ImageGen clean plate from approved concept; actors and UI removed; WebP encoding only"
+  },
+  "rescue": {
+    "concept": "docs/design/city-interiors/rescue-approved.png",
+    "source_sha256": "93993b48e86d65bd9cb10daf41246620a16df881b10d8f808166d006932b33d4",
+    "size": [
+      853,
+      1844
+    ],
+    "file": "rescue-v1.webp",
+    "workflow": "ImageGen clean plate from approved concept; actors and UI removed; WebP encoding only"
   }
 }

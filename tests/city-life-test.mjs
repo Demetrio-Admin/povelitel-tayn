@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CITY_LIFE, CHAT_LINES, populationFor, buildRoutes, pointAt, pickSpawn } from '../src/world/cityLife.js';
+import { CITY_LIFE, CHAT_LINES, populationFor, buildRoutes, pointAt, pickSpawn, routeDistance, personFacing, petPose } from '../src/world/cityLife.js';
 import { cityMapData } from '../src/config/city.plan.js';
 import { ASSET_FILES, DISPLAY_SIZE, TEMPORARY_ART } from '../src/config/assets.manifest.js';
 
@@ -49,6 +49,37 @@ ok(Math.abs(Math.abs(m.y) - 20) < 1e-6 && Math.abs(m.tx - 1) < 1e-6, 'смеще
   ok(pickSpawn(inside, view, seeded(3)) === null, 'без героини проявляться на экране не откуда — никто не появляется');
 }
 
+// ---- расстояние до маршрута и «обход» героини
+{
+  const v = buildRoutes([{ id: 'city_street_d', pts: [[500, 0], [500, 1000]], w: 90 }])[0];
+  ok(routeDistance(v, 500, 400) < 3 && Math.abs(routeDistance(v, 760, 400) - 260) < 3, 'расстояние от героини до улицы');
+  const near = buildRoutes([{ id: 'city_street_n', pts: [[500, 0], [500, 1000]], w: 90 }, { id: 'city_street_f', pts: [[1200, 0], [1200, 1000]], w: 90 }]);
+  const free = near.filter(r => routeDistance(r, 520, 500) > CITY_LIFE.spawnAvoidHeroPx);
+  ok(free.length === 1 && free[0].id === 'city_street_f', 'улица, на которой стоит героиня, для новых прохожих не годится');
+  ok(CITY_LIFE.yieldPx.person < CITY_LIFE.spawnAvoidHeroPx && CITY_LIFE.yieldPx.pet < CITY_LIFE.spawnAvoidHeroPx && CITY_LIFE.crowd.max <= 2, 'рядом с героиней не толпятся');
+}
+
+// ---- сторона человека: вверх по экрану — спиной, вниз и вбок — лицом, без мигания на границе
+{
+  ok(personFacing(-1) === 'back' && personFacing(1) === 'front' && personFacing(0) === 'front', 'вверх — спиной, вниз и вбок — лицом');
+  ok(personFacing(-0.35, 'back') === 'back' && personFacing(-0.35, 'front') === 'front', 'на границе остаётся прежняя сторона');
+}
+
+// ---- поза зверя: мордой по ходу, а не боком
+{
+  const close = (x, y) => Math.abs(x - y) < 1e-6;
+  let p = petPose(1, 0); ok(!p.flip && close(p.deg, 0), 'вправо: как нарисован');
+  p = petPose(-1, 0); ok(p.flip && close(p.deg, 0), 'влево: зеркало');
+  p = petPose(0, 1, false); ok(!p.flip && close(p.deg, 90), 'вниз по улице: мордой вниз');
+  p = petPose(0, -1, false); ok(!p.flip && close(p.deg, -90), 'вверх по улице: мордой вверх');
+  p = petPose(0, 1, true); ok(p.flip && close(p.deg, -90), 'вниз, зеркальный: мордой вниз');
+  p = petPose(0, -1, true); ok(p.flip && close(p.deg, 90), 'вверх, зеркальный: мордой вверх');
+  p = petPose(1, 1); ok(!p.flip && close(p.deg, 45), 'вправо-вниз: наклон по диагонали');
+  p = petPose(-1, 1); ok(p.flip && close(p.deg, -45), 'влево-вниз: наклон по диагонали');
+  let all = true; for (let a = 0; a < 360; a += 5) { const q = petPose(Math.cos(a * Math.PI / 180), Math.sin(a * Math.PI / 180)); all = all && q.deg >= -90 && q.deg <= 90; }
+  ok(all, 'угол всегда в пределах ±90°');
+}
+
 // ---- сколько кого
 {
   const frozen = populationFor(() => false), thawed = populationFor(k => k === 'chapter_2_complete'), early = populationFor(k => k === 'ch2_severin_defeated');
@@ -63,7 +94,7 @@ ok(Math.abs(Math.abs(m.y) - 20) < 1e-6 && Math.abs(m.tx - 1) < 1e-6, 'смеще
 // ---- все кадры есть в манифесте и на диске
 {
   const need = [];
-  for (const v of CITY_LIFE.citizenVariants) for (let i = 0; i <= 4; i++) need.push(`cl_${v}_${i}`);
+  for (const v of CITY_LIFE.citizenVariants) for (let i = 0; i <= 4; i++) need.push(`cl_${v}_${i}`, `cl_${v}_b_${i}`);   // лицом и спиной
   for (const v of [...CITY_LIFE.cats, ...CITY_LIFE.dogs]) for (const f of ['sit', 'walk1', 'walk2', 'run1', 'run2']) need.push(`cl_${v}_${f}`);
   for (let i = 1; i <= 3; i++) need.push(`cl_crow_${i}`);
   for (const k of need) {

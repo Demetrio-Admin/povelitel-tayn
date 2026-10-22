@@ -1,5 +1,15 @@
 # Witch flight
 
+## Active artwork: adult mystical witch (22 October 2026)
+
+`witch-flight-mystic-v2.webp`: 960×640, transparent alpha, generated with the built-in ImageGen tool. The adult witch has natural proportions, an expressive face, flowing auburn hair, a detailed plum cloak and a turquoise astral sign. The user rejected the previous large-headed, childlike loading character because it made the game look like a children's game.
+
+The new illustration replaces only the loader's character asset. The 3:2 placement, illustrated night forest, title, live loading progress and reduced-motion behaviour are preserved. The original `witch-flight.webp` remains as an unused earlier version. Source/output hashes and encoding details are recorded in `witch-flight-mystic-v2.json`.
+
+Production direction: a clearly adult witch around 30 with natural anatomy and a proportionate head, a calm confident expression, copper-auburn hair, a tailored plum velvet outfit, brass crescent fasteners and celestial embroidery, flying right on one wooden broom. One hand holds the shaft while the other conjures a compact turquoise astral sigil; restrained gold/teal magical filaments trail left. Rich, finely painted fantasy illustration; fully clothed; complete silhouette and broom, transparent background, no scenery, text or interface. Avoid chibi, toddler features, toy proportions, pin-up styling, photorealism and glossy 3D. The supplied screenshot is a palette/composition reference, not an identity to preserve.
+
+## Previous artwork
+
 `witch-flight.webp`: 480×320, transparent alpha, 27,958 bytes. Its decoded RGBA
 pixels occupy 614,400 bytes (this is the illustration alone, not total page memory).
 Created with the built-in image generation tool from `public/assets/sprites/hero_side.png`

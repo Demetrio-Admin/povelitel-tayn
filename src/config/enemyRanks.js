@@ -18,6 +18,14 @@ export const ENEMY_RANKS = {
   frost_alpha: { level: 15, difficulty: 'boss', rank: 1520 },
   barrow_warden: { level: 15, difficulty: 'boss', rank: 1521 },
   severin_boss: { level: 15, difficulty: 'boss', rank: 1522 },
+  // v0.38.0 — глава III
+  glass_stoat: { level: 16, difficulty: 'normal', rank: 1600 },
+  echo_wisp: { level: 17, difficulty: 'normal', rank: 1700 },
+  glass_wolf: { level: 17, difficulty: 'normal', rank: 1701 },
+  needle: { level: 18, difficulty: 'normal', rank: 1800 },
+  needle_elite: { level: 18, difficulty: 'elite', rank: 1810 },
+  glass_guardian: { level: 19, difficulty: 'elite', rank: 1910 },
+  iva_reflection: { level: 20, difficulty: 'boss', rank: 2020 },
 };
 export const ENEMY_DIFFICULTY = { normal: 'Обычный', elite: 'Элитный', boss: 'Босс' };
 export function enemyCaption(def) {

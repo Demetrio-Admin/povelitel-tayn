@@ -21,7 +21,8 @@ export const CONTENT_INTERACTIVES = [
   // ================================================================== ДОМ ВЕДЬМЫ (зона A)
   { id: 'house_cauldron', kind: 'alchemy', x: 1075, y: 5135, texture: 'cauldron_01', collide: { w: 66, h: 26 }, radius: 120,
     hint: 'Котёл Мирры' },
-  { id: 'npc_mirra', kind: 'npc', npc: 'mirra', x: 825, y: 5110, texture: 'npc_mirra', collide: { w: 30, h: 14 }, radius: 115 },
+  // v0.38.0: в конце квеста 12 главы III Мирра уходит в Безымянную рощу и возвращается домой после финала главы
+  { id: 'npc_mirra', kind: 'npc', npc: 'mirra', x: 825, y: 5110, texture: 'npc_mirra', collide: { w: 30, h: 14 }, radius: 115, hideEvent: 'ch3_needle_3', returnEvent: 'chapter_3_complete' },
   { id: 'house_wardrobe', kind: 'inspect', x: 722, y: 5085, texture: 'wardrobe_01', collide: { w: 70, h: 24 }, radius: 100, markerDist: 150,
     lines: ['Платья, плащи, одна шляпа с заплатой. Всё пахнет сушёной лавандой.', fm('В шкафу висит старая мантия. Рукава коротковаты — видно, носила другая ведьма.', 'В шкафу висит старая мантия. Рукава коротковаты — видно, её носила какая-то ведьма.'), 'Шкаф скрипнул. Кажется, ему тоже хочется поговорить, но он пока воздерживается.'] },
   { id: 'house_trunk', kind: 'inspect', x: 985, y: 5255, texture: 'trunk_01', collide: { w: 76, h: 22 }, radius: 100, markerDist: 150,

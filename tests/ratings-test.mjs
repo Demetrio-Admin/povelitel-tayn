@@ -19,7 +19,8 @@ console.log('\nРейтинги: уровни монстров');
   const L = MONSTER_LEVELS;
   ok(L.forest_scavenger < L.rootling && L.rootling < L.forest_guardian && L.forest_guardian < L.node_guardian && L.node_guardian < L.frost_critter, 'глава I: от Падальщика до Хранителя сердца уровень растёт');
   ok(L.frost_critter <= L.frost_collector && L.frost_collector < L.ice_guardian && L.ice_guardian < L.severin_boss, 'глава II: от зверька до Северина уровень растёт, босс — выше всех в сюжете');
-  ok(Math.max(...Object.values(L)) === L.severin_boss && L.frost_alpha === L.severin_boss && L.barrow_warden === L.severin_boss, 'вожак вылазки и Страж кургана — на уровне Северина (самые сильные)');
+  ok(L.frost_alpha === L.severin_boss && L.barrow_warden === L.severin_boss && Object.entries(L).filter(([k]) => ENEMIES[k].arena && !['grove', 'grove_heart'].includes(ENEMIES[k].arena)).every(([, l]) => l <= L.severin_boss), 'вожак вылазки и Страж кургана — на уровне Северина (самые сильные до главы III)');
+  ok(L.glass_stoat > L.severin_boss && L.glass_stoat <= L.echo_wisp && L.echo_wisp < L.needle && L.needle < L.glass_guardian && L.glass_guardian < L.iva_reflection && Math.max(...Object.values(L)) === L.iva_reflection, 'глава III: от стеклянного горностая до Отражения Ивы уровень растёт, босс — выше всех');
   ok(monsterLevel('nobody') === 0, 'неизвестный монстр — уровень 0, в рейтинг не идёт');
 }
 

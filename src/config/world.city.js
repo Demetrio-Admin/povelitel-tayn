@@ -271,11 +271,13 @@ export const CITY_INTERACTIVES = [
     requiresEvent: 'ch2_final_start', doneEvent: 'ch2_fin_seal', hint: 'Астральный барьер',
     lockedText: 'Дуэльный зал запечатан изнутри.',
     doneTitle: 'Барьер снят', doneText: 'Астрал нашёл швы барьера — и завеса рассыпалась искрами. Изнутри тянет холодом и голосом Северина.', doneButton: 'Дальше' },
-  { id: 'npc_nerys_final', kind: 'npc', npc: 'nerys', x: 2800, y: 4040, texture: 'npc_nerys', collide: { w: 30, h: 14 }, radius: 140, requiresEvent: 'ch2_final_start' },
+  // v0.38.0: после стеклянного листа (глава III) Нэрис уходит в Безымянную рощу — её лагерь там
+  { id: 'npc_nerys_final', kind: 'npc', npc: 'nerys', x: 2800, y: 4040, texture: 'npc_nerys', collide: { w: 30, h: 14 }, radius: 140, requiresEvent: 'ch2_final_start', hideEvent: 'ch3_leaf_read' },
   { id: 'final_letters', kind: 'seal_sigil', x: 2510, y: 4280, texture: 'city_letters', litTexture: 'city_letters', litTint: 0xe8d6ff, radius: 110,
     requiresEnemyDefeated: 'final_severin', doneEvent: 'ch2_letters_read', hint: 'Зашифрованные письма',
     doneTitle: 'Чужая рука', doneText: 'Под Астралом шифр поплыл. Деньги, материалы, старые схемы — всё это Северину присылал кто-то другой.\n\nПодписи нет. Вместо неё — знак защиты рощи с Древних ворот. А между листами — засушенный лист, прозрачный, как стекло.\n\nПоследняя строка: «Мне не нужна сила. Мне нужно, чтобы ничто больше не умирало».', doneButton: 'К Иларии' },
-  { id: 'npc_severin_after', kind: 'npc', npc: 'severin', x: 2780, y: 4380, texture: 'npc_severin', collide: { w: 32, h: 14 }, radius: 130, requiresEvent: 'ch2_severin_defeated' },
+  // v0.38.0: в главе III Северин разбирает бумаги Общества в Архиве под надзором Иларии (npc_severin_archive, world.grove.js)
+  { id: 'npc_severin_after', kind: 'npc', npc: 'severin', x: 2780, y: 4380, texture: 'npc_severin', collide: { w: 32, h: 14 }, radius: 130, requiresEvent: 'ch2_severin_defeated', hideEvent: 'ch3_start' },
   // ---- квест 14 «Не в одиночку»: Дом Ковенов
   { id: 'npc_rowena', kind: 'npc', npc: 'rowena', x: 3240, y: 4300, texture: 'npc_rowena', collide: { w: 50, h: 24 }, radius: 140 },
 ];

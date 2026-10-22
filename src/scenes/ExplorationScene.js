@@ -17,6 +17,8 @@ import { MapEditor } from '../systems/MapEditor.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { Player } from '../objects/Player.js';
+import { Companion, COMPANIONS, activeCompanion } from '../objects/Companion.js';
+const COMPANION_TEXTURES = Object.fromEntries(Object.entries(COMPANIONS).map(([id, c]) => [id, c.texture]));
 import { CityPresentation } from '../world/CityPresentation.js';
 import { InteractionSystem } from '../systems/InteractionSystem.js';
 import { TelekinesisObject } from '../objects/TelekinesisObject.js';
@@ -42,6 +44,7 @@ import {
 } from '../objects/InteractiveObject.js';
 import { DISPLAY_SIZE } from '../config/assets.manifest.js';
 import { ZONE_EVENTS } from '../config/world.city.js';
+import { GROVE_ZONE_EVENTS, GROVE_AWAKE } from '../config/world.grove.js';
 import { LOCATIONS, locationAt, locationById, locationOpen, inLocation, touchesLocation } from '../config/locations.js';
 import { enemyDownNow } from '../state/enemyRep.js';
 import { IceObject } from '../objects/IceObject.js';
@@ -136,7 +139,9 @@ export class ExplorationScene extends Phaser.Scene {
     this.resumeEncounters();
     this.buildContentDecor();
     this.cityPresentation = this.loc?.id === 'city' ? new CityPresentation(this) : null;
+    this.groveAwake = state.hasEvent(GROVE_AWAKE);   // v0.38.0: роща уже ожила — без вспышки при загрузке
     this.setupLife();   // v0.28.0
+    this.setupCompanion();   // v0.40
     this.setupGuidance();
     this.refreshAll();
     this.recoverCityPosition();
@@ -166,11 +171,21 @@ export class ExplorationScene extends Phaser.Scene {
     bus.on(MSG.NPC_TALK_END, (id) => this.objects.forEach(o => { if (o instanceof NpcObject && o.npc.id === id) o.onTalkEnd(); services.guidance.noteProgress(); }), this);
     bus.on(MSG.NPC_TALK, () => services.guidance.noteProgress(), this);
     bus.on(MSG.QUEST_CHANGED, () => this.objects.forEach(o => { if (o instanceof NpcObject) o.updateBadge(); }), this);
+    // v0.38.0: событие из разговора (без операции мира) тоже меняет мир: персонажи приходят и уходят, роща оживает
+    this.eventsSeen = state.data.completedEvents.length;
+    bus.on(MSG.QUEST_CHANGED, () => {
+      const n = services.state.data.completedEvents.length;
+      if (n === this.eventsSeen) return;
+      this.eventsSeen = n;
+      this.refreshAll();
+      this.awakenGrove();
+    }, this);
     bus.on(MSG.CRAFTED, ({ result }) => this.objects.find(o => o instanceof AlchemyObject)?.celebrate(POTIONS[result]?.color), this);
     bus.on(MSG.HERO_SAY, (t, ms) => this.heroSay(t, ms), this);
     bus.on(MSG.UNLOCK_SEAL, this.unlockSeal, this);
     bus.on(MSG.UNLOCK_GIFT, this.unlockGift, this);
     bus.on(MSG.CHAPTER_FINALE, this.chapterFinale, this);
+    bus.on(MSG.COMPANION_CHANGED, this.setupCompanion, this);
     bus.on(MSG.DUEL_START, this.startDuel, this);   // v0.26.0
     bus.on(MSG.TRAVEL, (t) => this.travelTo(t, t?.text), this);   // v0.20.0
     bus.on(MSG.MAP_TRAVEL, this.travelToLocation, this);           // v0.27.0: отправиться с карты мира
@@ -320,6 +335,7 @@ export class ExplorationScene extends Phaser.Scene {
 
   /** v0.22.0: итог главы II — награды (их уже выдал сервер вместе с событием chapter_2_complete) и что открыто дальше. */
   chapterFinale(n) {
+    if (n === 3) { this.chapterFinale3(); return; }
     if (n !== 2) return;
     this.burst(this.player.x, this.player.y - 60, COLORS.ice, 40);
     services.audio.play('quest_update');
@@ -329,6 +345,19 @@ export class ExplorationScene extends Phaser.Scene {
         + 'Награда: опыт, монеты, инеевый осколок, 50 сапфиров и титул «Переживший иней». Сердце холода от Северина — в сумке: '
         + 'из него однажды выйдут сильный амулет, редкий артефакт или следующая ступень Льда. Решать не нужно сейчас.\n\n'
         + 'Дальше: поручения, Ковены, вылазки и Магическая Дуэль.',
+      buttons: [{ label: 'Отлично', primary: true }],
+    });
+  }
+
+  /** v0.38.0: итог главы III — награды выдал сервер вместе с событием chapter_3_complete. */
+  chapterFinale3() {
+    this.burst(this.player.x, this.player.y - 60, 0x9be8a0, 40);
+    services.audio.play('quest_update');
+    this.dialog({
+      title: 'Глава III «Безымянная роща» завершена', color: 0x9be8a0,
+      text: 'Ива сама сказала имя — и время вернулось в рощу. Ракита догорела, стекло стало водой, а из пепла поднимаются молодые ветлы.\n\n'
+        + 'Награда: опыт, монеты, искры памяти, 60 сапфиров и титул «Голос рощи». Семя ветлы — в сумке, а Сердце холода пока подождёт своего часа.\n\n'
+        + 'Дальше: роща, поручения, Ковены, вылазки и Магическая Дуэль.',
       buttons: [{ label: 'Отлично', primary: true }],
     });
   }
@@ -361,6 +390,7 @@ export class ExplorationScene extends Phaser.Scene {
   /** События мира: объекты пересчитываются, героиня может прокомментировать, «застряли» сбрасывается. */
   onWorldEvent(key) {
     this.refreshAll();
+    if (key === GROVE_AWAKE) this.awakenGrove();   // v0.38.0
     const g = services.guidance;
     g.onEvent(key);
     const l = g.lineFor({ event: key });
@@ -391,7 +421,7 @@ export class ExplorationScene extends Phaser.Scene {
     const V = this.view, R = this.bounds;
     if(this.loc?.interior)this.add.rectangle(R.x,R.y-V.top,R.w,V.h,0x17120e).setOrigin(0).setDepth(DEPTH.ground);
     // v0.37.0: the town has its own calm, tended lawn; the forest keeps its wild grass.
-    else this.add.tileSprite(R.x, R.y, R.w, R.h + V.bottom, this.loc?.id === 'city' ? 'city_walk_lawn' : 'grass_ground_01').setOrigin(0).setDepth(DEPTH.ground);
+    else this.groundTile = this.add.tileSprite(R.x, R.y, R.w, R.h + V.bottom, this.baseGroundKey()).setOrigin(0).setDepth(DEPTH.ground);
     this.paintTerrain();
     this.rebuildGrounds(this.map.grounds);
     if (!V.top && !V.bottom) return;
@@ -402,6 +432,28 @@ export class ExplorationScene extends Phaser.Scene {
     this.add.rectangle(R.x, R.y - V.top, R.w, V.top, (this.loc?.interior?0x17120e:0x172114)).setOrigin(0).setDepth(DEPTH.path - 1);
   }
 
+  /** v0.37.0: у города свой ухоженный газон; v0.38.0: Безымянная роща — стеклянная трава, пока духу не вернули имя. */
+  baseGroundKey() {
+    if (this.loc?.id === 'city') return 'city_walk_lawn';
+    if (this.loc?.id === 'grove' && !services.state.hasEvent(GROVE_AWAKE)) return 'glass_ground_01';
+    return 'grass_ground_01';
+  }
+
+  /** v0.38.0: роща оживает — стекло тает (трава, ивы и ручей — декор until/requires), просыпается «живой мир». */
+  awakenGrove() {
+    if (this.loc?.id !== 'grove' || this.groveAwake || !services.state.hasEvent(GROVE_AWAKE)) return;
+    this.groveAwake = true;
+    if (this.groundTile?.active) {
+      this.groundTile.setTexture('grass_ground_01');
+      this.groundTile.setAlpha(0.2);
+      this.tweens.add({ targets: this.groundTile, alpha: 1, duration: 1600, ease: 'Sine.easeOut' });
+    }
+    this.cameras.main.flash(900, 220, 255, 230);
+    this.burst(this.player.x, this.player.y - 60, 0x9fe8a0, 48);
+    this.sparkleShower?.(this.player.x, this.player.y - 80, 0xb8f5c0);
+    if (this.life && !this.life.running) this.life.start(services.settings);
+  }
+
   /**
    * The map editor (?edit) sees every location at once. Each one gets the same base as in the game (grass, the town lawn,
    * dark bands, the dark floor of rooms) instead of one world-sized grass texture larger than a video card accepts.
@@ -410,7 +462,7 @@ export class ExplorationScene extends Phaser.Scene {
     for (const loc of LOCATIONS) {
       const R = loc.rect, top = loc.extraTop || 0, bottom = loc.extraBottom || 0, dark = loc.interior ? 0x17120e : 0x172114;
       if (loc.interior) this.add.rectangle(R.x, R.y - top, R.w, R.h + top + bottom, 0x17120e).setOrigin(0).setDepth(DEPTH.ground);
-      else this.tiledGround(R.x, R.y, R.w, R.h + bottom, loc.id === 'city' ? 'city_walk_lawn' : 'grass_ground_01');
+      else this.tiledGround(R.x, R.y, R.w, R.h + bottom, loc.id === 'city' ? 'city_walk_lawn' : loc.id === 'grove' ? 'glass_ground_01' : 'grass_ground_01');
       if (bottom) this.add.rectangle(R.x, R.y + R.h, R.w, bottom, dark).setOrigin(0).setDepth(DEPTH.path - 1);
       if (top) this.add.rectangle(R.x, R.y - top, R.w, top, dark).setOrigin(0).setDepth(DEPTH.path - 1);
     }
@@ -511,7 +563,7 @@ export class ExplorationScene extends Phaser.Scene {
       const bottomDepth = DEPTH.mainBase + c.y + c.h;
       switch (c.kind) {
         case 'trees':
-          if (c.forestUnderlay !== false) keep(this.add.rectangle(c.x, c.y, c.w, c.h, this.loc?.id === 'frostwood' ? 0x76938c : this.loc?.id === 'graveyard' ? 0x343d32 : (this.loc?.interior?0x17120e:0x172114)).setOrigin(0).setDepth(DEPTH.path - 1));
+          if (c.forestUnderlay !== false) keep(this.add.rectangle(c.x, c.y, c.w, c.h, this.loc?.id === 'frostwood' ? 0x76938c : this.loc?.id === 'graveyard' ? 0x343d32 : this.loc?.id === 'grove' ? 0x26312f : (this.loc?.interior?0x17120e:0x172114)).setOrigin(0).setDepth(DEPTH.path - 1));
           break;
         case 'wall': {
           const city = locationAt(c.x+c.w/2,c.y+c.h/2).id === 'city';
@@ -619,6 +671,12 @@ export class ExplorationScene extends Phaser.Scene {
     if(style.l)img.setDepth(style.l==='ground'?DEPTH.ground+0.1:style.l==='floor'?DEPTH.path+1:style.l==='room-floor'?DEPTH.path+0.7:style.l==='back'?DEPTH.backDecor:style.l==='front'?DEPTH.frontDecor:DEPTH.mainBase+img.y);
   }
 
+  /** Декор с requires появляется после события, с until (v0.38.0) — исчезает после него. Редактор видит всё. */
+  propShown(p) {
+    const has = (k) => services.state.hasEvent(k);
+    return services.edit || ((!p.requires || has(p.requires)) && !(p.until && has(p.until)));
+  }
+
   placePropView(view) {
     const {p,img}=view;
     img.setTexture(p.k).setPosition(p.x,p.y);
@@ -627,7 +685,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.styleImage(img,p,p.k);
     const depth=p.l==='ground'?DEPTH.ground+0.1:p.l==='floor'?DEPTH.path+1:p.l==='room-floor'?DEPTH.path+0.7:p.l==='back'?DEPTH.backDecor:p.l==='front'?DEPTH.frontDecor:DEPTH.mainBase+p.y;
     img.setDepth(depth).setAlpha(p.alpha??(p.l==='front'?0.85:1));
-    img.setVisible(services.edit||!p.requires||services.state.hasEvent(p.requires));
+    img.setVisible(this.propShown(p));
     const footprint=propSolid(p);
     if(!footprint){view.blocker?.destroy();view.blocker=null;}
     else {
@@ -691,6 +749,14 @@ export class ExplorationScene extends Phaser.Scene {
     }
   }
 
+  /** v0.40: спутник героя (косметика): создаётся заново при входе в локацию и при выборе в диалоге. */
+  setupCompanion() {
+    const id = activeCompanion(services.state);
+    if (this.companion?.id === id) return;
+    this.companion?.destroy(); this.companion = null;
+    if (id && this.player && this.textures.exists(COMPANION_TEXTURES[id])) this.companion = new Companion(this, this.player, id);
+  }
+
   /** v0.28.0: «живой мир» — рябь, качающиеся кроны, птицы, зверёк, листья (только лес Мирры, выключается в настройках). */
   setupLife() {
     this.life = null;
@@ -704,7 +770,7 @@ export class ExplorationScene extends Phaser.Scene {
       if (value) this.life.start(settings); else this.life.stop();
     };
     settings.listeners.add(onChange);
-    this.events.once('shutdown', () => { settings.listeners.delete(onChange); this.life?.destroy(); this.life = null; });
+    this.events.once('shutdown', () => { settings.listeners.delete(onChange); this.life?.destroy(); this.life = null; this.companion?.destroy(); this.companion = null; });
   }
 
   /** Мерцающая искорка. */
@@ -953,7 +1019,7 @@ export class ExplorationScene extends Phaser.Scene {
   refreshAll() {
     this.objects?.forEach(o => {o.refresh();this.styleEntity(o);});
     this.enemies?.forEach(e => {e.refresh();this.styleEntity(e);});
-    for(const {p,img} of this.propViews.values())img.setVisible(services.edit||!p.requires||services.state.hasEvent(p.requires));
+    for(const {p,img} of this.propViews.values())img.setVisible(this.propShown(p));
     this.cityPresentation?.refresh();
   }
 
@@ -1216,7 +1282,7 @@ export class ExplorationScene extends Phaser.Scene {
     services.state.data.safePoint = { ...z.safePoint };
     this.bus.emit(MSG.ZONE_CHANGED, z);
     // v0.20.0: события «пришёл в место» (например, первый вход в город); условия и награду проверяет сервер
-    const ze = ZONE_EVENTS[z.id];
+    const ze = ZONE_EVENTS[z.id] || GROVE_ZONE_EVENTS[z.id];   // v0.38.0: первый вход в Безымянную рощу
     if (ze && !services.state.hasEvent(ze.event) && (ze.requires || []).every(e => services.state.hasEvent(e))) services.quests.complete(ze.event);
   }
 
@@ -1249,6 +1315,7 @@ export class ExplorationScene extends Phaser.Scene {
     if (this.editor) return;
     const dt = Math.min(delta, 50) / 1000;
     const { state } = services;
+    this.companion?.update(dt);
     const active = this.canAct();
     // время игры и восстановление HP/маны по часам (в доме Мирры мана быстрее); во время действия сервера время игры стоит
     if (advanceWorld(state, delta, { frozen: serverActionBusy(services), inHouse: this.zone?.id === VITALS.houseZone })) this.vitalsDirty = true;

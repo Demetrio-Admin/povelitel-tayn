@@ -40,11 +40,11 @@ console.log('\nДоска поручений: сервер (JS-зеркало)')
   const T0 = Date.UTC(2026, 9, 6, 10, 0, 0);
   const day = dailyDay(T0), offers = dailyOffers(day);
   let s = { ...emptySnapshot(), level: 12 };
-  s.inventory = { ...s.inventory, frost_herb: 10, ice_crystal: 5, warm_potion: 2, tree_resin: 6, rune_dust: 6, elixir_life: 4, forest_mushroom: 6 };
+  s.inventory = { ...s.inventory, frost_herb: 10, ice_crystal: 5, warm_potion: 2, tree_resin: 6, rune_dust: 6, elixir_life: 4, forest_mushroom: 6, glass_leaf: 6, willow_bark: 6, memory_spark: 4 };
   let T = T0;
   const act = (a) => { T += 1000; const r = applyAction(s, a, T); s = r.snapshot; return r.result; };
   ok(act({ op: 'daily_take', offer: offers[0] }).reason === 'locked', 'до квеста 10 доска закрыта');
-  s.quests = [...s.quests, 'ch2_quarter_cleared', 'ch2_lab_open'];
+  s.quests = [...s.quests, 'ch2_quarter_cleared', 'ch2_lab_open', 'chapter_2_complete', 'chapter_3_complete'];   // v0.40: заказы рощи тоже на доске
   const notToday = DAILY_ORDER.find(id => !offers.includes(id));
   ok(act({ op: 'daily_take', offer: notToday }).reason === 'unknown', 'поручение не с сегодняшней доски не взять');
   ok(act({ op: 'daily_done', offer: offers[0] }).reason === 'not_taken', 'сдать можно только взятое');

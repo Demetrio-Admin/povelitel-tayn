@@ -14,9 +14,9 @@ export const RESOURCES = {
   frost_shard:     { name: 'Инеевый осколок',   icon: 'icon_frost_shard', color: 0x7fb8ff, hint: 'Редкий осколок, который остаётся от сильных морозных врагов. В лавках не продаётся.' },
   cold_heart:      { name: 'Сердце холода',     icon: 'icon_cold_heart', color: 0x5fd0ff, hint: 'Очень редкий компонент сильнейших противников. Пригодится для будущих амулетов и ступеней Льда.' },
   // v0.38.0 — глава III «Безымянная роща» (docs/design/chapter-3-story-v0.1.md §10): снова не больше четырёх
-  glass_leaf:      { name: 'Стеклянный лист',   icon: 'icon_glass_leaf', color: 0xbfe8f0, hint: 'Лист ивы, застывший стеклом. Растёт в Безымянной роще; нужен для Отвара памяти и Стеклянной склянки.' },
+  glass_leaf:      { name: 'Стеклянный лист',   icon: 'icon_glass_leaf', color: 0xbfe8f0, hint: 'Лист ивы, застывший стеклом. Растёт в Безымянной роще; нужен для Отвара памяти.' },
   memory_spark:    { name: 'Искра памяти',      icon: 'icon_memory_spark', color: 0xf3d9a4, hint: 'Тёплая искра чьего-то воспоминания. Её роняет эхо, а ещё она прячется в стекле рощи.' },
-  willow_bark:     { name: 'Ивовая кора',       icon: 'icon_willow_bark', color: 0xb39a76, hint: 'Горькая кора сухих ив из Сухой балки. Лечит и снимает холод в Ивовом настое.' },
+  willow_bark:     { name: 'Ивовая кора',       icon: 'icon_willow_bark', color: 0xb39a76, hint: 'Горькая кора сухих ив из Сухой балки. Без неё Отвар памяти не держит имя.' },
   vetla_seed:      { name: 'Семя ветлы',        icon: 'icon_vetla_seed', color: 0x9be8a0, hint: 'Подарок духа рощи. Его посадят там, где дорого, — когда придёт время.' },
 };
 
@@ -37,11 +37,6 @@ export const POTIONS = {
     text: 'Делает врага хрупким на 5 с: следующий удар даров +40%. Только в бою.' },
   crystal_guard: { name: 'Кристальная защита', icon: 'icon_potion_guard', color: 0x7fb8ff, effect: { type: 'guard', incoming: 0.75, sec: 12 },
     text: 'Двенадцать секунд получаемый урон −25%. Только в бою.' },
-  // v0.38.0 — глава III
-  willow_tonic: { name: 'Ивовый настой', icon: 'icon_potion_willow', color: 0xd8c08a, effect: { type: 'cleanse', heal: 0.35 },
-    text: 'Снимает холод и возвращает 35% здоровья. Только в бою.' },
-  glass_flask: { name: 'Стеклянная склянка', icon: 'icon_glass_flask', color: 0xbfe8f0, effect: { type: 'damage', amount: 60, school: 'telekinesis', brittle: { bonus: 0.4, sec: 5 } },
-    text: 'Бросок во врага: 60 урона осколками и Хрупкость на 5 с. Только в бою.' },
 };
 
 // Fixed restoration is separate from legacy inventory; old flasks retain their effects.

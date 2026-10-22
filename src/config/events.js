@@ -168,7 +168,7 @@ export const QUEST_STEPS = [
     progress: s => `${RAVINE.filter(k => has(s, k)).length}/2`, done: s => RAVINE.every(k => has(s, k)) },
   { id: 'ch3_nameless',  text: 'Серебряная тень на Стеклянной опушке — поговорите с ней', done: s => has(s, 'ch3_nameless_met') },
   { id: 'ch3_echo1',     text: 'Эхо у ручья: прочтите его Астралом', done: s => has(s, 'ch3_echo_stream') },
-  { id: 'ch3_draught',   text: 'Сварите Отвар памяти: 2 искры памяти, лунная трава и стеклянный лист', craft: 'memory_draught',
+  { id: 'ch3_draught',   text: 'Сварите Отвар памяти: 2 искры памяти, ивовая кора и стеклянный лист', craft: 'memory_draught',
     done: s => has(s, 'memory_draught_crafted') || has(s, 'ch3_name_stream') },
   { id: 'ch3_name1',     text: 'Верните ручью имя: поговорите с Безымянной', done: s => has(s, 'ch3_name_stream') },
   { id: 'ch3_dam',       text: 'Ручей вспомнил себя: растопите Огнём стеклянную плотину у брода', done: s => has(s, 'ch3_dam_open') },

@@ -45,12 +45,6 @@ export const AMULETS = {
     text: 'Удар Льда +10%, замедление Льдом сильнее на 5%.', tradeoff: 'Без Льда в билде почти бесполезен.',
     effect: { iceMult: 1.1, slowBonus: 0.05 },
   },
-  // v0.38.0: первый из трёх путей Сердца холода (глава III): холод Северина, отданный живой роще
-  amulet_vetla: {
-    name: 'Амулет ветлы', icon: 'icon_amulet_vetla', rarity: 'epic',
-    text: 'Урон даров и автоатаки +8%, получаемый урон −12%.', tradeoff: 'Делается один раз — из Сердца холода, которое не купить.',
-    effect: { damageMult: 1.08, incomingMult: 0.88 },
-  },
 };
 Object.assign(AMULETS, {
   amulet_tracker: { name: 'Амулет Следопыта', icon: 'icon_amulet_forest', rarity: 'rare', text: 'Шанс дополнительного обычного ингредиента при сборе.', tradeoff: 'Не усиливает бой и не умножает сапфиры.', effect: { gatherBonus: 0.1 } },

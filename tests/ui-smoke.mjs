@@ -263,7 +263,7 @@ await mute(async () => {
       ok(h.modal.buttons.length === 1 && t.includes('Закрыть') && !t.includes('Отправиться'), 'из меню карта только для просмотра');
       const flat = (o, out = []) => { out.push(o); (o.children || []).forEach(x => flat(x, out)); return out; };
       const lockCount = () => flat(h.modal.container).filter(o => o.texKey === 'icon_lock').length;
-      ok(lockCount() === 3, 'закрытые локации: три настоящие иконки замка, независимо от emoji-шрифта');
+      ok(lockCount() === 4, 'закрытые локации: четыре настоящие иконки замка (город, две вылазки и роща главы III), независимо от emoji-шрифта');
       const pick = (name) => { const all = flat(h.modal.container); const b = all.find(o => typeof o.text === 'string' && o.text.startsWith(name)); const hit = all.find(o => o !== b && o.handlers?.pointerup && Math.abs(o.x - b.x) < 24 && Math.abs(o.y - (b.y + 1)) < 3); const sc = h.modal.scroll; h.input.activePointer = { x: sc.x + 5, y: sc.y + 5 }; hit.emit('pointerdown'); hit.emit('pointerup'); };
       pick('Город');
       t = texts(h.modal.container).join(' | ');
@@ -275,7 +275,7 @@ await mute(async () => {
       sv.bus.emit(MSG.OPEN_MAP, { exit: 'exit_forest' });
       pick('Город');
       t = texts(h.modal.container).join(' | ');
-      ok(t.includes('Отправиться: Город') && lockCount() === 2, 'у выхода: открытая локация — «Отправиться», замок города убран');
+      ok(t.includes('Отправиться: Город') && lockCount() === 3, 'у выхода: открытая локация — «Отправиться», замок города убран');
       h.closeModal(h.modal.buttons[0]);
       ok(travel === 'city' && !h.modal && !sv.modalOpen, '«Отправиться» — событие перехода в выбранную локацию');
       sv.bus.emit(MSG.OPEN_MAP, { exit: 'exit_forest' });

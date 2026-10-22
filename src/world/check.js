@@ -3,10 +3,11 @@ import { locationAt, locationById } from '../config/locations.js';
 // Используется редактором карты (кнопка «Проверить проходимость») и тестами.
 import { WORLD } from '../config/world.layout.js';
 import { CITY_GATE_IDS, CITY_BEHIND_GATES } from '../config/world.city.js';
+import { GROVE_GATE_IDS, GROVE_BEHIND_GATES } from '../config/world.grove.js';
 import { buildWalkGrid, floodFrom, reachableNear } from './walk.js';
 import { collectSolids } from './solids.js';
 
-export const GATE_IDS = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', ...CITY_GATE_IDS];
+export const GATE_IDS = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', ...CITY_GATE_IDS, ...GROVE_GATE_IDS];
 // Что должно оставаться недостижимым, пока проходы закрыты: за ними — следующие зоны маршрута.
 export const BEHIND_GATES = ['moonstone', 'west_chest', 'forest_guardian_01', 'fire_circle', 'dry_bush', 'ancient_gate', 'node_trial', 'forest_node'];
 
@@ -30,7 +31,7 @@ export function checkWalkability({ colliders, props, interactives, enemies, terr
     const {grid,seen}=floods.get(loc.id);
     if(!near(grid,seen,o,loc))problems.push({id:o.id,text:`«${o.id}» недостижим даже с открытыми проходами`});
   }
-  for(const [location,ids] of [['forest',BEHIND_GATES],['city',CITY_BEHIND_GATES]]){
+  for(const [location,ids] of [['forest',BEHIND_GATES],['city',CITY_BEHIND_GATES],['grove',GROVE_BEHIND_GATES]]){
     const loc=locationById(location),grid=gridFor(loc,[]),p=location==='forest'?start:loc.arrival;
     const seen=floodFrom(grid,p.x-loc.rect.x,p.y-loc.rect.y);
     for(const id of ids){

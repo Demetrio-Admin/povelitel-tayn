@@ -21,7 +21,7 @@ import { BAG, bagData, bagUsed, takesBagSpace } from '../config/bag.js';
 // applyAction — зеркало player_action (v0.9): платное лечение и стартовый набор зелий — атомарные операции сервера,
 // а не дельты patch (иначе при нехватке монет сервер обрезал бы списание до нуля, а HP всё равно стало бы полным).
 import { createDefaultState } from '../state/GameState.js';
-import { HERO_LEVELS, HEALING } from '../config/balance.hero.js';
+import { HERO_LEVELS, HEALING, HERO_LEVEL_CAP_BEFORE_CH3 } from '../config/balance.hero.js';
 import { serverRules } from '../config/serverRules.js';
 import { checkBuild, slotCount, defaultSlots, progressGate, amuletEffect } from '../config/build.js';
 
@@ -297,7 +297,8 @@ function grant(s, reward = {}) {
   if (reward.heroXP || reward.topUp?.heroXP) {
     const before = s.level;
     s.xp = clamp(Math.max(s.xp + (reward.heroXP || 0), reward.topUp?.heroXP || 0), 0, LIMITS.maxXp);
-    const lvl = Math.max(s.level, levelForXp(s.xp));
+    const cap = s.quests.includes(HERO_LEVEL_CAP_BEFORE_CH3.event) ? Infinity : HERO_LEVEL_CAP_BEFORE_CH3.level;
+    const lvl = Math.max(s.level, Math.min(cap, levelForXp(s.xp)));
     if (lvl > before) {
       const mx = maxVitals(before);
       if (!num(s.hp)) s.hp = mx.hp;

@@ -1,6 +1,7 @@
 // Маршруты tap-to-move: обход препятствий, закрытые цели, узкие проходы, реальный мир. node tests/nav-test.mjs
 import { CITY_START, EAST_X } from '../src/config/world.city.js';
 import { regionStart } from '../src/config/world.expeditions.js';
+import { GROVE_GATE_IDS } from '../src/config/world.grove.js';
 import { buildNav, findPath, lineClear, NAV } from '../src/world/nav.js';
 import { WORLD, INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
 import { buildTerrain } from '../src/world/terrain.js';
@@ -79,7 +80,7 @@ console.log('\nМаршруты: реальный мир (первая глав�
 {
   const LIVE = resolveMap({ storage: null, useDraft: false });
   const terrain = buildTerrain({ ROADS: LIVE.roads, WATERS: LIVE.waters });
-  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', 'frost_barrier', 'fq_water', 'lab_seal', 'final_ward'];
+  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', 'frost_barrier', 'fq_water', 'lab_seal', 'final_ward', ...GROVE_GATE_IDS];
   const solidsFor = (skip) => collectSolids({ colliders: LIVE.colliders, props: PROPS, interactives: INTERACTIVES, enemies: ENEMY_SPAWNS, waterRects: terrain.waterRects, skip: new Set(skip) });
   const dims = { width: WORLD.width, height: WORLD.height };
   const t0 = performance.now();

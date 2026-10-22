@@ -179,7 +179,7 @@ export const EVENT_REWARDS = {
   ch3_severin_talk:        { heroXP: 280, coins: 100 },
   ch3_leaf_read:           { heroXP: 360, coins: 120, items: { glass_leaf: 1 } },
   ch3_grove_arrived:       { heroXP: 300, coins: 100 },
-  ch3_nerys_met:           { heroXP: 300, coins: 150, items: { moon_herb: 2, willow_tonic: 1 } },   // лунная трава — на первые Отвары памяти
+  ch3_nerys_met:           { heroXP: 300, coins: 150, items: { elixir_life: 1 } },   // Нэрис делится запасом перед дорогой к ручью
   ch3_nameless_met:        { heroXP: 200 },
   ch3_echo_stream:         { heroXP: 350, items: { memory_spark: 1 } },
   ch3_name_stream:         { heroXP: 450, coins: 200 },

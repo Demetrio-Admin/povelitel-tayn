@@ -22,14 +22,26 @@ sys.path.insert(0, os.path.dirname(__file__))
 from ch3_lib import (Canvas, hexrgb, mix, outline, glow, trim, gradient_map, hue_mask, blend_masked, glassify, specular,
                      tileable_noise, save_webp)
 from ch3_trees import willow, sapling, GLASS, ALIVE, DRY, cubic
+import ch3_props as P
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 OUT = os.path.join(ROOT, 'public', 'assets', 'chapter3')
 DOCS = os.path.join(ROOT, 'docs', 'design', 'chapter-3-art')
 CONFIG = os.path.join(ROOT, 'src', 'config', 'chapter3.art.generated.js')
-VERSION = 'ch3-proto-1'
+VERSION = 'ch3-proto-2'
 
 FILES, SIZES, SHEET = {}, {}, []
+
+
+def _old_sizes():
+    try:
+        txt = open(CONFIG, encoding='utf-8').read()
+        return json.loads(txt.split('CHAPTER3_SIZES = ', 1)[1].rsplit(';', 1)[0])
+    except Exception:
+        return {}
+
+
+OLD = _old_sizes()
 
 
 def src(rel):
@@ -912,30 +924,30 @@ def main():
     register('dry_willow_01', willow(seed=7, w=380, h=500, pal=DRY), height=190)
     rk = register('grove_rakita_glass', rakita_glass(), height=400)
     register('grove_rakita_alive', rakita_alive(), height=300)
-    register('glass_dam_01', glass_dam(), height=124)
+    register('glass_dam_01', P.glass_dam(), size=OLD.get('glass_dam_01') or (230, 124))
     register('glass_roots_01', glass_roots(), height=124)
-    register('glass_wall_01', glass_wall(), height=140)
-    register('glass_wall_frost', frost_shards(), height=60)
-    register('glass_block_cracked', cracked_block(), height=112)
-    register('glass_bridge_01', glass_bridge(False), size=(160, 108))
-    register('glass_bridge_frozen_01', glass_bridge(True), size=(160, 108))
-    register('glass_cocoon_01', cocoon(), height=122)
+    register('glass_wall_01', P.glass_wall(), size=OLD.get('glass_wall_01') or (160, 140))
+    register('glass_wall_frost', P.frost_floor(), size=OLD.get('glass_wall_frost') or (170, 60))
+    register('glass_block_cracked', P.cracked_block(), size=OLD.get('glass_block_cracked') or (150, 112))
+    register('glass_bridge_01', P.glass_bridge(False), size=(160, 108))
+    register('glass_bridge_frozen_01', P.glass_bridge(True), size=(160, 108))
+    register('glass_cocoon_01', P.cocoon(), height=122)
     for kind in ('bird', 'fox', 'flower', 'empty'):
-        register(f'glass_jar_{kind}', jar(kind), height={'bird': 96, 'fox': 96, 'flower': 84, 'empty': 44}[kind])
+        register(f'glass_jar_{kind}', P.jar(kind), height={'bird': 96, 'fox': 96, 'flower': 84, 'empty': 44}[kind])
     register('iva_ward_01', ward_green(), height=134)
     register('grove_echo_01', echo(False), height=122)
     register('grove_echo_lit', echo(True), height=122)
-    register('glass_leaf_node', gather_leaf_node(), height=58)
-    register('memory_spark_node', spark_node(), height=60)
-    register('willow_bark_node', bark_node(), height=52)
-    register('glass_leaf_token', leaf_token(), height=56)
+    register('glass_leaf_node', P.glass_sprig(), height=58)
+    register('memory_spark_node', P.spark_node(), height=60)
+    register('willow_bark_node', P.bark_node(), height=52)
+    register('glass_leaf_token', P.leaf_token(), height=56)
     register('iva_hut', iva_hut(), size=(300, 197))
-    register('grove_stream_glass', stream_strip(False), size=(1300, 130))
-    register('grove_stream_water', stream_strip(True), size=(1300, 130))
+    register('grove_stream_glass', P.stream_strip(False), size=(1300, 130))
+    register('grove_stream_water', P.stream_strip(True), size=(1300, 130))
     register('grove_rift', rift_strip(), size=(1300, 90))
     register('glass_roots_tile', glass_roots(w=256, h=160, seed=5, tile=True) if False else roots_tile(), name='glass_roots_tile')
-    register('glass_thicket_tile', thicket_tile(), name='glass_thicket_tile')
-    glass_ground, dry_ground = ground_tiles()
+    register('glass_thicket_tile', P.thicket_tile(), name='glass_thicket_tile')
+    glass_ground, dry_ground = P.ground_tiles()
     register('glass_ground_01', glass_ground, name='glass_ground')
     register('dry_ground_01', dry_ground, name='dry_ground')
     # characters
@@ -954,14 +966,11 @@ def main():
         register(f'enemy_{key}', trim(img, 2), name=key, height=h)
     register('enemy_iva_reflection', reflection(young), name='iva_reflection', height=130)
     # icons
-    register('icon_glass_leaf', icon_glass_leaf(), height=64)
-    register('icon_memory_spark', icon_spark(), height=64)
-    register('icon_willow_bark', icon_bark(), height=64)
+    register('icon_glass_leaf', P.icon_glass_leaf(), height=64)
+    register('icon_memory_spark', P.icon_spark(), height=64)
+    register('icon_willow_bark', P.icon_bark(), height=64)
     register('icon_vetla_seed', icon_seed(), height=64)
     register('icon_memory_draught', recolor_potion('assets/chapter2/potion_warm.webp', [(0, (60, 40, 10)), (0.5, (230, 170, 70)), (1, (255, 246, 214))], hue=(10, 60, 0.3, 0.3)), height=64)
-    register('icon_potion_willow', recolor_potion('assets/chapter2/potion_stable.webp', [(0, (40, 30, 16)), (0.5, (170, 140, 80)), (1, (246, 236, 196))], hue=(120, 200, 0.12, 0.25)), height=64)
-    register('icon_glass_flask', recolor_potion('assets/chapter2/potion_brittle.webp', [(0, (40, 50, 70)), (0.5, (170, 196, 220)), (1, (250, 252, 255))], hue=(170, 240, 0.12, 0.25), extra=lambda im: specular(im, seed=3, count=3)), height=64)
-    register('icon_amulet_vetla', icon_amulet(), height=64)
     grove_arena, heart_arena = arenas(rk)
     register('arena_grove', grove_arena, name='arena_grove', sheet=False)
     register('arena_grove_heart', heart_arena, name='arena_grove_heart', sheet=False)

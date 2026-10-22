@@ -68,6 +68,9 @@ export const GROVE_COLLIDERS = [
 
 /** Проходы рощи: закрыты, пока их не открыл сюжет (для проверок проходимости), и что за ними. */
 export const GROVE_GATE_IDS = ['ge_dam', 'gr_roots', 'gh_wall', 'gh_wall_block', 'gh_bridge', 'gh_ward'];
+/** Что должно оставаться недостижимым, пока проходы рощи закрыты (проверка проходимости): за плотиной — сад, за корнями — Мирра и эхо,
+ *  за стеной, мостом и завесой — кокон, страж и сердце. */
+export const GROVE_BEHIND_GATES = ['npc_iva_garden', 'gg_jar_bird', 'gr_echo_vetla', 'npc_mirra_grove', 'gh_cocoon', 'gh_guardian', 'gh_reflection', 'npc_iva_heart'];
 
 // Квесты 2–3 идут в городском Архиве (помещение city_archive, его прямоугольник — city.plan.js): Северин под надзором Иларии и
 // стеклянный лист из последнего письма.
@@ -92,7 +95,7 @@ const GROVE_OBJECT_LIST = [
   { id: 'gb_bark_2', kind: 'gather', res: 'willow_bark', amount: 1, respawnSec: 300, ...G(1280, 4620), texture: 'willow_bark_node', radius: 90, requiresEvent: OPENED },
   { id: 'gb_bark_3', kind: 'gather', res: 'willow_bark', amount: 1, respawnSec: 300, ...G(560, 4560), texture: 'willow_bark_node', radius: 90, requiresEvent: OPENED },
   { id: 'gb_cache', kind: 'chest', ...G(1300, 5170), texture: 'chest_01', openTexture: 'chest_01_open', collide: { w: 50, h: 24 }, radius: 100,
-    requiresEvent: OPENED, reward: { items: { willow_bark: 2, elixir_life: 1, coins: 60 } }, hint: 'Старый тайник' },
+    requiresEvent: OPENED, reward: { items: { willow_bark: 2, elixir_life: 1 }, coins: 60 }, hint: 'Старый тайник' },
 
   // ---- Стеклянная опушка: Безымянная, эхо у ручья, искры и листья, плотина у брода
   { id: 'npc_nameless_edge', kind: 'npc', npc: 'nameless', ...G(640, 4060), texture: 'npc_nameless', collide: { w: 30, h: 14 }, radius: 140,

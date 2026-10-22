@@ -49,7 +49,7 @@ export function simulate({profile='prepared',capacity=100,potion='medium',policy
  const p=profiles[profile];assert.ok(p,'profile');let s=emptySnapshot(),now=2e12,position={x:merchant.x,y:merchant.y};
  const life=`potion_life_${potion}`,mana=`potion_mana_${potion}`,target=stocks||{[life]:6,[mana]:6,warm_potion:4,potion_crystal_shield:4};
  s.level=15;s.xp=7900;s.hp=255;s.mana=205;s.vitalsAt=now;s.pos={...position};s.wallet.sapphires=0;
- s.quests=[...Object.keys(R.events),'regen_potions_learned'];s.enemies=[...ENEMY_SPAWNS.filter(o=>!o.repeatSec).map(o=>o.id)];
+ s.quests=[...Object.keys(R.events).filter(e=>!e.startsWith('ch3_')&&e!=='chapter_3_complete'),'regen_potions_learned'];s.enemies=[...ENEMY_SPAWNS.filter(o=>!o.repeatSec).map(o=>o.id)];
  const ids=['telekinesis','fire','seal','ice','storm'];s.abilities=Object.fromEntries(ids.map((id,i)=>[id,{level:p.levels[i],unlocked:p.levels[i]>0}]));
  s.inventory={...target,coins:capital,...Object.fromEntries(p.amulets.map(id=>[id,1]))};s.objects.player_build={amulets:p.amulets,amuletLevels:p.amuletLevels,branches:p.branches,slots:['telekinesis','fire','ice'],potions:Object.keys(target)};s.objects.player_bag={capacity,pending:{},version:29};
  if(checkpoint){s=structuredClone(checkpoint.snapshot);now=checkpoint.now;position={...s.pos};assert.equal(s.level,15,'poststory continuation');}

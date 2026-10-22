@@ -1,7 +1,7 @@
 // Save / GameState — единственный источник правды о прогрессе и состоянии мира.
 // Не зависит от Phaser: тестируется в node (tests/run-tests.js).
 
-import { HERO_LEVELS } from '../config/balance.hero.js';
+import { HERO_LEVELS, HERO_LEVEL_CAP_BEFORE_CH3 } from '../config/balance.hero.js';
 import { UPGRADES, TIMER_MODE, BRANCH_RESPEC, BALANCE_MIGRATION } from '../config/balance.progression.js';
 import { ABILITIES } from '../config/balance.abilities.js';
 import { WORLD } from '../config/world.layout.js';
@@ -175,6 +175,7 @@ export class GameState {
     for (;;) {
       const next = HERO_LEVELS.find(r => r.level === this.data.heroLevel + 1);
       if (!next || this.data.heroXP < next.xp) break;
+      if (next.level > HERO_LEVEL_CAP_BEFORE_CH3.level && !this.hasEvent(HERO_LEVEL_CAP_BEFORE_CH3.event)) break; // 16–20 — только в главе III
       if (!gained.length) materialize(this); // новый максимум не даёт скрытого полного восстановления
       this.data.heroLevel = next.level;
       gained.push(next);

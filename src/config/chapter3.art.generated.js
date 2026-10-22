@@ -54,6 +54,14 @@ export const CHAPTER3_FILES = {
   "icon_memory_spark": "assets/chapter3/icon_memory_spark.webp?v=ch3-proto-2",
   "icon_willow_bark": "assets/chapter3/icon_willow_bark.webp?v=ch3-proto-2",
   "icon_vetla_seed": "assets/chapter3/icon_vetla_seed.webp?v=ch3-proto-2",
+  "garden_bed_leaf": "assets/chapter3/garden_bed_leaf.webp?v=ch3-proto-2",
+  "garden_bed_bark": "assets/chapter3/garden_bed_bark.webp?v=ch3-proto-2",
+  "garden_bed_spark": "assets/chapter3/garden_bed_spark.webp?v=ch3-proto-2",
+  "garden_bed_moon": "assets/chapter3/garden_bed_moon.webp?v=ch3-proto-2",
+  "companion_robin": "assets/chapter3/companion_robin.webp?v=ch3-proto-2",
+  "companion_fox": "assets/chapter3/companion_fox.webp?v=ch3-proto-2",
+  "icon_companion_robin": "assets/chapter3/icon_companion_robin.webp?v=ch3-proto-2",
+  "icon_companion_fox": "assets/chapter3/icon_companion_fox.webp?v=ch3-proto-2",
   "icon_memory_draught": "assets/chapter3/icon_memory_draught.webp?v=ch3-proto-2",
   "arena_grove": "assets/chapter3/arena_grove.webp?v=ch3-proto-2",
   "arena_grove_heart": "assets/chapter3/arena_grove_heart.webp?v=ch3-proto-2",
@@ -258,6 +266,38 @@ export const CHAPTER3_SIZES = {
   ],
   "icon_vetla_seed": [
     50,
+    64
+  ],
+  "garden_bed_leaf": [
+    112,
+    84
+  ],
+  "garden_bed_bark": [
+    110,
+    84
+  ],
+  "garden_bed_spark": [
+    112,
+    84
+  ],
+  "garden_bed_moon": [
+    121,
+    84
+  ],
+  "companion_robin": [
+    77,
+    40
+  ],
+  "companion_fox": [
+    67,
+    46
+  ],
+  "icon_companion_robin": [
+    99,
+    64
+  ],
+  "icon_companion_fox": [
+    80,
     64
   ],
   "icon_memory_draught": [

@@ -17,6 +17,8 @@ import { MapEditor } from '../systems/MapEditor.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { Player } from '../objects/Player.js';
+import { Companion, COMPANIONS, activeCompanion } from '../objects/Companion.js';
+const COMPANION_TEXTURES = Object.fromEntries(Object.entries(COMPANIONS).map(([id, c]) => [id, c.texture]));
 import { CityPresentation } from '../world/CityPresentation.js';
 import { InteractionSystem } from '../systems/InteractionSystem.js';
 import { TelekinesisObject } from '../objects/TelekinesisObject.js';
@@ -139,6 +141,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.cityPresentation = this.loc?.id === 'city' ? new CityPresentation(this) : null;
     this.groveAwake = state.hasEvent(GROVE_AWAKE);   // v0.38.0: роща уже ожила — без вспышки при загрузке
     this.setupLife();   // v0.28.0
+    this.setupCompanion();   // v0.40
     this.setupGuidance();
     this.refreshAll();
     this.recoverCityPosition();
@@ -182,6 +185,7 @@ export class ExplorationScene extends Phaser.Scene {
     bus.on(MSG.UNLOCK_SEAL, this.unlockSeal, this);
     bus.on(MSG.UNLOCK_GIFT, this.unlockGift, this);
     bus.on(MSG.CHAPTER_FINALE, this.chapterFinale, this);
+    bus.on(MSG.COMPANION_CHANGED, this.setupCompanion, this);
     bus.on(MSG.DUEL_START, this.startDuel, this);   // v0.26.0
     bus.on(MSG.TRAVEL, (t) => this.travelTo(t, t?.text), this);   // v0.20.0
     bus.on(MSG.MAP_TRAVEL, this.travelToLocation, this);           // v0.27.0: отправиться с карты мира
@@ -745,6 +749,14 @@ export class ExplorationScene extends Phaser.Scene {
     }
   }
 
+  /** v0.40: спутник героя (косметика): создаётся заново при входе в локацию и при выборе в диалоге. */
+  setupCompanion() {
+    const id = activeCompanion(services.state);
+    if (this.companion?.id === id) return;
+    this.companion?.destroy(); this.companion = null;
+    if (id && this.player && this.textures.exists(COMPANION_TEXTURES[id])) this.companion = new Companion(this, this.player, id);
+  }
+
   /** v0.28.0: «живой мир» — рябь, качающиеся кроны, птицы, зверёк, листья (только лес Мирры, выключается в настройках). */
   setupLife() {
     this.life = null;
@@ -758,7 +770,7 @@ export class ExplorationScene extends Phaser.Scene {
       if (value) this.life.start(settings); else this.life.stop();
     };
     settings.listeners.add(onChange);
-    this.events.once('shutdown', () => { settings.listeners.delete(onChange); this.life?.destroy(); this.life = null; });
+    this.events.once('shutdown', () => { settings.listeners.delete(onChange); this.life?.destroy(); this.life = null; this.companion?.destroy(); this.companion = null; });
   }
 
   /** Мерцающая искорка. */
@@ -1303,6 +1315,7 @@ export class ExplorationScene extends Phaser.Scene {
     if (this.editor) return;
     const dt = Math.min(delta, 50) / 1000;
     const { state } = services;
+    this.companion?.update(dt);
     const active = this.canAct();
     // время игры и восстановление HP/маны по часам (в доме Мирры мана быстрее); во время действия сервера время игры стоит
     if (advanceWorld(state, delta, { frozen: serverActionBusy(services), inHouse: this.zone?.id === VITALS.houseZone })) this.vitalsDirty = true;

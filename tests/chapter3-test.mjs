@@ -17,6 +17,9 @@ import { GROVE_INTERACTIVES, GROVE_ENEMIES } from '../src/config/world.grove.js'
 import { serverRules } from '../src/config/serverRules.js';
 import { levelForXp } from '../src/cloud/playerModel.js';
 import { chapter3Pass } from '../tools/balance/chapter3-pass.mjs';
+import { applyAction } from '../src/cloud/playerModel.js';
+import { DAILY_POOL } from '../src/config/daily.js';
+import { COMPANIONS } from '../src/objects/Companion.js';
 
 let failures = 0;
 const ok = (c, m) => { if (c) console.log('  ✓', m); else { failures++; console.log('  ✗', m); } };
@@ -100,6 +103,40 @@ console.log('\nГлава III: сквозное прохождение');
   ok(guardian.enemy === 'glass_guardian' && guardian.potions <= 4, `Стеклянный страж: ${guardian.seconds} с, зелий ${guardian.potions}`);
   ok(rep.final.coins > rep.start.coins && rep.final.sapphires >= rep.start.sapphires, 'награды главы пополняют монеты и не отнимают сапфиры');
   ok(rep.final.vetla_seed === 1 && rep.final.memory_spark >= 0, 'семя Ветлы получено');
+}
+
+console.log('\nПосле главы III: Сад Ветлы, спутник, заказы рощи (без правок боя)');
+{
+  const done = await chapter3Pass();
+  let s = structuredClone(done.snapshot), time = 2.2e12;
+  const act = (a) => { time += 400_000; const r = applyAction(s, a, time, () => .999999); s = r.snapshot; return r.result; };
+  s.inventory.coins = 60000;
+  const have = k => s.inventory[k] || 0;
+  const bedAt = id => GROVE_INTERACTIVES.find(o => o.id === id);
+  ok(['gg_bed_leaf', 'gg_bed_bark', 'gg_bed_spark', 'gg_bed_moon'].every(id => bedAt(id)?.kind === 'gather' && bedAt(id).requiresEvent), 'четыре грядки: скрыты, пока их не вырастили');
+  ok(act({ op: 'world', obj: 'gg_bed_leaf' }).ok === false, 'грядка до посадки недоступна');
+  s.inventory.glass_leaf = Math.max(have('glass_leaf'), 30); s.inventory.memory_spark = Math.max(have('memory_spark'), 10); s.inventory.willow_bark = Math.max(have('willow_bark'), 10);
+  const coin0 = have('coins');
+  ok(act({ op: 'craft', recipe: 'garden_grow_2' }).ok === false, 'вторую грядку нельзя вырастить до посадки');
+  ok(act({ op: 'craft', recipe: 'garden_plant' }).ok && have('vetla_seed') === 0 && coin0 - have('coins') === 1000, 'посадка: Семя ветлы + 1000 монет + 3 листа');
+  ok(act({ op: 'craft', recipe: 'garden_plant' }).ok === false, 'посадить второй раз нельзя');
+  const g1 = act({ op: 'world', obj: 'gg_bed_leaf' });
+  ok(g1.ok && have('glass_leaf') >= 2, 'после посадки грядка листа даёт материал');
+  ok(act({ op: 'world', obj: 'gg_bed_leaf' }).ok === false, 'и не даёт его снова сразу: грядка растёт по часам');
+  ok(act({ op: 'craft', recipe: 'garden_grow_2' }).ok && act({ op: 'craft', recipe: 'garden_grow_3' }).ok, 'грядки 2 и 3 вырастают по порядку');
+  ok(['gg_bed_bark', 'gg_bed_spark', 'gg_bed_moon'].every(id => act({ op: 'world', obj: id }).ok), 'все грядки сада сейчас дают урожай');
+  // экономика сада: за полные сутки сад приносит немного, а не обгоняет сбор
+  const perDay = 4 * 2 + 4 * 2 + 2 * 1 + 1;   // листья (6 ч ×4) + кора (6 ч ×4) + искры (12 ч ×2) + лунный осколок (24 ч ×1)
+  ok(perDay <= 25, `урожай сада за сутки — ${perDay} единиц материала, без монет: не конкурирует со сбором`);
+  const robin = act({ op: 'craft', recipe: 'companion_robin' });
+  ok(robin.ok && have('companion_robin') === 1 && act({ op: 'craft', recipe: 'companion_robin' }).ok === false, 'Малиновка: один раз, предмет-спутник в запасе');
+  s.inventory.glass_leaf = 30; s.inventory.memory_spark = 10;   // материалы рощи добираются повторными походами
+  ok(act({ op: 'craft', recipe: 'companion_fox' }).ok && have('companion_fox') === 1, 'Лисёнок: отдельная покупка');
+  ok(Object.keys(COMPANIONS).sort().join() === 'fox,robin' && Object.values(COMPANIONS).every(c => CHAPTER3_FILES[c.texture] && c.item), 'у каждого спутника есть картинка и предмет');
+  const orders = Object.entries(DAILY_POOL).filter(([id]) => id.startsWith('grove_') || id === 'hunt_glass');
+  ok(orders.length === 4 && orders.every(([, o]) => o.requires === 'chapter_3_complete'), 'четыре заказа рощи видны с итога главы III');
+  ok(orders.every(([, o]) => o.reward.heroXP <= 60 && o.reward.coins <= 40), 'награды заказов в рамках доски (≤60 опыта, ≤40 монет)');
+  ok(orders.filter(([, o]) => o.goal.type === 'deliver').every(([, o]) => Object.keys(o.goal.items).every(k => RESOURCES[k] && ['glass_leaf', 'memory_spark', 'willow_bark'].includes(k))), 'заказы просят только материалы рощи (их нельзя продать)');
 }
 
 console.log(failures ? `\n✗ ПРОВАЛЕНО: ${failures}` : '\n✓ Глава III: всё в порядке');

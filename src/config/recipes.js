@@ -95,8 +95,23 @@ Object.assign(RECIPES, {
     requires: ['ch3_echo_stream'], crafted: 'memory_draught_crafted', blockedBy: ['ch3_name_willow'], where: 'котёл Нэрис или котёл Ивы',
     note: 'Так поили рощу, когда она болела: память, горькая кора и стекло.', learn: 'Рецепт помнит дух рощи на Стеклянной опушке.' },
 });
+// v0.40: Сад Ветлы и спутники — траты после главы III (docs/design/post-chapter-3-progression-v0.1.md §6). Не боевые: сила героя не растёт.
+// Улучшение сада — «грамота» и событие: грядки (world.grove.js, gg_bed_*) проявляются по событию. Монеты входят в needs, как в других ценах.
+Object.assign(RECIPES, {
+  garden_plant: { kind: 'garden', chapter: 3, result: 'garden_deed_1', amount: 1, needs: { vetla_seed: 1, coins: 1000, glass_leaf: 3 },
+    requires: ['chapter_3_complete'], crafted: 'garden_planted', blockedBy: ['garden_planted'], where: 'любой котёл',
+    learn: 'Посадить Семя ветлы можно после возвращения домой.' },
+  garden_grow_2: { kind: 'garden', chapter: 3, result: 'garden_deed_2', amount: 1, needs: { coins: 5000, glass_leaf: 8, memory_spark: 2 },
+    requires: ['garden_planted'], crafted: 'garden_grown_2', blockedBy: ['garden_grown_2'], where: 'любой котёл', learn: 'Сначала посадите Семя ветлы.' },
+  garden_grow_3: { kind: 'garden', chapter: 3, result: 'garden_deed_3', amount: 1, needs: { coins: 15000, glass_leaf: 15, memory_spark: 5, willow_bark: 6 },
+    requires: ['garden_grown_2'], crafted: 'garden_grown_3', blockedBy: ['garden_grown_3'], where: 'любой котёл', learn: 'Сначала вырастите вторую грядку.' },
+  companion_robin: { kind: 'companion', chapter: 3, result: 'companion_robin', amount: 1, needs: { coins: 3000, glass_leaf: 6, memory_spark: 1 },
+    requires: ['chapter_3_complete'], crafted: 'companion_robin_owned', blockedBy: ['companion_robin_owned'], where: 'любой котёл', learn: 'Малиновка прилетит после возвращения домой.' },
+  companion_fox: { kind: 'companion', chapter: 3, result: 'companion_fox', amount: 1, needs: { coins: 6000, glass_leaf: 10, memory_spark: 2 },
+    requires: ['chapter_3_complete'], crafted: 'companion_fox_owned', blockedBy: ['companion_fox_owned'], where: 'любой котёл', learn: 'Лисёнок выйдет из рощи после возвращения домой.' },
+});
 export const RECIPE_ORDER = Object.keys(RECIPES).filter(id => !['elixir_life', 'elixir_mana', 'crystal_guard'].includes(id));
 export const POTION_RECIPES = RECIPE_ORDER.filter(id => RECIPES[id].kind === 'potion');
 /** v0.19.0: разделы котла по порядку показа. */
-export const RECIPE_SECTIONS = { potion: 'Зелья', story: 'Для главного задания', component: 'Компоненты', tool: 'Инструменты', amulet: 'Амулеты' };
+export const RECIPE_SECTIONS = { potion: 'Зелья', story: 'Для главного задания', component: 'Компоненты', tool: 'Инструменты', amulet: 'Амулеты', garden: 'Сад Ветлы', companion: 'Спутники' };
 export const STORY_RECIPES = RECIPE_ORDER.filter(id => RECIPES[id].kind === 'story');

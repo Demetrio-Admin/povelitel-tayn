@@ -130,6 +130,11 @@ const GROVE_OBJECT_LIST = [
   { id: 'gg_cauldron', kind: 'alchemy', ...G(880, 2500), texture: 'cauldron_01', collide: { w: 66, h: 26 }, radius: 120, requiresEvent: 'ch3_iva_met', hint: 'Остывший котёл Ивы' },
   { id: 'gg_spark_1', kind: 'gather', res: 'memory_spark', amount: 1, respawnSec: 900, ...G(300, 3060), texture: 'memory_spark_node', radius: 90, requiresEvent: 'ch3_dam_open' },
   { id: 'gg_leaf_1', kind: 'gather', res: 'glass_leaf', amount: 1, respawnSec: 300, ...G(1300, 2620), texture: 'glass_leaf_node', radius: 90, requiresEvent: 'ch3_dam_open' },
+  // v0.40: Сад Ветлы — четыре грядки (проявляются по грамотам, см. recipes.js garden_*); долгий возврат урожая, без боя и без монет
+  { id: 'gg_bed_leaf', kind: 'gather', res: 'glass_leaf', amount: 2, respawnSec: 21600, ...G(680, 2760), texture: 'garden_bed_leaf', radius: 100, requiresEvent: 'garden_planted' },
+  { id: 'gg_bed_bark', kind: 'gather', res: 'willow_bark', amount: 2, respawnSec: 21600, ...G(800, 2760), texture: 'garden_bed_bark', radius: 100, requiresEvent: 'garden_grown_2' },
+  { id: 'gg_bed_spark', kind: 'gather', res: 'memory_spark', amount: 1, respawnSec: 43200, ...G(680, 2870), texture: 'garden_bed_spark', radius: 100, requiresEvent: 'garden_grown_3' },
+  { id: 'gg_bed_moon', kind: 'gather', res: 'lunar_shard', amount: 1, respawnSec: 86400, ...G(800, 2870), texture: 'garden_bed_moon', radius: 100, requiresEvent: 'garden_grown_3' },
   { id: 'gg_leaf_2', kind: 'gather', res: 'glass_leaf', amount: 1, respawnSec: 300, ...G(620, 3040), texture: 'glass_leaf_node', radius: 90, requiresEvent: 'ch3_dam_open' },
   { id: 'gg_cache', kind: 'chest', ...G(1320, 2350), texture: 'chest_01', openTexture: 'chest_01_open', collide: { w: 50, h: 24 }, radius: 100,
     requiresEvent: 'ch3_iva_met', reward: { sapphires: 10 }, hint: 'Сундучок под стеклом' },

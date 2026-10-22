@@ -9,6 +9,13 @@ const BYE = { label: 'Спасибо.' };
 const GOT_IT = fm('Поняла.', 'Понял.');
 const HEAL = { label: 'Восстановить здоровье', when: c => c.hpMissing, do: [{ heal: true }] };
 const HOME = [{ label: 'Сварить зелье', do: [{ alchemy: true }] }, HEAL, { label: 'Открыть журнал', do: [{ journal: true }] }, BYE];
+// v0.40: спутники — позвать или отпустить (чисто косметика; выбор хранится в сохранении, на сервер не уходит)
+const PETS = [
+  { label: 'Позвать малиновку', when: c => c.item('companion_robin') > 0, do: [{ companion: 'robin' }] },
+  { label: 'Позвать лисёнка', when: c => c.item('companion_fox') > 0, do: [{ companion: 'fox' }] },
+  { label: 'Отпустить спутника', when: c => c.item('companion_robin') > 0 || c.item('companion_fox') > 0, do: [{ companion: null }] },
+];
+const GARDEN = { label: 'Сад Ветлы и спутники', when: c => c.has('chapter_3_complete'), do: [{ alchemy: true }] };
 const CAMP = [{ label: 'Котёл', do: [{ alchemy: true }] }, { label: 'Дары', do: [{ gifts: true }] }, BYE];
 const RETRY = [{ label: 'Попробовать ещё', next: 'start' }, { label: 'Подумаю.' }];
 const NOT_IT = { lines: ['Нет… Это имя скользит мимо. Оно чужое.'], choices: RETRY };
@@ -18,7 +25,7 @@ export const CH3_DIALOGUES = {
   mirra: [
     {
       id: 'mirra_ch3_done', repeat: true, when: c => c.has('chapter_3_complete'),
-      nodes: { start: { lines: ['Ива пишет мне. Сорок лет молчала — а теперь по письму в неделю. Всё про ростки: сколько взошло, какой выше.'], choices: HOME } },
+      nodes: { start: { lines: ['Ива пишет мне. Сорок лет молчала — а теперь по письму в неделю. Всё про ростки: сколько взошло, какой выше.'], choices: [GARDEN, ...PETS, ...HOME] } },
     },
     {
       id: 'mirra_ch3_final_ready', when: c => c.has('ch3_epilogue') && c.has('ch3_vetla_blessing') && !c.has('chapter_3_complete'),
@@ -379,7 +386,7 @@ export const CH3_DIALOGUES = {
   iva_old: [
     {
       id: 'iva_old_done', repeat: true, when: c => c.has('ch3_epilogue'),
-      nodes: { start: { lines: ['Ростки тянутся к воде. Я считаю их по утрам: уже сорок три. Считать живое куда приятнее, чем хранить.'], choices: [BYE] } },
+      nodes: { start: { lines: ['Ростки тянутся к воде. Я считаю их по утрам: уже сорок три. Считать живое куда приятнее, чем хранить.'], choices: [GARDEN, ...PETS, BYE] } },
     },
     {
       id: 'iva_old_ready', when: c => c.has('ch3_name_vetla') && !c.has('ch3_epilogue'),

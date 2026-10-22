@@ -970,6 +970,12 @@ def main():
     register('icon_memory_spark', P.icon_spark(), height=64)
     register('icon_willow_bark', P.icon_bark(), height=64)
     register('icon_vetla_seed', icon_seed(), height=64)
+    for kind in ('leaf', 'bark', 'spark', 'moon'):
+        register(f'garden_bed_{kind}', P.garden_bed(kind), height=84)
+    register('companion_robin', P.companion_robin(), height=40)
+    register('companion_fox', P.companion_fox(), height=46)
+    register('icon_companion_robin', P.icon_companion('robin'), height=64)
+    register('icon_companion_fox', P.icon_companion('fox'), height=64)
     register('icon_memory_draught', recolor_potion('assets/chapter2/potion_warm.webp', [(0, (60, 40, 10)), (0.5, (230, 170, 70)), (1, (255, 246, 214))], hue=(10, 60, 0.3, 0.3)), height=64)
     grove_arena, heart_arena = arenas(rk)
     register('arena_grove', grove_arena, name='arena_grove', sheet=False)

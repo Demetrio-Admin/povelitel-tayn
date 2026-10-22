@@ -34,7 +34,7 @@ const fit = (img, size) => { img.setScale(size / Math.max(img.width, img.height,
 /** Размер текста: добавляет в контейнер и возвращает объект. */
 /** v0.19.0: что показать про результат рецепта любого вида (зелье, сюжетный предмет, компонент, инструмент, амулет). */
 function craftInfo(r) {
-  if (r.kind === 'story') return STORY_ITEMS[r.result];
+  if (r.kind === 'story' || r.kind === 'garden' || r.kind === 'companion') return STORY_ITEMS[r.result];
   if (POTIONS[r.result]) return POTIONS[r.result];
   if (CRAFT_ITEMS[r.result]) return CRAFT_ITEMS[r.result];
   const a = AMULETS[r.result];
@@ -224,7 +224,7 @@ export const windows08 = {
             const t = label(this, c, x, cy + 4, RECIPE_SECTIONS[section] || 'Рецепты', { fontSize: UI.type.heading, fontStyle: 'bold', color: COLORS.textGold });
             cy = t.y + t.height + 14;
           }
-          const story = r.kind === 'story';
+          const story = r.kind === 'story' || r.kind === 'garden' || r.kind === 'companion';
           const p = craftInfo(r);
           const st = alchemy.status(r.id), chk = st.chk;
           const canCraft = st.state === 'ready';
@@ -252,7 +252,7 @@ export const windows08 = {
             const note = st.state === 'have' ? 'Готово — в сумке' : st.state === 'used' ? 'Задача выполнена' : `В сумке: ${state.item(r.result)}`;
             label(this, c, x + 20, top + ch - 66, note, { fontSize: UI.type.small, color: st.state === 'have' ? '#9be8a0' : COLORS.textDim }).setOrigin(0, 0.5);
             if (st.state === 'ready' || st.state === 'missing') {
-              const b = addButton(this, x + w - 132, top + ch - 62, 224, UI.touch.button, r.kind === 'amulet' ? 'Создать' : r.kind === 'potion' || r.kind === 'story' ? 'Сварить' : 'Изготовить', {
+              const b = addButton(this, x + w - 132, top + ch - 62, 224, UI.touch.button, r.kind === 'amulet' ? 'Создать' : r.kind === 'garden' ? 'Вырастить' : r.kind === 'companion' ? 'Позвать' : r.kind === 'potion' || r.kind === 'story' ? 'Сварить' : 'Изготовить', {
                 primary: canCraft, accent: canCraft ? p.color : null, fontSize: UI.type.body,
                 onPress: () => { if (this.modal?.scroll?.canTap()) this.craftRecipe(r.id); },
               });

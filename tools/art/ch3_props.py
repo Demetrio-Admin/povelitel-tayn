@@ -514,3 +514,99 @@ def thicket_tile(w=256, h=160):
         for k in (-1, 0, 1):
             canvas.alpha_composite(pic, (x + k * w, h - pic.height - (0 if scale == 1.0 else 6))) if -pw < x + k * w < w else None
     return sparkle(canvas, seed=4, n=14)
+
+
+# ============================================================================ garden of Vetla and companions
+def _textured(mask_img, tex, mul=1.0, tint_rgb=None):
+    """Fill the non-transparent area of mask_img with a (tiled) texture, optionally darkened/tinted."""
+    w, h = mask_img.size
+    t = Image.new('RGBA', (w, h))
+    for ty in range(0, h, tex.height):
+        for tx in range(0, w, tex.width):
+            t.paste(tex, (tx, ty))
+    arr = np.asarray(t).astype(np.float32)
+    arr[:, :, :3] *= mul
+    if tint_rgb is not None:
+        arr[:, :, :3] = arr[:, :, :3] * 0.7 + np.array(tint_rgb, np.float32) * 0.3
+    arr[:, :, 3] = np.asarray(mask_img.split()[3])
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), 'RGBA')
+
+
+def garden_bed(kind):
+    """A raised bed of the Vetla garden: plank frame, dark soil, and what grows in it (kind: leaf / bark / spark / moon)."""
+    from ch3_trees import sapling
+    w, h = 170, 130
+    cx = w / 2
+    wood = src('chapter2/wood_floor.webp').resize((128, 128), Image.LANCZOS)
+    soil = src('chapter2/grave_ground.webp').resize((128, 128), Image.LANCZOS)
+    shadow = Canvas(w, h)
+    shadow.ellipse(cx, h - 12, 76, 13, hexrgb('#000000', 80))
+    out = shadow.result()
+    # back rim, soil, front planks (drawn as flat masks, then textured)
+    back = Canvas(w, h)
+    back.poly([(10, h - 50), (w - 10, h - 50), (w - 4, h - 70), (4, h - 70)], hexrgb('#ffffff'))
+    top = Canvas(w, h)
+    top.poly([(14, h - 52), (w - 14, h - 52), (w - 9, h - 68), (9, h - 68)], hexrgb('#ffffff'))
+    front = Canvas(w, h)
+    front.poly([(8, h - 50), (w - 8, h - 50), (w - 8, h - 16), (8, h - 16)], hexrgb('#ffffff'))
+    left = Canvas(w, h)
+    left.poly([(8, h - 52), (16, h - 60), (16, h - 26), (8, h - 18)], hexrgb('#ffffff'))
+    soil_mask = Canvas(w, h)
+    soil_mask.poly([(16, h - 52), (w - 16, h - 52), (w - 11, h - 67), (11, h - 67)], hexrgb('#ffffff'))
+    out.alpha_composite(outline(_textured(back.result(), wood, 0.62), (44, 30, 22), px=2, soft=0.4))
+    out.alpha_composite(_textured(soil_mask.result(), soil, 0.52, (60, 44, 30)))
+    plants = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    base_y = h - 58
+    if kind == 'leaf':
+        sp = glass_sprig()
+        sp = fit_h(sp, 74)
+        plants.alpha_composite(sp, (int(cx - sp.width / 2), base_y - sp.height + 6))
+    elif kind == 'bark':
+        sp = sapling(seed=7, w=120, h=150)
+        sp = fit_h(sp, 84)
+        plants.alpha_composite(sp, (int(cx - sp.width / 2), base_y - sp.height + 6))
+    elif kind == 'spark':
+        c = Canvas(w, h)
+        rnd = random.Random(12)
+        for i, (dx, dy, r) in enumerate([(-30, 26, 6), (-6, 40, 8), (22, 30, 6), (40, 50, 5), (-48, 46, 5)]):
+            c.line([(cx + dx, base_y), (cx + dx + rnd.uniform(-3, 3), base_y - dy + 6)], hexrgb('#6f9a52'), 2.4)
+            c.ellipse(cx + dx, base_y - dy, r + 2, r + 2, hexrgb('#ffe9b4', 235))
+            c.ellipse(cx + dx - 1, base_y - dy - 1, r * 0.5, r * 0.5, hexrgb('#ffffff'))
+        plants = glow(outline(c.result(), (70, 50, 24), px=1, soft=0.4), (255, 200, 110), radius=7, strength=0.8)
+    else:   # moon
+        cr = src('chapter2/ice_crystal.webp')
+        cr = gradient_map(cr, [(0, (46, 40, 90)), (0.5, (160, 150, 232)), (1, (250, 246, 255))], amount=0.9)
+        cr = fit_h(trim(cr, 1), 62)
+        plants.alpha_composite(cr, (int(cx - cr.width / 2), base_y - cr.height + 10))
+        plants = glow(plants, (190, 170, 255), radius=6, strength=0.5)
+    out.alpha_composite(plants)
+    out.alpha_composite(outline(_textured(front.result(), wood, 0.9), (44, 30, 22), px=2, soft=0.4))
+    # plank seams on the front face
+    seams = Canvas(w, h)
+    for x in (w * 0.34, w * 0.67):
+        seams.line([(x, h - 50), (x, h - 16)], hexrgb('#3a2616', 200), 1.6)
+    seams.line([(8, h - 33), (w - 8, h - 33)], hexrgb('#3a2616', 140), 1.2)
+    sl = seams.result()
+    sa = np.minimum(np.asarray(sl.split()[3]).astype(np.float32), np.asarray(front.result().split()[3]).astype(np.float32))
+    arr = np.asarray(sl).astype(np.float32); arr[:, :, 3] = sa
+    out.alpha_composite(Image.fromarray(arr.astype(np.uint8), 'RGBA'))
+    return trim(out, 1)
+
+
+def companion_robin():
+    s = trim(src('forest/life-bird-3.webp'), 1)
+    return s
+
+
+def companion_fox():
+    s = src('chapter2/frost_critter.webp')
+    warm = gradient_map(s, [(0, (74, 36, 18)), (0.35, (168, 82, 34)), (0.7, (236, 140, 62)), (1, (255, 238, 214))])
+    return trim(blend_masked(s, warm, np.ones(s.size[::-1], np.float32) * 0.92), 1)
+
+
+def icon_companion(kind):
+    s = companion_robin() if kind == 'robin' else companion_fox()
+    s = fit_w(s, 118) if s.width >= s.height else fit_h(s, 118)
+    c = Image.new('RGBA', (128, 128), (0, 0, 0, 0))
+    c.alpha_composite(s, ((128 - s.width) // 2, (128 - s.height) // 2))
+    return trim(outline(glow(c, (255, 226, 160), radius=6, strength=0.4), (44, 34, 30), px=1.5, soft=0.5), 2)

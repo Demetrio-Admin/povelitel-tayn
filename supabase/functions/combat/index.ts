@@ -238,6 +238,13 @@ var STORY_ITEMS = {
     purpose: "\u041F\u043E\u043C\u043E\u0436\u0435\u0442 \u0434\u0443\u0445\u0443 \u0440\u043E\u0449\u0438 \u0443\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0451\u043D\u043D\u043E\u0435 \u0438\u043C\u044F. \u041E\u0442\u0434\u0430\u0442\u044C \u0411\u0435\u0437\u044B\u043C\u044F\u043D\u043D\u043E\u0439, \u043A\u043E\u0433\u0434\u0430 \u0443\u0437\u043D\u0430\u0435\u0442\u0435 \u0438\u043C\u044F."
   }
 };
+Object.assign(STORY_ITEMS, {
+  garden_deed_1: { name: "\u0413\u0440\u0430\u043C\u043E\u0442\u0430 \u0421\u0430\u0434\u0430 I", icon: "icon_vetla_seed", color: 10217632, purpose: "\u0421\u0435\u043C\u044F \u0432\u0435\u0442\u043B\u044B \u043F\u043E\u0441\u0430\u0436\u0435\u043D\u043E: \u0433\u0440\u044F\u0434\u043A\u0430 \u0441\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u044B\u0445 \u043B\u0438\u0441\u0442\u044C\u0435\u0432 \u0440\u0430\u0441\u0442\u0451\u0442 \u0441\u0430\u043C\u0430." },
+  garden_deed_2: { name: "\u0413\u0440\u0430\u043C\u043E\u0442\u0430 \u0421\u0430\u0434\u0430 II", icon: "icon_willow_bark", color: 11770486, purpose: "\u0412\u0442\u043E\u0440\u0430\u044F \u0433\u0440\u044F\u0434\u043A\u0430: \u0438\u0432\u043E\u0432\u0430\u044F \u043A\u043E\u0440\u0430." },
+  garden_deed_3: { name: "\u0413\u0440\u0430\u043C\u043E\u0442\u0430 \u0421\u0430\u0434\u0430 III", icon: "icon_memory_spark", color: 15980964, purpose: "\u0414\u0432\u0435 \u0440\u0435\u0434\u043A\u0438\u0435 \u0433\u0440\u044F\u0434\u043A\u0438: \u0438\u0441\u043A\u0440\u044B \u043F\u0430\u043C\u044F\u0442\u0438 \u0438 \u043B\u0443\u043D\u043D\u044B\u0435 \u043E\u0441\u043A\u043E\u043B\u043A\u0438." },
+  companion_robin: { name: "\u0421\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u0430\u044F \u043C\u0430\u043B\u0438\u043D\u043E\u0432\u043A\u0430", icon: "icon_companion_robin", color: 16757611, purpose: "\u0421\u043F\u0443\u0442\u043D\u0438\u043A: \u0431\u0435\u0436\u0438\u0442 \u0437\u0430 \u0432\u0430\u043C\u0438 \u043F\u043E \u043C\u0438\u0440\u0443. \u041F\u043E\u0437\u0432\u0430\u0442\u044C \u0438\u043B\u0438 \u043E\u0442\u043F\u0443\u0441\u0442\u0438\u0442\u044C \u2014 \u0443 \u0418\u0432\u044B \u0438\u043B\u0438 \u0443 \u041C\u0438\u0440\u0440\u044B." },
+  companion_fox: { name: "\u041B\u0438\u0441\u0451\u043D\u043E\u043A \u0440\u043E\u0449\u0438", icon: "icon_companion_fox", color: 16751178, purpose: "\u0421\u043F\u0443\u0442\u043D\u0438\u043A: \u0431\u0435\u0436\u0438\u0442 \u0437\u0430 \u0432\u0430\u043C\u0438 \u043F\u043E \u043C\u0438\u0440\u0443. \u041F\u043E\u0437\u0432\u0430\u0442\u044C \u0438\u043B\u0438 \u043E\u0442\u043F\u0443\u0441\u0442\u0438\u0442\u044C \u2014 \u0443 \u0418\u0432\u044B \u0438\u043B\u0438 \u0443 \u041C\u0438\u0440\u0440\u044B." }
+});
 var STORY_USES = {
   lunar_wick: {
     requires: ["lunar_quest_start"],
@@ -1955,6 +1962,11 @@ var GROVE_OBJECT_LIST = [
   { id: "gg_cauldron", kind: "alchemy", ...G(880, 2500), texture: "cauldron_01", collide: { w: 66, h: 26 }, radius: 120, requiresEvent: "ch3_iva_met", hint: "\u041E\u0441\u0442\u044B\u0432\u0448\u0438\u0439 \u043A\u043E\u0442\u0451\u043B \u0418\u0432\u044B" },
   { id: "gg_spark_1", kind: "gather", res: "memory_spark", amount: 1, respawnSec: 900, ...G(300, 3060), texture: "memory_spark_node", radius: 90, requiresEvent: "ch3_dam_open" },
   { id: "gg_leaf_1", kind: "gather", res: "glass_leaf", amount: 1, respawnSec: 300, ...G(1300, 2620), texture: "glass_leaf_node", radius: 90, requiresEvent: "ch3_dam_open" },
+  // v0.40: Сад Ветлы — четыре грядки (проявляются по грамотам, см. recipes.js garden_*); долгий возврат урожая, без боя и без монет
+  { id: "gg_bed_leaf", kind: "gather", res: "glass_leaf", amount: 2, respawnSec: 21600, ...G(680, 2760), texture: "garden_bed_leaf", radius: 100, requiresEvent: "garden_planted" },
+  { id: "gg_bed_bark", kind: "gather", res: "willow_bark", amount: 2, respawnSec: 21600, ...G(800, 2760), texture: "garden_bed_bark", radius: 100, requiresEvent: "garden_grown_2" },
+  { id: "gg_bed_spark", kind: "gather", res: "memory_spark", amount: 1, respawnSec: 43200, ...G(680, 2870), texture: "garden_bed_spark", radius: 100, requiresEvent: "garden_grown_3" },
+  { id: "gg_bed_moon", kind: "gather", res: "lunar_shard", amount: 1, respawnSec: 86400, ...G(800, 2870), texture: "garden_bed_moon", radius: 100, requiresEvent: "garden_grown_3" },
   { id: "gg_leaf_2", kind: "gather", res: "glass_leaf", amount: 1, respawnSec: 300, ...G(620, 3040), texture: "glass_leaf_node", radius: 90, requiresEvent: "ch3_dam_open" },
   {
     id: "gg_cache",
@@ -3581,6 +3593,68 @@ Object.assign(RECIPES, {
     learn: "\u0420\u0435\u0446\u0435\u043F\u0442 \u043F\u043E\u043C\u043D\u0438\u0442 \u0434\u0443\u0445 \u0440\u043E\u0449\u0438 \u043D\u0430 \u0421\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u043E\u0439 \u043E\u043F\u0443\u0448\u043A\u0435."
   }
 });
+Object.assign(RECIPES, {
+  garden_plant: {
+    kind: "garden",
+    chapter: 3,
+    result: "garden_deed_1",
+    amount: 1,
+    needs: { vetla_seed: 1, coins: 1e3, glass_leaf: 3 },
+    requires: ["chapter_3_complete"],
+    crafted: "garden_planted",
+    blockedBy: ["garden_planted"],
+    where: "\u043B\u044E\u0431\u043E\u0439 \u043A\u043E\u0442\u0451\u043B",
+    learn: "\u041F\u043E\u0441\u0430\u0434\u0438\u0442\u044C \u0421\u0435\u043C\u044F \u0432\u0435\u0442\u043B\u044B \u043C\u043E\u0436\u043D\u043E \u043F\u043E\u0441\u043B\u0435 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u0434\u043E\u043C\u043E\u0439."
+  },
+  garden_grow_2: {
+    kind: "garden",
+    chapter: 3,
+    result: "garden_deed_2",
+    amount: 1,
+    needs: { coins: 5e3, glass_leaf: 8, memory_spark: 2 },
+    requires: ["garden_planted"],
+    crafted: "garden_grown_2",
+    blockedBy: ["garden_grown_2"],
+    where: "\u043B\u044E\u0431\u043E\u0439 \u043A\u043E\u0442\u0451\u043B",
+    learn: "\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u043F\u043E\u0441\u0430\u0434\u0438\u0442\u0435 \u0421\u0435\u043C\u044F \u0432\u0435\u0442\u043B\u044B."
+  },
+  garden_grow_3: {
+    kind: "garden",
+    chapter: 3,
+    result: "garden_deed_3",
+    amount: 1,
+    needs: { coins: 15e3, glass_leaf: 15, memory_spark: 5, willow_bark: 6 },
+    requires: ["garden_grown_2"],
+    crafted: "garden_grown_3",
+    blockedBy: ["garden_grown_3"],
+    where: "\u043B\u044E\u0431\u043E\u0439 \u043A\u043E\u0442\u0451\u043B",
+    learn: "\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0440\u0430\u0441\u0442\u0438\u0442\u0435 \u0432\u0442\u043E\u0440\u0443\u044E \u0433\u0440\u044F\u0434\u043A\u0443."
+  },
+  companion_robin: {
+    kind: "companion",
+    chapter: 3,
+    result: "companion_robin",
+    amount: 1,
+    needs: { coins: 3e3, glass_leaf: 6, memory_spark: 1 },
+    requires: ["chapter_3_complete"],
+    crafted: "companion_robin_owned",
+    blockedBy: ["companion_robin_owned"],
+    where: "\u043B\u044E\u0431\u043E\u0439 \u043A\u043E\u0442\u0451\u043B",
+    learn: "\u041C\u0430\u043B\u0438\u043D\u043E\u0432\u043A\u0430 \u043F\u0440\u0438\u043B\u0435\u0442\u0438\u0442 \u043F\u043E\u0441\u043B\u0435 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u0434\u043E\u043C\u043E\u0439."
+  },
+  companion_fox: {
+    kind: "companion",
+    chapter: 3,
+    result: "companion_fox",
+    amount: 1,
+    needs: { coins: 6e3, glass_leaf: 10, memory_spark: 2 },
+    requires: ["chapter_3_complete"],
+    crafted: "companion_fox_owned",
+    blockedBy: ["companion_fox_owned"],
+    where: "\u043B\u044E\u0431\u043E\u0439 \u043A\u043E\u0442\u0451\u043B",
+    learn: "\u041B\u0438\u0441\u0451\u043D\u043E\u043A \u0432\u044B\u0439\u0434\u0435\u0442 \u0438\u0437 \u0440\u043E\u0449\u0438 \u043F\u043E\u0441\u043B\u0435 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u0434\u043E\u043C\u043E\u0439."
+  }
+});
 var RECIPE_ORDER = Object.keys(RECIPES).filter((id) => !["elixir_life", "elixir_mana", "crystal_guard"].includes(id));
 var POTION_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "potion");
 var STORY_RECIPES = RECIPE_ORDER.filter((id) => RECIPES[id].kind === "story");
@@ -3792,6 +3866,39 @@ var DAILY_POOL = {
     goal: { type: "wins", spawns: ["gy_wisp_1", "gy_wisp_2"], count: 2 },
     requires: "chapter_2_complete",
     reward: { heroXP: 55, coins: 35, items: { rune_dust: 2 } }
+  },
+  // v0.40: заказы рощи (после главы III) — тратят лишние материалы рощи, которые нельзя продать, и дают повод вернуться в рощу
+  grove_leaf_order: {
+    giver: "\u041D\u044D\u0440\u0438\u0441, \u0440\u043E\u0449\u0430",
+    title: "\u0421\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u044B\u0435 \u043B\u0438\u0441\u0442\u044C\u044F \u0434\u043B\u044F \u043E\u043F\u044B\u0442\u043E\u0432",
+    text: "\u041D\u044D\u0440\u0438\u0441 \u0440\u0430\u0437\u0431\u0438\u0440\u0430\u0435\u0442, \u0438\u0437 \u0447\u0435\u0433\u043E \u0441\u0434\u0435\u043B\u0430\u043D\u0430 \u0441\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u0430\u044F \u0442\u0438\u0448\u0438\u043D\u0430. \u0415\u0439 \u043D\u0443\u0436\u043D\u044B \u0442\u0440\u0438 \u0441\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u044B\u0445 \u043B\u0438\u0441\u0442\u0430.",
+    goal: { type: "deliver", items: { glass_leaf: 3 } },
+    requires: "chapter_3_complete",
+    reward: { heroXP: 45, coins: 40, items: { rune_dust: 1 } }
+  },
+  grove_bark_order: {
+    giver: "\u041C\u0438\u0440\u0440\u0430",
+    title: "\u0418\u0432\u043E\u0432\u0430\u044F \u043A\u043E\u0440\u0430 \u0434\u043B\u044F \u0434\u043E\u043C\u0430\u0448\u043D\u0438\u0445 \u043E\u0442\u0432\u0430\u0440\u043E\u0432",
+    text: "\u041C\u0438\u0440\u0440\u0430 \u0441\u0443\u0448\u0438\u0442 \u0438\u0432\u043E\u0432\u0443\u044E \u043A\u043E\u0440\u0443 \u0434\u043B\u044F \u0437\u0438\u043C\u043D\u0438\u0445 \u043D\u0430\u0441\u0442\u043E\u0435\u0432. \u041F\u0440\u0438\u043D\u0435\u0441\u0438 \u0442\u0440\u0438 \u043A\u0443\u0441\u043A\u0430 \u2014 \u0432\u0437\u0430\u043C\u0435\u043D \u043F\u043E\u043B\u0443\u0447\u0438\u0448\u044C \u0441\u043C\u043E\u043B\u0443 \u0434\u043B\u044F \u0444\u0430\u043A\u0435\u043B\u043E\u0432.",
+    goal: { type: "deliver", items: { willow_bark: 3 } },
+    requires: "chapter_3_complete",
+    reward: { heroXP: 45, coins: 40, items: { tree_resin: 2 } }
+  },
+  grove_spark_order: {
+    giver: "\u0418\u043B\u0430\u0440\u0438\u044F, \u0410\u0440\u0445\u0438\u0432",
+    title: "\u0418\u0441\u043A\u0440\u044B \u043F\u0430\u043C\u044F\u0442\u0438 \u0434\u043B\u044F \u0437\u0430\u043F\u0438\u0441\u0435\u0439",
+    text: "\u0410\u0440\u0445\u0438\u0432 \u0445\u043E\u0447\u0435\u0442 \u0437\u0430\u043F\u0438\u0441\u0430\u0442\u044C, \u0447\u0442\u043E \u0432\u0441\u043F\u043E\u043C\u043D\u0438\u043B\u0430 \u0440\u043E\u0449\u0430. \u0414\u043B\u044F \u0437\u0430\u043F\u0438\u0441\u0435\u0439 \u043D\u0443\u0436\u043D\u044B \u0434\u0432\u0435 \u0438\u0441\u043A\u0440\u044B \u043F\u0430\u043C\u044F\u0442\u0438.",
+    goal: { type: "deliver", items: { memory_spark: 2 } },
+    requires: "chapter_3_complete",
+    reward: { heroXP: 55, coins: 40, items: { ice_crystal: 1 } }
+  },
+  hunt_glass: {
+    giver: "\u041D\u044D\u0440\u0438\u0441, \u0440\u043E\u0449\u0430",
+    title: "\u0421\u0442\u0435\u043A\u043B\u043E \u0441\u043D\u043E\u0432\u0430 \u0442\u0440\u0435\u0441\u043A\u0430\u0435\u0442\u0441\u044F",
+    text: "\u0412 \u0440\u043E\u0449\u0435 \u043E\u043F\u044F\u0442\u044C \u0442\u0440\u0435\u0441\u043A\u0430\u044E\u0442\u0441\u044F \u0441\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u044B\u0435 \u0437\u0432\u0435\u0440\u0438. \u041D\u044D\u0440\u0438\u0441 \u043F\u0440\u043E\u0441\u0438\u0442 \u043E\u0431\u043E\u0439\u0442\u0438 \u0442\u0440\u043E\u0438\u0445 \u0438 \u043F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C, \u0447\u0442\u043E \u0442\u0438\u0448\u0438\u043D\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430\u0441\u044C.",
+    goal: { type: "wins", spawns: ["gb_stoat_1", "gb_stoat_2", "ge_echo_1", "ge_echo_2", "gg_wolf_1", "gg_wolf_2"], count: 3 },
+    requires: "chapter_3_complete",
+    reward: { heroXP: 60, coins: 40, items: { lunar_shard: 1 } }
   }
 };
 for (const o of Object.values(DAILY_POOL)) o.reward = { ...o.reward, sapphires: DAILY.sapphires };
@@ -5513,6 +5620,8 @@ var MSG = {
   FINAL_SCREEN: "ui:final",
   // v0.10.0: ({ outcome, reward }) — финал первой главы
   UNLOCK_SEAL: "story:unlock-seal",
+  COMPANION_CHANGED: "cosmetic:companion",
+  // v0.40: выбран/отпущен спутник (диалог) — сцена пересоздаёт его
   CHAPTER_FINALE: "story:chapter-finale",
   // v0.22.0: (номер главы) — итоговое окно главы
   UNLOCK_GIFT: "story:unlock-gift",

@@ -1,6 +1,6 @@
 import { GAME_TITLE } from '../config/branding.js';
 
-const witchFlight = new URL('../assets/loading/witch-flight.webp', import.meta.url).href;
+const witchFlight = new URL('../assets/loading/witch-flight-mystic-v2.webp', import.meta.url).href;
 
 let screen = null;
 

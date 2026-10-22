@@ -1,0 +1,17 @@
+{
+  "source": "ImageGen adult witch concept, 22 October 2026",
+  "reference": "User screenshot image(20261022-155409).png (palette, placement and direction only)",
+  "source_sha256": "d107aa9f82d7982ed9cba80a5b0ab3241f3013e951f969eb06b791ef228d6ed5",
+  "source_size": [
+    1536,
+    1024
+  ],
+  "output": "witch-flight-mystic-v2.webp",
+  "output_sha256": "a35e78880ca6b7a80950c8218447a99ba6ddfce0935bf00ccf6e7e851a89c9eb",
+  "output_size": [
+    960,
+    640
+  ],
+  "transparent": true,
+  "processing": "Uniform Lanczos downsample; WebP quality 90, alpha preserved."
+}

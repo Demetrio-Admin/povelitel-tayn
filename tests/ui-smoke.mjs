@@ -244,10 +244,29 @@ await mute(async () => {
     // смена цели — временное уведомление, без повтора на каждом обновлении
     h.goalBanner?.destroy(); h.goalBanner = null;
     h.refreshQuest(); ok(!h.goalBanner, 'обычное обновление HUD не показывает уведомление');
-    h.lastObjective = 'Прежняя цель'; h.refreshQuest();   // цель сменилась (как после события мира)
+    h.lastObjective = 'Прежняя цель (1/3)'; h.refreshQuest();   // изменился только счётчик в том же шаге
+    ok(!h.goalBanner, 'счётчик «(1/3)» внутри шага не вызывает уведомление «Новая цель»');
+    h.lastObjective = 'Прежняя цель'; h.lastObjectiveStep = 'old_step'; h.refreshQuest();   // шаг сменился (как после события мира)
     const banner = h.goalBanner;
     ok(banner && banner.bannerText === sv.quests.objectiveText(), 'смена цели → короткое уведомление «Новая цель»');
     h.refreshQuest(); ok(h.goalBanner === banner, 'повторное обновление не создаёт второе уведомление');
+
+    // сообщения «не хватает…» лежат выше окон и меню
+    {
+      h.toasts.forEach(t => t.destroy()); h.toasts = [];
+      h.openModal({ title: 'Окно', text: 'Текст', buttons: [{ label: 'Ок', primary: true }] });
+      h.toast('Не хватает: Лунная трава 1/3');
+      const t = h.toasts[h.toasts.length - 1];
+      ok(h.modal && t && t.depth > h.modal.container.depth, 'сообщение лежит выше открытого окна (' + t?.depth + ' > ' + h.modal?.container?.depth + ')');
+      ok(t.y < 200, 'при открытом окне сообщение — у верхнего края, а не под колонкой кнопок (y=' + Math.round(t.y) + ')');
+      h.closeModal(null);
+      h.openMenu();
+      h.toast('Не хватает маны: 3 / 8.');
+      const m = h.toasts[h.toasts.length - 1];
+      ok(h.modal?.menu && m.depth > 9500, 'сообщение лежит выше меню (' + m.depth + ')');
+      h.closeMenu?.();
+      h.toasts.forEach(x => x.destroy()); h.toasts = [];
+    }
 
     // меню: шесть пунктов в порядке, без общей надписи «В разработке»
     h.menuBtn.hit.emit('pointerdown');

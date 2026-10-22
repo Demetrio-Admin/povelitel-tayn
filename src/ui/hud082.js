@@ -157,6 +157,7 @@ export const hud082 = {
   // ================================================================== временное уведомление о цели
   showGoalBanner(text, title = 'Новая цель') {
     if (!text || this.mode === 'combat') return;
+    services.guidance?.hush();
     this.goalBanner?.destroy();
     const w = UI.side.x - UI.side.hitW / 2 - 8 - 20;      // слева от колонки Журнал/Меню
     const cx = 20 + w / 2;

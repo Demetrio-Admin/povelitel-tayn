@@ -291,7 +291,7 @@ export const windows08 = {
     const miss = services.alchemy.missing(id);
     if (miss.length) {   // заранее, без запроса: понятная нехватка
       services.audio.play('locked');
-      this.toast('Не хватает: ' + miss.map(m => `${m.name} ${m.have}/${m.need}`).join(', '), COLORS.danger);
+      this.toast('Не хватает: ' + miss.map(m => `${m.name} ${m.have}/${m.need}`).join(', ') + (RESOURCE_WHERE[miss[0].id] ? `.\nГде взять ${String(miss[0].name).toLowerCase()}: ${RESOURCE_WHERE[miss[0].id]}` : ''), COLORS.danger);
       return;
     }
     const res = await services.actions.craft(id);

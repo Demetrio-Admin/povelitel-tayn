@@ -45,6 +45,8 @@ const H = VIEW.height;
 const BAR_Y = 1096;          // верх зоны нижних кнопок (касания ниже — только кнопки)
 const BTN_Y = UI.dock.buttonY;
 const BTN_R = 58;
+const TOAST_DEPTH = 20000;   // сообщения («не хватает…») лежат выше окон (10000), меню (9400+) и всего остального
+const TOAST_TOP_OVER_MODAL = 24;   // верх стопки, когда открыто окно или меню
 const SWAP_MS = 170;         // длительность плавной смены вкладки в окне
 const hex = c => '#' + c.toString(16).padStart(6, '0');
 const fmtTime = (ms) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
@@ -356,10 +358,14 @@ export class UIScene extends Phaser.Scene {
     const text = services.quests.objectiveText();
     const prev = this.lastObjective;
     this.lastObjective = text;
+    // плашка «Новая цель» — только при смене шага; счётчики вроде «(2/3)» её не вызывают
+    const stepId = services.quests.currentStep().id;
+    const stepChanged = this.lastObjectiveStep !== undefined && this.lastObjectiveStep !== stepId;
+    this.lastObjectiveStep = stepId;
     this.hintPlate?.setVisible(this.mode !== 'combat' && !!this.hintText?.text);
     this.refreshV08Hud();
     this.layoutHint();
-    if (prev && prev !== text && this.mode !== 'combat') {
+    if (prev && prev !== text && stepChanged && this.mode !== 'combat') {
       services.audio.play('quest_update', { minGap: 600 });
       this.showGoalBanner(text);
     }
@@ -441,11 +447,17 @@ export class UIScene extends Phaser.Scene {
     this.updateDialogue(delta);
 
     // тосты
-    let toastTop = this.questBottom || this.fieldTop();
+    let toastTop = this.toastBaseY();
     this.toasts.forEach(t => {
-      const targetY = (this.mode === 'combat' ? 440 : toastTop) + t.toastHeight / 2;
+      const targetY = (this.mode === 'combat' && !this.modal ? 440 : toastTop) + t.toastHeight / 2;
       t.y += (targetY - t.y) * 0.25; toastTop += t.toastHeight + 12;
     });
+  }
+
+  /** Верх стопки сообщений. Поверх окна и меню — у верхнего края экрана (над затемнением), иначе под колонкой Журнал/Меню. */
+  toastBaseY() {
+    if (this.modal) return TOAST_TOP_OVER_MODAL;
+    return this.mode === 'combat' ? 440 : (this.questBottom || this.fieldTop());
   }
 
   // ================================================================== тосты и награды
@@ -456,20 +468,20 @@ export class UIScene extends Phaser.Scene {
     if (this.lastToast && this.lastToast.text === text && now - this.lastToast.t < 1500) return;
     this.lastToast = { text, t: now };
     const label = this.add.text(-30, 0, text, { fontFamily: FONT, fontSize: UI.type.body, color: hex(color), align: 'center', wordWrap: { width: 536 }, shadow: SH }).setOrigin(0.5);
-    if (this.mode === 'combat') {
+    if (this.mode === 'combat' && !this.modal) {
       this.toasts.forEach(t => t.destroy());
       this.toasts = []; // one readable notification below the warning, never over the potion lane
     }
     const height = Math.max(72, label.height + 24), width = Math.min(660, label.width + 112);
-    const y = this.mode === 'combat' ? 440 + height / 2 : (this.questBottom || this.fieldTop()) + height / 2 + this.toasts.reduce((sum, t) => sum + t.toastHeight + 12, 0);
+    const y = (this.mode === 'combat' && !this.modal ? 440 : this.toastBaseY()) + height / 2 + this.toasts.reduce((sum, t) => sum + t.toastHeight + 12, 0);
     const bg = drawPlate(this.add.graphics(), width, height, { accent: color, fill: 0x120d0b, alpha: 0.9 });
-    const c = this.add.container(W / 2, y, [bg, label]).setDepth(9000).setAlpha(0);
+    const c = this.add.container(W / 2, y, [bg, label]).setDepth(TOAST_DEPTH).setAlpha(0);
     c.toastHeight = height;
     addNoticeClose(this, c, () => this.dropToast(c), { x: width / 2 - 36 });
     this.toasts.push(c);
     if (this.toasts.length > 4) this.dropToast(this.toasts[0]);
     this.tweens.add({ targets: c, alpha: 1, duration: 160 });
-    this.time.delayedCall(2600 + text.length * 25, () => this.dropToast(c));
+    this.time.delayedCall(2600 + text.length * 25 + (color === COLORS.danger ? 1400 : 0), () => this.dropToast(c));
   }
 
   dropToast(c) {

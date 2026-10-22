@@ -7,6 +7,7 @@
 // Pivot всех объектов мира — нижний центр (origin 0.5, 1). Размер на экране задаётся DISPLAY_SIZE,
 // поэтому исходники можно делать крупнее (например 512×512).
 
+import { ROOM_FILES } from './city.rooms.js';
 import { CHAPTER2_FILES, CHAPTER2_SIZES } from './chapter2.art.generated.js';
 import { CITY_INTERIOR_FILES, CITY_INTERIOR_SIZES } from './city.interiors.generated.js';
 import { CITY_FINAL_FILES, CITY_FINAL_SIZES } from './city.final.art.js';
@@ -16,6 +17,7 @@ import { NEIGHBORHOOD_FILES, NEIGHBORHOOD_SIZES } from './city.neighborhoods.art
 import { CHAPTER3_FILES, CHAPTER3_SIZES } from './chapter3.art.generated.js';
 
 export const ASSET_FILES = {
+  ...ROOM_FILES,
   icon_storm: 'assets/ui/storm.svg',
   welcome_cover: 'assets/ui/welcome-cover-v1.webp',
   welcome_settings: 'assets/ui/welcome-settings.svg',

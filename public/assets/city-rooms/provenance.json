@@ -1,0 +1,82 @@
+{
+  "warehouse_a": {
+    "concept": "docs/design/city-interiors/warehouse-a-approved.png",
+    "source_sha256": "fae0710ec2c86ba7e8ee38ffce341033d971d60285b74e57fb2fa4fd0b60abc3",
+    "size": [
+      853,
+      1844
+    ],
+    "file": "warehouse_a-v1.webp",
+    "workflow": "ImageGen clean plate from approved concept; actors and UI removed; WebP encoding only"
+  },
+  "warehouse_b": {
+    "concept": "docs/design/city-interiors/warehouse-b-approved.png",
+    "source_sha256": "40902a926a3961b3ab344d942d54f3234a1f58e126b4f90ff74d32e517659ca3",
+    "size": [
+      853,
+      1844
+    ],
+    "file": "warehouse_b-v1.webp",
+    "workflow": "ImageGen clean plate from approved concept; actors and UI removed; WebP encoding only"
+  },
+  "bank": {
+    "concept": "docs/design/city-interiors/bank-approved.png",
+    "source_sha256": "546c01050a3e2855ee80d14fc3027e59793b7569096f4b7d40e7d2768a6e574c",
+    "size": [
+      853,
+      1844
+    ],
+    "file": "bank-v1.webp",
+    "workflow": "ImageGen clean plate from approved concept; actors and UI removed; WebP encoding only"
+  },
+  "archive": {
+    "concept": "docs/design/city-interiors/archive-approved.png",
+    "source_sha256": "4acf0ce297414ea3f6ab12950e5ad5f1e2c984a7e6e1b798df645e69f08e275c",
+    "size": [
+      853,
+      1844
+    ],
+    "file": "archive-v1.webp",
+    "workflow": "ImageGen clean plate from approved concept; actors and UI removed; WebP encoding only"
+  },
+  "society": {
+    "concept": "docs/design/city-interiors/society-approved.png",
+    "source_sha256": "804bee35b1da46d52d12a8e709de8536d4c86ff3a8fb68c786a07288b63ebe50",
+    "size": [
+      853,
+      1844
+    ],
+    "file": "society-v1.webp",
+    "workflow": "ImageGen clean plate from approved concept; actors and UI removed; WebP encoding only"
+  },
+  "lab": {
+    "concept": "docs/design/city-interiors/lab-approved.png",
+    "source_sha256": "8f7e9f4a9131abeb8c9bdac31bd191cb148c3daf0b92e5c37321f4b793c27d13",
+    "size": [
+      853,
+      1844
+    ],
+    "file": "lab-v1.webp",
+    "workflow": "ImageGen clean plate from approved concept; actors and UI removed; WebP encoding only"
+  },
+  "duel": {
+    "concept": "docs/design/city-interiors/duel-approved.png",
+    "source_sha256": "f27a8f0309c307055c983262b02db5185a8f3915228ad8540787271d03c299b8",
+    "size": [
+      853,
+      1844
+    ],
+    "file": "duel-v1.webp",
+    "workflow": "ImageGen clean plate from approved concept; actors and UI removed; WebP encoding only"
+  },
+  "coven": {
+    "concept": "docs/design/city-interiors/coven-approved.png",
+    "source_sha256": "43c6703de1062dead3f6b2fbf198aae1ec94fd0a0fa98774b14d71f496043cb1",
+    "size": [
+      853,
+      1844
+    ],
+    "file": "coven-v1.webp",
+    "workflow": "ImageGen clean plate from approved concept; actors and UI removed; WebP encoding only"
+  }
+}

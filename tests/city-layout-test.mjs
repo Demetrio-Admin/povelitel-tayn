@@ -1,7 +1,7 @@
 // v0.37.0: walkable town (plan v4) — geometry, approaches, story gates and the one-time save migration.
 import assert from 'node:assert/strict';
 import { INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
-import { CITY_ROOMS, CITY_PORTALS, BUILDINGS, CITY_RECT, CITY_POSITIONS, CITY_SPOTS, CITY_ADMIN_POINTS, CITY_LAYOUT_VERSION,
+import { CITY_ROOMS, CITY_PORTALS, BUILDINGS, CITY_RECT, CITY_POSITIONS, CITY_SPOTS, CITY_ADMIN_POINTS, CITY_LAYOUT_VERSION, LEGACY_ROOM_RECTS,
   V3_CITY, CITY_CANAL, cityPoint, cityArrival, cityMapData } from '../src/config/city.plan.js';
 import { CITY_START } from '../src/config/world.city.js';
 import { ADMIN_CHECKPOINTS } from '../src/admin/config.js';
@@ -121,10 +121,26 @@ for(const b of BUILDINGS.filter(b=>!b.id.startsWith('north_'))){
   assert.deepEqual(exit.target,{x:b.door.x,y:b.door.y+100},'exit returns to its own house: '+b.id);
   assert.equal(locationAt(exit.target.x,exit.target.y).id,'city');
 }
-assert.equal(CITY_ROOMS.length,9);
+assert.equal(CITY_ROOMS.length,10);
 assert.equal(CITY_PORTALS.filter(o=>o.id.startsWith('door_warehouse')).length,2);
-assert.equal(objects.find(o=>o.id==='door_warehouse_a').room,objects.find(o=>o.id==='door_warehouse_b').room);
-assert.equal(objects.find(o=>o.id==='npc_banker').x,10560);
+assert.notEqual(objects.find(o=>o.id==='door_warehouse_a').room,objects.find(o=>o.id==='door_warehouse_b').room);
+assert.equal(locationAt(byId('wh_equipment').x,byId('wh_equipment').y).id,'city_warehouse_a');
+for(const id of ['wh_collector_2','wh_elite','wh_cargo'])
+ assert.equal(locationAt(byId(id).x,byId(id).y).id,'city_warehouse_b',id+' belongs to B');
+assert.equal(locationAt(byId('wh_collector_1').x,byId('wh_collector_1').y).id,'city_warehouse_a');
+for(const r of CITY_ROOMS){
+ if(r.painted){
+  const face=m.colliders.find(c=>c.id===r.id+'_wall_back');
+  assert.ok(face && face.w===r.rect.w,'full painted wall face: '+r.id);
+  const path=findPath(grids(r,GATE_IDS),r.arrival,{x:r.rect.x+r.rect.w/2,y:face.y+face.h-40});
+  assert.ok(path.end.y>=face.y+face.h+21,'cannot route onto painted wall: '+r.id);
+ }else{
+  const mural=m.props.find(p=>p.id==='room_decor_'+r.key+'_back_wall');
+  const face=m.colliders.find(c=>c.id==='room_back_wall_'+r.key);
+  assert.ok(face && face.y+face.h===mural.y,'full wall face blocks feet: '+r.id);
+ }
+}
+assert.equal(objects.find(o=>o.id==='npc_banker').x,CITY_POSITIONS.npc_banker.x);
 assert.equal(m.colliders.find(o=>o.id==='c105').x,3600,'stable expedition collider id');
 assert.equal(CITY_PORTALS.some(o=>o.id.includes('north_')),false);
 
@@ -161,6 +177,20 @@ assert.deepEqual({x:st.getObject('fq_cellar').x,y:st.getObject('fq_cellar').y},d
 assert.equal(st.getObject('city_layout').version,4);
 assert.deepEqual({inv:JSON.stringify(st.data.inventory),ev:st.data.completedEvents},before,'progress untouched');
 const once=JSON.stringify(st.data);assert.equal(migrateCitySave(st),false);assert.equal(JSON.stringify(st.data),once,'second load moves nothing');
+// Saved feet, respawn and telekinetic cargo from either half of the old shared hall.
+for(const [x,key] of [[10500,'warehouse_a'],[11340,'warehouse_b']]){
+ const saved=new GameState();saved.setObject('city_layout',{version:4});
+ saved.data.player={x,y:6700};saved.data.safePoint={x,y:6500};
+ saved.setObject('wh_cargo',{state:'moved',x:11390,y:5610});
+ saved.markEnemyDefeated('wh_elite');saved.markEvent('ch2_cargo_found');
+ const progress=JSON.stringify([saved.data.inventory,saved.data.completedEvents,saved.getObject('enc:wh_elite')]);
+ assert.equal(migrateCitySave(saved),true);
+ assert.deepEqual(saved.data.player,CITY_ROOMS.find(r=>r.key===key).arrival);
+ assert.deepEqual(saved.data.safePoint,saved.data.player);
+ assert.deepEqual({x:saved.getObject('wh_cargo').x,y:saved.getObject('wh_cargo').y},byId('wh_cargo').target);
+ assert.equal(JSON.stringify([saved.data.inventory,saved.data.completedEvents,saved.getObject('enc:wh_elite')]),progress);
+ const migrated=JSON.stringify(saved.data);assert.equal(migrateCitySave(saved),false);assert.equal(JSON.stringify(saved.data),migrated);
+}
 const fresh=new GameState();fresh.data.player={x:900,y:5200};assert.equal(migrateCitySave(fresh),true);assert.deepEqual(fresh.data.player,{x:900,y:5200});
 const oldSave=createDefaultState();oldSave.player=v3(2210,2790);
 const synced=fromSnapshot(applyPatch(toSnapshot(oldSave),{pos:front('bank'),objects:{city_layout:{version:4}}}));
@@ -175,4 +205,30 @@ console.log('✓ Walkable town: same houses on a 2× territory, 12 doorsteps, me
   const { readFileSync } = await import('node:fs');
   const sql = readFileSync(new URL('../supabase/migrations/20261011_walkable_city_admin_points.sql', import.meta.url), 'utf8');
   for (const k of ['city', 'nerys', 'nerys_final']) assert.ok(sql.includes(`('${k}', ${ADMIN_CHECKPOINTS[k].x}, ${ADMIN_CHECKPOINTS[k].y})`), 'SQL admin point ' + k);
+}
+
+// Approved room art, physical furniture and all one-time room-save migrations.
+for(const r of CITY_ROOMS.filter(r=>r.painted)){
+ assert.deepEqual([r.rect.w,r.rect.h,r.extraTop,r.extraBottom],[600,1300,0,0]);
+ assert.ok(m.grounds.some(g=>g.id==='floor_'+r.id&&g.plate&&g.tex==='city_room_'+r.key));
+ assert.ok(m.props.some(p=>p.id.startsWith('room_overlay_'+r.key+'_')&&p.roomCrop));
+ const old=LEGACY_ROOM_RECTS.find(o=>o.key===r.key),saved=new GameState();
+ saved.setObject('city_layout',{version:4});saved.setObject('city_warehouses',{version:1});
+ saved.data.player={x:old.x+old.w-40,y:old.y+old.h-40};saved.data.safePoint={...saved.data.player};
+ saved.markEvent('ch2_cargo_found');saved.markEnemyDefeated('wh_elite');
+ const progress=JSON.stringify([saved.data.inventory,saved.data.completedEvents,saved.getObject('enc:wh_elite')]);
+ migrateCitySave(saved);assert.deepEqual(saved.data.player,r.arrival);assert.deepEqual(saved.data.safePoint,r.arrival);
+ assert.equal(JSON.stringify([saved.data.inventory,saved.data.completedEvents,saved.getObject('enc:wh_elite')]),progress);
+ const once=JSON.stringify(saved.data);assert.equal(migrateCitySave(saved),false);assert.equal(JSON.stringify(saved.data),once);
+}
+for(const [id,table] of [['archive_document','room_desk'],['lab_journal','room_journal'],['final_letters','room_letters']]){
+ const o=byId(id),c=m.colliders.find(c=>c.id===table);assert.ok(Math.abs(o.y-(c.y+c.h+1))<1e-8);assert.ok(o.elevated>0);
+}
+for(const id of ['npc_severin_archive','ch3_glass_leaf'])assert.equal(locationAt(byId(id).x,byId(id).y).id,'city_archive','chapter III stays in archive');
+console.log('✓ Eight approved interiors: art, walls, live quest objects and idempotent save migration.');
+
+// A pushed live crate must fit between the painted shelf bases at its saved destination.
+{
+ const o=byId('wh_cargo'),b={x:o.target.x-o.collide.w/2,y:o.target.y-o.collide.h,w:o.collide.w,h:o.collide.h};
+ assert.deepEqual(solids().filter(s=>s.src!=='obj:wh_cargo'&&s.x<b.x+b.w&&s.x+s.w>b.x&&s.y<b.y+b.h&&s.y+s.h>b.y).map(s=>s.src),[],'cargo target clear of walls and shelf feet');
 }

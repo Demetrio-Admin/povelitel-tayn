@@ -8,6 +8,8 @@ import { distToPolygon, catmullRom } from '../world/geometry.js';
 import { dressArchiveDistrict } from './city.archive.js';
 import { dressCityNeighborhoods } from './city.neighborhoods.js';
 import { dressLaboratoryTrail } from './city.lab-garden.js';
+import { dressWarehouseA } from './city.warehouses.js';
+import { ROOM_ART, ROOM_WIDTH, ROOM_HEIGHT, paintedRoom, roomPoint, dressPaintedRooms } from './city.rooms.js';
 
 export const CITY_LAYOUT_VERSION = 4;
 export const CITY_RECT = { x: 5600, y: 160, w: 2880, h: 5760 };
@@ -47,27 +49,30 @@ const layouts = [
   ['lab','Тайная лаборатория',10200,2600,960,2160],
   ['duel','Магическая Дуэль',11800,2600,1080,1680],
   ['coven','Дом Ковенов',13400,2600,840,1440],
-  ['warehouse','Складской комплекс',10200,5200,1440,1680],
+  ['warehouse_a','Склад А',10200,5200,720,1100],
+  ['warehouse_b','Склад Б',11040,5200,720,1200],
   ['cellar','Дом с погребом',11800,5200,720,1440],
   ['rescue','Дом за ледяной дверью',13400,5200,720,1440],
 ];
+export const LEGACY_ROOM_RECTS = layouts.map(([key,name,x,y,w,h])=>({key,x,y,w,h}));
 export const CITY_ROOMS = layouts.map(([key,name,x,y,w,h]) => {
-  const doors = BUILDINGS.filter(b => (key === 'warehouse' ? b.id.startsWith('warehouse_') : b.id === key));
+  if(paintedRoom(key)){w=ROOM_WIDTH;h=ROOM_HEIGHT;}
+  const doors = BUILDINGS.filter(b => b.id === key);
   return { id:'city_'+key,key,name,interior:true,parent:'city',rect:{x,y,w,h},
     requires:doors[0]?.requires,lockedText:'Сначала завершите действие у входа.',
-    arrival:{x:x+w/2,y:y+h-180},exit:'room_exit_'+doors[0].id,
-    entrances:doors.map(b => 'door_'+b.id), extraTop:120,extraBottom:180 };
+    arrival:{x:x+w/2,y:y+h-(paintedRoom(key)?260:180)},exit:'room_exit_'+doors[0].id,
+    entrances:doors.map(b => 'door_'+b.id), extraTop:paintedRoom(key)?0:120,extraBottom:paintedRoom(key)?0:180,painted:paintedRoom(key) };
 });
 const room = key => CITY_ROOMS.find(r => r.key === key);
 const rp = (key,x,y) => ({x:room(key).rect.x+x,y:room(key).rect.y+y});
 export const CITY_PORTALS = BUILDINGS.filter(b => !b.id.startsWith('north_')).flatMap(b => {
-  const key=b.id.startsWith('warehouse_')?'warehouse':b.id,r=room(key);
-  const entryX=key==='warehouse'?(b.id==='warehouse_a'?300:1140):r.rect.w/2;
-  const inside=rp(key,entryX,r.rect.h-180);
+  const key=b.id,r=room(key);
+  const entryX=r.rect.w/2;
+  const inside={...r.arrival};
   return [
     {id:'door_'+b.id,kind:'room_door',x:b.door.x,y:b.door.y+28,ghost:{w:120,h:80},radius:110,
       target:inside,room:r.id,hint:'Войти: '+b.name,requiresEvent:b.requires},
-    {id:'room_exit_'+b.id,kind:'room_door',...rp(key,entryX,r.rect.h-55),ghost:{w:160,h:80},radius:130,
+    {id:'room_exit_'+b.id,kind:'room_door',...rp(key,entryX,r.rect.h-(r.painted?100:55)),ghost:{w:160,h:80},radius:130,
       target:{x:b.door.x,y:b.door.y+100},room:'city',hint:'Выйти: '+b.name},
   ];
 });
@@ -106,18 +111,28 @@ export const CITY_POSITIONS = Object.fromEntries([
   ['lab_herb_1',rp('lab',140,720)],['lab_herb_2',rp('lab',810,940)],
   ['lab_chest',rp('lab',160,1880)],['lab_cauldron',rp('lab',820,1880)],
   ['npc_tikhon',rp('lab',240,1540)],['lab_journal',{...rp('lab',710,1786),elevated:41}],
-  ['wh_cargo',rp('warehouse',1110,440)],['wh_equipment',rp('warehouse',400,630)],
+  ['wh_cargo',rp('warehouse_b',540,360)],['wh_equipment',rp('warehouse_a',540,420)],
   ['final_letters',{...rp('duel',840,626),elevated:41}],['npc_severin_after',rp('duel',770,820)],
-  ['wh_collector_1',rp('warehouse',430,1160)],['wh_collector_2',rp('warehouse',1050,900)],['wh_elite',rp('warehouse',790,490)],
+  ['wh_collector_1',rp('warehouse_a',360,610)],['wh_collector_2',rp('warehouse_b',260,800)],['wh_elite',rp('warehouse_b',430,530)],
   ['vol_1',rp('lab',390,1240)],['vol_2',rp('lab',680,960)],['lab_construct',rp('lab',480,450)],
   ['final_severin',rp('duel',540,600)],
 ]);
+// Actors and usable objects stay live; their art is not baked into the room painting.
+for(const [key,a] of Object.entries(ROOM_ART))for(const [id,[x,y]] of Object.entries(a.positions))CITY_POSITIONS[id]=roomPoint(key,x,y,CITY_ROOMS);
+Object.assign(CITY_POSITIONS.npc_banker,{approach:roomPoint('bank',425,750,CITY_ROOMS)});
+for(const id of ['archive_document','lab_journal','final_letters','ch3_glass_leaf'])Object.assign(CITY_POSITIONS[id],{elevated:42,editorStyle:{w:30,h:25}});
+for(const [id,key,index] of [['archive_document','archive',1],['lab_journal','lab',3],['final_letters','duel',2]]){
+  const b=ROOM_ART[key].boxes[index];CITY_POSITIONS[id].y=roomPoint(key,0,b[1]+b[3],CITY_ROOMS).y+1;
+}
+CITY_POSITIONS.wh_cargo.target={x:CITY_POSITIONS.wh_cargo.x+48,y:CITY_POSITIONS.wh_cargo.y+14};
+
 export const plannedObject = o => {
   const p=CITY_POSITIONS[o.id];
   if(!p)return {...o};
   const out={...o,...p};
   const outdoors=insideRect(p,CITY_RECT);
-  if(o.target)out.target={x:p.x+(o.target.x-o.x)*(outdoors?TARGET_SCALE:1),y:p.y+(o.target.y-o.y)*(outdoors?TARGET_SCALE:1)};
+  if(p.target)out.target={...p.target};
+  else if(o.target)out.target={x:p.x+(o.target.x-o.x)*(outdoors?TARGET_SCALE:1),y:p.y+(o.target.y-o.y)*(outdoors?TARGET_SCALE:1)};
   return out;
 };
 
@@ -129,7 +144,7 @@ export const CITY_SPOTS = {
   quarter: P(1580,1720), waterSouth: P(1720,1250), yard: P(1720,1000),
 };
 export function cityZoneData() {
-  const roomZones=CITY_ROOMS.map(r=>({id:({archive:'AR',society:'SO',lab:'LB',duel:'DU',coven:'CV',bank:'BK',warehouse:'WH',cellar:'RC',rescue:'RD'})[r.key],name:r.name,...r.rect,interior:true,safePoint:r.arrival}));
+  const roomZones=CITY_ROOMS.map(r=>({id:({archive:'AR',society:'SO',lab:'LB',duel:'DU',coven:'CV',bank:'BK',warehouse_a:'WH',warehouse_b:'WB',cellar:'RC',rescue:'RD'})[r.key],name:r.name,...r.rect,interior:true,safePoint:r.arrival}));
   const zone=(id,name,x,y,w,h,safePoint)=>({id,name,...P(x,y),w,h,safePoint});
   // Порядок — с севера на юг; безопасная точка закрытой части всегда лежит перед её проходом.
   return [...roomZones,
@@ -196,9 +211,9 @@ export function cityMapData() {
     rect('city_frost_quarter',680,160,1920,1922,'snow_ground_01',{tileScale:0.5,tint:0xdcf0f6,alpha:0.3,layerOffset:0.2}),
     rect('city_frost_plaza',680,3080,1920,1680,'snow_ground_01',{tileScale:0.5,tint:0xdcf0f6,alpha:0.36,layerOffset:0.2}),
     ...CITY_ROOMS.map(r=>({id:'floor_'+r.id,...r.rect,
-      tex:['society','lab','duel','warehouse'].includes(r.key)?'city_final_stone_floor':'city_final_wood_floor',
-      tileScale:['society','lab','duel','warehouse'].includes(r.key)?0.25:0.22,
-      ...(['lab','warehouse'].includes(r.key)?{tint:0xc6c0b3}:{}),interior:true})),
+      tex:['society','lab','duel','warehouse_b'].includes(r.key)?'city_final_stone_floor':'city_final_wood_floor',
+      tileScale:['society','lab','duel','warehouse_b'].includes(r.key)?0.25:0.22,
+      ...(['lab','warehouse_b'].includes(r.key)?{tint:0xc6c0b3}:{}),interior:true})),
   ];
   const road=(id,w,pts,kind='stone')=>({id:'city_street_'+id,kind,w,pts:pts.map(([x,y])=>{const p=P(x,y);return [p.x,p.y];}),seamless:true,
     ...(kind==='stone'?{texture:'city_walk_paving',tileScale:0.24,urban:true}:{})});
@@ -268,14 +283,15 @@ export function cityMapData() {
   fence('bank_garden',2400,4360,180,'iron');fence('coven_garden',2420,3360,160,'wood');fence('rescue_yard',2250,1840,300,'wood');
   fence('workshop_yard',2440,1030,140,'wood');fence('society_garden',2400,2960,180,'iron');fence('cellar_garden',700,1990,200,'wood');
   for(const r of CITY_ROOMS) {
+    if(r.painted)continue;
     const {x,y,w,h}=r.rect,t=24;
-    const xs=r.key==='warehouse'?[300,1140]:[w/2];
+    const xs=[w/2];
     colliders.push(...[{x,y,w,h:t},{x,y,w:t,h},{x:x+w-t,y,w:t,h}].map((a,i)=>({id:r.id+'_wall_'+i,kind:'wall',tex:'city_timber',...a})));
     let last=0;
     for(const dx of xs){colliders.push({id:r.id+'_wall_bottom_'+dx,kind:'wall',tex:'city_timber',x:x+last,y:y+h-t,w:dx-90-last,h:t});last=dx+90;}
     colliders.push({id:r.id+'_wall_end',kind:'wall',tex:'city_timber',x:x+last,y:y+h-t,w:w-last,h:t});
   }
-  const furniture=(key,id,x,y,w,h,tex,extra={})=>colliders.push({id:'room_'+id,kind:'furniture',...rp(key,x,y),w,h,tex,...extra});
+  const furniture=(key,id,x,y,w,h,tex,extra={})=>!paintedRoom(key)&&colliders.push({id:'room_'+id,kind:'furniture',...rp(key,x,y),w,h,tex,...extra});
   furniture('bank','counter',150,400,420,40,'city_final_bank_counter');
   furniture('bank','safe',520,230,80,35,'city_bank_safe');
   furniture('archive','shelf_left',50,380,170,35,'city_final_archive_shelf');
@@ -298,8 +314,7 @@ export function cityMapData() {
   furniture('lab','machine_b',710,540,150,35,'city_lab_machine');
   furniture('lab','journal',630,1750,160,35,'city_archive_desk',{editorStyle:{w:180,h:130}});
   furniture('duel','letters',760,590,160,35,'city_archive_desk',{editorStyle:{w:180,h:130}});
-  furniture('warehouse','crate_a',180,550,100,30,'city_crate');
-  furniture('warehouse','crate_b',1170,300,100,30,'city_crate');
+  furniture('warehouse_b','crate_b',65,440,100,30,'city_crate');
   furniture('cellar','cellar_kitchen_table',100,690,170,35,'city_coven_table');
   furniture('rescue','rescue_bed',500,510,120,35,'bed_01',{editorStyle:{w:130,h:150,tint:0xbecfe4}});
   for(const key of ['cellar','rescue']){
@@ -307,11 +322,20 @@ export function cityMapData() {
     furniture(key,key+'_shelf',510,310,140,35,'city_archive_shelf');
   }
   const props=[];
-  const roomProp=(key,id,k,x,y,extra={})=>props.push({id:'room_decor_'+key+'_'+id,k,...rp(key,x,y),solid:null,...extra});
+  const roomProp=(key,id,k,x,y,extra={})=>{
+    if(paintedRoom(key))return;
+    props.push({id:'room_decor_'+key+'_'+id,k,...rp(key,x,y),solid:null,...extra});
+    // The mural is a wall, not floor: its entire face is impassable, in physics and navigation.
+    if(id==='back_wall'){
+      const r=room(key).rect;
+      colliders.push({id:'room_back_wall_'+key,kind:'room_wall',
+        x:r.x+24,y:r.y+24,w:r.w-48,h:y-24});
+    }
+  };
   roomProp('bank','back_wall','city_final_bank_wall',360,250,{l:'back'});
   roomProp('archive','back_wall','city_final_archive_wall',450,290,{l:'back'});
   for(const [key,tex,y] of [['society','society',270],['lab','lab',280],['duel','duel',310],
-    ['coven','coven',270],['warehouse','warehouse',300],['cellar','home',250],['rescue','home',250]]){
+    ['coven','coven',270],['cellar','home',250],['rescue','home',250]]){
     roomProp(key,'back_wall','city_final_'+tex+'_wall',room(key).rect.w/2,y,{l:'back'});
   }
   roomProp('duel','arena_inlay','city_final_duel_circle',540,1120,{l:'room-floor'});
@@ -328,12 +352,11 @@ export function cityMapData() {
   for(const [key,x,y] of [['society',80,1170],['society',820,1170],['coven',760,1220]]){
     roomProp(key,'plant_'+x,'plant_pot_01',x,y,{solid:{w:28,h:14}});
   }
-  for(const [i,[x,y]] of [[170,920],[1240,1180],[170,380],[1270,650]].entries()){
-    roomProp('warehouse','stack_'+i,i%2?'barrel_01':'city_crate',x,y,{solid:{w:i%2?50:90,h:26}});
-  }
-  // Two stocked sections frame a clear 360px centre aisle on portrait screens.
-  for(const [i,[x,y]] of [[430,980],[1040,1240],[430,380],[1040,660]].entries()){
-    roomProp('warehouse','section_stock_'+i,'city_crate',x,y,{w:180,h:165,solid:{w:160,h:32}});
+  dressWarehouseA({furniture,roomProp});
+  // B has its own door, quest cargo and guards. Its visual pass follows A.
+  roomProp('warehouse_b','back_wall','city_final_warehouse_wall',360,164,{l:'back',w:672,h:140});
+  for(const [i,[x,y]] of [[130,650],[590,960],[130,300],[590,650]].entries()){
+    roomProp('warehouse_b','stock_'+i,i%2?'city_barrel':'city_crate',x,y,{w:110,h:100,solid:{w:90,h:32}});
   }
   roomProp('bank','rug','city_final_bank_rug',360,760,{l:'room-floor'});
   roomProp('archive','rug','city_final_archive_rug',450,1210,{l:'room-floor'});
@@ -501,6 +524,7 @@ export function cityMapData() {
   dressArchiveDistrict({ grounds, colliders, props, roads, point: P, buildings: BUILDINGS, questPositions: CITY_POSITIONS });
   dressCityNeighborhoods({ colliders, props, roads, point: P, buildings: BUILDINGS, questPositions: CITY_POSITIONS });
   dressLaboratoryTrail({ colliders, props, roads, point: P, buildings: BUILDINGS, questPositions: CITY_POSITIONS });
+  dressPaintedRooms({grounds,colliders,props},CITY_ROOMS);
   return {grounds,colliders,props,roads,waters:[CITY_CANAL],skipped};
 }
 export const cityLocal = local;

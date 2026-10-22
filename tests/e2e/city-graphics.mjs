@@ -53,14 +53,14 @@ try{
   const move=async(x,y)=>{await page.evaluate(({x,y})=>{const s=window.__game.scene.getScene('ExplorationScene');s.player.stop();s.player.setPosition(x,y);},{x,y});await settle();};
   const door=async id=>{await page.evaluate(id=>{const s=window.__game.scene.getScene('ExplorationScene'),d=s.objects.find(o=>o.id===id);s.player.stop();s.player.setPosition(d.x,d.y+70);},id);await settle();};
   const clickObject=async id=>{
-   const p=await page.evaluate(id=>{const s=window.__game.scene.getScene('ExplorationScene'),o=s.objects.find(o=>o.id===id),c=s.cameras.main,r=window.__game.canvas.getBoundingClientRect();return {x:r.x+(o.x-c.scrollX)*c.zoom*r.width/window.__game.scale.width,y:r.y+(o.sprite.y-o.sprite.displayHeight/2-c.scrollY)*c.zoom*r.height/window.__game.scale.height};},id);
+   const p=await page.evaluate(id=>{const s=window.__game.scene.getScene('ExplorationScene'),o=s.objects.find(o=>o.id===id),c=s.cameras.main,r=window.__game.canvas.getBoundingClientRect();return {x:r.x+(o.x-c.worldView.x)*c.zoom*r.width/window.__game.scale.width,y:r.y+(o.sprite.y-o.sprite.displayHeight/2-c.worldView.y)*c.zoom*r.height/window.__game.scale.height};},id);
    await page.mouse.click(p.x,p.y);
   };
   // On a slow software renderer the walk to an NPC can stop short; a player simply taps again.
   const talk=async npc=>{for(let i=0;i<3;i++){await clickObject('npc_'+npc);if(await page.waitForFunction(npc=>window.__game.scene.getScene('UIScene').dlg?.npcId===npc,npc,{timeout:20000}).then(()=>true,()=>false))return;}throw new Error('dialogue did not open: '+npc);};
   await door('door_bank');await shot('bank-exterior');
   await page.keyboard.press('Space');await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city_bank' && window.__witch.mode==='exploration');
-  await move(10560,1050);await shot('bank-room');await talk('banker');
+  {const r=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').loc.rect);await move(r.x+r.w/2,r.y+r.h*.64);}await shot('bank-room');await talk('banker');
   const bankReach=await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),c=s.map.colliders.find(c=>c.id==='room_counter'),o=s.objects.find(o=>o.id==='npc_banker');return {player:{x:s.player.x,y:s.player.y},counter:c,npc:{x:o.x,y:o.y,radius:o.radius},distance:Math.hypot(s.player.x-o.x,s.player.y-o.y)};});
   assert.ok(bankReach.player.y>=bankReach.counter.y+bankReach.counter.h && bankReach.distance<=bankReach.npc.radius,'talk reaches Agata across the counter');
   await page.screenshot({path:path.join(out,viewport.width+'-bank-dialogue.png')});
@@ -68,15 +68,15 @@ try{
   await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city' && window.__witch.mode==='exploration');
   await door('door_archive');await shot('archive-exterior');
   await page.keyboard.press('Space');await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city_archive' && window.__witch.mode==='exploration');
-  await move(12250,1120);await shot('archive-room');
+  {const r=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').loc.rect);await move(r.x+r.w/2,r.y+r.h*.65);}await shot('archive-room');
   await talk('ilaria');
   await page.evaluate(()=>{const w=window.__witch,u=window.__game.scene.getScene('UIScene');u.closeDialogue(true);w.state.markEvent('ch2_trace_found');w.abilities.unlock('seal',1);w.state.setObject('player_build',{...w.state.buildData(),slots:['seal']});w.state.data.mana=110;window.__game.scene.getScene('ExplorationScene').refreshAll();});
-  await move(12200,1010);await clickObject('archive_document');
+  {const p=await page.evaluate(()=>{const o=window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id==='archive_document');return{x:o.x-90,y:o.y+150};});await move(p.x,p.y);}await clickObject('archive_document');
   await page.waitForFunction(()=>window.__witch.state.hasEvent('ch2_archive_read'),null,{timeout:20000});
   // The story window appears after the casting animation, after the event is saved.
   await page.waitForFunction(()=>!!window.__game.scene.getScene('UIScene').modal);
   await page.keyboard.press('Space');await page.waitForFunction(()=>!window.__game.scene.getScene('UIScene').modal);
-  await move(12200,1020);await shot('archive-desk');
+  {const r=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').loc.rect);await move(r.x+r.w/2,r.y+r.h*.61);}await shot('archive-desk');
   await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').travelToLocation('city'));
   await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city' && window.__witch.mode==='exploration');
   const square=CITY_SPOTS.square;await move(square.x,square.y);await shot('square-frozen');

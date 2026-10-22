@@ -1,3 +1,4 @@
+import { ROOM_WIDTH, ROOM_HEIGHT } from '../config/city.rooms.js';
 import { migrateCitySave } from '../world/cityMigration.js';
 import { CITY_WITCH_SPRITES } from '../config/city.witch.art.js';
 import { buildingDoor, linkBuildingPortals } from '../world/buildingGeometry.js';
@@ -150,13 +151,14 @@ export class ExplorationScene extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBounds(this.view.x, this.view.y, this.view.w, this.view.h);   // v0.27.0: камера — только своя локация
     const followSize = () => {
-      this.followOffsetY = (CAMERA.heroScreenY - 0.5) * cam.height + PLAYER.displayHeight * 0.4;
+      // Cover the painted room on tall and wide viewports. Bounds clamp before any unpainted area is visible.
+      cam.setZoom(this.loc?.painted ? Math.max(cam.width / R.w, cam.height / R.h) : 1);
+      this.followOffsetY = (CAMERA.heroScreenY - 0.5) * cam.height / cam.zoom + PLAYER.displayHeight * 0.4;
       this.follow();
     };
     this.scale.on?.('resize', followSize);
     this.events.once('shutdown', () => this.scale.off?.('resize', followSize));
-    this.followOffsetY = (CAMERA.heroScreenY - 0.5) * cam.height + PLAYER.displayHeight * 0.4;
-    this.follow();
+    followSize();
     cam.fadeIn(500);
 
     this.zone = null;
@@ -520,6 +522,10 @@ export class ExplorationScene extends Phaser.Scene {
     for (const {img} of this.groundViews.values()) img.destroy();
     this.groundViews.clear();
     for (const g of list) if (touchesLocation(g,this.loc)) {
+      if(g.plate){
+        const img=this.add.image(g.x,g.y,g.tex).setOrigin(0).setDisplaySize(g.w,g.h).setDepth(DEPTH.path+0.4);
+        this.groundViews.set(g.id,{g,img});continue;
+      }
       const img = this.add.tileSprite(g.x,g.y,g.w,g.h,g.tex).setOrigin(0)
         .setDepth(g.l==='ground'?DEPTH.ground+0.1:g.l==='front'?DEPTH.frontDecor:g.l==='back'?DEPTH.backDecor:DEPTH.path+(g.layerOffset??(g.interior?0.4:0)));
       img.setAngle(g.a||0).setFlipX(!!g.f).setAlpha(g.alpha??1);
@@ -679,6 +685,13 @@ export class ExplorationScene extends Phaser.Scene {
 
   placePropView(view) {
     const {p,img}=view;
+    if(p.roomCrop){
+      const t=this.textures.get(p.k),src=t.getSourceImage(),c=p.roomCrop;
+      if(!t.has(p.id))t.add(p.id,0,Math.round(c.x*src.width),Math.round(c.y*src.height),Math.round(c.w*src.width),Math.round(c.h*src.height));
+      img.setTexture(p.k,p.id).setPosition(p.x,p.y).setOrigin(0).setDisplaySize(c.w*ROOM_WIDTH,c.h*ROOM_HEIGHT)
+        .setDepth(DEPTH.mainBase+c.bottom).setAlpha(1).setVisible(true);
+      view.blocker?.destroy();view.blocker=null;return;
+    }
     img.setTexture(p.k).setPosition(p.x,p.y);
     const facade=CITY_WITCH_SPRITES[p.k];
     img.setOrigin(facade?.anchor.x??0.5,facade?.anchor.y??1);

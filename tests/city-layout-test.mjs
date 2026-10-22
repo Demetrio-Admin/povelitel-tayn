@@ -226,3 +226,9 @@ for(const [id,table] of [['archive_document','room_desk'],['lab_journal','room_j
 }
 for(const id of ['npc_severin_archive','ch3_glass_leaf'])assert.equal(locationAt(byId(id).x,byId(id).y).id,'city_archive','chapter III stays in archive');
 console.log('✓ Eight approved interiors: art, walls, live quest objects and idempotent save migration.');
+
+// A pushed live crate must fit between the painted shelf bases at its saved destination.
+{
+ const o=byId('wh_cargo'),b={x:o.target.x-o.collide.w/2,y:o.target.y-o.collide.h,w:o.collide.w,h:o.collide.h};
+ assert.deepEqual(solids().filter(s=>s.src!=='obj:wh_cargo'&&s.x<b.x+b.w&&s.x+s.w>b.x&&s.y<b.y+b.h&&s.y+s.h>b.y).map(s=>s.src),[],'cargo target clear of walls and shelf feet');
+}

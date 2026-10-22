@@ -1202,7 +1202,7 @@ for (const [id, key, index] of [["archive_document", "archive", 1], ["lab_journa
   const b = ROOM_ART[key].boxes[index];
   CITY_POSITIONS[id].y = roomPoint(key, 0, b[1] + b[3], CITY_ROOMS).y + 1;
 }
-CITY_POSITIONS.wh_cargo.target = { x: CITY_POSITIONS.wh_cargo.x + 48, y: CITY_POSITIONS.wh_cargo.y + 8 };
+CITY_POSITIONS.wh_cargo.target = { x: CITY_POSITIONS.wh_cargo.x + 48, y: CITY_POSITIONS.wh_cargo.y + 14 };
 var plannedObject = (o) => {
   const p = CITY_POSITIONS[o.id];
   if (!p) return { ...o };

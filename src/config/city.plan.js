@@ -124,7 +124,7 @@ for(const id of ['archive_document','lab_journal','final_letters','ch3_glass_lea
 for(const [id,key,index] of [['archive_document','archive',1],['lab_journal','lab',3],['final_letters','duel',2]]){
   const b=ROOM_ART[key].boxes[index];CITY_POSITIONS[id].y=roomPoint(key,0,b[1]+b[3],CITY_ROOMS).y+1;
 }
-CITY_POSITIONS.wh_cargo.target={x:CITY_POSITIONS.wh_cargo.x+48,y:CITY_POSITIONS.wh_cargo.y+8};
+CITY_POSITIONS.wh_cargo.target={x:CITY_POSITIONS.wh_cargo.x+48,y:CITY_POSITIONS.wh_cargo.y+14};
 
 export const plannedObject = o => {
   const p=CITY_POSITIONS[o.id];

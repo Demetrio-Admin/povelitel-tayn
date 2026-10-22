@@ -41,4 +41,28 @@ begin
   end loop;
   return pr;
 end $$;
+
+-- Враги главы III в каталоге профиля героя (hero_enemy_catalog / hero_enemy_spawns): без них победы в роще не попадают в профиль.
+insert into public.hero_enemy_catalog(enemy,level,difficulty,rank) values
+('glass_stoat',16,'normal',1600),
+('echo_wisp',17,'normal',1700),
+('glass_wolf',17,'normal',1701),
+('needle',18,'normal',1800),
+('needle_elite',18,'elite',1810),
+('glass_guardian',19,'elite',1910),
+('iva_reflection',20,'boss',2020)
+on conflict(enemy) do update set level=excluded.level,difficulty=excluded.difficulty,rank=excluded.rank;
+insert into public.hero_enemy_spawns(spawn,enemy) values
+('gb_stoat_1','glass_stoat'),
+('gb_stoat_2','glass_stoat'),
+('ge_echo_1','echo_wisp'),
+('ge_echo_2','echo_wisp'),
+('gg_wolf_1','glass_wolf'),
+('gg_wolf_2','glass_wolf'),
+('gr_needle_1','needle'),
+('gr_needle_2','needle'),
+('gr_needle_elite','needle_elite'),
+('gh_guardian','glass_guardian'),
+('gh_reflection','iva_reflection')
+on conflict(spawn) do update set enemy=excluded.enemy;
 commit;

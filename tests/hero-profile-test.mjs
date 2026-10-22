@@ -34,6 +34,8 @@ try {
   const guardian=ENEMY_SPAWNS.find(s=>s.enemy==='forest_guardian');
   await q("insert into public.player_world(user_id,kind,key,data) values($1,'enemy',$2,'{}')",[veteran,guardian.id]);
   await db.exec(migration); await db.exec(migration);
+  // Старая миграция несёт снимок правил; последние правила (враги главы III) ставит свежая схема, как поздние миграции в проде.
+  await db.exec(execFileSync('git',['show','HEAD:supabase/schema.sql'],{encoding:'utf8',maxBuffer:2_000_000}).match(/create or replace function public\._game_rules\(\)[^\n]+/)[0]);
   assert.deepEqual((await q("select public._game_rules()->'ratings' r")).rows[0].r,ratingsRules(),'server and client use one enemy-level catalog');
   const old=await rpc(veteran);
   assert.equal(old.strongest.enemy,'forest_guardian');assert.equal(old.strongest.wonAt,null);assert.equal(old.strongest.heroLevel,null);

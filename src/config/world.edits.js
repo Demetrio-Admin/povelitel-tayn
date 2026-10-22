@@ -864,18 +864,6 @@ export const EDITS = {
       "solid": null
     },
     {
-      "id": "n026",
-      "k": "tree_frost_01",
-      "x": 3961,
-      "y": 2047,
-      "flip": false,
-      "scale": 0.72,
-      "fill": true,
-      "s": 0.72,
-      "l": "main",
-      "solid": null
-    },
-    {
       "id": "n027",
       "k": "tree_frost_01",
       "x": 3015,

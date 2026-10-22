@@ -1,0 +1,9 @@
+{
+  "source": "Заснеженная тропа к ледяному святилищу(1).png",
+  "source_sha256": "b922ccd8f69e7422ce1f202122468d28d116337a40314155f8a7d9ecf1e9648a",
+  "width": 1024,
+  "height": 1536,
+  "output": "frozen-sanctuary-v1.webp",
+  "output_sha256": "b60cc1afc69313096659f1bf8cfb51fa2fcc046a26b3d522a01001412ee54cec",
+  "processing": "Original user-supplied painting, encoded as WebP at quality 95; no cropping, repainting or stretching."
+}

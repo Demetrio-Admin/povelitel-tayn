@@ -1,6 +1,7 @@
 import { ROOM_WIDTH, ROOM_HEIGHT } from '../config/city.rooms.js';
 import { migrateCitySave } from '../world/cityMigration.js';
 import { migrateGraveyardSave } from '../world/graveyardMigration.js';
+import { migrateFrostwoodSave } from '../world/frostwoodMigration.js';
 import { CITY_WITCH_SPRITES } from '../config/city.witch.art.js';
 import { buildingDoor, linkBuildingPortals } from '../world/buildingGeometry.js';
 import { RoomDoor } from '../objects/RoomDoor.js';
@@ -108,6 +109,7 @@ export class ExplorationScene extends Phaser.Scene {
     // v0.37.0: one-time move to the walkable town plan (player, safe point and pushed objects travel with the marker).
     migrateCitySave(state);
     migrateGraveyardSave(state);
+    migrateFrostwoodSave(state);
     let p = this.fixStartPosition(state.data.player);
     state.data.player={...p};
     this.loc = services.edit ? null : locationAt(p.x, p.y);

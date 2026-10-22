@@ -1,6 +1,7 @@
 import { CITY_RECT, CITY_ROOMS } from './city.plan.js';
 import { GROVE_RECT, GROVE_START } from './world.grove.js';
 import { GRAVEYARD_RECT, GRAVEYARD_ARRIVAL, GRAVEYARD_POSITIONS } from './graveyard.plan.js';
+import { FROSTWOOD_RECT, FROSTWOOD_ARRIVAL, FROSTWOOD_POSITIONS } from './frostwood.plan.js';
 // v0.24.0 — вылазки (stage-2-design-pack §24–25): настоящие опасные места к востоку от города (мир шире: 3600 → 5400).
 // Морозный лес (север) и Старое кладбище (юг) — отдельные локации (v0.27.0: config/locations.js), переход — через карту мира у выхода. Внутри: сбор, несколько боёв, сильный противник в конце и его запас (одна выдача за победный цикл, как запас у Корневика).
 // Места возобновляются (repeatSec): одна вылазка — 10–15 минут; звери возвращаются через 10 минут, вожак и страж — через час.
@@ -8,12 +9,12 @@ import { GRAVEYARD_RECT, GRAVEYARD_ARRIVAL, GRAVEYARD_POSITIONS } from './gravey
 // Открываются после главы II (chapter_2_complete).
 
 export const EXP_X = 3700;   // восточнее — участки вылазок (проходимость проверяется от их точек входа)
-export const FROSTWOOD_START = { x: 3820, y: 2380 };
+export const FROSTWOOD_START = FROSTWOOD_ARRIVAL;
 export const GRAVEYARD_START = GRAVEYARD_ARRIVAL;
 const OPEN = 'chapter_2_complete';
 
 export const EXP_ZONES = [
-  { id: 'FW', name: 'Морозный лес', x: 3700, y: 300, w: 1600, h: 2200, safePoint: FROSTWOOD_START },
+  { id: 'FW', name: 'Морозный лес', ...FROSTWOOD_RECT, safePoint: FROSTWOOD_START },
   { id: 'GY', name: 'Старое кладбище', ...GRAVEYARD_RECT, safePoint: GRAVEYARD_START },
 ];
 
@@ -65,7 +66,7 @@ const EXP_OBJECT_LIST = [
   { id: 'gy_cache', kind: 'stash', guard: 'gy_warden', x: 4800, y: 3050, texture: 'city_grave_cache', collide: { w: 60, h: 22 }, emptyTexture: 'city_grave_cache_empty', radius: 110,
     items: { crafting_core: 1, frost_shard: 1, lunar_shard: 2 }, hint: 'Сокровище кургана', label: 'Забрать добычу', guardText: 'Сокровище стережёт Страж кургана.' },
 ];
-export const EXP_INTERACTIVES = EXP_OBJECT_LIST.map(o => ({ ...o, ...GRAVEYARD_POSITIONS[o.id],
+export const EXP_INTERACTIVES = EXP_OBJECT_LIST.map(o => ({ ...o, ...GRAVEYARD_POSITIONS[o.id], ...FROSTWOOD_POSITIONS[o.id],
   ...(o.kind === 'exit' ? {} : { requiresEvent: OPEN }) }));
 
 const EXP_ENEMY_LIST = [
@@ -81,7 +82,7 @@ const EXP_ENEMY_LIST = [
   { id: 'gy_warden', enemy: 'barrow_warden', x: 4500, y: 3300, radius: 140, repeatSec: 3600 },
 ];
 /** Бои, сбор и запасы вылазок сервер засчитывает только после главы II (как и указатели туда). */
-export const EXP_ENEMIES = EXP_ENEMY_LIST.map(e => ({ ...e, ...GRAVEYARD_POSITIONS[e.id], requiresEvent: OPEN }));
+export const EXP_ENEMIES = EXP_ENEMY_LIST.map(e => ({ ...e, ...GRAVEYARD_POSITIONS[e.id], ...FROSTWOOD_POSITIONS[e.id], requiresEvent: OPEN }));
 
 export const EXP_DECOR = [
   // заснеженные ели вдоль чащ и по краям

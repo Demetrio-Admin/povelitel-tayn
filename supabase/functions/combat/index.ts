@@ -2294,12 +2294,35 @@ var GRAVEYARD_POSITIONS = Object.fromEntries(Object.entries({
   gy_warden: [555, 285]
 }).map(([id, p]) => [id, graveyardPoint(...p)]));
 
+// src/config/frostwood.plan.js
+var FROSTWOOD_ART = { key: "frostwood_painted", width: 1024, height: 1536 };
+var FROSTWOOD_RECT = { x: 3700, y: 100, w: 1600, h: 2400 };
+var frostwoodPoint = (x, y) => ({
+  x: FROSTWOOD_RECT.x + x * FROSTWOOD_RECT.w / FROSTWOOD_ART.width,
+  y: FROSTWOOD_RECT.y + y * FROSTWOOD_RECT.h / FROSTWOOD_ART.height
+});
+var FROSTWOOD_ARRIVAL = frostwoodPoint(735, 1440);
+var FROSTWOOD_POSITIONS = Object.fromEntries(Object.entries({
+  exit_frostwood: [795, 1470],
+  fw_herb_1: [510, 1280],
+  fw_herb_2: [540, 810],
+  fw_herb_3: [450, 195],
+  fw_crystal_1: [910, 1080],
+  fw_crystal_2: [300, 410],
+  fw_cache: [765, 230],
+  fw_wolf_1: [535, 1230],
+  fw_wolf_2: [470, 880],
+  fw_wolf_3: [790, 550],
+  fw_wolf_4: [410, 300],
+  fw_alpha: [820, 260]
+}).map(([id, p]) => [id, frostwoodPoint(...p)]));
+
 // src/config/world.expeditions.js
-var FROSTWOOD_START = { x: 3820, y: 2380 };
+var FROSTWOOD_START = FROSTWOOD_ARRIVAL;
 var GRAVEYARD_START = GRAVEYARD_ARRIVAL;
 var OPEN = "chapter_2_complete";
 var EXP_ZONES = [
-  { id: "FW", name: "\u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441", x: 3700, y: 300, w: 1600, h: 2200, safePoint: FROSTWOOD_START },
+  { id: "FW", name: "\u041C\u043E\u0440\u043E\u0437\u043D\u044B\u0439 \u043B\u0435\u0441", ...FROSTWOOD_RECT, safePoint: FROSTWOOD_START },
   { id: "GY", name: "\u0421\u0442\u0430\u0440\u043E\u0435 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435", ...GRAVEYARD_RECT, safePoint: GRAVEYARD_START }
 ];
 var EXP_GROUND = [
@@ -2376,6 +2399,7 @@ var EXP_OBJECT_LIST = [
 var EXP_INTERACTIVES = EXP_OBJECT_LIST.map((o) => ({
   ...o,
   ...GRAVEYARD_POSITIONS[o.id],
+  ...FROSTWOOD_POSITIONS[o.id],
   ...o.kind === "exit" ? {} : { requiresEvent: OPEN }
 }));
 var EXP_ENEMY_LIST = [
@@ -2390,7 +2414,7 @@ var EXP_ENEMY_LIST = [
   { id: "gy_hound_2", enemy: "grave_hound", x: 4950, y: 4150, radius: 120, repeatSec: 600 },
   { id: "gy_warden", enemy: "barrow_warden", x: 4500, y: 3300, radius: 140, repeatSec: 3600 }
 ];
-var EXP_ENEMIES = EXP_ENEMY_LIST.map((e) => ({ ...e, ...GRAVEYARD_POSITIONS[e.id], requiresEvent: OPEN }));
+var EXP_ENEMIES = EXP_ENEMY_LIST.map((e) => ({ ...e, ...GRAVEYARD_POSITIONS[e.id], ...FROSTWOOD_POSITIONS[e.id], requiresEvent: OPEN }));
 var EXP_DECOR = [
   // заснеженные ели вдоль чащ и по краям
   ...[[3760, 520], [3990, 470], [5240, 520], [5240, 1500], [3760, 1450], [5240, 2350], [4700, 2440], [4380, 1720], [4740, 1180], [4250, 640]].map(([x, y], i) => ({ id: `fw_tree_${i}`, k: i % 2 ? "tree_frost_02" : "tree_frost_01", x, y })),

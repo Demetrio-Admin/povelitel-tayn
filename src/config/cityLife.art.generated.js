@@ -5,21 +5,41 @@ export const CITY_LIFE_FILES = {
   "cl_man_a_2": "assets/city-life/man_a_2.webp?v=city-life-1",
   "cl_man_a_3": "assets/city-life/man_a_3.webp?v=city-life-1",
   "cl_man_a_4": "assets/city-life/man_a_4.webp?v=city-life-1",
+  "cl_man_a_b_0": "assets/city-life/man_a_b_0.webp?v=city-life-1",
+  "cl_man_a_b_1": "assets/city-life/man_a_b_1.webp?v=city-life-1",
+  "cl_man_a_b_2": "assets/city-life/man_a_b_2.webp?v=city-life-1",
+  "cl_man_a_b_3": "assets/city-life/man_a_b_3.webp?v=city-life-1",
+  "cl_man_a_b_4": "assets/city-life/man_a_b_4.webp?v=city-life-1",
   "cl_man_b_0": "assets/city-life/man_b_0.webp?v=city-life-1",
   "cl_man_b_1": "assets/city-life/man_b_1.webp?v=city-life-1",
   "cl_man_b_2": "assets/city-life/man_b_2.webp?v=city-life-1",
   "cl_man_b_3": "assets/city-life/man_b_3.webp?v=city-life-1",
   "cl_man_b_4": "assets/city-life/man_b_4.webp?v=city-life-1",
+  "cl_man_b_b_0": "assets/city-life/man_b_b_0.webp?v=city-life-1",
+  "cl_man_b_b_1": "assets/city-life/man_b_b_1.webp?v=city-life-1",
+  "cl_man_b_b_2": "assets/city-life/man_b_b_2.webp?v=city-life-1",
+  "cl_man_b_b_3": "assets/city-life/man_b_b_3.webp?v=city-life-1",
+  "cl_man_b_b_4": "assets/city-life/man_b_b_4.webp?v=city-life-1",
   "cl_woman_a_0": "assets/city-life/woman_a_0.webp?v=city-life-1",
   "cl_woman_a_1": "assets/city-life/woman_a_1.webp?v=city-life-1",
   "cl_woman_a_2": "assets/city-life/woman_a_2.webp?v=city-life-1",
   "cl_woman_a_3": "assets/city-life/woman_a_3.webp?v=city-life-1",
   "cl_woman_a_4": "assets/city-life/woman_a_4.webp?v=city-life-1",
+  "cl_woman_a_b_0": "assets/city-life/woman_a_b_0.webp?v=city-life-1",
+  "cl_woman_a_b_1": "assets/city-life/woman_a_b_1.webp?v=city-life-1",
+  "cl_woman_a_b_2": "assets/city-life/woman_a_b_2.webp?v=city-life-1",
+  "cl_woman_a_b_3": "assets/city-life/woman_a_b_3.webp?v=city-life-1",
+  "cl_woman_a_b_4": "assets/city-life/woman_a_b_4.webp?v=city-life-1",
   "cl_woman_b_0": "assets/city-life/woman_b_0.webp?v=city-life-1",
   "cl_woman_b_1": "assets/city-life/woman_b_1.webp?v=city-life-1",
   "cl_woman_b_2": "assets/city-life/woman_b_2.webp?v=city-life-1",
   "cl_woman_b_3": "assets/city-life/woman_b_3.webp?v=city-life-1",
   "cl_woman_b_4": "assets/city-life/woman_b_4.webp?v=city-life-1",
+  "cl_woman_b_b_0": "assets/city-life/woman_b_b_0.webp?v=city-life-1",
+  "cl_woman_b_b_1": "assets/city-life/woman_b_b_1.webp?v=city-life-1",
+  "cl_woman_b_b_2": "assets/city-life/woman_b_b_2.webp?v=city-life-1",
+  "cl_woman_b_b_3": "assets/city-life/woman_b_b_3.webp?v=city-life-1",
+  "cl_woman_b_b_4": "assets/city-life/woman_b_b_4.webp?v=city-life-1",
   "cl_cat_ginger_walk1": "assets/city-life/cat_ginger_walk1.webp?v=city-life-1",
   "cl_cat_ginger_walk2": "assets/city-life/cat_ginger_walk2.webp?v=city-life-1",
   "cl_cat_ginger_run1": "assets/city-life/cat_ginger_run1.webp?v=city-life-1",
@@ -70,6 +90,26 @@ export const CITY_LIFE_SIZES = {
     69,
     120
   ],
+  "cl_man_a_b_0": [
+    69,
+    120
+  ],
+  "cl_man_a_b_1": [
+    69,
+    120
+  ],
+  "cl_man_a_b_2": [
+    69,
+    120
+  ],
+  "cl_man_a_b_3": [
+    69,
+    120
+  ],
+  "cl_man_a_b_4": [
+    69,
+    120
+  ],
   "cl_man_b_0": [
     69,
     120
@@ -87,6 +127,26 @@ export const CITY_LIFE_SIZES = {
     120
   ],
   "cl_man_b_4": [
+    69,
+    120
+  ],
+  "cl_man_b_b_0": [
+    69,
+    120
+  ],
+  "cl_man_b_b_1": [
+    69,
+    120
+  ],
+  "cl_man_b_b_2": [
+    69,
+    120
+  ],
+  "cl_man_b_b_3": [
+    69,
+    120
+  ],
+  "cl_man_b_b_4": [
     69,
     120
   ],
@@ -110,6 +170,26 @@ export const CITY_LIFE_SIZES = {
     86,
     120
   ],
+  "cl_woman_a_b_0": [
+    86,
+    120
+  ],
+  "cl_woman_a_b_1": [
+    86,
+    120
+  ],
+  "cl_woman_a_b_2": [
+    86,
+    120
+  ],
+  "cl_woman_a_b_3": [
+    86,
+    120
+  ],
+  "cl_woman_a_b_4": [
+    86,
+    120
+  ],
   "cl_woman_b_0": [
     86,
     120
@@ -127,6 +207,26 @@ export const CITY_LIFE_SIZES = {
     120
   ],
   "cl_woman_b_4": [
+    86,
+    120
+  ],
+  "cl_woman_b_b_0": [
+    86,
+    120
+  ],
+  "cl_woman_b_b_1": [
+    86,
+    120
+  ],
+  "cl_woman_b_b_2": [
+    86,
+    120
+  ],
+  "cl_woman_b_b_3": [
+    86,
+    120
+  ],
+  "cl_woman_b_b_4": [
     86,
     120
   ],

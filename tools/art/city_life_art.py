@@ -115,6 +115,146 @@ _WOMAN_KERCHIEF = {'hue': (338, 14), 'sat': (0.45, 1), 'val': (0.3, 1), 'rows': 
 _WOMAN_SHAWL = {'hue': (338, 24), 'sat': (0.12, 0.5), 'val': (0.22, 0.66), 'rows': (125, 305)}  # шаль
 _WOMAN_SKIRT = {'hue': (0, 26), 'sat': (0.45, 1), 'val': (0.3, 1), 'rows': (235, 413)}         # бант, фартук, юбка
 
+# ------------------------------------------------------------------ вид со спины (идут вверх по улице)
+# Нарисованные жители смотрят на зрителя. Чтобы при ходьбе «от зрителя» они не шли задом наперёд, голова и корпус дорисовываются
+# со спины (лицо закрыто волосами, спереди ничего нет), а ноги — те же. Цвета берутся из самого рисунка, поэтому перекраска
+# (recolor) ложится и на спину.
+def _median(arr, box):
+    x0, y0, x1, y1 = box
+    px = arr[y0:y1, x0:x1].reshape(-1, 4)
+    px = px[px[:, 3] > 200]
+    return tuple(int(v) for v in np.median(px[:, :3], axis=0)) if len(px) else (128, 128, 128)
+
+
+def _fold(cv, pts, color, width):
+    cv.line(pts, color, width)
+
+
+def _shade_layer(layer, top=1.06, bottom=0.82, side=0.1):
+    """Объём: светлее сверху, темнее снизу и у краёв слоя (по альфа-маске)."""
+    arr = np.asarray(layer).astype(np.float32)
+    h, w = arr.shape[:2]
+    a = arr[:, :, 3] > 0
+    ys = np.where(a.any(1))[0]; xs = np.where(a.any(0))[0]
+    if not len(ys):
+        return layer
+    y0, y1, x0, x1 = ys[0], ys[-1], xs[0], xs[-1]
+    ky = np.clip((np.arange(h) - y0) / max(1, y1 - y0), 0, 1)
+    kx = np.abs((np.arange(w) - (x0 + x1) / 2) / max(1, (x1 - x0) / 2))
+    k = (top + (bottom - top) * ky)[:, None] * (1 - side * np.clip(kx, 0, 1) ** 2)[None, :]
+    arr[:, :, :3] = np.where(a[:, :, None], np.clip(arr[:, :, :3] * k[:, :, None], 0, 255), arr[:, :, :3])
+    return Image.fromarray(arr.astype(np.uint8), 'RGBA')
+
+
+def _paste_where(dst, src, mask):
+    """Поверх dst кладёт пиксели src там, где mask (bool)."""
+    d = np.asarray(dst).copy(); sa = np.asarray(src)
+    d[mask] = sa[mask]
+    return Image.fromarray(d, 'RGBA')
+
+
+def _dilate(mask, px):
+    from PIL import ImageFilter as F
+    im = Image.fromarray((mask * 255).astype(np.uint8), 'L').filter(F.MaxFilter(px * 2 + 1))
+    return np.asarray(im) > 0
+
+
+def _round(pts, n=2):
+    """Скругление ломаной (Чайкин): углы многоугольника становятся мягкими, как нарисованная одежда."""
+    for _ in range(n):
+        q = []
+        for i in range(len(pts)):
+            (x0, y0), (x1, y1) = pts[i], pts[(i + 1) % len(pts)]
+            q += [(x0 * 0.75 + x1 * 0.25, y0 * 0.75 + y1 * 0.25), (x0 * 0.25 + x1 * 0.75, y0 * 0.25 + y1 * 0.75)]
+        pts = q
+    return pts
+
+
+def _sat_val(a):
+    rgb = a[..., :3].astype(np.float32) / 255.0
+    mx, mn = rgb.max(2), rgb.min(2)
+    return np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-6), 0), mx
+
+
+def man_back(base):
+    W, H = base.size
+    a = np.asarray(base).copy()
+    vest = (84, 98, 118); sleeve = (233, 218, 184); skin = (238, 178, 130); hair = (204, 196, 184); hair_d = (156, 148, 138)
+    cap = (a[..., 2].astype(int) > a[..., 0].astype(int) + 6) & (a[..., 3] > 40); cap[115:] = False
+    cap = _dilate(cap, 3) & (a[..., 3] > 0)
+    a[150:306, :, 3] = 0                                       # спереди убираем всё: грудь, руки, мешок
+    out = Image.fromarray(a, 'RGBA')
+    ink = INK + (255,)
+    # руки вдоль тела — под корпусом: рукава, закатанные манжеты, кулаки
+    arms = Canvas(W, H)
+    for sx, ex in ((100, 70), (186, 214)):
+        arms.line([(sx, 190), (ex, 262)], ink, 35)
+        arms.line([(sx, 190), (ex, 262)], sleeve + (255,), 30)
+        arms.line([(ex - 0.1 * (sx - ex), 258), (ex, 276)], ink, 33)
+        arms.line([(ex - 0.1 * (sx - ex), 258), (ex, 276)], _mul(sleeve, 0.84) + (255,), 28)
+        arms.ellipse(ex - (4 if sx < 140 else -4), 291, 14, 15, skin + (255,), ink, 2.5)
+    out.alpha_composite(_shade_layer(arms.result(), 1.04, 0.9, 0.04))
+    # корпус: жилет со спины с центральным швом
+    t = Canvas(W, H)
+    body = _round([(104, 170), (182, 170), (196, 204), (203, 252), (204, 306), (90, 306), (88, 252), (94, 204)], 2)
+    t.poly(body, vest + (255,), ink, 3)
+    t.line([(143, 178), (144, 303)], _mul(vest, 0.72) + (255,), 2.2)
+    for sx in (102, 186):
+        t.line([(sx, 206), (sx - (4 if sx < 140 else -4), 296)], _mul(vest, 0.84) + (255,), 2)
+    t.poly(_round([(110, 163), (178, 163), (170, 181), (118, 181)], 2), sleeve + (255,), ink, 2.5)   # воротник рубашки
+    out.alpha_composite(_shade_layer(t.result(), 1.06, 0.84, 0.07))
+    # затылок: волосы вместо лица и бороды
+    h = Canvas(W, H)
+    h.ellipse(124, 114, 57, 54, hair + (255,), ink, 3)
+    h.ellipse(112, 98, 34, 26, _mul(hair, 1.05) + (255,))
+    for dx in (-34, -16, 2, 22, 40):
+        h.line([(124 + dx * 0.8, 96), (124 + dx * 1.2, 158)], hair_d + (255,), 2.4)
+    out.alpha_composite(_shade_layer(h.result(), 1.04, 0.9, 0.05))
+    return _paste_where(out, base, cap)                        # кепка поверх — как нарисована
+
+
+def woman_back(base):
+    W, H = base.size
+    a = np.asarray(base).copy()
+    shawl = (112, 88, 96); skin = (240, 186, 146)
+    hair = (74, 46, 36); hair_l = (112, 76, 54)
+    sat, val = _sat_val(a)
+    kerchief = (sat > 0.62) & (val > 0.35) & (a[..., 3] > 40); kerchief[155:] = False; kerchief[:, 205:] = False
+    kerchief = _dilate(kerchief, 1) & (a[..., 3] > 0)
+    kerchief[:, 150:] &= (np.arange(H)[:, None] < 70)           # у лица — только верх платка; ниже слева остаётся узел
+    a[130:262, :, 3] = 0
+    out = Image.fromarray(a, 'RGBA')
+    ink = INK + (255,)
+    # кисти из-под шали
+    hands = Canvas(W, H)
+    for hx in (116, 266):
+        hands.ellipse(hx, 272, 12, 13, skin + (255,), ink, 2.5)
+    out.alpha_composite(hands.result())
+    # шаль треугольником: плечи, спина, остриё вниз, бахрома по нижним краям
+    t = Canvas(W, H)
+    pts = _round([(160, 134), (226, 134), (262, 152), (278, 208), (274, 262), (192, 306), (106, 262), (102, 208), (122, 152)], 2)
+    t.poly(pts, shawl + (255,), ink, 3)
+    for fx in (-1, 1):
+        t.line([(192 + fx * 24, 150), (192 + fx * 56, 252)], _mul(shawl, 0.8) + (255,), 2.4)
+    t.line([(192, 140), (192, 292)], _mul(shawl, 0.76) + (255,), 2.4)
+    for i in range(7):
+        y0 = 262 + i * 6
+        for x0 in (106 + i * 12, 272 - i * 12):
+            t.line([(x0, y0), (x0 - 1, y0 + 12)], _mul(shawl, 0.7) + (255,), 2)
+    out.alpha_composite(_shade_layer(t.result(), 1.07, 0.86, 0.08))
+    # затылок: тёмные волосы вместо лица, узел платка остаётся нарисованным
+    h = Canvas(W, H)
+    h.ellipse(192, 94, 53, 62, hair + (255,))
+    h.ellipse(186, 142, 40, 14, hair + (255,))
+    for cx, cy in ((158, 130), (180, 142), (204, 144), (226, 134), (240, 116)):
+        h.ellipse(cx, cy, 14, 13, hair + (255,))
+    h.ellipse(198, 96, 32, 28, _mul(hair, 1.2) + (255,))
+    for k in range(5):
+        h.line([(168 + k * 13, 80), (164 + k * 15, 140)], hair_l + (255,), 2.2)
+    out.alpha_composite(_shade_layer(h.result(), 1.08, 0.88, 0.06))
+    return _paste_where(out, base, kerchief)                   # платок и бант — как нарисованы
+
+
 CITIZENS = {
     # имя: (исходник, правила перекраски)
     'man_a': ('resident_man', [
@@ -144,10 +284,13 @@ def citizens():
         base = Image.open(os.path.join(ROOT, 'public', 'assets', 'chapter2', src + '.webp')).convert('RGBA')
         img = recolor(base, rules)
         cut, split = (MAN_CUT, MAN_SPLIT) if src == 'resident_man' else (WOMAN_CUT, WOMAN_SPLIT)
-        frames = walk_frames(img, cut, split, lift=16 if src == 'resident_man' else 10)
-        out[name] = frames
-        for i, f in enumerate(frames):
-            save_webp(f, os.path.join(OUT, f'{name}_{i}.webp'), quality=90)
+        lift = 16 if src == 'resident_man' else 10
+        back = (man_back if src == 'resident_man' else woman_back)(base)
+        for key, pic in ((name, img), (name + '_b', recolor(back, rules))):
+            frames = walk_frames(pic, cut, split, lift=lift)
+            out[key] = frames
+            for i, f in enumerate(frames):
+                save_webp(f, os.path.join(OUT, f'{key}_{i}.webp'), quality=90)
     return out
 
 

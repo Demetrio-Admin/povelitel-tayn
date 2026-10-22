@@ -6,6 +6,7 @@
 import { DEPTH } from '../config/game.config.js';
 import { ZONES } from '../config/world.layout.js';
 import { DISPLAY_SIZE } from '../config/assets.manifest.js';
+import { CityLife } from './cityLife.js';
 
 export const LIFE = {
   tickMs: 600,
@@ -117,12 +118,15 @@ export class LivingWorld {
     this.timers.push(s.time.addEvent({ delay: LIFE.tickMs, loop: true, callback: () => this.tick() }));
     this.timers.push(s.time.delayedCall(LIFE.birdFirstMs, () => this.birdLoop()));
     this.timers.push(s.time.delayedCall(LIFE.animalFirstMs, () => this.animalLoop()));
+    // v0.40.0: в городе ещё и люди, звери, вороны, дым и снег (world/cityLife.js)
+    if (s.loc?.id === 'city') { this.city = new CityLife(s, this); this.city.start(); }
     this.tick();
   }
 
   stop() {
     if (!this.running) return;
     this.running = false;
+    this.city?.stop(); this.city = null;
     const tw = this.scene.tweens;
     for (const t of this.timers) t.remove(false);
     this.timers = [];
@@ -157,6 +161,7 @@ export class LivingWorld {
     this.updateSway(view);
     this.spawnRipple(view);
     this.updateLeaves();
+    this.city?.tick(view);
   }
 
   // ------------------------------------------------------------------ крона качается плавно, только рядом с камерой

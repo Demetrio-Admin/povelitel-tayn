@@ -323,6 +323,13 @@ export class AudioManager {
 
 // ------------------------------------------------------------------ рецепты эффектов
 const SFX = {
+  // ворона на крыше: два коротких хриплых «кар» (город, world/cityLife.js)
+  crow_caw: a => {
+    for (const at of [0, 0.22]) {
+      a.tone({ f: 520, to: 300, dur: 0.14, vol: 0.05, type: 'sawtooth', a: 0.01, at });
+      a.noise({ dur: 0.14, vol: 0.05, f: 1500, q: 2.5, a: 0.01, at });
+    }
+  },
   ui_click: a => { a.tone({ f: 900, to: 600, dur: 0.05, vol: 0.12, type: 'triangle' }); },
   ui_back: a => { a.tone({ f: 600, to: 380, dur: 0.07, vol: 0.12, type: 'triangle' }); },
   modal_open: a => { a.tone({ f: 523, dur: 0.18, vol: 0.08, type: 'sine' }); a.tone({ f: 784, dur: 0.22, vol: 0.06, at: 0.05 }); },

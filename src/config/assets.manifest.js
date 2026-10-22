@@ -15,6 +15,7 @@ import { CITY_WALK_FILES, CITY_WALK_SIZES } from './city.walk.art.js';
 import { ARCHIVE_FILES, ARCHIVE_SIZES } from './city.archive.art.js';
 import { NEIGHBORHOOD_FILES, NEIGHBORHOOD_SIZES } from './city.neighborhoods.art.js';
 import { CHAPTER3_FILES, CHAPTER3_SIZES } from './chapter3.art.generated.js';
+import { CITY_LIFE_FILES, CITY_LIFE_SIZES } from './cityLife.art.generated.js';
 
 export const ASSET_FILES = {
   ...ROOM_FILES,
@@ -112,9 +113,11 @@ Object.assign(ASSET_FILES, NEIGHBORHOOD_FILES);
 Object.assign(DISPLAY_SIZE, NEIGHBORHOOD_SIZES);
 // v0.38.0: глава III «Безымянная роща» — прототипная графика, нарисованная кодом (tools/art/ch3_grove_art.py).
 // Карта мира с рощей тоже оттуда: та же карта, на северо-западе — поляна со стеклянными ивами.
+Object.assign(ASSET_FILES, CITY_LIFE_FILES);   // прототипы «живого города» (tools/art/city_life_art.py)
+Object.assign(DISPLAY_SIZE, CITY_LIFE_SIZES);
 Object.assign(ASSET_FILES, CHAPTER3_FILES);
 Object.assign(DISPLAY_SIZE, CHAPTER3_SIZES);
 
 /** Рисунки-заглушки, не готовые к релизу. Оба героя используют финальные PNG.
  *  v0.38.0: вся графика главы III пока прототипная (список финальной — docs/design/chapter-3-art-inventory-v0.1.md). */
-export const TEMPORARY_ART = Object.keys(CHAPTER3_FILES).filter(k => k !== 'world_map_01');
+export const TEMPORARY_ART = [...Object.keys(CHAPTER3_FILES).filter(k => k !== 'world_map_01'), ...Object.keys(CITY_LIFE_FILES)];

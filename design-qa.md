@@ -1,3 +1,59 @@
+# Painted world map — implementation review (22 October 2026)
+
+Scope: adapt the supplied map artwork to the existing playable world-map modal. All five existing destinations, chapter locks, interior-parent resolution and exit-only travel remain functional.
+
+## Visual evidence and normalization
+
+- Source visual truth: `docs/design/world-map/reference.webp`, converted from the supplied 1024 × 1536 PNG. Original attachment: `/workspace/scratch/7accfa56fae9/upload/Фэнтезийная карта мира с городом и локациями(1).png`.
+- Browser-rendered implementation: `docs/design/world-map/game-view.webp` (527 × 936), cropped from `/workspace/scratch/7accfa56fae9/world-map-final.jpg` (1363 × 936).
+- Cloud Browser viewport: 1363 × 936 CSS pixels, DPR 1. Phaser logical canvas: 720 × 1280, displayed at x418, y0, 526.5 × 936 CSS pixels. No simulated device chrome.
+- Full-view comparison: `docs/design/world-map/comparison.jpg`. Source modal crop (114,23)–(950,1490) normalized to 487 pixels wide; implementation modal crop (438,41)–(925,880), also 487 pixels wide. Both shown together, without stretching their proportions.
+- Focused comparison: `docs/design/world-map/marker-detail.jpg`, the reference city badge/ribbon and the implemented current-forest badge/ribbon. Different subjects reflect actual player location; both show the same dynamic marker anatomy.
+- State difference: the reference shows chapter II, city current and destinations open. The browser evidence uses a new offline player in the forest, with chapter locks visible. The additional NW grove is an existing chapter III destination, deliberately retained. These are intentional game-state differences, not missing content.
+
+![Source and actual game modal](docs/design/world-map/comparison.jpg)
+
+![Marker, current-place ribbon and nameplate](docs/design/world-map/marker-detail.jpg)
+
+## Comparison history
+
+1. First combined comparison: `/workspace/scratch/7accfa56fae9/world-map-shots/comparison-first.jpg`. [P2] The current-place ribbon sat below the nameplate; the reference puts it above the medallion. [P2] The terrain had wider margins and occupied less of the modal than the source. Result: blocked.
+2. Moved the real parchment ribbon above the badge; increased the painted area from 608 to 632 logical pixels wide, reduced map-specific footer spacing, and restored the existing gold divider and a thin map frame. Captured the revised browser implementation and compared the full modal and marker regions together with the source again. The larger terrain now follows the reference proportions; the current marker sits above the correct location. No actionable P0/P1/P2 differences remain.
+
+## Required fidelity surfaces
+
+- Fonts/typography: existing Philosopher serif matches the fantasy UI direction. Title hierarchy, gold subheading and cream body copy remain readable. Labels use the existing native button typography; long descriptions wrap and scroll. Exact source lettering is not a supplied font asset, so the established game font is retained intentionally.
+- Spacing/layout rhythm: 4:5 terrain, narrow modal insets, title/divider, destination medallions and bottom close action follow the reference. The footer stays reachable while long descriptions scroll. Icon and label share a larger touch target. A short current-location description can make the overall modal shorter than the city reference.
+- Colors/tokens: dark wood and warm gold use existing UI tokens. Saturated forest, snowy blue north and violet cemetery follow the source. Locked destinations have a muted tint and a real lock icon, selected labels have the established gold highlight.
+- Image quality: terrain, five medallions and parchment ribbon are ImageGen raster assets guided by the supplied reference. Terrain is 1024 × 1280; badges are 512 × 512 RGBA WebP, ribbon 512 × 160 RGBA. No labels, buttons or location state are baked into the terrain. Alpha edges and final in-game scaling inspected. Natural repainting changes small building/branch details and badge ornament shapes; accepted P3 variation.
+- Copy/content: Russian location names, chapter labels and descriptions come from existing location data. «вы здесь» uses the actual player location, independently of selection. The grove, lock reasons and travel instructions are deliberate additions required by the existing game.
+
+## Interactions and verification
+
+- Cloud Browser: open map from the real game menu, select the city by medallion, select cemetery by nameplate, return to forest, inspect locked descriptions, scroll the long cemetery description and close/reopen the modal.
+- Console: checked application errors after reload with final code; none. The first development load exposed a transient undefined-radius edit, fixed before the final capture. Browser extension metadata errors are unrelated to the app.
+- `npm test`: passed (including map selection, closed destinations, menu-only viewing, exit-only travel, world data and UI smoke checks).
+- UI smoke re-run after final layout changes: passed. Existing map test now locates the target that contains the label instead of assuming the old tiny zone center.
+- `npm run build`: passed after final code changes. Existing large-chunk warning remains.
+- Combat bundle freshness and `git diff --check`: passed.
+- Test gap: this pass renders one Cloud Browser viewport and its portrait Phaser surface; no physical mobile device session or online-account travel was run. Existing state/UI tests cover travel permission and emitted destination.
+
+## Findings / checklist
+
+- [x] Replace old prototype terrain and point circles with illustrated terrain and medallions.
+- [x] Keep labels, current-place ribbon, locks and selection live.
+- [x] Match map proportions and move ribbon above the current badge.
+- [x] Preserve the fifth destination and all travel rules.
+- [x] Compare actual browser output against the source at full and focused scales.
+- [x] Run game tests and production build.
+- P3 follow-up only: exact micro-detail of repainted terrain and badge ornament differs from the single raster reference.
+
+final result: passed
+
+---
+
+# Previous review retained for history
+
 # Archive courtyard — concept 2 implementation review
 
 Scope: a playable trial of the selected courtyard art direction around the Archive, garden and canal. This is an adaptation to the existing game map, not a pixel-for-pixel replacement illustration. The agreed constraints retain the current house sizes/positions, rooms, quest points and original hero scale.

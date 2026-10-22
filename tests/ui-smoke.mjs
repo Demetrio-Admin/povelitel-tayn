@@ -305,7 +305,7 @@ await mute(async () => {
       const flat = (o, out = []) => { out.push(o); (o.children || []).forEach(x => flat(x, out)); return out; };
       const lockCount = () => flat(h.modal.container).filter(o => o.texKey === 'icon_lock').length;
       ok(lockCount() === 4, 'закрытые локации: четыре настоящие иконки замка (город, две вылазки и роща главы III), независимо от emoji-шрифта');
-      const pick = (name) => { const all = flat(h.modal.container); const b = all.find(o => typeof o.text === 'string' && o.text.startsWith(name)); const hit = all.find(o => o !== b && o.handlers?.pointerup && Math.abs(o.x - b.x) < 24 && Math.abs(o.y - (b.y + 1)) < 3); const sc = h.modal.scroll; h.input.activePointer = { x: sc.x + 5, y: sc.y + 5 }; hit.emit('pointerdown'); hit.emit('pointerup'); };
+      const pick = (name) => { const all = flat(h.modal.container); const b = all.find(o => typeof o.text === 'string' && o.text.startsWith(name)); const hit = all.find(o => o !== b && o.handlers?.pointerup && Math.abs(o.x - b.x) <= o.width / 2 && Math.abs(o.y - b.y) <= o.height / 2); const sc = h.modal.scroll; h.input.activePointer = { x: sc.x + 5, y: sc.y + 5 }; hit.emit('pointerdown'); hit.emit('pointerup'); };
       pick('Город');
       t = texts(h.modal.container).join(' | ');
       ok(h.modal?.opts?.title === 'Карта мира' && t.includes('Город · Глава II') && t.includes('покажет Мирра'), 'точка на карте: описание локации и почему закрыта');

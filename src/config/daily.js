@@ -47,6 +47,15 @@ export const DAILY_POOL = {
     goal: { type: 'wins', spawns: ['fw_wolf_1', 'fw_wolf_2', 'fw_wolf_3', 'fw_wolf_4'], count: 3 }, requires: 'chapter_2_complete', reward: { heroXP: 60, coins: 40, items: { ice_crystal: 1 } } },
   hunt_wisps: { giver: 'Сторож кладбища', title: 'Огоньки на погосте', text: 'По ночам над могилами снова бродят огоньки. Сторож просит развеять двоих.',
     goal: { type: 'wins', spawns: ['gy_wisp_1', 'gy_wisp_2'], count: 2 }, requires: 'chapter_2_complete', reward: { heroXP: 55, coins: 35, items: { rune_dust: 2 } } },
+  // v0.40: заказы рощи (после главы III) — тратят лишние материалы рощи, которые нельзя продать, и дают повод вернуться в рощу
+  grove_leaf_order: { giver: 'Нэрис, роща', title: 'Стеклянные листья для опытов', text: 'Нэрис разбирает, из чего сделана стеклянная тишина. Ей нужны три стеклянных листа.',
+    goal: { type: 'deliver', items: { glass_leaf: 3 } }, requires: 'chapter_3_complete', reward: { heroXP: 45, coins: 40, items: { rune_dust: 1 } } },
+  grove_bark_order: { giver: 'Мирра', title: 'Ивовая кора для домашних отваров', text: 'Мирра сушит ивовую кору для зимних настоев. Принеси три куска — взамен получишь смолу для факелов.',
+    goal: { type: 'deliver', items: { willow_bark: 3 } }, requires: 'chapter_3_complete', reward: { heroXP: 45, coins: 40, items: { tree_resin: 2 } } },
+  grove_spark_order: { giver: 'Илария, Архив', title: 'Искры памяти для записей', text: 'Архив хочет записать, что вспомнила роща. Для записей нужны две искры памяти.',
+    goal: { type: 'deliver', items: { memory_spark: 2 } }, requires: 'chapter_3_complete', reward: { heroXP: 55, coins: 40, items: { ice_crystal: 1 } } },
+  hunt_glass: { giver: 'Нэрис, роща', title: 'Стекло снова трескается', text: 'В роще опять трескаются стеклянные звери. Нэрис просит обойти троих и проверить, что тишина не вернулась.',
+    goal: { type: 'wins', spawns: ['gb_stoat_1', 'gb_stoat_2', 'ge_echo_1', 'ge_echo_2', 'gg_wolf_1', 'gg_wolf_2'], count: 3 }, requires: 'chapter_3_complete', reward: { heroXP: 60, coins: 40, items: { lunar_shard: 1 } } },
 };
 // награда сапфирами одна для всех поручений: её задаёт DAILY.sapphires, а не каждая запись отдельно
 for (const o of Object.values(DAILY_POOL)) o.reward = { ...o.reward, sapphires: DAILY.sapphires };

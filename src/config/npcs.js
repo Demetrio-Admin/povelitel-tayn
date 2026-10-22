@@ -63,4 +63,26 @@ export const NPCS = {
     greetings: ['Кассиан крутит посох и оценивающе смотрит на вас.'],
     wave: false,
   },
+  // ---- v0.38.0: глава III «Безымянная роща»
+  iva: {
+    id: 'iva', name: 'Ива', title: 'Садовница', texture: 'npc_iva', color: 0xa8e0c8,
+    greetings: ['Ива поправляет стеклянную веточку в косе и смотрит на вас — ласково и очень устало.'],
+    wave: false,
+  },
+  // та же Ива после финала: сорок лет упали на неё разом (отдельный портрет)
+  iva_old: {
+    id: 'iva_old', name: 'Ива', title: 'Садовница', texture: 'npc_iva_old', color: 0xa8e0c8,
+    greetings: ['Ива растирает озябшие пальцы — и улыбается.'],
+    wave: true,
+  },
+  nameless: {
+    id: 'nameless', name: 'Безымянная', title: 'Дух рощи', texture: 'npc_nameless', color: 0xd8e6ee,
+    greetings: ['Серебряная тень дрожит, как отражение в воде.'],
+    float: true,
+  },
+  vetla: {
+    id: 'vetla', name: 'Ветла', title: 'Дух ивовой рощи', texture: 'npc_vetla', color: 0x9be8a0,
+    greetings: ['Ветла шелестит, как листва над водой.'],
+    float: true,
+  },
 };

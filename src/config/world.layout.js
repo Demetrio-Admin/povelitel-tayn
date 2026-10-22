@@ -12,6 +12,7 @@ import { cityZoneData, CITY_PORTALS, plannedObject } from './city.plan.js';
 import { CONTENT_INTERACTIVES, CONTENT_ENEMIES, CACHE_RESOURCE_REWARDS } from './world.content.js';
 import { CITY_GROUND, CITY_COLLIDERS, CITY_EXTRA_COLLIDERS, CITY_KEEP_CLEAR, CITY_INTERACTIVES, CITY_ENEMIES } from './world.city.js';
 import { EXP_ZONES, EXP_GROUND, EXP_COLLIDERS, EXP_KEEP_CLEAR, EXP_INTERACTIVES, EXP_ENEMIES } from './world.expeditions.js';
+import { GROVE_ZONES, GROVE_GROUND, GROVE_COLLIDERS, GROVE_KEEP_CLEAR, GROVE_INTERACTIVES, GROVE_ENEMIES } from './world.grove.js';
 export { CLEARINGS } from './world.content.js';
 
 export const WORLD = {
@@ -33,6 +34,7 @@ export const ZONES = [
   { id: 'L', name: 'Древние ворота',        x: 0,   y: 0,    w: 1800, h: 1100, safePoint: { x: 900, y: 820 } },
   ...cityZoneData(),   // v0.20.0: глава II
   ...EXP_ZONES,    // v0.24.0: вылазки
+  ...GROVE_ZONES,  // v0.38.0: глава III «Безымянная роща»
 ];
 
 // Поверхности (Layer 1 — Ground). Базовая трава кладётся на весь мир автоматически.
@@ -41,6 +43,7 @@ export const GROUND = [
   { tex: 'wooden_floor_01', x: 640,  y: 4880, w: 520, h: 420 },
   ...CITY_GROUND,
   ...EXP_GROUND,
+  ...GROVE_GROUND,
 ];
 
 // Места, где генератор не ставит случайный декор: проёмы между блоками, проходы к воротам.
@@ -52,6 +55,7 @@ export const KEEP_CLEAR = [
   { x: 700,  y: 125,  w: 960, h: 210 },  // v0.10.0: поляна узла за воротами (то же, что CLEARINGS в world.content.js)
   ...CITY_KEEP_CLEAR,
   ...EXP_KEEP_CLEAR,
+  ...GROVE_KEEP_CLEAR,
 ];
 
 // Коллизии (Blueprint §6): крупные деревья, здания, вода, камни, стены руин.
@@ -114,6 +118,7 @@ export const COLLIDERS = [
   ...CITY_COLLIDERS,
   ...EXP_COLLIDERS,   // v0.24.0: после городских (номера коллайдеров города не сдвигаются)
   ...CITY_EXTRA_COLLIDERS,
+  ...GROVE_COLLIDERS,   // v0.38.0: глава III — в конец, номера прежних коллайдеров не сдвигаются
 ];
 
 // ИСТОЧНИК для генератора карты (tools/world/bake.mjs). Игра читает готовый список из world.props.js,
@@ -196,7 +201,7 @@ for (const o of BASE_INTERACTIVES) {
   const extra = CACHE_RESOURCE_REWARDS[o.id];
   if (extra) o.reward = { ...o.reward, items: { ...(o.reward.items || {}), ...extra } };
 }
-export const INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES, ...CITY_GATHERING, ...EXP_INTERACTIVES, ...CITY_PORTALS].map(plannedObject);
+export const INTERACTIVES = [...BASE_INTERACTIVES, ...CONTENT_INTERACTIVES, ...CITY_INTERACTIVES, ...CITY_GATHERING, ...EXP_INTERACTIVES, ...CITY_PORTALS, ...GROVE_INTERACTIVES].map(plannedObject);
 
 // Враги-триггеры на карте. Бой начинается при входе в радиус.
 const BASE_ENEMY_SPAWNS = [
@@ -206,4 +211,4 @@ const BASE_ENEMY_SPAWNS = [
   { id: 'forest_guardian_01', enemy: 'forest_guardian', x: 400, y: 1400, radius: 230, collide: { w: 240, h: 80 },
     startEvent: 'forest_guardian_01', defeatEvent: 'guardian_defeated', opensPath: 'gate_path', scale: 1.5 },
 ];
-export const ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES, ...CITY_ENEMIES, ...EXP_ENEMIES].map(plannedObject);
+export const ENEMY_SPAWNS = [...BASE_ENEMY_SPAWNS, ...CONTENT_ENEMIES, ...CITY_ENEMIES, ...EXP_ENEMIES, ...GROVE_ENEMIES].map(plannedObject);

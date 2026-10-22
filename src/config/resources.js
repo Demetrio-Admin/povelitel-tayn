@@ -13,6 +13,11 @@ export const RESOURCES = {
   ice_crystal:     { name: 'Ледяной кристалл',  icon: 'icon_ice_crystal', color: 0x9fe6ff, hint: 'Необычный кристалл холода: в особых местах города и у морозных противников.' },
   frost_shard:     { name: 'Инеевый осколок',   icon: 'icon_frost_shard', color: 0x7fb8ff, hint: 'Редкий осколок, который остаётся от сильных морозных врагов. В лавках не продаётся.' },
   cold_heart:      { name: 'Сердце холода',     icon: 'icon_cold_heart', color: 0x5fd0ff, hint: 'Очень редкий компонент сильнейших противников. Пригодится для будущих амулетов и ступеней Льда.' },
+  // v0.38.0 — глава III «Безымянная роща» (docs/design/chapter-3-story-v0.1.md §10): снова не больше четырёх
+  glass_leaf:      { name: 'Стеклянный лист',   icon: 'icon_glass_leaf', color: 0xbfe8f0, hint: 'Лист ивы, застывший стеклом. Растёт в Безымянной роще; нужен для Отвара памяти.' },
+  memory_spark:    { name: 'Искра памяти',      icon: 'icon_memory_spark', color: 0xf3d9a4, hint: 'Тёплая искра чьего-то воспоминания. Её роняет эхо, а ещё она прячется в стекле рощи.' },
+  willow_bark:     { name: 'Ивовая кора',       icon: 'icon_willow_bark', color: 0xb39a76, hint: 'Горькая кора сухих ив из Сухой балки. Без неё Отвар памяти не держит имя.' },
+  vetla_seed:      { name: 'Семя ветлы',        icon: 'icon_vetla_seed', color: 0x9be8a0, hint: 'Подарок духа рощи. Его посадят там, где дорого, — когда придёт время.' },
 };
 
 /** Расходники. effect применяется в бою (CombatManager.usePotion); outside: true — можно выпить из сумки вне боя (v0.9). */
@@ -85,7 +90,8 @@ export const RESOURCE_ITEMS = {
   ...Object.fromEntries(Object.entries(CRAFT_ITEMS).map(([id, r]) => [id, { name: r.name, icon: r.icon }])),
 };
 
-export const RESOURCE_ORDER = ['moon_herb', 'forest_mushroom', 'tree_resin', 'rune_dust', 'lunar_shard', 'frost_herb', 'ice_crystal', 'frost_shard', 'cold_heart'];
+export const RESOURCE_ORDER = ['moon_herb', 'forest_mushroom', 'tree_resin', 'rune_dust', 'lunar_shard', 'frost_herb', 'ice_crystal', 'frost_shard', 'cold_heart',
+  'glass_leaf', 'memory_spark', 'willow_bark', 'vetla_seed'];
 /** v0.19.0: ресурсы главы I — их сумка показывает всегда; новые — когда они уже есть. */
 export const BASE_RESOURCES = ['moon_herb', 'forest_mushroom', 'tree_resin', 'rune_dust', 'lunar_shard'];
 export const POTION_ORDER = Object.keys(POTIONS);

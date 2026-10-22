@@ -2,6 +2,7 @@
 import { CITY_ROOMS } from '../src/config/city.plan.js';
 import { CITY_START, EAST_X } from '../src/config/world.city.js';
 import { regionStart, FROSTWOOD_START, GRAVEYARD_START } from '../src/config/world.expeditions.js';
+import { GROVE_START, GROVE_GATE_IDS, GROVE_BEHIND_GATES } from '../src/config/world.grove.js';
 import { WORLD, COLLIDERS, INTERACTIVES, ENEMY_SPAWNS } from '../src/config/world.layout.js';
 import { ROADS, WATERS } from '../src/config/world.terrain.js';
 import { ASSET_FILES } from '../src/config/assets.manifest.js';
@@ -85,7 +86,7 @@ console.log('\nМир: таблица коллизий');
 console.log('\nМир: проходимость');
 {
   const W = WORLD.width, H = WORLD.height;
-  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', 'frost_barrier', 'fq_water', 'lab_seal', 'final_ward'];
+  const GATES = ['corrupted_roots', 'heavy_boulder', 'forest_guardian_01', 'ancient_gate', 'node_trial', 'frost_barrier', 'fq_water', 'lab_seal', 'final_ward', ...GROVE_GATE_IDS];
   const objById = Object.fromEntries([...INTERACTIVES, ...ENEMY_SPAWNS].map(o => [o.id, o]));
   const near = (grid, seen, id, r) => { const o = objById[id]; return reachableNear(grid, seen, o.x, o.y, r ?? Math.min(o.radius || 100, 120)); };
 
@@ -105,7 +106,8 @@ console.log('\nМир: проходимость');
   // v0.24.0: участки вылазок — тоже отдельные (указатели из города)
   const seenFW = floodFrom(open, FROSTWOOD_START.x, FROSTWOOD_START.y), seenGY = floodFrom(open, GRAVEYARD_START.x, GRAVEYARD_START.y);
   const seenRooms=new Map(CITY_ROOMS.map(r=>[r.arrival,floodFrom(open,r.arrival.x,r.arrival.y)]));
-  const seenOf = (o) => { const p = regionStart(o, WORLD.playerStart, CITY_START, EAST_X); return seenRooms.get(p) || (p === CITY_START ? seenE : p === FROSTWOOD_START ? seenFW : p === GRAVEYARD_START ? seenGY : seenO); };
+  const seenG = floodFrom(open, GROVE_START.x, GROVE_START.y);   // v0.38.0: роща главы III — тоже отдельный участок (указатель с карты мира)
+  const seenOf = (o) => { const p = regionStart(o, WORLD.playerStart, CITY_START, EAST_X); return seenRooms.get(p) || (p === CITY_START ? seenE : p === GROVE_START ? seenG : p === FROSTWOOD_START ? seenFW : p === GRAVEYARD_START ? seenGY : seenO); };
   for (const o of [...INTERACTIVES, ...ENEMY_SPAWNS]) {
     if (['flame_c'].includes(o.id)) continue;
     ok(near(open, seenOf(o), o.id), `ворота открыты: «${o.id}» достижим`);
@@ -114,6 +116,14 @@ console.log('\nМир: проходимость');
   // лес и город пешком не соединены: из леса в город не пройти, только указателем
   ok(!near(open, seenO, 'npc_ilaria'), 'из леса в город пешком не пройти (только через карту мира у выхода)');
   ok(near(open, seenO, 'exit_forest') && near(open, seenE, 'exit_city') && near(open, seenFW, 'exit_frostwood') && near(open, seenGY, 'exit_graveyard'), 'выходы «Карта мира» достижимы во всех локациях');
+  // v0.38.0: роща главы III — пока проходы закрыты (плотина, корни, стена, мост, завеса), за ними пути нет; Сухая балка и опушка доступны
+  {
+    const gClosed = buildWalkGrid({ width: W, height: H, solids: solidsFor([]) });
+    const seenGC = floodFrom(gClosed, GROVE_START.x, GROVE_START.y);
+    for (const id of ['exit_grove', 'npc_nerys_grove', 'gb_bark_1', 'ge_echo_stream', 'ge_leaf_1']) ok(near(gClosed, seenGC, id), `роща, проходы закрыты: «${id}» достижим`);
+    for (const id of GROVE_BEHIND_GATES) ok(!near(gClosed, seenGC, id), `роща, проходы закрыты: «${id}» НЕ достижим (нет обхода)`);
+    ok(near(open, seenG, 'npc_vetla') && near(open, seenG, 'gh_reflection'), 'роща, проходы открыты: Сердце рощи и Отражение Ивы достижимы');
+  }
   // v0.10.0: Древние ворота — настоящая преграда (стена по бокам), а узел за ними стережёт испытание
   {
     const g1 = buildWalkGrid({ width: W, height: H, solids: solidsFor(['corrupted_roots', 'heavy_boulder', 'forest_guardian_01']) });

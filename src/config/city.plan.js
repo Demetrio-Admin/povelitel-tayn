@@ -9,6 +9,7 @@ import { dressArchiveDistrict } from './city.archive.js';
 import { dressCityNeighborhoods } from './city.neighborhoods.js';
 import { dressLaboratoryTrail } from './city.lab-garden.js';
 import { dressWarehouseA } from './city.warehouses.js';
+import { ROOM_ART, ROOM_WIDTH, ROOM_HEIGHT, paintedRoom, roomPoint, dressPaintedRooms } from './city.rooms.js';
 
 export const CITY_LAYOUT_VERSION = 4;
 export const CITY_RECT = { x: 5600, y: 160, w: 2880, h: 5760 };
@@ -53,23 +54,25 @@ const layouts = [
   ['cellar','Дом с погребом',11800,5200,720,1440],
   ['rescue','Дом за ледяной дверью',13400,5200,720,1440],
 ];
+export const LEGACY_ROOM_RECTS = layouts.map(([key,name,x,y,w,h])=>({key,x,y,w,h}));
 export const CITY_ROOMS = layouts.map(([key,name,x,y,w,h]) => {
+  if(paintedRoom(key)){w=ROOM_WIDTH;h=ROOM_HEIGHT;}
   const doors = BUILDINGS.filter(b => b.id === key);
   return { id:'city_'+key,key,name,interior:true,parent:'city',rect:{x,y,w,h},
     requires:doors[0]?.requires,lockedText:'Сначала завершите действие у входа.',
-    arrival:{x:x+w/2,y:y+h-180},exit:'room_exit_'+doors[0].id,
-    entrances:doors.map(b => 'door_'+b.id), extraTop:120,extraBottom:180 };
+    arrival:{x:x+w/2,y:y+h-(paintedRoom(key)?260:180)},exit:'room_exit_'+doors[0].id,
+    entrances:doors.map(b => 'door_'+b.id), extraTop:paintedRoom(key)?0:120,extraBottom:paintedRoom(key)?0:180,painted:paintedRoom(key) };
 });
 const room = key => CITY_ROOMS.find(r => r.key === key);
 const rp = (key,x,y) => ({x:room(key).rect.x+x,y:room(key).rect.y+y});
 export const CITY_PORTALS = BUILDINGS.filter(b => !b.id.startsWith('north_')).flatMap(b => {
   const key=b.id,r=room(key);
   const entryX=r.rect.w/2;
-  const inside=rp(key,entryX,r.rect.h-180);
+  const inside={...r.arrival};
   return [
     {id:'door_'+b.id,kind:'room_door',x:b.door.x,y:b.door.y+28,ghost:{w:120,h:80},radius:110,
       target:inside,room:r.id,hint:'Войти: '+b.name,requiresEvent:b.requires},
-    {id:'room_exit_'+b.id,kind:'room_door',...rp(key,entryX,r.rect.h-55),ghost:{w:160,h:80},radius:130,
+    {id:'room_exit_'+b.id,kind:'room_door',...rp(key,entryX,r.rect.h-(r.painted?100:55)),ghost:{w:160,h:80},radius:130,
       target:{x:b.door.x,y:b.door.y+100},room:'city',hint:'Выйти: '+b.name},
   ];
 });
@@ -114,12 +117,22 @@ export const CITY_POSITIONS = Object.fromEntries([
   ['vol_1',rp('lab',390,1240)],['vol_2',rp('lab',680,960)],['lab_construct',rp('lab',480,450)],
   ['final_severin',rp('duel',540,600)],
 ]);
+// Actors and usable objects stay live; their art is not baked into the room painting.
+for(const [key,a] of Object.entries(ROOM_ART))for(const [id,[x,y]] of Object.entries(a.positions))CITY_POSITIONS[id]=roomPoint(key,x,y,CITY_ROOMS);
+Object.assign(CITY_POSITIONS.npc_banker,{approach:roomPoint('bank',425,750,CITY_ROOMS)});
+for(const id of ['archive_document','lab_journal','final_letters','ch3_glass_leaf'])Object.assign(CITY_POSITIONS[id],{elevated:42,editorStyle:{w:30,h:25}});
+for(const [id,key,index] of [['archive_document','archive',1],['lab_journal','lab',3],['final_letters','duel',2]]){
+  const b=ROOM_ART[key].boxes[index];CITY_POSITIONS[id].y=roomPoint(key,0,b[1]+b[3],CITY_ROOMS).y+1;
+}
+CITY_POSITIONS.wh_cargo.target={x:CITY_POSITIONS.wh_cargo.x+48,y:CITY_POSITIONS.wh_cargo.y+8};
+
 export const plannedObject = o => {
   const p=CITY_POSITIONS[o.id];
   if(!p)return {...o};
   const out={...o,...p};
   const outdoors=insideRect(p,CITY_RECT);
-  if(o.target)out.target={x:p.x+(o.target.x-o.x)*(outdoors?TARGET_SCALE:1),y:p.y+(o.target.y-o.y)*(outdoors?TARGET_SCALE:1)};
+  if(p.target)out.target={...p.target};
+  else if(o.target)out.target={x:p.x+(o.target.x-o.x)*(outdoors?TARGET_SCALE:1),y:p.y+(o.target.y-o.y)*(outdoors?TARGET_SCALE:1)};
   return out;
 };
 
@@ -270,6 +283,7 @@ export function cityMapData() {
   fence('bank_garden',2400,4360,180,'iron');fence('coven_garden',2420,3360,160,'wood');fence('rescue_yard',2250,1840,300,'wood');
   fence('workshop_yard',2440,1030,140,'wood');fence('society_garden',2400,2960,180,'iron');fence('cellar_garden',700,1990,200,'wood');
   for(const r of CITY_ROOMS) {
+    if(r.painted)continue;
     const {x,y,w,h}=r.rect,t=24;
     const xs=[w/2];
     colliders.push(...[{x,y,w,h:t},{x,y,w:t,h},{x:x+w-t,y,w:t,h}].map((a,i)=>({id:r.id+'_wall_'+i,kind:'wall',tex:'city_timber',...a})));
@@ -277,7 +291,7 @@ export function cityMapData() {
     for(const dx of xs){colliders.push({id:r.id+'_wall_bottom_'+dx,kind:'wall',tex:'city_timber',x:x+last,y:y+h-t,w:dx-90-last,h:t});last=dx+90;}
     colliders.push({id:r.id+'_wall_end',kind:'wall',tex:'city_timber',x:x+last,y:y+h-t,w:w-last,h:t});
   }
-  const furniture=(key,id,x,y,w,h,tex,extra={})=>colliders.push({id:'room_'+id,kind:'furniture',...rp(key,x,y),w,h,tex,...extra});
+  const furniture=(key,id,x,y,w,h,tex,extra={})=>!paintedRoom(key)&&colliders.push({id:'room_'+id,kind:'furniture',...rp(key,x,y),w,h,tex,...extra});
   furniture('bank','counter',150,400,420,40,'city_final_bank_counter');
   furniture('bank','safe',520,230,80,35,'city_bank_safe');
   furniture('archive','shelf_left',50,380,170,35,'city_final_archive_shelf');
@@ -309,6 +323,7 @@ export function cityMapData() {
   }
   const props=[];
   const roomProp=(key,id,k,x,y,extra={})=>{
+    if(paintedRoom(key))return;
     props.push({id:'room_decor_'+key+'_'+id,k,...rp(key,x,y),solid:null,...extra});
     // The mural is a wall, not floor: its entire face is impassable, in physics and navigation.
     if(id==='back_wall'){
@@ -509,6 +524,7 @@ export function cityMapData() {
   dressArchiveDistrict({ grounds, colliders, props, roads, point: P, buildings: BUILDINGS, questPositions: CITY_POSITIONS });
   dressCityNeighborhoods({ colliders, props, roads, point: P, buildings: BUILDINGS, questPositions: CITY_POSITIONS });
   dressLaboratoryTrail({ colliders, props, roads, point: P, buildings: BUILDINGS, questPositions: CITY_POSITIONS });
+  dressPaintedRooms({grounds,colliders,props},CITY_ROOMS);
   return {grounds,colliders,props,roads,waters:[CITY_CANAL],skipped};
 }
 export const cityLocal = local;

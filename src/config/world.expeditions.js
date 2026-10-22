@@ -1,4 +1,5 @@
 import { CITY_RECT, CITY_ROOMS } from './city.plan.js';
+import { GROVE_RECT, GROVE_START } from './world.grove.js';
 // v0.24.0 — вылазки (stage-2-design-pack §24–25): настоящие опасные места к востоку от города (мир шире: 3600 → 5400).
 // Морозный лес (север) и Старое кладбище (юг) — отдельные локации (v0.27.0: config/locations.js), переход — через карту мира у выхода. Внутри: сбор, несколько боёв, сильный противник в конце и его запас (одна выдача за победный цикл, как запас у Корневика).
 // Места возобновляются (repeatSec): одна вылазка — 10–15 минут; звери возвращаются через 10 минут, вожак и страж — через час.
@@ -95,12 +96,13 @@ export const EXP_DECOR = [
   { id: 'gy_candles_2', k: 'candle_group_01', x: 4640, y: 3110 },
 ];
 
-/** С какой точки проверять, достижимо ли место: лес Мирры, город или участок вылазки (они не соединены пешком). */
+/** С какой точки проверять, достижимо ли место: лес Мирры, город, участок вылазки или роща главы III (они не соединены пешком). */
 export function regionStart(o, forestStart, cityStart, eastX) {
   const inside=r=>o.x>=r.x && o.x<r.x+r.w && o.y>=r.y && o.y<r.y+r.h;
   const room=CITY_ROOMS.find(r=>inside(r.rect));
   if(room)return room.arrival;
   if(inside(CITY_RECT))return cityStart;
+  if (inside(GROVE_RECT)) return GROVE_START;   // v0.38.0: глава III — своя локация
   if (o.x >= EXP_X) return o.y < 2650 ? FROSTWOOD_START : GRAVEYARD_START;
   if (o.x >= eastX) return cityStart;
   return forestStart;

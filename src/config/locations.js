@@ -7,6 +7,7 @@ import { CITY_RECT, CITY_ROOMS } from './city.plan.js';
 // сохранения и сервер остаются прежними. Игрок этого холста не видит — для него это отдельные места.
 import { CITY_START, FOREST_RETURN } from './world.city.js';
 import { FROSTWOOD_START, GRAVEYARD_START } from './world.expeditions.js';
+import { GROVE_RECT, GROVE_START } from './world.grove.js';
 
 export const LOCATIONS = [
   {
@@ -23,6 +24,16 @@ export const LOCATIONS = [
     requires: 'ch2_start', lockedText: 'Дорогу в город покажет Мирра после главы I.',
     map: { x: 330, y: 346 },
     text: 'Город под инеем: площадь, Архив, Общество Преображения, Замёрзший квартал, Дуэльный зал и Дом Ковенов.',
+  },
+  {
+    // v0.38.0 — глава III: роща, которой нет на картах, — пока Астрал не прочтёт стеклянный лист из писем Северина
+    id: 'grove', name: 'Безымянная роща', subtitle: 'Глава III', exit: 'exit_grove',
+    rect: GROVE_RECT, extraTop: 300, extraBottom: 300,
+    arrival: GROVE_START,
+    requires: 'ch3_leaf_read', lockedText: 'Места без имени нет на картах. Сначала узнайте, куда ведёт подпись «Садовница».',
+    map: { x: 112, y: 214 },
+    text: 'Ивовая роща из стекла: время здесь остановлено уже сорок лет. Сухая балка, Стеклянная опушка, Сад под колпаками, '
+      + 'Корни Ракиты и Сердце рощи. Стеклянных зверей колют Лёд и Телекинез, эхо пробивает Астрал, а Огонь берёт стекло только там, где вещам вернули имя.',
   },
   {
     id: 'frostwood', name: 'Морозный лес', subtitle: 'Вылазка', exit: 'exit_frostwood', expedition: true,

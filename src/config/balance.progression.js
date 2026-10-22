@@ -173,6 +173,34 @@ export const EVENT_REWARDS = {
   ch2_coven_ready:         { heroXP: 300, coins: 220, items: { ice_crystal: 2 } },
   ch2_epilogue:            { heroXP: 250 },
   chapter_2_complete:      { heroXP: 300, coins: 330, topUp: { heroXP: 7900 }, items: { frost_shard: 1 } },   // + 50 сапфиров и титул «Переживший иней» (EVENT_ACTIONS)
+  // v0.38.0 — глава III «Безымянная роща» (chapter-3-story-v0.1.md §12): 15 → 20 уровень; опыт боёв — в наградах врагов
+  ch3_start:               { heroXP: 60 },
+  ch3_ilaria_talk:         { heroXP: 250, coins: 120 },
+  ch3_severin_talk:        { heroXP: 280, coins: 100 },
+  ch3_leaf_read:           { heroXP: 360, coins: 120, items: { glass_leaf: 1 } },
+  ch3_grove_arrived:       { heroXP: 300, coins: 100 },
+  ch3_nerys_met:           { heroXP: 300, coins: 150, items: { elixir_life: 1 } },   // Нэрис делится запасом перед дорогой к ручью
+  ch3_nameless_met:        { heroXP: 200 },
+  ch3_echo_stream:         { heroXP: 350, items: { memory_spark: 1 } },
+  ch3_name_stream:         { heroXP: 450, coins: 200 },
+  ch3_dam_open:            { heroXP: 200 },
+  ch3_jar_bird:            { heroXP: 120 },
+  ch3_jar_fox:             { heroXP: 120 },
+  ch3_iva_met:             { heroXP: 450, coins: 200 },
+  ch3_echo_willow:         { heroXP: 350, items: { memory_spark: 1 } },
+  ch3_name_willow:         { heroXP: 450, coins: 200 },
+  ch3_roots_open:          { heroXP: 200 },
+  ch3_mirra_met:           { heroXP: 500, coins: 250, items: { elixir_life: 2 } },
+  ch3_echo_vetla:          { heroXP: 350 },
+  ch3_lock_wall:           { heroXP: 150 },
+  ch3_lock_bridge:         { heroXP: 150 },
+  ch3_lock_sapling:        { heroXP: 150 },
+  ch3_lock_ward:           { heroXP: 150 },
+  ch3_iva_refused:         { heroXP: 300 },
+  ch3_name_vetla:          { heroXP: 700, coins: 300 },
+  ch3_vetla_blessing:      { heroXP: 200, items: { vetla_seed: 1 } },
+  ch3_epilogue:            { heroXP: 400 },
+  chapter_3_complete:      { heroXP: 500, coins: 400, topUp: { heroXP: 18400 }, items: { memory_spark: 2 } },   // + 60 сапфиров и титул «Голос рощи» (EVENT_ACTIONS)
 };
 // lunar_quest_complete теперь выдаёт атомарная операция «применить Лунный фитиль» (storyItems.js STORY_USES.lunar_wick,
 // те же числа); запись выше осталась для старого пути QuestFlags.complete и тестов — алтарь его больше не вызывает.

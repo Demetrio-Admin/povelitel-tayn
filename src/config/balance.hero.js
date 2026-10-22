@@ -9,7 +9,7 @@ export const HERO_BASE = {
 // xp — суммарный опыт, нужный для достижения уровня.
 // [ПРОТОТИП] Пороги XP в документах не заданы — подобраны так, чтобы по маршруту
 // игрок получал ур. 2 после первого боя и ур. 3 к моменту Телекинеза II.
-// v0.30: реген маны в бою — 3 / 3,2 / 3,5 / 3,8 по диапазонам уровней 1–5 / 6–10 / 11–13 / 14–15.
+// v0.30: реген маны в бою — 3 / 3,2 / 3,5 / 3,8 по диапазонам уровней 1–5 / 6–10 / 11–13 / 14–15; v0.38.0: 4 на уровнях 16–20.
 // Тот же набор (level, xp, maxHp, maxMana) — в SQL game_hero_levels (supabase/schema.sql); совпадение проверяет diff-test.
 export const HERO_LEVELS = [
   { level: 1,  xp: 0,    maxHp: 120, maxMana: 100, manaRegen: 3, damageMult: 1.00, note: 'Телекинез I' },
@@ -28,6 +28,12 @@ export const HERO_LEVELS = [
   { level: 13, xp: 5100, maxHp: 226, maxMana: 185, manaRegen: 3.5, damageMult: 1.37, note: 'Лаборатория' },
   { level: 14, xp: 6400, maxHp: 240, maxMana: 195, manaRegen: 3.8, damageMult: 1.42, note: 'Ковены' },
   { level: 15, xp: 7900, maxHp: 255, maxMana: 205, manaRegen: 3.8, damageMult: 1.48, note: 'Финал главы II' },
+  // v0.38.0: глава III «Безымянная роща» (docs/design/chapter-3-story-v0.1.md §12)
+  { level: 16, xp: 9600, maxHp: 270, maxMana: 215, manaRegen: 4, damageMult: 1.54, note: 'Стеклянная опушка' },
+  { level: 17, xp: 11500, maxHp: 285, maxMana: 225, manaRegen: 4, damageMult: 1.6, note: 'Звонец' },
+  { level: 18, xp: 13600, maxHp: 300, maxMana: 235, manaRegen: 4, damageMult: 1.66, note: 'Ива и игольники' },
+  { level: 19, xp: 15900, maxHp: 316, maxMana: 245, manaRegen: 4, damageMult: 1.72, note: 'Четыре замка' },
+  { level: 20, xp: 18400, maxHp: 332, maxMana: 255, manaRegen: 4, damageMult: 1.78, note: 'Финал главы III' },
 ];
 
 export const HERO_RECOVERY = {

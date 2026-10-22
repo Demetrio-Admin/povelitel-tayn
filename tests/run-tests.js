@@ -418,10 +418,10 @@ console.log('\n[v0.8] Журнал, алхимия, диалоги, подска
   };
 
   // --- данные
-  ok(Object.keys(RESOURCES).length === 9 && BASE_RESOURCES.length === 5, '5 видов ресурсов главы I (+4 главы II с v0.19.0)');
+  ok(Object.keys(RESOURCES).length === 13 && BASE_RESOURCES.length === 5, '5 видов ресурсов главы I (+4 главы II с v0.19.0, +4 главы III с v0.38.0)');
   ok(Object.keys(RESOURCES).every(k => ITEMS[k]), 'каждый ресурс есть в ITEMS (имя, иконка)');
   ok(Object.values(RECIPES).every(r => Object.keys(r.needs).every(k => ITEMS[k]) && ITEMS[r.result]), 'рецепты ссылаются на существующие предметы');
-  ok(RECIPE_ORDER.includes('potion_life_small') && RECIPE_ORDER.includes('potion_mana_small') && RECIPE_ORDER.filter(id => RECIPES[id].kind === 'story').length === 3, 'алхимия главы I: шесть рецептов, три сюжетных (рецепты главы II — отдельно)');
+  ok(RECIPE_ORDER.includes('potion_life_small') && RECIPE_ORDER.includes('potion_mana_small') && RECIPE_ORDER.filter(id => RECIPES[id].kind === 'story' && !RECIPES[id].chapter).length === 3, 'алхимия главы I: шесть рецептов, три сюжетных (рецепты главы II — отдельно)');
   ok(Object.keys(NPCS).length >= 4 && Object.keys(NPCS).every(id => DIALOGUES[id]), 'NPC ≥ 4, у каждого есть диалоги');
   ok(SIDE_QUEST_ORDER.length === 6, 'шесть побочных заданий, включая цепочку Веды');
   const dialogOk = Object.values(DIALOGUES).every(vs => vs.every(v => Object.values(v.nodes).every(n => n.lines.length >= 1 && n.lines.length <= 5 && (n.choices || []).every(c => !c.next || v.nodes[c.next]))));
@@ -579,8 +579,8 @@ console.log('\n[v0.8.2] Опыт до следующего уровня');
   state.addHeroXP(1); ok(state.data.heroLevel === 8 && state.heroStats().maxMana === 140, '1300 — уровень 8: 140 маны');
   state.addHeroXP(1800); ok(state.data.heroLevel === 11 && state.heroStats().maxHp === 202, '3100 — уровень 11 (глава II): 202 HP');
   state.addHeroXP(50000); x = xpProgress(state);
-  ok(x.level === 15 && x.max && x.progress === 1 && x.caption === 'Максимальный уровень' && state.heroStats().maxHp === 255, 'уровень 15 — максимальный (глава II): 255 HP');
-  ok(x.remaining === 0 && !/NaN|null|16/.test(x.caption), 'после максимума нет 16-го уровня, NaN и отрицательных чисел');
+  ok(x.level === 20 && x.max && x.progress === 1 && x.caption === 'Максимальный уровень' && state.heroStats().maxHp === 332, 'уровень 20 — максимальный (глава III): 332 HP');
+  ok(x.remaining === 0 && !/NaN|null|21/.test(x.caption), 'после максимума нет 21-го уровня, NaN и отрицательных чисел');
   state.data.heroLevel = 2; state.data.heroXP = 10; x = xpProgress(state);   // повреждённое сохранение: опыт меньше порога
   ok(x.progress === 0 && x.remaining === 140, 'опыт ниже порога уровня не даёт отрицательную полосу');
 }

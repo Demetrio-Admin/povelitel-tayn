@@ -1,7 +1,7 @@
 // v0.37.0: однократный перенос сохранения на прогулочный план города (city_layout.version = 4).
 // Позиция героя, точка возрождения и сдвинутые Телекинезом предметы переносятся вместе с маркером версии —
 // поэтому перезагрузка или повторный вход в сцену ничего не двигает второй раз. Прогресс, предметы и события не трогаются.
-import { cityArrival, CITY_LAYOUT_VERSION, CITY_POSITIONS, CITY_ROOMS, V3_CITY, legacyCityPoint } from '../config/city.plan.js';
+import { cityArrival, CITY_LAYOUT_VERSION, CITY_POSITIONS, CITY_ROOMS, LEGACY_ROOM_RECTS, V3_CITY, legacyCityPoint } from '../config/city.plan.js';
 import { INTERACTIVES } from '../config/world.layout.js';
 
 const inRect = (p, r) => p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h;
@@ -16,7 +16,10 @@ export function cityLayoutOf(state) {
 /** Returns true when the save was moved to the current plan. */
 export function migrateCitySave(state) {
   const layout = cityLayoutOf(state);
-  if (layout >= CITY_LAYOUT_VERSION) return migrateWarehouseSave(state);
+  if (layout >= CITY_LAYOUT_VERSION) {
+    const warehouses=migrateWarehouseSave(state);
+    return migratePaintedRooms(state)||warehouses;
+  }
   const has = k => state.hasEvent(k);
   if (state.data.player) state.data.player = { ...cityArrival(state.data.player, has, layout) };
   if (state.data.safePoint) state.data.safePoint = { ...cityArrival(state.data.safePoint, has, layout) };
@@ -29,6 +32,7 @@ export function migrateCitySave(state) {
   }
   state.setObject('city_layout', { version: CITY_LAYOUT_VERSION });
   migrateWarehouseSave(state);
+  migratePaintedRooms(state);
   return true;
 }
 
@@ -49,4 +53,18 @@ export function migrateWarehouseSave(state) {
   }
   state.setObject('city_warehouses', { version: 1 });
   return true;
+}
+
+/** One-time relocation to the approved room layouts; ordinary progress is untouched. */
+export function migratePaintedRooms(state) {
+  if(state.getObject('city_interiors')?.version>=1)return false;
+  for(const field of ['player','safePoint']){
+    const p=state.data[field];if(!p)continue;
+    const old=LEGACY_ROOM_RECTS.find(r=>inRect(p,r));
+    const room=old&&CITY_ROOMS.find(r=>r.key===old.key&&r.painted);
+    if(room)state.data[field]={...room.arrival};
+  }
+  const cargo=state.getObject('wh_cargo');
+  if(cargo?.state==='moved')Object.assign(cargo,INTERACTIVES.find(o=>o.id==='wh_cargo').target);
+  state.setObject('city_interiors',{version:1});return true;
 }

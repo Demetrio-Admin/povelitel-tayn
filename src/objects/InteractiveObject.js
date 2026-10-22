@@ -65,7 +65,8 @@ export class InteractiveObject {
     const s = this.state;
     if (this.cfg.requiresEvent && !s.hasEvent(this.cfg.requiresEvent)) return false;
     if (this.cfg.requiresEnemyDefeated && !s.isEnemyDefeated(this.cfg.requiresEnemyDefeated)) return false;
-    if (this.cfg.hideEvent && s.hasEvent(this.cfg.hideEvent)) return false;   // v0.22.0: персонаж ушёл по сюжету
+    // v0.22.0: персонаж ушёл по сюжету; v0.38.0: returnEvent — и вернулся (Мирра уходит в рощу и возвращается домой после главы III)
+    if (this.cfg.hideEvent && s.hasEvent(this.cfg.hideEvent) && !(this.cfg.returnEvent && s.hasEvent(this.cfg.returnEvent))) return false;
     return true;
   }
 

@@ -37,7 +37,7 @@ try{
   assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.some(o=>o.id==='npc_banker')),true);
   console.log('Bank entered');
   // A real pointer click on the floor exercises routing with the room's coordinate origin.
-  const tap=await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),c=s.cameras.main,r=window.__game.canvas.getBoundingClientRect(),t={x:s.player.x+65,y:s.player.y-110};return {target:t,x:r.x+(t.x-c.scrollX)*c.zoom*r.width/window.__game.scale.width,y:r.y+(t.y-c.scrollY)*c.zoom*r.height/window.__game.scale.height};});
+  const tap=await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),c=s.cameras.main,r=window.__game.canvas.getBoundingClientRect(),t={x:s.player.x+65,y:s.player.y-110};return {target:t,x:r.x+(t.x-c.worldView.x)*c.zoom*r.width/window.__game.scale.width,y:r.y+(t.y-c.worldView.y)*c.zoom*r.height/window.__game.scale.height};});
   await page.mouse.click(tap.x,tap.y);await page.waitForFunction(t=>{const p=window.__game.scene.getScene('ExplorationScene').player;return Math.hypot(p.x-t.x,p.y-t.y)<25;},tap.target);
   const inv=await page.evaluate(()=>JSON.stringify(window.__witch.state.data.inventory));
   await page.screenshot({path:path.join(out,viewport.width+'-bank-inside.png')});
@@ -57,7 +57,7 @@ try{
     if(door.startsWith('warehouse_')){
       assert.deepEqual(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.filter(o=>o.id.startsWith('room_exit_')).map(o=>o.id)),['room_exit_'+door],'only its own exit is present');
       // Exercise the actual Arcade collision against the visible wall face.
-      const wall=await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),r=s.loc.rect,c=s.map.colliders.find(c=>c.id==='room_back_wall_'+s.loc.key);for(const e of s.enemies)e.grace=60000;s.player.stop();s.player.setPosition(r.x+r.w/2,c.y+c.h+90);return {bottom:c.y+c.h};});
+      const wall=await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),r=s.loc.rect,c=s.map.colliders.find(c=>c.id===s.loc.id+'_wall_back');for(const e of s.enemies)e.grace=60000;s.player.stop();s.player.setPosition(r.x+r.w/2,c.y+c.h+90);return {bottom:c.y+c.h};});
       await page.keyboard.down('ArrowUp');
       try{
         await page.waitForFunction(y=>window.__game.scene.getScene('ExplorationScene').player.y<=y+25,wall.bottom,{timeout:10000});

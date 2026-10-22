@@ -11,8 +11,19 @@ export const STORY_ITEMS = {
     purpose: 'Проявляет стёртое. Нужен у Древних ворот — после победы над Стражем.' },
   restoration_bundle: { name: 'Целебный сбор', icon: 'icon_bundle', color: 0x7be28a,
     purpose: 'Вылечит сердце рощи за воротами вместе с Астралом (20 маны).' },
+  // v0.38.0: глава III — отдаётся духу рощи вместе с именем (событие разговора, consume)
+  memory_draught: { name: 'Отвар памяти', icon: 'icon_memory_draught', color: 0xf3d9a4,
+    purpose: 'Поможет духу рощи удержать возвращённое имя. Отдать Безымянной, когда узнаете имя.' },
 };
-export const STORY_ITEM_ORDER = ['lunar_wick', 'revealing_compound', 'restoration_bundle'];
+// v0.40: после главы III — Сад Ветлы (грамоты за улучшение сада) и спутники (docs/design/post-chapter-3-progression-v0.1.md)
+Object.assign(STORY_ITEMS, {
+  garden_deed_1: { name: 'Грамота Сада I', icon: 'icon_vetla_seed', color: 0x9be8a0, purpose: 'Семя ветлы посажено: грядка стеклянных листьев растёт сама.' },
+  garden_deed_2: { name: 'Грамота Сада II', icon: 'icon_willow_bark', color: 0xb39a76, purpose: 'Вторая грядка: ивовая кора.' },
+  garden_deed_3: { name: 'Грамота Сада III', icon: 'icon_memory_spark', color: 0xf3d9a4, purpose: 'Две редкие грядки: искры памяти и лунные осколки.' },
+  companion_robin: { name: 'Стеклянная малиновка', icon: 'icon_companion_robin', color: 0xffb36b, purpose: 'Спутник: бежит за вами по миру. Позвать или отпустить — у Ивы или у Мирры.' },
+  companion_fox: { name: 'Лисёнок рощи', icon: 'icon_companion_fox', color: 0xff9a4a, purpose: 'Спутник: бежит за вами по миру. Позвать или отпустить — у Ивы или у Мирры.' },
+});
+export const STORY_ITEM_ORDER = ['lunar_wick', 'revealing_compound', 'restoration_bundle', 'memory_draught', 'garden_deed_1', 'garden_deed_2', 'garden_deed_3', 'companion_robin', 'companion_fox'];
 
 /**
  * Применение сюжетного предмета ({ op: 'use', item }): requires — нужные события, blockedBy — уже сделано,

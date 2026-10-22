@@ -7,14 +7,17 @@
 // Pivot всех объектов мира — нижний центр (origin 0.5, 1). Размер на экране задаётся DISPLAY_SIZE,
 // поэтому исходники можно делать крупнее (например 512×512).
 
+import { ROOM_FILES } from './city.rooms.js';
 import { CHAPTER2_FILES, CHAPTER2_SIZES } from './chapter2.art.generated.js';
 import { CITY_INTERIOR_FILES, CITY_INTERIOR_SIZES } from './city.interiors.generated.js';
 import { CITY_FINAL_FILES, CITY_FINAL_SIZES } from './city.final.art.js';
 import { CITY_WALK_FILES, CITY_WALK_SIZES } from './city.walk.art.js';
 import { ARCHIVE_FILES, ARCHIVE_SIZES } from './city.archive.art.js';
 import { NEIGHBORHOOD_FILES, NEIGHBORHOOD_SIZES } from './city.neighborhoods.art.js';
+import { CHAPTER3_FILES, CHAPTER3_SIZES } from './chapter3.art.generated.js';
 
 export const ASSET_FILES = {
+  ...ROOM_FILES,
   icon_storm: 'assets/ui/storm.svg',
   welcome_cover: 'assets/ui/welcome-cover-v1.webp',
   welcome_settings: 'assets/ui/welcome-settings.svg',
@@ -107,6 +110,11 @@ Object.assign(ASSET_FILES, ARCHIVE_FILES);
 Object.assign(DISPLAY_SIZE, ARCHIVE_SIZES);
 Object.assign(ASSET_FILES, NEIGHBORHOOD_FILES);
 Object.assign(DISPLAY_SIZE, NEIGHBORHOOD_SIZES);
+// v0.38.0: глава III «Безымянная роща» — прототипная графика, нарисованная кодом (tools/art/ch3_grove_art.py).
+// Карта мира с рощей тоже оттуда: та же карта, на северо-западе — поляна со стеклянными ивами.
+Object.assign(ASSET_FILES, CHAPTER3_FILES);
+Object.assign(DISPLAY_SIZE, CHAPTER3_SIZES);
 
-/** Рисунки-заглушки, не готовые к релизу. Оба героя используют финальные PNG. */
-export const TEMPORARY_ART = [];
+/** Рисунки-заглушки, не готовые к релизу. Оба героя используют финальные PNG.
+ *  v0.38.0: вся графика главы III пока прототипная (список финальной — docs/design/chapter-3-art-inventory-v0.1.md). */
+export const TEMPORARY_ART = Object.keys(CHAPTER3_FILES).filter(k => k !== 'world_map_01');

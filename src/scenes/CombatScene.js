@@ -109,6 +109,7 @@ export class CombatScene extends Phaser.Scene {
       this.started = true;
       if (this.tut.active) { const r = this.tut.reminder; if (r) this.tut.feedback = { text: r, left: 3 }; }
       else if (first) this.toast('Враг атакует сам. Прерывайте сильные атаки Телекинезом!', COLORS.telekinesis);
+      else if (this.def.introHint) this.toast(this.def.introHint, COLORS.seal);   // v0.38.0: своя подсказка у босса
       else if (this.def.phases) this.toast('Три фазы: кристалл — Телекинез, кора — Огонь и Астрал, тень — Астрал.', COLORS.seal);
       else if (this.def.armor) this.toast('Броня Стража держится на кристалле. Выберите его и разбейте Телекинезом.', COLORS.telekinesis);
       if (this.sim.item('resin_flask') > 0) this.queueHint(COMBAT_HINTS.flask, 'flask');
@@ -145,7 +146,7 @@ export class CombatScene extends Phaser.Scene {
     const texture = this.spawn.texture || this.def.texture;
     const s = this.add.image(this.enemyPos.x, this.enemyPos.y, texture).setOrigin(0.5, 1);
     applyDisplaySize(s, texture);
-    const human = this.duel || ['severin_boss', 'volunteer'].includes(this.enemyType);
+    const human = this.duel || ['severin_boss', 'volunteer', 'iva_reflection'].includes(this.enemyType);
     const mul = human ? (this.duel ? 1.125 : 1.2) : this.def.tier === 'strong' ? 1.5 : 1.7;
     s.setScale(s.scaleX * mul, s.scaleY * mul).setDepth(this.enemyPos.y);
     this.enemySprite = s;

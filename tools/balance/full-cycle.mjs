@@ -1,7 +1,7 @@
 // Closed-stock economy model. Currency rates are model outputs, never player guarantees.
 import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
-import { emptySnapshot, applyAction, combatApply, advanceVitals } from '../../src/cloud/playerModel.js';
+import { emptySnapshot, applyAction, combatApply, advanceVitals, maxVitals } from '../../src/cloud/playerModel.js';
 import { verifyCombat } from '../../src/cloud/combatVerify.js';
 import { playBot } from '../../tests/helpers/combat-bot.mjs';
 import { INTERACTIVES, ENEMY_SPAWNS, WORLD } from '../../src/config/world.layout.js';
@@ -75,7 +75,7 @@ export function simulate({profile='prepared',capacity=100,potion='medium',policy
   for(const[k,n]of Object.entries(needs)){const owned=s.inventory[k]||0,missing=Math.max(0,n+Math.min(retained[k]||0,owned)-owned);if(missing){ensureSpace(missing);const r=act('shop_buy',{item:k,qty:missing});assert.ok(r.ok,`refill ${k}: ${r.reason}`);metrics.purchases+=r.cost;tick(3,'trade');}}
   const missing=Object.entries(target).filter(([id,n])=>(s.inventory[id]||0)<n);
   if(missing.length){go(nodes.get('fq_cauldron'));for(const[id,n]of missing)while((s.inventory[id]||0)<n){const r=act('craft',{recipe:id});assert.ok(r.ok,`craft ${id}: ${r.reason}`);metrics.fees+=R.recipes[id].needs.coins||0;metrics.crafts++;tick(2,'craft');}go(merchant);}
-  if(s.hp<255)tick(255-s.hp+.001);if(s.mana<205)tick((205-s.mana)/.5+.001);
+  {const mv=maxVitals(s.level);if(s.hp<mv.hp)tick(mv.hp-s.hp+.001);if(s.mana<mv.mana)tick((mv.mana-s.mana)/.5+.001);}
  }
  function fight(o){
   if((s.inventory[life]||0)<1||(policy==='drink'&&(s.inventory[mana]||0)<1))service();go(o);
@@ -120,7 +120,7 @@ export function simulate({profile='prepared',capacity=100,potion='medium',policy
   }
   service();const elapsedSeconds=(now-from)/1000,seconds=Object.values(metrics.time).reduce((a,b)=>a+b,0),net=s.inventory.coins-coins;
   assert.ok(Math.abs(net-(metrics.combatCoins+metrics.sales-metrics.purchases-metrics.fees))<1e-6,'currency conservation');assert.ok(Math.abs(clock?Math.max(0,seconds-elapsedSeconds):seconds-elapsedSeconds)<1e-4,'time conservation');
-  for(const[id,n]of Object.entries(target))assert.equal(s.inventory[id],n,'closed potion stock '+id);assert.equal(s.hp,255);assert.equal(s.mana,205);assert.equal(Object.keys(bagData(s.objects).pending).length,0);assert.ok(bagUsed(s.inventory)<=capacity);
+  for(const[id,n]of Object.entries(target))assert.equal(s.inventory[id],n,'closed potion stock '+id);assert.equal(s.hp,maxVitals(s.level).hp);assert.equal(s.mana,maxVitals(s.level).mana);assert.equal(Object.keys(bagData(s.objects).pending).length,0);assert.ok(bagUsed(s.inventory)<=capacity);
   rows.push({cycle:cycle+1,seconds,elapsedSeconds,netCoins:net,coinsPerHour:net*3600/seconds,sapphiresPerHour:metrics.expectedSapphires*3600/seconds,...metrics,bagUsed:bagUsed(s.inventory),rare:{crafting_core:s.inventory.crafting_core||0,frost_shard:s.inventory.frost_shard||0},capital:s.inventory.coins});
  }
  const delta=key=>Object.fromEntries([...new Set([...Object.keys(s[key]),...Object.keys(starting[key])])].map(id=>[id,(s[key][id]||0)-(starting[key][id]||0)]).filter(([,n])=>n));

@@ -6,6 +6,7 @@ import { NPCS } from '../config/npcs.js';
 import { MSG } from '../state/EventBus.js';
 import * as vitals from '../state/vitals.js';
 import { EVENT_ACTIONS } from '../config/serverRules.js';
+import { setCompanionPref } from '../objects/Companion.js';
 
 export class DialogueSystem {
   /**
@@ -176,6 +177,7 @@ export class DialogueSystem {
       else if (e.covens) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_COVENS));   // v0.25.0
       else if (e.duel) this.pendingAfter.push(() => this.bus?.emit(MSG.OPEN_DUEL));       // v0.26.0     // v0.21.0: окно «Дары» (слоты 3 из 4)
       else if (e.gift) this.pendingAfter.push(() => this.bus?.emit(MSG.UNLOCK_GIFT, e.gift));   // v0.21.0: Нэрис учит Льду
+      else if ('companion' in e) { setCompanionPref(e.companion); this.bus?.emit(MSG.COMPANION_CHANGED); }   // v0.40: косметика, сервер не участвует
       else if (e.finale) this.pendingAfter.push(() => this.bus?.emit(MSG.CHAPTER_FINALE, e.finale));   // v0.22.0: окно «Глава завершена»
     }
   }

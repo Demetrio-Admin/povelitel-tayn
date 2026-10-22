@@ -57,6 +57,10 @@ const has = (s, k) => s.hasEvent(k);
 const WH_GUARDS = ['wh_collector_1', 'wh_collector_2', 'wh_elite'];   // v0.21.0: сборщики на складах (квест 6)
 const LAB_FIGHTS = ['ch2_vol_1', 'ch2_vol_2', 'ch2_lab_construct'];      // v0.22.0: лаборатория (квест 12)
 const FINAL_ROUTE = ['ch2_fin_tk', 'ch2_fin_fire', 'ch2_fin_ice', 'ch2_fin_seal'];   // v0.22.0: экзамен по четырём дарам (квест 15)
+const RAVINE = ['ch3_ravine_1', 'ch3_ravine_2'];                                   // v0.38.0: глава III
+const JARS = ['ch3_jar_bird', 'ch3_jar_fox'];
+const NEEDLES = ['ch3_needle_1', 'ch3_needle_2', 'ch3_needle_3'];
+const LOCKS = ['ch3_lock_wall', 'ch3_lock_bridge', 'ch3_lock_sapling', 'ch3_lock_ward'];
 const altarLit = s => has(s, EV.LUNAR_QUEST_COMPLETE);
 export const QUEST_STEPS = [
   { id: 'book',     text: 'Прочтите книгу первого дара на столе в доме',          done: s => has(s, EV.UNLOCK_TELEKINESIS_1) },
@@ -152,5 +156,42 @@ export const QUEST_STEPS = [
   { id: 'ch2_letters',     text: 'Прочтите письма Северина Астралом', done: s => has(s, 'ch2_letters_read') },
   { id: 'ch2_epilogue',    text: 'Город оттаивает — поговорите с Иларией', done: s => has(s, 'ch2_epilogue') },
   { id: 'ch2_home',        text: 'Вернитесь домой, к Мирре', done: s => has(s, 'chapter_2_complete') },
-  { id: 'ch2_next',    text: 'Глава II завершена. Дальше — поручения, Ковены и Магическая Дуэль', done: () => false },
+  { id: 'ch2_next',    text: 'Глава II завершена. Дальше — поручения, Ковены и Магическая Дуэль', done: s => has(s, 'ch3_start') },
+  // ---- v0.38.0: глава III «Безымянная роща» (docs/design/chapter-3-story-v0.1.md)
+  { id: 'ch3_call',      text: 'Мирра хочет поговорить', done: s => has(s, 'ch3_start') },
+  { id: 'ch3_ilaria',    text: 'Илария в Архиве: что ещё было в письмах Северина?', done: s => has(s, 'ch3_ilaria_talk') },
+  { id: 'ch3_severin',   text: 'Северин разбирает бумаги в Архиве: спросите его о Садовнице', done: s => has(s, 'ch3_severin_talk') },
+  { id: 'ch3_leaf',      text: 'Прочтите Астралом стеклянный лист из последнего письма', done: s => has(s, 'ch3_leaf_read') },
+  { id: 'ch3_road',      text: 'Безымянная роща появилась на карте мира: идите в Сухую балку', done: s => has(s, 'ch3_grove_arrived') },
+  { id: 'ch3_nerys',     text: 'В балке разбила лагерь Нэрис — поговорите с ней', done: s => has(s, 'ch3_nerys_met') },
+  { id: 'ch3_ravine',    text: 'Сухая балка: два стеклянных горностая',
+    progress: s => `${RAVINE.filter(k => has(s, k)).length}/2`, done: s => RAVINE.every(k => has(s, k)) },
+  { id: 'ch3_nameless',  text: 'Серебряная тень на Стеклянной опушке — поговорите с ней', done: s => has(s, 'ch3_nameless_met') },
+  { id: 'ch3_echo1',     text: 'Эхо у ручья: прочтите его Астралом', done: s => has(s, 'ch3_echo_stream') },
+  { id: 'ch3_draught',   text: 'Сварите Отвар памяти: 2 искры памяти, ивовая кора и стеклянный лист', craft: 'memory_draught',
+    done: s => has(s, 'memory_draught_crafted') || has(s, 'ch3_name_stream') },
+  { id: 'ch3_name1',     text: 'Верните ручью имя: поговорите с Безымянной', done: s => has(s, 'ch3_name_stream') },
+  { id: 'ch3_dam',       text: 'Ручей вспомнил себя: растопите Огнём стеклянную плотину у брода', done: s => has(s, 'ch3_dam_open') },
+  { id: 'ch3_jars',      text: 'Сад под колпаками: освободите Огнём малиновку и лисёнка',
+    progress: s => `${JARS.filter(k => has(s, k)).length}/2`, done: s => JARS.every(k => has(s, k)) || has(s, 'ch3_iva_met') },
+  { id: 'ch3_iva',       text: 'Хозяйка сада — поговорите с Ивой', done: s => has(s, 'ch3_iva_met') },
+  { id: 'ch3_echo2',     text: 'Эхо у корней старой ивы: прочтите его Астралом', done: s => has(s, 'ch3_echo_willow') },
+  { id: 'ch3_draught2',  text: 'Сварите второй Отвар памяти — в остывшем котле Ивы', craft: 'memory_draught',
+    done: s => s.item('memory_draught') > 0 || has(s, 'ch3_name_willow') },
+  { id: 'ch3_name2',     text: 'Назовите старую иву: поговорите с Безымянной у корней', done: s => has(s, 'ch3_name_willow') },
+  { id: 'ch3_roots',     text: 'Ракита вспомнила себя: отогрейте Огнём её стеклянные корни', done: s => has(s, 'ch3_roots_open') },
+  { id: 'ch3_needles',   text: 'Игольники Ивы тянут из рощи последнее: остановите всех троих',
+    progress: s => `${NEEDLES.filter(k => has(s, k)).length}/3`, done: s => NEEDLES.every(k => has(s, k)) },
+  { id: 'ch3_mirra',     text: 'В рощу пришла Мирра — поговорите с ней', done: s => has(s, 'ch3_mirra_met') },
+  { id: 'ch3_echo3',     text: 'Эхо последнего мига — у стеклянной стены: Астрал', done: s => has(s, 'ch3_echo_vetla') },
+  { id: 'ch3_locks',     text: 'Путь к сердцу: стена (Лёд, потом Телекинез), мост (Лёд), кокон (Огонь), завеса (Астрал)',
+    progress: s => `${LOCKS.filter(k => has(s, k)).length}/4`, done: s => LOCKS.every(k => has(s, k)) },
+  { id: 'ch3_guardian',  text: 'Стеклянный страж у сердца рощи', done: s => has(s, 'ch3_guardian_defeated') },
+  { id: 'ch3_iva_last',  text: 'Сердце рощи: поговорите с Ивой', done: s => has(s, 'ch3_iva_refused') },
+  { id: 'ch3_boss',      text: 'Отражение Ивы', done: s => has(s, 'ch3_reflection_defeated') },
+  { id: 'ch3_name3',     text: 'Последнее имя: поговорите с Ивой', done: s => has(s, 'ch3_name_vetla') },
+  { id: 'ch3_vetla',     text: 'Роща оживает — поговорите с Ветлой', done: s => has(s, 'ch3_vetla_blessing') },
+  { id: 'ch3_epilogue',  text: 'Поговорите с Ивой', done: s => has(s, 'ch3_epilogue') },
+  { id: 'ch3_home',      text: 'Мирра ждёт у Ракиты', done: s => has(s, 'chapter_3_complete') },
+  { id: 'ch3_next',      text: 'Глава III завершена. Дальше — роща, поручения, Ковены и Магическая Дуэль', done: () => false },
 ];

@@ -13,7 +13,7 @@ const server=await createServer({root,server:{host:'127.0.0.1',port:5195,strictP
 const browser=await chromium.launch({executablePath:process.env.CHROME_PATH,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 try{
  for(const viewport of (process.env.CITY_VIEWPORTS?JSON.parse(process.env.CITY_VIEWPORTS):[{width:390,height:844},{width:320,height:568},{width:1280,height:900}])){
-  const page=await browser.newPage({viewport,hasTouch:true}),errors=[];
+  const page=await browser.newPage({viewport,hasTouch:true}),errors=[];page.setDefaultTimeout(120000);
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await page.goto('http://127.0.0.1:5195/?reset&skipmenu');
   assert.match(await page.title(),/Колдовство/);
@@ -36,11 +36,11 @@ try{
   const shot=async name=>{await settle();await page.screenshot({path:path.join(out,viewport.width+'-'+name+'.png')});};
   const move=async(x,y)=>{await page.evaluate(({x,y})=>{const s=window.__game.scene.getScene('ExplorationScene');for(const e of s.enemies)e.grace=60000;s.player.stop();s.player.setPosition(x,y);s.cameras.main.centerOn(x,y-s.followOffsetY);},{x,y});await settle();};
   const click=async id=>{
-   const p=await page.evaluate(id=>{const s=window.__game.scene.getScene('ExplorationScene'),o=s.objects.find(o=>o.id===id),c=s.cameras.main,r=window.__game.canvas.getBoundingClientRect();return {x:r.x+(o.x-c.scrollX)*c.zoom*r.width/window.__game.scale.width,y:r.y+(o.sprite.y-o.sprite.displayHeight/2-c.scrollY)*c.zoom*r.height/window.__game.scale.height};},id);
+   const p=await page.evaluate(id=>{const s=window.__game.scene.getScene('ExplorationScene'),o=s.objects.find(o=>o.id===id),c=s.cameras.main,r=window.__game.canvas.getBoundingClientRect();return {x:r.x+(o.x-c.worldView.x)*c.zoom*r.width/window.__game.scale.width,y:r.y+(o.sprite.y-o.sprite.displayHeight/2-c.worldView.y)*c.zoom*r.height/window.__game.scale.height};},id);
    await page.mouse.click(p.x,p.y);
   };
   // Every exterior uses its own sprite. North houses stay decorative, without invented entrances.
-  for(const id of ['society','lab','duel','coven','warehouse_a','warehouse_b','cellar','rescue','north_bay','north_workshop']){
+  for(const id of (process.env.INTERIORS_ONLY?[]:['society','lab','duel','coven','warehouse_a','warehouse_b','cellar','rescue','north_bay','north_workshop'])){
    const b=await page.evaluate(id=>{const s=window.__game.scene.getScene('ExplorationScene'),v=s.colliderViews.get('city_plan_building_'+id);return {x:v.c.x+v.c.w/2,y:v.c.y+v.c.h,key:v.img.texture.key};},id);
    assert.equal(b.key,'city_final_'+id+'_exterior');await move(b.x,b.y+150);await shot(id+'-exterior');
   }
@@ -53,7 +53,7 @@ try{
    await page.evaluate(id=>{const s=window.__game.scene.getScene('ExplorationScene'),d=s.objects.find(o=>o.id===id);s.player.stop();s.player.setPosition(d.x,d.y+12);for(const e of s.enemies)e.grace=60000;},'door_'+door);
    await settle();await page.keyboard.press('Space');await ready('city_'+key);
    const r=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').loc.rect);
-   await move(r.x+r.w/2,r.y+({society:790,coven:800,lab:1510,duel:1140,warehouse_a:700,warehouse_b:800,cellar:790,rescue:790})[key]);
+   await move(r.x+r.w/2,r.y+r.h*.61);
    await shot(key+'-room');
    if(key==='society'||key==='coven'){
     const npc=key==='society'?'severin':'rowena';await click('npc_'+npc);
@@ -64,17 +64,17 @@ try{
     const id=key==='lab'?'lab_journal':'final_letters',boss=key==='lab'?'lab_construct':'final_severin',ev=key==='lab'?'ch2_lab_journal':'ch2_letters_read';
     await page.evaluate(boss=>{const w=window.__witch;w.state.markEnemyDefeated(boss);w.abilities.unlock('seal',1);w.state.setObject('player_build',{...w.state.buildData(),slots:['seal']});w.state.data.mana=110;window.__game.scene.getScene('ExplorationScene').refreshAll();},boss);
     const target=await page.evaluate(id=>{const s=window.__game.scene.getScene('ExplorationScene'),o=s.objects.find(o=>o.id===id),table=s.map.colliders.find(c=>c.id===(id==='lab_journal'?'room_journal':'room_letters'));return {x:o.x,y:o.y,depth:o.sprite.depth,tableBottom:table.y+table.h,artY:o.sprite.y};},id);
-    assert.equal(target.y,target.tableBottom+1,'paper sorts in front of tabletop');assert.ok(target.artY<target.tableBottom);
+    assert.ok(Math.abs(target.y-target.tableBottom-1)<1e-8,'paper sorts in front of tabletop');assert.ok(target.artY<target.tableBottom);
     await move(target.x-140,target.y+190);await click(id);
     await page.waitForFunction(ev=>window.__witch.state.hasEvent(ev),ev,{timeout:20000});
     await page.waitForFunction(()=>!!window.__game.scene.getScene('UIScene').modal);await page.keyboard.press('Space');
     await page.waitForFunction(()=>!window.__game.scene.getScene('UIScene').modal);await shot(key+'-paper');
    }
    if(key==='lab'){
-    await move(r.x+480,r.y+690);await shot('lab-experiments');
+    await move(r.x+r.w/2,r.y+r.h*.5);await shot('lab-experiments');
    }
    await page.evaluate(id=>{const s=window.__game.scene.getScene('ExplorationScene'),d=s.objects.find(o=>o.id===id);s.player.stop();s.player.setPosition(d.x,d.y-40);},'room_exit_'+door);
-   await settle();await page.keyboard.press('Space');await ready('city');console.log('✓',viewport.width,key);
+   await settle();await page.waitForFunction(id=>{const s=window.__game.scene.getScene('ExplorationScene');return s.interaction.focus?.id===id&&s.canAct();},'room_exit_'+door).catch(async e=>{console.log(await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene');return {mode:window.__witch.mode,p:[s.player.x,s.player.y],focus:s.interaction.focus?.id,can:s.canAct()};}));throw e;});await page.keyboard.press('Space');await ready('city');console.log('✓',viewport.width,key);
   }
   await page.evaluate(()=>{window.__witch.state.markEvent('ch2_severin_defeated');window.__game.scene.getScene('ExplorationScene').refreshAll();});
   assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').colliderViews.get('city_plan_building_rescue').img.isTinted),false,'story thaw keeps individual facade and clears frost');

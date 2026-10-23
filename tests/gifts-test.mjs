@@ -483,7 +483,7 @@ console.log('\n[v0.19.0] Экономика главы II: зелья, амул�
     const icon = RESOURCES[k]?.icon || POTIONS[k]?.icon || CRAFT_ITEMS[k]?.icon || k;
     // v0.38.0: иконка — файл из рабочего манифеста (глава III) или прежний PNG в sprites/
     const file = ASSET_FILES[icon]?.split('?')[0];
-    if (!fs.existsSync(new URL(`../public/assets/sprites/${icon}.png`, import.meta.url)) && !(file && fs.existsSync(new URL(`../public/${file}`, import.meta.url)))) ok(false, `иконка ${icon} нарисована`);
+    if (!fs.existsSync(new URL(`../public/assets/sprites/${icon}.webp`, import.meta.url)) && !(file && fs.existsSync(new URL(`../public/${file}`, import.meta.url)))) ok(false, `иконка ${icon} нарисована`);
   }
   ok(true, 'у всех новых предметов есть нарисованные иконки');
   // амулет: уровни

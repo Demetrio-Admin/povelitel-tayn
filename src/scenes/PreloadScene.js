@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
 import { ASSET_FILES, DISPLAY_SIZE } from '../config/assets.manifest.js';
+import { PACK_IDS, PACK_IMAGES, LAZY_KEYS } from '../config/assets.packs.js';
+import { initAssetPacks, ensureLocationWithScreen, markPackLoaded, prefetchLocations } from '../systems/assetPacks.js';
+import { LOCATIONS, locationAt, locationOpen } from '../config/locations.js';
 import { COLORS } from '../config/game.config.js';
 import { services } from '../services.js';
 import { showLoadingScreen, setLoadingProgress, hideLoadingScreen } from '../ui/loadingScreen.js';
-import { CITY_WITCH_ATLASES, CITY_WITCH_SPRITES } from '../config/city.witch.art.js';
 import { installCityWitchSprites } from '../world/cityWitchArt.js';
 import { WALK_SHEET_FILES, WALK_FRAME } from '../config/hero.walk.js';
 
@@ -20,16 +22,21 @@ export class PreloadScene extends Phaser.Scene {
       this.load.off('progress', setLoadingProgress);
       hideLoadingScreen();
     });
-    for (const [key, path] of Object.entries(ASSET_FILES)) if (path && !CITY_WITCH_SPRITES[key]) this.load.image(key, path);
-    for (const [key, path] of Object.entries(CITY_WITCH_ATLASES)) this.load.image(key, path);
+    // Сразу грузится только базовый пакет; графика локаций приходит пакетами (config/assets.packs.js, systems/assetPacks.js).
+    // Редактор карты видит весь мир, поэтому в нём грузим всё.
+    initAssetPacks(this);
+    const upfront = services.edit ? PACK_IDS : ['core'];
+    for (const id of upfront) for (const [key, path] of Object.entries(PACK_IMAGES[id])) this.load.image(key, path);
     // покадровая ходьба героев: ряд кадров 166×240 (config/hero.walk.js)
     for (const [key, path] of Object.entries(WALK_SHEET_FILES)) this.load.spritesheet(key, path, { frameWidth: WALK_FRAME.w, frameHeight: WALK_FRAME.h });
   }
 
   create() {
+    markPackLoaded('core');
+    if (services.edit) for (const id of PACK_IDS) markPackLoaded(id);
     installCityWitchSprites(this.textures);
     for (const [key, draw] of Object.entries(DRAWERS)) {
-      if (this.textures.exists(key)) continue;
+      if (this.textures.exists(key) || LAZY_KEYS.has(key)) continue;   // ключи отложенных пакетов получат картинку при загрузке пакета
       const [w, h] = DISPLAY_SIZE[key] || draw.size || [64, 64];
       const g = this.make.graphics({ x: 0, y: 0 }, false);
       draw(g, w, h);
@@ -38,7 +45,7 @@ export class PreloadScene extends Phaser.Scene {
     }
     // любые ключи манифеста без отрисовщика — нейтральная заглушка
     for (const key of Object.keys(ASSET_FILES)) {
-      if (this.textures.exists(key)) continue;
+      if (this.textures.exists(key) || LAZY_KEYS.has(key)) continue;
       const [w, h] = DISPLAY_SIZE[key] || [64, 64];
       const g = this.make.graphics({ x: 0, y: 0 }, false);
       g.fillStyle(0x777777).fillRect(0, 0, w, h).lineStyle(2, 0xffffff).strokeRect(1, 1, w - 2, h - 2);
@@ -55,10 +62,18 @@ export class PreloadScene extends Phaser.Scene {
   }
 }
 
-/** Запуск игровых сцен (из Preload или из меню). */
+/** Запуск игровых сцен (из Preload или из меню): сначала догружаем графику стартовой локации. */
 export function startGame(scene) {
-  scene.scene.start('ExplorationScene');
-  if (!services.edit) scene.scene.launch('UIScene');
+  const launch = () => {
+    scene.scene.start('ExplorationScene');
+    if (!services.edit) scene.scene.launch('UIScene');
+    // пока игрок осматривается, тихо докачиваем открытые локации — переход не будет ждать загрузки
+    const open = LOCATIONS.filter(l => locationOpen(l, (k) => services.state?.hasEvent(k)));
+    if (!services.edit) setTimeout(() => prefetchLocations(scene, open), 4000);
+  };
+  const p = services.state?.data?.player;
+  const loc = p ? locationAt(p.x, p.y) : LOCATIONS[0];
+  ensureLocationWithScreen(scene, loc).then(launch);
 }
 
 // ---------------------------------------------------------------------------

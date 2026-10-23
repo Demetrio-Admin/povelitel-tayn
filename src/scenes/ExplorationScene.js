@@ -1,3 +1,4 @@
+import { ensureLocationWithScreen } from '../systems/assetPacks.js';
 import { ROOM_WIDTH, ROOM_HEIGHT } from '../config/city.rooms.js';
 import { migrateCitySave } from '../world/cityMigration.js';
 import { migrateGraveyardSave } from '../world/graveyardMigration.js';
@@ -931,11 +932,14 @@ export class ExplorationScene extends Phaser.Scene {
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       const t = at || loc.arrival;
       const a = { x: Math.round(t.x), y: Math.round(t.y) };
-      st.data.player = { ...a };
-      st.data.safePoint = { ...a };
-      st.save();
-      services.mode = 'exploration';
-      this.scene.restart();
+      // графика новой локации грузится пакетом (обычно уже подкачана в фоне и ждать не приходится)
+      ensureLocationWithScreen(this, loc).then(() => {
+        st.data.player = { ...a };
+        st.data.safePoint = { ...a };
+        st.save();
+        services.mode = 'exploration';
+        this.scene.restart();
+      });
     });
   }
 

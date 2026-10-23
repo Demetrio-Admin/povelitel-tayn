@@ -31,29 +31,29 @@ console.log('\nГлава II: данные');
   ok(ch2.map(s => s.id).slice(0, 7).join() === 'ch2_road,ch2_plaza,ch2_ilaria,ch2_trace,ch2_tell,ch2_archive,ch2_severin', 'цепочка целей квестов 1–5');
   ok(ch2.length === 48 && ch2.at(-1).id === 'ch2_next', `квесты 6–15: ${ch2.length - 8} новых целей, последняя — «глава завершена»`);
   ok(ch2.every(s => STEP_WHY[s.id] && STEP_GUIDE[s.id]), 'у каждой цели есть «зачем» и подсказки');
-  for (const id of ['ilaria', 'severin', 'merchant', 'banker', 'duelist']) ok(NPCS[id] && DIALOGUES[id]?.length && ASSETS?.[`npc_${id}`] !== undefined || fs.existsSync(`public/assets/sprites/npc_${id}.png`), `NPC ${NPCS[id]?.name}: данные, диалоги, спрайт`);
-  for (const id of ['ilaria', 'severin', 'merchant', 'banker', 'duelist']) ok(fs.existsSync(`public/assets/sprites/portrait_${id}.png`), `портрет ${id}`);
+  for (const id of ['ilaria', 'severin', 'merchant', 'banker', 'duelist']) ok(NPCS[id] && DIALOGUES[id]?.length && ASSETS?.[`npc_${id}`] !== undefined || fs.existsSync(`public/assets/sprites/npc_${id}.webp`), `NPC ${NPCS[id]?.name}: данные, диалоги, спрайт`);
+  for (const id of ['ilaria', 'severin', 'merchant', 'banker', 'duelist']) ok(fs.existsSync(`public/assets/sprites/portrait_${id}.webp`), `портрет ${id}`);
   ok(WORLD.width >= 3600 && ZONES.some(z => z.id === 'P') && ZONES.findIndex(z => z.id === 'AR') < ZONES.findIndex(z => z.id === 'P'), 'мир шире (город к востоку), зоны зданий проверяются раньше площади');
   const city = [...INTERACTIVES, ...ENEMY_SPAWNS].filter(o => o.x >= EAST_X);
   ok(city.length >= 12 && city.every(o => o.x < WORLD.width && o.y < WORLD.height), `в городе и на дороге ${city.length} объектов, все внутри мира`);
-  ok(ENEMIES.frost_critter && fs.existsSync('public/assets/sprites/enemy_frost_critter.png') && ENEMIES.frost_critter.normalAttack.chill, 'Инеевый зверёк: данные, спрайт, холод');
+  ok(ENEMIES.frost_critter && fs.existsSync('public/assets/sprites/enemy_frost_critter.webp') && ENEMIES.frost_critter.normalAttack.chill, 'Инеевый зверёк: данные, спрайт, холод');
   const ef = INTERACTIVES.find(o => o.id === 'exit_forest'), ec = INTERACTIVES.find(o => o.id === 'exit_city');   // v0.27.0: переход — через карту мира
   ok(ef?.kind === 'exit' && ef.x < EAST_X && ec?.kind === 'exit' && ec.x >= EAST_X && STEP_GUIDE.ch2_road.targets[0] === 'exit_forest' && STEP_GUIDE.ch2_home.targets[0] === 'exit_city', 'выходы «Карта мира»: в лесу и в городе; наведение ведёт к ним');
   ok(ZONE_EVENTS.P.event === 'ch2_city_arrived', 'первый вход на площадь — событие «пришёл в город»');
   // v0.21.0
-  ok(NPCS.nerys && DIALOGUES.nerys?.length >= 10 && fs.existsSync('public/assets/sprites/npc_nerys.png') && fs.existsSync('public/assets/sprites/portrait_nerys.png'), 'Нэрис: данные, диалоги, спрайт и портрет');
-  for (const id of ['frost_collector', 'frost_collector_elite', 'ice_guardian']) ok(ENEMIES[id] && fs.existsSync(`public/assets/sprites/${ENEMIES[id].texture}.png`) && DISPLAY_SIZE[ENEMIES[id].texture], `${ENEMIES[id]?.name}: данные и спрайт`);
+  ok(NPCS.nerys && DIALOGUES.nerys?.length >= 10 && fs.existsSync('public/assets/sprites/npc_nerys.webp') && fs.existsSync('public/assets/sprites/portrait_nerys.webp'), 'Нэрис: данные, диалоги, спрайт и портрет');
+  for (const id of ['frost_collector', 'frost_collector_elite', 'ice_guardian']) ok(ENEMIES[id] && fs.existsSync(`public/assets/sprites/${ENEMIES[id].texture}.webp`) && DISPLAY_SIZE[ENEMIES[id].texture], `${ENEMIES[id]?.name}: данные и спрайт`);
   ok(ENEMIES.frost_collector.defense > 0 && ENEMIES.ice_guardian.armor && ENEMIES.ice_guardian.weaknesses.fire, 'сборщик — корка (пробивает Астрал), страж — броня и слабость к Огню');
-  for (const t of ['ice_wall_01', 'ice_construct_01', 'water_patch_01', 'ice_floor_01', 'frozen_door_01']) ok(ASSETS[t] && DISPLAY_SIZE[t] && fs.existsSync(`public/assets/sprites/${t}.png`), `картинка ${t}`);
+  for (const t of ['ice_wall_01', 'ice_construct_01', 'water_patch_01', 'ice_floor_01', 'frozen_door_01']) ok(ASSETS[t] && DISPLAY_SIZE[t] && fs.existsSync(`public/assets/sprites/${t}.webp`), `картинка ${t}`);
   const water = INTERACTIVES.find(o => o.id === 'fq_water'), wall = INTERACTIVES.find(o => o.id === 'frost_barrier');
   ok(water.kind === 'ice' && water.walkable && water.collide && wall.kind === 'fire' && wall.waitEvent === 'ch2_frost_wave', 'ледяная стена (Огонь после волны холода) и затопленный пролом (Лёд) — настоящие преграды');
   { const fy = ZONES.find(z => z.id === 'FY'), fq = ZONES.find(z => z.id === 'FQ');   // v0.37.0: квартал за мостом и Северный двор за затопленным проходом
     ok(fy.y === CITY_RECT.y && fq.y === fy.y + fy.h && fq.y + fq.h < CITY_RECT.y + CITY_RECT.h / 2, 'Замёрзший квартал — северная часть города'); }
   // v0.22.0
-  for (const id of ['tikhon', 'rowena']) ok(NPCS[id] && DIALOGUES[id]?.length && fs.existsSync(`public/assets/sprites/npc_${id}.png`) && fs.existsSync(`public/assets/sprites/portrait_${id}.png`), `${NPCS[id]?.name}: данные, диалоги, спрайт и портрет`);
-  for (const id of ['volunteer', 'experimental_construct', 'severin_boss']) ok(ENEMIES[id] && fs.existsSync(`public/assets/sprites/${ENEMIES[id].texture}.png`) && DISPLAY_SIZE[ENEMIES[id].texture], `${ENEMIES[id]?.name}: данные и спрайт`);
+  for (const id of ['tikhon', 'rowena']) ok(NPCS[id] && DIALOGUES[id]?.length && fs.existsSync(`public/assets/sprites/npc_${id}.webp`) && fs.existsSync(`public/assets/sprites/portrait_${id}.webp`), `${NPCS[id]?.name}: данные, диалоги, спрайт и портрет`);
+  for (const id of ['volunteer', 'experimental_construct', 'severin_boss']) ok(ENEMIES[id] && fs.existsSync(`public/assets/sprites/${ENEMIES[id].texture}.webp`) && DISPLAY_SIZE[ENEMIES[id].texture], `${ENEMIES[id]?.name}: данные и спрайт`);
   ok(ENEMIES.severin_boss.phases.length === 3 && ENEMIES.severin_boss.rewards.items.cold_heart === 1 && !ENEMIES.volunteer.repeatRewards, 'Северин — три фазы и Сердце холода; добровольцы — не фарм');
-  for (const t of ['astral_ward_01']) ok(ASSETS[t] && DISPLAY_SIZE[t] && fs.existsSync(`public/assets/sprites/${t}.png`), `картинка ${t}`);
+  for (const t of ['astral_ward_01']) ok(ASSETS[t] && DISPLAY_SIZE[t] && fs.existsSync(`public/assets/sprites/${t}.webp`), `картинка ${t}`);
   ok(INTERACTIVES.find(o => o.id === 'final_ward').opens && INTERACTIVES.find(o => o.id === 'lab_seal').kind === 'ice', 'барьер зала (Астрал) и печать лаборатории (Лёд) — настоящие двери');
 }
 

@@ -24,7 +24,7 @@ console.log('\nВылазки: данные');
   ok(spawns.length === 10 && spawns.every(s => s.repeatSec >= 600), 'десять мест боя, все возобновляются (звери — 10 мин, вожак и страж — час)');
   for (const id of ['frost_wolf', 'frost_alpha', 'grave_wisp', 'grave_hound', 'barrow_warden']) {
     const e = ENEMIES[id];
-    ok(e && fs.existsSync(`public/assets/sprites/${e.texture}.png`) && DISPLAY_SIZE[e.texture] && e.repeatRewards, `${e?.name}: данные, спрайт, награда за повтор`);
+    ok(e && fs.existsSync(`public/assets/sprites/${e.texture}.webp`) && DISPLAY_SIZE[e.texture] && e.repeatRewards, `${e?.name}: данные, спрайт, награда за повтор`);
   }
   ok(ENEMIES.frost_wolf.weaknesses.ice < 0 && ENEMIES.frost_wolf.weaknesses.fire > 0 && ENEMIES.grave_wisp.weaknesses.fire < 0 && ENEMIES.grave_wisp.weaknesses.seal > 0,
     'в лесу Лёд слабее, а Огонь сильнее; на кладбище наоборот Огонь слабее, Астрал сильнее');

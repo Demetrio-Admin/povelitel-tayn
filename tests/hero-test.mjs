@@ -26,7 +26,17 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let failures = 0;
 const ok = (cond, msg) => { if (cond) console.log('  ✓', msg); else { failures++; console.log('  ✗', msg); } };
 const memStorage = () => { const m = new Map(); return { getItem: k => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k), _m: m }; };
-const pngSize = (file) => { const b = fs.readFileSync(file); return { w: b.readUInt32BE(16), h: b.readUInt32BE(20), colorType: b[25] }; };
+// размер и наличие альфы: PNG (IHDR) или WebP (VP8X / VP8L / VP8) — спрайты переведены в WebP; colorType 6 = RGBA
+const pngSize = (file) => {
+  const b = fs.readFileSync(file);
+  if (b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP') {
+    const kind = b.toString('ascii', 12, 16);
+    if (kind === 'VP8X') return { w: 1 + b.readUIntLE(24, 3), h: 1 + b.readUIntLE(27, 3), colorType: b[20] & 0x10 ? 6 : 2 };
+    if (kind === 'VP8L') { const v = b.readUInt32LE(21); return { w: (v & 0x3fff) + 1, h: ((v >> 14) & 0x3fff) + 1, colorType: (v >> 28) & 1 ? 6 : 2 }; }
+    return { w: b.readUInt16LE(26) & 0x3fff, h: b.readUInt16LE(28) & 0x3fff, colorType: 2 };   // «VP8 »: без альфы
+  }
+  return { w: b.readUInt32BE(16), h: b.readUInt32BE(20), colorType: b[25] };
+};
 
 console.log('\nОпределения героев');
 {
@@ -42,7 +52,7 @@ console.log('\nОпределения героев');
     const files = Object.values(h.textures).map(k => ASSET_FILES[k]);
     ok(files.every(Boolean) && Object.values(h.textures).every(k => DISPLAY_SIZE[k]?.join() === '64,128'), `${h.name}: все ракурсы в manifest, размер на экране общий`);
     const sizes = files.map(f => pngSize(path.join(ROOT, 'public', f)));
-    ok(sizes.every(s => s.w === 166 && s.h === 240 && s.colorType === 6), `${h.name}: PNG 166×240 RGBA (одинаковый холст — общий масштаб, ноги и hitbox)`);
+    ok(sizes.every(s => s.w === 166 && s.h === 240 && s.colorType === 6), `${h.name}: 166×240 RGBA (одинаковый холст — общий масштаб, ноги и hitbox)`);
   }
   if (TEMPORARY_ART.length) console.log(`  ⚠ ВРЕМЕННАЯ графика (не для релиза): ${TEMPORARY_ART.join(', ')} — см. config/assets.manifest.js`);
   ok(TEMPORARY_ART.every(k => ASSET_FILES[k]), 'временная графика отмечена в manifest (TEMPORARY_ART) и загружается');

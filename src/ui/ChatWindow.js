@@ -142,7 +142,7 @@ function select(values, value) {
 function avatar(p) {
   const a = el("div", "chat-avatar"),
     i = el("img");
-  i.src = `${import.meta.env.BASE_URL}assets/sprites/${p?.hero === "warlock" ? "warlock" : "hero"}_down.png`;
+  i.src = `${import.meta.env.BASE_URL}assets/sprites/${p?.hero === "warlock" ? "warlock" : "hero"}_down.webp`;
   i.alt = "";
   a.append(i);
   return a;

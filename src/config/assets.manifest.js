@@ -138,4 +138,4 @@ DISPLAY_SIZE.map_current_ribbon = [130, 42];
 
 /** Рисунки-заглушки, не готовые к релизу. Оба героя используют финальные PNG.
  *  v0.38.0: вся графика главы III пока прототипная (список финальной — docs/design/chapter-3-art-inventory-v0.1.md). */
-export const TEMPORARY_ART = [...Object.keys(CHAPTER3_FILES).filter(k => k !== 'world_map_01'), ...Object.keys(CITY_LIFE_FILES).filter(k => !CITY_LIFE_PAINTED_FILES[k])];
+export const TEMPORARY_ART = [...Object.keys(CHAPTER3_FILES).filter(k => k !== 'world_map_01' && !MONSTER_REDESIGN_FILES[k]), ...Object.keys(CITY_LIFE_FILES).filter(k => !CITY_LIFE_PAINTED_FILES[k])];

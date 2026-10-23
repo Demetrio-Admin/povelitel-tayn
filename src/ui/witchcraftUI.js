@@ -25,7 +25,7 @@ export function addCraftPortrait(scene, x, y, size, texture = currentHero().text
   const key = `ui:craft-portrait:${texture}:${size}`;
   ensureTexture(scene, key, size, size, (ctx) => {
     const hero = scene.textures.get(texture).getSourceImage();
-    const side = Math.min(hero.width, hero.height * 0.5);
+    const side = Math.min(hero.width, hero.height * 0.6);
     const inset = size * 0.12, opening = size - inset * 2;
     ctx.save();
     ctx.beginPath();

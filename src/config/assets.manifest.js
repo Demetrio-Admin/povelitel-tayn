@@ -25,15 +25,15 @@ export const ASSET_FILES = {
   graveyard_painted: 'assets/graveyard/spirit-cemetery-v1.webp',
   ...ROOM_FILES,
   icon_storm: 'assets/ui/storm.svg',
-  welcome_cover: 'assets/ui/welcome-cover-v1.webp',
+  welcome_cover: 'assets/ui/welcome-cover-lunar-v2.webp',
   welcome_settings: 'assets/ui/welcome-settings.svg',
   // Одобренный рисованный UI: тонкие медальоны без общей нижней рамки и меню.
   ui_craft_medallion: 'assets/ui/craft-medallion-rounded.webp',
   ui_craft_menu: 'assets/ui/craft-menu.webp', ui_craft_portrait: 'assets/ui/craft-portrait.webp',
   // герой (Hero & Sprite Spec v0.1 §18 — минимальный набор)
-  hero_down: 'assets/sprites/hero_down.png', hero_up: 'assets/sprites/hero_up.png', hero_side: 'assets/sprites/hero_side.png', hero_shadow: null,
+  hero_down: 'assets/heroes/lunar-v1/hero_down.png', hero_up: 'assets/heroes/lunar-v1/hero_up.png', hero_side: 'assets/heroes/lunar-v1/hero_side.png', hero_shadow: null,
   // Колдун: финальные акварельные ракурсы, тот же холст 166×240 и масштаб, что у ведьмы.
-  warlock_down: 'assets/sprites/warlock_down.png', warlock_up: 'assets/sprites/warlock_up.png', warlock_side: 'assets/sprites/warlock_side.png',
+  warlock_down: 'assets/heroes/lunar-v1/warlock_down.png', warlock_up: 'assets/heroes/lunar-v1/warlock_up.png', warlock_side: 'assets/heroes/lunar-v1/warlock_side.png',
   // v0.28.0: живой мир (птицы, белка, заяц, лист)
   life_bird_1: 'assets/forest/life-bird-1.webp?v=forest-art-20261006', life_bird_2: 'assets/forest/life-bird-2.webp?v=forest-art-20261006', life_bird_3: 'assets/forest/life-bird-3.webp?v=forest-art-20261006',
   life_squirrel_1: 'assets/forest/life-squirrel-1.webp?v=forest-art-20261006', life_squirrel_2: 'assets/forest/life-squirrel-2.webp?v=forest-art-20261006', life_squirrel_3: 'assets/forest/life-squirrel-3.webp?v=forest-art-20261006',

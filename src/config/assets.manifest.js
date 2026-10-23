@@ -17,6 +17,7 @@ import { ARCHIVE_FILES, ARCHIVE_SIZES } from './city.archive.art.js';
 import { NEIGHBORHOOD_FILES, NEIGHBORHOOD_SIZES } from './city.neighborhoods.art.js';
 import { CHAPTER3_FILES, CHAPTER3_SIZES } from './chapter3.art.generated.js';
 import { CITY_LIFE_FILES, CITY_LIFE_SIZES } from './cityLife.art.generated.js';
+import { CITY_LIFE_PAINTED_FILES } from './cityLife.painted.js';
 
 export const ASSET_FILES = {
   frostwood_painted: 'assets/frostwood/frozen-sanctuary-v1.webp',
@@ -118,6 +119,7 @@ Object.assign(DISPLAY_SIZE, NEIGHBORHOOD_SIZES);
 // Финальная рисованная карта переопределяется после пакета главы III.
 Object.assign(ASSET_FILES, CITY_LIFE_FILES);   // прототипы «живого города» (tools/art/city_life_art.py)
 Object.assign(DISPLAY_SIZE, CITY_LIFE_SIZES);
+Object.assign(ASSET_FILES, CITY_LIFE_PAINTED_FILES);
 Object.assign(ASSET_FILES, CHAPTER3_FILES);
 Object.assign(DISPLAY_SIZE, CHAPTER3_SIZES);
 Object.assign(ASSET_FILES, WORLD_MAP_FILES);
@@ -127,4 +129,4 @@ DISPLAY_SIZE.map_current_ribbon = [130, 42];
 
 /** Рисунки-заглушки, не готовые к релизу. Оба героя используют финальные PNG.
  *  v0.38.0: вся графика главы III пока прототипная (список финальной — docs/design/chapter-3-art-inventory-v0.1.md). */
-export const TEMPORARY_ART = [...Object.keys(CHAPTER3_FILES).filter(k => k !== 'world_map_01'), ...Object.keys(CITY_LIFE_FILES)];
+export const TEMPORARY_ART = [...Object.keys(CHAPTER3_FILES).filter(k => k !== 'world_map_01'), ...Object.keys(CITY_LIFE_FILES).filter(k => !CITY_LIFE_PAINTED_FILES[k])];

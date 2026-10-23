@@ -70,6 +70,17 @@ try {
   // ---------- город после оттаивания: людно, дым, разговор, вороны
   {
     const { page, errors, context } = await enterCity(true);
+    const loaded = await page.evaluate(() => {
+      const textures = window.__game.scene.getScene('ExplorationScene').textures;
+      const keys = textures.getTextureKeys().filter(k => k.startsWith('cl_'));
+      return { count: keys.length, invalid: keys.filter(k => {
+        const img = textures.get(k).getSourceImage();
+        return !(img instanceof HTMLImageElement) || !img.complete || !img.naturalWidth;
+      }) };
+    });
+    assert.equal(loaded.count, 68, 'все кадры живого города загружены');
+    assert.deepEqual(loaded.invalid, [], 'реальные рисованные изображения, без серых заглушек при ошибке загрузки');
+    ok('все 68 рисованных кадров успешно декодированы браузером');
     const first = await info(page);
     assert.ok(first.running && first.routes >= 10, `маршруты по улицам найдены (${first.routes})`); ok(`маршруты по улицам: ${first.routes}`);
     assert.ok(first.roofs >= 6, `крыши для ворон найдены (${first.roofs})`); ok(`крыши: ${first.roofs}`);

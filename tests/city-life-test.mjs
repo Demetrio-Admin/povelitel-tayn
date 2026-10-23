@@ -102,7 +102,7 @@ ok(Math.abs(Math.abs(m.y) - 20) < 1e-6 && Math.abs(m.tx - 1) < 1e-6, 'смеще
     ok(Array.isArray(DISPLAY_SIZE[k]) && DISPLAY_SIZE[k].every(n => n > 0), `${k}: задан размер`);
     ok(fs.existsSync(path.join(root, 'public', ASSET_FILES[k].split('?')[0])), `${k}: файл на диске`);
   }
-  ok(need.every(k => TEMPORARY_ART.includes(k)), 'прототипы помечены как временная графика');
+  ok(need.every(k => !TEMPORARY_ART.includes(k) && ASSET_FILES[k].startsWith('assets/city-life/painted-v1/')), 'все 68 кадров живого города заменены рисованной графикой');
 }
 
 // ---- реплики жителей помещаются в «пузырёк» (230 px, 20 px шрифт)

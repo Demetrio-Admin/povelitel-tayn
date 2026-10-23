@@ -46,6 +46,13 @@ async function enterCity(thawed) {
   await page.waitForFunction(() => { const s = window.__game.scene.getScene('ExplorationScene'); return s.player && s.loc?.id === 'city' && s.life?.city?.running; }, null, { timeout: 120000 });
   await page.evaluate(() => { Object.defineProperty(window.__game.loop, 'actualFps', { get: () => 60, set() {}, configurable: true });
     const C = window.__game.scene.getScene('ExplorationScene').life.city, take = C.takeOff.bind(C);   // считаем перелёты ворон
+    window.__visibleDeaths = [];
+    const kill = C.killWalker.bind(C);
+    C.killWalker = (w, quiet = false) => {
+      const b = w.img.getBounds(), v = window.__game.scene.getScene('ExplorationScene').cameras.main.worldView;
+      if (!quiet && b.right >= v.x && b.x <= v.right && b.bottom >= v.y && b.y <= v.bottom) window.__visibleDeaths.push(w.variant);
+      kill(w, quiet);
+    };
     window.__flights = 0; C.takeOff = (c, ...a) => { const was = c.state; take(c, ...a); if (was !== 'fly' && c.state === 'fly') window.__flights++; };
   });   // слабое «железо» тестового браузера — не повод включать лёгкий режим
   await page.waitForTimeout(800);
@@ -78,9 +85,9 @@ try {
         return !(img instanceof HTMLImageElement) || !img.complete || !img.naturalWidth;
       }) };
     });
-    assert.equal(loaded.count, 68, 'все кадры живого города загружены');
+    assert.equal(loaded.count, 118, 'все кадры живого города загружены');
     assert.deepEqual(loaded.invalid, [], 'реальные рисованные изображения, без серых заглушек при ошибке загрузки');
-    ok('все 68 рисованных кадров успешно декодированы браузером');
+    ok('все 118 рисованных кадров успешно декодированы браузером');
     const first = await info(page);
     assert.ok(first.running && first.routes >= 10, `маршруты по улицам найдены (${first.routes})`); ok(`маршруты по улицам: ${first.routes}`);
     assert.ok(first.roofs >= 6, `крыши для ворон найдены (${first.roofs})`); ok(`крыши: ${first.roofs}`);
@@ -152,7 +159,7 @@ try {
               else if (w.hy > -0.15) { seen.down++; if (back(w.tex)) seen.badFacing.push(`${w.variant}: идёт вниз/вбок (hy ${w.hy.toFixed(2)}), но кадр ${w.tex}`); }
             } else if (w.mode !== 'sit' && Math.abs(w.hy) > 0.8) {
               seen.petVertical++;
-              if (Math.abs(w.angle) < 40) seen.badAngle.push(`${w.variant}: по вертикали, угол ${w.angle}`);
+              if (w.angle !== 0 || !w.tex.includes(w.hy < 0 ? '_up_' : '_down_')) seen.badAngle.push(`${w.variant}: по вертикали, угол ${w.angle}`);
             }
           }
         }
@@ -161,18 +168,111 @@ try {
       assert.ok(seen.up > 5 && seen.down > 5, `видели ходьбу вверх и вниз (${seen.up}/${seen.down})`); ok(`горожане: вверх ${seen.up} / вниз ${seen.down} замеров`);
       assert.deepEqual(seen.badFacing.slice(0, 5), [], 'идущий вверх повёрнут спиной, вниз — лицом'); ok('вверх — спиной, вниз — лицом');
       assert.ok(seen.pets > 0, 'звери встречаются во время прогулки'); ok(`звери встречены (${seen.pets} замеров)`);
-      assert.ok(seen.petVertical > 10 && seen.badAngle.length <= seen.petVertical * 0.08, `зверь на вертикальной улице повёрнут мордой по ходу, а не боком (${seen.badAngle.length} из ${seen.petVertical} не успели довернуть)`); ok(`звери повёрнуты по ходу (замеров по вертикали: ${seen.petVertical})`);
+      assert.ok(seen.petVertical > 10 && seen.badAngle.length === 0, `зверь на вертикальной улице повёрнут мордой по ходу, а не боком (${seen.badAngle.length} из ${seen.petVertical} с неправильным ракурсом)`); ok(`звери используют ракурсы сверху без вращения (замеров по вертикали: ${seen.petVertical})`);
       assert.ok(seen.crowdMax <= 3, `возле героини не толпа (макс. ${seen.crowdMax} в радиусе 380 px)`); ok(`рядом с героиней не больше ${seen.crowdMax}`);
       assert.ok(seen.nearMin >= 85, `прохожие не лезут на героиню (ближе всего ${seen.nearMin} px)`); ok(`ближе всего прохожий подошёл на ${seen.nearMin} px`);
     }
+    // Истёкший срок и конец короткого маршрута не могут растворить человека в кадре.
+    const exit = await page.evaluate(async () => {
+      const { pointAt } = await import('/src/world/cityLife.js');
+      const { routeFromPoints } = await import('/src/world/cityStreetExit.js');
+      const sc = window.__game.scene.getScene('ExplorationScene'), C = sc.life.city, cam = sc.cameras.main;
+      for (const w of [...C.walkers]) C.killWalker(w, true);
+      C.walkers = []; C.spawnIn = C.petSpawnIn = 1e9;
+      let fixture;
+      for (const r of [...C.routes].sort((a, b) => a.len - b.len)) {
+        const p = pointAt(r, r.len / 2);
+        if (C.solidAt(p.x, p.y)) continue;
+        cam.centerOn(p.x, p.y); cam.preRender(); sc.player.setPosition(p.x + 500, p.y);
+        const w = C.makeWalker('person', { route: r, s: r.len / 2, dir: 1, hidden: true },
+          { variant: 'man_a', key: n => `cl_man_a_${n}`, lane: 0, speed: 55 });
+        if (C.sendOffscreen(w, cam.worldView)) { fixture = { w, p }; break; }
+        C.killWalker(w, true); C.walkers = C.walkers.filter(v => v !== w);
+      }
+      if (!fixture) return { error: 'нет связанного маршрута для проверки выхода' };
+      const { w, p } = fixture;
+      // A deliberately short visible route ending under the camera must reverse safely.
+      w.route = routeFromPoints([{ x: p.x, y: p.y - 10 }, { x: p.x, y: p.y + 10 }]);
+      w.s = 19; w.dir = 1; w.exitRouteActive = false; w.age = 100; w.ttl = 1;
+      C.moveWalker(w, 1 / 30, null);
+      const endpointAlive = C.walkers.includes(w) && w.img.alpha === 1;
+      C.tick(cam.worldView);
+      let faded = false, steps = 0;
+      while (C.walkers.includes(w) && steps++ < 12000) {
+        C.moveWalker(w, 1 / 30, null);
+        const b = w.img.getBounds(), v = cam.worldView;
+        const visible = b.right >= v.x && b.x <= v.right && b.bottom >= v.y && b.y <= v.bottom;
+        if (visible && w.img.alpha < 0.999) faded = true;
+        if (steps % 18 === 0) C.tick(v);
+      }
+      C.spawnIn = 100; C.petSpawnIn = 100;
+      return { endpointAlive, faded, exited: !C.walkers.includes(w), seconds: steps / 30 };
+    });
+    assert.ok(!exit.error, exit.error);
+    assert.ok(exit.endpointAlive && !exit.faded && exit.exited, JSON.stringify(exit));
+    ok(`человек доходит с короткой улицы за экран без растворения (${exit.seconds.toFixed(1)} с)`);
+    assert.deepEqual(await page.evaluate(() => window.__visibleDeaths), [], 'никто не удалён на глазах у игрока');
+
+    // Оба настоящих Player, 4 направления, ручной ввод и tap-to-move, затем удаление препятствия.
+    const collisions = await page.evaluate(async () => {
+      const { Player } = await import('/src/objects/Player.js');
+      const { setHeroSource } = await import('/src/state/hero.js');
+      const { routeFromPoints } = await import('/src/world/cityStreetExit.js');
+      const sc = window.__game.scene.getScene('ExplorationScene'), C = sc.life.city;
+      const x = 7400, y = 2400, results = [];
+      const r = routeFromPoints([{ x, y }, { x: x + 400, y }]);
+      const w = C.makeWalker('person', { route: r, s: 0, dir: 1, hidden: true },
+        { variant: 'man_a', key: n => `cl_man_a_${n}`, lane: 0, speed: 0 });
+      w.ttl = 1e9; w.wait = 1e9;
+      // Move after creation: the collider must follow the person in Arcade's static tree.
+      w.s = 100; C.moveWalker(w, 1 / 30, null);
+      const at = { x: x + 100, y };
+      const rect = w.collider.body;
+      const originalHero = window.__witch.state.data.heroId;
+      for (const hero of ['witch', 'warlock']) {
+        setHeroSource(() => hero);
+        const h = new Player(sc, at.x - 120, at.y - 12);
+        const blocker = sc.physics.add.collider(h.sprite, C.peopleBodies);
+        for (const mode of ['manual', 'tap']) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          // Feet share a center at y - 12; Player's origin is the bottom of its 22px body.
+          const start = { x: at.x - dx * 120, y: at.y - 1 - dy * 120 };
+          h.stop(); h.setPosition(start.x, start.y); h.prev = { ...start }; h.actual = 1;
+          if (mode === 'tap') h.walkTo(at.x + dx * 120, at.y - 1 + dy * 120);
+          let overlap = false;
+          for (let i = 0; i < 180; i++) {
+            h.update(1 / 60, mode === 'manual' ? { x: dx, y: dy } : { x: 0, y: 0 });
+            sc.physics.world.singleStep();
+            const b = h.sprite.body;
+            overlap ||= b.x < rect.right - 0.1 && b.right > rect.x + 0.1 && b.y < rect.bottom - 0.1 && b.bottom > rect.y + 0.1;
+          }
+          const distance = (h.x - start.x) * dx + (h.y - start.y) * dy;
+          results.push({ hero, mode, dx, dy, overlap, distance, texture: h.tex.down });
+        }
+        blocker.destroy(); h.sprite.destroy(); h.view.destroy(); h.shadow.destroy();
+      }
+      setHeroSource(() => originalHero || 'witch');
+      C.killWalker(w, true); C.walkers = C.walkers.filter(v => v !== w);
+      const h = new Player(sc, at.x - 120, at.y - 1);
+      const blocker = sc.physics.add.collider(h.sprite, C.peopleBodies);
+      for (let i = 0; i < 120; i++) { h.update(1 / 60, { x: 1, y: 0 }); sc.physics.world.singleStep(); }
+      const free = h.x > at.x + 100;
+      blocker.destroy(); h.sprite.destroy(); h.view.destroy(); h.shadow.destroy();
+      return { results, free };
+    });
+    for (const r of collisions.results) assert.ok(!r.overlap && r.distance > 60 && r.distance < 115, JSON.stringify(r));
+    assert.ok(collisions.results.some(r => r.hero === 'warlock' && r.texture === 'warlock_down'));
+    assert.ok(collisions.free, 'после удаления жителя невидимое препятствие не остаётся');
+    ok('ведьма и колдун не проходят сквозь людей: 4 стороны, ручное управление и tap-to-move');
+
     assert.deepEqual(errors, [], 'ошибок страницы нет'); ok('ошибок страницы нет');
     // объекты не копятся: ещё 20 с, число не растёт заметно
     const before = (await info(page)).objs; await simulate(page, 90); const after = await info(page);
     assert.ok(after.objs <= before + 12, `число объектов сцены не растёт (${before} → ${after.objs})`); ok(`объекты сцены: ${before} → ${after.objs}`);
     // настройка «Живой мир» выключает
-    await page.evaluate(() => window.__witch.settings.set('anim', false)); await page.waitForTimeout(500);
+    await page.evaluate(() => { window.__peopleBeforeOff = window.__game.scene.getScene('ExplorationScene').life.city.peopleBodies.getChildren().slice(); window.__witch.settings.set('anim', false); }); await page.waitForTimeout(500);
     const off = await info(page);
-    assert.equal(off.running, false); ok('настройка «Живой мир» выключает город');
+    assert.equal(off.running, false);
+    assert.ok(await page.evaluate(() => !window.__game.scene.getScene('ExplorationScene').life.city && window.__peopleBeforeOff.every(z => !z.body)), 'при отключении нет невидимых препятствий'); ok('настройка «Живой мир» выключает город');
     await page.evaluate(() => window.__witch.settings.set('anim', true)); await page.waitForTimeout(800);
     assert.equal((await info(page)).running, true); ok('и включает обратно');
     await context.close();
@@ -180,6 +280,20 @@ try {
   // ---------- замёрзший город: меньше людей, снег, без дыма
   {
     const { page, errors, context } = await enterCity(false);
+    const residents = await page.evaluate(() => {
+      const s = window.__game.scene.getScene('ExplorationScene'), state = window.__witch.state;
+      const views = ['city_plan_resident_woman', 'city_plan_resident_man'].map(id => s.propViews.get(id));
+      s.navGrids(); const before = s.navCache.sig;
+      const shown = views.every(v => v.img.visible && v.blocker?.body.enable);
+      state.data.completedEvents = state.data.completedEvents.filter(e => e !== 'ch2_rescue_door');
+      s.refreshAll(); s.navGrids();
+      const hidden = views.every(v => !v.img.visible && !v.blocker?.body.enable);
+      const navChanged = before !== s.navCache.sig;
+      state.markEvent('ch2_rescue_door'); s.refreshAll();
+      return { shown, hidden, navChanged, restored: views.every(v => v.blocker?.body.enable) };
+    });
+    assert.ok(residents.shown && residents.hidden && residents.navChanged && residents.restored, JSON.stringify(residents));
+    ok('опора спасённых жителей включается вместе с их появлением, скрытые NPC не мешают пути');
     await simulate(page, 4); await page.waitForTimeout(200);
     const s = await info(page);
     assert.ok(s.flakes > 0 && s.puffs === 0, 'пока город замёрз — снег, без дыма'); ok(`снег: ${s.flakes} снежинок, дыма нет`);

@@ -1,0 +1,127 @@
+{
+  "cat_ginger": {
+    "source": "exec-92fc1401-e481-409d-9865-36f29182f36c.png",
+    "sha256": "b427c660f7db3a288249d313fa5a7ca0f38d51452bdd02517087253bc3c95ac6",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "frameSize": [
+      96,
+      128
+    ],
+    "frames": [
+      "up_walk1",
+      "up_walk2",
+      "up_run1",
+      "up_run2",
+      "up_sit",
+      "down_walk1",
+      "down_walk2",
+      "down_run1",
+      "down_run2",
+      "down_sit"
+    ],
+    "prompt": "Use case: stylized-concept. Production sprite sheet for our existing 2D hand-painted fantasy RPG. The input image is a STYLE AND IDENTITY REFERENCE of this exact animal in side view. Keep the SAME individual, coat colors, markings, collar, anatomy and watercolor/ink painting style, but DRAW NEW CAMERA VIEWS. CRITICAL: we are replacing an erroneous 90-degree rotation of a side-view sprite. Do NOT rotate a side-view picture. Draw genuine overhead FRONT and REAR views of a quadruped walking on all four paws on a horizontal ground plane. Camera elevated about 55 degrees above the ground, looking down onto the animal's back. Its SPINE and travel direction run vertically on the screen, not left-right. Its BACK, shoulder blades and top of the rump must be visible; paws small and foreshortened below, never a sideways silhouette or lying on one side. Genuine transparent RGBA, no ground plane, no shadow, text, grid, labels or scenery. Regular FIVE columns × TWO rows, 10 separate full animals, same scale with plenty of transparent gaps, no touching tails. TOP ROW: animal moving AWAY from viewer toward TOP of screen, seen from behind and above, face NOT visible, ears/head at top and rump/tail toward bottom. Columns: walk left paws forward; alternate walk; extended run; collected run; seated facing away. BOTTOM ROW: animal moving TOWARD viewer toward BOTTOM of screen, seen from front and above, muzzle at bottom, back recedes upward and tail toward top. Same five poses: walk phase A, walk phase B, extended run, collected run, seated facing viewer. All ten use same camera elevation and body scale. Entire tail and four paws included, no human legs, no standing on hind legs, no extra limbs, no giant cartoon head. Clean detailed fur, readable at 50-70px in game. Subject identity: Ginger tabby with cream chest and green eyes."
+  },
+  "cat_grey": {
+    "source": "exec-f399833f-f395-4925-b3fa-eaddb6756bf3.png",
+    "sha256": "56931ae3a8c13a9032695419a00695bcbe3c102261622946a92f9beb76df8b1b",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "frameSize": [
+      96,
+      128
+    ],
+    "frames": [
+      "up_walk1",
+      "up_walk2",
+      "up_run1",
+      "up_run2",
+      "up_sit",
+      "down_walk1",
+      "down_walk2",
+      "down_run1",
+      "down_run2",
+      "down_sit"
+    ],
+    "prompt": "Use case: stylized-concept. Production sprite sheet for our existing 2D hand-painted fantasy RPG. The input image is a STYLE AND IDENTITY REFERENCE of this exact animal in side view. Keep the SAME individual, coat colors, markings, collar, anatomy and watercolor/ink painting style, but DRAW NEW CAMERA VIEWS. CRITICAL: we are replacing an erroneous 90-degree rotation of a side-view sprite. Do NOT rotate a side-view picture. Draw genuine overhead FRONT and REAR views of a quadruped walking on all four paws on a horizontal ground plane. Camera elevated about 55 degrees above the ground, looking down onto the animal's back. Its SPINE and travel direction run vertically on the screen, not left-right. Its BACK, shoulder blades and top of the rump must be visible; paws small and foreshortened below, never a sideways silhouette or lying on one side. Genuine transparent RGBA, no ground plane, no shadow, text, grid, labels or scenery. Regular FIVE columns × TWO rows, 10 separate full animals, same scale with plenty of transparent gaps, no touching tails. TOP ROW: animal moving AWAY from viewer toward TOP of screen, seen from behind and above, face NOT visible, ears/head at top and rump/tail toward bottom. Columns: walk left paws forward; alternate walk; extended run; collected run; seated facing away. BOTTOM ROW: animal moving TOWARD viewer toward BOTTOM of screen, seen from front and above, muzzle at bottom, back recedes upward and tail toward top. Same five poses: walk phase A, walk phase B, extended run, collected run, seated facing viewer. All ten use same camera elevation and body scale. Entire tail and four paws included, no human legs, no standing on hind legs, no extra limbs, no giant cartoon head. Clean detailed fur, readable at 50-70px in game. Subject identity: Silver-grey tabby with ivory chin and amber eyes."
+  },
+  "cat_tux": {
+    "source": "exec-005a05d0-d6fa-4472-946e-2de7af8d3fb2.png",
+    "sha256": "cebdbdcffc2a59618b51e3d2008aec04216814bdf3b67ecbbdd948a898c4ed82",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "frameSize": [
+      96,
+      128
+    ],
+    "frames": [
+      "up_walk1",
+      "up_walk2",
+      "up_run1",
+      "up_run2",
+      "up_sit",
+      "down_walk1",
+      "down_walk2",
+      "down_run1",
+      "down_run2",
+      "down_sit"
+    ],
+    "prompt": "Use case: stylized-concept. Production sprite sheet for our existing 2D hand-painted fantasy RPG. The input image is a STYLE AND IDENTITY REFERENCE of this exact animal in side view. Keep the SAME individual, coat colors, markings, collar, anatomy and watercolor/ink painting style, but DRAW NEW CAMERA VIEWS. CRITICAL: we are replacing an erroneous 90-degree rotation of a side-view sprite. Do NOT rotate a side-view picture. Draw genuine overhead FRONT and REAR views of a quadruped walking on all four paws on a horizontal ground plane. Camera elevated about 55 degrees above the ground, looking down onto the animal's back. Its SPINE and travel direction run vertically on the screen, not left-right. Its BACK, shoulder blades and top of the rump must be visible; paws small and foreshortened below, never a sideways silhouette or lying on one side. Genuine transparent RGBA, no ground plane, no shadow, text, grid, labels or scenery. Regular FIVE columns × TWO rows, 10 separate full animals, same scale with plenty of transparent gaps, no touching tails. TOP ROW: animal moving AWAY from viewer toward TOP of screen, seen from behind and above, face NOT visible, ears/head at top and rump/tail toward bottom. Columns: walk left paws forward; alternate walk; extended run; collected run; seated facing away. BOTTOM ROW: animal moving TOWARD viewer toward BOTTOM of screen, seen from front and above, muzzle at bottom, back recedes upward and tail toward top. Same five poses: walk phase A, walk phase B, extended run, collected run, seated facing viewer. All ten use same camera elevation and body scale. Entire tail and four paws included, no human legs, no standing on hind legs, no extra limbs, no giant cartoon head. Clean detailed fur, readable at 50-70px in game. Subject identity: Black-and-white tuxedo cat, white bib/muzzle and four white paws, olive-green eyes."
+  },
+  "dog_tan": {
+    "source": "exec-190aeebf-bd3b-4a34-8c17-dcdbbe133149.png",
+    "sha256": "63af653fe68f3d33d228330c081dcc1a01eda053abb0c65d8ed83b2d7f9f0622",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "frameSize": [
+      112,
+      144
+    ],
+    "frames": [
+      "up_walk1",
+      "up_walk2",
+      "up_run1",
+      "up_run2",
+      "up_sit",
+      "down_walk1",
+      "down_walk2",
+      "down_run1",
+      "down_run2",
+      "down_sit"
+    ],
+    "prompt": "Use case: stylized-concept. Production sprite sheet for our existing 2D hand-painted fantasy RPG. The input image is a STYLE AND IDENTITY REFERENCE of this exact animal in side view. Keep the SAME individual, coat colors, markings, collar, anatomy and watercolor/ink painting style, but DRAW NEW CAMERA VIEWS. CRITICAL: we are replacing an erroneous 90-degree rotation of a side-view sprite. Do NOT rotate a side-view picture. Draw genuine overhead FRONT and REAR views of a quadruped walking on all four paws on a horizontal ground plane. Camera elevated about 55 degrees above the ground, looking down onto the animal's back. Its SPINE and travel direction run vertically on the screen, not left-right. Its BACK, shoulder blades and top of the rump must be visible; paws small and foreshortened below, never a sideways silhouette or lying on one side. Genuine transparent RGBA, no ground plane, no shadow, text, grid, labels or scenery. Regular FIVE columns × TWO rows, 10 separate full animals, same scale with plenty of transparent gaps, no touching tails. TOP ROW: animal moving AWAY from viewer toward TOP of screen, seen from behind and above, face NOT visible, ears/head at top and rump/tail toward bottom. Columns: walk left paws forward; alternate walk; extended run; collected run; seated facing away. BOTTOM ROW: animal moving TOWARD viewer toward BOTTOM of screen, seen from front and above, muzzle at bottom, back recedes upward and tail toward top. Same five poses: walk phase A, walk phase B, extended run, collected run, seated facing viewer. All ten use same camera elevation and body scale. Entire tail and four paws included, no human legs, no standing on hind legs, no extra limbs, no giant cartoon head. Clean detailed fur, readable at 50-70px in game. Subject identity: Tan dog with ivory chest, dark floppy ears and muted burgundy collar."
+  },
+  "dog_brown": {
+    "source": "exec-a4fc476d-63a2-4bce-b63b-c31535833dff.png",
+    "sha256": "9128eb72b45ce81599b947ddb0cc6fcf02db3d14c7a4a7234ffe16b12b211816",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "frameSize": [
+      112,
+      144
+    ],
+    "frames": [
+      "up_walk1",
+      "up_walk2",
+      "up_run1",
+      "up_run2",
+      "up_sit",
+      "down_walk1",
+      "down_walk2",
+      "down_run1",
+      "down_run2",
+      "down_sit"
+    ],
+    "prompt": "Use case: stylized-concept. Production sprite sheet for our existing 2D hand-painted fantasy RPG. The input image is a STYLE AND IDENTITY REFERENCE of this exact animal in side view. Keep the SAME individual, coat colors, markings, collar, anatomy and watercolor/ink painting style, but DRAW NEW CAMERA VIEWS. CRITICAL: we are replacing an erroneous 90-degree rotation of a side-view sprite. Do NOT rotate a side-view picture. Draw genuine overhead FRONT and REAR views of a quadruped walking on all four paws on a horizontal ground plane. Camera elevated about 55 degrees above the ground, looking down onto the animal's back. Its SPINE and travel direction run vertically on the screen, not left-right. Its BACK, shoulder blades and top of the rump must be visible; paws small and foreshortened below, never a sideways silhouette or lying on one side. Genuine transparent RGBA, no ground plane, no shadow, text, grid, labels or scenery. Regular FIVE columns × TWO rows, 10 separate full animals, same scale with plenty of transparent gaps, no touching tails. TOP ROW: animal moving AWAY from viewer toward TOP of screen, seen from behind and above, face NOT visible, ears/head at top and rump/tail toward bottom. Columns: walk left paws forward; alternate walk; extended run; collected run; seated facing away. BOTTOM ROW: animal moving TOWARD viewer toward BOTTOM of screen, seen from front and above, muzzle at bottom, back recedes upward and tail toward top. Same five poses: walk phase A, walk phase B, extended run, collected run, seated facing viewer. All ten use same camera elevation and body scale. Entire tail and four paws included, no human legs, no standing on hind legs, no extra limbs, no giant cartoon head. Clean detailed fur, readable at 50-70px in game. Subject identity: Chestnut slightly shaggy dog, ivory chest and toes, floppy ears and muted teal collar."
+  }
+}

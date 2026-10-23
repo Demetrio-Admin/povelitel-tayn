@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CITY_LIFE, CHAT_LINES, populationFor, buildRoutes, pointAt, pickSpawn, routeDistance, personFacing, petPose } from '../src/world/cityLife.js';
+import { buildStreetGraph, planStreetExit, routeFromPoints, outsideCamera } from '../src/world/cityStreetExit.js';
 import { cityMapData } from '../src/config/city.plan.js';
 import { ASSET_FILES, DISPLAY_SIZE, TEMPORARY_ART } from '../src/config/assets.manifest.js';
 
@@ -65,19 +66,30 @@ ok(Math.abs(Math.abs(m.y) - 20) < 1e-6 && Math.abs(m.tx - 1) < 1e-6, 'смеще
   ok(personFacing(-0.35, 'back') === 'back' && personFacing(-0.35, 'front') === 'front', 'на границе остаётся прежняя сторона');
 }
 
-// ---- поза зверя: мордой по ходу, а не боком
+// ---- отдельные верхние ракурсы вместо вращения бокового рисунка
 {
-  const close = (x, y) => Math.abs(x - y) < 1e-6;
-  let p = petPose(1, 0); ok(!p.flip && close(p.deg, 0), 'вправо: как нарисован');
-  p = petPose(-1, 0); ok(p.flip && close(p.deg, 0), 'влево: зеркало');
-  p = petPose(0, 1, false); ok(!p.flip && close(p.deg, 90), 'вниз по улице: мордой вниз');
-  p = petPose(0, -1, false); ok(!p.flip && close(p.deg, -90), 'вверх по улице: мордой вверх');
-  p = petPose(0, 1, true); ok(p.flip && close(p.deg, -90), 'вниз, зеркальный: мордой вниз');
-  p = petPose(0, -1, true); ok(p.flip && close(p.deg, 90), 'вверх, зеркальный: мордой вверх');
-  p = petPose(1, 1); ok(!p.flip && close(p.deg, 45), 'вправо-вниз: наклон по диагонали');
-  p = petPose(-1, 1); ok(p.flip && close(p.deg, -45), 'влево-вниз: наклон по диагонали');
-  let all = true; for (let a = 0; a < 360; a += 5) { const q = petPose(Math.cos(a * Math.PI / 180), Math.sin(a * Math.PI / 180)); all = all && q.deg >= -90 && q.deg <= 90; }
-  ok(all, 'угол всегда в пределах ±90°');
+  ok(petPose(1, 0).facing === 'side' && !petPose(1, 0).flip, 'вправо: боковой рисунок');
+  ok(petPose(-1, 0).facing === 'side' && petPose(-1, 0).flip, 'влево: зеркало бокового рисунка');
+  ok(petPose(0, -1).facing === 'up' && !petPose(0, -1).flip, 'вверх: отдельный вид сверху со спины');
+  ok(petPose(0, 1).facing === 'down' && !petPose(0, 1).flip, 'вниз: отдельный вид сверху спереди');
+  ok(petPose(1, 1, 'up').facing === 'down' && petPose(1, 1, 'side').facing === 'side', 'гистерезис не даёт ракурсу мигать на диагонали');
+  for (let a = 0; a < 360; a += 5) ok(petPose(Math.cos(a), Math.sin(a)).deg === 0, 'ни один ракурс не вращается на бок');
+}
+
+// ---- выход по связанным улицам, даже когда исходный маршрут весь в кадре
+{
+  const short = routeFromPoints([{ x: 500, y: 300 }, { x: 500, y: 700 }]);
+  const long = routeFromPoints([{ x: 500, y: 700 }, { x: 500, y: 1800 }]);
+  const view = { x: 300, y: 200, width: 400, height: 800 };
+  const graph = buildStreetGraph([short, long], pointAt);
+  const path = planStreetExit(graph, { x: 500, y: 400 }, view, 170);
+  ok(path?.length > 2 && path.at(-1).y > 1170, 'с короткой улицы уходит на длинную за экран');
+  ok(path.every(p => Math.abs(p.x - 500) < 1), 'выход остаётся на улице');
+  const barrier = buildStreetGraph([short, long], pointAt, (x, y) => y > 780 && y < 850);
+  ok(planStreetExit(barrier, { x: 500, y: 400 }, view, 170) === null, 'не проходит сквозь препятствие ради выхода');
+  ok(planStreetExit(graph, { x: 500, y: 400 }, { x: 0, y: 0, width: 2000, height: 2000 }) === null, 'если выхода нет — ждёт, а не исчезает');
+  ok(!outsideCamera({ x: 490, y: 190, width: 20, height: 30 }, view), 'частично видимый рисунок ещё в кадре');
+  ok(outsideCamera({ x: 490, y: 100, width: 20, height: 30 }, view, 30), 'исчезнуть можно только за краем всего рисунка');
 }
 
 // ---- сколько кого
@@ -103,6 +115,13 @@ ok(Math.abs(Math.abs(m.y) - 20) < 1e-6 && Math.abs(m.tx - 1) < 1e-6, 'смеще
     ok(fs.existsSync(path.join(root, 'public', ASSET_FILES[k].split('?')[0])), `${k}: файл на диске`);
   }
   ok(need.every(k => !TEMPORARY_ART.includes(k) && ASSET_FILES[k].startsWith('assets/city-life/painted-v1/')), 'все 68 кадров живого города заменены рисованной графикой');
+  for (const v of [...CITY_LIFE.cats, ...CITY_LIFE.dogs]) for (const d of ['up', 'down']) for (const f of ['sit', 'walk1', 'walk2', 'run1', 'run2']) {
+    const key = `cl_${v}_${d}_${f}`;
+    ok(ASSET_FILES[key]?.startsWith('assets/city-life/painted-v2/'), `${key}: отдельный нарисованный ракурс`);
+    ok(DISPLAY_SIZE[key]?.[1] > DISPLAY_SIZE[key]?.[0], `${key}: продольный вид сверху`);
+    ok(fs.statSync(path.join(root, 'public', ASSET_FILES[key])).size > 32, `${key}: непустой игровой файл`);
+  }
+
 }
 
 // ---- реплики жителей помещаются в «пузырёк» (230 px, 20 px шрифт)

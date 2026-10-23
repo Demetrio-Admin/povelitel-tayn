@@ -711,6 +711,7 @@ export class ExplorationScene extends Phaser.Scene {
       const r=footprint;
       if(!view.blocker){view.blocker=this.add.zone(r.x+r.w/2,r.y+r.h/2,r.w,r.h);this.solids.add(view.blocker);}
       else{view.blocker.setPosition(r.x+r.w/2,r.y+r.h/2).setSize(r.w,r.h);view.blocker.body.setSize(r.w,r.h);view.blocker.body.updateFromGameObject();}
+      view.blocker.body.enable = img.visible;
     }
     if(view.glow)view.glow.setPosition(p.x,p.y-img.displayHeight+12);
   }
@@ -1039,7 +1040,10 @@ export class ExplorationScene extends Phaser.Scene {
   refreshAll() {
     this.objects?.forEach(o => {o.refresh();this.styleEntity(o);});
     this.enemies?.forEach(e => {e.refresh();this.styleEntity(e);});
-    for(const {p,img} of this.propViews.values())img.setVisible(this.propShown(p));
+    for(const {p,img,blocker} of this.propViews.values()) {
+      img.setVisible(this.propShown(p));
+      if (blocker?.body) blocker.body.enable = img.visible;
+    }
     this.cityPresentation?.refresh();
   }
 
@@ -1113,7 +1117,7 @@ export class ExplorationScene extends Phaser.Scene {
     const solids = [];
     let sig = 0;
     for (const z of this.solids.getChildren()) {
-      const b = z.body; if (!b) continue;
+      const b = z.body; if (!b?.enable) continue;
       solids.push({ x: b.x, y: b.y, w: b.width, h: b.height });
       sig = (sig * 31 + Math.round(b.x * 3 + b.y * 7 + b.width * 11 + b.height * 13)) | 0;
     }

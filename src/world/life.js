@@ -114,7 +114,7 @@ export class LivingWorld {
       if (a) this.items.push({ id: v.p.id, k: v.p.k, x: v.p.x, y: v.p.y, a, img: v.img });
       if (/rock|boulder/.test(v.p.k)) this.solidRects.push({ x: v.p.x - v.img.displayWidth / 2, y: v.p.y - v.img.displayHeight, w: v.img.displayWidth, h: v.img.displayHeight });
     }
-    for (const z of s.solids?.getChildren?.() || []) this.solidRects.push({ x: z.x - z.width / 2, y: z.y - z.height / 2, w: z.width, h: z.height });
+    for (const z of s.solids?.getChildren?.() || []) if (z.body?.enable) this.solidRects.push({ x: z.x - z.width / 2, y: z.y - z.height / 2, w: z.width, h: z.height });
     this.timers.push(s.time.addEvent({ delay: LIFE.tickMs, loop: true, callback: () => this.tick() }));
     this.timers.push(s.time.delayedCall(LIFE.birdFirstMs, () => this.birdLoop()));
     this.timers.push(s.time.delayedCall(LIFE.animalFirstMs, () => this.animalLoop()));

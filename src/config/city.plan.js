@@ -516,10 +516,10 @@ export function cityMapData() {
   for(const p of props)if(p.k==='city_lamp_01'){
     p.k='city_walk_lamp';p.light=42;
   }
-  // Сюжетные детали: открытый погреб и спасённые жители (не мешают проходу, видны после событий)
+  // Сюжетные детали: открытый погреб и спасённые жители (с опорой у ног, видны после событий)
   props.push({id:'city_plan_rescued_cellar',k:'city_cellar',...P(1050,1830),solid:null,l:'floor',requires:'ch2_rescue_cellar'});
-  props.push({id:'city_plan_resident_woman',k:'city_resident_woman',...P(2160,1700),solid:null,requires:'ch2_rescue_door'});
-  props.push({id:'city_plan_resident_man',k:'city_resident_man',...P(2230,1660),solid:null,requires:'ch2_rescue_door'});
+  props.push({id:'city_plan_resident_woman',k:'city_resident_woman',...P(2160,1700),solid:{w:34,h:22},requires:'ch2_rescue_door'});
+  props.push({id:'city_plan_resident_man',k:'city_resident_man',...P(2230,1660),solid:{w:34,h:22},requires:'ch2_rescue_door'});
   // Selected courtyard concept: forest-style gardens around the Archive, with the original city geometry.
   dressArchiveDistrict({ grounds, colliders, props, roads, point: P, buildings: BUILDINGS, questPositions: CITY_POSITIONS });
   dressCityNeighborhoods({ colliders, props, roads, point: P, buildings: BUILDINGS, questPositions: CITY_POSITIONS });

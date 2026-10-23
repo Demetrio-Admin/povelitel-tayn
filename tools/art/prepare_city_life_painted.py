@@ -35,7 +35,7 @@ def figures(im, count):
     distance, nearest = distance_transform_edt(~seeds, return_distances=True, return_indices=True)
     owner = regions[tuple(nearest)]
     boxes = find_objects(regions)
-    major.sort(key=lambda i: (boxes[i-1][0].start // (im.height // 2) if count == 10 else 0,
+    major.sort(key=lambda i: ((boxes[i-1][0].start + boxes[i-1][0].stop) // im.height if count == 10 else 0,
                               boxes[i-1][1].start))
     result = []
     for i in major:

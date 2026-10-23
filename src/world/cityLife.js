@@ -1,12 +1,13 @@
 // «Живой город» (v0.40.0): горожане, собаки и кошки, вороны на крышах, болтающие жители у спасённого дома, дым из труб и снег.
 // Как и лесной «Живой мир» (life.js), это дёшево: ничего не считается для того, что не видно, все спрайты — из маленьких наборов
 // (≤ 5 людей, ≤ 3 зверей, 3 вороны, ≤ 16 клубов дыма, 24 снежинки), а при низком FPS лишнее выключается само.
-// Люди и звери идут по осям мощёных улиц из карты (никакого поиска пути): появляются за краем экрана, уходят за край.
+// Люди и звери идут по мощёным улицам. Для ухода за экран используется небольшой граф улиц.
 // Рисованные кадры: config/cityLife.painted.js. Маршруты, ключи анимаций и масштаб отделены от графики.
 import { DEPTH } from '../config/game.config.js';
 import { DISPLAY_SIZE } from '../config/assets.manifest.js';
 import { services } from '../services.js';
 import { catmullRom } from './geometry.js';
+import { buildStreetGraph, planStreetExit, routeFromPoints, outsideCamera } from './cityStreetExit.js';
 
 export const CITY_LIFE = {
   citizenVariants: ['man_a', 'man_b', 'woman_a', 'woman_b'],
@@ -90,16 +91,12 @@ export function personFacing(hy, prev = 'front') {
   return prev;
 }
 
-/**
- * Поза зверя по направлению движения (hx, hy — вектор, вниз по экрану hy > 0). Спрайты нарисованы боком, мордой вправо:
- * идём влево — зеркалим, идём вверх или вниз — поворачиваем по ходу, чтобы зверь не ехал боком. Возвращает { flip, deg } (deg — по часовой).
- */
-export function petPose(hx, hy, prevFlip = false) {
-  const m = Math.hypot(hx, hy) || 1;
-  hx /= m; hy /= m;
-  const flip = Math.abs(hx) < 0.2 ? prevFlip : hx < 0;
-  const deg = (flip ? -1 : 1) * Math.atan2(hy, flip ? -hx : hx) * 180 / Math.PI;
-  return { flip, deg: Math.max(-90, Math.min(90, deg)) };
+/** Dedicated front/rear overhead frames, with hysteresis near diagonal streets. */
+export function petPose(hx, hy, previous = 'side') {
+  const wasVertical = previous === 'up' || previous === 'down';
+  const vertical = Math.abs(hy) > Math.abs(hx) * (wasVertical ? 0.85 : 1.15);
+  const facing = vertical ? (hy < 0 ? 'up' : 'down') : 'side';
+  return { facing, flip: facing === 'side' && hx < 0, deg: 0 };
 }
 
 const inRect = (x, y, r, m = 0) => x >= r.x - m && x <= r.x + r.width + m && y >= r.y - m && y <= r.y + r.height + m;
@@ -172,8 +169,11 @@ export class CityLife {
     if (this.running) return;
     this.running = true;
     this.routes = buildRoutes(s.map?.roads);
+    this.streetGraph = null;
     this.solids = this.life.solidRects || [];
     this.roofs = this.findRoofs();
+    this.peopleBodies = s.physics.add.staticGroup();
+    this.peopleCollider = s.physics.add.collider(s.player.sprite, this.peopleBodies);
     this.chatTargets();
     s.events.on('update', this.onUpdate);
     this.tick(s.cameras.main.worldView);
@@ -186,6 +186,8 @@ export class CityLife {
     s.events.off('update', this.onUpdate);
     for (const w of this.walkers) this.killWalker(w, true);
     this.walkers = [];
+    this.peopleCollider?.destroy(); this.peopleCollider = null;
+    this.peopleBodies?.destroy(true); this.peopleBodies = null;
     for (const c of this.crows) { s.tweens.killTweensOf(c.img); c.img.destroy(); }
     this.crows = [];
     for (const p of this.puffs) p.img.destroy();
@@ -203,11 +205,15 @@ export class CityLife {
     const dtMs = CITY_LIFE.tickMs;
     // люди и звери: пополнение и уборка тех, кто ушёл далеко
     for (const w of [...this.walkers]) {
-      const far = !inRect(w.img.x, w.img.y, view, CITY_LIFE.despawnMargin);
-      const excess = this.walkers.filter(x => x.kind === w.kind).length > (w.kind === 'person' ? this.pop.citizens : this.pop.pets);
-      if (far && (w.age > w.ttl || excess)) this.killWalker(w);
-      else if (far && w.age > 8 && this.rnd() < 0.15) this.killWalker(w);   // ушёл — не копим
-      else if (!far && !w.leaving && (w.age > w.ttl || excess)) w.leaving = true;   // ещё на экране — растворяется
+      const expired = w.age > w.ttl;
+      const count = this.walkers.filter(x => (x.kind === 'person') === (w.kind === 'person')).length;
+      const excess = count > (w.kind === 'person' ? this.pop.citizens : this.pop.pets);
+      const outside = outsideCamera(w.img.getBounds(), view, 30);
+      if (outside && (expired || excess || w.retiring || w.age > 8)) this.killWalker(w);
+      else if (expired || excess || w.retiring) {
+        w.retiring = true;
+        if (!w.exitRouteActive && w.exitRetry <= 0) this.sendOffscreen(w, view);
+      }
     }
     this.spawnIn -= dtMs; this.petSpawnIn -= dtMs;
     if (this.spawnIn <= 0 && this.walkers.filter(w => w.kind === 'person').length < this.pop.citizens) {
@@ -277,20 +283,35 @@ export class CityLife {
     const [dw, dh] = DISPLAY_SIZE[first] || [60, 60];
     const p = pointAt(spot.route, spot.s, o.lane);
     const pet = kind !== 'person';
-    // человек стоит на ногах (опора — низ), зверь поворачивается по ходу, поэтому вращается вокруг середины корпуса
-    const img = s.add.image(p.x, p.y, first).setOrigin(0.5, pet ? 0.65 : 1).setDisplaySize(dw, dh).setDepth(DEPTH.mainBase + p.y);
+    // Every facing is drawn upright; all frames share a ground contact point.
+    const img = s.add.image(p.x, p.y, first).setOrigin(0.5, 1).setDisplaySize(dw, dh).setDepth(DEPTH.mainBase + p.y);
     const shadow = s.add.image(p.x, p.y - 2, 'hero_shadow').setAlpha(0.45).setDisplaySize(kind === 'person' ? 52 : dw * 0.8, kind === 'person' ? 16 : 12).setDepth(DEPTH.mainBase + p.y - 1);
     const w = { kind, ...o, route: spot.route, s: spot.s, dir: spot.dir, img, shadow, dw, dh, age: 0, ttl: 60, animT: this.rnd(), frame: -1, wait: 0, blocked: 0, greeted: false, hop: 0, mode: 'walk', modeT: 0,
-      fade: spot.hidden ? 1 : 0, leaving: false, turned: false, facing: 'front', flip: 0, petFlip: false, rot: 0 };
+      fade: spot.hidden ? 1 : 0, retiring: false, exitRouteActive: false, exitRetry: 0, turned: false, facing: 'front', flip: 0, petFacing: 'side', rot: 0 };
     if (!spot.hidden) { img.setAlpha(0); shadow.setAlpha(0); }
+    if (!pet) {
+      w.collider = s.add.zone(p.x, p.y - 12, 34, 24);
+      this.peopleBodies.add(w.collider);
+    }
     this.walkers.push(w);
     return w;
   }
 
   killWalker(w, quiet = false) {
     this.scene.tweens.killTweensOf(w.img);
-    w.img.destroy(); w.shadow.destroy();
+    w.img.destroy(); w.shadow.destroy(); w.collider?.destroy();
     if (!quiet) this.walkers = this.walkers.filter(x => x !== w);
+  }
+
+  sendOffscreen(w, view) {
+    this.streetGraph ||= buildStreetGraph(this.routes, pointAt, (x, y) => this.solidAt(x, y));
+    const from = pointAt(w.route, w.s, w.lane);
+    const points = planStreetExit(this.streetGraph, { x: from.x, y: from.y }, view, CITY_LIFE.despawnMargin);
+    w.exitRetry = 3;
+    if (!points || points.length < 2) return false;
+    w.route = routeFromPoints(points); w.s = 0; w.dir = 1; w.lane = 0;
+    w.exitRouteActive = true;
+    return true;
   }
 
   solidAt(x, y) {
@@ -302,17 +323,17 @@ export class CityLife {
     if (!this.running || !dt) return;
     const s = this.scene, hero = s.player;
     for (const w of this.walkers) this.moveWalker(w, dt, hero);
-    if (this.walkers.some(w => w.dead)) for (const w of this.walkers.filter(x => x.dead)) this.killWalker(w);
     this.moveCrows(dt, hero);
     this.moveSmoke(dt);
     this.moveSnow(dt);
   }
 
   moveWalker(w, dt, hero) {
-    w.age += dt;
+    w.age += dt; w.exitRetry = Math.max(0, w.exitRetry - dt);
     const person = w.kind === 'person';
     // режимы зверя: идёт → сидит → пробегает; кошка удирает от героини
-    if (!person) {
+    if (!person && w.retiring) w.mode = 'walk';
+    if (!person && !w.retiring) {
       w.modeT -= dt;
       const near = hero && Math.hypot(hero.x - w.img.x, hero.y - w.img.y) < 120;
       if (w.kind === 'cat' && near && w.mode !== 'run') { w.mode = 'run'; w.modeT = 1.8 + this.rnd(); const q = pointAt(w.route, w.s); w.dir = ((hero.x - w.img.x) * q.tx + (hero.y - w.img.y) * q.ty) > 0 ? -1 : 1; w.turned = true; }
@@ -324,23 +345,23 @@ export class CityLife {
     }
     let speed = w.speed;
     if (!person) speed = w.mode === 'sit' ? 0 : w.mode === 'run' ? CITY_LIFE.petRun : CITY_LIFE.petWalk;
-    // героиня на пути: не лезем на неё — постояли, развернулись и ушли (дойдя до конца улицы — растворяются, а не возвращаются)
+    // героиня на пути: не лезем на неё — постояли, развернулись и ушли (выходят за экран по связанным улицам)
     if (w.wait > 0) { w.wait -= dt; speed = 0; }
     else if (speed > 0) {
       const here = pointAt(w.route, w.s, w.lane), ahead = pointAt(w.route, w.s + w.dir * 30, w.lane);
       const yieldPx = person ? CITY_LIFE.yieldPx.person : CITY_LIFE.yieldPx.pet;
       const closing = hero && Math.hypot(hero.x - ahead.x, hero.y - ahead.y) < yieldPx && Math.hypot(hero.x - ahead.x, hero.y - ahead.y) < Math.hypot(hero.x - here.x, hero.y - here.y);
-      if (closing) { w.dir *= -1; w.turned = true; w.wait = 0.5 + this.rnd() * 0.6; speed = 0; w.ttl = Math.min(w.ttl, w.age + 25); }
+      if (closing) { w.exitRouteActive = false; w.dir *= -1; w.turned = true; w.wait = 0.5 + this.rnd() * 0.6; speed = 0; w.ttl = Math.min(w.ttl, w.age + 25); }
       else if (this.solidAt(ahead.x, ahead.y)) {
         speed = 0; w.wait = 0.5 + this.rnd() * 0.8;
-        if (++w.blocked > 3) { w.dir *= -1; w.blocked = 0; }
+        if (++w.blocked > 3) { w.dir *= -1; w.blocked = 0; w.exitRouteActive = false; }
       } else w.blocked = 0;
     }
     if (speed > 0) {
       w.s += w.dir * speed * dt;
       if (w.s <= 0 || w.s >= w.route.len) {
         w.s = Math.max(0, Math.min(w.route.len, w.s));
-        if (w.turned) w.leaving = true; else w.dir *= -1;
+        w.dir *= -1; w.exitRouteActive = false; w.exitRetry = 0;
       }
     }
     const p = pointAt(w.route, w.s, w.lane);
@@ -354,8 +375,14 @@ export class CityLife {
       key = w.key(w.facing === 'back' ? `b_${frame}` : frame);
       frame = `${w.facing}${frame}`;
     } else {
-      if (w.mode === 'sit' && speed === 0) { frame = 'sit'; key = w.key('sit'); }
-      else { w.animT += dt; const t = w.mode === 'run' ? CITY_LIFE.crowFlapSec + 0.03 : 0.22; frame = (w.mode === 'run' ? 'run' : 'walk') + (1 + (Math.floor(w.animT / t) % 2)); key = w.key(frame); }
+      if (speed > 0) {
+        const pose = petPose(hx, hy, w.petFacing);
+        w.petFacing = pose.facing; w.img.setFlipX(pose.flip);
+      }
+      if (w.mode === 'sit' && speed === 0) frame = 'sit';
+      else { w.animT += dt; const t = w.mode === 'run' ? CITY_LIFE.crowFlapSec + 0.03 : 0.22; frame = (w.mode === 'run' ? 'run' : 'walk') + (1 + (Math.floor(w.animT / t) % 2)); }
+      key = w.key((w.petFacing === 'side' ? '' : `${w.petFacing}_`) + frame);
+      frame = key;
     }
     if (frame !== w.frame) { w.frame = frame; w.img.setTexture(key).setDisplaySize(...(DISPLAY_SIZE[key] || [w.dw, w.dh])); }
     // приветствие: один подскок, когда героиня рядом
@@ -364,7 +391,7 @@ export class CityLife {
     if (hd > CITY_LIFE.greetPx * 2) w.greeted = false;
     let lift = 0;
     if (w.hop > 0) { w.hop -= dt; lift = Math.sin((1 - w.hop / 0.35) * Math.PI) * 9; }
-    w.fade = w.leaving ? Math.max(0, w.fade - dt / CITY_LIFE.fadeSec) : Math.min(1, w.fade + dt / CITY_LIFE.fadeSec);
+    w.fade = Math.min(1, w.fade + dt / CITY_LIFE.fadeSec);
     if (person) {
       // зеркалим по горизонтальному ходу и слегка наклоняем по ходу — как «идёт», а не «скользит»
       if (speed > 0 && Math.abs(hx) > 0.3) { w.flip = hx; w.img.setFlipX(hx < 0); }
@@ -372,16 +399,14 @@ export class CityLife {
       w.rot += (lean - w.rot) * Math.min(1, dt * 8);
       w.img.setPosition(p.x, p.y - lift).setAngle(w.rot);
     } else {
-      // зверь поворачивается мордой по ходу (а сидящий — по последнему направлению) и плавно доворачивает
-      const pose = petPose(hx, hy, w.petFlip);
-      if (speed > 0) { w.petFlip = pose.flip; w.img.setFlipX(pose.flip); }
-      const want = speed > 0 ? pose.deg : 0;
-      w.rot += (want - w.rot) * Math.min(1, dt * 9);
-      w.img.setPosition(p.x, p.y - w.dh * 0.35 - lift).setAngle(w.rot);
+      w.img.setPosition(p.x, p.y - lift).setAngle(0);
+    }
+    if (w.collider) {
+      w.collider.setPosition(p.x, p.y - 12);
+      w.collider.body.updateFromGameObject();
     }
     w.img.setDepth(DEPTH.mainBase + p.y).setAlpha(w.fade);
     w.shadow.setPosition(p.x, p.y - 2).setDepth(DEPTH.mainBase + p.y - 1).setAlpha((0.45 - lift * 0.02) * w.fade);
-    if (w.leaving && w.fade <= 0) w.dead = true;
   }
 
   // ------------------------------------------------------------------ вороны

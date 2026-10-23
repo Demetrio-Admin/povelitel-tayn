@@ -71,7 +71,3 @@ export async function loginEmail(norm, domain) {
 }
 
 /** Короткая форма ника для HUD. */
-export function shortNick(nick, max = 9) {
-  const s = String(nick || '');
-  return s.length > max ? s.slice(0, max - 1) + '…' : s;
-}

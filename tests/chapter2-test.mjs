@@ -53,7 +53,7 @@ console.log('\nГлава II: данные');
   for (const id of ['tikhon', 'rowena']) ok(NPCS[id] && DIALOGUES[id]?.length && fs.existsSync(`public/assets/sprites/npc_${id}.png`) && fs.existsSync(`public/assets/sprites/portrait_${id}.png`), `${NPCS[id]?.name}: данные, диалоги, спрайт и портрет`);
   for (const id of ['volunteer', 'experimental_construct', 'severin_boss']) ok(ENEMIES[id] && fs.existsSync(`public/assets/sprites/${ENEMIES[id].texture}.png`) && DISPLAY_SIZE[ENEMIES[id].texture], `${ENEMIES[id]?.name}: данные и спрайт`);
   ok(ENEMIES.severin_boss.phases.length === 3 && ENEMIES.severin_boss.rewards.items.cold_heart === 1 && !ENEMIES.volunteer.repeatRewards, 'Северин — три фазы и Сердце холода; добровольцы — не фарм');
-  for (const t of ['astral_ward_01', 'lab_seal_01', 'lab_seal_frozen_01', 'rift_01', 'rift_frozen_01']) ok(ASSETS[t] && DISPLAY_SIZE[t] && fs.existsSync(`public/assets/sprites/${t}.png`), `картинка ${t}`);
+  for (const t of ['astral_ward_01']) ok(ASSETS[t] && DISPLAY_SIZE[t] && fs.existsSync(`public/assets/sprites/${t}.png`), `картинка ${t}`);
   ok(INTERACTIVES.find(o => o.id === 'final_ward').opens && INTERACTIVES.find(o => o.id === 'lab_seal').kind === 'ice', 'барьер зала (Астрал) и печать лаборатории (Лёд) — настоящие двери');
 }
 

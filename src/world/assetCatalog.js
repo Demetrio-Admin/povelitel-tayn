@@ -4,11 +4,6 @@ import { PROP_DEFS } from './propDefs.js';
 import { CITY_WITCH_ATLASES, CITY_WITCH_SPRITES } from '../config/city.witch.art.js';
 import { BUILDINGS } from '../config/city.plan.js';
 
-export const ASSET_GROUPS = {
-  nature:'Деревья, цветы и природа', furniture:'Мебель и оборудование', town:'Город и здания',
-  objects:'Предметы и магия', characters:'Персонажи', enemies:'Монстры', animals:'Животные',
-  ground:'Полы, стены и покрытия', portraits:'Портреты', ui:'Иконки и интерфейс', backgrounds:'Фоны',
-};
 const NAMES = {
   city_neighborhood_market_stall:'Лавка Бориса с навесом и товарами',
   city_lab_garden_workbench:'Стол алхимика у тайной лаборатории',

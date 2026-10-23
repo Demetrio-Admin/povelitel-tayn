@@ -43,8 +43,6 @@ export function spendMana(state, cost) {
 }
 
 /** Восстановить; возвращает фактически добавленное (0, если запас полный). */
-export function restoreHp(state, amount) { const before = hp(state); setHp(state, before + Math.max(0, amount)); return hp(state) - before; }
-export function restoreMana(state, amount) { const before = mana(state); setMana(state, before + Math.max(0, amount)); return mana(state) - before; }
 
 /**
  * Пассивное восстановление по настенным часам: HP и мана растут с теми же скоростями, что считает сервер, пока герой

@@ -8,7 +8,6 @@
 
 export const GROVE_RECT = { x: 8600, y: 600, w: 1500, h: 5400 };
 const G = (lx, ly) => ({ x: GROVE_RECT.x + lx, y: GROVE_RECT.y + ly });
-export const groveLocal = G;
 
 /** Прибытие с карты мира — у указателя в Сухой балке. */
 export const GROVE_START = G(380, 5150);

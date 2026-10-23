@@ -527,4 +527,3 @@ export function cityMapData() {
   dressPaintedRooms({grounds,colliders,props},CITY_ROOMS);
   return {grounds,colliders,props,roads,waters:[CITY_CANAL],skipped};
 }
-export const cityLocal = local;

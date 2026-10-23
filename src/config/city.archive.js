@@ -2,7 +2,6 @@
 import { buildRoad } from '../world/terrain.js';
 import { distToPolygon } from '../world/geometry.js';
 
-export const ARCHIVE_DISTRICT = { x: 680, y: 2190, w: 1920, h: 930 };
 export const inArchiveDistrict = (x, y) => x >= 680 && x <= 2600 && y >= 2190 && y <= 3120;
 
 export function dressArchiveDistrict({ colliders, props, roads, point, buildings, questPositions }) {

@@ -1,0 +1,220 @@
+{
+  "man_a": {
+    "source": "exec-ce0c4724-bf58-42d9-95a2-d802087b6d93.png",
+    "sha256": "9cab3a7c94d9e015a57934b08fc43b287121bbdcc576e0a777396bc111491547",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "frameSize": [
+      138,
+      240
+    ],
+    "frames": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "b_0",
+      "b_1",
+      "b_2",
+      "b_3",
+      "b_4"
+    ],
+    "prompt": "Use case: stylized-concept. Asset: production sprite sheet for a portrait 2D fantasy RPG. Image 1 is the game's existing hero and NPC style/scale reference (the old animals are only placeholders, do not copy their simplistic geometry). Image 2 is the actual painted game town; match its warm hand-painted watercolor/gouache, fine dark brown ink contour, softly textured fabric, clear readable silhouette. NOT photorealistic, NOT 3D, NOT vector, NOT pixel art. Camera is elevated RPG 3/4 view, matching the reference hero. True transparent RGBA background, no ground, no shadow, no text, no grid lines or labels. Maintain identical character design, face, outfit, height, lighting and body volume across every cell. Make a regular, perfectly aligned grid of FIVE equal columns and TWO equal rows, landscape sheet, 10 fully separated complete figures. Each figure centered in its cell, feet on the same baseline 93% down the cell, crown at about 8%, at least 12% clear horizontal margins. All props and boots fully inside the cell. TOP ROW: five views facing camera/downscreen, slight 3/4 turn toward screen-right: idle; left foot forward contact; passing step; right foot forward contact; opposite passing step. BOTTOM ROW: exactly the same five poses and same clothes seen FROM BEHIND, facing upscreen, absolutely no face visible. Hands naturally swing, modest step cycle, no duplicated legs. Two boots in every pose. Preserve adult age, not babies or doll-like toddlers. No accessories drifting between frames. One character repeated ten times; no extra characters. Subject: An approachable older town craftsman, grey hair and a short neat silver beard, muted teal cap, warm ivory shirt, dark moss green waistcoat, weathered tan trousers, brown ankle boots. Small leather cross-body work satchel, hands free. Lived-in fantasy town citizen, slight stocky adult build, kind but restrained face."
+  },
+  "man_b": {
+    "source": "exec-e9f352a8-7f3f-49ff-a9da-c6c9f911c06f.png",
+    "sha256": "d215ad018faca1054a70f309238453c9a61a48df5f586ebfd5243dfa2f07e850",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "frameSize": [
+      138,
+      240
+    ],
+    "frames": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "b_0",
+      "b_1",
+      "b_2",
+      "b_3",
+      "b_4"
+    ],
+    "prompt": "Use case: stylized-concept. Asset: production sprite sheet for a portrait 2D fantasy RPG. Image 1 is the game's existing hero and NPC style/scale reference (the old animals are only placeholders, do not copy their simplistic geometry). Image 2 is the actual painted game town; match its warm hand-painted watercolor/gouache, fine dark brown ink contour, softly textured fabric, clear readable silhouette. NOT photorealistic, NOT 3D, NOT vector, NOT pixel art. Camera is elevated RPG 3/4 view, matching the reference hero. True transparent RGBA background, no ground, no shadow, no text, no grid lines or labels. Maintain identical character design, face, outfit, height, lighting and body volume across every cell. Make a regular, perfectly aligned grid of FIVE equal columns and TWO equal rows, landscape sheet, 10 fully separated complete figures. Each figure centered in its cell, feet on the same baseline 93% down the cell, crown at about 8%, at least 12% clear horizontal margins. All props and boots fully inside the cell. TOP ROW: five views facing camera/downscreen, slight 3/4 turn toward screen-right: idle; left foot forward contact; passing step; right foot forward contact; opposite passing step. BOTTOM ROW: exactly the same five poses and same clothes seen FROM BEHIND, facing upscreen, absolutely no face visible. Hands naturally swing, modest step cycle, no duplicated legs. Two boots in every pose. Preserve adult age, not babies or doll-like toddlers. No accessories drifting between frames. One character repeated ten times; no extra characters. Subject: A different adult town bookseller, about 35-45 years old, dark brown wavy hair, clean-shaven, ochre scarf, wine-burgundy short coat over linen shirt, charcoal trousers and worn dark brown boots, a small leather book pouch worn at the left hip. Slim adult build, subtle expressive face."
+  },
+  "woman_a": {
+    "source": "exec-a41351bc-7baa-4c06-8016-bfe8b9e1ade5.png",
+    "sha256": "c34ace5e4b3e3af0a618d7ae0cb2b322015d7a3b2067470313b010490256ca31",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "frameSize": [
+      172,
+      240
+    ],
+    "frames": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "b_0",
+      "b_1",
+      "b_2",
+      "b_3",
+      "b_4"
+    ],
+    "prompt": "Use case: stylized-concept. Asset: production sprite sheet for a portrait 2D fantasy RPG. Image 1 is the game's existing hero and NPC style/scale reference (the old animals are only placeholders, do not copy their simplistic geometry). Image 2 is the actual painted game town; match its warm hand-painted watercolor/gouache, fine dark brown ink contour, softly textured fabric, clear readable silhouette. NOT photorealistic, NOT 3D, NOT vector, NOT pixel art. Camera is elevated RPG 3/4 view, matching the reference hero. True transparent RGBA background, no ground, no shadow, no text, no grid lines or labels. Maintain identical character design, face, outfit, height, lighting and body volume across every cell. Make a regular, perfectly aligned grid of FIVE equal columns and TWO equal rows, landscape sheet, 10 fully separated complete figures. Each figure centered in its cell, feet on the same baseline 93% down the cell, crown at about 8%, at least 12% clear horizontal margins. All props and boots fully inside the cell. TOP ROW: five views facing camera/downscreen, slight 3/4 turn toward screen-right: idle; left foot forward contact; passing step; right foot forward contact; opposite passing step. BOTTOM ROW: exactly the same five poses and same clothes seen FROM BEHIND, facing upscreen, absolutely no face visible. Hands naturally swing, modest step cycle, no duplicated legs. Two boots in every pose. Preserve adult age, not babies or doll-like toddlers. No accessories drifting between frames. One character repeated ten times; no extra characters. Subject: An adult town herbalist woman about 30-40 years old, warm brown braided hair under a muted plum kerchief, sage green layered dress, warm beige apron, dark plum shoulder shawl, brown lace-up ankle boots. A small herb pouch on her belt, hands free for walking. Natural adult proportions, gentle face."
+  },
+  "woman_b": {
+    "source": "exec-b5284b9d-2bb6-4820-805e-3f535e0a69df.png",
+    "sha256": "eeb9820c613d3bf38d3992e312b35fe25efc0c7c2c9110a65c42676b817a8ca8",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "frameSize": [
+      172,
+      240
+    ],
+    "frames": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "b_0",
+      "b_1",
+      "b_2",
+      "b_3",
+      "b_4"
+    ],
+    "prompt": "Use case: stylized-concept. Asset: production sprite sheet for a portrait 2D fantasy RPG. Image 1 is the game's existing hero and NPC style/scale reference (the old animals are only placeholders, do not copy their simplistic geometry). Image 2 is the actual painted game town; match its warm hand-painted watercolor/gouache, fine dark brown ink contour, softly textured fabric, clear readable silhouette. NOT photorealistic, NOT 3D, NOT vector, NOT pixel art. Camera is elevated RPG 3/4 view, matching the reference hero. True transparent RGBA background, no ground, no shadow, no text, no grid lines or labels. Maintain identical character design, face, outfit, height, lighting and body volume across every cell. Make a regular, perfectly aligned grid of FIVE equal columns and TWO equal rows, landscape sheet, 10 fully separated complete figures. Each figure centered in its cell, feet on the same baseline 93% down the cell, crown at about 8%, at least 12% clear horizontal margins. All props and boots fully inside the cell. TOP ROW: five views facing camera/downscreen, slight 3/4 turn toward screen-right: idle; left foot forward contact; passing step; right foot forward contact; opposite passing step. BOTTOM ROW: exactly the same five poses and same clothes seen FROM BEHIND, facing upscreen, absolutely no face visible. Hands naturally swing, modest step cycle, no duplicated legs. Two boots in every pose. Preserve adult age, not babies or doll-like toddlers. No accessories drifting between frames. One character repeated ten times; no extra characters. Subject: An older town baker woman about 55-65 years old, silver hair in a low bun under a deep teal kerchief, warm brick red skirt, cream blouse, indigo-blue vest and ochre knitted shoulder shawl, leather ankle boots. Sturdy adult figure, kind lived-in face, small belt pouch, hands free for walking."
+  },
+  "cat_ginger": {
+    "source": "exec-6137c8ce-bc4d-481d-a342-ce2c73c2b3d4.png",
+    "sha256": "6979d3007006b98d566d4fd3e1de39a3e66d47b955fa3195122315d76c785a5d",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "frameSize": [
+      160,
+      108
+    ],
+    "frames": [
+      "walk1",
+      "walk2",
+      "run1",
+      "run2",
+      "sit"
+    ],
+    "prompt": "Use case: stylized-concept. Asset: hand-painted production animal sprite sheet for a 2D fantasy town RPG. References: Image 1 shows the game's hero/people style (ignore the crude old animal placeholders); Image 2 is the painted town environment. Match the town's delicate dark brown ink edges, watercolor/gouache shading, soft natural fur, clearly readable small-game silhouette. Animal anatomy, NOT human-like, NOT a caricature with a giant head. Not a flat vector, not 3D, not pixel art. Elevated 3/4 RPG view, animal in right-facing side view, we see a little of its back. One and the SAME individual in all five cells, identical markings/lighting/size. Genuine transparent RGBA background. No ground, no cast shadow, no labels, no borders, no scenery. Make exactly FIVE equal cells in one horizontal row, very wide landscape strip (approximately 3:1 overall). FULL animal inside every cell with 12% safe margins, no overlap. In each cell the torso stays centered at exactly the same point, all four paws and tail included. Left to right: 1 walking with near front paw forward, 2 alternate walking with near front paw back, 3 running extended gallop, 4 running collected gallop with legs tucked, 5 sitting calmly facing right. Readable correct anatomy in every pose, exactly four legs during walk/run, no extra legs, clean alpha edges. Tail must remain inside its own cell. Fur must be detailed enough to look painted at full size, simple enough to read when downscaled. Subject: A slender ginger tabby town cat, warm orange striped fur, cream chest and muzzle, green eyes, small ears, long curved tail. Alert graceful domestic cat, no collar, no magical props."
+  },
+  "cat_grey": {
+    "source": "exec-8d917f2c-36c3-4c7b-ab9d-8c7a4168cbdb.png",
+    "sha256": "676f44ed8dd0d9b6f7d007fe70225580c6ca480b6f9e3a0a8b31f870ee79fcfb",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "frameSize": [
+      160,
+      108
+    ],
+    "frames": [
+      "walk1",
+      "walk2",
+      "run1",
+      "run2",
+      "sit"
+    ],
+    "prompt": "Use case: stylized-concept. Asset: hand-painted production animal sprite sheet for a 2D fantasy town RPG. References: Image 1 shows the game's hero/people style (ignore the crude old animal placeholders); Image 2 is the painted town environment. Match the town's delicate dark brown ink edges, watercolor/gouache shading, soft natural fur, clearly readable small-game silhouette. Animal anatomy, NOT human-like, NOT a caricature with a giant head. Not a flat vector, not 3D, not pixel art. Elevated 3/4 RPG view, animal in right-facing side view, we see a little of its back. One and the SAME individual in all five cells, identical markings/lighting/size. Genuine transparent RGBA background. No ground, no cast shadow, no labels, no borders, no scenery. Make exactly FIVE equal cells in one horizontal row, very wide landscape strip (approximately 3:1 overall). FULL animal inside every cell with 12% safe margins, no overlap. In each cell the torso stays centered at exactly the same point, all four paws and tail included. Left to right: 1 walking with near front paw forward, 2 alternate walking with near front paw back, 3 running extended gallop, 4 running collected gallop with legs tucked, 5 sitting calmly facing right. Readable correct anatomy in every pose, exactly four legs during walk/run, no extra legs, clean alpha edges. Tail must remain inside its own cell. Fur must be detailed enough to look painted at full size, simple enough to read when downscaled. Subject: A graceful silver-grey tabby town cat with darker grey stripes, ivory chin and chest, amber eyes, long soft tail. Adult domestic cat, no collar or props."
+  },
+  "cat_tux": {
+    "source": "exec-af64063c-7595-472c-9571-e4437c464cae.png",
+    "sha256": "4b28887d4568f2b455160e606dc0d92b7fb359a5f46e499f27d87c293523a708",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "frameSize": [
+      160,
+      108
+    ],
+    "frames": [
+      "walk1",
+      "walk2",
+      "run1",
+      "run2",
+      "sit"
+    ],
+    "prompt": "Use case: stylized-concept. Asset: hand-painted production animal sprite sheet for a 2D fantasy town RPG. References: Image 1 shows the game's hero/people style (ignore the crude old animal placeholders); Image 2 is the painted town environment. Match the town's delicate dark brown ink edges, watercolor/gouache shading, soft natural fur, clearly readable small-game silhouette. Animal anatomy, NOT human-like, NOT a caricature with a giant head. Not a flat vector, not 3D, not pixel art. Elevated 3/4 RPG view, animal in right-facing side view, we see a little of its back. One and the SAME individual in all five cells, identical markings/lighting/size. Genuine transparent RGBA background. No ground, no cast shadow, no labels, no borders, no scenery. Make exactly FIVE equal cells in one horizontal row, very wide landscape strip (approximately 3:1 overall). FULL animal inside every cell with 12% safe margins, no overlap. In each cell the torso stays centered at exactly the same point, all four paws and tail included. Left to right: 1 walking with near front paw forward, 2 alternate walking with near front paw back, 3 running extended gallop, 4 running collected gallop with legs tucked, 5 sitting calmly facing right. Readable correct anatomy in every pose, exactly four legs during walk/run, no extra legs, clean alpha edges. Tail must remain inside its own cell. Fur must be detailed enough to look painted at full size, simple enough to read when downscaled. Subject: A sleek black-and-white tuxedo town cat, black back/head/tail, white bib, white muzzle and four white paws, soft olive-green eyes. Adult domestic cat, no collar or props."
+  },
+  "dog_tan": {
+    "source": "exec-9d07a0aa-11d9-4dee-9305-1750ef701cbf.png",
+    "sha256": "a249bc5548438f1d088d7feedffacad4dc2a930fef20d97c750b8bb60b37b106",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "frameSize": [
+      192,
+      120
+    ],
+    "frames": [
+      "walk1",
+      "walk2",
+      "run1",
+      "run2",
+      "sit"
+    ],
+    "prompt": "Use case: stylized-concept. Asset: hand-painted production animal sprite sheet for a 2D fantasy town RPG. References: Image 1 shows the game's hero/people style (ignore the crude old animal placeholders); Image 2 is the painted town environment. Match the town's delicate dark brown ink edges, watercolor/gouache shading, soft natural fur, clearly readable small-game silhouette. Animal anatomy, NOT human-like, NOT a caricature with a giant head. Not a flat vector, not 3D, not pixel art. Elevated 3/4 RPG view, animal in right-facing side view, we see a little of its back. One and the SAME individual in all five cells, identical markings/lighting/size. Genuine transparent RGBA background. No ground, no cast shadow, no labels, no borders, no scenery. Make exactly FIVE equal cells in one horizontal row, very wide landscape strip (approximately 3:1 overall). FULL animal inside every cell with 12% safe margins, no overlap. In each cell the torso stays centered at exactly the same point, all four paws and tail included. Left to right: 1 walking with near front paw forward, 2 alternate walking with near front paw back, 3 running extended gallop, 4 running collected gallop with legs tucked, 5 sitting calmly facing right. Readable correct anatomy in every pose, exactly four legs during walk/run, no extra legs, clean alpha edges. Tail must remain inside its own cell. Fur must be detailed enough to look painted at full size, simple enough to read when downscaled. Subject: A small-to-medium tan town mongrel dog, cream chest and muzzle, warm tawny short fur, darker floppy ears, brown eyes, a simple muted burgundy leather collar, medium curved tail. Clearly a DOG with canine snout and paws, not a cat, not a puppy."
+  },
+  "dog_brown": {
+    "source": "exec-12c4801a-8bac-4c22-add2-bf52a85dc9e5.png",
+    "sha256": "8e7a2ffdffda9b573f46f646cd72362a4fda48db4cd52e841758f573a0bc445c",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "frameSize": [
+      192,
+      120
+    ],
+    "frames": [
+      "walk1",
+      "walk2",
+      "run1",
+      "run2",
+      "sit"
+    ],
+    "prompt": "Use case: stylized-concept. Asset: hand-painted production animal sprite sheet for a 2D fantasy town RPG. References: Image 1 shows the game's hero/people style (ignore the crude old animal placeholders); Image 2 is the painted town environment. Match the town's delicate dark brown ink edges, watercolor/gouache shading, soft natural fur, clearly readable small-game silhouette. Animal anatomy, NOT human-like, NOT a caricature with a giant head. Not a flat vector, not 3D, not pixel art. Elevated 3/4 RPG view, animal in right-facing side view, we see a little of its back. One and the SAME individual in all five cells, identical markings/lighting/size. Genuine transparent RGBA background. No ground, no cast shadow, no labels, no borders, no scenery. Make exactly FIVE equal cells in one horizontal row, very wide landscape strip (approximately 3:1 overall). FULL animal inside every cell with 12% safe margins, no overlap. In each cell the torso stays centered at exactly the same point, all four paws and tail included. Left to right: 1 walking with near front paw forward, 2 alternate walking with near front paw back, 3 running extended gallop, 4 running collected gallop with legs tucked, 5 sitting calmly facing right. Readable correct anatomy in every pose, exactly four legs during walk/run, no extra legs, clean alpha edges. Tail must remain inside its own cell. Fur must be detailed enough to look painted at full size, simple enough to read when downscaled. Subject: A small-to-medium dark chestnut brown town mongrel dog, rusty-brown face markings, warm ivory chest and toes, slightly shaggy coat, floppy ears, hazel eyes, simple muted teal leather collar and medium bushy tail. Clearly a DOG, adult and friendly, not puppy or cat."
+  },
+  "crow": {
+    "source": "exec-505eb030-b058-4a9a-8b56-573705bc7387.png",
+    "sha256": "e6b2a8a1149b0a31b964aac1a6b4d01f4389e1c034bfe9c1338fc00af333bebc",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "frameSize": [
+      80,
+      68
+    ],
+    "frames": [
+      "1",
+      "2",
+      "3"
+    ],
+    "prompt": "Use case: stylized-concept. Asset: 3-frame crow sprite sheet for the same 2D fantasy RPG town as the references. Draw a REAL recognisable crow: elongated glossy charcoal-black body, subtle indigo/teal feather sheen, sturdy straight black beak, black feet, long fan-shaped tail and intelligent small dark eye. NOT a round robin, pigeon, eagle or cartoon big-eyed chick. Warm hand-painted gouache/watercolor with delicate dark ink outlines matching the town. Elevated right-facing side/three-quarter RPG view. Exactly THREE equal square cells in ONE horizontal row (overall 3:1 landscape); the SAME crow with the SAME body scale and torso center in all cells. Frame 1: flying with both wings lifted high overhead. Frame 2: flying with wings sweeping down and out. Frame 3: PERCHED upright, wings neatly folded, feet visible, beak pointing right, tail pointing left. Wing and tail tips must be fully inside each cell with generous transparent margins. Body center in the same place in every cell; do not enlarge the perched bird to fill its cell. True transparent RGBA, no background, no roof, no shadow, no text, no grid lines. Painterly feather detail readable as a very small game sprite. References show game art direction, not anatomy to copy."
+  }
+}

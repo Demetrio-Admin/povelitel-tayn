@@ -3477,7 +3477,7 @@ var expedition = new Set(EXP_INTERACTIVES.map((o) => o.id));
 var SAPPHIRE_DROPS = { world: {}, combat: {} };
 for (const o of INTERACTIVES) {
   const c = city.has(o.id), e = expedition.has(o.id);
-  if (o.kind === "gather") SAPPHIRE_DROPS.world[o.id] = { chance: e ? 0.15 : c ? 0.12 : 0.1, amount: e ? 6 : c ? 3 : 2 };
+  if (o.kind === "gather") SAPPHIRE_DROPS.world[o.id] = { chance: e ? 0.15 : c ? 0.05 : 0.02, amount: e ? 6 : c ? 3 : 2 };
   if (o.kind === "stash") SAPPHIRE_DROPS.world[o.id] = { chance: e ? 0.8 : 0.4, amount: e ? 25 : 5 };
   if (o.kind === "chest" && !o.reward?.sapphires) SAPPHIRE_DROPS.world[o.id] = { chance: c ? 0.3 : 0.2, amount: c ? 10 : 5 };
 }
@@ -3487,9 +3487,10 @@ for (const o of ENEMY_SPAWNS) {
   if (["frost_alpha", "barrow_warden", "severin_boss"].includes(o.enemy)) rule = [0.85, 45];
   else if (["node_guardian", "frost_collector_elite", "ice_guardian", "experimental_construct"].includes(o.enemy)) rule = [0.6, 12];
   else if (o.enemy === "forest_guardian") rule = [0.5, 8];
-  else if (o.enemy === "rootling") rule = [0.25, 3];
+  else if (o.enemy === "rootling") rule = [0.08, 3];
   else if (/^(fw_|gy_)/.test(o.id)) rule = [0.35, 8];
-  else if (["forest_scavenger", "young_scavenger"].includes(o.enemy)) rule = [0.2, 2];
+  else if (["forest_scavenger", "young_scavenger"].includes(o.enemy)) rule = [0.05, 2];
+  else if (["frost_critter", "frost_collector", "volunteer"].includes(o.enemy)) rule = [0.12, 4];
   else rule = [0.3, 4];
   SAPPHIRE_DROPS.combat[o.id] = { chance: rule[0], amount: rule[1] };
 }

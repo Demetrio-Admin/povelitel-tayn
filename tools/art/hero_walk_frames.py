@@ -15,12 +15,13 @@
 import math
 import os
 import sys
+import json
 
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = os.path.join(os.path.dirname(__file__), '..', '..')
-SPR = os.path.join(ROOT, 'public', 'assets', 'sprites')
+SPR = os.environ.get('HERO_SPRITE_DIR', os.path.join(ROOT, 'public', 'assets', 'sprites'))
 W, H = 166, 240
 SS = 4                 # запас разрешения при сборке кадра
 FRAMES = 8             # кадров в цикле (два шага); то же число в src/config/hero.walk.js
@@ -54,6 +55,11 @@ HEROES = {
 }
 REAR_SHADE = 0.9       # задняя нога в профиле чуть темнее передней
 
+# Each art pack may supply its own boot/hem bounds without changing legacy art.
+if os.environ.get('HERO_WALK_CONFIG'):
+    with open(os.environ['HERO_WALK_CONFIG'], encoding='utf-8') as config_file:
+        HEROES = json.load(config_file)
+
 
 def cut_layers(im, c):
     """-> (корпус без ног, нога A, нога B, bbox A, bbox B). A — левая на экране (в профиле — передняя)."""
@@ -76,7 +82,12 @@ def cut_layers(im, c):
     f = c.get('front')
     if f:
         ys, xs = np.mgrid[0:A.shape[0], 0:A.shape[1]]
-        front = E & ((xs <= f['split']) | (ys >= f['toe_y']))
+        if f.get('polygon'):
+            mask = Image.new('L', im.size)
+            ImageDraw.Draw(mask).polygon([tuple(p) for p in f['polygon']], fill=255)
+            front = E & (np.array(mask) > 0)
+        else:
+            front = E & ((xs <= f['split']) | (ys >= f['toe_y']))
         fa = np.zeros_like(arr)
         fa[front] = arr[front]
         piece = Image.fromarray(fa)

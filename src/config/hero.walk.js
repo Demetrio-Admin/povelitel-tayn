@@ -11,7 +11,7 @@ export const WALK_SHEETS = {
 
 /** key → путь файла, для PreloadScene. */
 export const WALK_SHEET_FILES = Object.fromEntries(
-  Object.values(WALK_SHEETS).flatMap(s => Object.values(s)).map(key => [key, `assets/sprites/${key}.png`]),
+  Object.values(WALK_SHEETS).flatMap(s => Object.values(s)).map(key => [key, `assets/heroes/lunar-v1/${key}.png`]),
 );
 
 /** Листы героя по id; неизвестный id — как у ведьмы (так же, как в heroes.js). */

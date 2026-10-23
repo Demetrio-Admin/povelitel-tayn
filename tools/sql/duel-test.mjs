@@ -37,13 +37,13 @@ q(`update public.player_world set data = jsonb_set(data, '{rating}', '3000') whe
 q(`delete from public.player_quests where quest_id = 'chapter_2_complete' and user_id not in ('${A}', '${B}');`);
 
 console.log('\nДуэль: вызов');
-ok(act(C, { op: 'duel_start' }).action.reason === 'locked', 'до конца главы II — нельзя');
-const s0 = act(A, { op: 'duel_start' });
+ok(act(C, { op: 'duel_start', balanceVersion: 40, duelVersion: 3 }).action.reason === 'locked', 'до конца главы II — нельзя');
+const s0 = act(A, { op: 'duel_start', balanceVersion: 40, duelVersion: 3 });
 const opp = s0.action.opponent;
 ok(s0.action.ok && opp && !opp.ghost && opp.name !== `duelA_${SUF}` && opp.level === 15 && opp.abilities.ice.level === 3, `соперник — другой герой (${opp?.name}), его слепок с дарами`);
 ok(opp.name === `duelB_${SUF}` && opp.hero === 'warlock' && opp.build?.slots?.length === 3, 'ближайший по рейтингу, с обликом и билдом');
 ok(s0.action.left === DUEL.attemptsPerDay - 1 && s0.combatSince != null, 'попытка списана, бой начался');
-ok(act(A, { op: 'duel_start' }).action.reason === 'combat', 'второй вызов посреди боя — нельзя');
+ok(act(A, { op: 'duel_start', balanceVersion: 40, duelVersion: 3 }).action.reason === 'combat', 'второй вызов посреди боя — нельзя');
 
 console.log('\nДуэль: итог боя');
 const raw = J(q(`select public.combat_load('${A}');`, 'service'));
@@ -95,7 +95,7 @@ q(`delete from public.player_world where kind = 'object' and key = 'duel' and ((
 q(`insert into public.player_world (user_id, kind, key, data) values ${T.map((u, i) => `('${u}', 'object', 'duel', '${esc({ ...prevS, rating: [9100, 9000, 8900, 8800, 9500, 9999][i], ...(i === 4 ? { wins: 4 } : {}), ...(i === 5 ? { season: cur - 2 } : {}) , best: 9999, d: 0, used: 0 })}')`).join(',')};`);
 const c = (u) => act(u, { op: 'duel_season' }).action.reward;
 // t1 сначала «Вызывает» (состояние переходит в новый сезон, итог уходит в prev) — таблицу сезона это не ломает
-const t1 = act(T[0], { op: 'duel_start' }).action;
+const t1 = act(T[0], { op: 'duel_start', balanceVersion: 40, duelVersion: 3 }).action;
 ok(t1.ok && t1.seasonReward.rank === 1 && t1.seasonReward.top === 200 && t1.seasonReward.paid === 350 && sap(T[0]) === 350, '1-е место: Высшая лига 150 + топ 200, выдано при Вызове');
 ok(q(`select data -> 'prev' ->> 'rating' from public.player_world where user_id = '${T[0]}' and key = 'duel';`).out === '9100', 'итог прошлого сезона остался в prev');
 const t2 = c(T[1]); ok(t2.rank === 2 && t2.top === 100 && t2.paid === 250 && sap(T[1]) === 250, '2-е место (после того как t1 уже в новом сезоне): 150 + 100');
@@ -132,7 +132,7 @@ ok(promo(1900) === 30 + 50 + 70 + 100 && sap(A) === w1 + 20 + 250, 'осталь
 // смена сезона в Вызове: итог прошлого сезона не теряется
 setDuel(A, { season: cur - 3, rating: 1500, wins: 5, losses: 3 });
 const w2 = sap(A);
-const st3 = act(A, { op: 'duel_start' });
+const st3 = act(A, { op: 'duel_start', balanceVersion: 40, duelVersion: 3 });
 ok(st3.action.ok && st3.action.seasonReward?.league === 'platinum' && st3.action.seasonReward.sapphires === 60 && sap(A) === w2 + 60, 'Вызов нового сезона выдаёт награду прошлого: Платина — 60');
 ok(st3.objects.duel.season === cur && st3.objects.duel.prev?.season === cur - 3 && st3.objects.duel.prev.rating === 1500, 'итог прошлого сезона записан в состоянии');
 ok(act(A, { op: 'duel_season' }).action.reward.fresh === false && sap(A) === w2 + 60, 'после Вызова награда не удваивается');

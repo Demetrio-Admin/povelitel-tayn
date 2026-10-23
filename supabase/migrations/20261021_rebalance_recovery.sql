@@ -718,6 +718,9 @@ begin
     now_ms := (extract(epoch from pr.vitals_at) * 1000)::bigint;
     if not _has_event(uid, m ->> 'requires') then res := jsonb_build_object('ok', false, 'reason', 'locked');
     elsif pr.combat_since is not null then res := jsonb_build_object('ok', false, 'reason', 'combat');
+    -- Новые Дуэли — только по действующему протоколу (бой 40, Дуэль 3). Старые версии нужны лишь для проверки уже начатых боёв,
+    -- поэтому клиент не выбирает правила: запрос с другой версией отклоняется до списания попытки.
+    elsif not coalesce(action->'balanceVersion'='40'::jsonb and action->'duelVersion'='3'::jsonb, false) then res := jsonb_build_object('ok', false, 'reason', 'update_required');   -- coalesce: без версий в запросе условие NULL, и проверку нельзя пропустить
     else
       select data into od from player_world where user_id = uid and kind = 'object' and key = 'duel';
       sp := _duel_state(od, now_ms, m);
@@ -749,7 +752,7 @@ begin
         'potionLoadout', _potion_loadout(uid), 'potionCooldown', _potion_cooldown(uid,extract(epoch from pr.vitals_at)*1000),
           'potions', (select jsonb_object_agg(p, _inv(uid, p)) from jsonb_array_elements_text(rules -> 'combatPotions') p),
           'build', (select data from player_world where user_id = uid and kind = 'object' and key = 'player_build'),
-          'duel', jsonb_build_object('version', case when action->'balanceVersion'='40'::jsonb and action->'duelVersion'='3'::jsonb then 3 when action->'balanceVersion' in ('38'::jsonb,'39'::jsonb,'40'::jsonb) and action->'duelVersion'='2'::jsonb then 2 else 1 end, 'opponent', u, 'rating', sp -> 'rating', 'season', sp -> 'season'));
+          'duel', jsonb_build_object('version', 3, 'opponent', u, 'rating', sp -> 'rating', 'season', sp -> 'season'));
         res := jsonb_build_object('ok', true, 'opponent', u, 'rating', sp -> 'rating', 'left', (m ->> 'attemptsPerDay')::numeric - (sp ->> 'used')::numeric);
         if coalesce((v ->> 'fresh')::boolean, false) then res := res || jsonb_build_object('seasonReward', v); end if;
       end if;
@@ -1404,6 +1407,9 @@ begin
     now_ms := (extract(epoch from pr.vitals_at) * 1000)::bigint;
     if not _has_event(uid, m ->> 'requires') then res := jsonb_build_object('ok', false, 'reason', 'locked');
     elsif pr.combat_since is not null then res := jsonb_build_object('ok', false, 'reason', 'combat');
+    -- Новые Дуэли — только по действующему протоколу (бой 40, Дуэль 3). Старые версии нужны лишь для проверки уже начатых боёв,
+    -- поэтому клиент не выбирает правила: запрос с другой версией отклоняется до списания попытки.
+    elsif not coalesce(action->'balanceVersion'='40'::jsonb and action->'duelVersion'='3'::jsonb, false) then res := jsonb_build_object('ok', false, 'reason', 'update_required');   -- coalesce: без версий в запросе условие NULL, и проверку нельзя пропустить
     else
       select data into od from player_world where user_id = uid and kind = 'object' and key = 'duel';
       sp := _duel_state(od, now_ms, m);
@@ -1435,7 +1441,7 @@ begin
         'potionLoadout', _potion_loadout(uid), 'potionCooldown', _potion_cooldown(uid,extract(epoch from pr.vitals_at)*1000),
           'potions', (select jsonb_object_agg(p, _inv(uid, p)) from jsonb_array_elements_text(rules -> 'combatPotions') p),
           'build', (select data from player_world where user_id = uid and kind = 'object' and key = 'player_build'),
-          'duel', jsonb_build_object('version', case when action->'balanceVersion'='40'::jsonb and action->'duelVersion'='3'::jsonb then 3 when action->'balanceVersion' in ('38'::jsonb,'39'::jsonb,'40'::jsonb) and action->'duelVersion'='2'::jsonb then 2 else 1 end, 'opponent', u, 'rating', sp -> 'rating', 'season', sp -> 'season'));
+          'duel', jsonb_build_object('version', 3, 'opponent', u, 'rating', sp -> 'rating', 'season', sp -> 'season'));
         res := jsonb_build_object('ok', true, 'opponent', u, 'rating', sp -> 'rating', 'left', (m ->> 'attemptsPerDay')::numeric - (sp ->> 'used')::numeric);
         if coalesce((v ->> 'fresh')::boolean, false) then res := res || jsonb_build_object('seasonReward', v); end if;
       end if;

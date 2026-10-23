@@ -42,12 +42,12 @@ console.log('\nДуэль: сервер (JS-зеркало)');
   s.objects.player_build = { branches: { telekinesis: 'lord', ice: 'frost' }, slots: ['ice', 'telekinesis', 'seal'] };
   s.inventory = { ...s.inventory, elixir_life: 9, elixir_mana: 9 };
   const act = (a) => { T += 60_000; const r = applyAction(s, a, T); s = r.snapshot; return r.result; };
-  ok(act({ op: 'duel_start' }).reason === 'locked', 'Дуэль — после главы II');
+  ok(act({ op: 'duel_start', balanceVersion: 40, duelVersion: 3 }).reason === 'locked', 'Дуэль — после главы II');
   s.quests = [...s.quests, 'chapter_2_complete'];
   const hp0 = s.hp;
-  const r = act({ op: 'duel_start' });
+  const r = act({ op: 'duel_start', balanceVersion: 40, duelVersion: 3 });
   ok(r.ok && r.opponent.ghost && r.opponent.level === 15 && r.rating === 1000 && r.left === DUEL.attemptsPerDay - 1, 'соперника нет — «Тень дуэлянта», попытка списана');
-  ok(act({ op: 'duel_start' }).reason === 'combat', 'второй вызов посреди боя — нельзя');
+  ok(act({ op: 'duel_start', balanceVersion: 40, duelVersion: 3 }).reason === 'combat', 'второй вызов посреди боя — нельзя');
   // бой ботом, проверка записи, итог
   let won = null;
   for (let seed = 1; seed <= 8 && !won; seed++) { const p = playBot(s.combatCtx, { seed, policy: 'smart', maxTicks: 60 * 300 }); if (p.cm.result === 'victory') won = p; }
@@ -61,7 +61,7 @@ console.log('\nДуэль: сервер (JS-зеркало)');
   ok(ap.result.ok && st.rating === 1016 && st.wins === 1 && st.used === 1, 'рейтинг записан: 1016, одна победа');
   ok(s.combatSince == null && s.hp === hp0, 'Дуэль — арена: здоровье после боя как до него');
   // поражение
-  act({ op: 'duel_start' });
+  act({ op: 'duel_start', balanceVersion: 40, duelVersion: 3 });
   const lost = playBot(s.combatCtx, { seed: 3, policy: 'idle', maxTicks: 60 * 300 });
   const v2 = verifyCombat(s, JSON.parse(JSON.stringify(lost.log)), s.combatSince + lost.log.ticks * STEP * 1000 + 1000);
   ok(v2.ok && v2.verdict.outcome === 'defeat' && v2.verdict.duel.delta < 0 && !v2.verdict.coinsLost, 'поражение: рейтинг вниз, монеты не отнимаются');
@@ -69,10 +69,10 @@ console.log('\nДуэль: сервер (JS-зеркало)');
   s = combatApply(s, v2.verdict, T).snapshot;
   ok(duelStateOf(s, T).losses === 1 && duelStateOf(s, T).best === 1016, 'лучший рейтинг сезона запомнен');
   // попытки
-  for (let i = 0; i < 6; i++) { act({ op: 'duel_start' }); act({ op: 'combat_end', outcome: 'retreat' }); }
-  ok(act({ op: 'duel_start' }).reason === 'attempts', `попыток в день: ${DUEL.attemptsPerDay}`);
+  for (let i = 0; i < 6; i++) { act({ op: 'duel_start', balanceVersion: 40, duelVersion: 3 }); act({ op: 'combat_end', outcome: 'retreat' }); }
+  ok(act({ op: 'duel_start', balanceVersion: 40, duelVersion: 3 }).reason === 'attempts', `попыток в день: ${DUEL.attemptsPerDay}`);
   T += DUEL.dayMs;
-  ok(act({ op: 'duel_start' }).ok, 'на следующий день — снова');
+  ok(act({ op: 'duel_start', balanceVersion: 40, duelVersion: 3 }).ok, 'на следующий день — снова');
   act({ op: 'combat_end', outcome: 'retreat' });
   // новый сезон: рейтинг сжимается к базе
   s.objects.duel = { ...s.objects.duel, rating: 1400 };

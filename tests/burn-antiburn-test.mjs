@@ -147,7 +147,7 @@ try {
   check(started.combatCtx.balanceVersion === 39 && started.combatCtx.sapphireDrops === 1 && started.combatCtx.potions[item] === 1, 'SQL stamps v39 and freezes potion stock');
   await act({ op: 'combat_end', outcome: 'retreat' });
   const newer = await act({ op: 'duel_start', balanceVersion: 39, duelVersion: 2 });
-  check(newer.combatCtx.balanceVersion === 39 && newer.combatCtx.duel.version === 2 && !newer.combatCtx.sapphireDrops, 'SQL v39 Duel keeps v2 AI and no PvE drops');
+  check(newer.action.reason === 'update_required' && !newer.combatCtx, 'SQL refuses new Duels on the superseded v39/v2 protocol');
   await act({ op: 'combat_end', outcome: 'retreat' });
   for (const version of [38, 30, 999, '39']) {
     const actual = [38, 30].includes(version) ? version : 29;

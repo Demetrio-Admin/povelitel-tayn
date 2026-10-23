@@ -27,7 +27,7 @@ import { checkBuild, slotCount, defaultSlots, progressGate, amuletEffect } from 
 
 import { potionLoadout } from '../config/resources.js';
 import { combatBalanceVersion } from '../config/combatVersions.js';
-import { duelVersionFor } from '../config/duelPacing.js';
+import { DUEL_VERSION, duelVersionFor } from '../config/duelPacing.js';
 const RULES = serverRules();
 /**
  * Ключи объектов мира, состояние которых пишет только сервер: всё, что есть в RULES.world (с v0.15.0 и магия — сервер ставит mark),
@@ -823,14 +823,16 @@ function duelStart(s, nowMs, balanceVersion, duelVersion) {
   const D = RULES.duel;
   if (!has(s, D.requires)) return { ok: false, reason: 'locked' };
   if (s.combatSince != null) return { ok: false, reason: 'combat' };
+  // Зеркало SQL: новые Дуэли только по действующему протоколу; старые версии — лишь для проверки уже начатых боёв.
+  const version = combatBalanceVersion(balanceVersion);
+  if (duelVersionFor(version, duelVersion) !== DUEL_VERSION) return { ok: false, reason: 'update_required' };
   const st = duelStateOf(s, nowMs);
   if (st.used >= D.attemptsPerDay) return { ok: false, reason: 'attempts' };
   st.used += 1;
   s.objects.duel = st;
   const opponent = duelGhostOf(s, st.rating);
   s.combatSince = s.vitalsAt;
-  const version = combatBalanceVersion(balanceVersion);
-  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), balanceVersion: version, duel: { version: duelVersionFor(version, duelVersion), opponent, rating: st.rating, season: st.season } };
+  s.combatCtx = { ...combatCtxOf(s, 'duel', 'duel_mage'), balanceVersion: version, duel: { version: DUEL_VERSION, opponent, rating: st.rating, season: st.season } };
   return { ok: true, opponent, rating: st.rating, left: D.attemptsPerDay - st.used };
 }
 

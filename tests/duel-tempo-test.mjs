@@ -126,15 +126,20 @@ try {
  const duplicate=(await q('select combat_apply($1,$2::jsonb) j',[uid,JSON.stringify(v.verdict)])).rows[0].j;
  check(duplicate.action.reason==='no_combat'&&duplicate.objects.duel.rating===result.objects.duel.rating,'settlement idempotent');
  check((await q('select count(*)::int n from player_sapphire_drops where user_id=$1',[uid])).rows[0].n===0,'v3 never creates PvE sapphire receipts');
- for(const [balanceVersion,duelVersion] of [[40,2],[38,3],[39,3],[30,3],[40,'3'],[40,99],[999,2]]){
+ // A new Duel is only started by the current protocol; superseded or forged requests are refused before an attempt is charged.
+ await act({op:'combat_end',outcome:'retreat'});
+ const usedBefore=(await as(uid,()=>q('select get_player() j'))).rows[0].j.objects.duel.used;
+ for(const [balanceVersion,duelVersion] of [[40,2],[40,1],[38,3],[39,3],[30,3],[40,'3'],['40',3],[40,99],[999,2],[undefined,undefined]]){
   const got=await act({op:'duel_start',balanceVersion,duelVersion});
-  const normalized=[30,38,39,40].includes(balanceVersion)?balanceVersion:29;
-  const expected=duelVersionFor(normalized,duelVersion);
-  check(got.action.ok&&got.combatCtx.duel.version===expected,'SQL protocol selection and strict types');
-  const s=emptySnapshot();s.quests=['chapter_2_complete'];const local=applyAction(s,{op:'duel_start',balanceVersion,duelVersion},1000).snapshot;
-  check(local.combatCtx.duel.version===expected,'JS selection matches SQL');
-  await act({op:'combat_end',outcome:'retreat'});
+  check(!got.action.ok&&got.action.reason==='update_required'&&!got.combatCtx,'SQL refuses new Duel on superseded or type-forged protocol');
+  const s=emptySnapshot();s.quests=['chapter_2_complete'];const local=applyAction(s,{op:'duel_start',balanceVersion,duelVersion},1000);
+  check(local.result.reason==='update_required'&&!local.snapshot.combatCtx,'JS mirror refuses the same requests');
  }
+ check((await as(uid,()=>q('select get_player() j'))).rows[0].j.objects.duel.used===usedBefore,'refused starts do not charge attempts');
+ const again=await act({op:'duel_start',balanceVersion:40,duelVersion:3});
+ check(again.action.ok&&again.combatCtx.duel.version===3,'current protocol still starts');
+ await act({op:'combat_end',outcome:'retreat'});
+ for(let i=0;i<6;i++){check((await act({op:'duel_start',balanceVersion:40,duelVersion:3})).action.ok,'attempt '+(i+3)+' of 8 is available');await act({op:'combat_end',outcome:'retreat'});}
  check((await act({op:'duel_start',balanceVersion:40,duelVersion:3})).action.reason==='attempts','still eight attempts per day');
 }finally{await db.close()}
 console.log(`Duel tempo: ${checks} checks passed; 64 frozen v2 battles, 200 verified v3 comparisons, reactive counters and SQL.`);

@@ -1204,7 +1204,7 @@ export class ExplorationScene extends Phaser.Scene {
     if (!r?.ok) {
       this.inTransition = false;
       services.mode = 'exploration';
-      this.toast({ attempts: 'На сегодня попытки Дуэли закончились.', locked: 'Дуэль откроется после главы II.', combat: 'Сначала закончите бой.', network: 'Нет связи с сервером.' }[r?.reason] || 'Не удалось начать Дуэль.', COLORS.danger);
+      this.toast({ attempts: 'На сегодня попытки Дуэли закончились.', locked: 'Дуэль откроется после главы II.', combat: 'Сначала закончите бой.', network: 'Нет связи с сервером.', update_required: 'Обновите страницу: Дуэль идёт по новым правилам.' }[r?.reason] || 'Не удалось начать Дуэль.', COLORS.danger);
       return;
     }
     if (r.seasonReward?.paid > 0) this.toast(`Награда сезона ${r.seasonReward.season}: +${sapphireText(r.seasonReward.paid)}${r.seasonReward.top > 0 ? ` (${r.seasonReward.rank}-е место!)` : ''}`, 0x6fa8ff);   // v0.34.0

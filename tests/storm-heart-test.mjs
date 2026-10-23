@@ -156,9 +156,10 @@ try {
   await act({ op: 'combat_end', outcome: 'retreat' });
   for (const version of [40,39,38,30,999,'40']) {
     const s = await act({ op: 'duel_start', balanceVersion: version, duelVersion: 2 });
-    const expected = [40,39,38,30].includes(version) ? version : 29;
-    check(s.combatCtx.balanceVersion === expected && s.combatCtx.duel.version === (expected >= 38 ? 2 : 1) && !s.combatCtx.sapphireDrops, 'known/unknown Duel protocol selection');
-    await act({ op: 'combat_end', outcome: 'retreat' });
+    check(s.action.reason === 'update_required' && !s.combatCtx, 'superseded or forged Duel protocol is refused');
   }
+  const current = await act({ op: 'duel_start', balanceVersion: 40, duelVersion: 3 });
+  check(current.combatCtx.balanceVersion === 40 && current.combatCtx.duel.version === 3 && !current.combatCtx.sapphireDrops, 'current Duel protocol stamps v40/v3 without PvE drops');
+  await act({ op: 'combat_end', outcome: 'retreat' });
 } finally { await db.close(); }
 console.log(`Storm Heart: ${checks} checks passed; 56 PvE + 84 Duel verified comparisons, natural refund timing and SQL.`);

@@ -136,8 +136,12 @@ try {
  const frozenBuild={slots:['telekinesis','fire','storm'],amulets:['amulet_embers','amulet_storm_heart'],amuletLevels:{amulet_embers:5,amulet_storm_heart:5},branches:{fire:'arsonist',telekinesis:'breaker',storm:'discharge'}};
  await q('select _merge_build($1,$2::jsonb)',[opp,JSON.stringify(frozenBuild)]);
  const act=async args=>(await as(uid,()=>q('select player_action($1::jsonb) j',[JSON.stringify({id:randomUUID(),...args})]))).rows[0].j;
- const started=await act({op:'duel_start',balanceVersion:40,duelVersion:2});
- check(started.action.ok&&started.combatCtx.balanceVersion===40&&started.combatCtx.duel.version===2&&!started.combatCtx.duel.opponent.ghost,'SQL chooses real opponent and stamps v2');
+ const fresh=await act({op:'duel_start',balanceVersion:40,duelVersion:3});
+ check(fresh.action.ok&&fresh.combatCtx.duel.version===3,'SQL stamps the current protocol on a new Duel');
+ // This report covers the saved protocol-2 replay: emulate a fight that was started before the update.
+ await q("update player_progress set combat_ctx=jsonb_set(combat_ctx,'{duel,version}','2'::jsonb) where user_id=$1",[uid]);
+ const started=(await as(uid,()=>q('select get_player() j'))).rows[0].j;
+ check(started.combatCtx.balanceVersion===40&&started.combatCtx.duel.version===2&&!started.combatCtx.duel.opponent.ghost,'SQL keeps real opponent and the saved v2 fight');
  assert.deepEqual(started.combatCtx.duel.opponent.build,frozenBuild);checks++;
  await q("select _merge_build($1,'{\"branches\":{\"fire\":\"blaster\"},\"amuletLevels\":{\"amulet_embers\":0}}')",[opp]);
  const current=(await as(uid,()=>q('select get_player() j'))).rows[0].j;
@@ -150,7 +154,7 @@ try {
  check((await q('select count(*)::int n from player_sapphire_drops where user_id=$1',[uid])).rows[0].n===0,'SQL never invokes PvE sapphire roll for Duel');
  const dup=(await q('select combat_apply($1,$2::jsonb) j',[uid,JSON.stringify(v.verdict)])).rows[0].j;
  check(dup.action.reason==='no_combat','Duel settlement remains idempotent');
- const old=await act({op:'duel_start',balanceVersion:38});check(old.combatCtx.duel.version===1,'old clients retain old defender');
+ const old=await act({op:'duel_start',balanceVersion:38});check(old.action.reason==='update_required'&&!old.combatCtx,'old clients can no longer start a legacy Duel');
 }finally{await db.close()}
 console.log(`Duel defender: ${checks} checks passed; ${matrix.length} equal/different loadout replays.`);
 if(process.argv.includes('--report'))fs.writeFileSync('docs/design/duel-defender-results.json',JSON.stringify({date:'2026-10-21',balanceVersion:40,duelVersion:2,kind:'local deterministic bot, not player win-rate',profiles,matrix},null,2)+'\n');

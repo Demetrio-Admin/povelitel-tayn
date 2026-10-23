@@ -37,13 +37,15 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Regenerate authoritative combat function for changed boss texture
+        run: node tools/build-combat-function.mjs
       - run: npm test
       - run: npm run build
       - name: Commit verified sprite files (remove transfer archive and temporary workflow)
         run: |
           rm tools/art/monster-redesign/staged-drafts.zip
           rm .github/workflows/monster-redesign-deploy.yml
-          git add -A public/assets/monster-redesign tools/art/monster-redesign .github/workflows/monster-redesign-deploy.yml
+          git add -A public/assets/monster-redesign tools/art/monster-redesign .github/workflows/monster-redesign-deploy.yml supabase/functions/combat/index.ts
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "art: unpack and verify 25 RGBA monster sprites"

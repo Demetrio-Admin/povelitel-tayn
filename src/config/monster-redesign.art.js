@@ -1,59 +1,133 @@
-// 25 hand-painted monster redesign cutouts (approved visual draft, 2026-10-23).
-// Only textures and display proportions change. Combat ids, HP, rewards and attack logic do not.
+// 25 individually drawn, distinct enemy designs approved in chat (2026-10-23).
+// Whole images resampled with alpha preserved: no contact-sheet extraction or silhouette cropping.
 export const MONSTER_REDESIGN_FILES = {
-  "enemy_scavenger": "assets/monster-redesign/01.png?v=20261023",
-  "enemy_scavenger_small": "assets/monster-redesign/02.png?v=20261023",
-  "enemy_rootling": "assets/monster-redesign/03.png?v=20261023",
-  "enemy_guardian": "assets/monster-redesign/04.png?v=20261023",
-  "enemy_heart_keeper": "assets/monster-redesign/05.png?v=20261023",
-  "enemy_frost_critter": "assets/monster-redesign/06.png?v=20261023",
-  "enemy_frost_collector": "assets/monster-redesign/07.png?v=20261023",
-  "enemy_frost_collector_elite": "assets/monster-redesign/08.png?v=20261023",
-  "enemy_ice_guardian": "assets/monster-redesign/09.png?v=20261023",
-  "enemy_volunteer": "assets/monster-redesign/10.png?v=20261023",
-  "enemy_volunteer_miron": "assets/monster-redesign/11.png?v=20261023",
-  "enemy_experimental_construct": "assets/monster-redesign/12.png?v=20261023",
-  "enemy_severin": "assets/monster-redesign/13.png?v=20261023",
-  "enemy_frost_wolf": "assets/monster-redesign/14.png?v=20261023",
-  "enemy_frost_alpha": "assets/monster-redesign/15.png?v=20261023",
-  "enemy_grave_wisp": "assets/monster-redesign/16.png?v=20261023",
-  "enemy_grave_hound": "assets/monster-redesign/17.png?v=20261023",
-  "enemy_barrow_warden": "assets/monster-redesign/18.png?v=20261023",
-  "enemy_glass_stoat": "assets/monster-redesign/19.png?v=20261023",
-  "enemy_echo": "assets/monster-redesign/20.png?v=20261023",
-  "enemy_glass_wolf": "assets/monster-redesign/21.png?v=20261023",
-  "enemy_needle": "assets/monster-redesign/22.png?v=20261023",
-  "enemy_needle_elite": "assets/monster-redesign/23.png?v=20261023",
-  "enemy_glass_guardian": "assets/monster-redesign/24.png?v=20261023",
-  "enemy_iva_reflection": "assets/monster-redesign/25.png?v=20261023",
+  "enemy_scavenger": "assets/monster-redesign/01.webp?v=individual-20261023",
+  "enemy_scavenger_small": "assets/monster-redesign/02.webp?v=individual-20261023",
+  "enemy_rootling": "assets/monster-redesign/03.webp?v=individual-20261023",
+  "enemy_guardian": "assets/monster-redesign/04.webp?v=individual-20261023",
+  "enemy_heart_keeper": "assets/monster-redesign/05.webp?v=individual-20261023",
+  "enemy_frost_critter": "assets/monster-redesign/06.webp?v=individual-20261023",
+  "enemy_frost_collector": "assets/monster-redesign/07.webp?v=individual-20261023",
+  "enemy_frost_collector_elite": "assets/monster-redesign/08.webp?v=individual-20261023",
+  "enemy_ice_guardian": "assets/monster-redesign/09.webp?v=individual-20261023",
+  "enemy_volunteer": "assets/monster-redesign/10.webp?v=individual-20261023",
+  "enemy_volunteer_miron": "assets/monster-redesign/11.webp?v=individual-20261023",
+  "enemy_experimental_construct": "assets/monster-redesign/12.webp?v=individual-20261023",
+  "enemy_severin": "assets/monster-redesign/13.webp?v=individual-20261023",
+  "enemy_frost_wolf": "assets/monster-redesign/14.webp?v=individual-20261023",
+  "enemy_frost_alpha": "assets/monster-redesign/15.webp?v=individual-20261023",
+  "enemy_grave_wisp": "assets/monster-redesign/16.webp?v=individual-20261023",
+  "enemy_grave_hound": "assets/monster-redesign/17.webp?v=individual-20261023",
+  "enemy_barrow_warden": "assets/monster-redesign/18.webp?v=individual-20261023",
+  "enemy_glass_stoat": "assets/monster-redesign/19.webp?v=individual-20261023",
+  "enemy_echo": "assets/monster-redesign/20.webp?v=individual-20261023",
+  "enemy_glass_wolf": "assets/monster-redesign/21.webp?v=individual-20261023",
+  "enemy_needle": "assets/monster-redesign/22.webp?v=individual-20261023",
+  "enemy_needle_elite": "assets/monster-redesign/23.webp?v=individual-20261023",
+  "enemy_glass_guardian": "assets/monster-redesign/24.webp?v=individual-20261023",
+  "enemy_iva_reflection": "assets/monster-redesign/25.webp?v=individual-20261023"
 };
 
-// Actual pixel dimensions from the imported alpha PNGs. Keep previous on-screen height
-// for each enemy, updating width proportionally so creatures are not distorted.
+// Source canvas proportions keep display sizes undistorted.
 export const MONSTER_REDESIGN_DIMENSIONS = {
-  "enemy_scavenger": [229, 168],
-  "enemy_scavenger_small": [223, 139],
-  "enemy_rootling": [230, 178],
-  "enemy_guardian": [239, 200],
-  "enemy_heart_keeper": [262, 238],
-  "enemy_frost_critter": [147, 172],
-  "enemy_frost_collector": [152, 174],
-  "enemy_frost_collector_elite": [149, 178],
-  "enemy_ice_guardian": [150, 182],
-  "enemy_volunteer": [128, 150],
-  "enemy_volunteer_miron": [125, 150],
-  "enemy_experimental_construct": [173, 163],
-  "enemy_severin": [120, 157],
-  "enemy_frost_wolf": [236, 137],
-  "enemy_frost_alpha": [232, 144],
-  "enemy_grave_wisp": [159, 144],
-  "enemy_grave_hound": [233, 135],
-  "enemy_barrow_warden": [247, 166],
-  "enemy_glass_stoat": [165, 176],
-  "enemy_echo": [153, 176],
-  "enemy_glass_wolf": [172, 176],
-  "enemy_needle": [172, 173],
-  "enemy_needle_elite": [184, 174],
-  "enemy_glass_guardian": [169, 177],
-  "enemy_iva_reflection": [142, 176],
+  "enemy_scavenger": [
+    637,
+    768
+  ],
+  "enemy_scavenger_small": [
+    768,
+    640
+  ],
+  "enemy_rootling": [
+    637,
+    768
+  ],
+  "enemy_guardian": [
+    637,
+    768
+  ],
+  "enemy_heart_keeper": [
+    637,
+    768
+  ],
+  "enemy_frost_critter": [
+    768,
+    512
+  ],
+  "enemy_frost_collector": [
+    768,
+    702
+  ],
+  "enemy_frost_collector_elite": [
+    768,
+    702
+  ],
+  "enemy_ice_guardian": [
+    637,
+    768
+  ],
+  "enemy_volunteer": [
+    637,
+    768
+  ],
+  "enemy_volunteer_miron": [
+    637,
+    768
+  ],
+  "enemy_experimental_construct": [
+    637,
+    768
+  ],
+  "enemy_severin": [
+    637,
+    768
+  ],
+  "enemy_frost_wolf": [
+    768,
+    512
+  ],
+  "enemy_frost_alpha": [
+    768,
+    702
+  ],
+  "enemy_grave_wisp": [
+    637,
+    768
+  ],
+  "enemy_grave_hound": [
+    768,
+    640
+  ],
+  "enemy_barrow_warden": [
+    768,
+    702
+  ],
+  "enemy_glass_stoat": [
+    768,
+    512
+  ],
+  "enemy_echo": [
+    637,
+    768
+  ],
+  "enemy_glass_wolf": [
+    768,
+    512
+  ],
+  "enemy_needle": [
+    637,
+    768
+  ],
+  "enemy_needle_elite": [
+    768,
+    512
+  ],
+  "enemy_glass_guardian": [
+    637,
+    768
+  ],
+  "enemy_iva_reflection": [
+    637,
+    768
+  ]
 };

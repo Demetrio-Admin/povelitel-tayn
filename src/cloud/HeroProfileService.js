@@ -13,17 +13,3 @@ export class HeroProfileService {
   }
 }
 
-export function bindHeroPresence(service, doc = document, win = window) {
-  let stopped = false, pending = false, last = 0;
-  const touch = async () => {
-    if (stopped || pending || doc.visibilityState === 'hidden' || !service.available || Date.now() - last < 55_000) return;
-    pending = true;
-    try { await service.touch(); last = Date.now(); } catch { /* Ввод игры не зависит от индикатора присутствия. */ }
-    finally { pending = false; }
-  };
-  const timer = win.setInterval(touch, 60_000);
-  const off = service.session.onChange(() => { touch(); });
-  doc.addEventListener('visibilitychange', touch);
-  touch();
-  return () => { stopped = true; win.clearInterval(timer); off(); doc.removeEventListener('visibilitychange', touch); };
-}

@@ -26,12 +26,3 @@ export const PROP_DEFS = {
   wooden_bridge_01: { name: 'Мостик',          solid: null },
 };
 
-// Группы для палитры редактора.
-export const PALETTE = [
-  { title: 'Деревья', keys: ['tree_dark_01', 'tree_dark_02', 'tree_autumn_01', 'tree_autumn_02', 'birch_01', 'dead_tree_01'] },
-  { title: 'Кусты и камни', keys: ['bush_01', 'bush_02', 'rock_small_01'] },
-  { title: 'Грибы и цветы', keys: ['mushroom_red_01', 'mushroom_blue_01', 'flower_white_01', 'flower_purple_01', 'reeds_01'] },
-  { title: 'Свет и знаки', keys: ['lantern_01', 'lantern_02', 'signpost_01', 'candle_group_01', 'claw_marks_01', 'wooden_bridge_01'] },
-];
-
-export const propName = (key) => PROP_DEFS[key]?.name || key;

@@ -2,7 +2,6 @@
 // затем используются как обычные картинки. Модуль не импортирует Phaser, поэтому его логику
 // можно проверить в Node на фейковой сцене (tests/run-tests.js).
 import { UI } from '../config/ui.config.js';
-import { currentHero } from '../state/hero.js';
 import * as P from './uiPaint.js';
 
 const S = UI.texScale;
@@ -85,11 +84,6 @@ export function setOrb(img, scene, accent, size, locked, gem = true) {
 }
 
 /** Нижняя панель на всю ширину. barY — верхняя кромка планки; lift — «дымка» над ней. */
-export function addBottomBar(scene, barY, w, h, marks, lift = 22) {
-  const key = `ui:bar:${w}x${h}:${marks.join(',')}`;
-  ensureTexture(scene, key, w, h + lift, (ctx) => P.paintBottomBar(ctx, w, h + lift, marks, lift), 0);
-  return scene.add.image(0, barY - lift, key).setOrigin(0, 0).setDisplaySize(w, h + lift);
-}
 
 /** Затемнение по краям экрана (во весь экран). */
 export function addScreenVignette(scene, w, h, a = 0.5) {
@@ -99,30 +93,12 @@ export function addScreenVignette(scene, w, h, a = 0.5) {
 }
 
 /** Лунный серп. */
-export function addCrescent(scene, x, y, size, color = 0xe8c56a) {
-  const key = `ui:moon:${size}:${accKey(color)}`;
-  ensureTexture(scene, key, size, size, (ctx) => P.paintCrescent(ctx, size, color), 0);
-  return scene.add.image(x, y, key).setDisplaySize(size, size);
-}
 
 /**
  * Медальон героя: портрет (кадр «голова и плечи» из переднего ракурса) в золотом кольце.
  * v0.9.2: texture — ракурс выбранного героя (по умолчанию текущий герой); он входит в ключ кэша, поэтому после входа
  * в другой аккаунт или выбора другого героя не достаётся уже нарисованный медальон прежнего героя.
  */
-export function addMedallion(scene, x, y, size, accent = 0x4fe3c1, texture = currentHero().textures.down) {
-  const key = `ui:medal:${texture}:${size}:${accKey(accent)}`;
-  ensureTexture(scene, key, size, size, (ctx) => {
-    let img = null, crop = null;
-    try {
-      img = scene.textures.get(texture).getSourceImage();
-      const sw = img.width, sh = img.height, side = Math.min(sw, sh * 0.5);
-      crop = { x: (sw - side) / 2, y: sh * 0.02, w: side, h: side };   // голова и плечи
-    } catch (e) { img = null; }
-    P.paintMedallion(ctx, size, img, crop, accent);
-  }, 0);
-  return scene.add.image(x, y, key).setDisplaySize(size, size);
-}
 
 /**
  * Полоса здоровья/маны/опыта. (x, y) — левый край и вертикальный центр. width — полная ширина жёлоба.

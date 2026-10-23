@@ -12,19 +12,6 @@ export const FOREST_RETURN = { x: 1200, y: 4416 };
 /** Где начинается восточная часть мира (для проверки проходимости: её места проверяются от CITY_START). */
 export const EAST_X = 1800;
 
-export const CITY_ZONES = [
-  { id: 'R', name: 'Дорога в большой мир', x: 1800, y: 3300, w: 560, h: 650, safePoint: { x: 1960, y: 3625 } },
-  { id: 'AR', name: 'Городской Архив', x: 2440, y: 2560, w: 420, h: 480, interior: true, safePoint: { x: 2650, y: 3150 } },
-  { id: 'SO', name: 'Общество Преображения', x: 2960, y: 2560, w: 500, h: 480, interior: true, safePoint: { x: 3210, y: 3150 } },
-  { id: 'LB', name: 'Тайная лаборатория', x: 1840, y: 4060, w: 480, h: 700, interior: true, safePoint: { x: 2070, y: 3800 } },
-  { id: 'DU', name: 'Зал Магической Дуэли', x: 2420, y: 4100, w: 440, h: 360, interior: true, safePoint: { x: 2640, y: 4020 } },
-  { id: 'CV', name: 'Дом Ковенов', x: 2960, y: 4100, w: 500, h: 360, interior: true, safePoint: { x: 3210, y: 4020 } },
-  { id: 'BK', name: 'Городской Банк', x: 3120, y: 3560, w: 400, h: 420, interior: true, safePoint: { x: 3320, y: 4030 } },
-  { id: 'WH', name: 'Складской квартал', x: 2400, y: 4500, w: 1140, h: 500, safePoint: { x: 2910, y: 4050 } },
-  { id: 'FQ', name: 'Замёрзший квартал', x: 2400, y: 1500, w: 1160, h: 1000, safePoint: { x: 2910, y: 3150 } },
-  { id: 'P', name: 'Центральная площадь', x: 2360, y: 1500, w: 1240, h: 3500, safePoint: { x: 2600, y: 3625 } },
-];
-
 /** Пол: вся мостовая города и полы зданий-разрезов (поверх мостовой). */
 export const CITY_GROUND = [
   { tex: 'city_paving', x: 2360, y: 1500, w: 1240, h: 3540 },

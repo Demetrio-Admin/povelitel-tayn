@@ -471,7 +471,7 @@ export const ENEMIES = {
   // Общие: обычная атака 12 / 4,5 с; сильная подготовка 2,5 с, КД 10 с, первая через 6 с; после прерывания — 7 с.
   node_guardian: {
     name: 'Хранитель сердца',
-    texture: 'enemy_guardian',
+    texture: 'enemy_heart_keeper',
     tint: 0xbfe9dc,
     tier: 'strong',
     hp: 900,

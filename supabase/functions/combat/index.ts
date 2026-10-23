@@ -4735,7 +4735,7 @@ var ENEMIES = {
   // Общие: обычная атака 12 / 4,5 с; сильная подготовка 2,5 с, КД 10 с, первая через 6 с; после прерывания — 7 с.
   node_guardian: {
     name: "\u0425\u0440\u0430\u043D\u0438\u0442\u0435\u043B\u044C \u0441\u0435\u0440\u0434\u0446\u0430",
-    texture: "enemy_guardian",
+    texture: "enemy_heart_keeper",
     tint: 12577244,
     tier: "strong",
     hp: 900,

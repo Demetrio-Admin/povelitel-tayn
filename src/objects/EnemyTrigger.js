@@ -10,6 +10,7 @@ import * as vitals from '../state/vitals.js';
 export const encKey = (spawnId) => `enc:${spawnId}`;
 export { repKey, repState, recordRepeatWin, enemyDownNow } from '../state/enemyRep.js';
 import { enemyDownNow } from '../state/enemyRep.js';
+import { applyMonsterArt, addMonsterShadow } from '../world/monsterArt.js';
 
 /**
  * EnemyTrigger — враг на карте exploration. При входе героини в radius сцена запускает CombatScene.
@@ -35,9 +36,12 @@ export class EnemyTrigger {
     this.texture = cfg.texture || this.def.texture;
     this.sprite = scene.add.image(cfg.x, cfg.y, this.texture).setOrigin(0.5, 1);
     applyDisplaySize(this.sprite, this.texture);
+    applyMonsterArt(this.sprite, this.texture);
     if (this.def.tint) this.sprite.setTint(this.def.tint);
     if (cfg.scale) this.sprite.setScale(this.sprite.scaleX * cfg.scale, this.sprite.scaleY * cfg.scale);
     this.sprite.setDepth(DEPTH.mainBase + cfg.y);
+    this.shadow = addMonsterShadow(scene, this.sprite, DEPTH.mainBase + cfg.y - 0.1);
+    if (this.shadow && cfg.scale) this.shadow.setScale(this.shadow.scaleX * cfg.scale, this.shadow.scaleY * cfg.scale);
     this.nameText = scene.add.text(cfg.x, cfg.y - this.sprite.displayHeight - 14, `${this.def.name}\nУр. ${this.def.level} · ${this.def.difficulty === 'boss' ? 'Босс' : this.def.difficulty === 'elite' ? 'Элитный' : 'Обычный'}`, {
       fontFamily: UI.font, fontSize: scene.loc?.painted ? 20 : UI.type.small, wordWrap: scene.loc?.painted ? {width:165} : undefined, align: 'center', color: '#ff8a7a', stroke: '#000', strokeThickness: 4,
     }).setOrigin(0.5, 1).setDepth(DEPTH.markers);
@@ -49,7 +53,7 @@ export class EnemyTrigger {
     else this.refresh();
   }
 
-  get visuals() { return [this.sprite, this.nameText, this.ring]; }
+  get visuals() { return [this.shadow, this.sprite, this.nameText, this.ring].filter(Boolean); }
 
   /** Возобновляемое место: враг уходит до следующего цикла (объекты не уничтожаются). */
   hide(animate = true) {
@@ -124,7 +128,7 @@ export class EnemyTrigger {
   refresh() {
     if (this.defeated) return;
     const vis = this.requirementsMet();
-    [this.sprite, this.nameText, this.ring].forEach(o => o.setVisible(vis));
+    this.visuals.forEach(o => o.setVisible(vis));
   }
 
   update(dt, player) {
@@ -142,7 +146,7 @@ export class EnemyTrigger {
     this.defeated = true;
     this.idle?.stop();
     if (this.blocker) { this.blocker.destroy(); this.blocker = null; }
-    const objs = [this.sprite, this.nameText, this.ring];
+    const objs = this.visuals;
     if (animate) this.scene.tweens.add({ targets: objs, alpha: 0, duration: 700, onComplete: () => objs.forEach(o => o.destroy()) });
     else objs.forEach(o => o.destroy());
   }

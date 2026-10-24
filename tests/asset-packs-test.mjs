@@ -15,6 +15,7 @@ const seen = new Map();
 for (const id of PACK_IDS) for (const k of Object.keys(PACK_IMAGES[id])) seen.set(k, [...(seen.get(k) || []), id]);
 ok(expected.every((k) => seen.get(k)?.length === 1), 'каждый файловый ключ манифеста — ровно в одном пакете');
 ok(Object.keys(CITY_WITCH_ATLASES).every((k) => PACK_IMAGES.city[k]), 'атласы фасадов города — в пакете city');
+ok(Object.keys(CITY_WITCH_SPRITES).every(k => LAZY_KEYS.get(k) === 'city'), 'вырезки домов тоже отложены: старт в лесу не создаёт серые заглушки вместо фасадов');
 ok(Object.keys(WALK_SHEET_FILES).every((k) => !LAZY_KEYS.has(k)), 'листы ходьбы героев не отложены (грузятся в core как spritesheet)');
 
 const missing = [];

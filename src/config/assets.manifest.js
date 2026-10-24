@@ -16,7 +16,7 @@ import { CITY_WALK_FILES, CITY_WALK_SIZES } from './city.walk.art.js';
 import { ARCHIVE_FILES, ARCHIVE_SIZES } from './city.archive.art.js';
 import { NEIGHBORHOOD_FILES, NEIGHBORHOOD_SIZES } from './city.neighborhoods.art.js';
 import { CHAPTER3_FILES, CHAPTER3_SIZES } from './chapter3.art.generated.js';
-import { MONSTER_REDESIGN_FILES, MONSTER_REDESIGN_DIMENSIONS } from './monster-redesign.art.js';
+import { MONSTER_REDESIGN_FILES, MONSTER_REDESIGN_DIMENSIONS, MONSTER_WORLD_HEIGHTS } from './monster-redesign.art.js';
 import { CITY_LIFE_FILES, CITY_LIFE_SIZES } from './cityLife.art.generated.js';
 import { CITY_LIFE_PAINTED_FILES, CITY_LIFE_DIRECTION_FILES, CITY_LIFE_DIRECTION_SIZES } from './cityLife.painted.js';
 
@@ -129,7 +129,7 @@ Object.assign(ASSET_FILES, WORLD_MAP_FILES);
 // Visual-only override. All 25 monsters are individually addressable, including the heart boss.
 Object.assign(ASSET_FILES, MONSTER_REDESIGN_FILES);
 for (const [key, [pixelWidth, pixelHeight]] of Object.entries(MONSTER_REDESIGN_DIMENSIONS)) {
-  const screenHeight = key === 'enemy_heart_keeper' ? 230 : (DISPLAY_SIZE[key]?.[1] ?? 120);
+  const screenHeight = MONSTER_WORLD_HEIGHTS[key];
   DISPLAY_SIZE[key] = [Math.round(screenHeight * pixelWidth / pixelHeight), screenHeight];
 }
 DISPLAY_SIZE.world_map_01 = [WORLD_MAP.width, WORLD_MAP.height];

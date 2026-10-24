@@ -15,6 +15,7 @@ import { HeroAnimator } from '../systems/HeroAnimator.js';
 import { UI } from '../config/ui.config.js';
 import { UIBar, drawPlate } from '../ui/widgets.js';
 import { applyDisplaySize, itemName } from '../objects/InteractiveObject.js';
+import { applyMonsterArt, addMonsterShadow, monsterCombatScale } from '../world/monsterArt.js';
 import { AbilitySystem } from '../systems/AbilitySystem.js';
 import { CombatRecorder, STEP } from '../systems/combatReplay.js';
 import { startState } from '../cloud/combatVerify.js';
@@ -146,14 +147,19 @@ export class CombatScene extends Phaser.Scene {
     const texture = this.spawn.texture || this.def.texture;
     const s = this.add.image(this.enemyPos.x, this.enemyPos.y, texture).setOrigin(0.5, 1);
     applyDisplaySize(s, texture);
+    const readable = applyMonsterArt(s, texture);
     const human = this.duel || ['severin_boss', 'volunteer', 'iva_reflection'].includes(this.enemyType);
-    const mul = human ? (this.duel ? 1.125 : 1.2) : this.def.tier === 'strong' ? 1.5 : 1.7;
+    const requested = human ? (this.duel ? 1.125 : 1.2) : this.def.tier === 'strong' ? 1.5 : 1.7;
+    const mul = readable ? monsterCombatScale(s.monsterArt.visibleHeight, requested) : requested;
     s.setScale(s.scaleX * mul, s.scaleY * mul).setDepth(this.enemyPos.y);
     this.enemySprite = s;
     this.enemyTint = this.def.tint || null;   // v0.10.0: Страж узла отличается оттенком от Лесного Стража
     if (this.enemyTint) s.setTint(this.enemyTint);
     this.enemyBase = { sx: s.scaleX, sy: s.scaleY };
-    this.add.image(this.enemyPos.x, this.enemyPos.y - 4, 'hero_shadow').setDisplaySize(s.displayWidth * 0.9, 34).setDepth(this.enemyPos.y - 1);
+    if (readable) {
+      const shadow = addMonsterShadow(this, s, this.enemyPos.y - 1);
+      shadow.setScale(shadow.scaleX * mul, shadow.scaleY * mul);
+    } else this.add.image(this.enemyPos.x, this.enemyPos.y - 4, 'hero_shadow').setDisplaySize(s.displayWidth * 0.9, 34).setDepth(this.enemyPos.y - 1);
     this.idle = this.tweens.add({ targets: s, scaleY: s.scaleY * 1.04, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     this.prepGlow = this.add.image(this.enemyPos.x, this.enemyPos.y - s.displayHeight / 2, 'fx_glow').setTint(COLORS.danger).setBlendMode('ADD').setScale(3).setAlpha(0).setDepth(this.enemyPos.y + 1);
     this.armorGlow = this.add.image(this.enemyPos.x, this.enemyPos.y - s.displayHeight / 2, 'fx_ring').setTint(0x9f8bff).setScale(2.2, 2.6).setAlpha(this.cm.enemy.hasArmor ? 0.6 : 0).setDepth(this.enemyPos.y + 2);

@@ -131,3 +131,18 @@ export const MONSTER_REDESIGN_DIMENSIONS = {
     768
   ]
 };
+
+// Visible silhouette height in world pixels (hero: about 110 px including hat).
+// Canvas padding and sprite resolution must not make small enemies disappear.
+export const MONSTER_WORLD_HEIGHTS = {
+  enemy_scavenger: 138, enemy_scavenger_small: 114, enemy_rootling: 104,
+  enemy_guardian: 224, enemy_heart_keeper: 252,
+  enemy_frost_critter: 88, enemy_frost_collector: 132, enemy_frost_collector_elite: 156,
+  enemy_ice_guardian: 220, enemy_volunteer: 138, enemy_volunteer_miron: 148,
+  enemy_experimental_construct: 208, enemy_severin: 152,
+  enemy_frost_wolf: 118, enemy_frost_alpha: 158,
+  enemy_grave_wisp: 116, enemy_grave_hound: 136, enemy_barrow_warden: 224,
+  enemy_glass_stoat: 88, enemy_echo: 120, enemy_glass_wolf: 118,
+  enemy_needle: 132, enemy_needle_elite: 156, enemy_glass_guardian: 224,
+  enemy_iva_reflection: 152,
+};

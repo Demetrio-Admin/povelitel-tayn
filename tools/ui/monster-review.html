@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Проверка монстров</title>
+<style>
+body{margin:0;background:#1b181e;color:#e8dcc6;font:14px system-ui;display:flex;gap:16px}aside{width:300px;height:100vh;overflow:auto;padding:12px;box-sizing:border-box}h1{font-size:19px}button,select{font:inherit;color:inherit;background:#302731;border:1px solid #796b50;border-radius:6px;padding:7px;margin:3px;cursor:pointer}button:disabled{opacity:.4;cursor:wait}#choices button{display:block;text-align:left;width:100%}iframe{border:0;width:390px;height:844px;max-height:100vh;background:#18151c}pre{white-space:pre-wrap;font:12px monospace}#gallery{display:flex;flex-wrap:wrap;align-content:start;width:420px;height:100vh;overflow:auto}figure{margin:5px;width:195px}figcaption{font-size:11px}canvas{max-width:100%}
+</style>
+<aside><h1>Все 25 монстров</h1><p>Локальный стенд с тестовым сохранением. Реальные сцены, пакеты локаций и спрайты игры.</p>
+<button id="all" disabled>Проверить все локации и 25 видов</button><button id="life" disabled>Скрыть / вернуть врага</button><button id="battle" disabled>Начать бой</button>
+<p id="status" role="status">Загрузка игры…</p><div id="choices"></div><pre id="results"></pre></aside>
+<iframe id="game" title="Игра — проверка монстров" src="/?reset&skipmenu&hero=witch&notrack"></iframe><section id="gallery" aria-label="Монстры рядом с героиней"></section>
+<script type="module">
+import { MONSTER_REDESIGN_FILES, MONSTER_WORLD_HEIGHTS } from '/src/config/monster-redesign.art.js';
+import { ENEMIES } from '/src/config/balance.enemies.js';
+import { ENEMY_SPAWNS } from '/src/config/world.layout.js';
+import { LOCATIONS, locationAt } from '/src/config/locations.js';
+const frame=document.querySelector('iframe'), status=document.querySelector('#status'), results=document.querySelector('#results');
+const keys=Object.keys(MONSTER_REDESIGN_FILES), sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let current=null,busy=false;
+const report=[];
+const app=()=>frame.contentWindow;
+const scene=()=>app().__game.scene.getScene('ExplorationScene');
+const spawnOf=key=>{const s=ENEMY_SPAWNS.find(s=>(s.texture||ENEMIES[s.enemy]?.texture)===key);return s?{...s,...app().__witch?.map?.pos?.[s.id]}:null;};
+function controls(disabled){busy=disabled;document.querySelectorAll('button').forEach(b=>b.disabled=disabled);}
+function sample(enemy,key){
+  if(document.getElementById('sample-'+key))return;
+  const fig=document.createElement('figure'), cv=document.createElement('canvas'), label=document.createElement('figcaption');
+  fig.id='sample-'+key; cv.width=390;cv.height=500;const c=cv.getContext('2d');c.fillStyle='#3f3932';c.fillRect(0,0,390,500);
+  const hero=scene().textures.get('hero_down').getSourceImage(), art=enemy.sprite.monsterArt;
+  c.drawImage(hero,20,460-168,166*.7,168);
+  const image=scene().textures.get(art.key).getSourceImage(), k=1.4;
+  c.drawImage(image,245-art.width*k/2,460-art.height*k*art.originY,art.width*k,art.height*k);
+  label.textContent=ENEMIES[enemy.cfg.enemy].name+' · '+MONSTER_WORLD_HEIGHTS[key]+' px';fig.append(cv,label);document.querySelector('#gallery').append(fig);
+}
+async function show(key){
+  const spawn=spawnOf(key);if(!spawn)throw Error('Нет спавна: '+key);
+  const st=app().__witch.state;
+  st.markEvent('prologue_seen');
+  for(const loc of LOCATIONS)if(loc.requires)st.markEvent(loc.requires);
+  if(spawn.requiresEvent)st.markEvent(spawn.requiresEvent);
+  app().__witch.settings.set('hints',false);app().__witch.tutorial.hide();
+  const ui=app().__game.scene.getScene('UIScene');if(ui.dlg)ui.closeDialogue(true);ui.closeModal(null);
+  const loc=locationAt(spawn.x,spawn.y);if(scene().loc.id!==loc.id)await scene().travelToLocation(loc.id);
+  for(let i=0;i<2400&&(scene().inTransition||scene().loc.id!==loc.id||!scene().enemies.some(e=>e.id===spawn.id));i++)await sleep(50);
+  const sc=scene(), enemy=sc.enemies.find(e=>e.id===spawn.id);if(!enemy)throw Error('Нет врага: '+spawn.id+'; цель '+loc.id+'; сцена '+sc.loc?.id+'; переход '+sc.inTransition+'; '+spawn.x+','+spawn.y+'; есть '+sc.enemies.map(e=>e.id).join(','));
+  enemy.defeated=false;enemy.visuals.forEach(o=>o.setVisible(true).setAlpha(1));enemy.grace=100000;
+  for(const e of sc.enemies)e.grace=100000;
+  sc.player.stop();sc.player.setPosition(spawn.x-150,spawn.y+20);
+  sc.cameras.main.stopFollow();sc.cameras.main.centerOn(spawn.x-60,spawn.y+100);sc.cameras.main.preRender();
+  sc.refreshAll();enemy.visuals.forEach(o=>o.setVisible(true).setAlpha(1));
+  if(ui.dlg)ui.closeDialogue(true);ui.closeModal(null);
+  if(!enemy.sprite.monsterArt||!enemy.shadow?.visible)throw Error('Нет обработки или тени: '+key);
+  const art=enemy.sprite.monsterArt;
+  if(art.visibleHeight!==MONSTER_WORLD_HEIGHTS[key])throw Error('Неверный размер: '+key);
+  current=enemy;sample(enemy,key);status.textContent=ENEMIES[spawn.enemy].name+' · '+loc.name+' · '+art.visibleHeight+' px';
+  return key+' · '+loc.id+' · размер/прозрачность/тень: OK';
+}
+async function action(fn){if(busy)return;controls(true);try{await fn();}catch(e){status.textContent='ОШИБКА: '+e.message;throw e;}finally{controls(false);}}
+for(const key of keys){const b=document.createElement('button'),sp=spawnOf(key);b.textContent=ENEMIES[sp?.enemy]?.name||key;b.disabled=true;b.onclick=()=>action(()=>show(key));document.querySelector('#choices').append(b);}
+document.querySelector('#all').onclick=()=>action(async()=>{report.length=0;for(const key of keys){report.push(await show(key));results.textContent=report.join('\n');await sleep(100);}status.textContent='25/25: проверены все размеры, текстуры, тени и пакеты локаций';});
+document.querySelector('#life').onclick=()=>action(async()=>{if(!current)return;current.hide(false);if(current.shadow.visible)throw Error('Тень осталась после скрытия');await sleep(250);current.respawn();current.grace=100000;if(!current.shadow.visible)throw Error('Тень не вернулась');status.textContent='Скрытие / возрождение: враг и тень синхронны';});
+document.querySelector('#battle').onclick=()=>action(async()=>{if(current)await scene().startCombat(current);});
+for(let i=0;i<1200;i++){if(app().__game?.scene.isActive('UIScene')&&scene()?.player){controls(false);await action(()=>show('enemy_rootling'));break;}await sleep(100);}
+</script></html>

@@ -56,6 +56,9 @@ export const PACK_IMAGES = (() => {
 export const LAZY_KEYS = (() => {
   const m = new Map();
   for (const id of PACK_IDS) if (id !== 'core') for (const key of Object.keys(PACK_IMAGES[id])) m.set(key, id);
+  // These keys are created from city atlases, not downloaded as individual files.
+  // Keep PreloadScene from reserving them with grey fallback textures at forest boot.
+  for (const key of Object.keys(CITY_WITCH_SPRITES)) m.set(key, 'city');
   return m;
 })();
 

@@ -58,16 +58,15 @@ export const services = {
 // v0.9.2: внешность и обращения — по герою профиля (онлайн) или сохранения (без сервера); источник один для всех сцен
 setHeroSource(() => heroIdNow());
 
-export function initServices() {
+export function initServices({ storage = window.localStorage, localOnly = false } = {}) {
   const params = new URLSearchParams(window.location.search);
-  const storage = window.localStorage;
   services.debug = params.has('debug');
-  services.edit = params.has('edit');
+  services.edit = !localOnly && params.has('edit');
   // ?edit — редактор: прогресс игрока не читаем и не пишем (хранилище не подключено);
   // ?draft — играть с черновиком правок карты из этого браузера
   services.map = resolveMap({ storage, useDraft: (services.edit && !params.has('nodraft')) || params.has('draft') });
   const api = new SupabaseApi({ url: CLOUD.url, anonKey: CLOUD.anonKey, loginDomain: CLOUD.loginDomain, timeoutMs: CLOUD.timeoutMs });
-  const online = api.enabled && !services.edit;
+  const online = !localOnly && api.enabled && !services.edit;
   // онлайн: в браузере только токен входа, прогресс приходит с сервера; без сервера — localStorage (разработка)
   services.state = new GameState(online || services.edit ? null : storage);
   if (online) {

@@ -6,9 +6,12 @@ import { DISPLAY_SIZE } from '../config/assets.manifest.js';
 // разворачивается по направлению. Кто идёт за героем — косметический выбор этого устройства (localStorage): сервер о нём не знает,
 // а применяется он, только если предмет-спутник у героя есть.
 const PREF_KEY = 'povelitel.companion';
-export function getCompanionPref() { try { return globalThis.localStorage?.getItem(PREF_KEY) || null; } catch { return null; } }
+let preferenceStorage;
+export function setCompanionStorage(storage) { preferenceStorage = storage; }
+const storage = () => preferenceStorage === undefined ? globalThis.localStorage : preferenceStorage;
+export function getCompanionPref() { try { return storage()?.getItem(PREF_KEY) || null; } catch { return null; } }
 export function setCompanionPref(id) {
-  try { if (id && COMPANIONS[id]) globalThis.localStorage?.setItem(PREF_KEY, id); else globalThis.localStorage?.removeItem(PREF_KEY); } catch { /* без хранилища выбор просто не запомнится */ }
+  try { if (id && COMPANIONS[id]) storage()?.setItem(PREF_KEY, id); else storage()?.removeItem(PREF_KEY); } catch { /* без хранилища выбор просто не запомнится */ }
 }
 export const COMPANIONS = {
   robin: { texture: 'companion_robin', item: 'companion_robin', lag: 54, speed: 330, hop: 5 },

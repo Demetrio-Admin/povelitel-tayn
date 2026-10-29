@@ -1,0 +1,17 @@
+<!doctype html><html lang="ru"><meta charset="utf-8"><title>Camera test QA</title>
+<style>body{margin:0;background:#282333;color:#fff;font:15px sans-serif}header{padding:12px;display:flex;gap:10px;flex-wrap:wrap}button{padding:9px;font:inherit}main{display:flex;gap:20px;align-items:flex-start}iframe{border:0;background:#120d0b;flex:none}pre{white-space:pre-wrap;max-width:650px}#report{padding:12px}</style>
+<header><button id="run">Run mobile checks</button><button data-size="360,800">360×800</button><button data-size="390,844">390×844</button><button data-size="412,915">412×915</button><button data-size="320,568">320×568</button><button data-size="720,1280">Portrait desktop</button><button id="root">Основная игра</button></header>
+<main><iframe id="game-frame" title="Мобильная версия" width="390" height="844" src="/camera-test/"></iframe><pre id="report">Готов к проверке</pre></main>
+<script type="module">
+import {runCameraChecks} from './camera-checks.js';
+const frame=document.querySelector('iframe'),report=document.querySelector('#report');
+if(new URLSearchParams(location.search).has('built')) frame.src='/dist/camera-test/';
+const resize=(w,h)=>{frame.width=w;frame.height=h};
+document.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>resize(...b.dataset.size.split(',').map(Number)));
+document.querySelector('#root').onclick=()=>{frame.src='/?skipmenu';};
+document.querySelector('#run').onclick=async()=>{
+ report.textContent='Проверка…\n';
+ try { const result=await runCameraChecks(frame.contentWindow,{resize,log:s=>report.textContent+=s+'\n'});report.textContent+='PASS\n'+JSON.stringify(result.measurements,null,2)+'\nMeasured renderer FPS: '+result.actualFps.toFixed(1); }
+ catch(e){report.textContent+='FAIL: '+e.stack;}
+};
+</script></html>

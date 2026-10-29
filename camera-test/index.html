@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#120d0b" />
+  <title>Колдовство — тест камеры</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #120d0b; overflow: hidden; touch-action: none; overscroll-behavior: none; }
+    #game {
+      position: fixed;
+      left: calc(var(--viewport-left, 0px) + env(safe-area-inset-left, 0px));
+      top: calc(var(--viewport-top, 0px) + env(safe-area-inset-top, 0px));
+      width: calc(var(--viewport-width, 100vw) - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+      height: calc(var(--viewport-height, 100vh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+      height: calc(var(--viewport-height, 100dvh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    }
+    canvas { display: block; touch-action: none; }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <script type="module" src="/src/camera-test/main.js"></script>
+</body>
+</html>

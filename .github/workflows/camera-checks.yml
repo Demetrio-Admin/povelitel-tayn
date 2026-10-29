@@ -1,0 +1,39 @@
+name: Camera experiment checks
+on:
+  pull_request:
+    paths:
+      - 'camera-test/**'
+      - 'src/camera-test/**'
+      - 'src/services.js'
+      - 'src/objects/Companion.js'
+      - 'tests/**'
+      - 'vite.config.js'
+      - '.github/workflows/camera-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  camera:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:camera
+      - run: npm run build
+      - name: New camera route and native touch
+        run: npm run test:camera:browser
+      - name: Original viewport regression
+        run: npm run test:viewport
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: camera-screenshots
+          path: |
+            /tmp/witch-camera-test
+            /tmp/witch-viewport

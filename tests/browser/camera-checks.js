@@ -1,5 +1,5 @@
 // Runs inside a real rendered iframe; also reusable by Playwright on the built route.
-export async function runCameraChecks(frame, { resize, log = console.log } = {}) {
+export async function runCameraChecks(frame, { resize, log = console.log, quick = false } = {}) {
   const results = [];
   const check = (ok, message) => { if (!ok) throw Error(message); results.push(message); log('✓ ' + message); };
   const wait = async (fn, label, ms=60000) => { const end=Date.now()+ms; while(Date.now()<end) { if(fn())return; await new Promise(r=>setTimeout(r,50)); } throw Error('Timeout: '+label); };
@@ -27,6 +27,7 @@ export async function runCameraChecks(frame, { resize, log = console.log } = {})
     check(Math.abs(canvas.width/canvas.height-game.scale.width/game.scale.height)<.001 && canvas.width<=host.width+1 && canvas.height<=host.height+1,`${w}×${h}: uniform viewport without clipping (${canvas.width}×${canvas.height}; game ${game.scale.width}×${game.scale.height}; host ${host.width}×${host.height})`);
     measurements.push({w,h,logical:[game.scale.width,game.scale.height],heroHeight:e.player.view.displayHeight,zoom});
   }
+  if(quick) return {results,measurements,actualFps:game.loop.actualFps};
   if(resize) { resize(390,844); await new Promise(r=>setTimeout(r,200)); }
   const e=scene(), p=e.player;
   const path=e.planPath(p.x,p.y-160);

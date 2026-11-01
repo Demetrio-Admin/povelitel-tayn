@@ -168,8 +168,13 @@ try {
 
   for (const id of ['ep_resin_2', 'ep_resin_1']) { await go(id); await actObj(id); await heat(); await clearUi(); }
   assert.equal(await ev((e, u, ep) => ep.control()), 2, 'three good uses → confident fire');
-  await go('ep_lantern_1', 60); await actObj('ep_lantern_1'); await sleep(900);
-  assert.equal(await ev((e) => window.__game.scene.isActive('EpisodeMagicScene') || !e.objects.find(o => o.id === 'ep_lantern_1').isDone()), false, 'simple flame in one touch');
+  await go('ep_lantern_1', 60); await actObj('ep_lantern_1');
+  let lit = false, magicOpened = false;
+  for (let i = 0; i < 60 && !lit; i++) {
+    const st = await ev((e) => ({ magic: window.__game.scene.isActive('EpisodeMagicScene'), lit: e.objects.find(o => o.id === 'ep_lantern_1').isDone() }));
+    lit = st.lit; magicOpened ||= st.magic; await sleep(300);
+  }
+  assert.ok(lit && !magicOpened, `simple flame in one touch (lit ${lit}, magic ${magicOpened})`);
   await clearUi();
   for (const id of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1']) { await go(id, 50); await actObj(id); await sleep(700); }
   await go('ep_shard', 60); await actObj('ep_shard'); await sleep(1500); await clearUi();

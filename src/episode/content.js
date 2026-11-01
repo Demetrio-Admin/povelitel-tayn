@@ -33,8 +33,8 @@ export const EPISODE_CONTENT = [
   { id: 'ep_circle', kind: 'ep_circle', x: 1000, y: 2400, texture: 'fire_circle_01', collide: { w: 130, h: 36 }, radius: 150, flameY: 26 },
 
   // замёрзший сбор Веды: последствие неумелого огня
-  { id: 'ep_herbs_1', kind: 'ep_heat', purpose: 'herbs', frozen: true, activeStep: 'herbs', x: 1505, y: 2470, texture: 'herb_bundle_01', radius: 110 },
-  { id: 'ep_herbs_2', kind: 'ep_heat', purpose: 'herbs', frozen: true, activeStep: 'herbs', second: true, x: 1560, y: 2482, texture: 'herb_bundle_01', radius: 110 },
+  { id: 'ep_herbs_1', kind: 'ep_heat', purpose: 'herbs', frozen: true, activeStep: 'herbs', x: 1505, y: 2470, texture: 'herb_bundle_01', scale: 1.5, radius: 110 },
+  { id: 'ep_herbs_2', kind: 'ep_heat', purpose: 'herbs', frozen: true, activeStep: 'herbs', second: true, x: 1565, y: 2482, texture: 'herb_bundle_01', scale: 1.5, radius: 110 },
 
   // смола для ритуала: вытопить огнём (можно пережечь)
   { id: 'ep_resin_1', kind: 'ep_heat', purpose: 'resin', activeStep: 'gather', x: 905, y: 2565, texture: 'resin_log_01', collide: { w: 56, h: 18 }, radius: 110 },

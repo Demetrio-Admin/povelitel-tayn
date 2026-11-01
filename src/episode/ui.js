@@ -26,6 +26,24 @@ export class EpisodeUIScene extends CameraUIScene {
   // Облачные окна основной игры в эпизоде не нужны.
   openWallet() { this.toast('В эпизоде кошелька нет.'); }
 
+  /** «Все дары» в эпизоде — что умеет герой сейчас (таймеры изучения и слоты основной игры здесь не участвуют). */
+  openGifts() {
+    const ep = episode.ep, fire = services.abilities.isUnlocked('fire');
+    const ctl = FIRE_CONTROL[episode.control()];
+    const lines = [
+      'Телекинез',
+      '• Подхватить тяжёлое и вести пальцем (мана уходит, пока предмет в воздухе)',
+      '• Притянуть лёгкое',
+      '',
+      fire ? `Огонь ${ep.fireLevel >= 2 ? 'II' : 'I'}` : 'Огонь — ещё спит',
+      fire ? '• Жар удержанием: держите в тёплой полосе' : '• Его будят в старом круге у Лунного алтаря',
+      ep.fireLevel >= 2 ? '• Направленное пламя: ведите поток пальцем' : '',
+      fire ? `• Владение: ${ctl.name}${ep.lesson && episode.control() < 2 ? ` — практика ${Math.min(ep.practice, PRACTICE_FOR_CONFIDENT)}/${PRACTICE_FOR_CONFIDENT}` : ''}` : '',
+      episode.control() >= 2 ? '• Простое пламя — одним касанием' : '',
+    ].filter((l, i, a) => l !== '' || (a[i - 1] && a[i - 1] !== ''));
+    this.openModal({ title: 'Дары', color: COLORS.fire, text: lines.join('\n') });
+  }
+
   buildGoal() {
     const c = this.add.container(20 + GOAL.w / 2, GOAL.y).setDepth(40);
     this.goalPlate = drawPlate(this.add.graphics(), GOAL.w, GOAL.h, { accent: COLORS.fire, alpha: 0.78, radius: 18 });

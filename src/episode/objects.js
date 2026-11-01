@@ -442,7 +442,7 @@ export class EpTravel extends EpisodeObject {
 export class EpCrystal extends EpisodeObject {
   constructor(scene, cfg) {
     super(scene, cfg);
-    this.inner = scene.add.image(cfg.x, cfg.y - 70, 'fx_glow').setTint(0xff8a3d).setBlendMode('ADD').setDepth(DEPTH.mainBase + cfg.y + 1).setScale(1.6).setAlpha(0.55);
+    this.inner = scene.add.image(cfg.x, cfg.y - 75, 'fx_glow').setTint(0xff8a3d).setBlendMode('ADD').setDepth(DEPTH.mainBase + cfg.y + 1).setScale(1.6).setAlpha(0.55);
     scene.tweens.add({ targets: this.inner, alpha: { from: 0.35, to: 0.75 }, scale: { from: 1.4, to: 1.9 }, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     this.glows = [this.inner];
     if (atLeast(this.ep, 'done')) this.freed(false);
@@ -452,16 +452,17 @@ export class EpCrystal extends EpisodeObject {
   get label() { return 'Отогреть кристалл'; }
   isDone() { return atLeast(this.ep, 'done'); }
   async interact() {
-    const r = await this.scene.runMagic('stream', { obj: this, spots: [{ x: this.cfg.x, y: this.cfg.y - 70, r: 34 }], need: 2.4, title: 'Кристалл святилища', hint: 'Подо льдом бьётся пламя. Ведите поток на кристалл и держите.' });
+    const r = await this.scene.runMagic('stream', { obj: this, spots: [{ x: this.cfg.x, y: this.cfg.y - 75, r: 40 }], need: 2.4, title: 'Кристалл святилища', hint: 'Подо льдом бьётся пламя. Ведите поток на кристалл и держите.' });
     if (r !== 'done') return;
     this.freed(true);
     episode.advance('sanctuary');
     this.scene.finale();
   }
+  get markerY() { return this.baseY - 190; }
   freed(animate) {
-    this.sprite.setTint(0xffd2a8);
+    this.inner?.setTint(0xffc46b);
     if (animate) {
-      this.scene.burst(this.x, this.baseY - 70, 0xffc46b, 50);
+      this.scene.burst(this.x, this.baseY - 75, 0xffc46b, 50);
       this.scene.cameras.main.flash(600, 255, 200, 140);
     }
     this.spirit = this.scene.add.particles(this.x, this.baseY - 110, 'fx_dot', {

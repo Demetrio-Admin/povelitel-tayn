@@ -52,7 +52,8 @@ export const EPISODE_CONTENT = [
   { id: 'ep_lantern_2', kind: 'ep_heat', purpose: 'lantern', x: 1365, y: 2335, texture: 'lantern_01', radius: 100, flameY: 70 },
 
   // Морозный лес: святилище на вершине
-  { id: 'ep_crystal', kind: 'ep_crystal', ...frostwoodPoint(818, 250), texture: 'ice_crystal_node_01', radius: 190, scale: 1.25 },
+  // нарисованный кристалл святилища: объект без собственной картинки (ghost), только свет и действие
+  { id: 'ep_crystal', kind: 'ep_crystal', ...frostwoodPoint(818, 152), ghost: { w: 110, h: 150 }, radius: 210 },
 ];
 
 /** Украшения и препятствия эпизода (вместо объектов главы, которые здесь не создаются). */

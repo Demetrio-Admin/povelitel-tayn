@@ -172,7 +172,8 @@ try {
   assert.equal(result.result, 'victory');
   assert.ok(result.stats.interrupts + result.stats.combos >= 1, 'the fight used interrupts or combos');
   await page.evaluate(() => { const s = window.__game.scene.getScene('EpisodeCombatScene'); s.leave(s.battle.result); });
-  await sleep(900); await clearUi(); await expectStep('enter');
+  await page.waitForFunction(() => !!window.__game.scene.getScene('UIScene').modal, null, { timeout: 60000 });
+  await sleep(600); await clearUi(); await expectStep('enter');
 
   await go('ep_frost_path', 60); await tapObj('ep_frost_path', -30); await sleep(2500); await ready(); await sleep(1500);
   await shot('frostwood'); await expectStep('sanctuary');

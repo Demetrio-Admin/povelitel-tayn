@@ -15,8 +15,9 @@ import '@fontsource/philosopher/latin-400.css';
 import Phaser from 'phaser';
 import { VIEW } from '../config/game.config.js';
 import { GAME_TITLE } from '../config/branding.js';
-import { CameraBootScene as BootScene, CameraExplorationScene as ExplorationScene, CameraUIScene as UIScene } from './scenes.js';
+import { CameraBootScene as BootScene, CameraExplorationScene as ExplorationScene, CameraUIScene, ClassicCameraUIScene } from './scenes.js';
 import { installPanel } from './panel.js';
+import { experiment } from './model.js';
 import './panel.css';
 import { PreloadScene } from '../scenes/PreloadScene.js';
 import { CombatScene } from '../scenes/CombatScene.js';
@@ -25,7 +26,12 @@ import { loadUIFont } from '../ui/fonts.js';
 import { showLoadingScreen } from '../ui/loadingScreen.js';
 import { bindBrowserViewport, viewportScaleMode } from '../ui/viewport.js';
 
-const debug = new URLSearchParams(window.location.search).has('debug');
+const query = new URLSearchParams(window.location.search);
+const debug = query.has('debug');
+// The compact mobile HUD is the experiment; ?hud=classic restores the production HUD for side-by-side comparison.
+const classicHud = query.get('hud') === 'classic';
+const UIScene = classicHud ? ClassicCameraUIScene : CameraUIScene;
+experiment.hudPadding = !classicHud;
 const editor = false;   // map editor: the map fills the free space
 document.title = 'Колдовство — тест камеры';
 // Resolve existing public assets from the game root, including lazy Phaser loads.

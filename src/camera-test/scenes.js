@@ -1,12 +1,12 @@
 import { BootScene } from '../scenes/BootScene.js';
 import { ExplorationScene } from '../scenes/ExplorationScene.js';
-import { UIScene } from '../scenes/UIScene.js';
 import { initServices, services } from '../services.js';
 import { setCompanionStorage } from '../objects/Companion.js';
 import { locationById } from '../config/locations.js';
 import { cityPoint } from '../config/city.plan.js';
 import { STORY } from '../config/story.js';
 import { PROFILES, experiment, isolatedStorage, lookAhead } from './model.js';
+import { HUD_PAD } from './hud.js';
 
 export class CameraBootScene extends BootScene {
   create() {
@@ -47,7 +47,19 @@ export class CameraExplorationScene extends ExplorationScene {
   }
   follow() {
     this.look = { x: 0, y: 0 };
+    this.padForHud();
     super.follow();
+  }
+  // Painted rooms have no dark bands (extraTop/extraBottom = 0), so at the room edge the hero would walk under the
+  // permanent HUD. With the compact HUD the camera may scroll a little past the room (dark floor colour), enough to
+  // keep the hero clear of the top zone and the bottom bar. Experiment only: ExplorationScene is untouched.
+  padForHud() {
+    const loc = this.loc, cam = this.cameras.main;
+    if (!experiment.hudPadding || !loc?.painted || loc.extraTop || loc.extraBottom) return;
+    const zoom = cam.zoom || 1, v = this.view;
+    const top = Math.ceil(HUD_PAD.top / zoom), bottom = Math.ceil(HUD_PAD.bottom / zoom);
+    cam.setBounds(v.x, v.y - top, v.w, v.h + top + bottom);
+    cam.setBackgroundColor(0x17120e);
   }
   applyProfile() {
     this.look = { x: 0, y: 0 };
@@ -77,22 +89,8 @@ export class CameraExplorationScene extends ExplorationScene {
   scheduleStory() {} // The test skips scripted introductions, not ordinary object interaction.
 }
 
-export class CameraUIScene extends UIScene {
-  openWallet() { this.toast('Тестовый режим: покупки отключены'); }
-  openAccount() { this.toast('Локальный тест: вход в аккаунт отключён'); }
-  openChat() { this.toast('Тестовый режим: чат отключён'); }
-  openCovens() { this.toast('Тестовый режим: Ковены отключены'); }
-  openDuel() { this.toast('Тестовый режим: сетевые дуэли отключены'); }
-  setupPointer() {
-    const before = new Set(this.input.listeners('pointerdown'));
-    super.setupPointer();
-    const start = this.input.listeners('pointerdown').find(fn => !before.has(fn));
-    this.input.off('pointerdown', start);
-    this.input.on('pointerdown', (p, over) => { if (!this.touch) start(p, over); });
-    // A second finger on a HUD control must not replace an active joystick gesture.
-    this.input.on('pointermove', () => { if (Math.hypot(services.input.joy.x, services.input.joy.y) > .01) this.scene.get('ExplorationScene').player.moveTarget = null; });
-  }
-}
+// The UI scenes live in ui.js: the compact mobile HUD, and the production HUD (?hud=classic) for comparison.
+export { CameraUIScene, ClassicCameraUIScene } from './ui.js';
 
 export function testScene() { return window.__game?.scene.getScene('ExplorationScene'); }
 export async function jumpTo(id) {

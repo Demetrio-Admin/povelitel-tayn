@@ -2,12 +2,14 @@ import { services } from '../services.js';
 import { PROFILES, experiment } from './model.js';
 import { testScene, jumpTo } from './scenes.js';
 export function installPanel(game) {
+  const classic = new URLSearchParams(location.search).get('hud') === 'classic';
   const panel = document.createElement('details'); panel.id = 'camera-test-panel';
   panel.innerHTML = `<summary>Тест камеры · <span id="camera-profile">B</span></summary>
     <div class="camera-content"><strong>Эксперимент: камера и управление</strong>
     <p>Тап — идти. Проведение пальцем — джойстик.</p>
     <div class="camera-profiles" role="group" aria-label="Профиль камеры">${Object.entries(PROFILES).map(([id,p]) => `<button type="button" data-profile="${id}" aria-pressed="${id==='b'}">${p.label}</button>`).join('')}</div>
     <div class="camera-locations"><button data-location="forest">Лес Мирры</button><button data-location="city">Город</button><button data-location="city_bank">Интерьер</button></div>
+    <div class="camera-hud" role="group" aria-label="Интерфейс"><button type="button" data-hud="new" aria-pressed="${!classic}">Новый HUD</button><button type="button" data-hud="classic" aria-pressed="${classic}">Прежний HUD</button></div>
     <div class="camera-actions"><button id="camera-hero">Герой: ведьма</button><button id="camera-reset">Сброс вида</button></div>
     <p>Прогресс локальный. Покупки отключены.</p><a href="./">Основная версия ↗</a></div>`;
   document.body.append(panel);
@@ -30,12 +32,20 @@ export function installPanel(game) {
   }
   panel.querySelectorAll('[data-profile]').forEach(b => b.onclick = () => select(b.dataset.profile));
   panel.querySelector('#camera-reset').onclick = () => select(experiment.profile);
+  // The interface is chosen when the game starts, so switching reloads the same route (progress is kept in the test save).
+  panel.querySelectorAll('[data-hud]').forEach(b => b.onclick = () => {
+    if ((b.dataset.hud === 'classic') === classic) return;
+    const url = new URL(location.href);
+    if (b.dataset.hud === 'classic') url.searchParams.set('hud', 'classic'); else url.searchParams.delete('hud');
+    location.href = url.href;
+  });
   panel.querySelectorAll('[data-location]').forEach(b => b.onclick = () => { experiment.panelOpen=false; panel.open=false; jumpTo(b.dataset.location); });
   panel.querySelector('#camera-hero').onclick = () => {
     const scene = testScene(); if (!scene?.player || services.mode !== 'exploration' || services.modalOpen || services.dialogue.active) return;
     scene.player.stop(); scene.savePosition();
     services.state.data.heroId = services.state.data.heroId === 'warlock' ? 'witch' : 'warlock';
     services.state.save();
+    game.scene.getScene('UIScene')?.refreshHud?.();   // the HUD portrait follows the active hero
     panel.querySelector('#camera-hero').textContent = 'Герой: ' + (services.state.data.heroId === 'warlock' ? 'колдун' : 'ведьма');
     experiment.panelOpen=false; panel.open=false; scene.scene.restart();
   };

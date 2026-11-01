@@ -5,7 +5,7 @@ export const PROFILES = {
   a: { label: 'A — Герой крупнее', scale: 1.25, look: 0 },
   b: { label: 'B — Умная камера', scale: 1.25, look: 0.09 },
 };
-export const experiment = { profile: 'b', changing: false, panelOpen: false };
+export const experiment = { profile: 'b', changing: false, panelOpen: false, hudPadding: false };
 export function isolatedStorage(storage) {
   const memory = new Map();
   return {

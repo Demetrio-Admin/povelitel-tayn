@@ -273,6 +273,7 @@ export class EpisodeExplorationScene extends CameraExplorationScene {
     this.inTransition = true;
     services.mode = 'transition';
     this.player.stop();
+    this.interaction.clearFocus();   // кнопка действия не должна остаться от тропы
     const cam = this.cameras.main;
     cam.fadeOut(420, 0, 0, 0);
     cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {

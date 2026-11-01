@@ -55,6 +55,13 @@ try {
     assert.ok(r != null && r < 90, `A* reaches ${id} (${r})`);
     await sleep(900);
   }
+  /** Как игрок: встать рядом и нажать кнопку действия (настоящее касание). */
+  async function actObj(id) {
+    await page.waitForFunction((id) => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === id, id, { timeout: 15000 });
+    const p = await page.evaluate(() => { const g = window.__game, u = g.scene.getScene('UIScene'), r = g.canvas.getBoundingClientRect(), k = r.width / g.scale.gameSize.width, gh = g.scale.gameSize.height;
+      return { x: r.left + u.ctx.x * k, y: r.top + (u.ctx.y + gh - 1280) * k }; });
+    await page.touchscreen.tap(p.x, p.y); await sleep(600);
+  }
   async function tapObj(id, dy = -30) { const o = await obj(id); const p = await toCss(o.x, o.y + dy); await page.touchscreen.tap(p.x, p.y); await sleep(500); }
   async function clearUi(max = 40) {
     for (let i = 0; i < max; i++) {
@@ -146,10 +153,10 @@ try {
   assert.ok(await ev(() => window.__witch.abilities.isUnlocked('fire')), 'fire awakened');
 
   // ошибка и её последствие, затем урок
-  await go('ep_herbs_1'); await tapObj('ep_herbs_1', -20); await sleep(800); await shot('heat'); await heat({ overheat: true });
+  await go('ep_herbs_1'); await actObj('ep_herbs_1'); await sleep(800); await shot('heat'); await heat({ overheat: true });
   await shot('charred'); await clearUi();
   assert.deepEqual(await ev((e, u, ep) => ({ lesson: ep.ep.lesson, charred: ep.ep.charred, control: ep.control() })), { lesson: true, charred: 1, control: 1 });
-  await go('ep_herbs_2'); await tapObj('ep_herbs_2', -20); await heat(); await clearUi(); await expectStep('gather');
+  await go('ep_herbs_2'); await actObj('ep_herbs_2'); await heat(); await clearUi(); await expectStep('gather');
 
   // сохранение тестового прогресса переживает перезагрузку
   await ev((e) => e.savePosition());
@@ -157,13 +164,13 @@ try {
   await expectStep('gather');
   assert.ok(await ev(() => window.__witch.abilities.isUnlocked('fire')), 'fire after reload');
 
-  for (const id of ['ep_resin_2', 'ep_resin_1']) { await go(id); await tapObj(id, -10); await heat(); await clearUi(); }
+  for (const id of ['ep_resin_2', 'ep_resin_1']) { await go(id); await actObj(id); await heat(); await clearUi(); }
   assert.equal(await ev((e, u, ep) => ep.control()), 2, 'three good uses → confident fire');
-  await go('ep_lantern_1', 60); await tapObj('ep_lantern_1', -40); await sleep(900);
+  await go('ep_lantern_1', 60); await actObj('ep_lantern_1'); await sleep(900);
   assert.equal(await ev((e) => window.__game.scene.isActive('EpisodeMagicScene') || !e.objects.find(o => o.id === 'ep_lantern_1').isDone()), false, 'simple flame in one touch');
   await clearUi();
-  for (const id of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1']) { await go(id, 50); await tapObj(id, -10); await sleep(700); }
-  await go('ep_shard', 60); await tapObj('ep_shard', -10); await sleep(1500); await clearUi();
+  for (const id of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1']) { await go(id, 50); await actObj(id); await sleep(700); }
+  await go('ep_shard', 60); await actObj('ep_shard'); await sleep(1500); await clearUi();
   await expectStep('ritual');
 
   await go('ep_circle', 90); await tapObj('ep_circle', -20); await sleep(1500); await shot('ritual'); await heat(); await clearUi(); await expectStep('melt');

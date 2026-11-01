@@ -57,7 +57,9 @@ try {
   }
   /** Как игрок: встать рядом и нажать кнопку действия (настоящее касание). */
   async function actObj(id) {
-    await page.waitForFunction((id) => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === id, id, { timeout: 15000 });
+    const focused = await page.waitForFunction((id) => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === id, id, { timeout: 10000 }).then(() => true, () => false);
+    // рядом другой объект перехватил фокус — тогда касание по самому объекту на карте
+    if (!focused) { await tapObj(id, -10); return; }
     const p = await page.evaluate(() => { const g = window.__game, u = g.scene.getScene('UIScene'), r = g.canvas.getBoundingClientRect(), k = r.width / g.scale.gameSize.width, gh = g.scale.gameSize.height;
       return { x: r.left + u.ctx.x * k, y: r.top + (u.ctx.y + gh - 1280) * k }; });
     await page.touchscreen.tap(p.x, p.y); await sleep(600);

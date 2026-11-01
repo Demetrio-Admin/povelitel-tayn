@@ -102,7 +102,7 @@ export class EpisodeUIScene extends CameraUIScene {
       '',
       stepIndex(ep.step) >= stepIndex('gather') && stepIndex(ep.step) <= stepIndex('ritual')
         ? `Для ритуала: ${Object.entries(RITUAL_NEEDS).map(([id, n]) => `${names[id]} ${Math.min(n, inv[id] || 0)}/${n}`).join(' · ')}` : '',
-      done.length ? `Пройдено: ${done.map(s => s.goal.toLowerCase()).join('; ')}.` : '',
+      done.length ? `Пройдено: ${done.map(s => s.goal[0].toLowerCase() + s.goal.slice(1)).join('; ')}.` : '',
     ].filter((l, i, a) => l !== '' || (a[i - 1] && a[i - 1] !== ''));
     this.openModal({
       title: 'Первое пламя', color: COLORS.fire, text: lines.join('\n'),

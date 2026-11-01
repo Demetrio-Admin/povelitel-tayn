@@ -93,7 +93,9 @@ try {
       const inside = await page.evaluate(() => { const x = window.__game.scene.getScene('EpisodeMagicScene')?.model; return !x || Math.hypot(x.x - x.target.x, x.y - x.target.y) < x.radius * 0.6; });
       if (inside) break; await touch('touchMove', end); await sleep(80);
     }
-    await touch('touchEnd', end); await sleep(900);
+    await touch('touchEnd', end);
+    await page.waitForFunction(() => !window.__game.scene.isActive('EpisodeMagicScene'), null, { timeout: 120000 });
+    await sleep(900);
   }
   async function stream() {
     await waitMagic(); let down = false, last = null;

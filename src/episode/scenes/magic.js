@@ -26,6 +26,8 @@ export class EpisodeMagicScene extends Phaser.Scene {
     this.cam = this.world.cameras.main;
     this.finger = null;
     this.ended = false;
+    // сцена переиспользуется: ссылки на объекты прошлого действия уже уничтожены
+    this.progressText = null; this.statusText = null; this.model = null; this.streamFx = null;
     this.W = this.scale.gameSize.width; this.H = this.scale.gameSize.height;
     services.modalOpen = true;
     services.bus.emit(MSG.MODAL_OPEN);

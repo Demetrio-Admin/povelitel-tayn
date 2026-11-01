@@ -30,6 +30,8 @@ export class EpisodeCombatScene extends Phaser.Scene {
     this.onEnd = data.onEnd;
     this.W = this.scale.gameSize.width; this.H = this.scale.gameSize.height;
     this.ended = false;
+    // повторный бой (после отступления) — сцена та же, прошлый бой и его объекты уже уничтожены
+    this.battle = null; this.buttons = null; window.__episodeBattle = null;
     this.buildArena();
     this.buildActors();
     this.loadoutView();

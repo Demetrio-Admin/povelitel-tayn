@@ -1,0 +1,38 @@
+name: Episode «Первое пламя» checks
+on:
+  pull_request:
+    paths:
+      - 'episode/**'
+      - 'src/episode/**'
+      - 'src/camera-test/**'
+      - 'tests/episode-test.mjs'
+      - 'tests/e2e/episode.mjs'
+      - 'vite.config.js'
+      - '.github/workflows/episode-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  episode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:episode
+      - run: npm run build
+      - name: Full playthrough with real touches
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 5195 > /tmp/episode-preview.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:5195/episode/ > /dev/null && break; sleep 1; done
+          UI_BASE_URL=http://127.0.0.1:5195/ UI_SHOTS_DIR=/tmp/witch-episode npm run test:episode:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: episode-screenshots
+          path: /tmp/witch-episode

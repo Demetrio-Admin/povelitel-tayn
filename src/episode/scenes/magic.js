@@ -31,6 +31,9 @@ export class EpisodeMagicScene extends Phaser.Scene {
     this.W = this.scale.gameSize.width; this.H = this.scale.gameSize.height;
     services.modalOpen = true;
     services.bus.emit(MSG.MODAL_OPEN);
+    // старые уведомления не должны лежать под карточкой действия
+    const ui = this.scene.get('UIScene');
+    ui?.toasts?.slice().forEach(t => ui.dropToast?.(t));
     this.world.player.stop();
     const o = this.opts.obj;
     this.world.player.castAt(o.x, o.baseY, this.kind === 'drag' ? 'telekinesis' : 'fire');
@@ -75,7 +78,7 @@ export class EpisodeMagicScene extends Phaser.Scene {
     const title = this.add.text(x, top + 20, this.opts.title || '', { fontFamily: FONT, fontSize: 32, fontStyle: 'bold', color: '#ffcf8a', shadow: SH }).setOrigin(0.5, 0);
     const hint = this.add.text(x, top + 62, this.opts.hint || '', { fontFamily: FONT, fontSize: 26, color: '#f1e3c2', align: 'center', wordWrap: { width: w - 40 }, shadow: SH, lineSpacing: 4 }).setOrigin(0.5, 0);
     const h = 62 + hint.height + 26;
-    const plate = drawPlate(this.add.graphics(), w, h, { accent: COLORS.fire, alpha: 0.82, radius: 18 }).setPosition(x, top + h / 2);
+    const plate = drawPlate(this.add.graphics(), w, h, { accent: COLORS.fire, alpha: 0.93, radius: 18 }).setPosition(x, top + h / 2);
     plate.setDepth(-1);
     this.cardBottom = top + h;
   }

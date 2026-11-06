@@ -32,8 +32,7 @@ jobs:
         run: |
           npm run preview -- --host 127.0.0.1 --port 5195 > /tmp/episode-preview.log 2>&1 &
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:5195/episode/ > /dev/null && break; sleep 1; done
-          EPISODE_FROM=gather UI_BASE_URL=http://127.0.0.1:5195/ UI_SHOTS_DIR=/tmp/witch-episode/growth npm run test:episode:browser
-          UI_BASE_URL=http://127.0.0.1:5195/ UI_SHOTS_DIR=/tmp/witch-episode/full npm run test:episode:browser
+          UI_BASE_URL=http://127.0.0.1:5195/ UI_SHOTS_DIR=/tmp/witch-episode npm run test:episode:browser
       - uses: actions/upload-artifact@v4
         if: always()
         with:

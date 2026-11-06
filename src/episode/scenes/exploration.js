@@ -70,6 +70,7 @@ export class EpisodeExplorationScene extends CameraExplorationScene {
   create() {
     // Лёд, волк и арена лежат в пакетах главы II и Морозного леса — догружаем до постройки мира.
     this.ready = false;
+    this.morvenSprite = null; // Phaser destroys the old actor on restart/location travel.
     if (!EXTRA_PACKS.every(isPackLoaded)) {
       showLoadingScreen('Собираем магию…');
       ensurePacks(this, EXTRA_PACKS).then(() => { hideLoadingScreen(); this.scene.restart(); });

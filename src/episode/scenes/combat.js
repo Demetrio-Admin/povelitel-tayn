@@ -140,7 +140,9 @@ export class EpisodeCombatScene extends Phaser.Scene {
     episode.save();
     this.domPanel.root.remove();
     this.options = battleOptions(services.state.data, episode.ep, this.enemyId);
-    this.battle = new EpisodeBattle({ ...this.options, loadout, seed: (Date.now() & 0xffff) || 7 });
+    const testSeed = new URLSearchParams(window.location.search).get('seed');
+    const seed = testSeed != null && Number.isInteger(Number(testSeed)) ? Number(testSeed) : (Date.now() & 0xffff) || 7;
+    this.battle = new EpisodeBattle({ ...this.options, loadout, seed });
     window.__episodeBattle = this.battle;
     this.buildFightUi(loadout);
     this.banner('Автобой', 0xcfefff);

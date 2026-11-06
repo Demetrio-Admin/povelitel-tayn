@@ -28,7 +28,7 @@ try {
   // производственное сохранение в том же браузере не должно меняться
   await page.goto(new URL('favicon.ico', base).href);
   await page.evaluate(() => localStorage.setItem('witch_rpg_proto_save_v1', 'production-save'));
-  await page.goto(new URL('episode/', base).href);
+  await page.goto(new URL(process.env.EPISODE_FROM === 'gather' ? 'episode/?step=gather&seed=7' : 'episode/?seed=7', base).href);
 
   const ready = () => page.waitForFunction(() => window.__game?.scene.isActive('UIScene') && window.__game.scene.getScene('ExplorationScene')?.ready && !window.__game.scene.getScene('ExplorationScene').inTransition, null, { timeout: 180000 });
   const sleep = (ms) => page.waitForTimeout(ms);
@@ -131,6 +131,7 @@ try {
   }
 
   await ready();
+  if (process.env.EPISODE_FROM !== 'gather') {
   await page.waitForFunction(() => !!window.__game.scene.getScene('UIScene').dlg, null, { timeout: 60000 });
   await shot('intro'); await clearUi(); await expectStep('goran');
   // HUD эпизода: строка цели под верхней панелью
@@ -157,6 +158,8 @@ try {
   await expectStep('gather');
   assert.ok(await ev(() => window.__witch.abilities.isUnlocked('fire')), 'fire after reload');
 
+  } else { await clearUi(); await expectStep('gather'); }
+
   for (const id of ['ep_resin_2', 'ep_resin_1']) { await go(id); await actObj(id); await sleep(700); assert.equal(await magicOn(), false, 'routine resin uses one tap'); await clearUi(); }
   assert.equal(await ev((e, u, ep) => ep.control()), 2, 'three good uses → confident fire');
   await go('ep_lantern_1', 60); await actObj('ep_lantern_1');
@@ -167,8 +170,10 @@ try {
   }
   assert.ok(lit && !magicOpened, `simple flame in one touch (lit ${lit}, magic ${magicOpened})`);
   await clearUi();
-  for (const id of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1']) { await go(id, 50); await actObj(id); await sleep(700); }
+  for (const id of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1']) { await go(id, 50); await actObj(id); await sleep(700); log('gathered', id, JSON.stringify(await ev(e => ({ inventory:window.__witch.state.data.inventory,focus:e.interaction.focus?.id })))); }
   await go('ep_shard', 60); await actObj('ep_shard'); await sleep(1500); await clearUi();
+  log('ritual inventory', JSON.stringify(await ev(e => ({ inventory: window.__witch.state.data.inventory, objects: e.objects.filter(o => /ep_(moon|resin|shard)/.test(o.id)).map(o => ({id:o.id,done:o.isDone(),available:o.isAvailable(),saved:o.saved})), focus:e.interaction.focus?.id }))));
+  await shot('gather-check');
   await expectStep('ritual');
 
   await go('ep_circle', 90); await tapObj('ep_circle', -20); await sleep(1500); await shot('ritual'); await heat(); await clearUi(); await expectStep('melt');

@@ -172,7 +172,7 @@ try {
   }
   assert.ok(lit && !magicOpened, `simple flame in one touch (lit ${lit}, magic ${magicOpened})`);
   await clearUi();
-  for (const id of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1']) { await go(id, 50); await actObj(id); await sleep(700); log('gathered', id, JSON.stringify(await ev((e,u) => ({ inventory:window.__witch.state.data.inventory,focus:e.interaction.focus?.id,modal:!!u.modal,modalOpen:window.__witch.modalOpen,mode:window.__witch.mode })))); }
+  for (const id of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1']) { await clearUi(); await go(id, 50); await actObj(id); await sleep(700); await clearUi(); log('gathered', id, JSON.stringify(await ev((e,u) => ({ inventory:window.__witch.state.data.inventory,focus:e.interaction.focus?.id,modal:!!u.modal,modalOpen:window.__witch.modalOpen,mode:window.__witch.mode })))); }
   await go('ep_shard', 60); await actObj('ep_shard'); await sleep(1500); await clearUi();
   log('ritual inventory', JSON.stringify(await ev(e => ({ inventory: window.__witch.state.data.inventory, objects: e.objects.filter(o => /ep_(moon|resin|shard)/.test(o.id)).map(o => ({id:o.id,done:o.isDone(),available:o.isAvailable(),saved:o.saved})), focus:e.interaction.focus?.id }))));
   await shot('gather-check');

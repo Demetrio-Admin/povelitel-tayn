@@ -129,10 +129,7 @@ export class EpHeat extends EpisodeObject {
       this.scene.toast(quick ? 'Фонарь вспыхнул от одного касания' : 'Фонарь горит', COLORS.fire);
       episode.save();
     }
-    if (confident) this.scene.time.delayedCall(900, () => this.scene.showScene({
-      title: 'Уверенный огонь', color: COLORS.fire,
-      text: 'Огонь стал послушным: жар растёт ровно и почти не перескакивает за край.\n\nПростое пламя — зажечь фонарь или свечу — теперь получается одним касанием.',
-    }));
+    if (confident) this.scene.toast('Уверенный огонь: жар стал послушнее. Простые действия — одним касанием.', COLORS.fire);
     this.scene.checkGather();
   }
 

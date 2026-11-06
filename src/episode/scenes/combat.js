@@ -15,6 +15,7 @@ import { battleOptions, defaultLoadout, ENCOUNTERS } from '../model/progression.
 import { learnedMoves, powerDefinition } from '../../config/magic.powers.js';
 import { panel, node, button } from '../panels.js';
 import { episode } from '../runtime.js';
+import { PRACTICE_LESSONS, practiceOptions, suggestedLoadouts, loadoutKey, explainDecision, practiceFeedback } from '../model/battlePractice.js';
 
 const FONT = UI.font;
 const SH = { offsetX: 0, offsetY: 2, color: '#000', blur: 4, fill: true };
@@ -32,10 +33,13 @@ export class EpisodeCombatScene extends Phaser.Scene {
 
   create(data) {
     this.onEnd = data.onEnd;
+    this.practiceIndex = Number.isInteger(data.practiceIndex) ? data.practiceIndex : null;
+    this.lesson = PRACTICE_LESSONS[this.practiceIndex];
+    this.courseHistory = data.courseHistory || {};
     this.enemyId = data.enemyId || 'frost_wolf';
-    this.options = battleOptions(services.state.data, episode.ep, this.enemyId);
-    this.def = this.options.enemy; this.speed = 1; this.accumulator = 0;
-    this.events.once('shutdown', () => { this.domPanel?.root.remove(); this.liveControls?.remove(); });
+    this.options = this.lesson ? practiceOptions(this.practiceIndex) : battleOptions(services.state.data, episode.ep, this.enemyId);
+    this.def = this.options.enemy; this.speed = 1; this.accumulator = 0; this.paused = false;
+    this.events.once('shutdown', () => { this.domPanel?.root.remove(); this.liveControls?.remove(); this.coach?.remove(); });
     this.W = this.scale.gameSize.width; this.H = this.scale.gameSize.height;
     this.ended = false;
     // повторный бой (после отступления) — сцена та же, прошлый бой и его объекты уже уничтожены
@@ -94,26 +98,44 @@ export class EpisodeCombatScene extends Phaser.Scene {
 
   // ------------------------------------------------------------------ выбор приёмов
   loadoutView() {
-    const learned = learnedMoves(services.state.data);
+    const learned = this.lesson?.moves || learnedMoves(services.state.data);
     const saved = episode.ep.loadout || defaultLoadout(services.state.data);
-    this.pick = new Set([...saved, ...defaultLoadout(services.state.data)].filter(id => learned.includes(id)).filter((id, i, a) => a.indexOf(id) === i).slice(0, LOADOUT_SIZE));
-    this.domPanel = panel(this.def.name, { onClose: () => this.leave('cancel') });
+    this.pick = new Set(this.lesson ? [] : [...saved, ...defaultLoadout(services.state.data)].filter(id => learned.includes(id)).filter((id, i, a) => a.indexOf(id) === i).slice(0, LOADOUT_SIZE));
+    this.domPanel = panel(this.lesson?.title || this.def.name, { onClose: () => this.leave('cancel') });
     const { content, footer } = this.domPanel;
-    content.append(node('p', this.enemyId === 'frost_wolf' ? 'Сложная встреча. Усильте магию или соедините силы, прежде чем бросать вызов метели.' : this.enemyId === 'forest_spirit' ? 'Броня и медленное восстановление. Астрал пробивает защиту; Порча II останавливает лечение.' : 'Короткая встреча: опыт даров, травы и монеты.'));
-    content.append(node('p', 'До 4 приёмов. Ведьма сама применит выбранные чары и восстановит ману.', 'ep-note'));
+    if (this.lesson) {
+      const tabs = node('nav', null, 'ep-row'); tabs.setAttribute('aria-label', 'Учебные бои');
+      PRACTICE_LESSONS.forEach((l, i) => { const t = button(`Бой ${i + 1}${this.courseHistory[i]?.some(h => h.result === 'victory') ? ' ✓' : ''}`, () => this.restartPractice(i)); t.setAttribute('aria-current', String(i === this.practiceIndex)); tabs.append(t); });
+      content.append(tabs, node('p', this.lesson.goal, 'ep-lesson-goal'), node('p', this.lesson.enemyHint));
+      content.append(node('p', 'Тренировка: силы выданы на этот бой. Наград и расходов нет.', 'ep-note'));
+    } else content.append(node('p', this.enemyId === 'frost_wolf' ? 'Сложная встреча. Усильте магию или соедините силы, прежде чем бросать вызов метели.' : this.enemyId === 'forest_spirit' ? 'Броня и медленное восстановление. Астрал пробивает защиту; Порча II останавливает лечение.' : 'Короткая встреча: опыт даров, травы и монеты.'));
+    content.append(node('p', '1. Выбери набор → 2. Нажми «В бой» → 3. Ведьма сражается сама.', 'ep-lesson-goal'));
+    const presets = this.lesson?.presets || suggestedLoadouts(learned, this.enemyId);
+    this.presetCards = presets.map((p, i) => {
+      const card = button('', () => { this.pick = new Set(p.moves); this.drawCards(); }, 'ep-preset');
+      card.append(node('strong', `${i === 0 ? '★ ' : ''}${p.name}`), node('small', p.why)); content.append(card);
+      return { ...p, card };
+    });
+    const manual = this.lesson ? node('details', null, 'ep-manual') : content;
+    if (this.lesson) { manual.append(node('summary', 'Собрать набор самому')); content.append(manual); }
+    else manual.append(node('h2', 'Или выбери приёмы сам'));
+    manual.append(node('p', 'Можно взять до 4. Повторное нажатие убирает приём.', 'ep-note'));
     const grid = node('div', null, 'ep-moves');
     this.cards = learned.map(id => {
       const m = MOVES[id], def = powerDefinition(m.powerId, { experimental: true });
       const card = button('', () => this.togglePick(id), 'ep-move');
       const img = node('img'); img.src = new URL(ASSET_FILES[m.icon], document.baseURI).href; img.alt = '';
-      const text = node('span'); text.append(node('strong', m.name), node('small', `${def.name} · ${def.school}`), node('small', `${m.cost} маны · ${m.cd} с`), node('small', m.desc, 'ep-desc'));
-      card.append(img, text); grid.append(card); return { id, card };
+      const text = node('span'), state = node('small', '', 'ep-pick-state');
+      text.append(node('strong', m.name), state, node('small', `${def.name} · ${def.school}`), node('small', `${m.cost} маны · ${m.cd} с`), node('small', m.desc, 'ep-desc'));
+      card.append(img, text); grid.append(card); return { id, card, state };
     });
-    content.append(grid);
-    const row = node('div', null, 'ep-row');
-    this.potionButton = button('', () => { episode.ep.usePotion = !episode.ep.usePotion; episode.save(); this.drawCards(); }); row.append(this.potionButton);
-    if (episode.ep.morven) row.append(node('p', 'Морвен усиливает проклятую цель', 'ep-note'));
-    content.append(row);
+    manual.append(grid);
+    if (!this.lesson) {
+      const row = node('div', null, 'ep-row');
+      this.potionButton = button('', () => { episode.ep.usePotion = !episode.ep.usePotion; episode.save(); this.drawCards(); }); row.append(this.potionButton);
+      if (episode.ep.morven) row.append(node('p', 'Морвен усиливает проклятую цель', 'ep-note'));
+      content.append(row);
+    } else this.potionButton = null;
     this.pickHint = node('div', '', 'ep-counter'); this.pickHint.setAttribute('role', 'status'); footer.append(this.pickHint);
     this.goBtn = button('В бой', () => this.startFight(), 'ep-primary'); footer.append(this.goBtn);
     this.drawCards();
@@ -125,30 +147,41 @@ export class EpisodeCombatScene extends Phaser.Scene {
     services.audio.play('ui_click'); this.drawCards();
   }
   drawCards() {
-    for (const { id, card } of this.cards) card.setAttribute('aria-pressed', String(this.pick.has(id)));
-    this.pickHint.textContent = `Выбрано ${this.pick.size} / ${LOADOUT_SIZE}`;
+    for (const { id, card, state } of this.cards) { card.setAttribute('aria-pressed', String(this.pick.has(id))); state.textContent = this.pick.has(id) ? '✓ В наборе' : '+ Взять'; }
+    for (const p of this.presetCards) p.card.setAttribute('aria-pressed', String(loadoutKey(this.pick) === loadoutKey(p.moves)));
+    this.pickHint.textContent = this.pick.size ? `${this.pick.size} / ${LOADOUT_SIZE}: ${[...this.pick].map(id => MOVES[id].name).join(' + ')}` : 'Сначала выбери готовый набор или отдельные приёмы выше.';
     this.goBtn.disabled = this.pick.size === 0;
-    this.potionButton.textContent = `Настой +40 HP: ${episode.ep.usePotion ? 'взять' : 'не брать'} (${services.state.item('potion_life_small')})`;
-    this.potionButton.disabled = !services.state.item('potion_life_small');
+    if (this.potionButton) {
+      this.potionButton.textContent = `Настой +40 HP: ${episode.ep.usePotion ? 'взять' : 'не брать'} (${services.state.item('potion_life_small')})`;
+      this.potionButton.disabled = !services.state.item('potion_life_small');
+    }
+  }
+  restartPractice(index = this.practiceIndex) {
+    this.scene.restart({ practiceIndex: index, courseHistory: this.courseHistory, onEnd: this.onEnd });
   }
 
   // ------------------------------------------------------------------ бой
   startFight() {
     if (!this.pick.size) return;
     const loadout = Object.keys(MOVES).filter(id => this.pick.has(id));
-    episode.ep.loadout = loadout;
-    episode.save();
+    if (!this.lesson) { episode.ep.loadout = loadout; episode.save(); }
     this.domPanel.root.remove();
-    this.options = battleOptions(services.state.data, episode.ep, this.enemyId);
+    this.options = this.lesson ? practiceOptions(this.practiceIndex) : battleOptions(services.state.data, episode.ep, this.enemyId);
     const testSeed = new URLSearchParams(window.location.search).get('seed');
     const seed = testSeed != null && Number.isInteger(Number(testSeed)) ? Number(testSeed) : (Date.now() & 0xffff) || 7;
-    this.battle = new EpisodeBattle({ ...this.options, loadout, seed });
+    this.battle = new EpisodeBattle({ ...this.options, loadout, seed: this.lesson ? 7 : seed });
     window.__episodeBattle = this.battle;
+    this.coach = node('aside', null, 'ep-coach'); this.coach.setAttribute('aria-label', 'Пояснение автобоя');
+    this.coachText = node('p', 'Набор выбран. Дальше ведьма сама применяет чары. Нижние значки — индикаторы, нажимать их не нужно.');
+    this.coach.append(this.coachText); document.getElementById('game').append(this.coach);
+    this.lastCoachAt = -10;
     this.buildFightUi(loadout);
     this.banner('Автобой', 0xcfefff);
     this.liveControls = node('div', null, 'ep-live');
-    if ((episode.ep.encounters?.[this.enemyId] || 0) > 0 || episode.ep.defeats > 0) this.liveControls.append(button('Скорость ×1', () => {}));
+    if (!this.lesson && ((episode.ep.encounters?.[this.enemyId] || 0) > 0 || episode.ep.defeats > 0)) this.liveControls.append(button('Скорость ×1', () => {}));
     const speedBtn = this.liveControls.firstChild; if (speedBtn) speedBtn.onclick = () => { this.speed = this.speed === 1 ? 2 : 1; speedBtn.textContent = `Скорость ×${this.speed}`; };
+    if (this.lesson) { const pauseBtn = button('Пауза', () => { this.paused = !this.paused; pauseBtn.textContent = this.paused ? 'Продолжить' : 'Пауза'; }); this.liveControls.append(pauseBtn); }
+    this.liveControls.append(button('Пояснения', () => { this.coach.hidden = !this.coach.hidden; }));
     this.liveControls.append(button('Отступить', () => this.finish('defeat')));
     document.getElementById('game').append(this.liveControls);
   }
@@ -156,7 +189,8 @@ export class EpisodeCombatScene extends Phaser.Scene {
   buildFightUi(loadout) {
     const { W, H } = this;
     // враг: имя, здоровье, намерение
-    const top = 150;
+    const canvasWidth = this.game.canvas.getBoundingClientRect().width || W;
+    const top = this.fightTop = Math.max(150, (this.coach.getBoundingClientRect().height + 34) * W / canvasWidth);
     this.add.text(W / 2, top, this.def.name, { fontFamily: FONT, fontSize: 30, fontStyle: 'bold', color: '#cfefff', shadow: SH }).setOrigin(0.5).setDepth(3000);
     this.ehp = this.add.graphics().setDepth(3000);
     this.intentPlate = drawPlate(this.add.graphics(), W - 80, 104, { accent: COLORS.danger, alpha: 0.85, radius: 16 }).setPosition(W / 2, top + 108).setDepth(3000);
@@ -168,7 +202,7 @@ export class EpisodeCombatScene extends Phaser.Scene {
     this.hText = this.add.text(40, H - 372, '', { fontFamily: FONT, fontSize: 22, color: '#fff', shadow: SH }).setDepth(3001);
     this.mText = this.add.text(40, H - 336, '', { fontFamily: FONT, fontSize: 22, color: '#fff', shadow: SH }).setDepth(3001);
     // приёмы
-    const bw = (W - 50) / 4, by = H - 150;
+    const bw = (W - 50) / 4, by = H - 195;
     this.buttons = loadout.map((id, i) => {
       const m = MOVES[id], x = 10 + i * (bw + 10) + bw / 2;
       const g = this.add.graphics().setDepth(3000);
@@ -190,11 +224,15 @@ export class EpisodeCombatScene extends Phaser.Scene {
 
   update(time, delta) {
     this.updateHero(delta);
-    if (!this.battle || this.ended) return;
+    if (!this.battle || this.ended || this.paused) return;
     this.accumulator += Math.min(delta, 250) / 1000 * this.speed;
     while (this.accumulator >= .05 && !this.battle.result) {
       this.accumulator -= .05;
-      const id = autoCombatPolicy(this.battle); if (id) this.battle.command(id);
+      const id = autoCombatPolicy(this.battle);
+      if (id) {
+        if (this.battle.time - this.lastCoachAt >= 2) { this.coachText.textContent = explainDecision(this.battle, id); this.lastCoachAt = this.battle.time; }
+        this.battle.command(id);
+      }
       this.battle.tick(.05);
       if (this.battle.time >= 150 && !this.battle.result) { this.battle.result = 'defeat'; this.battle.emit({ type: 'result', result: 'defeat' }); }
     }
@@ -264,7 +302,7 @@ export class EpisodeCombatScene extends Phaser.Scene {
   drawUi(time) {
     const b = this.battle, { W, H } = this, e = b.enemy, h = b.hero;
     // здоровье врага
-    const g = this.ehp.clear(), bx = 70, bw = W - 140, by = 180;
+    const g = this.ehp.clear(), bx = 70, bw = W - 140, by = this.fightTop + 30;
     g.fillStyle(0x1a0d0b, 0.9).fillRoundedRect(bx, by, bw, 22, 11);
     g.fillStyle(0xd9534a, 1).fillRoundedRect(bx, by, Math.max(12, bw * e.hp / e.maxHp), 22, 11);
     g.lineStyle(2, 0xffd0c8, 0.7).strokeRoundedRect(bx, by, bw, 22, 11);
@@ -273,7 +311,7 @@ export class EpisodeCombatScene extends Phaser.Scene {
     if (it.state === 'windup' || it.state === 'channel') {
       this.intentText.setText(it.state === 'channel' ? `${it.name}!` : `Готовит: ${it.name}`).setColor(it.state === 'channel' ? '#cfefff' : '#ffb3a6');
       this.intentHint.setText(COUNTERS[it.action] || '');
-      ib.fillStyle(0x2a1210, 1).fillRoundedRect(80, 296, W - 160, 12, 6).fillStyle(it.state === 'channel' ? 0x9fe6ff : 0xff6a5a, 1).fillRoundedRect(80, 296, (W - 160) * Math.min(1, it.progress), 12, 6);
+      ib.fillStyle(0x2a1210, 1).fillRoundedRect(80, this.fightTop + 146, W - 160, 12, 6).fillStyle(it.state === 'channel' ? 0x9fe6ff : 0xff6a5a, 1).fillRoundedRect(80, this.fightTop + 146, (W - 160) * Math.min(1, it.progress), 12, 6);
       this.prepGlow.setAlpha(0.25 + 0.35 * it.progress);
     } else {
       this.intentText.setText(it.state === 'held' ? 'Скован!' : it.state === 'staggered' ? 'Оглушён' : 'Кружит, выжидает').setColor(it.state === 'held' ? '#9fe9ff' : '#d8c7a5');
@@ -327,13 +365,30 @@ export class EpisodeCombatScene extends Phaser.Scene {
       this.tweens.add({ targets: this.enemy, alpha: 0, y: this.enemyPos.y - 40, duration: 900 });
       services.audio.play('victory');
     } else this.anim.playDeath();
-    this.liveControls?.remove();
+    this.liveControls?.remove(); this.coach?.remove();
+    if (this.lesson) { this.practiceResult(result); return; }
     this.domPanel = panel(result === 'victory' ? 'Победа' : 'Отступление');
     const lines = result === 'victory'
       ? [`${this.def.name}: ${Math.round(b.time)} с · сочетаний ${s.combos} · прерываний ${s.interrupts}`, `Награда: ${this.def.reward.coins} монет и ингредиенты. Опыт использованных сил +${this.def.xp}.`, ...(s.familiarHits ? [`Морвен помог ${s.familiarHits} раз.`] : [])]
       : battleDiagnosis(b);
     for (const line of lines) this.domPanel.content.append(node('p', line));
     this.domPanel.footer.append(button(result === 'victory' ? 'Дальше' : 'Вернуться и усилиться', () => this.leave(result), 'ep-primary'));
+  }
+
+  practiceResult(result) {
+    const b = this.battle;
+    const history = this.courseHistory[this.practiceIndex] ||= [];
+    history.push({ name: b.loadout.map(id => MOVES[id].name).join(' + '), result, time: Math.round(b.time), damage: b.stats.damageTaken });
+    this.domPanel = panel(result === 'victory' ? 'Учебный бой завершён' : 'Попробуем другой набор', { onClose: () => this.leave('cancel') });
+    const { content, footer } = this.domPanel;
+    content.append(node('h2', this.lesson.title), node('p', practiceFeedback(this.practiceIndex, b)));
+    const table = node('table', null, 'ep-results');
+    const head = node('tr'); for (const label of ['Набор', 'Итог', 'Время', 'Урон по тебе']) head.append(node('th', label)); table.append(head);
+    for (const h of history.slice(-6)) { const tr = node('tr'); for (const text of [h.name, h.result === 'victory' ? 'Победа' : 'Отступление', `${h.time} с`, String(h.damage)]) tr.append(node('td', text)); table.append(tr); }
+    content.append(table, node('p', 'Что выбираешь ты: чары до боя. Что делает ведьма: выбирает момент для атаки, сочетаний, защиты и восстановления маны.', 'ep-note'));
+    footer.append(button('Другой набор · тот же враг', () => this.restartPractice()));
+    if (this.practiceIndex < PRACTICE_LESSONS.length - 1) footer.append(button('Следующий учебный бой →', () => this.restartPractice(this.practiceIndex + 1), 'ep-primary'));
+    else footer.append(button('Вернуться в приключение', () => this.leave('cancel'), 'ep-primary'));
   }
 
   leave(result) {

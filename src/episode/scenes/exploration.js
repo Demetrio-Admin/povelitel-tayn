@@ -90,6 +90,10 @@ export class EpisodeExplorationScene extends CameraExplorationScene {
     const off = episode.on(() => { this.placeNpcs(); this.refreshAll(); });
     this.events.once('shutdown', off);
     this.bus.on(MSG.NPC_TALK_END, () => this.time.delayedCall(60, () => this.afterTalk()), this);
+    if (new URLSearchParams(location.search).has('practice') && !episode.practiceOpened) {
+      episode.practiceOpened = true;
+      this.time.delayedCall(350, () => this.startBattlePractice());
+    }
     this.introAt = episode.step === 'intro' ? this.time.now + 900 : null;   // вступление Мирры начинается само
     if (this.loc?.id === 'frostwood' && episode.step === 'sanctuary' && episode.note('frostwood_arrival')) {
       episode.save();
@@ -235,6 +239,17 @@ export class EpisodeExplorationScene extends CameraExplorationScene {
     services.audio.play('locked');
     this.heroSay('Из-за тающего льда — волк. Белый, как метель.', 2600);
     this.time.delayedCall(1700, () => this.startEpisodeFight());
+  }
+
+  startBattlePractice(index = 0) {
+    if (this.scene.isActive('EpisodeCombatScene') || this.inTransition) return;
+    this.player.stop(); this.introAt = null;
+    services.mode = 'combat';
+    this.scene.launch('EpisodeCombatScene', { practiceIndex: index, onEnd: () => {
+      services.mode = 'exploration'; this.scene.resume(); this.scene.wake('UIScene');
+      if (episode.step === 'intro') this.introAt = this.time.now + 900;
+    } });
+    this.scene.bringToTop('EpisodeCombatScene'); this.scene.pause(); this.scene.sleep('UIScene');
   }
 
   startEpisodeFight(enemyId = 'frost_wolf', source = null) {

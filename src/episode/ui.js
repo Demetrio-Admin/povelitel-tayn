@@ -46,6 +46,7 @@ export class EpisodeUIScene extends CameraUIScene {
       if (!p.root.isConnected) return;
       const d = services.state.data, ep = episode.ep;
       p.content.replaceChildren();
+      p.content.append(button('Учебные бои · 4 встречи', () => { p.close(); this.scene.get('ExplorationScene').startBattlePractice(); }, 'ep-primary'), node('p', 'Неясно, как выбирать чары? Попробуй готовые наборы и сравни их в бою.', 'ep-note'));
       p.content.append(node('p', `Монеты: ${d.inventory.coins || 0} · смола: ${d.inventory.tree_resin || 0} · пыль: ${d.inventory.rune_dust || 0}`, 'ep-note'));
       if (d.research) p.content.append(node('p', `Изучение: ${EPISODE_UPGRADES[d.research.upgradeId]?.title || 'дар'} — ${Math.ceil(services.state.researchRemainingMs() / 1000)} с`, 'ep-counter'));
       for (const id of ['telekinesis', 'fire', 'seal', 'curse', 'barrier']) {

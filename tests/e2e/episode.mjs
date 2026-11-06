@@ -38,6 +38,8 @@ try {
     return world ? { x: r.left + (x - c.worldView.x) * c.zoom * k, y: r.top + (y - c.worldView.y) * c.zoom * k } : { x: r.left + x * k, y: r.top + y * k };
   }, [x, y, world]);
   const touch = (type, p) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x: p.x, y: p.y, id: 1 }] });
+  // Keep the finger down across a rendered frame: CI software rendering can otherwise swallow a zero-duration canvas tap.
+  const tapAt = async p => { await touch('touchStart', p); await sleep(200); await touch('touchEnd', p); };
   const step = () => ev((e, u, ep) => ep.ep.step);
   const expectStep = async (s) => { const cur = await step(); log('step', cur); assert.equal(cur, s); };
   const obj = (id) => ev((e, u, ep, id) => { const o = e.objects.find(x => x.id === id); return o && { x: o.x, y: o.baseY }; }, id);
@@ -61,9 +63,9 @@ try {
     if (!focused) { await tapObj(id, -10); return; }
     const p = await page.evaluate(() => { const g = window.__game, u = g.scene.getScene('UIScene'), r = g.canvas.getBoundingClientRect(), k = r.width / g.scale.gameSize.width, gh = g.scale.gameSize.height;
       return { x: r.left + u.ctx.x * k, y: r.top + (u.ctx.y + gh - 1280) * k }; });
-    await page.touchscreen.tap(p.x, p.y); await sleep(600);
+    await tapAt(p); await sleep(600);
   }
-  async function tapObj(id, dy = -30) { const o = await obj(id); const p = await toCss(o.x, o.y + dy); await page.touchscreen.tap(p.x, p.y); await sleep(500); }
+  async function tapObj(id, dy = -30) { const o = await obj(id); const p = await toCss(o.x, o.y + dy); await tapAt(p); await sleep(500); }
   async function clearUi(max = 40) {
     for (let i = 0; i < max; i++) {
       const st = await ev((e, u) => ({ dlg: !!u.dlg, modal: !!u.modal }));
@@ -170,7 +172,7 @@ try {
   }
   assert.ok(lit && !magicOpened, `simple flame in one touch (lit ${lit}, magic ${magicOpened})`);
   await clearUi();
-  for (const id of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1']) { await go(id, 50); await actObj(id); await sleep(700); log('gathered', id, JSON.stringify(await ev(e => ({ inventory:window.__witch.state.data.inventory,focus:e.interaction.focus?.id })))); }
+  for (const id of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1']) { await go(id, 50); await actObj(id); await sleep(700); log('gathered', id, JSON.stringify(await ev((e,u) => ({ inventory:window.__witch.state.data.inventory,focus:e.interaction.focus?.id,modal:!!u.modal,modalOpen:window.__witch.modalOpen,mode:window.__witch.mode })))); }
   await go('ep_shard', 60); await actObj('ep_shard'); await sleep(1500); await clearUi();
   log('ritual inventory', JSON.stringify(await ev(e => ({ inventory: window.__witch.state.data.inventory, objects: e.objects.filter(o => /ep_(moon|resin|shard)/.test(o.id)).map(o => ({id:o.id,done:o.isDone(),available:o.isAvailable(),saved:o.saved})), focus:e.interaction.focus?.id }))));
   await shot('gather-check');

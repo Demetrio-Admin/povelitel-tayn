@@ -38,8 +38,8 @@ try {
     return world ? { x: r.left + (x - c.worldView.x) * c.zoom * k, y: r.top + (y - c.worldView.y) * c.zoom * k } : { x: r.left + x * k, y: r.top + y * k };
   }, [x, y, world]);
   const touch = (type, p) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x: p.x, y: p.y, id: 1 }] });
-  // Keep the finger down across a rendered frame: CI software rendering can otherwise swallow a zero-duration canvas tap.
-  const tapAt = async p => { await touch('touchStart', p); await sleep(200); await touch('touchEnd', p); };
+  // Use an actual short tap: a delayed finger release can exceed the world's tap/hold threshold in software-rendered CI.
+  const tapAt = p => page.touchscreen.tap(p.x, p.y);
   const step = () => ev((e, u, ep) => ep.ep.step);
   const expectStep = async (s) => { const cur = await step(); log('step', cur); assert.equal(cur, s); };
   const obj = (id) => ev((e, u, ep, id) => { const o = e.objects.find(x => x.id === id); return o && { x: o.x, y: o.baseY }; }, id);

@@ -4,6 +4,8 @@ on:
     paths:
       - 'episode/**'
       - 'src/episode/**'
+      - 'src/config/magic.powers.js'
+      - 'tests/unified-magic-test.mjs'
       - 'src/camera-test/**'
       - 'tests/episode-test.mjs'
       - 'tests/e2e/episode.mjs'

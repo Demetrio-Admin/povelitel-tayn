@@ -32,6 +32,7 @@ export function freshProgress() {
     episode: EPISODE_ID, step: 'intro',
     lesson: false, practice: 0, charred: 0, herbsThawed: 0, resinBurnt: 0,
     fireLevel: 0, loadout: null, fights: 0, defeats: 0,
+    encounters: {}, morven: false, usePotion: false, amulet: null,
     found: [],   // что игрок уже увидел/сделал (для реплик и проверок)
   };
 }

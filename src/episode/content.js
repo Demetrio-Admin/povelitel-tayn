@@ -51,6 +51,18 @@ export const EPISODE_CONTENT = [
   { id: 'ep_lantern_1', kind: 'ep_heat', purpose: 'lantern', x: 1150, y: 2665, texture: 'lantern_01', radius: 100, flameY: 70 },
   { id: 'ep_lantern_2', kind: 'ep_heat', purpose: 'lantern', x: 1365, y: 2335, texture: 'lantern_01', radius: 100, flameY: 70 },
 
+  // Optional growth loop around the same clearing. Existing sprites, no new map.
+  { id: 'ep_farm_wolf', kind: 'ep_encounter', enemyId: 'forest_wolf', x: 1740, y: 2800, texture: 'enemy_frost_wolf', scale: .7, radius: 160, fromStep: 'herbs' },
+  { id: 'ep_farm_spirit', kind: 'ep_encounter', enemyId: 'forest_spirit', x: 750, y: 2230, texture: 'enemy_guardian', scale: .75, radius: 160, fromStep: 'herbs' },
+  { id: 'ep_regrow_herb', kind: 'ep_renewable', powerId: 'telekinesis', x: 1130, y: 2550, texture: 'moon_herb_01', radius: 110, reward: { moon_herb: 1, forest_mushroom: 1 } },
+  { id: 'ep_regrow_resin', kind: 'ep_renewable', powerId: 'fire', x: 1030, y: 2670, texture: 'resin_log_01', radius: 110, reward: { tree_resin: 1, rune_dust: 1 } },
+  { id: 'ep_astral_cache', kind: 'ep_trial', powerId: 'seal', actionId: 'unseal', x: 1650, y: 2250, texture: 'chest_01', radius: 130,
+    label: 'Древняя печать', lesson: 'Астрал видит нити древней печати. Разомкнув их, можно открыть тайник; в бою — разрушить броню духа.', success: 'Печать открыта', reward: { coins: 30, amulet_focus: 1 } },
+  { id: 'ep_cursed_roots', kind: 'ep_trial', powerId: 'curse', actionId: 'unravel', x: 1640, y: 2520, texture: 'corrupted_roots_01', scale: .55, radius: 130,
+    label: 'Проклятые корни', lesson: 'Порча распутывает чужое проклятие. Морвен следит за вашими руками: та же нить ослабляет врага и усиливает огонь.', success: 'Проклятие распутано', reward: { tree_resin: 1 } },
+  { id: 'ep_magic_trap', kind: 'ep_trial', powerId: 'barrier', actionId: 'protect', x: 820, y: 2630, texture: 'ice_crystal_node_01', scale: .55, radius: 130,
+    label: 'Морозная ловушка', lesson: 'Барьер поглощает всплеск холода, позволяя безопасно забрать осколки. В бою он прикроет от опасного удара.', success: 'Ловушка обезврежена', reward: { frost_shard: 1, rune_dust: 1 } },
+
   // Морозный лес: святилище на вершине
   // нарисованный кристалл святилища: объект без собственной картинки (ghost), только свет и действие
   { id: 'ep_crystal', kind: 'ep_crystal', ...frostwoodPoint(818, 152), ghost: { w: 110, h: 150 }, radius: 210 },

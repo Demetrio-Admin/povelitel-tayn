@@ -1,10 +1,12 @@
 // Объекты мира эпизода. Действия выполняются на устройстве (изолированное сохранение), без серверных операций.
-// Каждое значимое применение силы — короткое управляемое действие (EpisodeMagicScene), затем анимация и видимое изменение мира.
+// Routine magic is one tap; rare story actions retain direct control.
 import { COLORS, DEPTH } from '../config/game.config.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import * as vitals from '../state/vitals.js';
 import { InteractiveObject } from '../objects/InteractiveObject.js';
+import { checkWorldAction, powerDefinition } from '../config/magic.powers.js';
+import { ENCOUNTERS } from './model/progression.js';
 import { episode } from './runtime.js';
 import { atLeast, notePractice, ritualMissing, RITUAL_NEEDS } from './model/story.js';
 import { SCENES } from './dialogues.js';
@@ -32,6 +34,13 @@ class EpisodeObject extends InteractiveObject {
     if (this.blocker?.body) this.blocker.body.enable = vis && !this.cfg.passable;
   }
   persist(patch) { Object.assign(this.saved, patch); services.state.setObject(this.id, patch); services.state.save(); }
+  magic(id, actionId, spend = true) {
+    const st = checkWorldAction(services.state.data, id, actionId, { mana: vitals.mana(services.state), experimental: true });
+    if (!st.ok) { this.scene.toast(st.reason); return false; }
+    if (spend && st.action.mana) vitals.spendMana(services.state, st.action.mana);
+    return true;
+  }
+  practice(id, amount = 4) { services.state.addSchoolXP(id, amount); services.state.save(); }
   say(text, ms) { this.scene.heroSay(text, ms); }
 }
 
@@ -63,8 +72,10 @@ export class EpHeat extends EpisodeObject {
     if (abilityId && abilityId !== 'fire') { this.scene.toast('Здесь нужен Огонь.', COLORS.fire); return; }
     if (!services.abilities.isUnlocked('fire')) { this.scene.toast('Здесь нужен Огонь.', COLORS.fire); return; }
     if (this.cfg.purpose === 'herbs' && this.cfg.second && !this.ep.charred) { this.scene.toast('Эта связка подождёт — начните с первой.'); return; }
-    // «Уверенный огонь»: простое пламя получается одним касанием
-    if (this.cfg.purpose === 'lantern' && episode.control() >= 2) {
+    if (!this.magic('fire', this.cfg.purpose === 'resin' ? 'resin' : this.cfg.purpose === 'lantern' ? 'lantern' : 'heat', false)) return;
+    // Routine uses are one tap; the first story herbs keep the heat lesson.
+    if (this.cfg.purpose === 'lantern' || this.cfg.purpose === 'resin') {
+      if (!this.magic('fire', this.cfg.purpose === 'resin' ? 'resin' : 'lantern')) return;
       this.scene.player.castAt(this.x, this.baseY, 'fire');
       this.scene.castFx(this.x, this.baseY - 60, COLORS.fire);
       this.succeed(true);
@@ -100,8 +111,8 @@ export class EpHeat extends EpisodeObject {
       this.scene.revealFire();
       return;
     }
-    let confident = false;
-    if (!quick) confident = notePractice(ep);
+    this.practice('fire');
+    const confident = notePractice(ep);
     if (purpose === 'herbs') {
       ep.herbsThawed += 1;
       const first = !ep.lesson;
@@ -118,10 +129,7 @@ export class EpHeat extends EpisodeObject {
       this.scene.toast(quick ? 'Фонарь вспыхнул от одного касания' : 'Фонарь горит', COLORS.fire);
       episode.save();
     }
-    if (confident) this.scene.time.delayedCall(900, () => this.scene.showScene({
-      title: 'Уверенный огонь', color: COLORS.fire,
-      text: 'Огонь стал послушным: жар растёт ровно и почти не перескакивает за край.\n\nПростое пламя — зажечь фонарь или свечу — теперь получается одним касанием.',
-    }));
+    if (confident) this.scene.toast('Уверенный огонь: жар стал послушнее. Простые действия — одним касанием.', COLORS.fire);
     this.scene.checkGather();
   }
 
@@ -153,8 +161,9 @@ export class EpHeat extends EpisodeObject {
       ep.lesson = true;
       episode.save();
       if (first) this.scene.showScene(SCENES.charred, () => this.scene.showScene(SCENES.lesson));
-      else this.scene.toast('И эта связка сгорела… Веда отвернулась.', COLORS.danger);
+      else { this.state0 = 'frozen'; this.persist({ state: 'frozen' }); this.scene.toast('Веда принесла свежую связку — можно попробовать снова.', COLORS.danger); }
     } else if (purpose === 'resin') {
+      this.state0 = 'frozen'; this.persist({ state: 'frozen' });
       this.ep.resinBurnt += 1;
       episode.save();
       this.scene.toast('Смола вспыхнула и сгорела. В другой колоде ещё есть.', COLORS.danger);
@@ -220,11 +229,13 @@ export class EpDrag extends EpisodeObject {
 
   async interact(abilityId) {
     if (abilityId && abilityId !== 'telekinesis') { this.scene.toast('Огнём сухое дерево только подожжёшь. Здесь нужен Телекинез.', COLORS.telekinesis); return; }
+    if (!this.magic('telekinesis', 'heavy', false)) return;
     const r = await this.scene.runMagic('drag', {
       obj: this, target: this.cfg.target, radius: this.cfg.targetRadius || 80, weight: 'heavy',
       title: 'Телекинез: сухое дерево', hint: 'Прижмите палец к стволу и ведите его в светлый круг у обочины. Тяжёлое — тянется медленно.',
     });
     if (r !== 'done') return;
+    this.practice('telekinesis', 10);
     this.persist({ state: 'moved' });
     this.placeAt(this.cfg.target.x, this.cfg.target.y);
     this.scene.cameras.main.shake(160, 0.008);
@@ -276,16 +287,18 @@ export class EpPull extends EpisodeObject {
   isAvailable() { return super.isAvailable() && atLeast(this.ep, 'gather'); }
   interact(abilityId) {
     if (abilityId && abilityId !== 'telekinesis') { this.scene.toast('Здесь нужен Телекинез.', COLORS.telekinesis); return; }
+    if (!this.magic('telekinesis', 'pull')) return;
+    this.practice('telekinesis');
     const p = this.scene.player;
     this.busy = true;
     p.castAt(this.x, this.baseY, 'telekinesis');
     this.scene.castFx(this.x, this.baseY - 20, COLORS.telekinesis);
+    episode.give({ [this.cfg.item]: 1 });
     this.persist({ state: 'collected' });
     this.scene.tweens.add({
       targets: this.sprite, x: p.x, y: p.y - 40, scale: this.sprite.scale * 0.5, duration: 600, ease: 'Sine.easeIn',
       onComplete: () => {
         services.audio.play('pickup');
-        episode.give({ [this.cfg.item]: 1 });
         episode.save();
         this.scene.toast(this.cfg.gotText || 'Получено', 0x9fe9ff);
         this.remove(false);
@@ -389,6 +402,7 @@ export class EpWall extends EpisodeObject {
   async interact(abilityId) {
     const step = this.ep.step;
     if (step === 'melt') {
+      if (!this.magic('fire', 'stream', false)) return;
       const r = await this.scene.runMagic('stream', { obj: this, spots: this.spots(), title: 'Направленное пламя', hint: 'Держите палец и ведите поток по светящимся трещинам. Лёд сдаётся с самых слабых мест.' });
       if (r === 'done') this.melt();
       return;
@@ -405,7 +419,10 @@ export class EpWall extends EpisodeObject {
     } else if (step !== 'wall' && !atLeast(this.ep, 'melt')) this.scene.toast('Лёд не тает. Нужен направленный огонь — ритуал Проводника.', 0x9fe9ff);
   }
 
+  refresh() { super.refresh(); if (this.melted) { this.sprite.setVisible(false); this.inner?.setVisible(false); if (this.blocker?.body) this.blocker.body.enable = false; } }
+
   melt() {
+    this.practice('fire', 12);
     this.meltNow(true);
     episode.advance('melt');
     this.scene.time.delayedCall(1400, () => this.scene.wolfAppears());
@@ -482,4 +499,53 @@ export function spendWorldMana(cost) {
   return vitals.mana(s);
 }
 
-export const EPISODE_CLASSES = { ep_heat: EpHeat, ep_drag: EpDrag, ep_gather: EpGather, ep_pull: EpPull, ep_wolf: EpWolf, ep_circle: EpCircle, ep_wall: EpWall, ep_travel: EpTravel, ep_crystal: EpCrystal };
+export class EpEncounter extends EpWolf {
+  get label() { return `${ENCOUNTERS[this.cfg.enemyId].name} · сразиться`; }
+  isAvailable() { return !this.removed && atLeast(this.ep, 'herbs') && Date.now() >= (this.saved.readyAt || 0) && !this.scene.scene.isActive('EpisodeCombatScene'); }
+  interact() { this.scene.startEpisodeFight(this.cfg.enemyId, this); }
+}
+
+export class EpRenewable extends EpisodeObject {
+  get markerIcon() { return this.cfg.powerId === 'fire' ? 'icon_fire' : 'icon_telekinesis'; }
+  get markerColor() { return this.cfg.powerId === 'fire' ? COLORS.fire : COLORS.telekinesis; }
+  get label() { return this.cfg.powerId === 'fire' ? 'Вытопить смолу' : 'Притянуть сбор'; }
+  isDone() { return false; }
+  isAvailable() { return !this.removed && atLeast(this.ep, 'gather') && Date.now() >= (this.saved.readyAt || 0); }
+  interact() {
+    const id = this.cfg.powerId, act = id === 'fire' ? 'resin' : 'pull';
+    if (!this.magic(id, act)) return;
+    this.persist({ readyAt: Date.now() + 12000 });
+    episode.give(this.cfg.reward); this.practice(id, 5); episode.save();
+    this.scene.player.castAt(this.x, this.baseY, id); this.scene.castFx(this.x, this.baseY - 30, this.markerColor);
+    this.scene.toast('Сбор получен. Здесь снова можно собирать через 12 секунд.', this.markerColor);
+  }
+}
+
+export class EpTrial extends EpisodeObject {
+  // Experimental powers never go through the production slot/ability renderer.
+  refresh() { super.refresh(); if (this.saved.done) { this.sprite.setTint(0xa5e6bf); if (this.blocker) { this.blocker.destroy(); this.blocker = null; } } }
+  get markerIcon() { return 'icon_seal'; }
+  get markerColor() { return 0xc5a3ee; }
+  get label() { return this.cfg.label; }
+  isDone() { return !!this.saved.done; }
+  isAvailable() { return super.isAvailable() && atLeast(this.ep, 'melt'); }
+  interact() {
+    const id = this.cfg.powerId, state = services.state;
+    if (!state.isUnlocked(id)) {
+      state.unlockAbility(id, 1); episode.save();
+      this.scene.showScene({ title: `${powerDefinition(id, { experimental: true }).name} пробуждается`, color: this.markerColor,
+        text: `${this.cfg.lesson}\n\nСила появилась в «Магии» и среди боевых приёмов. Нажмите на объект ещё раз, чтобы применить её.` });
+      return;
+    }
+    if (!this.magic(id, this.cfg.actionId)) return;
+    this.persist({ done: true }); this.practice(id, 10); episode.give(this.cfg.reward || {});
+    if (id === 'curse' || id === 'barrier') state.unlockAbility(id, 2);
+    if (id === 'curse') { episode.ep.morven = true; this.scene.toast('Морвен рядом: он откликнется на Порчу в бою.', this.markerColor); }
+    this.sprite.setTint(0xa5e6bf); if (this.blocker) { this.blocker.destroy(); this.blocker = null; }
+    this.scene.castFx(this.x, this.baseY - 30, this.markerColor); episode.save();
+    this.scene.showScene({ title: this.cfg.success, color: this.markerColor,
+      text: `${this.cfg.lesson}\n\n${id === 'curse' ? 'Порча II запрещает восстановление здоровья; Морвен усиливает проклятую цель.' : id === 'barrier' ? 'Барьер II отражает часть удара в бою.' : 'Астрал пробивает защиту лесного духа. В тайнике — амулет Сосредоточения.'}` });
+  }
+}
+
+export const EPISODE_CLASSES = { ep_encounter: EpEncounter, ep_renewable: EpRenewable, ep_trial: EpTrial, ep_heat: EpHeat, ep_drag: EpDrag, ep_gather: EpGather, ep_pull: EpPull, ep_wolf: EpWolf, ep_circle: EpCircle, ep_wall: EpWall, ep_travel: EpTravel, ep_crystal: EpCrystal };

@@ -13,6 +13,8 @@ import { InteractiveObject } from '../../objects/InteractiveObject.js';
 import * as vitals from '../../state/vitals.js';
 import { CameraExplorationScene } from '../../camera-test/scenes.js';
 import { EPISODE_CLASSES } from '../objects.js';
+import { encounterReward, ENCOUNTERS } from '../model/progression.js';
+import { MOVES } from '../model/combat.js';
 import { episode } from '../runtime.js';
 import { atLeast, ritualMissing, stepDef } from '../model/story.js';
 import { EPISODE_CONTENT, EPISODE_DECOR, NPC_PLACES, HERO_START } from '../content.js';
@@ -68,6 +70,7 @@ export class EpisodeExplorationScene extends CameraExplorationScene {
   create() {
     // Лёд, волк и арена лежат в пакетах главы II и Морозного леса — догружаем до постройки мира.
     this.ready = false;
+    this.morvenSprite = null; // Phaser destroys the old actor on restart/location travel.
     if (!EXTRA_PACKS.every(isPackLoaded)) {
       showLoadingScreen('Собираем магию…');
       ensurePacks(this, EXTRA_PACKS).then(() => { hideLoadingScreen(); this.scene.restart(); });
@@ -87,6 +90,10 @@ export class EpisodeExplorationScene extends CameraExplorationScene {
     const off = episode.on(() => { this.placeNpcs(); this.refreshAll(); });
     this.events.once('shutdown', off);
     this.bus.on(MSG.NPC_TALK_END, () => this.time.delayedCall(60, () => this.afterTalk()), this);
+    if (new URLSearchParams(location.search).has('practice') && !episode.practiceOpened) {
+      episode.practiceOpened = true;
+      this.time.delayedCall(350, () => this.startBattlePractice());
+    }
     this.introAt = episode.step === 'intro' ? this.time.now + 900 : null;   // вступление Мирры начинается само
     if (this.loc?.id === 'frostwood' && episode.step === 'sanctuary' && episode.note('frostwood_arrival')) {
       episode.save();
@@ -97,6 +104,11 @@ export class EpisodeExplorationScene extends CameraExplorationScene {
   update(time, delta) {
     if (!this.ready) return;
     super.update(time, delta);
+    if (episode.ep.morven && this.textures.exists('cat_01')) {
+      if (!this.morvenSprite) this.morvenSprite = this.add.image(this.player.x, this.player.y, 'cat_01').setOrigin(.5, 1);
+      this.morvenSprite.setPosition(this.player.x - 48, this.player.y + 8).setDepth(DEPTH.mainBase + this.player.y + 7);
+      this.morvenSprite.setScale(48 / this.morvenSprite.height);
+    }
     // вступление: как только мир и HUD готовы и ничего не открыто
     if (this.introAt && time >= this.introAt) {
       const ui = this.scene.get('UIScene');
@@ -229,18 +241,40 @@ export class EpisodeExplorationScene extends CameraExplorationScene {
     this.time.delayedCall(1700, () => this.startEpisodeFight());
   }
 
-  startEpisodeFight() {
+  startBattlePractice(index = 0) {
+    if (this.scene.isActive('EpisodeCombatScene') || this.inTransition) return;
+    this.player.stop(); this.introAt = null;
+    services.mode = 'combat';
+    this.scene.launch('EpisodeCombatScene', { practiceIndex: index, onEnd: () => {
+      services.mode = 'exploration'; this.scene.resume(); this.scene.wake('UIScene');
+      if (episode.step === 'intro') this.introAt = this.time.now + 900;
+    } });
+    this.scene.bringToTop('EpisodeCombatScene'); this.scene.pause(); this.scene.sleep('UIScene');
+  }
+
+  startEpisodeFight(enemyId = 'frost_wolf', source = null) {
     if (this.scene.isActive('EpisodeCombatScene') || this.inTransition) return;
     this.player.stop();
     services.mode = 'combat';
     const ui = this.scene.get('UIScene');
     this.scene.launch('EpisodeCombatScene', {
-      onEnd: (result) => {
+      enemyId,
+      onEnd: (result, battle) => {
         services.mode = 'exploration';
         this.scene.resume();
         if (ui) { this.scene.wake('UIScene'); }
         this.cameras.main.fadeIn(300);
+        if (result === 'cancel') return;
+        if (battle?.stats.heals) services.state.removeItem('potion_life_small', 1);
         if (result === 'victory') {
+          encounterReward(services.state.data, ENCOUNTERS[enemyId], Object.keys(battle.stats.commands).filter(id => MOVES[id]).map(id => MOVES[id].powerId));
+          episode.ep.encounters[enemyId] = (episode.ep.encounters[enemyId] || 0) + 1;
+          episode.save();
+          if (enemyId !== 'frost_wolf') {
+            source?.persist({ readyAt: Date.now() + 12000 });
+            this.toast(`${ENCOUNTERS[enemyId].name}: добыча и опыт получены. Улучшения — в «Магии».`, 0xffd08a);
+            this.bus.emit(MSG.HUD_REFRESH); return;
+          }
           episode.ep.fights += 1;
           episode.advance('fight');
           vitals.setHp(services.state, vitals.maxHp(services.state));
@@ -256,8 +290,8 @@ export class EpisodeExplorationScene extends CameraExplorationScene {
           episode.save();
           vitals.setHp(services.state, Math.round(vitals.maxHp(services.state) * 0.6));
           services.state.save();
-          this.showScene({ title: 'Волк сильнее, чем казалось', color: COLORS.danger,
-            text: 'Вы отступили. Волк караулит у стены и ждёт.\n\nСмотрите, что он готовит: прыжок сбивают Толчком или Удержанием, ледяное дыхание растапливает Пламя. Набор приёмов можно поменять.' });
+          this.showScene({ title: 'Нужно больше силы', color: COLORS.danger,
+            text: 'Вы отступили. Противник ждёт в лесу.\n\nОткройте «Магию»: можно улучшить дар, сварить настой или найти более лёгкого врага для добычи. Набор приёмов выбирается перед боем.' });
         }
         this.bus.emit(MSG.HUD_REFRESH);
       },
@@ -265,6 +299,17 @@ export class EpisodeExplorationScene extends CameraExplorationScene {
     this.scene.bringToTop('EpisodeCombatScene');
     this.scene.pause();
     if (ui) this.scene.sleep('UIScene');
+  }
+
+  walkToEpisodeObject(id) {
+    const obj = this.objects.find(o => o.id === id && !o.removed);
+    if (!obj) { this.toast('Этот объект остался в Лесу Мирры.'); return; }
+    const route = this.planPath(obj.x, obj.y);
+    if (!route || (!route.complete && Math.hypot(route.end.x - obj.x, route.end.y - obj.y) > obj.radius)) { this.toast('Путь пока перекрыт. Следуйте цели эпизода.'); return; }
+    this.player.walkTo(obj.x, obj.y, () => {
+      if (obj.isAvailable() && this.canAct()) { this.interaction.setFocus(obj); this.interaction.act(); }
+      else this.toast('Объект ещё восстанавливается или ждёт следующего шага истории.');
+    }, obj.radius * .8, { path: route.points });
   }
 
   enterFrostwood() {

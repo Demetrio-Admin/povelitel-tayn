@@ -1,6 +1,7 @@
 // Короткие управляемые действия магии в мире: жар (удержание), телекинез (ведение пальцем), направленное пламя, ритуал.
 // Сцена-оверлей поверх HUD: забирает касания, рисует шкалу и подсказку; мир меняется в ExplorationScene.
 import Phaser from 'phaser';
+import { POWER_METADATA } from '../../config/magic.powers.js';
 import { COLORS, DEPTH } from '../../config/game.config.js';
 import { UI } from '../../config/ui.config.js';
 import { MSG } from '../../state/EventBus.js';
@@ -13,7 +14,9 @@ import { spendWorldMana } from '../objects.js';
 
 const FONT = UI.font;
 const SH = { offsetX: 0, offsetY: 2, color: '#000', blur: 4, fill: true };
-const START_COST = { heat: 4, ritual: 0, drag: 0, stream: 0 };
+const WORLD_FIRE = POWER_METADATA.fire.worldActions;
+const WORLD_HEAVY = POWER_METADATA.telekinesis.worldActions.heavy;
+const START_COST = { heat: WORLD_FIRE.heat.mana, ritual: 0, drag: WORLD_HEAVY.mana, stream: WORLD_FIRE.stream.mana };
 
 export class EpisodeMagicScene extends Phaser.Scene {
   constructor() { super('EpisodeMagicScene'); }
@@ -58,8 +61,8 @@ export class EpisodeMagicScene extends Phaser.Scene {
     const level = this.opts.level ?? episode.control();
     if (this.kind === 'heat') this.model = createHeat(this.opts.task, level);
     if (this.kind === 'ritual') this.model = createRitual(this.opts.bands, 1.4, Math.max(1, level));
-    if (this.kind === 'drag') this.model = createDrag({ x: o.x, y: o.baseY, target: this.opts.target, radius: this.opts.radius });
-    if (this.kind === 'stream') this.model = createStream(this.opts.spots, { need: this.opts.need || 1.2 });
+    if (this.kind === 'drag') this.model = createDrag({ x: o.x, y: o.baseY, target: this.opts.target, radius: this.opts.radius, drain: WORLD_HEAVY.drain });
+    if (this.kind === 'stream') this.model = createStream(this.opts.spots, { need: this.opts.need || 1.2, drain: WORLD_FIRE.stream.drain });
     this.flames = this.world.add.particles(o.x, o.baseY - 30, 'fx_dot', {
       x: { min: -26, max: 26 }, speedY: { min: -140, max: -50 }, speedX: { min: -16, max: 16 }, scale: { start: 0.9, end: 0 }, alpha: { start: 0.9, end: 0 },
       lifespan: 620, frequency: 40, quantity: 1, tint: [COLORS.fire, 0xffc46b, 0xff3b2f], blendMode: 'ADD', emitting: false,

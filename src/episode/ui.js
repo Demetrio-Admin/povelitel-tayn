@@ -5,6 +5,10 @@ import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { drawPlate } from '../ui/widgets.js';
 import { CameraUIScene } from '../camera-test/ui.js';
+import { powerDefinition, powerLevel } from '../config/magic.powers.js';
+import { EPISODE_UPGRADES, beginEpisodeResearch, brewEpisode, sellEpisodePotion } from './model/progression.js';
+import { ITEMS } from '../config/balance.progression.js';
+import { panel, node, button } from './panels.js';
 import { episode, PREFIX } from './runtime.js';
 import { FIRE_CONTROL, PRACTICE_FOR_CONFIDENT } from './model/heat.js';
 import { RITUAL_NEEDS, stepIndex, STEPS } from './model/story.js';
@@ -27,21 +31,59 @@ export class EpisodeUIScene extends CameraUIScene {
   openWallet() { this.toast('В эпизоде кошелька нет.'); }
 
   /** «Все дары» в эпизоде — что умеет герой сейчас (таймеры изучения и слоты основной игры здесь не участвуют). */
+  toggleTray() { if (this.magicPanel) this.magicPanel.close(); else if (!this.modal && this.mode === 'exploration') this.openGifts(); }
+
   openGifts() {
-    const ep = episode.ep, fire = services.abilities.isUnlocked('fire');
-    const ctl = FIRE_CONTROL[episode.control()];
-    const lines = [
-      'Телекинез',
-      '• Подхватить тяжёлое и вести пальцем (мана уходит, пока предмет в воздухе)',
-      '• Притянуть лёгкое',
-      '',
-      fire ? `Огонь ${ep.fireLevel >= 2 ? 'II' : 'I'}` : 'Огонь — ещё спит',
-      fire ? '• Жар удержанием: держите в тёплой полосе' : '• Его будят в старом круге у Лунного алтаря',
-      ep.fireLevel >= 2 ? '• Направленное пламя: ведите поток пальцем' : '',
-      fire ? `• Владение: ${ctl.name}${ep.lesson && episode.control() < 2 ? ` — практика ${Math.min(ep.practice, PRACTICE_FOR_CONFIDENT)}/${PRACTICE_FOR_CONFIDENT}` : ''}` : '',
-      episode.control() >= 2 ? '• Простое пламя — одним касанием' : '',
-    ].filter((l, i, a) => l !== '' || (a[i - 1] && a[i - 1] !== ''));
-    this.openModal({ title: 'Дары', color: COLORS.fire, text: lines.join('\n') });
+    if (this.magicPanel) return;
+    services.modalOpen = true; this.bus.emit(MSG.MODAL_OPEN);
+    this.scene.get('ExplorationScene')?.player.stop();
+    const p = panel('Магия и подготовка', { onClose: () => {
+      this.magicPanel = null; services.modalOpen = false; this.bus.emit(MSG.MODAL_CLOSED); this.refreshHud();
+    } });
+    this.magicPanel = p;
+    this.events.once('shutdown', () => { p.root.remove(); this.magicPanel = null; services.modalOpen = false; });
+    const render = () => {
+      if (!p.root.isConnected) return;
+      const d = services.state.data, ep = episode.ep;
+      p.content.replaceChildren();
+      p.content.append(button('Учебные бои · 4 встречи', () => { p.close(); this.scene.get('ExplorationScene').startBattlePractice(); }, 'ep-primary'), node('p', 'Неясно, как выбирать чары? Попробуй готовые наборы и сравни их в бою.', 'ep-note'));
+      p.content.append(node('p', `Монеты: ${d.inventory.coins || 0} · смола: ${d.inventory.tree_resin || 0} · пыль: ${d.inventory.rune_dust || 0}`, 'ep-note'));
+      if (d.research) p.content.append(node('p', `Изучение: ${EPISODE_UPGRADES[d.research.upgradeId]?.title || 'дар'} — ${Math.ceil(services.state.researchRemainingMs() / 1000)} с`, 'ep-counter'));
+      for (const id of ['telekinesis', 'fire', 'seal', 'curse', 'barrier']) {
+        const def = powerDefinition(id, { experimental: true }), level = powerLevel(d, id);
+        const box = node('div', null, 'ep-box');
+        box.append(node('h2', `${def.name}${level ? ` · ${level}` : ' · спит'}`), node('p', `${def.school} · опыт ${d.schoolXP[id] || 0}`, 'ep-note'));
+        const tips = {
+          telekinesis: `Мир: притянуть сбор, отвести дерево. Бой: Бросок и Толчок${level >= 2 ? ', Удержание → Огонь' : '; на II — Удержание'}.`,
+          fire: level ? `Мир: смола и фонари одним касанием${level >= 2 ? ', направленный поток' : ''}. Бой: Пламя и Поджог. ${level >= 3 ? 'Пламя оставляет горение.' : 'На III Пламя получает горение.'}` : 'Разбудите огонь в круге по сюжету.',
+          seal: 'Древняя печать у алтаря открывает Астрал: тайник в мире, пробитие брони в бою.',
+          curse: 'Проклятые корни у Веды открывают Порчу: ослабление и Огонь ×1,5; на II — запрет лечения.',
+          barrier: 'Морозная ловушка у круга открывает Барьер: безопасный сбор в мире, щит и отражение в бою.',
+        };
+        box.append(node('p', tips[id]));
+        for (const [key, u] of Object.entries(EPISODE_UPGRADES).filter(([, u]) => u.ability === id && u.toLevel > level)) {
+          box.append(node('p', `${u.title}: ${u.cost.coins} монет, ${u.cost.schoolXP} опыта, ${Object.entries(u.cost.items).map(([k,n]) => `${ITEMS[k]?.name || k} ×${n}`).join(', ')}. ${u.explanation}`, 'ep-note'));
+          box.append(button(`Изучить ${u.title}`, () => {
+            const r = beginEpisodeResearch(services.state, ep, key); episode.save(); render();
+            if (!r.ok) this.toast(r.reason);
+          }));
+        }
+        p.content.append(box);
+      }
+      p.content.append(node('h2', 'Алхимия и снаряжение'), node('p', `Трава ${d.inventory.moon_herb || 0} · грибы ${d.inventory.forest_mushroom || 0} · настои ${d.inventory.potion_life_small || 0}. Настой варится из 1 травы и 1 гриба.`, 'ep-note'));
+      const row = node('div', null, 'ep-row');
+      row.append(button('Сварить настой', () => { const ok = brewEpisode(d); episode.save(); render(); if (!ok) this.toast('Нужны лунная трава и лесной гриб.'); }), button('Продать настой · 25 монет', () => { const ok = sellEpisodePotion(d); episode.save(); render(); if (!ok) this.toast('Сначала сварите настой.'); }));
+      p.content.append(row);
+      if (d.inventory.amulet_focus) p.content.append(button(`Амулет Сосредоточения: ${ep.amulet ? 'надет' : 'надеть'}`, () => { ep.amulet = ep.amulet ? null : 'amulet_focus'; episode.save(); render(); }));
+      p.content.append(node('p', ep.morven ? 'Морвен рядом: усиливает проклятую цель.' : 'Морвен присоединится, когда вы распутаете проклятие корней.', 'ep-note'));
+      p.content.append(node('h2', 'Найти в лесу'));
+      const links = [['ep_regrow_herb','Травы и грибы'],['ep_regrow_resin','Смола и пыль'],['ep_farm_wolf','Лёгкий волк'],['ep_farm_spirit','Лесной дух'],['ep_astral_cache','Древняя печать'],['ep_cursed_roots','Проклятые корни'],['ep_magic_trap','Морозная ловушка'],['ep_wolf','Волк метели']];
+      const paths = node('div', null, 'ep-row');
+      for (const [id, label] of links) paths.append(button(label, () => { p.close(); this.scene.get('ExplorationScene').walkToEpisodeObject(id); }));
+      p.content.append(paths, node('p', 'Тестовый эпизод. Прогресс сохраняется отдельно от основной игры.', 'ep-note'));
+    };
+    render();
+    const timer = this.time.addEvent({ delay: 1000, loop: true, callback: () => { if (!p.root.isConnected) timer.remove(); else if (services.state.data.research || this.panelResearch) { this.panelResearch = services.state.data.research; render(); } } });
   }
 
   buildGoal() {
@@ -97,7 +139,7 @@ export class EpisodeUIScene extends CameraUIScene {
       '',
       'Сила',
       `• Телекинез: подхватить, отвести, притянуть`,
-      services.abilities.isUnlocked('fire') ? `• Огонь ${ep.fireLevel >= 2 ? 'II — направленное пламя' : 'I — жар удержанием'}` : '• Огонь ещё спит',
+      services.abilities.isUnlocked('fire') ? `• Огонь ${ep.fireLevel} — ${ep.fireLevel >= 3 ? 'пламя и горение' : ep.fireLevel >= 2 ? 'направленное пламя' : 'первый жар'}` : '• Огонь ещё спит',
       services.abilities.isUnlocked('fire') ? `• Владение огнём: ${ctl.name}${ep.lesson && episode.control() < 2 ? ` (практика ${Math.min(ep.practice, PRACTICE_FOR_CONFIDENT)}/${PRACTICE_FOR_CONFIDENT})` : ''}` : '',
       '',
       stepIndex(ep.step) >= stepIndex('gather') && stepIndex(ep.step) <= stepIndex('ritual')
@@ -122,11 +164,11 @@ export class EpisodeUIScene extends CameraUIScene {
     const ep = episode.ep;
     const mistake = ep.charred ? 'Вы обожгли сбор Веды — и научились отпускать жар раньше.' : 'Вы отогрели травы с первого раза — Мирра всё равно показала, как слушать жар.';
     const growth = episode.control() >= 2 ? 'Огонь стал послушным: простое пламя — одним касанием.' : `Практика огня: ${Math.min(ep.practice, PRACTICE_FOR_CONFIDENT)}/${PRACTICE_FOR_CONFIDENT}.`;
-    const fight = `Бой: ${ep.defeats ? `с ${ep.defeats + 1}-й попытки` : 'с первой попытки'}, приёмы — ${(ep.loadout || []).map(id => ({ throw: 'Бросок', push: 'Толчок', hold: 'Удержание', flame: 'Пламя', ignite: 'Поджог', ward: 'Тёплый щит' })[id]).join(', ')}.`;
+    const fight = `Бой: ${ep.defeats ? `с ${ep.defeats + 1}-й попытки` : 'с первой попытки'}, приёмы — ${(ep.loadout || []).map(id => ({ astral: 'Астрал', hex: 'Порча', barrier: 'Барьер', throw: 'Бросок', push: 'Толчок', hold: 'Удержание', flame: 'Пламя', ignite: 'Поджог', ward: 'Тёплый щит' })[id]).join(', ')}.`;
     this.openModal({
       title: 'Эпизод «Первое пламя» пройден', color: 0xffc46b,
       text: `${mistake}\n${growth}\n${fight}\n\nЖивое пламя знает, куда унесли сердце зимы, — на старое кладбище. Чтобы дойти туда, придётся научиться соединять силы.\n\n`
-        + 'Что важно понять после игры:\n• захотелось ли самому пробовать силу;\n• понятно ли, зачем были находки;\n• почувствовался ли рост;\n• приходилось ли менять команды в бою;\n• оправдал ли Морозный лес ожидание.',
+        + 'Что важно понять после игры:\n• захотелось ли самому пробовать силу;\n• понятно ли, зачем были находки;\n• почувствовался ли рост;\n• было ли видно, как выбранные силы работают вместе;\n• оправдал ли Морозный лес ожидание.',
       buttons: [{ label: 'Остаться в Морозном лесу', primary: true }, { label: 'Пройти заново', onClick: () => restartEpisode() }],
     });
   }

@@ -11,8 +11,8 @@ export { PREFIX, isolatedStorage } from './model/storage.js';
 export const episode = {
   ep: null,
   listeners: new Set(),
-  load() { this.ep = readProgress(services.state); return this.ep; },
-  save() { writeProgress(services.state, this.ep); this.changed(); },
+  load() { this.ep = readProgress(services.state); this.ep.fireLevel = services.state.abilityLevel('fire'); return this.ep; },
+  save() { this.ep.fireLevel = services.state.abilityLevel('fire'); writeProgress(services.state, this.ep); this.changed(); },
   changed() { for (const f of this.listeners) f(this.ep); services.bus.emit(MSG.QUEST_CHANGED); services.bus.emit(MSG.HUD_REFRESH); },
   on(f) { this.listeners.add(f); return () => this.listeners.delete(f); },
   get step() { return this.ep?.step; },

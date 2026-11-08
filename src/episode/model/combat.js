@@ -118,14 +118,14 @@ export class EpisodeBattle {
     const held = e.held > 0;
     if (id === 'throw') this.hitEnemy(Math.round(m.dmg * (held ? COMBOS.heldThrow.mult : 1)), id, held ? 'heldThrow' : null);
     if (id === 'flame') {
-      const melt = this.level('fire') >= 2 && this.interruptIf(m.interrupts);
+      const melt = this.level('fire') >= 2 && this.interruptIf(m.interrupts, id);
       const combo = held ? 'heldFlame' : e.cursed > 0 ? 'curseFire' : null;
       this.hitEnemy(Math.round(m.dmg * (combo ? COMBOS[combo].mult : 1)), id, combo);
       if (this.hasFeature('fire', 'burn')) { e.burn = 4; this.emit({ type: 'status', text: 'Горение' }); }
       if (melt) this.emit({ type: 'melt' });
     }
     if (id === 'push') {
-      this.interruptIf(m.interrupts);
+      this.interruptIf(m.interrupts, id);
       if (this.patch > 0) {
         this.patch = 0;
         this.hitEnemy(COMBOS.firePush.dmg, id, 'firePush');
@@ -134,26 +134,26 @@ export class EpisodeBattle {
       } else this.hitEnemy(m.dmg, id, null);
     }
     if (id === 'hold') {
-      this.interruptIf('all');
+      this.interruptIf('all', id);
       e.held = m.holdSec;
       if (e.state !== 'staggered') { e.state = 'held'; e.action = null; }
       this.emit({ type: 'held', sec: m.holdSec });
     }
     if (id === 'ignite') { this.patch = m.patchSec; this.emit({ type: 'patch', on: true }); }
-    if (id === 'ward' || id === 'barrier') { this.hero.ward = m.wardSec; this.hero.wardCut = m.wardCut; this.hero.reflect = id === 'barrier' && this.hasFeature('barrier', 'reflect'); this.hero.chill = 0; this.emit({ type: 'ward', sec: m.wardSec }); }
+    if (id === 'ward' || id === 'barrier') { this.hero.ward = m.wardSec; this.hero.wardMove = id; this.hero.wardCut = m.wardCut; this.hero.reflect = id === 'barrier' && this.hasFeature('barrier', 'reflect'); this.hero.chill = 0; this.emit({ type: 'ward', sec: m.wardSec }); }
     if (id === 'hex') { e.cursed = m.curseSec; this.emit({ type: 'status', text: 'Порча: удары слабее' }); }
-    if (id === 'astral') { if (e.armor) this.emit({ type: 'status', text: 'Пробита защита' }); e.armor = 0; this.hitEnemy(m.dmg, id, null); }
+    if (id === 'astral') { if (e.armor) this.emit({ type: 'status', text: 'Пробита защита', armorBroken: e.armor }); e.armor = 0; this.hitEnemy(m.dmg, id, null); }
   }
 
   /** Прервать намерение врага, если приём умеет. true — прервали. */
-  interruptIf(list) {
+  interruptIf(list, move) {
     const e = this.enemy;
     if (!(e.state === 'windup' || e.state === 'channel') || !e.action) return false;
     if (list !== 'all' && !list?.includes(e.action)) return false;
     const was = e.action;
     e.action = null;
     this.stats.interrupts += 1;
-    this.emit({ type: 'interrupt', action: was });
+    this.emit({ type: 'interrupt', action: was, move });
     this.stagger(this.def.stagger);
     return true;
   }
@@ -167,10 +167,15 @@ export class EpisodeBattle {
   hitEnemy(dmg, source, combo) {
     if (this.result) return;
     const e = this.enemy;
-    dmg = Math.max(1, Math.round(dmg * (1 - e.armor) * (this.amulet === 'amulet_focus' ? 1.12 : 1)));
+    const amuletMultiplier = this.amulet === 'amulet_focus' ? 1.12 : 1;
+    const unarmored = Math.max(1, Math.round(dmg * amuletMultiplier));
+    const baseDamage = combo ? this.move(source).dmg : null;
+    dmg = Math.max(1, Math.round(dmg * (1 - e.armor) * amuletMultiplier));
+    const withoutCombo = baseDamage == null ? dmg
+      : Math.max(1, Math.round(baseDamage * (1 - e.armor) * amuletMultiplier));
     e.hp = Math.max(0, e.hp - dmg);
     if (combo) { this.stats.combos += 1; this.stats.comboTypes[combo] = (this.stats.comboTypes[combo] || 0) + 1; this.emit({ type: 'combo', combo, text: COMBOS[combo].text }); }
-    this.emit({ type: 'hit', target: 'enemy', dmg, source, combo });
+    this.emit({ type: 'hit', target: 'enemy', dmg, source, combo, withoutCombo, absorbed: unarmored - dmg });
     if (e.hp <= 0) { this.result = 'victory'; this.emit({ type: 'result', result: 'victory' }); }
   }
 
@@ -178,13 +183,15 @@ export class EpisodeBattle {
     if (this.result) return;
     const h = this.hero;
     const warded = h.ward > 0;
-    const real = Math.max(1, Math.round(dmg * (this.enemy.cursed > 0 ? .7 : 1) * (this.amulet === 'amulet_forest' ? .8 : 1) * (warded ? 1 - h.wardCut : 1)));
+    const incoming = dmg * (this.enemy.cursed > 0 ? .7 : 1) * (this.amulet === 'amulet_forest' ? .8 : 1);
+    const real = Math.max(1, Math.round(incoming * (warded ? 1 - h.wardCut : 1)));
+    const prevented = Math.max(1, Math.round(incoming)) - real;
     h.hp = Math.max(0, h.hp - real);
     this.stats.damageTaken += real;
     this.stats.damageBySource[source] = (this.stats.damageBySource[source] || 0) + real;
     if (chill && !warded) h.chill = this.cfg.chillLinger;
     if (h.focus) { h.focus = null; this.emit({ type: 'focus', on: false, broken: true }); }
-    this.emit({ type: 'hit', target: 'hero', dmg: real, source, warded });
+    this.emit({ type: 'hit', target: 'hero', dmg: real, source, warded, prevented, wardMove: h.wardMove });
     if (h.hp <= 0) { this.result = 'defeat'; this.emit({ type: 'result', result: 'defeat' }); }
     else if (warded && h.reflect) this.hitEnemy(Math.round(dmg * .35), 'reflect', null);
   }

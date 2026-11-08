@@ -83,3 +83,39 @@ export function practiceFeedback(index, battle) {
   if (index === 2) return s.commands.astral && battle.enemy.armor === 0 ? 'Астрал снял броню. Поэтому остальным атакам больше не мешала защита духа. Так свойства врага подсказывают выбор сил.' : 'Броня оставалась на враге и поглощала урон. Попробуй Астрал + Пламя и сравни результат.';
   return s.commands.barrier ? 'Ведьма сама выбирала момент для Барьера. Сравни полученный урон с набором без защиты: дополнительная атака не всегда полезнее щита.' : 'Ты взял атакующие приёмы без Барьера. Попробуй заменить один из них защитой и сравни полученный урон.';
 }
+
+/** Explain an observed result using the exact damage emitted by the battle. */
+export function practiceImpact(event, enemy) {
+  if (event.type === 'interrupt') {
+    const action = enemy.actions[event.action]?.name;
+    const spell = MOVES[event.move]?.name;
+    return [spell ? `${spell}: атака сорвана` : 'Атака сорвана', action ? `Враг не успел применить «${action}».` : 'Враг пропустил удар.'];
+  }
+  if (event.armorBroken) return ['Астрал снял броню', `Враг больше не поглощает ${Math.round(event.armorBroken * 100)}% урона.`];
+  if (event.type !== 'hit') return null;
+  if (event.prevented > 0) {
+    return [`${MOVES[event.wardMove]?.name || 'Щит'} поглотил ${event.prevented} урона`, `По ведьме: ${event.dmg} вместо ${event.dmg + event.prevented}.`];
+  }
+  if (event.dmg > event.withoutCombo) {
+    const combo = { heldFlame: 'Удержание + Пламя', heldThrow: 'Удержание + Бросок', curseFire: 'Порча + Пламя', firePush: 'Поджог + Толчок' };
+    return [combo[event.combo], `По врагу: ${event.dmg} вместо ${event.withoutCombo} урона.`];
+  }
+  if (event.absorbed > 0) return [`Броня поглотила ${event.absorbed} урона`, `По врагу прошло только ${event.dmg}.`];
+  if (event.target === 'hero' && event.source === 'leap') {
+    return ['Враг попал тяжёлым ударом', `Ведьма получила ${event.dmg} урона.`];
+  }
+  return null;
+}
+
+export function practiceComparison(current, previous, lesson) {
+  if (!current.completed || !previous) return '';
+  const outcome = current.result === previous.result ? ''
+    : current.result === 'victory' ? 'Победа вместо поражения.' : 'Прошлый набор победил. Этот проиграл.';
+  const compareTime = lesson === 'armor' && current.result === 'victory' && previous.result === 'victory';
+  const difference = compareTime ? current.time - previous.time : current.damage - previous.damage;
+  let detail;
+  if (!difference) detail = compareTime ? 'Время боя одинаковое.' : 'Полученный урон одинаковый.';
+  else if (compareTime) detail = `Бой завершился на ${Math.abs(difference)} с ${difference < 0 ? 'быстрее' : 'дольше'}.`;
+  else detail = `Получено на ${Math.abs(difference)} урона ${difference < 0 ? 'меньше' : 'больше'}.`;
+  return [outcome, detail].filter(Boolean).join(' ');
+}

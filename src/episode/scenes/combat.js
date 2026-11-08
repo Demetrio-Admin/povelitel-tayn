@@ -15,7 +15,7 @@ import { battleOptions, defaultLoadout, ENCOUNTERS } from '../model/progression.
 import { learnedMoves, powerDefinition } from '../../config/magic.powers.js';
 import { panel, node, button } from '../panels.js';
 import { episode } from '../runtime.js';
-import { PRACTICE_LESSONS, practiceOptions, suggestedLoadouts, loadoutKey, explainDecision, practiceFeedback } from '../model/battlePractice.js';
+import { PRACTICE_LESSONS, practiceOptions, suggestedLoadouts, loadoutKey, explainDecision, practiceFeedback, practiceImpact, practiceComparison } from '../model/battlePractice.js';
 
 const FONT = UI.font;
 const SH = { offsetX: 0, offsetY: 2, color: '#000', blur: 4, fill: true };
@@ -173,7 +173,13 @@ export class EpisodeCombatScene extends Phaser.Scene {
     window.__episodeBattle = this.battle;
     this.coach = node('aside', null, 'ep-coach'); this.coach.setAttribute('aria-label', 'Пояснение автобоя');
     this.coachText = node('p', 'Набор выбран. Дальше ведьма сама применяет чары. Нижние значки — индикаторы, нажимать их не нужно.');
-    this.coach.append(this.coachText); document.getElementById('game').append(this.coach);
+    this.lastImpact = null;
+    if (this.lesson) {
+      this.coachTitle = node('strong', 'Твои чары в бою');
+      this.coach.append(this.coachTitle);
+    }
+    this.coach.append(this.coachText);
+    document.getElementById('game').append(this.coach);
     this.lastCoachAt = -10;
     this.buildFightUi(loadout);
     this.banner('Автобой', 0xcfefff);
@@ -230,7 +236,10 @@ export class EpisodeCombatScene extends Phaser.Scene {
       this.accumulator -= .05;
       const id = autoCombatPolicy(this.battle);
       if (id) {
-        if (this.battle.time - this.lastCoachAt >= 2) { this.coachText.textContent = explainDecision(this.battle, id); this.lastCoachAt = this.battle.time; }
+        if (!this.lastImpact && this.battle.time - this.lastCoachAt >= 2) {
+          this.coachText.textContent = explainDecision(this.battle, id);
+          this.lastCoachAt = this.battle.time;
+        }
         this.battle.command(id);
       }
       this.battle.tick(.05);
@@ -252,6 +261,13 @@ export class EpisodeCombatScene extends Phaser.Scene {
   processEvents() {
     const b = this.battle;
     for (const e of b.drainEvents()) {
+      const impact = this.lesson && practiceImpact(e, this.def);
+      if (impact) {
+        this.lastImpact = impact;
+        this.coachTitle.textContent = impact[0];
+        this.coachText.textContent = impact[1];
+        this.coach.classList.add('ep-coach-impact');
+      }
       if (e.type === 'cast') { this.anim.playCast(MOVES[e.move].school); this.castFx(e.move); }
       if (e.type === 'queued') this.floatText(this.heroPos.x, this.heroPos.y - 210, `Следом: ${MOVES[e.move].name}`, 0xffe9b0);
       if (e.type === 'hit' && e.target === 'enemy') {
@@ -378,10 +394,27 @@ export class EpisodeCombatScene extends Phaser.Scene {
   practiceResult(result) {
     const b = this.battle;
     const history = this.courseHistory[this.practiceIndex] ||= [];
-    history.push({ name: b.loadout.map(id => MOVES[id].name).join(' + '), result, time: Math.round(b.time), damage: b.stats.damageTaken });
+    const key = loadoutKey(b.loadout);
+    const attempt = {
+      key, name: b.loadout.map(id => MOVES[id].name).join(' + '),
+      completed: Boolean(b.result), result, time: Math.round(b.time), damage: b.stats.damageTaken,
+    };
+    const previous = history.findLast(h => h.completed && h.key !== key);
+    const comparison = practiceComparison(attempt, previous, this.lesson.id);
+    history.push(attempt);
     this.domPanel = panel(result === 'victory' ? 'Учебный бой завершён' : 'Попробуем другой набор', { onClose: () => this.leave('cancel') });
     const { content, footer } = this.domPanel;
     content.append(node('h2', this.lesson.title), node('p', practiceFeedback(this.practiceIndex, b)));
+    if (this.lastImpact) {
+      const impact = node('div', null, 'ep-box');
+      impact.append(node('strong', this.lastImpact[0]), node('p', this.lastImpact[1]));
+      content.append(impact);
+    }
+    if (comparison) {
+      const difference = node('div', null, 'ep-box');
+      difference.append(node('strong', `В сравнении с набором «${previous.name}»`), node('p', comparison));
+      content.append(difference);
+    }
     const table = node('table', null, 'ep-results');
     const head = node('tr'); for (const label of ['Набор', 'Итог', 'Время', 'Урон по тебе']) head.append(node('th', label)); table.append(head);
     for (const h of history.slice(-6)) { const tr = node('tr'); for (const text of [h.name, h.result === 'victory' ? 'Победа' : 'Отступление', `${h.time} с`, String(h.damage)]) tr.append(node('td', text)); table.append(tr); }

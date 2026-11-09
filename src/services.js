@@ -149,12 +149,15 @@ export async function bootSession() {
   if (!session) return;
   const loading = showLoading('Загрузка персонажа…');
   try {
-    let r = await session.restore();
+    const status = await session.restore();
     loading.close();
-    while (r === 'offline') {
-      r = await new Promise((resolve) => {
+    if (status === 'offline') {
+      await new Promise((resolve) => {
         const off = session.onChange((reason) => {
-          if (reason === 'status' && session.status !== 'offline') { off(); resolve(session.status === 'ready' ? 'ready' : 'signed_out'); }
+          if (reason === 'status' && (session.status === 'ready' || session.status === 'signed_out')) {
+            off();
+            resolve();
+          }
         });
       });
     }

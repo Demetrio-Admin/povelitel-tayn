@@ -235,8 +235,12 @@ console.log('\nОбрыв связи');
   srv.offline = true;
   const boot = device(srv, phoneStorage);
   ok(await boot.session.restore() === 'offline', 'запуск без сети — «Нет соединения», игра не стартует на устаревших данных');
+  const bootStatuses = [];
+  boot.session.onChange(reason => { if (reason === 'status') bootStatuses.push(boot.session.status); });
+  ok(await boot.session.retryNow() === false && bootStatuses.length === 0, 'неудачный повтор не выводит игру из режима ожидания');
   srv.offline = false;
-  ok(await boot.session.retryNow() && boot.state.item('coins') === coins && boot.state.data.player.x === 77, 'связь появилась — персонаж загружен с сервера');
+  await boot.fire();
+  ok(bootStatuses.join() === 'ready' && boot.state.item('coins') === coins && boot.state.data.player.x === 77, 'автоповтор загрузил персонажа после восстановления связи');
 }
 
 console.log('\nДоверие клиенту');

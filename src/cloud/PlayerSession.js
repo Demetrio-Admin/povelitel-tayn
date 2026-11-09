@@ -43,6 +43,7 @@ export class PlayerSession {
     this.inflight = null;      // { id, patch, sent } — отправка, ответ на которую ещё не пришёл (или потерялся)
     this.timer = null; this.timerMinor = false;
     this.retryTimer = null; this.retryN = 0;
+    this.restoreRetry = null;
     this.busy = null;          // текущий flush()
     this.listeners = new Set();
     this.lastError = null;
@@ -170,12 +171,12 @@ export class PlayerSession {
     const saved = this._loadTokens();
     if (!saved?.refresh_token) { this._setStatus('signed_out'); return 'signed_out'; }
     this.auth = saved;
-    this._setStatus('loading');
+    if (this.status !== 'offline') this._setStatus('loading');
     try {
       await this._loadPlayer();
       return 'ready';
     } catch (e) {
-      if (isNetworkError(e)) { this._setStatus('offline'); this.lastError = e; return 'offline'; }
+      if (isNetworkError(e)) { this.lastError = e; this._goOffline(); return 'offline'; }
       if (this.auth) this._lostSession();
       return 'signed_out';
     }
@@ -488,7 +489,11 @@ export class PlayerSession {
   async retryNow() {
     if (this.retryTimer) { this.clearTimer(this.retryTimer); this.retryTimer = null; }
     if (this.status !== 'offline') return this.status === 'ready';
-    if (!this.base) { return (await this.restore()) === 'ready'; } // связь пропала ещё при запуске
+    if (!this.base) {
+      if (this.restoreRetry) return this.restoreRetry;
+      this.restoreRetry = this.restore().then(status => status === 'ready');
+      try { return await this.restoreRetry; } finally { this.restoreRetry = null; }
+    }
     const ok = await this.flush();
     if (ok && this.status === 'offline') this._backOnline();
     return this.status === 'ready';

@@ -6,7 +6,6 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
-import { smartPolicy } from '../../src/episode/model/combat.js';
 
 process.env.VITE_SUPABASE_URL = ''; process.env.VITE_SUPABASE_ANON_KEY = '';
 const vite = process.env.UI_BASE_URL ? null : await createServer({ server: { host: '127.0.0.1', port: 5194, strictPort: true } });
@@ -29,7 +28,7 @@ try {
   // производственное сохранение в том же браузере не должно меняться
   await page.goto(new URL('favicon.ico', base).href);
   await page.evaluate(() => localStorage.setItem('witch_rpg_proto_save_v1', 'production-save'));
-  await page.goto(new URL('episode/', base).href);
+  await page.goto(new URL(process.env.EPISODE_FROM === 'gather' ? 'episode/?step=gather&seed=7' : 'episode/?seed=7', base).href);
 
   const ready = () => page.waitForFunction(() => window.__game?.scene.isActive('UIScene') && window.__game.scene.getScene('ExplorationScene')?.ready && !window.__game.scene.getScene('ExplorationScene').inTransition, null, { timeout: 180000 });
   const sleep = (ms) => page.waitForTimeout(ms);
@@ -39,6 +38,8 @@ try {
     return world ? { x: r.left + (x - c.worldView.x) * c.zoom * k, y: r.top + (y - c.worldView.y) * c.zoom * k } : { x: r.left + x * k, y: r.top + y * k };
   }, [x, y, world]);
   const touch = (type, p) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x: p.x, y: p.y, id: 1 }] });
+  // Use an actual short tap: a delayed finger release can exceed the world's tap/hold threshold in software-rendered CI.
+  const tapAt = p => page.touchscreen.tap(p.x, p.y);
   const step = () => ev((e, u, ep) => ep.ep.step);
   const expectStep = async (s) => { const cur = await step(); log('step', cur); assert.equal(cur, s); };
   const obj = (id) => ev((e, u, ep, id) => { const o = e.objects.find(x => x.id === id); return o && { x: o.x, y: o.baseY }; }, id);
@@ -62,9 +63,9 @@ try {
     if (!focused) { await tapObj(id, -10); return; }
     const p = await page.evaluate(() => { const g = window.__game, u = g.scene.getScene('UIScene'), r = g.canvas.getBoundingClientRect(), k = r.width / g.scale.gameSize.width, gh = g.scale.gameSize.height;
       return { x: r.left + u.ctx.x * k, y: r.top + (u.ctx.y + gh - 1280) * k }; });
-    await page.touchscreen.tap(p.x, p.y); await sleep(600);
+    await tapAt(p); await sleep(600);
   }
-  async function tapObj(id, dy = -30) { const o = await obj(id); const p = await toCss(o.x, o.y + dy); await page.touchscreen.tap(p.x, p.y); await sleep(500); }
+  async function tapObj(id, dy = -30) { const o = await obj(id); const p = await toCss(o.x, o.y + dy); await tapAt(p); await sleep(500); }
   async function clearUi(max = 40) {
     for (let i = 0; i < max; i++) {
       const st = await ev((e, u) => ({ dlg: !!u.dlg, modal: !!u.modal }));
@@ -120,26 +121,19 @@ try {
   async function fight() {
     await page.waitForFunction(() => window.__game.scene.getScene('EpisodeCombatScene')?.goBtn, null, { timeout: 30000 });
     await sleep(500); await shot('loadout');
-    const go = await page.evaluate(() => { const b = window.__game.scene.getScene('EpisodeCombatScene').goBtn.hit; return { x: b.x, y: b.y }; });
-    const gp = await toCss(go.x, go.y, false); await page.touchscreen.tap(gp.x, gp.y);
+    await page.getByRole('button', { name: 'В бой', exact: true }).click();
     await page.waitForFunction(() => !!window.__episodeBattle, null, { timeout: 10000 });
-    let next = 0, shotDone = false;
-    for (let i = 0; i < 4000; i++) {
-      const st = await page.evaluate(`(() => { const b = window.__episodeBattle; if (!b || b.result) return { done: true };
-        const it = b.intent(); const late = it.state === 'windup' && it.progress * b.def.actions[it.action].windup < 0.4;
-        const id = late ? null : (${smartPolicy.toString()})(b); const s = window.__game.scene.getScene('EpisodeCombatScene');
-        const btn = id === 'focus' ? s.focusPos : s.buttons.find(x => x.id === id); return { id, x: btn?.x, y: btn?.y, t: b.time }; })()`);
-      if (st.done) break;
-      if (st.id && st.x != null && Date.now() > next) { const p = await toCss(st.x, st.y, false); await page.touchscreen.tap(p.x, p.y); next = Date.now() + 450; }
-      if (!shotDone && st.t > 6) { shotDone = true; await shot('fight'); }
-      await sleep(80);
-    }
+    // No taps or policy injection: the real scene must run its own automatic policy.
+    await page.waitForFunction(() => window.__episodeBattle?.time > 6 || window.__episodeBattle?.result, null, { timeout: 120000 });
+    await shot('fight');
+    await page.waitForFunction(() => !!window.__episodeBattle?.result, null, { timeout: 240000 });
     const r = await page.evaluate(() => { const s = window.__game.scene.getScene('EpisodeCombatScene'); return { result: s.battle.result, stats: s.battle.stats, time: Math.round(s.battle.time) }; });
     await shot('fight-end');
     return r;
   }
 
   await ready();
+  if (process.env.EPISODE_FROM !== 'gather') {
   await page.waitForFunction(() => !!window.__game.scene.getScene('UIScene').dlg, null, { timeout: 60000 });
   await shot('intro'); await clearUi(); await expectStep('goran');
   // HUD эпизода: строка цели под верхней панелью
@@ -166,7 +160,9 @@ try {
   await expectStep('gather');
   assert.ok(await ev(() => window.__witch.abilities.isUnlocked('fire')), 'fire after reload');
 
-  for (const id of ['ep_resin_2', 'ep_resin_1']) { await go(id); await actObj(id); await heat(); await clearUi(); }
+  } else { await clearUi(); await expectStep('gather'); }
+
+  for (const id of ['ep_resin_2', 'ep_resin_1']) { await go(id); await actObj(id); await sleep(700); assert.equal(await magicOn(), false, 'routine resin uses one tap'); await clearUi(); }
   assert.equal(await ev((e, u, ep) => ep.control()), 2, 'three good uses → confident fire');
   await go('ep_lantern_1', 60); await actObj('ep_lantern_1');
   let lit = false, magicOpened = false;
@@ -176,18 +172,29 @@ try {
   }
   assert.ok(lit && !magicOpened, `simple flame in one touch (lit ${lit}, magic ${magicOpened})`);
   await clearUi();
-  for (const id of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1']) { await go(id, 50); await actObj(id); await sleep(700); }
+  for (const id of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1']) { await clearUi(); await go(id, 50); await actObj(id); await sleep(700); await clearUi(); log('gathered', id, JSON.stringify(await ev((e,u) => ({ inventory:window.__witch.state.data.inventory,focus:e.interaction.focus?.id,modal:!!u.modal,modalOpen:window.__witch.modalOpen,mode:window.__witch.mode })))); }
   await go('ep_shard', 60); await actObj('ep_shard'); await sleep(1500); await clearUi();
+  log('ritual inventory', JSON.stringify(await ev(e => ({ inventory: window.__witch.state.data.inventory, objects: e.objects.filter(o => /ep_(moon|resin|shard)/.test(o.id)).map(o => ({id:o.id,done:o.isDone(),available:o.isAvailable(),saved:o.saved})), focus:e.interaction.focus?.id }))));
+  await shot('gather-check');
   await expectStep('ritual');
 
   await go('ep_circle', 90); await tapObj('ep_circle', -20); await sleep(1500); await shot('ritual'); await heat(); await clearUi(); await expectStep('melt');
   assert.deepEqual(await ev(() => window.__witch.state.data.inventory.tree_resin || 0), 0, 'the ritual used the ingredients');
+  // Optional preparation: the same powers used on world objects become battle moves.
+  for (const id of ['ep_astral_cache', 'ep_cursed_roots', 'ep_magic_trap']) {
+    await go(id, 90); await actObj(id); await clearUi(); await actObj(id); await clearUi();
+  }
+  assert.equal(await ev((e, u, ep) => ep.ep.morven), true);
+  // Pick a tested loadout via the actual DOM cards, after the wall sequence opens preparation.
   await go('ep_wall', 110); await tapObj('ep_wall', -60); await sleep(1500); await shot('stream'); await stream();
+  await page.getByRole('dialog', { name: 'Волк метели', exact: true }).waitFor({ state: 'visible', timeout: 30000 });
+  await page.locator('.ep-move[aria-pressed="true"]').evaluateAll(es => es.forEach(e => e.click()));
+  for (const name of ['Пламя', 'Порча', 'Барьер', 'Астрал']) await page.locator('.ep-move').filter({ has: page.locator('strong', { hasText: new RegExp(`^${name}$`) }) }).click();
   const result = await fight();
   log('fight', JSON.stringify(result));
   assert.equal(result.result, 'victory');
   assert.ok(result.stats.interrupts + result.stats.combos >= 1, 'the fight used interrupts or combos');
-  await page.evaluate(() => { const s = window.__game.scene.getScene('EpisodeCombatScene'); s.leave(s.battle.result); });
+  await page.getByRole('button', { name: 'Дальше', exact: true }).click();
   await page.waitForFunction(() => !!window.__game.scene.getScene('UIScene').modal, null, { timeout: 60000 });
   await sleep(600); await clearUi(); await expectStep('enter');
 

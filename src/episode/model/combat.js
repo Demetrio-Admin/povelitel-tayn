@@ -1,45 +1,15 @@
-// Бой эпизода «Первое пламя»: реальное время, команды игрока, без автоатаки (без Phaser — проверяется в Node).
-//
-// Правила:
-//  • перед боем игрок выбирает до 4 приёмов (LOADOUT_SIZE); «Собраться» доступно всегда — выход при нехватке маны;
-//  • герой исполняет приём сам; пока он колдует, можно отдать ещё одну команду — она встанет в очередь;
-//  • враг показывает намерение заранее (подготовка), его можно прервать, переждать за щитом или рискнуть;
-//  • сочетания: Удержание → Пламя/Бросок по скованному сильнее; Поджог → Толчок в горящий хворост.
+// Renderer-independent episode battle. Production combat rules are not changed.
+import { EPISODE_MOVES, powerLevel, featuresAt, powerDefinition } from '../../config/magic.powers.js';
 
 export const LOADOUT_SIZE = 4;
-
-export const MOVES = {
-  throw: {
-    name: 'Бросок', school: 'telekinesis', icon: 'icon_telekinesis', cost: 6, cd: 1.2, cast: 0.35, dmg: 9,
-    desc: 'Метнуть камень. Дёшево, но слабо.',
-  },
-  push: {
-    name: 'Толчок', school: 'telekinesis', icon: 'icon_telekinesis', cost: 10, cd: 3, cast: 0.25, dmg: 4, interrupts: ['bite', 'leap', 'howl'],
-    desc: 'Отбросить волка: сбивает укус, прыжок и вой. В горящий хворост — больно.',
-  },
-  hold: {
-    name: 'Удержание', school: 'telekinesis', icon: 'icon_telekinesis', cost: 14, cd: 7, cast: 0.3, holdSec: 2.6, interrupts: 'all',
-    desc: 'Сковать волка на 2,6 с: прерывает любое действие. Огонь по скованному жжёт сильнее.',
-  },
-  flame: {
-    name: 'Пламя', school: 'fire', icon: 'icon_fire', cost: 12, cd: 1.6, cast: 0.45, dmg: 15, interrupts: ['breath'],
-    desc: 'Направленный поток. Растапливает ледяное дыхание.',
-  },
-  ignite: {
-    name: 'Поджог', school: 'fire', icon: 'icon_fire', cost: 8, cd: 5, cast: 0.3, patchSec: 7,
-    desc: 'Поджечь сухой хворост у волка. Толчок в огонь — сильный удар.',
-  },
-  ward: {
-    name: 'Тёплый щит', school: 'fire', icon: 'icon_fire', cost: 10, cd: 8, cast: 0.15, wardSec: 3, wardCut: 0.7,
-    desc: 'На 3 с ослабляет удары на 70% и не пускает холод.',
-  },
-};
+export const MOVES = EPISODE_MOVES;
 
 export const FOCUS = { name: 'Собраться', channel: 1.4, gain: 26, cd: 2.5, desc: 'Восстановить ману. Удар врага сбивает.' };
 
 export const COMBOS = {
   heldFlame: { mult: 1.75, text: 'Держать и жечь!' },
   heldThrow: { mult: 1.5, text: 'Точно в цель!' },
+  curseFire: { mult: 1.5, text: 'Порча → Огонь ×1,5' },
   firePush: { dmg: 20, stagger: 1.6, text: 'В огонь!' },
 };
 
@@ -68,21 +38,30 @@ export function validLoadout(ids) {
 }
 
 export class EpisodeBattle {
-  constructor({ loadout, seed = 7, hero = HERO, enemy = WOLF } = {}) {
+  constructor({ loadout, seed = 7, hero = HERO, enemy = WOLF, powers = null, familiar = false, potion = false, amulet = null } = {}) {
     if (!validLoadout(loadout)) throw new Error('Bad loadout');
     this.loadout = [...loadout];
+    this.powers = powers; this.familiar = familiar; this.familiarCd = 0; this.potion = potion; this.amulet = amulet;
+    if (powers && loadout.some(id => this.level(MOVES[id].powerId) < MOVES[id].level)) throw new Error('Unlearned move');
     this.random = rng(seed);
     this.hero = { hp: hero.hp, maxHp: hero.hp, mana: hero.mana, maxMana: hero.mana, regen: hero.regen,
-      cast: null, queue: null, cds: {}, ward: 0, chill: 0, focus: null };
+      cast: null, queue: null, cds: {}, ward: 0, wardCut: 0, reflect: false, chill: 0, focus: null };
     this.cfg = hero;
     this.def = enemy;
-    this.enemy = { hp: enemy.hp, maxHp: enemy.hp, state: 'idle', timer: 0, action: null, held: 0, buff: 1, last: null, channelT: 0, tickT: 0 };
+    this.enemy = { hp: enemy.hp, maxHp: enemy.hp, state: 'idle', timer: 0, action: null, held: 0, buff: 1, last: null, channelT: 0, tickT: 0, cursed: 0, burn: 0, burnTick: 0, armor: enemy.armor || 0 };
     this.enemy.timer = this.idleTime(0.6);
     this.patch = 0;          // секунд горящего хвороста
     this.time = 0;
     this.result = null;      // 'victory' | 'defeat'
     this.events = [];
-    this.stats = { commands: {}, combos: 0, interrupts: 0, damageTaken: 0 };
+    this.stats = { commands: {}, combos: 0, comboTypes: {}, interrupts: 0, damageTaken: 0, damageBySource: {}, manaWait: 0, familiarHits: 0, heals: 0 };
+  }
+
+  level(id) { return this.powers ? powerLevel(this.powers, id) : 2; }
+  hasFeature(id, feature) { return featuresAt(powerDefinition(id, { experimental: true }), this.level(id)).includes(feature); }
+  move(id) {
+    const m = MOVES[id], level = this.level(m.powerId);
+    return { ...m, dmg: m.dmg ? Math.round(m.dmg * (1 + (this.powers ? .22 * Math.max(0, level - 1) : 0))) : 0 };
   }
 
   emit(e) { this.events.push({ t: this.time, ...e }); }
@@ -100,6 +79,7 @@ export class EpisodeBattle {
     if (this.result) return 'end';
     if (id === 'focus') return this.cooldown('focus') > 0 ? 'cd' : this.hero.focus ? 'busy' : '';
     const m = MOVES[id];
+    if (m && this.level(m.powerId) < m.level) return 'nope';
     if (!m || !this.loadout.includes(id)) return 'nope';
     if (this.cooldown(id) > 0) return 'cd';
     if (this.hero.mana < m.cost) return 'mana';
@@ -134,16 +114,18 @@ export class EpisodeBattle {
   }
 
   resolve(id) {
-    const m = MOVES[id], e = this.enemy;
+    const m = this.move(id), e = this.enemy;
     const held = e.held > 0;
     if (id === 'throw') this.hitEnemy(Math.round(m.dmg * (held ? COMBOS.heldThrow.mult : 1)), id, held ? 'heldThrow' : null);
     if (id === 'flame') {
-      const melt = this.interruptIf(m.interrupts);
-      this.hitEnemy(Math.round(m.dmg * (held ? COMBOS.heldFlame.mult : 1)), id, held ? 'heldFlame' : null);
+      const melt = this.level('fire') >= 2 && this.interruptIf(m.interrupts, id);
+      const combo = held ? 'heldFlame' : e.cursed > 0 ? 'curseFire' : null;
+      this.hitEnemy(Math.round(m.dmg * (combo ? COMBOS[combo].mult : 1)), id, combo);
+      if (this.hasFeature('fire', 'burn')) { e.burn = 4; this.emit({ type: 'status', text: 'Горение' }); }
       if (melt) this.emit({ type: 'melt' });
     }
     if (id === 'push') {
-      this.interruptIf(m.interrupts);
+      this.interruptIf(m.interrupts, id);
       if (this.patch > 0) {
         this.patch = 0;
         this.hitEnemy(COMBOS.firePush.dmg, id, 'firePush');
@@ -152,24 +134,26 @@ export class EpisodeBattle {
       } else this.hitEnemy(m.dmg, id, null);
     }
     if (id === 'hold') {
-      this.interruptIf('all');
+      this.interruptIf('all', id);
       e.held = m.holdSec;
       if (e.state !== 'staggered') { e.state = 'held'; e.action = null; }
       this.emit({ type: 'held', sec: m.holdSec });
     }
     if (id === 'ignite') { this.patch = m.patchSec; this.emit({ type: 'patch', on: true }); }
-    if (id === 'ward') { this.hero.ward = m.wardSec; this.hero.chill = 0; this.emit({ type: 'ward', sec: m.wardSec }); }
+    if (id === 'ward' || id === 'barrier') { this.hero.ward = m.wardSec; this.hero.wardMove = id; this.hero.wardCut = m.wardCut; this.hero.reflect = id === 'barrier' && this.hasFeature('barrier', 'reflect'); this.hero.chill = 0; this.emit({ type: 'ward', sec: m.wardSec }); }
+    if (id === 'hex') { e.cursed = m.curseSec; this.emit({ type: 'status', text: 'Порча: удары слабее' }); }
+    if (id === 'astral') { if (e.armor) this.emit({ type: 'status', text: 'Пробита защита', armorBroken: e.armor }); e.armor = 0; this.hitEnemy(m.dmg, id, null); }
   }
 
   /** Прервать намерение врага, если приём умеет. true — прервали. */
-  interruptIf(list) {
+  interruptIf(list, move) {
     const e = this.enemy;
     if (!(e.state === 'windup' || e.state === 'channel') || !e.action) return false;
     if (list !== 'all' && !list?.includes(e.action)) return false;
     const was = e.action;
     e.action = null;
     this.stats.interrupts += 1;
-    this.emit({ type: 'interrupt', action: was });
+    this.emit({ type: 'interrupt', action: was, move });
     this.stagger(this.def.stagger);
     return true;
   }
@@ -183,9 +167,15 @@ export class EpisodeBattle {
   hitEnemy(dmg, source, combo) {
     if (this.result) return;
     const e = this.enemy;
+    const amuletMultiplier = this.amulet === 'amulet_focus' ? 1.12 : 1;
+    const unarmored = Math.max(1, Math.round(dmg * amuletMultiplier));
+    const baseDamage = combo ? this.move(source).dmg : null;
+    dmg = Math.max(1, Math.round(dmg * (1 - e.armor) * amuletMultiplier));
+    const withoutCombo = baseDamage == null ? dmg
+      : Math.max(1, Math.round(baseDamage * (1 - e.armor) * amuletMultiplier));
     e.hp = Math.max(0, e.hp - dmg);
-    if (combo) { this.stats.combos += 1; this.emit({ type: 'combo', combo, text: COMBOS[combo].text }); }
-    this.emit({ type: 'hit', target: 'enemy', dmg, source, combo });
+    if (combo) { this.stats.combos += 1; this.stats.comboTypes[combo] = (this.stats.comboTypes[combo] || 0) + 1; this.emit({ type: 'combo', combo, text: COMBOS[combo].text }); }
+    this.emit({ type: 'hit', target: 'enemy', dmg, source, combo, withoutCombo, absorbed: unarmored - dmg });
     if (e.hp <= 0) { this.result = 'victory'; this.emit({ type: 'result', result: 'victory' }); }
   }
 
@@ -193,18 +183,23 @@ export class EpisodeBattle {
     if (this.result) return;
     const h = this.hero;
     const warded = h.ward > 0;
-    const real = Math.max(1, Math.round(dmg * (warded ? 1 - MOVES.ward.wardCut : 1)));
+    const incoming = dmg * (this.enemy.cursed > 0 ? .7 : 1) * (this.amulet === 'amulet_forest' ? .8 : 1);
+    const real = Math.max(1, Math.round(incoming * (warded ? 1 - h.wardCut : 1)));
+    const prevented = Math.max(1, Math.round(incoming)) - real;
     h.hp = Math.max(0, h.hp - real);
     this.stats.damageTaken += real;
+    this.stats.damageBySource[source] = (this.stats.damageBySource[source] || 0) + real;
     if (chill && !warded) h.chill = this.cfg.chillLinger;
     if (h.focus) { h.focus = null; this.emit({ type: 'focus', on: false, broken: true }); }
-    this.emit({ type: 'hit', target: 'hero', dmg: real, source, warded });
+    this.emit({ type: 'hit', target: 'hero', dmg: real, source, warded, prevented, wardMove: h.wardMove });
     if (h.hp <= 0) { this.result = 'defeat'; this.emit({ type: 'result', result: 'defeat' }); }
+    else if (warded && h.reflect) this.hitEnemy(Math.round(dmg * .35), 'reflect', null);
   }
 
   chooseAction() {
     const acts = this.def.actions, e = this.enemy;
-    const pool = Object.entries(acts).filter(([id]) => id !== e.last && !(id === 'howl' && e.buff > 1));
+    let pool = Object.entries(acts).filter(([id]) => id !== e.last && !(id === 'howl' && e.buff > 1));
+    if (!pool.length) pool = Object.entries(acts);
     const total = pool.reduce((s, [, a]) => s + a.weight, 0);
     let r = this.random() * total;
     for (const [id, a] of pool) { r -= a.weight; if (r <= 0) return id; }
@@ -275,7 +270,14 @@ export class EpisodeBattle {
     if (this.result) return;
     this.time += dt;
     this.patch = Math.max(0, this.patch - dt);
-    this.tickHero(dt);
+    this.enemy.cursed = Math.max(0, this.enemy.cursed - dt);
+    this.familiarCd = Math.max(0, this.familiarCd - dt);
+    if (this.enemy.burn > 0) { this.enemy.burn -= dt; this.enemy.burnTick -= dt; if (this.enemy.burnTick <= 0) { this.enemy.burnTick += 1; this.hitEnemy(4, 'burn', null); } }
+    if (!this.result && this.def.regen && !(this.enemy.cursed > 0 && this.hasFeature('curse', 'deny_regen'))) this.enemy.hp = Math.min(this.enemy.maxHp, this.enemy.hp + this.def.regen * dt);
+    if (!this.result && this.familiar && this.enemy.cursed > 0 && this.familiarCd <= 0) { this.familiarCd = 5; this.stats.familiarHits++; this.emit({ type: 'status', text: 'Морвен: метка тени' }); this.hitEnemy(9, 'morven', null); }
+    if (!this.result && this.potion && this.hero.hp > 0 && this.hero.hp < this.hero.maxHp * .4) { this.potion = false; this.hero.hp = Math.min(this.hero.maxHp, this.hero.hp + 40); this.stats.heals++; this.emit({ type: 'status', text: 'Настой: +40 здоровья' }); }
+    if (this.hero.mana < 6) this.stats.manaWait += dt;
+    if (!this.result) this.tickHero(dt);
     if (!this.result) this.tickEnemy(dt);
   }
 
@@ -312,8 +314,8 @@ export function smartPolicy(b) {
 /** Нажимать одну и ту же кнопку, пока хватает маны. */
 export const spamPolicy = (id) => (b) => (!b.hero.cast && !b.blocked(id) ? id : null);
 
-export function simulate(loadout, policy, { seed = 7, dt = 0.05, limit = 240 } = {}) {
-  const b = new EpisodeBattle({ loadout, seed });
+export function simulate(loadout, policy, { seed = 7, dt = 0.05, limit = 240, ...options } = {}) {
+  const b = new EpisodeBattle({ loadout, seed, ...options });
   while (!b.result && b.time < limit) {
     const id = policy(b);
     if (id) b.command(id);

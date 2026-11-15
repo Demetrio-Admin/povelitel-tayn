@@ -11,5 +11,6 @@
   "migrations/20261010_compact_city_admin_points.sql",
   "migrations/20261011_walkable_city_admin_points.sql",
   "migrations/20261021_rebalance_recovery.sql",
-  "migrations/20261022_chapter3_levels.sql"
+  "migrations/20261022_chapter3_levels.sql",
+  "migrations/202611150001_combat_receipts.sql"
 ]

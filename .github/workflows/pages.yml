@@ -11,7 +11,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  # A database-dependent preflight must not cancel the last compatible release.
+  group: ${{ vars.KOLDOVSTVO_COMBAT_RECEIPTS_READY == 'true' && 'pages' || 'pages-combat-receipts-preflight' }}
   cancel-in-progress: true
 
 jobs:
@@ -23,6 +24,7 @@ jobs:
 
   build:
     needs: checks
+    if: vars.KOLDOVSTVO_COMBAT_RECEIPTS_READY == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

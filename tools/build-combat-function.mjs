@@ -13,10 +13,10 @@ const out = resolve(root, 'supabase/functions/combat/index.ts');
 const HEADER = `// Edge Function «combat» (v0.14.0): сервер проверяет бой. ФАЙЛ СОБРАН АВТОМАТИЧЕСКИ: node tools/build-combat-function.mjs. Руками не править.
 //
 // Игра пишет действия игрока в бою, а эта функция проигрывает запись тем же движком боя с состояния героя, которое база запомнила
-// в начале боя (player_action combat_start), сама решает исход и атомарно записывает итог (SQL combat_apply). Присланному «я победил» верить нельзя.
+// в начале боя (player_action combat_start), сама решает исход и атомарно записывает итог через SQL combat_finish или прежний combat_apply.
 //
 // Развёртывание: Supabase → Edge Functions → Deploy a new function → имя «combat» → вставить этот файл → Deploy.
-// Переменные SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY Supabase подставляет сам. Перед включением выполните supabase/schema.sql (combat_load / combat_apply).
+// Переменные SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY Supabase подставляет сам. Перед выпуском примените миграцию combat_receipts по GAME_SYSTEMS/RELEASE_AND_RECOVERY.md.
 //
 `;
 

@@ -19,6 +19,8 @@ import { ChatService } from './cloud/ChatService.js';
 import { Presence } from './cloud/Presence.js';
 import { SupabaseApi } from './cloud/api.js';
 import { CLOUD } from './config/cloud.config.js';
+import { ITEMS } from './config/balance.progression.js';
+import { ABILITIES } from './config/balance.abilities.js';
 import { showLoading, showOffline, showNotice } from './ui/accountUI.js';
 import { createTelemetry } from './telemetry/hooks.js';
 
@@ -67,7 +69,7 @@ export function initServices({ storage = window.localStorage, localOnly = false 
   services.map = resolveMap({ storage, useDraft: (services.edit && !params.has('nodraft')) || params.has('draft') });
   const api = new SupabaseApi({ url: CLOUD.url, anonKey: CLOUD.anonKey, loginDomain: CLOUD.loginDomain, timeoutMs: CLOUD.timeoutMs });
   const online = !localOnly && api.enabled && !services.edit;
-  // онлайн: в браузере только токен входа, прогресс приходит с сервера; без сервера — localStorage (разработка)
+  // Онлайн-прогресс приходит с сервера. В локальном режиме он хранится в браузере.
   services.state = new GameState(online || services.edit ? null : storage);
   if (online) {
     services.session = new PlayerSession({ api, state: services.state, storage, saveDelayMs: CLOUD.saveDelayMs, minorDelayMs: CLOUD.minorDelayMs });
@@ -111,7 +113,7 @@ export function initServices({ storage = window.localStorage, localOnly = false 
 /** Окно «Нет соединения» и потеря входа — общие для всех сцен. */
 export function installSessionUI(session) {
   let offlineWin = null;
-  session.onChange((reason) => {
+  session.onChange((reason, _, data) => {
     if (reason === 'status') {
       const off = session.status === 'offline';
       services.offline = off;
@@ -126,6 +128,23 @@ export function installSessionUI(session) {
       if (window.__game?.scene.isActive('ExplorationScene') || window.__game?.scene.isActive('CombatScene')) reloadToMenu();
     }
     if (reason === 'ban-lifted') reloadToMenu();
+    if (reason === 'combat-recovered') {
+      const { id, userId, action } = data;
+      const { outcome, reward, coinsLost, potions, duel, levelTo, spawn } = action.verdict;
+      const title = { victory: 'Победа', defeat: 'Поражение', retreat: 'Отступление' }[outcome];
+      const items = Object.entries(reward?.items || {}).map(([item, qty]) => `${ITEMS[item]?.name || item} ×${qty}`);
+      const schools = Object.entries(reward?.schoolXP || {}).map(([school, xp]) => `${ABILITIES[school]?.name || school} +${xp} опыта`);
+      const used = Object.entries(potions || {}).map(([item, qty]) => `${ITEMS[item]?.name || item} ×${qty}`);
+      const details = [
+        reward?.heroXP > 0 && `+${reward.heroXP} опыта героя`, levelTo != null && `Новый уровень: ${levelTo}`, ...schools, ...items,
+        (reward?.sapphires || action.promoSapphires) > 0 && `+${(reward?.sapphires || 0) + (action.promoSapphires || 0)} сапфиров`,
+        coinsLost > 0 && `Потеряно монет: ${coinsLost}`,
+        used.length > 0 && `Израсходовано: ${used.join(', ')}`,
+        duel?.rating != null && `Рейтинг: ${duel.rating} (${duel.delta > 0 ? '+' : ''}${duel.delta})`,
+      ].filter(Boolean);
+      showNotice({ title: `Итог ${spawn === 'duel' ? 'дуэли' : 'боя'} восстановлен`, text: [title, ...details].join(' · '),
+        onClose: () => session.acknowledgeCombat(id, userId) });
+    }
     if (reason === 'staff-update') {
       services.offline = true;
       showNotice({ title: 'Помощь команды', text: 'Состояние персонажа обновлено. Продолжите игру с новым сохранением.', button: 'Продолжить', onClose: () => reloadToMenu() });

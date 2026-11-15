@@ -172,7 +172,8 @@ export class SupabaseApi {
   playerAction(token, action) { return this.rpc('player_action', { action }, token); }
 
   /** v0.14.0: запись боя на проверку (Edge Function combat — supabase/functions/combat). Ответ как у player_action: снимок игрока + action. */
-  combat(token, log) { return this._req('/functions/v1/combat', { method: 'POST', token, body: { log } }); }
+  combat(token, log, combatId) { return this._req('/functions/v1/combat', { method: 'POST', token, body: { log, combatId } }); }
+  combatResult(token, combatId) { return this.combat(token, undefined, combatId); }
 
   /** v0.10.2: пачка событий телеметрии (supabase/migrations/20261005_telemetry.sql). Без миграции вернёт ошибку — игре всё равно. */
   telemetryLog(token, session, events, { keepalive = false } = {}) { return this.rpc('telemetry_log', { session, events }, token, { keepalive }); }

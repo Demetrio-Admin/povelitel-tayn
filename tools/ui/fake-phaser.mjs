@@ -119,7 +119,11 @@ function applyTween(cfg) {
 class FakeScene {
   constructor(key) {
     this.key = key; this._list = []; this._timers = []; this._reg = new Map();
-    this.add = mkFactory(this); this.make = { graphics: () => this.add.graphics() };
+    this.add = mkFactory(this);
+    this.make = {
+      graphics: ({ add = false, x = 0, y = 0 } = {}, addToScene = add) =>
+        addToScene ? this.add.graphics().setPosition(x, y) : new Obj(this, 'graphics', { x, y, originX: 0, originY: 0 }),
+    };
     this.textures = {
       exists: k => Reg.textures.has(k), get: k => ({ key: k, getSourceImage: () => Reg.textures.get(k) }),
       addCanvas: (k, cv) => { Reg.textures.set(k, cv); }, remove: k => { Reg.textures.delete(k); },

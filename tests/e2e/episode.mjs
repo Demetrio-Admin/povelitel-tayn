@@ -57,11 +57,22 @@ try {
   }
   /** Как игрок: встать рядом и нажать кнопку действия (настоящее касание). */
   async function actObj(id) {
-    const focused = await page.waitForFunction((id) => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === id, id, { timeout: 10000 }).then(() => true, () => false);
+    await page.waitForFunction(() => window.__game.scene.getScene('ExplorationScene').canAct(), null, { timeout: 30000 });
+    const focused = await page.waitForFunction((id) => {
+      const e = window.__game.scene.getScene('ExplorationScene'), u = window.__game.scene.getScene('UIScene');
+      return e.interaction.focus?.id === id && u.ctx.visible && u.ctx.scaleX >= 0.9;
+    }, id, { timeout: 10000 }).then(() => true, error => {
+      if (error.name === 'TimeoutError') return false;
+      throw error;
+    });
     // рядом другой объект перехватил фокус — тогда касание по самому объекту на карте
     if (!focused) { await tapObj(id, -10); return; }
-    const p = await page.evaluate(() => { const g = window.__game, u = g.scene.getScene('UIScene'), r = g.canvas.getBoundingClientRect(), k = r.width / g.scale.gameSize.width, gh = g.scale.gameSize.height;
-      return { x: r.left + u.ctx.x * k, y: r.top + (u.ctx.y + gh - 1280) * k }; });
+    const p = await page.evaluate(() => {
+      const g = window.__game, u = g.scene.getScene('UIScene'), r = g.canvas.getBoundingClientRect();
+      const anchor = u.viewport.cameras.bottom;
+      return { x: r.left + (u.ctx.x - anchor.scrollX) * r.width / anchor.width,
+        y: r.top + (u.ctx.y - anchor.scrollY) * r.height / anchor.height };
+    });
     await page.touchscreen.tap(p.x, p.y); await sleep(600);
   }
   async function tapObj(id, dy = -30) { const o = await obj(id); const p = await toCss(o.x, o.y + dy); await page.touchscreen.tap(p.x, p.y); await sleep(500); }
@@ -176,8 +187,14 @@ try {
   }
   assert.ok(lit && !magicOpened, `simple flame in one touch (lit ${lit}, magic ${magicOpened})`);
   await clearUi();
-  for (const id of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1']) { await go(id, 50); await actObj(id); await sleep(700); }
-  await go('ep_shard', 60); await actObj('ep_shard'); await sleep(1500); await clearUi();
+  const waitIngredient = async (item, count) => {
+    await page.waitForFunction(([item, count]) => window.__witch.state.item(item) === count, [item, count], { timeout: 30000 });
+  };
+  for (const [index, id] of ['ep_moon_2', 'ep_moon_4', 'ep_moon_1'].entries()) {
+    await go(id, 50); await actObj(id); await waitIngredient('moon_herb', index + 1);
+  }
+  await go('ep_shard', 60); await actObj('ep_shard'); await waitIngredient('frost_shard', 1);
+  await clearUi();
   await expectStep('ritual');
 
   await go('ep_circle', 90); await tapObj('ep_circle', -20); await sleep(1500); await shot('ritual'); await heat(); await clearUi(); await expectStep('melt');

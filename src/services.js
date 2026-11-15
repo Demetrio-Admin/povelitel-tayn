@@ -154,7 +154,7 @@ export async function bootSession() {
     if (status === 'offline') {
       await new Promise((resolve) => {
         const off = session.onChange((reason) => {
-          if (reason === 'status' && (session.status === 'ready' || session.status === 'signed_out')) {
+          if (reason === 'status' && ['ready', 'signed_out', 'banned'].includes(session.status)) {
             off();
             resolve();
           }

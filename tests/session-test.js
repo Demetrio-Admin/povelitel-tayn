@@ -243,6 +243,67 @@ console.log('\nОбрыв связи');
   ok(bootStatuses.join() === 'ready' && boot.state.item('coins') === coins && boot.state.data.player.x === 77, 'автоповтор загрузил персонажа после восстановления связи');
 }
 
+console.log('\nВосстановление гостя при отказе сервера');
+{
+  const authServer = new FakeSupabase({ backend: BACKEND });
+  const first = device(authServer);
+  await first.session.playAsGuest('witch');
+  const uid = first.session.userId;
+  first.state.data.player = { x: 412, y: 312 };
+  await first.session.flush();
+
+  for (const [status, failPath, error] of [
+    [500, '/rest/v1/rpc/get_player', 'internal_error'],
+    [429, '/rest/v1/rpc/get_player', 'over_request_rate_limit'],
+    [503, '/auth/v1/token', 'internal_error'],
+    [429, '/auth/v1/token', 'over_request_rate_limit'],
+  ]) {
+    if (failPath === '/auth/v1/token') authServer.expireAccess();
+    const boot = device(authServer, first.storage);
+    const saved = boot.storage.getItem(TOKENS_KEY);
+    let fail = true;
+    boot.api.fetchFn = (url, options) => fail && new URL(url).pathname === failPath
+      ? authServer.reply(status, { error_code: error }) : authServer.fetch(url, options);
+    ok(await boot.session.restore() === 'offline' && boot.storage.getItem(TOKENS_KEY) === saved,
+      `${status} на ${failPath}: токены гостя сохранены`);
+    fail = false;
+    ok(await boot.session.retryNow() && boot.session.userId === uid && boot.state.data.player.x === 412,
+      'повтор загружает того же гостя и его прогресс');
+  }
+
+  const pending = device(authServer, first.storage);
+  let started;
+  const fetching = new Promise(resolve => { started = resolve; });
+  let finish;
+  const response = new Promise(resolve => { finish = resolve; });
+  let hold = true;
+  pending.api.fetchFn = (url, options) => {
+    if (hold && new URL(url).pathname === '/rest/v1/rpc/get_player') { started(); return response; }
+    return authServer.fetch(url, options);
+  };
+  const restoring = pending.session.restore();
+  await fetching;
+  await pending.session.logout();
+  hold = false;
+  await pending.session.playAsGuest('witch');
+  const switched = pending.storage.getItem(TOKENS_KEY);
+  finish(authServer.reply(500, { error_code: 'internal_error' }));
+  await restoring;
+  ok(pending.session.status === 'ready' && pending.session.userId !== uid && pending.storage.getItem(TOKENS_KEY) === switched,
+    'запоздалый сбой прежней загрузки не сбрасывает новый вход');
+
+  const creating = device(authServer);
+  let creatingFailed = true;
+  creating.api.fetchFn = (url, options) => creatingFailed && new URL(url).pathname === '/rest/v1/rpc/create_player'
+    ? authServer.reply(500, { error_code: 'internal_error' }) : authServer.fetch(url, options);
+  ok((await rejects(() => creating.session.playAsGuest('witch')))?.status === 500 && creating.session.userId,
+    'первый сбой создания персонажа оставляет сессию гостя');
+  const creatingUid = creating.session.userId;
+  creatingFailed = false;
+  await creating.session.playAsGuest('witch');
+  ok(creating.session.userId === creatingUid && creating.session.ready, 'повтор создания использует исходный аккаунт гостя');
+}
+
 console.log('\nДоверие клиенту');
 {
   const d = device(srv, phoneStorage);

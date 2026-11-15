@@ -13,5 +13,11 @@ const fn = `create or replace function public._game_rules() returns jsonb langua
 const s = fs.readFileSync(file, 'utf8');
 const re = /-- @rules:begin\n[\s\S]*?-- @rules:end/;
 if (!re.test(s)) throw new Error('markers not found');
-fs.writeFileSync(file, s.replace(re, `-- @rules:begin\n${fn}\n-- @rules:end`));
-console.log('_game_rules() обновлена:', json.length, 'символов');
+const generated = s.replace(re, `-- @rules:begin\n${fn}\n-- @rules:end`);
+if (process.argv.includes('--check')) {
+  if (s !== generated) throw new Error('_game_rules() расходится с serverRules.js. Запустите node tools/sql/gen-rules.mjs.');
+  console.log('_game_rules() соответствует serverRules.js');
+} else {
+  fs.writeFileSync(file, generated);
+  console.log('_game_rules() обновлена:', json.length, 'символов');
+}

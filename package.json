@@ -11,6 +11,7 @@
     "ui:shots": "node --import ./tools/ui/register.mjs tools/ui/render-scenes.mjs",
     "e2e": "npm run test:viewport",
     "e2e:legacy": "node tests/e2e/play.mjs",
+    "test:db:install": "node tests/db-install-test.mjs",
     "test:db": "node tools/sql/security-test.mjs && node tools/sql/diff-test.mjs && node tools/sql/migration-test.mjs && node tools/sql/combat-test.mjs && node tools/sql/telemetry-test.mjs && node tools/sql/coven-test.mjs && node tools/sql/coven-cycles-test.mjs && node tools/sql/duel-test.mjs && node tools/sql/ratings-test.mjs && node tools/sql/rate-test.mjs && BACKEND=pg node tests/session-test.js",
     "test:chat": "node tests/chat-service-test.mjs && node tests/chat-db-test.mjs && node tests/chat-roles-test.mjs",
     "test:chat:browser": "node tests/e2e/chat.mjs",

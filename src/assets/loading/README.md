@@ -1,12 +1,12 @@
 # Witch flight
 
-## Active artwork: adult mystical witch (22 October 2026)
+## Active artwork: broom flight (15 November 2026)
 
-`witch-flight-mystic-v2.webp`: 960×640, transparent alpha, generated with the built-in ImageGen tool. The adult witch has natural proportions, an expressive face, flowing auburn hair, a detailed plum cloak and a turquoise astral sign. The user rejected the previous large-headed, childlike loading character because it made the game look like a children's game.
+`witch-flight-mystic-v3.webp` is a 960×640 transparent WebP. The witch grips the broom at two separate points. The astral crescent floats ahead of the broom. The auburn hair, embroidered plum cloak and original palette carry over from the previous illustration.
 
-The new illustration replaces only the loader's character asset. The 3:2 placement, illustrated night forest, title, live loading progress and reduced-motion behaviour are preserved. The original `witch-flight.webp` remains as an unused earlier version. Source/output hashes and encoding details are recorded in `witch-flight-mystic-v2.json`.
+The loader positions the sprite in a 3:2 box over the illustrated forest. The image was edited from `witch-flight-mystic-v2.webp`, available in Git history. ImageGen source and WebP output hashes are recorded in `witch-flight-mystic-v3.json`.
 
-Production direction: a clearly adult witch around 30 with natural anatomy and a proportionate head, a calm confident expression, copper-auburn hair, a tailored plum velvet outfit, brass crescent fasteners and celestial embroidery, flying right on one wooden broom. One hand holds the shaft while the other conjures a compact turquoise astral sigil; restrained gold/teal magical filaments trail left. Rich, finely painted fantasy illustration; fully clothed; complete silhouette and broom, transparent background, no scenery, text or interface. Avoid chibi, toddler features, toy proportions, pin-up styling, photorealism and glossy 3D. The supplied screenshot is a palette/composition reference, not an identity to preserve.
+Production direction for the edit: keep the adult red-haired witch and her crescent-trimmed outfit flying to the right. Give each arm a clear path from its own shoulder to a separate gloved grip on the broom. Place the floating crescent above the leading grip. Keep the complete hat, cloak, boots and broom in a 3:2 frame with a transparent background.
 
 ## Previous artwork
 

@@ -1,0 +1,10 @@
+{
+  "source": "ImageGen edit of witch-flight-mystic-v2.webp, 15 November 2026",
+  "source_sha256": "c0cdd165cd5589a425070a0616cc499064bda7d918049b265c9601bab2f7a357",
+  "source_size": [1536, 1024],
+  "output": "witch-flight-mystic-v3.webp",
+  "output_sha256": "aab9618190f21023bc394b511fa5d619cf4806785adb0fe27afe090830a424bf",
+  "output_size": [960, 640],
+  "transparent": true,
+  "processing": "Lanczos downsample; WebP quality 88, alpha preserved."
+}

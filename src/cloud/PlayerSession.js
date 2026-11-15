@@ -232,8 +232,8 @@ export class PlayerSession {
     if (!this.auth) {
       // ник проверяем заранее, чтобы не заводить гостя впустую (окончательно решает база при регистрации)
       if (!(await this.api.nicknameAvailable(n.norm))) throw new CloudError('nickname_taken', errorText('nickname_taken'));
-      await this.playAsGuest(hero);
     }
+    if (!this.auth || !this.base) await this.playAsGuest(hero);
     return this.registerGuest({ nickname, password, password2 });
   }
 

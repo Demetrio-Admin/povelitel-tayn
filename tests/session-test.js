@@ -302,6 +302,16 @@ console.log('\nВосстановление гостя при отказе се�
   creatingFailed = false;
   await creating.session.playAsGuest('witch');
   ok(creating.session.userId === creatingUid && creating.session.ready, 'повтор создания использует исходный аккаунт гостя');
+
+  const registering = device(authServer);
+  const registration = { hero: 'witch', nickname: nickLat('RestoreGuest'), password: PASS, password2: PASS };
+  creatingFailed = true;
+  registering.api.fetchFn = creating.api.fetchFn;
+  ok((await rejects(() => registering.session.registerNew(registration)))?.status === 500, 'регистрация останавливается, если персонаж ещё не создан');
+  const registeringUid = registering.session.userId;
+  creatingFailed = false;
+  await registering.session.registerNew(registration);
+  ok(registering.session.registered && registering.session.userId === registeringUid, 'повтор регистрации завершает создание того же персонажа');
 }
 
 console.log('\nДоверие клиенту');

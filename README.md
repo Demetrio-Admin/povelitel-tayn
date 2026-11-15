@@ -13,6 +13,9 @@ npm ci
 npm run dev        # vite --host: откройте адрес из консоли, с телефона тоже (та же сеть)
 npm test           # логические тесты боя и прогрессии (Node, без браузера)
 npm run build      # статическая сборка в dist/
+# Для браузерного smoke-теста
+npx playwright install chromium
+npm run e2e
 ```
 
 Параметры URL:
@@ -145,7 +148,7 @@ tests/run-tests.js        проверки Combat Math и прогрессии
 ```bash
 npm i -D puppeteer-core
 npm run build && npx vite preview --port 4173 &
-CHROME_PATH="/path/to/chrome" npm run e2e
+CHROME_PATH="/path/to/chrome" npm run e2e:legacy
 ```
 
 `tests/e2e/bot.js` проходит весь маршрут и сам ведёт бои. Он выводит лог событий, окон и боёв, а в конце — ошибки консоли. Между объектами бот не ходит, а телепортируется. Исследование Телекинеза II он завершает принудительно.

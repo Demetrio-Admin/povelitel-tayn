@@ -9,7 +9,7 @@ import { ENEMY_SPAWNS } from '../config/world.layout.js';
 import { COMBAT } from '../config/balance.enemies.js';
 import { ABILITIES } from '../config/balance.abilities.js';
 import { MSG } from '../state/EventBus.js';
-import { services } from '../services.js';
+import { reloadToMenu, services } from '../services.js';
 import { CombatManager } from '../systems/CombatManager.js';
 import { HeroAnimator } from '../systems/HeroAnimator.js';
 import { UI } from '../config/ui.config.js';
@@ -23,7 +23,7 @@ import { GameState } from '../state/GameState.js';
 import { POTIONS, POTION_ORDER, POTION_BATTLE_LIMIT } from '../config/resources.js';
 import { CombatTutorial } from '../systems/CombatTutorial.js';
 import { STORY, COMBAT_HINTS } from '../config/story.js';
-import { VITALS } from '../config/balance.hero.js';
+import { HERO_LEVELS, VITALS } from '../config/balance.hero.js';
 import { currentHero, T, fm } from '../state/hero.js';
 import * as vitals from '../state/vitals.js';
 import { addButton } from '../ui/widgets.js';
@@ -34,6 +34,7 @@ const SCHOOL_COLOR = { telekinesis: COLORS.telekinesis, fire: COLORS.fire, seal:
 const ENEMY_POS = { x: VIEW.width / 2, y: 560 };
 const HERO_POS = { x: VIEW.width / 2, y: 1040 };
 const hex = c => '#' + c.toString(16).padStart(6, '0');
+const UNCONFIRMED = new Set(['network', 'server', 'session', 'error', 'no_combat', 'stale', 'result_pending', 'result_unavailable']);
 
 /**
  * CombatScene — отрисовка и ввод боя. Вся логика — в CombatManager (чистый JS, тестируется в node).
@@ -56,6 +57,8 @@ export class CombatScene extends Phaser.Scene {
     // v0.14.0: бой идёт на копии героя в том состоянии, которое сервер запомнил при старте боя (combatCtx), — оно же у проверки на сервере.
     // Настоящее состояние игры (сумка, опыт, HP) бой не трогает: итог — HP, мана, зелья, награда — приходит в ответе сервера.
     const ctx = state.data.combatCtx;
+    this.combatId = ctx?.combatId;
+    this.combatOwner = services.session?.userId;
     this.sim = ctx ? startState(ctx, state.now()) : Object.assign(new GameState(null, () => state.now()), { data: JSON.parse(JSON.stringify(state.data)) });
     const duelDef = this.duel && ctx?.duel?.opponent ? duelEnemyDef(ctx.duel.opponent, ctx.duel.version) : null;
     this.cm = new CombatManager({ enemyType: this.enemyType, enemyDef: duelDef, state: this.sim, abilities: new AbilitySystem(this.sim, null, null) });
@@ -733,7 +736,8 @@ export class CombatScene extends Phaser.Scene {
     console.info(`[combat] ${this.enemyType} ${result} in ${secs}s`, this.cm.stats);
     { const h = this.cm.hero; services.telemetry?.track('combat_end', { enemy: this.enemyType, spawn: this.spawnId, result, sec: secs, hp: Math.ceil(h.hp), mana: Math.floor(h.mana), intr: this.cm.stats.interrupts, lvl: state.data.heroLevel }); }
     this.coach?.setVisible(false);
-    this.settled = this.settleServer(this.rec.toJSON());
+    this.combatLog = this.rec.toJSON();
+    this.settled = this.settleServer(this.combatLog);
 
     if (result === 'victory') {
       this.tweens.add({ targets: this.enemySprite, alpha: 0, scaleY: 0.2, duration: 600 });
@@ -758,15 +762,18 @@ export class CombatScene extends Phaser.Scene {
   /** Окно итога по ответу сервера r (см. PlayerActions.combatSubmit). */
   showOutcome(r, clientSecs) {
     const { state } = services;
+    if (UNCONFIRMED.has(r?.reason)) { this.showUnconfirmedOutcome(r, clientSecs); return; }
     if (this.duel) { this.showDuelOutcome(r, clientSecs); return; }
     const out = r?.ok ? r.verdict?.outcome : null;
     const secs = r?.verdict?.entry?.timeSec ?? clientSecs;
     const v = vitals.view(state);   // уже по ответу сервера
     const g = r?.verdict?.reward || {};
     if (out === 'victory') {
+      const { levelFrom, levelTo, entry } = r.verdict;
+      const levelUps = levelTo == null ? r.outcome?.levelUps || [] : HERO_LEVELS.filter(row => row.level > levelFrom && row.level <= levelTo);
       this.bus.emit(MSG.DIALOG, {
         title: 'Победа!', color: COLORS.gold,
-        victory: { reward: g, vitals: v, seconds: secs, interrupts: this.cm.stats.interrupts, levelUps: r.outcome?.levelUps || [] },
+        victory: { reward: g, vitals: v, seconds: secs, interrupts: entry?.interrupts ?? this.cm.stats.interrupts, levelUps },
         buttons: [{ label: 'Продолжить', primary: true, onClick: () => this.exit('victory') }],
       });
     } else if (out === 'defeat') {
@@ -777,18 +784,31 @@ export class CombatScene extends Phaser.Scene {
         buttons: [{ label: 'Вернуться', primary: true, onClick: () => this.exit('defeat') }],
       });
     } else {
-      // сервер не засчитал бой (нет связи, запись отклонена, функция не развёрнута): награды нет, герой отступает
-      const why = r?.reason === 'network' ? 'Нет связи с сервером, итог боя не удалось подтвердить.'
-        : r?.reason === 'server' ? 'Сервер проверки боя сейчас недоступен.'
-        : out === 'retreat' ? 'Бой не был доведён до конца.' : 'Сервер не принял запись этого боя.';
+      const why = out === 'retreat' ? 'Бой не был доведён до конца.' : 'Сервер не принял запись этого боя.';
       console.error('[combat] бой не засчитан', r);
-      services.actions?.combatEnd('retreat')?.catch(() => {});
+      if (!out) services.actions?.combatEnd('retreat')?.catch(() => {});
       this.bus.emit(MSG.DIALOG, {
         title: 'Бой не засчитан', color: COLORS.danger,
         text: `${why}\n\nНаграда не выдана, зелья не потрачены. Попробуйте ещё раз.`,
         buttons: [{ label: 'Вернуться', primary: true, onClick: () => this.exit('defeat') }],
       });
     }
+  }
+
+  showUnconfirmedOutcome(result, seconds) {
+    const unavailable = result.reason === 'result_unavailable';
+    const buttons = [{ label: 'Перезагрузить игру', onClick: reloadToMenu }];
+    if (this.combatId && this.combatOwner === services.session?.userId && !unavailable) {
+      buttons.unshift({ label: 'Повторить проверку', primary: true, onClick: async () => {
+        this.toast('Сверяем итог боя с сервером…');
+        this.showOutcome(await this.settleServer(this.combatLog), seconds);
+      } });
+    }
+    this.bus.emit(MSG.DIALOG, {
+      title: 'Итог боя не подтверждён', color: COLORS.danger,
+      text: unavailable ? 'Сервер не нашёл сохранённый итог этого боя.' : 'Пока не удалось получить ответ сервера. Если бой уже засчитан, сервер вернёт его итог.',
+      buttons,
+    });
   }
 
   /**
@@ -799,7 +819,7 @@ export class CombatScene extends Phaser.Scene {
     const wait = (ms) => new Promise(r => setTimeout(r, ms));
     let hiccups = 0;
     for (let i = 0; i < 60; i++) {
-      const r = await services.actions.combatSubmit(log, this.spawnId);
+      const r = await services.actions.combatSubmit(log, this.spawnId, this.combatId, this.combatOwner);
       if (r.reason === 'busy') { await wait(250); continue; }
       if (r.reason === 'network') { await wait(1500); continue; }
       if (r.reason === 'server' && hiccups++ < 4) { await wait(2000); continue; }
@@ -815,30 +835,32 @@ export class CombatScene extends Phaser.Scene {
     const g = r?.verdict?.reward || {};
     if (out === 'victory' || out === 'defeat') {
       const st = duelStateOf({ objects: { duel: services.state.getObject('duel') } }, services.state.now());
+      const rating = d?.rating ?? st.rating;
       const lines = [
         out === 'victory' ? `Соперник «${d?.opponent || this.def.name}» повержен.` : `«${d?.opponent || this.def.name}» оказался сильнее.`,
-        '', `Рейтинг: ${st.rating} (${d?.delta > 0 ? '+' : ''}${d?.delta ?? 0})   ·   ${leagueOf(st.rating).name}`,
+        '', `Рейтинг: ${rating} (${d?.delta > 0 ? '+' : ''}${d?.delta ?? 0})   ·   ${leagueOf(rating).name}`,
         `Время боя: ${r?.verdict?.entry?.timeSec ?? clientSecs} сек`, '',
       ];
       if (g.heroXP) lines.push(`+${g.heroXP} опыта`);
       if (g.items?.coins) lines.push(`+${g.items.coins} монет`);
-      if (r?.promoSapphires > 0) lines.push(`Новая лига — «${leagueOf(st.best).name}»! +${sapphireText(r.promoSapphires)}`);   // v0.34.0
+      if (r?.promoSapphires > 0) lines.push(`Новая лига — «${leagueOf(d?.best ?? st.best).name}»! +${sapphireText(r.promoSapphires)}`);   // v0.34.0
       lines.push('', 'Дуэль — арена: здоровье после боя не теряется.');
       this.bus.emit(MSG.DIALOG, {
         title: out === 'victory' ? 'Победа в Дуэли!' : 'Поражение в Дуэли', color: out === 'victory' ? COLORS.gold : COLORS.danger, text: lines.join('\n'),
         buttons: [{ label: 'Продолжить', primary: true, onClick: () => this.exit(out) }],
       });
     } else {
-      services.actions?.combatEnd('retreat')?.catch(() => {});
+      if (!out) services.actions?.combatEnd('retreat')?.catch(() => {});
       this.bus.emit(MSG.DIALOG, {
         title: 'Дуэль не засчитана', color: COLORS.danger,
-        text: `${r?.reason === 'network' ? 'Нет связи с сервером, итог не удалось подтвердить.' : 'Сервер не принял запись этого боя.'}\n\nРейтинг не изменился. Попытка потрачена.`,
+        text: `${out === 'retreat' ? 'Бой не был доведён до конца.' : 'Сервер не принял запись этого боя.'} Рейтинг не изменился. Попытка потрачена.`,
         buttons: [{ label: 'Вернуться', primary: true, onClick: () => this.exit('defeat') }],
       });
     }
   }
 
   exit(result) {
+    services.session?.acknowledgeCombat(this.combatId, this.combatOwner);
     this.cameras.main.fadeOut(350, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
       this.scene.wake('ExplorationScene', { result, spawnId: this.spawnId, duel: this.duel });

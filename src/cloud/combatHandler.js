@@ -6,6 +6,7 @@
 // с action = { ok, outcome, verdict } (формат тот же, что у player_action: клиент принимает его как обычный ответ действия).
 import { verifyCombat } from './combatVerify.js';
 import { fillDefaults } from './playerModel.js';
+import { isCombatId } from './combatReceipt.js';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -19,7 +20,7 @@ const fail = (status, code) => json(status, { error_code: code });
 const MAX_BODY = 256 * 1024;
 
 /**
- * @param req   Request (POST { log })
+ * @param req   Request (POST { log, combatId? } or { combatId } for lookup)
  * @param env   { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY }
  * @param fetchFn fetch (в тестах подменяется)
  * @param now   () => мс — время сервера
@@ -41,6 +42,9 @@ export async function handle(req, env, fetchFn = fetch, now = Date.now) {
     body = JSON.parse(text);
   } catch { return fail(400, 'bad_request'); }
   if (!body || typeof body !== 'object') return fail(400, 'bad_request');
+  const id = body.combatId;
+  const lookup = !Object.hasOwn(body, 'log');
+  if ((id !== undefined && !isCombatId(id)) || (lookup && !id)) return fail(400, 'bad_request');
 
   const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
   if (!token) return fail(401, 'unauthorized');
@@ -51,15 +55,24 @@ export async function handle(req, env, fetchFn = fetch, now = Date.now) {
 
   const rpc = (name, args) => fetchFn(`${base}/rest/v1/rpc/${name}`, { method: 'POST', headers: admin, body: JSON.stringify(args) });
 
-  const loaded = await rpc('combat_load', { uid: user.id });
+  const fight = { uid: user.id, fight_id: id };
+  const loaded = id ? await rpc('combat_result', fight) : await rpc('combat_load', { uid: user.id });
   if (!loaded.ok) return fail(loaded.status === 404 ? 404 : 500, loaded.status === 404 ? 'not_deployed' : 'server_error');
   const raw = await loaded.json();
   if (!raw) return fail(409, 'no_player');
+  if (id && (lookup || raw.action?.reason !== 'result_pending')) return json(200, raw);
   const { snapshot, meta } = fillDefaults(raw);
 
   const t = now();
   const v = verifyCombat(snapshot, body.log, t);
   if (!v.ok) return json(200, { ...raw, action: { ok: false, reason: v.reason } });
+
+  if (id) {
+    const finished = await rpc('combat_finish', { ...fight, verdict: v.verdict });
+    if (!finished.ok) return fail(500, 'server_error');
+    const result = await finished.json();
+    return result ? json(200, result) : fail(409, 'no_player');
+  }
 
   const applied = await rpc('combat_apply', { uid: user.id, verdict: v.verdict });
   if (!applied.ok) return fail(500, 'server_error');

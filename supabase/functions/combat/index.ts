@@ -1,10 +1,10 @@
 // Edge Function «combat» (v0.14.0): сервер проверяет бой. ФАЙЛ СОБРАН АВТОМАТИЧЕСКИ: node tools/build-combat-function.mjs. Руками не править.
 //
 // Игра пишет действия игрока в бою, а эта функция проигрывает запись тем же движком боя с состояния героя, которое база запомнила
-// в начале боя (player_action combat_start), сама решает исход и атомарно записывает итог (SQL combat_apply). Присланному «я победил» верить нельзя.
+// в начале боя (player_action combat_start), сама решает исход и атомарно записывает итог через SQL combat_finish или прежний combat_apply.
 //
 // Развёртывание: Supabase → Edge Functions → Deploy a new function → имя «combat» → вставить этот файл → Deploy.
-// Переменные SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY Supabase подставляет сам. Перед включением выполните supabase/schema.sql (combat_load / combat_apply).
+// Переменные SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY Supabase подставляет сам. Перед выпуском примените миграцию combat_receipts по GAME_SYSTEMS/RELEASE_AND_RECOVERY.md.
 //
 // src/config/balance.hero.js
 var HERO_BASE = {
@@ -6919,6 +6919,10 @@ function verifyDuel(snap, ctx, log, nowMs) {
   return { ok: true, verdict };
 }
 
+// src/cloud/combatReceipt.js
+var COMBAT_RECEIPT_TTL_MS = 7 * 24 * 60 * 60 * 1e3;
+var isCombatId = (id) => typeof id === "string" && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id);
+
 // src/cloud/combatHandler.js
 var CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -6945,6 +6949,9 @@ async function handle(req, env, fetchFn = fetch, now = Date.now) {
     return fail(400, "bad_request");
   }
   if (!body || typeof body !== "object") return fail(400, "bad_request");
+  const id = body.combatId;
+  const lookup = !Object.hasOwn(body, "log");
+  if (id !== void 0 && !isCombatId(id) || lookup && !id) return fail(400, "bad_request");
   const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   if (!token) return fail(401, "unauthorized");
   const who = await fetchFn(`${base}/auth/v1/user`, { headers: { apikey: key, Authorization: `Bearer ${token}` } });
@@ -6952,14 +6959,22 @@ async function handle(req, env, fetchFn = fetch, now = Date.now) {
   const user = await who.json();
   if (!user?.id) return fail(401, "unauthorized");
   const rpc = (name, args) => fetchFn(`${base}/rest/v1/rpc/${name}`, { method: "POST", headers: admin, body: JSON.stringify(args) });
-  const loaded = await rpc("combat_load", { uid: user.id });
+  const fight = { uid: user.id, fight_id: id };
+  const loaded = id ? await rpc("combat_result", fight) : await rpc("combat_load", { uid: user.id });
   if (!loaded.ok) return fail(loaded.status === 404 ? 404 : 500, loaded.status === 404 ? "not_deployed" : "server_error");
   const raw = await loaded.json();
   if (!raw) return fail(409, "no_player");
+  if (id && (lookup || raw.action?.reason !== "result_pending")) return json(200, raw);
   const { snapshot, meta } = fillDefaults(raw);
   const t = now();
   const v = verifyCombat(snapshot, body.log, t);
   if (!v.ok) return json(200, { ...raw, action: { ok: false, reason: v.reason } });
+  if (id) {
+    const finished = await rpc("combat_finish", { ...fight, verdict: v.verdict });
+    if (!finished.ok) return fail(500, "server_error");
+    const result = await finished.json();
+    return result ? json(200, result) : fail(409, "no_player");
+  }
   const applied = await rpc("combat_apply", { uid: user.id, verdict: v.verdict });
   if (!applied.ok) return fail(500, "server_error");
   const res = await applied.json();

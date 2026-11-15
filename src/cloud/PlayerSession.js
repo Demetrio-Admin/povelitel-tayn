@@ -2,7 +2,7 @@
 // Без Phaser и DOM: сеть (SupabaseApi), хранилище токенов, часы и таймеры подставляются снаружи — так всё проверяется в тестах.
 //
 // Главное:
-//  • Источник правды — сервер. Прогресс живёт в таблицах по user_id; на устройстве лежат только токены входа.
+//  • Прогресс живёт на сервере по user_id. Браузер хранит токены входа и ID последнего отправленного боя до просмотра итога.
 //  • Гость — настоящий пользователь сервера (анонимный вход Supabase) со своим user_id и персонажем.
 //  • Регистрация гостя не создаёт нового персонажа: тому же user_id выдаются ник и пароль (Edge Function account).
 //  • Сохранение автоматическое: после каждого state.save() клиент считает, что изменилось (playerModel.diffSnapshots),
@@ -10,6 +10,7 @@
 //  • У каждой отправки есть id: если ответ потерялся в сети, повтор того же id сервер не применит второй раз.
 //  • Нет связи — игра блокируется окном «Нет соединения», изменения ждут в памяти, параллельного локального сейва нет.
 import { CloudError, errorText, isNetworkError, isAuthError } from './api.js';
+import { readPendingCombat, rememberPendingCombat, forgetPendingCombat } from './combatReceipt.js';
 import { validateNickname, checkPasswordPair, normalizeNickname, loginEmail } from './nickname.js';
 import { toSnapshot, fromSnapshot, diffSnapshots, applyPatch, fillDefaults, isMinorPatch, inHouse, maxVitals, STARTER_KIT } from './playerModel.js';
 
@@ -29,7 +30,7 @@ export class PlayerSession {
   /**
    * @param api        SupabaseApi
    * @param state      GameState (без хранилища: данные приходят с сервера)
-   * @param storage    localStorage-подобное хранилище — только для токенов входа
+   * @param storage    localStorage-подобное хранилище для входа и восстановления итога боя
    */
   constructor({ api, state, storage, now = () => Date.now(), setTimer = (f, ms) => setTimeout(f, ms), clearTimer = (t) => clearTimeout(t),
     saveDelayMs = 600, minorDelayMs = 15000, retryDelaysMs = [2000, 4000, 8000, 15000] }) {
@@ -63,7 +64,7 @@ export class PlayerSession {
   get hero() { return this.meta.hero || DEFAULT_HERO; }
   get level() { return this.state.data.heroLevel; }
   onChange(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); }
-  emit(reason) { this.listeners.forEach(fn => { try { fn(reason, this); } catch (e) { console.error(e); } }); }
+  emit(reason, data) { this.listeners.forEach(fn => { try { fn(reason, this, data); } catch (e) { console.error(e); } }); }
   _setStatus(s) { if (this.status !== s) { this.status = s; this.emit('status'); } }
   _setSaving(s) { if (this.saving !== s) { this.saving = s; this.emit('saving'); } }
 
@@ -155,11 +156,24 @@ export class PlayerSession {
     requireSameUser();
     if (!raw) raw = await this._authed(t => this.api.createPlayer(t, hero || DEFAULT_HERO)); // вход есть, персонажа нет
     requireSameUser();
+    const pendingId = readPendingCombat(this.storage, userId, this.now());
+    let recovered = null;
+    if (pendingId && this.api.combatResult) {
+      try {
+        const latest = await this._authed(t => this.api.combatResult(t, pendingId));
+        if (latest?.action?.ok && latest.action.verdict) {
+          raw = latest;
+          recovered = latest.action;
+        }
+      } catch { /* A failed lookup should not block loading the character. */ }
+      requireSameUser();
+    }
     this._applyServer(raw);
     this.inflight = null;
     this.retryN = 0;
     this._setSaving('saved');
     this._setStatus('ready');
+    if (recovered) this.emit('combat-recovered', { id: pendingId, userId, action: recovered });
   }
 
   setGameBan(data) {
@@ -439,8 +453,16 @@ export class PlayerSession {
    * ответ — снимок игрока и action = { ok, outcome, verdict } либо { ok: false, reason } (bad_log, too_fast, no_combat, …).
    * Причины отказа транспорта те же, что у runAction; 'server' с error.status 404 — функция ещё не развёрнута.
    */
-  async submitCombat(log) {
-    return this._act('combat', null, (t) => this.api.combat(t, log));
+  async submitCombat(log, combatId, userId = this.userId) {
+    return this._act('combat', null, (token) => {
+      if (this.userId !== userId) throw new CloudError('session_changed', 'Аккаунт изменился.');
+      rememberPendingCombat(this.storage, userId, combatId, this.now());
+      return this.api.combat(token, log, combatId);
+    });
+  }
+
+  acknowledgeCombat(combatId, userId = this.userId) {
+    forgetPendingCombat(this.storage, userId, combatId);
   }
 
   /** Общий путь действий с ответом-снимком: сначала отправляем накопленные изменения, потом действие, потом принимаем ответ сервера. */

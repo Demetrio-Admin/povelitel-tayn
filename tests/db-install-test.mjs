@@ -7,6 +7,7 @@ const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'
 const files = JSON.parse(read('supabase/fresh-install.json'));
 const recovery = 'migrations/20261021_rebalance_recovery.sql';
 const chapter3 = 'migrations/20261022_chapter3_levels.sql';
+const receipts = 'migrations/202611150001_combat_receipts.sql';
 const uid = 'b5be365d-a441-4a88-9c69-d395735849aa';
 
 async function apply(db, scripts) {
@@ -58,7 +59,7 @@ try {
   await verifyContract(fresh);
 
   await existing.exec(read('tools/sql/auth-stub.sql'));
-  await apply(existing, files.filter(file => file !== recovery && file !== chapter3));
+  await apply(existing, files.filter(file => file !== recovery && file !== chapter3 && file !== receipts));
   await existing.query('insert into auth.users(id) values ($1)', [uid]);
   await existing.query("select set_config('request.jwt.claim.sub', $1, false)", [uid]);
   await existing.query("select public.create_player('witch')");
@@ -77,7 +78,7 @@ try {
   try {
     assert.deepEqual(await playerData(restored), before, 'backup round trip preserves player data');
     for (let round = 0; round < 2; round++) {
-      await apply(restored, [recovery, chapter3]);
+      await apply(restored, [recovery, chapter3, receipts]);
       await verifyContract(restored);
       assert.deepEqual(await playerData(restored), before, 'upgrade and retry preserve player data and audit history');
     }

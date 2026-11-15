@@ -131,9 +131,9 @@ export class PlayerActions {
    * v0.14.0: запись боя на проверку. Успех: { ok, outcome: 'victory'|'defeat'|'retreat', verdict, outcome (изменения: опыт, уровни, предметы, события) }.
    * Отказ сервера: { ok: false, reason: 'bad_log' | 'too_fast' | 'no_combat' | … }. Сеть/занято/сессия — как у run().
    */
-  async combatSubmit(log, spawnId = null) {
+  async combatSubmit(log, spawnId = null, combatId, userId) {
     const r = await this.exec('combat', async (ses) => {
-      if (ses) return ses.submitCombat(log);
+      if (ses) return ses.submitCombat(log, combatId, userId);
       const now = this.state.now();
       const snap = toSnapshot(this.state.data);
       const v = verifyCombat(snap, log, now);

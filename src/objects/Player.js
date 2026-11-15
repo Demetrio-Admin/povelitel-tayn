@@ -159,7 +159,7 @@ export class Player {
     const H = PLAYER.displayHeight, v = this.view;
     v.setPosition(this.sprite.x + pose.dx * H, this.sprite.y + pose.dy * H);
     v.setScale(this.baseScale * pose.sx, this.baseScale * pose.sy).setAngle(pose.rot).setAlpha(pose.alpha);
-    if (pose.flash) v.setTintFill(0xffffff); else v.clearTint();
+    if (pose.flash) v.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL); else v.clearTint();
     v.setDepth(DEPTH.mainBase + this.sprite.y);
     this.shadow.setPosition(this.sprite.x, this.sprite.y - 2);
     this.shadow.setScale(this.shadowBase.x * pose.shadowScale, this.shadowBase.y * pose.shadowScale).setAlpha(0.8 * pose.shadowAlpha);

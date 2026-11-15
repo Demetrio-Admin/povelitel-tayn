@@ -53,6 +53,50 @@ const tapText = async (page, label) => {
   assert.ok(point, label);
   await tap(page, point);
 };
+const checkScrollClip = async page => {
+  const bounds = await page.evaluate(async () => {
+    const { addScrollViewport } = await import('/src/ui/scrollViewport.js');
+    const ui = window.__game.scene.getScene('UIScene');
+    const root = ui.add.container(0, 0).setDepth(99999);
+    const content = ui.add.container(0, 0, [ui.add.rectangle(0, 0, 180, 220, 0xff00ff).setOrigin(0)]);
+    const scroll = addScrollViewport(ui, root, content, { x: 240, y: 440, width: 120, height: 120, contentHeight: 220 });
+    const camera = ui.viewport.cameras.center;
+    const rect = ui.game.canvas.getBoundingClientRect();
+    window.__clipTest = { root, scroll };
+    const sample = (x, y) => ({
+      x: Math.round(rect.x + (x - camera.scrollX) * rect.width / camera.width),
+      y: Math.round(rect.y + (y - camera.scrollY) * rect.height / camera.height),
+    });
+    return [sample(300, 421), sample(300, 500), sample(300, 580), sample(380, 500)];
+  });
+  try {
+    for (const offset of [0, 100]) {
+      await page.evaluate(offset => window.__clipTest.scroll.scrollTo(offset), offset);
+      const screenshot = await page.screenshot();
+      const mask = await page.evaluate(async ({ png, bounds }) => {
+        const image = new Image();
+        image.src = `data:image/png;base64,${png}`;
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+        return bounds.map(({ x, y }) => {
+          const [r, g, b] = ctx.getImageData(x, y, 1, 1).data;
+          return r > 235 && g < 20 && b > 235;
+        });
+      }, { png: screenshot.toString('base64'), bounds });
+      assert.deepEqual(mask, [false, true, false, false], `clip follows the viewport at offset ${offset}`);
+    }
+  } finally {
+    await page.evaluate(() => {
+      window.__clipTest.scroll.destroy();
+      window.__clipTest.root.destroy();
+      delete window.__clipTest;
+    });
+  }
+};
 try {
   for (const [width, height] of [[390, 638], [360, 800], [412, 915], [768, 1024], [1280, 900]]) {
     const page = await browser.newPage({ viewport: { width, height }, isMobile: width < 900, hasTouch: true });
@@ -111,6 +155,7 @@ try {
     assert.ok(pointer, 'map touch dispatches movement');
     assert.ok(Math.abs(pointer.x / frame.logical.width - .48) < .01, 'world tap uses the expanded canvas coordinates');
     if (width === 390) {
+      await checkScrollClip(page);
       // Open a real HTML registration overlay and emulate a keyboard-only visual viewport resize.
       await page.evaluate(async () => {
         const { showRegister } = await import('/src/ui/accountUI.js');

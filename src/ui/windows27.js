@@ -1,5 +1,6 @@
 // v0.27.0 — карта мира: нарисованная карта с точками локаций (главы и вылазки). Открыта у выхода (указатель «Карта мира») —
 // можно отправиться в открытую локацию; из меню — только посмотреть (отправиться можно лишь у выхода).
+import Phaser from 'phaser';
 import { WORLD_MAP } from '../config/worldMap.js';
 import { COLORS } from '../config/game.config.js';
 import { UI } from '../config/ui.config.js';
@@ -42,7 +43,9 @@ export const windows27 = {
           const badge = this.add.image(px, py, `map_marker_${loc.id}`)
             .setDisplaySize(94 * k, 94 * k).setName(`map-marker-${loc.id}`);
           if (!open) badge.setTint(0x9d9aaf).setAlpha(0.85);
-          else if (selected) badge.preFX?.addGlow?.(0xffdf85, 3, 0, false, 0.15, 16);
+          else if (selected && this.game.renderer?.type === Phaser.WEBGL) {
+            badge.enableFilters().filters.internal.addGlow(0xffdf85, 3, 0, 1, false, 0.15, 16);
+          }
           c.add(badge);
           const label = loc.name;
           const probe = this.add.text(0, 0, label, { fontFamily: FONT, fontSize: `${UI.type.small}px` });

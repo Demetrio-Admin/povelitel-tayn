@@ -45,9 +45,9 @@ class Obj {
   setAngle(a) { this.angle = a; return this; }
   setText(t) { this.str = String(t); return this; }
   setColor(c) { this.style = { ...this.style, color: c }; return this; }
-  setTint(c) { this.tintCol = c; this.tintFill = false; return this; }
-  setTintFill(c) { this.tintCol = c; this.tintFill = true; return this; }
-  clearTint() { this.tintCol = null; return this; }
+  setTint(c) { this.tintCol = c; return this; }
+  setTintMode(mode) { this.tintFill = mode === Phaser.TintModes.FILL; return this; }
+  clearTint() { this.tintCol = null; this.tintFill = false; return this; }
   setBlendMode(b) { this.blend = b; return this; }
   setCrop(x, y, w, h) { this.crop = { x, y, w, h }; return this; }
   setTexture(k) { this.texKey = k; const img = Reg.textures.get(k); if (img) { this.frameW = img.width; this.frameH = img.height; } else Reg.missingTextures.add(k); return this; }
@@ -149,7 +149,8 @@ class RandomDataGenerator {
 }
 
 const Phaser = {
-  AUTO: 0, Scene: FakeScene,
+  AUTO: 0, WEBGL: 2, Scene: FakeScene,
+  TintModes: { MULTIPLY: 0, FILL: 1 },
   Scale: { FIT: 3, CENTER_BOTH: 1 },
   Math: {
     DegToRad: d => (d * Math.PI) / 180, RadToDeg: r => (r * 180) / Math.PI,

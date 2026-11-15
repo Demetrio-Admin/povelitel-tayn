@@ -182,7 +182,7 @@ export class CombatScene extends Phaser.Scene {
     const H = 144, b = this.heroBaseScale, s = this.heroSprite;
     s.setPosition(HERO_POS.x + pose.dx * H, HERO_POS.y + pose.dy * H);
     s.setScale(b * pose.sx, b * pose.sy).setAngle(pose.rot).setAlpha(pose.alpha);
-    if (pose.flash) s.setTintFill(COLORS.danger); else s.clearTint();
+    if (pose.flash) s.setTint(COLORS.danger).setTintMode(Phaser.TintModes.FILL); else s.clearTint();
     this.heroShadow.setScale(pose.shadowScale).setAlpha(pose.shadowAlpha);
   }
 
@@ -551,8 +551,8 @@ export class CombatScene extends Phaser.Scene {
       else if (ev.school === 'fire') a.play('fire_hit');
       else a.play('enemy_hit');
       if (!ev.tick) {
-        this.enemySprite.setTintFill(0xffffff);
-        this.time.delayedCall(70, () => { if (this.enemyTint) this.enemySprite.setTint(this.enemyTint); else this.enemySprite.clearTint(); });
+        this.enemySprite.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
+        this.time.delayedCall(70, () => { if (this.enemyTint) this.enemySprite.setTint(this.enemyTint).setTintMode(Phaser.TintModes.MULTIPLY); else this.enemySprite.clearTint(); });
         this.enemyShake = Math.max(this.enemyShake, ev.school === 'auto' ? 0.35 : 0.9);
         if (ev.school !== 'auto') this.freeze(ev.heavy ? 120 : 60);
       }

@@ -76,7 +76,7 @@
     "@fontsource/philosopher": "^5.2.8",
     "@fontsource/pt-sans": "^5.2.8",
     "lucide": "^0.468.0",
-    "phaser": "^3.90.0"
+    "phaser": "4.2.1"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.14",

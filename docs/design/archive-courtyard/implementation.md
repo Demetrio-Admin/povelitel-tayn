@@ -23,4 +23,4 @@ Terrain rendering now resolves any declared road texture from the loaded texture
 - `node tests/editor-data-test.mjs`: catalog, stable IDs, edits export/import and moved building portals passed.
 - `npm run build`, `node tools/check-bundle.mjs`, `git diff --check` passed.
 
-Browser evidence and visual comparison are recorded in the root `design-qa.md`.
+[Browser evidence and visual comparison](https://github.com/Demetrio-Admin/povelitel-tayn/blob/1f23ae56a79f6b8ab03d44d39c9e373f3b0b629d/design-qa.md) are available in the repository history.

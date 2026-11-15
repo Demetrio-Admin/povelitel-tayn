@@ -93,9 +93,9 @@ try{
    await pick('prop',walkableLamp);await field('collision').selectOption('none');
    await pick('prop',walkableLamp);
    await panel.locator('[data-a=delete]').click();await panel.locator('[data-a=undo]').click();
-   // Furniture shares its saved collider record; rendered size is independent of its footprint.
-   const counter=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.cols.find(c=>c.tex==='city_final_bank_counter').id);
-   await pick('col',counter);await set('x',10400);await set('w',250);
+   // The plaza bench shares its saved collider record; its sprite can be resized independently.
+   const bench='city_plan_bench_0';
+   await pick('col',bench);await set('x',1530);await set('w',250);
    // A storyline entity can be removed and restored; deletion survives reload.
    await pick('obj','npc_banker');
    await set('a',20);assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.selected.img.angle),20);
@@ -285,12 +285,13 @@ try{
    await page.evaluate(()=>{const w=window.__witch;w.state.markEvent('ch2_start');w.bus.emit('story:map-travel','city');});
    await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city');
    assert.equal(await page.evaluate(id=>!!window.__game.scene.getScene('ExplorationScene').propViews.get(id).blocker,walkableLamp),false);
-   const liveDoor=await page.evaluate(()=>{const s=window.__game.scene.getScene('ExplorationScene'),d=s.objects.find(o=>o.id==='door_bank');return{x:d.x,target:d.cfg.target};});
+   const liveDoor=await page.evaluate(bench=>{const s=window.__game.scene.getScene('ExplorationScene'),d=s.objects.find(o=>o.id==='door_bank'),b=s.colliderViews.get(bench);return{x:d.x,target:d.cfg.target,benchX:b.img.x,benchW:b.img.displayWidth};},bench);
    assert.equal(liveDoor.x,bankMoved.door.x);assert.deepEqual(liveDoor.target,bankBefore.door.target);
+   assert.equal(liveDoor.benchX,1530);assert.equal(liveDoor.benchW,250);
    await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id==='door_bank').interact());
    await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city_bank'&&window.__witch.mode==='exploration');
-   const live=await page.evaluate(({counter,floor})=>{const s=window.__game.scene.getScene('ExplorationScene');return{banker:s.objects.some(o=>o.id==='npc_banker'),counter:s.colliderViews.get(counter).img.displayWidth,floor:s.groundViews.get(floor).g};},{counter,floor});
-   assert.equal(live.banker,false);assert.equal(live.counter,250);assert.equal(live.floor.w,430);assert.equal(live.floor.tileScale,0.65);
+   const live=await page.evaluate(floor=>{const s=window.__game.scene.getScene('ExplorationScene');return{banker:s.objects.some(o=>o.id==='npc_banker'),floor:s.groundViews.get(floor).g};},floor);
+   assert.equal(live.banker,false);assert.equal(live.floor.w,430);assert.equal(live.floor.tileScale,0.65);
    const returnX=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id==='room_exit_bank').cfg.target.x);
    assert.equal(returnX,bankMoved.exit.target.x);
    await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id==='room_exit_bank').interact());

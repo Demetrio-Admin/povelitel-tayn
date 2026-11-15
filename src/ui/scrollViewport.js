@@ -1,9 +1,21 @@
+import Phaser from 'phaser';
+
 // A clipped, touch-scrollable area inside a fixed modal. Header/footer stay put.
 // Phaser masks only clip rendering: separately disable hit areas outside the view.
 export function addScrollViewport(scene, root, content, { x, y, width, height, contentHeight }) {
-  const maskSource = scene.add.graphics().fillStyle(0xffffff).fillRect(x, y, width, height).setVisible(false);
-  const mask = maskSource.createGeometryMask();
-  content.setMask(mask);
+  const maskSource = scene.make.graphics({ add: false }).fillStyle(0xffffff).fillRect(x, y, width, height);
+  const webgl = scene.game.renderer?.type === Phaser.WEBGL;
+  let removeMask;
+  if (webgl) {
+    // The clip stays in camera space while the content container moves.
+    const filters = content.enableFilters().filters.external;
+    const mask = filters.addMask(maskSource, false, scene.cameras.main);
+    removeMask = () => filters.remove(mask);
+  } else {
+    const mask = maskSource.createGeometryMask();
+    content.setMask(mask);
+    removeMask = () => content.clearMask(true);
+  }
   const catcher = scene.add.zone(x, y, width, height).setOrigin(0).setInteractive();
   root.add(catcher);
   root.add(content);
@@ -44,7 +56,8 @@ export function addScrollViewport(scene, root, content, { x, y, width, height, c
       scene.input.off('pointerupoutside', up);
       scene.input.off('wheel', wheel);
       scene.input.keyboard?.off('keydown', key);
-      content.clearMask(); mask.destroy(); maskSource.destroy();
+      removeMask();
+      maskSource.destroy();
     },
   };
   const down = p => { if (inside(p)) { moved = false; drag = { id: p.id, y: p.y, offset }; } else drag = null; };

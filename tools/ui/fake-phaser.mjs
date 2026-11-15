@@ -45,9 +45,9 @@ class Obj {
   setAngle(a) { this.angle = a; return this; }
   setText(t) { this.str = String(t); return this; }
   setColor(c) { this.style = { ...this.style, color: c }; return this; }
-  setTint(c) { this.tintCol = c; this.tintFill = false; return this; }
-  setTintFill(c) { this.tintCol = c; this.tintFill = true; return this; }
-  clearTint() { this.tintCol = null; return this; }
+  setTint(c) { this.tintCol = c; return this; }
+  setTintMode(mode) { this.tintFill = mode === Phaser.TintModes.FILL; return this; }
+  clearTint() { this.tintCol = null; this.tintFill = false; return this; }
   setBlendMode(b) { this.blend = b; return this; }
   setCrop(x, y, w, h) { this.crop = { x, y, w, h }; return this; }
   setTexture(k) { this.texKey = k; const img = Reg.textures.get(k); if (img) { this.frameW = img.width; this.frameH = img.height; } else Reg.missingTextures.add(k); return this; }
@@ -119,7 +119,11 @@ function applyTween(cfg) {
 class FakeScene {
   constructor(key) {
     this.key = key; this._list = []; this._timers = []; this._reg = new Map();
-    this.add = mkFactory(this); this.make = { graphics: () => this.add.graphics() };
+    this.add = mkFactory(this);
+    this.make = {
+      graphics: ({ add = false, x = 0, y = 0 } = {}, addToScene = add) =>
+        addToScene ? this.add.graphics().setPosition(x, y) : new Obj(this, 'graphics', { x, y, originX: 0, originY: 0 }),
+    };
     this.textures = {
       exists: k => Reg.textures.has(k), get: k => ({ key: k, getSourceImage: () => Reg.textures.get(k) }),
       addCanvas: (k, cv) => { Reg.textures.set(k, cv); }, remove: k => { Reg.textures.delete(k); },
@@ -149,7 +153,8 @@ class RandomDataGenerator {
 }
 
 const Phaser = {
-  AUTO: 0, Scene: FakeScene,
+  AUTO: 0, WEBGL: 2, Scene: FakeScene,
+  TintModes: { MULTIPLY: 0, FILL: 1 },
   Scale: { FIT: 3, CENTER_BOTH: 1 },
   Math: {
     DegToRad: d => (d * Math.PI) / 180, RadToDeg: r => (r * 180) / Math.PI,

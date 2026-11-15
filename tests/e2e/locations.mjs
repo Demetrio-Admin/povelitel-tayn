@@ -6,6 +6,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { inLocation, locationById } from '../../src/config/locations.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const out = process.env.LOC_SHOTS_DIR || '/tmp/witch-rpg-locations';
@@ -43,8 +44,10 @@ try {
   });
   const travel = async (id) => {
     await page.evaluate((id) => window.__witch.bus.emit('story:map-travel', id), id);
-    await page.waitForFunction((id) => { const s = window.__game.scene.getScene('ExplorationScene'); return s?.loc?.id === id && s.player && window.__witch.mode === 'exploration'; }, id, { timeout: 20000 });
-    await page.waitForTimeout(1200);
+    await page.waitForFunction((id) => {
+      const s = window.__game.scene.getScene('ExplorationScene');
+      return s?.loc?.id === id && s.player && !s.inTransition && window.__witch.mode === 'exploration';
+    }, id, { timeout: 120000 });
   };
 
   let L = await look();
@@ -76,12 +79,14 @@ try {
   await travel('city');
   L = await look();
   assert.deepEqual(L.outside, []); assert.deepEqual(L.exits, ['exit_city']);
-  assert.ok(L.cam.x === 1800 && L.cam.w === 1800 && L.cam.y === 1300 && L.phys.x === 1800, 'камера — только город: ' + JSON.stringify(L));
-  assert.ok(Math.abs(L.player.x - 2020) < 300, 'герой у входа в город: ' + JSON.stringify(L.player));
+  const city = locationById('city'), { x, y, w, h } = city.rect;
+  assert.deepEqual(L.cam, { x, y: y - city.extraTop, w, h: h + city.extraTop + city.extraBottom }, 'камера — только город');
+  assert.deepEqual(L.phys, { x, w }, 'физика ограничена городом');
+  assert.ok(Math.hypot(L.player.x - city.arrival.x, L.player.y - city.arrival.y) < 300, 'герой у входа в город: ' + JSON.stringify(L.player));
   ok(`город: ${L.n} объектов, все внутри; камера с x=${L.cam.x}, ${L.cam.w}×${L.cam.h}; герой ${L.player.x},${L.player.y}`);
   await shot('03-city');
   const saved = await page.evaluate(() => JSON.parse(JSON.stringify(window.__witch.state.data.player)));
-  assert.ok(saved.x >= 1800, 'позиция в городе сохранена');
+  assert.ok(inLocation(saved, city), 'позиция в городе сохранена');
 
   await page.evaluate(() => window.__witch.state.markEvent('chapter_2_complete'));
   for (const id of ['frostwood', 'graveyard', 'forest']) {

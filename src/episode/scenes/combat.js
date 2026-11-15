@@ -203,7 +203,7 @@ export class EpisodeCombatScene extends Phaser.Scene {
     const Hh = 170, b = this.heroBase, s = this.hero;
     s.setPosition(this.heroPos.x + pose.dx * Hh, this.heroPos.y + pose.dy * Hh);
     s.setScale(b * pose.sx, b * pose.sy).setAngle(pose.rot).setAlpha(pose.alpha);
-    if (pose.flash) s.setTintFill(COLORS.danger); else s.clearTint();
+    if (pose.flash) s.setTint(COLORS.danger).setTintMode(Phaser.TintModes.FILL); else s.clearTint();
     this.heroShadow.setScale(pose.shadowScale).setAlpha(pose.shadowAlpha);
   }
 
@@ -215,7 +215,7 @@ export class EpisodeCombatScene extends Phaser.Scene {
       if (e.type === 'hit' && e.target === 'enemy') {
         this.floatText(this.enemyPos.x + Phaser.Math.Between(-60, 60), this.enemyPos.y - 220, `−${e.dmg}`, e.source === 'flame' || e.combo === 'firePush' ? 0xffb070 : 0xcfefff, e.combo ? 46 : 36);
         this.tweens.add({ targets: this.enemy, x: this.enemyPos.x + 14, duration: 50, yoyo: true, repeat: 2 });
-        this.enemy.setTintFill(0xffffff); this.time.delayedCall(80, () => this.enemy.clearTint());
+        this.enemy.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL); this.time.delayedCall(80, () => this.enemy.clearTint());
       }
       if (e.type === 'hit' && e.target === 'hero') {
         this.anim.playHurt(e.dmg >= 12);

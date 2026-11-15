@@ -125,7 +125,7 @@ export class SupabaseApi {
     if (!res.ok) {
       let code = mapError(res.status, json);
       if (code === 'unknown' && res.status >= 500) code = 'server'; // сервер сломался — это не «нет связи», повтор не поможет сразу
-      throw new CloudError(code, errorText(code), res.status, String(json?.code || json?.error_code || json?.message || '').slice(0, 80));
+      throw new CloudError(code, errorText(code), res.status, String(json?.error_code || json?.code || json?.error || json?.message || '').slice(0, 80));
     }
     return json;
   }

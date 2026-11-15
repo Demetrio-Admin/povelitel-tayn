@@ -17,6 +17,8 @@ export const TOKENS_KEY = 'witch_rpg_auth_v2';
 export const DEFAULT_HERO = 'witch';
 
 const isEmpty = (p) => !p || Object.keys(p).length === 0;
+const rejectedRefresh = (e) => e instanceof CloudError && [400, 401, 403].includes(e.status)
+  && ['refresh_token_not_found', 'refresh_token_already_used', 'session_not_found', 'invalid_grant'].includes(e.detail);
 const randomId = () => {
   const c = globalThis.crypto;
   if (c?.randomUUID) return c.randomUUID();
@@ -84,7 +86,7 @@ export class PlayerSession {
         this._setAuth(updated);
         return updated;
       } catch (e) {
-        if (!isNetworkError(e) && this.auth === current) this._lostSession();
+        if (rejectedRefresh(e) && this.auth === current) this._lostSession();
         throw e;
       } finally { if (this.refreshAuth === task) this.refreshAuth = null; }
     })();
@@ -136,14 +138,23 @@ export class PlayerSession {
   }
 
   async _loadPlayer(hero) {
+    const userId = this.userId;
+    const requireSameUser = () => {
+      if (this.userId !== userId) throw new CloudError('session_changed', 'Аккаунт изменился. Повторите действие.');
+    };
     let raw;
     try { raw = await this._authed(t => this.api.getPlayer(t)); }
     catch (e) {
       if (e.code !== 'game_banned') throw e;
-      this.setGameBan(await this._authed(t => this.api.rpc('chat_request', { op: 'bootstrap' }, t)));
+      requireSameUser();
+      const ban = await this._authed(t => this.api.rpc('chat_request', { op: 'bootstrap' }, t));
+      requireSameUser();
+      this.setGameBan(ban);
       return;
     }
+    requireSameUser();
     if (!raw) raw = await this._authed(t => this.api.createPlayer(t, hero || DEFAULT_HERO)); // вход есть, персонажа нет
+    requireSameUser();
     this._applyServer(raw);
     this.inflight = null;
     this.retryN = 0;
@@ -164,9 +175,16 @@ export class PlayerSession {
 
   /**
    * Запуск игры: если на устройстве есть вход (гостя или игрока), продолжаем того же персонажа.
-   * Возвращает 'ready' | 'signed_out' | 'offline'. При 'offline' вызовите restore() ещё раз, когда появится связь.
+   * При временном сбое остаёмся в ожидании с сохранёнными токенами и повторяем загрузку.
    */
-  async restore() {
+  restore() {
+    if (!this.restoring) {
+      this.restoring = this._restore().finally(() => { this.restoring = null; });
+    }
+    return this.restoring;
+  }
+
+  async _restore() {
     if (!this.enabled) return 'signed_out';
     const saved = this._loadTokens();
     if (!saved?.refresh_token) { this._setStatus('signed_out'); return 'signed_out'; }
@@ -174,11 +192,12 @@ export class PlayerSession {
     if (this.status !== 'offline') this._setStatus('loading');
     try {
       await this._loadPlayer();
-      return 'ready';
+      return this.status;
     } catch (e) {
-      if (isNetworkError(e)) { this.lastError = e; this._goOffline(); return 'offline'; }
-      if (this.auth) this._lostSession();
-      return 'signed_out';
+      if (!this.auth || this.userId !== saved.user?.id || e.code === 'session_changed') return this.status;
+      this.lastError = e;
+      this._goOffline();
+      return 'offline';
     }
   }
 
@@ -187,7 +206,7 @@ export class PlayerSession {
   async playAsGuest(hero = DEFAULT_HERO) {
     this._setStatus('loading');
     try {
-      this._setAuth(await this.api.signInAnonymously());
+      if (!this.auth) this._setAuth(await this.api.signInAnonymously());
       await this._loadPlayer(hero);
       this.emit('signin');
     } catch (e) { this._afterFailedStart(); throw e; }
@@ -213,8 +232,8 @@ export class PlayerSession {
     if (!this.auth) {
       // ник проверяем заранее, чтобы не заводить гостя впустую (окончательно решает база при регистрации)
       if (!(await this.api.nicknameAvailable(n.norm))) throw new CloudError('nickname_taken', errorText('nickname_taken'));
-      await this.playAsGuest(hero);
     }
+    if (!this.auth || !this.base) await this.playAsGuest(hero);
     return this.registerGuest({ nickname, password, password2 });
   }
 

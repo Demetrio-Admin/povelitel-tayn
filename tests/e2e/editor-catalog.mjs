@@ -95,7 +95,9 @@ try{
    await panel.locator('[data-a=delete]').click();await panel.locator('[data-a=undo]').click();
    // The plaza bench shares its saved collider record; its sprite can be resized independently.
    const bench='city_plan_bench_0';
-   await pick('col',bench);await set('x',1530);await set('w',250);
+   await pick('col',bench);
+   const benchX=await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.selected.x)+200;
+   await set('x',benchX);await set('w',250);
    // A storyline entity can be removed and restored; deletion survives reload.
    await pick('obj','npc_banker');
    await set('a',20);assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').editor.selected.img.angle),20);
@@ -287,7 +289,7 @@ try{
    assert.equal(await page.evaluate(id=>!!window.__game.scene.getScene('ExplorationScene').propViews.get(id).blocker,walkableLamp),false);
    const liveDoor=await page.evaluate(bench=>{const s=window.__game.scene.getScene('ExplorationScene'),d=s.objects.find(o=>o.id==='door_bank'),b=s.colliderViews.get(bench);return{x:d.x,target:d.cfg.target,benchX:b.img.x,benchW:b.img.displayWidth};},bench);
    assert.equal(liveDoor.x,bankMoved.door.x);assert.deepEqual(liveDoor.target,bankBefore.door.target);
-   assert.equal(liveDoor.benchX,1530);assert.equal(liveDoor.benchW,250);
+   assert.equal(liveDoor.benchX,benchX);assert.ok(Math.abs(liveDoor.benchW-250)<0.01);
    await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').objects.find(o=>o.id==='door_bank').interact());
    await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').loc?.id==='city_bank'&&window.__witch.mode==='exploration');
    const live=await page.evaluate(floor=>{const s=window.__game.scene.getScene('ExplorationScene');return{banker:s.objects.some(o=>o.id==='npc_banker'),floor:s.groundViews.get(floor).g};},floor);

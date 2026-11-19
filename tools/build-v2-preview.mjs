@@ -27,7 +27,7 @@ const assetRoot = 'https://raw.githubusercontent.com/Demetrio-Admin/povelitel-ta
 const boot = 'const publicAssets = ' + JSON.stringify(assetRoot) + ';\n'
   + 'let base = document.querySelector("base"); if (!base) { base = document.createElement("base"); document.head.prepend(base); } base.href = publicAssets;\n'
   + 'window.__horizonPreview = { revision: ' + JSON.stringify(revision) + ' };\n';
-let page = html.replace(scripts[0][0], '').replace(/<link\b(?=[^>]*\brel="(?:icon|apple-touch-icon)")?[^>]*>/g, '');
+let page = html.replace(scripts[0][0], '').replace(/<link\b(?=[^>]*\brel="(?:stylesheet|icon|apple-touch-icon)")[^>]*>/g, '');
 page = page.replace('</head>', '<style>\n' + css.join('\n') + '\n</style>\n</head>');
 page = page.replace('</body>', () => '<script>(() => {\n' + boot + bundle.replace(/<\/script/gi, '<\\/script') + '\n})();</script>\n</body>');
 await writeFile('play.html', page);

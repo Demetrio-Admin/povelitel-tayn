@@ -56,14 +56,19 @@ try {
       const battle = window.__game.scene.getScene('CombatScene');
       return { x: battle.stones[id].x, y: battle.stones[id].y - 29 };
     }, id);
-    const point = await canvasPoint('CombatScene', pos.x, pos.y);
+    const point = await canvasPoint('CombatScene', pos.x, pos.y, true);
     await page.touchscreen.tap(point.x, point.y);
     await page.waitForFunction(id => window.__game.scene.getScene('CombatScene').selected === id, id);
   }
-  const cast = id => page.evaluate(id => {
-    const ui = window.__game.scene.getScene('UIScene');
-    ui.pressDock(ui.dock.findIndex(slot => slot.id === id));
-  }, id);
+  async function cast(id) {
+    const point = await page.evaluate(id => {
+      const game = window.__game, ui = game.scene.getScene('UIScene'), box = game.canvas.getBoundingClientRect();
+      const camera = ui.viewport.cameras.bottom, button = ui.buttons[id];
+      return { x: box.left + (button.x - camera.scrollX) * box.width / camera.width,
+        y: box.top + (button.y - camera.scrollY) * box.height / camera.height };
+    }, id);
+    await page.touchscreen.tap(point.x, point.y);
+  }
   const ready = () => page.waitForFunction(() => {
     const scene = window.__game.scene.getScene('CombatScene');
     return scene.sys.isActive() && scene.started && !scene.ended;
@@ -74,6 +79,7 @@ try {
   await visit('intro', true);
   for (let i = 0; i < 3; i++) await next();
   await waitStep('spark');
+  console.log('Reached spark');
 
   await visit('spark');
   await ready();
@@ -84,6 +90,7 @@ try {
   await cast('telekinesis');
   await page.waitForFunction(() => window.__game.scene.getScene('CombatScene').battle.combos === 1);
   await waitStep('upgrade');
+  console.log('Reached upgrade');
   await next();
   await waitMode('exploration');
 
@@ -91,21 +98,26 @@ try {
   await modal();
   await next();
   await waitStep('frost');
+  console.log('Reached frost');
   await visit('frost');
   await ready();
   assert.equal(await page.evaluate(() => window.__game.scene.getScene('CombatScene').battle.intervals.wand), 26);
   await waitStep('thaw');
+  console.log('Reached thaw');
   await next();
   await next();
   await waitStep('veda');
+  console.log('Reached veda');
   await visit('veda');
   await next();
   await next();
   await waitStep('grom');
+  console.log('Reached grom');
   await visit('grom');
   await next();
   await next();
   await waitStep('hunt');
+  console.log('Reached hunt');
   assert.equal(await page.evaluate(() => window.__game.scene.getScene('ExplorationScene').companion.id), 'fox');
 
   await visit('camp-edge');

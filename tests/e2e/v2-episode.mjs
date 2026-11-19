@@ -124,6 +124,11 @@ try {
   console.log('Reached hunt');
   assert.equal(await page.evaluate(() => window.__game.scene.getScene('ExplorationScene').companion.id), 'fox');
 
+  await visit('workbench');
+  await next();
+  await page.waitForFunction(() => window.__witch.state.getObject('horizon_campaign').workbenchRestored);
+  console.log('Restored Mirra’s workbench');
+
   await visit('camp-edge');
   await ready();
   assert.equal(await page.evaluate(() => window.__game.scene.getScene('CombatScene').battle.fox), true);

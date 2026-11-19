@@ -57,7 +57,10 @@ export function saveCampaign(next, { notify = true } = {}) {
 }
 
 export function objective() {
-  const { step } = campaign();
+  const { step, workbenchRestored } = campaign();
+  if (step === 'hunt' && !workbenchRestored) {
+    return { id: 'workbench', title: 'Оживший верстак', text: 'Отогрей верстак Огнём и прочитай записку Мирры.' };
+  }
   return { id: step, title: titleOf(step), text: OBJECTIVES[step] };
 }
 

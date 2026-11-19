@@ -17,23 +17,7 @@ if (!re.test(s)) throw new Error('markers not found');
 const horizonRe = /-- @horizon-rules:begin\n[\s\S]*?-- @horizon-rules:end/;
 if (!horizonRe.test(s)) throw new Error('horizon rules markers not found');
 const horizonJson = JSON.stringify(horizonRules()).replace(/'/g, "''");
-if (horizonJson.includes('$r
-if (process.argv.includes('--check')) {
-  if (s !== generated) throw new Error('_game_rules() расходится с serverRules.js. Запустите node tools/sql/gen-rules.mjs.');
-  console.log('_game_rules() соответствует serverRules.js');
-} else {
-  fs.writeFileSync(file, generated);
-  console.log('_game_rules() обновлена:', json.length, 'символов');
-}
-)) throw new Error('horizon rules contain $r
-if (process.argv.includes('--check')) {
-  if (s !== generated) throw new Error('_game_rules() расходится с serverRules.js. Запустите node tools/sql/gen-rules.mjs.');
-  console.log('_game_rules() соответствует serverRules.js');
-} else {
-  fs.writeFileSync(file, generated);
-  console.log('_game_rules() обновлена:', json.length, 'символов');
-}
-);
+if (horizonJson.includes('$r$')) throw new Error('horizon rules contain $r$');
 const horizonFn = `create or replace function public._horizon_rules() returns jsonb language sql immutable as $r$ select '${horizonJson}'::jsonb $r$;`;
 const generated = s.replace(re, () => `-- @rules:begin\n${fn}\n-- @rules:end`)
   .replace(horizonRe, () => `-- @horizon-rules:begin\n${horizonFn}\n-- @horizon-rules:end`);

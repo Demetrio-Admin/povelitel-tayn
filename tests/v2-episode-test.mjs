@@ -4,7 +4,7 @@ import { PREVIEW_CORE } from '../src/config/horizon/previewTuning.js';
 import { HorizonBattle, HORIZON_STEP_MS, replayHorizonBattle } from '../src/systems/HorizonBattle.js';
 import {
   STORY_ENCOUNTERS, battleContext, finishDialogue, huntOffers, starterState,
-  claimMirraLantern, settleVictory, tideStatus, upgradeWand,
+  claimMirraLantern, restoreWorkbench, settleVictory, tideStatus, upgradeWand,
 } from '../src/v2/episode.js';
 
 const now = Date.UTC(2026, 10, 19, 12);
@@ -64,6 +64,10 @@ assert.equal(state.step, 'thaw');
 assert.deepEqual([state.coins, state.herbs, state.fox], [45, 3, true]);
 state = finishDialogue(finishDialogue(finishDialogue(state)));
 assert.equal(state.step, 'hunt');
+const warmed = restoreWorkbench(state);
+assert.deepEqual([warmed.step, warmed.workbenchRestored, warmed.coins - state.coins, warmed.herbs - state.herbs],
+  ['hunt', true, 50, 3]);
+assert.equal(restoreWorkbench(warmed), warmed);
 assert.equal(tideStatus(state, now).remaining, 20);
 
 const offers = huntOffers(state, now);

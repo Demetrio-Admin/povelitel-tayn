@@ -34,6 +34,13 @@ export const DIALOGUE = {
   ],
 };
 
+export const MIRRA_NOTE = '«Мастерская теперь твоя. В Светлодоле раскололся Лунный Гримуар — его страницы будят зверей и тянут тепло из земли. Собирай осколки, грей очаг — и не верь тем, кто захочет запереть магию на замок»';
+
+export function restoreWorkbench(state) {
+  if (state.step !== 'hunt' || state.workbenchRestored) return state;
+  return { ...state, workbenchRestored: true, coins: state.coins + 50, herbs: state.herbs + 3 };
+}
+
 const FOES = {
   spark: { name: 'Искроцап', texture: 'enemy_scavenger_small', role: 'fighter' },
   frost: { name: 'Морозун', texture: 'enemy_frost_critter', role: 'fighter' },

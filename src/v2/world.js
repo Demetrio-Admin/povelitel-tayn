@@ -9,7 +9,7 @@ import { PREVIEW_CORE } from '../config/horizon/previewTuning.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { campaign, saveCampaign } from './campaign.js';
-import { DIALOGUE, STORY_ENCOUNTERS, claimMirraLantern, finishDialogue, huntOffers, tideStatus, upgradeWand, wandSeconds } from './episode.js';
+import { DIALOGUE, MIRRA_NOTE, STORY_ENCOUNTERS, claimMirraLantern, finishDialogue, huntOffers, restoreWorkbench, tideStatus, upgradeWand, wandSeconds } from './episode.js';
 
 const target = (key, label, x, y, texture, step = key) => ({
   id: 'v2_' + key, kind: 'horizon', action: key, label, x, y, texture, step, radius: 115,
@@ -23,6 +23,7 @@ const STORY_TARGETS = [
   target('frost', 'Морозун', 1112, 4422, 'enemy_frost_critter'),
   target('veda', 'Веда', 1185, 4430, 'npc_veda'),
   target('grom', 'Гром', 1260, 4280, 'npc_goran'),
+  target('workbench', 'Верстак Мирры', 785, 4770, 'table_01', 'hunt'),
   target('camp', 'Привал Грома', 1285, 4224, 'campfire_01', 'hunt'),
 ];
 
@@ -50,7 +51,7 @@ class CampaignTarget extends InteractiveObject {
   get markerIcon() {
     if (this.cfg.hunt || ['spark', 'frost'].includes(this.cfg.action)) return 'icon_fight';
     if (this.cfg.action === 'lantern') return 'icon_gather';
-    return this.cfg.action === 'upgrade' ? 'icon_fire' : 'icon_talk';
+    return ['upgrade', 'workbench'].includes(this.cfg.action) ? 'icon_fire' : 'icon_talk';
   }
 
   get markerColor() { return this.cfg.hunt ? COLORS.danger : COLORS.gold; }
@@ -60,7 +61,10 @@ class CampaignTarget extends InteractiveObject {
   }
 
   requirementsMet() {
-    return campaign().step === this.cfg.step && (!this.cfg.hunt || !!this.offer()?.ready);
+    const { step, workbenchRestored } = campaign();
+    if (step !== this.cfg.step) return false;
+    if (this.cfg.action === 'workbench') return !workbenchRestored;
+    return !this.cfg.hunt || !!this.offer()?.ready;
   }
 
   refresh() {
@@ -130,7 +134,7 @@ export class HorizonExplorationScene extends ExplorationScene {
 
   refreshHearth() {
     if (!this.lantern) return;
-    const { step, fox } = campaign();
+    const { step, fox, workbenchRestored } = campaign();
     const lit = step === 'intro' || fox;
     const frozen = !lit;
     this.hearthGate.setTint(frozen ? 0xaddbff : 0xffedcb);
@@ -138,7 +142,8 @@ export class HorizonExplorationScene extends ExplorationScene {
     this.ember.setVisible(step === 'spark' || step === 'lantern');
     this.campSign.setVisible(step === 'grom' || step === 'hunt');
     this.campGlow.setVisible(step === 'hunt');
-    for (const puff of this.steam) puff.setVisible(step === 'intro');
+    this.cauldron.setTint(step === 'intro' || workbenchRestored ? 0xffe8cb : 0xbad9f0);
+    for (const puff of this.steam) puff.setVisible(step === 'intro' || !!workbenchRestored);
     this.lantern.setTint(lit ? 0xffdfaa : 0xa2cfff);
     this.lanternGlow.setVisible(lit);
     for (const flower of this.flowers) flower.setVisible(fox);
@@ -147,8 +152,8 @@ export class HorizonExplorationScene extends ExplorationScene {
   }
 
   guideTarget() {
-    const { step } = campaign();
-    const key = step === 'hunt' ? 'v2_camp' : 'v2_' + step;
+    const { step, workbenchRestored } = campaign();
+    const key = step === 'hunt' ? (workbenchRestored ? 'v2_camp' : 'v2_workbench') : 'v2_' + step;
     return this.objects.some(o => o.id === key && o.isAvailable()) ? key : null;
   }
 
@@ -182,6 +187,7 @@ export class HorizonExplorationScene extends ExplorationScene {
     else if (cfg.action === 'lantern') this.pickUpLantern();
     else if (cfg.action === 'upgrade') this.upgradeWindow();
     else if (cfg.action === 'camp') this.campWindow();
+    else if (cfg.action === 'workbench') this.workbenchWindow(cfg);
     else if (STORY_ENCOUNTERS[cfg.action]) this.enterHorizonBattle(STORY_ENCOUNTERS[cfg.action]);
   }
 
@@ -296,6 +302,23 @@ export class HorizonExplorationScene extends ExplorationScene {
         { label: 'Закрыть', cancel: true },
       ],
     });
+  }
+
+  workbenchWindow(cfg) {
+    this.castFx(cfg.x, cfg.y - 48, COLORS.fire);
+    this.dialog({ title: 'Записка Мирры', text: MIRRA_NOTE, buttons: [
+      { label: 'Прочитать записку', primary: true, onClick: () => {
+        const current = campaign(), next = restoreWorkbench(current);
+        if (next === current) return;
+        saveCampaign(next);
+        this.burst(cfg.x, cfg.y - 47, 0xffe5ac, 26);
+        this.burst(773, 4695, 0xffc974, 20);
+        this.refreshAll();
+        this.refreshHearth();
+        this.toast('50 монет · 3 Лунные травы');
+        services.audio.play('quest_update');
+      } },
+    ] });
   }
 
   campWindow() {

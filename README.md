@@ -42,6 +42,8 @@ npm run e2e
 
 ## Версия 2
 
+[Открыть «Погасший очаг» в браузере](https://htmlpreview.github.io/?https://github.com/Demetrio-Admin/povelitel-tayn/blob/v2/episode-1/play.html).
+
 «Погасший очаг» открывается по пути `/v2/` на адресе из `npm run dev` или `npm run preview`. Эпизод охватывает четыре задания, после которых открывается свободная охота. Кнопка «Начать заново» находится в сумке.
 
 `npm run test:v2` проверяет сценарий и детерминированный повтор боёв. Браузерная проверка `npm run test:v2:browser` ждёт `npm run preview -- --port 5196`.

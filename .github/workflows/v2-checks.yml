@@ -25,5 +25,5 @@ jobs:
       - name: Touch playthrough
         run: |
           npm run preview -- --host 127.0.0.1 --port 5196 > /tmp/koldovstvo-v2-preview.log 2>&1 &
-          curl --fail --retry 20 --retry-all-errors --retry-delay 1 http://127.0.0.1:5196/v2/ -o /dev/null
+          curl --fail --retry 20 --retry-all-errors --retry-delay 1 http://127.0.0.1:5196/ -o /dev/null
           npm run test:v2:browser

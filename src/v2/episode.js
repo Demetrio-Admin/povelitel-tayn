@@ -1,24 +1,5 @@
 import { CORE, ECONOMY, TIDE, baseBattleCoins, tideAt, wandInterval } from '../config/horizon/rules.js';
 
-export const ART = {
-  hero: 'heroes/lunar-v1/hero_down.webp',
-  mirra: 'sprites/npc_mirra.webp',
-  veda: 'sprites/npc_veda.webp',
-  grom: 'sprites/npc_goran.webp',
-  fox: 'chapter3/companion_fox.webp',
-  hut: 'chapter3/iva_hut.webp',
-  flower: 'city-cozy/flowerbed.webp',
-  lantern: 'sprites/lantern_02.webp',
-  cauldron: 'sprites/cauldron_01.webp',
-  sign: 'sprites/signpost_01.webp',
-  camp: 'sprites/campfire_01.webp',
-  light: 'sprites/field_rock_light.webp',
-  heavy: 'sprites/field_rock_heavy.webp',
-  fire: 'sprites/icon_fire.webp',
-  telekinesis: 'sprites/icon_telekinesis.webp',
-  forestArena: 'chapter3/arena_grove.webp',
-};
-
 const TITLES = {
   intro: 'Очаг Мирры',
   spark: 'Не трожь фонарь!',
@@ -52,9 +33,9 @@ export const DIALOGUE = {
 };
 
 const FOES = {
-  spark: { name: 'Искроцап', art: 'sprites/enemy_scavenger_small.webp', role: 'fighter' },
-  frost: { name: 'Морозун', art: 'sprites/enemy_frost_critter.webp', role: 'fighter' },
-  thorn: { name: 'Колючник', art: 'sprites/enemy_rootling.webp', role: 'warder' },
+  spark: { name: 'Искроцап', texture: 'enemy_scavenger_small', role: 'fighter' },
+  frost: { name: 'Морозун', texture: 'enemy_frost_critter', role: 'fighter' },
+  thorn: { name: 'Колючник', texture: 'enemy_rootling', role: 'warder' },
 };
 export const STORY_ENCOUNTERS = Object.fromEntries(['spark', 'frost'].map(key => [key, {
   id: key, name: FOES[key].name, level: 1, pack: 'solo', enemies: [FOES[key]], arena: ['light'],
@@ -68,40 +49,12 @@ const SLOT_LAYOUT = [
 ];
 const LUNAR_TIER_MAX = TIDE[0].threshold;
 const REGION_MAX = 20;
-const SAVE_KEY = 'koldovstvo:v2:episode-1';
 const dayKey = now => new Date(now).toISOString().slice(0, 10);
-const nonnegative = value => Number.isSafeInteger(value) && value >= 0 ? value : 0;
-const starterState = () => ({
+export const starterState = () => ({
   step: 'intro', coins: 0, herbs: 0, storyPage: false, wandRank: 0, fox: false,
   huntLevel: 1, date: '', dailyWins: 0, totalWins: 0, shards: 0, respawns: {},
   bestiary: {},
 });
-
-export function loadEpisode(storage) {
-  try {
-    const data = JSON.parse(storage.getItem(SAVE_KEY));
-    if (!data || !STEPS.includes(data.step)) return starterState();
-    const clean = { ...starterState(), ...data };
-    for (const key of ['coins', 'herbs', 'wandRank', 'dailyWins', 'totalWins', 'shards']) clean[key] = nonnegative(clean[key]);
-    clean.huntLevel = Math.max(1, Math.min(REGION_MAX, nonnegative(clean.huntLevel)));
-    clean.respawns = Object.fromEntries(SLOT_LAYOUT.map(([id]) => [id, nonnegative(data.respawns?.[id])]));
-    clean.bestiary = Object.fromEntries(Object.keys(FOES).map(id => [id, nonnegative(data.bestiary?.[id])]));
-    clean.fox = clean.fox === true;
-    return clean;
-  } catch {
-    return starterState();
-  }
-}
-
-export function saveEpisode(storage, state) {
-  try { storage.setItem(SAVE_KEY, JSON.stringify(state)); } catch { /* Keep the session playable without storage. */ }
-}
-
-export function restartEpisode(storage) {
-  const state = starterState();
-  saveEpisode(storage, state);
-  return state;
-}
 
 export function finishDialogue(state) {
   const next = { intro: 'spark', thaw: 'veda', veda: 'grom', grom: 'hunt' }[state.step];

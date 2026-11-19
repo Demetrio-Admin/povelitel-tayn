@@ -2,13 +2,11 @@ import assert from 'node:assert/strict';
 import { CORE, baseBattleCoins, tideAt } from '../src/config/horizon/rules.js';
 import { HorizonBattle, HORIZON_STEP_MS, replayHorizonBattle } from '../src/systems/HorizonBattle.js';
 import {
-  STORY_ENCOUNTERS, battleContext, finishDialogue, huntOffers, loadEpisode, saveEpisode,
+  STORY_ENCOUNTERS, battleContext, finishDialogue, huntOffers, starterState,
   settleVictory, tideStatus, upgradeWand,
 } from '../src/v2/episode.js';
 
 const now = Date.UTC(2026, 10, 19, 12);
-const items = new Map();
-const storage = { getItem: key => items.get(key), setItem: (key, value) => items.set(key, value) };
 
 function play(context, strategy) {
   const battle = new HorizonBattle(context);
@@ -31,7 +29,7 @@ function play(context, strategy) {
 }
 
 const castAtStone = (battle, gift, object) => battle.command({ type: 'cast_on_object', gift, object });
-let state = finishDialogue(loadEpisode(storage));
+let state = finishDialogue(starterState());
 assert.equal(state.step, 'spark');
 assert.deepEqual(huntOffers(state, now), []);
 const first = play(battleContext(state, STORY_ENCOUNTERS.spark), battle => {
@@ -89,10 +87,6 @@ assert.deepEqual([19, 20, 49, 50, 149, 150].map(wins => tideAt(wins).value), [5,
 assert.equal(settleVictory(state, hardest, false, now).state, state);
 assert.equal(huntOffers(state, now).at(-1).ready, false);
 assert.equal(huntOffers(state, now + 30000).at(-1).ready, true);
-saveEpisode(storage, state);
-assert.equal(loadEpisode(storage).step, 'hunt');
-assert.equal(loadEpisode(storage).coins, state.coins);
-assert.equal(items.size, 1);
 assert.throws(() => replayHorizonBattle(battleContext(state, hardest), {
   ticks: 2, actions: [{ tick: 0, type: 'cast_on_object', gift: 'fire', object: 'missing' }],
 }), /Invalid battle action/);

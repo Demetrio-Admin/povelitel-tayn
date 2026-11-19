@@ -15,11 +15,10 @@ import '@fontsource/philosopher/latin-400.css';
 import Phaser from 'phaser';
 import { VIEW } from './config/game.config.js';
 import { GAME_TITLE } from './config/branding.js';
-import { BootScene } from './scenes/BootScene.js';
-import { PreloadScene } from './scenes/PreloadScene.js';
-import { ExplorationScene } from './scenes/ExplorationScene.js';
-import { CombatScene } from './scenes/CombatScene.js';
-import { UIScene } from './scenes/UIScene.js';
+import { HorizonBootScene, HorizonPreloadScene } from './v2/boot.js';
+import { HorizonExplorationScene } from './v2/world.js';
+import { HorizonCombatScene } from './v2/combat.js';
+import { HorizonUIScene } from './v2/hud.js';
 import { MenuScene } from './scenes/MenuScene.js';
 import { loadUIFont } from './ui/fonts.js';
 import { showLoadingScreen } from './ui/loadingScreen.js';
@@ -48,7 +47,7 @@ const config = {
   },
   input: { activePointers: 3 },
   render: { pixelArt: false, antialias: true },
-  scene: [BootScene, PreloadScene, MenuScene, ExplorationScene, CombatScene, UIScene],
+  scene: [HorizonBootScene, HorizonPreloadScene, MenuScene, HorizonExplorationScene, HorizonCombatScene, HorizonUIScene],
 };
 
 // Шрифт интерфейса грузится до старта игры (макс. 2 с), иначе Canvas нарисует текст запасным шрифтом навсегда.

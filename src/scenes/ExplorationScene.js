@@ -126,8 +126,9 @@ export class ExplorationScene extends Phaser.Scene {
     this.map = services.map;
     this.terrain = buildTerrain({ ROADS: this.map.roads, WATERS: this.map.waters });
     const here = (o) => inLocation(o, this.loc);
-    this.interactiveCfgs = applyPos(linkBuildingPortals(INTERACTIVES, this.map.colliders), this.map.pos).filter(here);
-    this.enemyCfgs = applyPos(ENEMY_SPAWNS, this.map.pos).filter(here);
+    const content = this.worldContent();
+    this.interactiveCfgs = applyPos(linkBuildingPortals(content.interactives, this.map.colliders), this.map.pos).filter(here);
+    this.enemyCfgs = applyPos(content.enemies, this.map.pos).filter(here);
     this.propViews = new Map();
     this.groundViews = new Map();
     this.colliderViews = new Map();
@@ -216,6 +217,8 @@ export class ExplorationScene extends Phaser.Scene {
     this.scheduleStory();
     this.migrateV10();
   }
+
+  worldContent() { return { interactives: INTERACTIVES, enemies: ENEMY_SPAWNS }; }
 
   // ------------------------------------------------------------------ v0.9: завязка и стартовый набор
   /** Вступление Мирры — один раз на нового персонажа (старые сохранения с прогрессом его не получают). */

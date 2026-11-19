@@ -9,11 +9,11 @@ import { randomUUID } from 'crypto';
 import { applyPatch, applyAction, combatApply, advanceVitals, fillDefaults, emptySnapshot, levelForXp, walletOf } from '../../src/cloud/playerModel.js';
 import { HERO_LEVELS } from '../../src/config/balance.hero.js';
 
-import { databaseRules } from './rules-config.mjs';
+import { serverRules } from '../../src/config/serverRules.js';
 import { DAILY_ORDER } from '../../src/config/daily.js';
 
 const SERIES = Number(process.argv[2]) || 60, STEPS = 14;
-const RULES = databaseRules();
+const RULES = serverRules();
 const RECIPE_IDS = Object.keys(RULES.recipes), USE_IDS = Object.keys(RULES.uses);
 const CHAPTER_ITEMS = ['moon_herb', 'forest_mushroom', 'tree_resin', 'rune_dust', 'lunar_shard', 'lunar_flame', 'rare_core', 'elixir_life', 'elixir_mana', ...USE_IDS];
 const WORLD_IDS = Object.keys(RULES.world);

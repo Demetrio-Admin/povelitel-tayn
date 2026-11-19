@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
-import { databaseRules } from '../tools/sql/rules-config.mjs';
+import { serverRules } from '../src/config/serverRules.js';
+import { horizonRules } from '../tools/sql/rules-config.mjs';
 
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 const files = JSON.parse(read('supabase/fresh-install.json'));
@@ -24,14 +25,16 @@ async function verifyContract(db) {
       to_regprocedure('public.telemetry_log(text,jsonb)') is not null as telemetry,
       has_function_privilege('authenticated', 'public.combat_apply(uuid,jsonb)', 'execute') as player_can_apply_combat,
       has_function_privilege('service_role', 'public.combat_apply(uuid,jsonb)', 'execute') as edge_can_apply_combat,
-      public._game_rules() as rules
+      public._game_rules() as rules,
+      public._horizon_rules() as horizon
   `);
-  const { rules, ...surface } = contract;
+  const { rules, horizon, ...surface } = contract;
   assert.deepEqual(surface, {
     wrapped: true, combat_wrapped: true, covens: true, chat: true, telemetry: true,
     player_can_apply_combat: false, edge_can_apply_combat: true,
   });
-  assert.deepEqual(rules, databaseRules(), 'SQL rules match the JS rules after install and upgrade');
+  assert.deepEqual(horizon, horizonRules(), 'Horizon 41 rules survive install and upgrade');
+  assert.deepEqual(rules, serverRules(), 'SQL rules match the JS rules after install and upgrade');
 }
 
 async function playerData(db) {

@@ -1,8 +1,6 @@
-import { HORIZON_TABLES } from '../../src/config/horizon/tables.generated.js';
+import { CORE as settings, ECONOMY, TIDE as tide, baseBattleCoins as baseCoins } from '../../src/config/horizon/rules.js';
 
-const settings = Object.fromEntries(HORIZON_TABLES.core_curves.map(({ param_key, value }) => [param_key, value]));
-const economy = new Map(HORIZON_TABLES.economy_tide.map(row => [row.section + '.' + row.key, row.value]));
-const tide = HORIZON_TABLES.economy_tide.filter(row => row.section === 'tide');
+const economy = new Map(Object.entries(ECONOMY));
 
 function rewardUnits(wins) {
   let units = 0;
@@ -17,7 +15,6 @@ function rewardUnits(wins) {
   throw new Error('Лунный прилив: отсутствует последняя ступень без лимита.');
 }
 
-const baseCoins = level => Math.floor(economy.get('coins.base_fight') * economy.get('coins.reward_growth') ** (level - 1));
 const roundCost = level => economy.get('level.active_tracks')
   * Math.floor(economy.get('level.cost_base') * economy.get('level.cost_growth') ** (level - 1));
 
@@ -57,18 +54,19 @@ const f2pWins = 20;
 const hardcoreWins = 400;
 const share = economy.get('coins.combat_income_share');
 const tableShare = (wins, key) => baseCoins(1) * rewardUnits(wins) / economy.get(key);
-const scenarios = [
-  {
+const canonical = {
+  assumptions: 'Контрольные доходы L1. Доля дохода от боёв фиксируется отдельно для каждого профиля.',
+  players: [
+    simulate(f2pWins, tableShare(f2pWins, 'coins.control_daily_f2p_level_one')),
+    simulate(hardcoreWins, tableShare(hardcoreWins, 'coins.control_daily_hardcore_level_one')),
+  ],
+};
+
+const result = { balanceVersion: settings.balance_version, targetLevel: settings.target_year_levels, canonical };
+if (process.argv.includes('--compare')) {
+  result.comparison = {
     assumptions: 'Бои дают 60% дневного дохода в обоих профилях.',
     players: [simulate(f2pWins, share), simulate(hardcoreWins, share)],
-  },
-  {
-    assumptions: 'Доход калибруется по контрольным суммам L1. Доля дохода от боёв фиксируется отдельно для каждого профиля.',
-    players: [
-      simulate(f2pWins, tableShare(f2pWins, 'coins.control_daily_f2p_level_one')),
-      simulate(hardcoreWins, tableShare(hardcoreWins, 'coins.control_daily_hardcore_level_one')),
-    ],
-  },
-];
-
-console.log(JSON.stringify({ balanceVersion: settings.balance_version, targetLevel: settings.target_year_levels, scenarios }, null, 2));
+  };
+}
+console.log(JSON.stringify(result, null, 2));

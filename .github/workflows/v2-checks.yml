@@ -1,0 +1,29 @@
+name: Version 2 episode checks
+on:
+  push:
+    branches: ['v2/episode-1']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  playthrough:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run balance:sync -- --check
+      - run: npm run balance:sim
+      - run: npm run test:v2
+      - run: npm run build
+      - run: npm run check:bundle
+      - run: npx playwright install --with-deps chromium
+      - name: Touch playthrough
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 5196 > /tmp/koldovstvo-v2-preview.log 2>&1 &
+          curl --fail --retry 20 --retry-all-errors --retry-delay 1 http://127.0.0.1:5196/v2/ -o /dev/null
+          npm run test:v2:browser

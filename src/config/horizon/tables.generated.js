@@ -330,6 +330,66 @@ export const HORIZON_TABLES = {
       "param_key": "amulet_5_coins",
       "value": 500000,
       "unit": "coins"
+    },
+    {
+      "param_key": "episode_wand_rank_step",
+      "value": 8,
+      "unit": "ranks"
+    },
+    {
+      "param_key": "episode_wand_base_mult",
+      "value": 0.86,
+      "unit": "multiplier"
+    },
+    {
+      "param_key": "episode_wand_upgrade_power",
+      "value": 1.065,
+      "unit": "multiplier"
+    },
+    {
+      "param_key": "episode_enemy_hit_mult",
+      "value": 0.7,
+      "unit": "multiplier"
+    },
+    {
+      "param_key": "episode_enemy_attack_interval",
+      "value": 2.5,
+      "unit": "s"
+    },
+    {
+      "param_key": "episode_enemy_cast_every",
+      "value": 3,
+      "unit": "attacks"
+    },
+    {
+      "param_key": "episode_enemy_cast_duration",
+      "value": 1.2,
+      "unit": "s"
+    },
+    {
+      "param_key": "episode_enemy_cast_mult",
+      "value": 1.8,
+      "unit": "multiplier"
+    },
+    {
+      "param_key": "episode_heat_tick_mult",
+      "value": 0.13,
+      "unit": "multiplier"
+    },
+    {
+      "param_key": "episode_heat_duration",
+      "value": 4,
+      "unit": "s"
+    },
+    {
+      "param_key": "episode_fox_kill_refund",
+      "value": 35,
+      "unit": "points"
+    },
+    {
+      "param_key": "episode_fox_kill_coins",
+      "value": 0.1,
+      "unit": "ratio"
     }
   ],
   "economy_tide": [
@@ -656,9 +716,9 @@ export const HORIZON_TABLES = {
       "tag": "heat",
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
+      "mana": 12,
+      "cd_sec": 4,
+      "sp_mult": 0.9,
       "arena_effect": "Раскаляет камень (бросок вешает 2 слоя *Жара*).",
       "passive_3star": null,
       "passive_5star": null,
@@ -1056,9 +1116,9 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": null,
       "target_scope": "single/splash",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
+      "mana": 9,
+      "cd_sec": 3,
+      "sp_mult": 0.55,
       "arena_effect": "Бросок любого камня с полной активацией его метки.",
       "passive_3star": null,
       "passive_5star": null,

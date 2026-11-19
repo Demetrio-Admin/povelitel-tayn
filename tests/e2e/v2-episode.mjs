@@ -1,0 +1,68 @@
+import assert from 'node:assert/strict';
+import { chromium } from 'playwright';
+
+const browser = await chromium.launch();
+try {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('response', response => {
+    if (response.status() >= 400 && !response.url().endsWith('favicon.ico')) errors.push(response.status() + ' ' + response.url());
+  });
+  await page.goto(new URL('v2/', process.env.UI_BASE_URL || 'http://127.0.0.1:5196/').href);
+  const tap = (action, scope = page) => scope.locator('[data-action="' + action + '"]').tap();
+  const step = () => page.evaluate(() => JSON.parse(localStorage.getItem('koldovstvo:v2:episode-1')).step);
+  const result = () => page.locator('.result-panel').waitFor({ timeout: 26000 });
+  await page.locator('.dialogue').waitFor();
+  for (let i = 0; i < 3; i++) await tap('next');
+  assert.equal(await step(), 'spark');
+  await tap('spark', page.locator('.quest-panel'));
+  await tap('stone:light');
+  await tap('gift:fire');
+  await page.locator('.stone.hot').waitFor();
+  await tap('stone:light');
+  await tap('gift:telekinesis');
+  await page.locator('.enemy .heat:not([hidden])').waitFor();
+  await result();
+  assert.equal(await step(), 'upgrade');
+  assert.match(await page.locator('.result-panel').innerText(), /65 монет/);
+  await tap('leave');
+  await tap('upgrade', page.locator('.quest-panel'));
+  await page.locator('.quest-panel').getByText(/1,30/).waitFor();
+  assert.equal(await step(), 'frost');
+  await tap('frost', page.locator('.quest-panel'));
+  await result();
+  assert.equal(await step(), 'thaw');
+  await tap('leave');
+  await page.locator('.flower').waitFor();
+  await page.locator('.map-fox').waitFor();
+  assert.equal(await page.locator('.frozen').count(), 0);
+  for (let i = 0; i < 5; i++) await tap('next');
+  assert.equal(await step(), 'hunt');
+  assert.equal(await page.locator('.hunt-markers button').count(), 4);
+  assert.match(await page.locator('.tide').innerText(), /20\/20/);
+  await tap('hunt:wood-road');
+  await tap('focus:1');
+  assert.equal(await page.locator('[data-action="focus:1"]').getAttribute('aria-pressed'), 'true');
+  await tap('stone:heavy');
+  await tap('gift:fire');
+  await tap('stone:heavy');
+  await tap('gift:telekinesis');
+  await page.locator('.battle-fox .response').waitFor();
+  assert.equal(await page.locator('.enemy').count(), 3);
+  await result();
+  assert.match(await page.locator('.result-panel').innerText(), /Победа/);
+  await tap('leave');
+  assert.match(await page.locator('.tide').innerText(), /19\/20/);
+  await tap('bestiary');
+  assert.match(await page.locator('dialog').innerText(), /Колючник · 1/);
+  await tap('close');
+  await page.reload();
+  await page.locator('.tide').waitFor();
+  assert.equal(await step(), 'hunt');
+  assert.match(await page.locator('.tide').innerText(), /19\/20/);
+  assert.deepEqual(errors, []);
+  console.log('Chrome touch playthrough passed at 390×844.');
+} finally {
+  await browser.close();
+}

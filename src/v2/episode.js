@@ -1,0 +1,175 @@
+import { CORE, ECONOMY, TIDE, baseBattleCoins, tideAt, wandInterval } from '../config/horizon/rules.js';
+
+export const ART = {
+  hero: 'heroes/lunar-v1/hero_down.webp',
+  mirra: 'sprites/npc_mirra.webp',
+  veda: 'sprites/npc_veda.webp',
+  grom: 'sprites/npc_goran.webp',
+  fox: 'chapter3/companion_fox.webp',
+  hut: 'chapter3/iva_hut.webp',
+  flower: 'city-cozy/flowerbed.webp',
+  lantern: 'sprites/lantern_02.webp',
+  cauldron: 'sprites/cauldron_01.webp',
+  sign: 'sprites/signpost_01.webp',
+  camp: 'sprites/campfire_01.webp',
+  light: 'sprites/field_rock_light.webp',
+  heavy: 'sprites/field_rock_heavy.webp',
+  fire: 'sprites/icon_fire.webp',
+  telekinesis: 'sprites/icon_telekinesis.webp',
+  forestArena: 'chapter3/arena_grove.webp',
+};
+
+const TITLES = {
+  intro: 'Очаг Мирры',
+  spark: 'Не трожь фонарь!',
+  upgrade: 'Искра в палочке',
+  frost: 'Тепло у калитки',
+  thaw: 'Тепло у калитки',
+  veda: 'Привал Грома',
+  grom: 'Привал Грома',
+  hunt: 'Свободная охота',
+};
+export const STEPS = Object.keys(TITLES);
+export const titleOf = step => TITLES[step];
+
+export const DIALOGUE = {
+  intro: [
+    ['Мирра', 'С посвящением, ученик. Теперь этот очаг — твой.'],
+    ['Мирра', 'Не бойся мелких искр — с них начинается большая магия.'],
+    ['Мирра', 'Береги Рыжика! Ищи меня в Светлодоле!..'],
+  ],
+  thaw: [
+    ['Рыжик', 'Рыжик теперь с тобой! Когда шкала отклика заполнится, он сам бросится добивать врага.'],
+  ],
+  veda: [
+    ['Веда', 'Я видела вспышку… Мирру унесло прямо к Светлодолу!'],
+    ['Веда', 'Мы её найдём. На верстаке осталась её записка.'],
+  ],
+  grom: [
+    ['Гром', 'От упавших страниц зверьё в бору с ума посходило.'],
+    ['Гром', 'Хочешь драться и качаться без пауз — жми на мой привал. За сильных тварей дам монеты и осколки даров!'],
+  ],
+};
+
+const FOES = {
+  spark: { name: 'Искроцап', art: 'sprites/enemy_scavenger_small.webp', role: 'fighter' },
+  frost: { name: 'Морозун', art: 'sprites/enemy_frost_critter.webp', role: 'fighter' },
+  thorn: { name: 'Колючник', art: 'sprites/enemy_rootling.webp', role: 'warder' },
+};
+export const STORY_ENCOUNTERS = Object.fromEntries(['spark', 'frost'].map(key => [key, {
+  id: key, name: FOES[key].name, level: 1, pack: 'solo', enemies: [FOES[key]], arena: ['light'],
+}]));
+
+const SLOT_LAYOUT = [
+  ['camp-edge', -1, 'solo', ['spark']],
+  ['pine-crossing', 0, 'duo', ['thorn', 'spark']],
+  ['white-bridge', 1, 'duo', ['frost', 'thorn']],
+  ['wood-road', 2, 'trio', ['thorn', 'spark', 'frost']],
+];
+const LUNAR_TIER_MAX = TIDE[0].threshold;
+const REGION_MAX = 20;
+const SAVE_KEY = 'koldovstvo:v2:episode-1';
+const dayKey = now => new Date(now).toISOString().slice(0, 10);
+const nonnegative = value => Number.isSafeInteger(value) && value >= 0 ? value : 0;
+const starterState = () => ({
+  step: 'intro', coins: 0, herbs: 0, storyPage: false, wandRank: 0, fox: false,
+  huntLevel: 1, date: '', dailyWins: 0, totalWins: 0, shards: 0, respawns: {},
+  bestiary: {},
+});
+
+export function loadEpisode(storage) {
+  try {
+    const data = JSON.parse(storage.getItem(SAVE_KEY));
+    if (!data || !STEPS.includes(data.step)) return starterState();
+    const clean = { ...starterState(), ...data };
+    for (const key of ['coins', 'herbs', 'wandRank', 'dailyWins', 'totalWins', 'shards']) clean[key] = nonnegative(clean[key]);
+    clean.huntLevel = Math.max(1, Math.min(REGION_MAX, nonnegative(clean.huntLevel)));
+    clean.respawns = Object.fromEntries(SLOT_LAYOUT.map(([id]) => [id, nonnegative(data.respawns?.[id])]));
+    clean.bestiary = Object.fromEntries(Object.keys(FOES).map(id => [id, nonnegative(data.bestiary?.[id])]));
+    clean.fox = clean.fox === true;
+    return clean;
+  } catch {
+    return starterState();
+  }
+}
+
+export function saveEpisode(storage, state) {
+  try { storage.setItem(SAVE_KEY, JSON.stringify(state)); } catch { /* Keep the session playable without storage. */ }
+}
+
+export function restartEpisode(storage) {
+  const state = starterState();
+  saveEpisode(storage, state);
+  return state;
+}
+
+export function finishDialogue(state) {
+  const next = { intro: 'spark', thaw: 'veda', veda: 'grom', grom: 'hunt' }[state.step];
+  return next ? { ...state, step: next } : state;
+}
+
+export function upgradeWand(state) {
+  const { act1_first_wand_coins: coins, act1_first_wand_herbs: herbs } = CORE;
+  if (state.step !== 'upgrade' || state.coins < coins || state.herbs < herbs) return state;
+  return { ...state, step: 'frost', coins: state.coins - coins, herbs: state.herbs - herbs, wandRank: CORE.episode_wand_rank_step };
+}
+
+export function huntOffers(state, now) {
+  if (state.step !== 'hunt') return [];
+  return SLOT_LAYOUT.map(([id, offset, pack, enemyIds]) => {
+    const level = Math.max(1, Math.min(REGION_MAX, state.huntLevel + offset));
+    return {
+      id, level, pack, enemyIds, enemies: enemyIds.map(key => FOES[key]),
+      arena: pack === 'solo' ? ['light'] : ['light', 'heavy'],
+      name: enemyIds.map(key => FOES[key].name).join(' и '),
+      readyAt: state.respawns[id] ?? 0, ready: (state.respawns[id] ?? 0) <= now,
+    };
+  });
+}
+
+export function battleContext(state, encounter) {
+  return {
+    balanceVersion: CORE.balance_version,
+    heroLevel: state.huntLevel, wandRank: state.wandRank, fox: state.fox, encounter,
+  };
+}
+
+export function tideStatus(state, now) {
+  const wins = state.date === dayKey(now) ? state.dailyWins : 0;
+  return { wins, remaining: Math.max(0, LUNAR_TIER_MAX - wins), tide: tideAt(wins) };
+}
+
+export function settleVictory(state, encounter, foxBonus, now) {
+  if (state.step === 'spark' && encounter.id === 'spark') {
+    return {
+      state: { ...state, step: 'upgrade', coins: state.coins + 65, herbs: state.herbs + 3, storyPage: true },
+      summary: '65 монет · 3 Лунные травы · Страница Гримуара',
+    };
+  }
+  if (state.step === 'frost' && encounter.id === 'frost') {
+    return {
+      state: { ...state, step: 'thaw', fox: true, coins: state.coins + 40, herbs: state.herbs + 2 },
+      summary: '40 монет · 2 Лунные травы · Рыжик',
+    };
+  }
+  const current = huntOffers(state, now).find(offer => offer.id === encounter.id && offer.ready && offer.level === encounter.level);
+  if (!current) return { state, summary: '' };
+  const { wins, tide } = tideStatus(state, now);
+  const coins = Math.floor(baseBattleCoins(encounter.level) * tide.value * (foxBonus ? 1 + CORE.episode_fox_kill_coins : 1));
+  const shards = encounter.level > state.huntLevel ? 1 : 0;
+  const level = Math.min(REGION_MAX, state.huntLevel + Number(encounter.level >= state.huntLevel));
+  const bestiary = { ...state.bestiary };
+  for (const id of current.enemyIds) bestiary[id] = (bestiary[id] ?? 0) + 1;
+  const summary = [coins + ' монет', shards ? shards + ' осколок Огня' : '', level > state.huntLevel ? 'Охота · ур. ' + level : '']
+    .filter(Boolean).join(' · ');
+  return {
+    state: {
+      ...state, huntLevel: level, coins: state.coins + coins, date: dayKey(now), dailyWins: wins + 1,
+      totalWins: state.totalWins + 1, shards: state.shards + shards, bestiary,
+      respawns: { ...state.respawns, [encounter.id]: now + ECONOMY['hunt.respawn_seconds'] * 1000 },
+    },
+    summary,
+  };
+}
+
+export const wandSeconds = rank => wandInterval(rank).toFixed(2).replace('.', ',');

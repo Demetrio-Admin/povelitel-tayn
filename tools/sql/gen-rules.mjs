@@ -4,19 +4,19 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { serverRules } from '../../src/config/serverRules.js';
+import { databaseRules } from './rules-config.mjs';
 
 const file = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../supabase/schema.sql');
-const json = JSON.stringify(serverRules());
+const json = JSON.stringify(databaseRules());
 if (json.includes('$r$')) throw new Error('rules contain $r$');
 const fn = `create or replace function public._game_rules() returns jsonb language sql immutable as $r$ select '${json.replace(/'/g, "''")}'::jsonb $r$;`;
 const s = fs.readFileSync(file, 'utf8');
 const re = /-- @rules:begin\n[\s\S]*?-- @rules:end/;
 if (!re.test(s)) throw new Error('markers not found');
-const generated = s.replace(re, `-- @rules:begin\n${fn}\n-- @rules:end`);
+const generated = s.replace(re, () => `-- @rules:begin\n${fn}\n-- @rules:end`);
 if (process.argv.includes('--check')) {
   if (s !== generated) throw new Error('_game_rules() расходится с serverRules.js. Запустите node tools/sql/gen-rules.mjs.');
-  console.log('_game_rules() соответствует serverRules.js');
+  console.log('_game_rules() соответствует конфигам JS');
 } else {
   fs.writeFileSync(file, generated);
   console.log('_game_rules() обновлена:', json.length, 'символов');

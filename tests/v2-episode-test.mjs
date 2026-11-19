@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { CORE, baseBattleCoins, tideAt } from '../src/config/horizon/rules.js';
+import { CORE, GIFT_RULES, baseBattleCoins, tideAt, encounterHp, coverage, defensiveRatings, incomingDamage, effectiveCooldown } from '../src/config/horizon/rules.js';
+import { PREVIEW_CORE } from '../src/config/horizon/previewTuning.js';
 import { HorizonBattle, HORIZON_STEP_MS, replayHorizonBattle } from '../src/systems/HorizonBattle.js';
 import {
   STORY_ENCOUNTERS, battleContext, finishDialogue, huntOffers, starterState,
-  settleVictory, tideStatus, upgradeWand,
+  claimMirraLantern, settleVictory, tideStatus, upgradeWand,
 } from '../src/v2/episode.js';
 
 const now = Date.UTC(2026, 10, 19, 12);
@@ -42,12 +43,16 @@ assert.ok(first.events.some(event => event.source === 'fire-stone'));
 assert.ok(first.events.some(event => event.source === 'impulse'));
 
 state = settleVictory(state, STORY_ENCOUNTERS.spark, false, now).state;
-assert.equal(state.step, 'upgrade');
+assert.equal(state.step, 'lantern');
+assert.deepEqual([state.coins, state.herbs, state.storyPage], [0, 0, false]);
+state = claimMirraLantern(state);
+assert.deepEqual([state.step, state.coins, state.herbs, state.storyPage], ['upgrade', 65, 3, true]);
+assert.equal(claimMirraLantern(state), state);
 assert.deepEqual([state.coins, state.herbs, state.storyPage], [65, 3, true]);
 assert.equal(settleVictory(state, STORY_ENCOUNTERS.spark, false, now).state, state);
 state = upgradeWand(state);
 assert.equal(state.step, 'frost');
-assert.deepEqual([state.coins, state.herbs, state.wandRank], [5, 1, CORE.episode_wand_rank_step]);
+assert.deepEqual([state.coins, state.herbs, state.wandRank], [5, 1, PREVIEW_CORE.episode_wand_rank_step]);
 assert.equal(upgradeWand(state), state);
 const second = play(battleContext(state, STORY_ENCOUNTERS.frost), () => {});
 assert.equal(second.battle.intervals.wand, 26);
@@ -91,3 +96,20 @@ assert.throws(() => replayHorizonBattle(battleContext(state, hardest), {
   ticks: 2, actions: [{ tick: 0, type: 'cast_on_object', gift: 'fire', object: 'missing' }],
 }), /Invalid battle action/);
 console.log('V2 episode passed. Story battles: ' + first.seconds + ' s / ' + second.seconds + ' s, trio: ' + hunt.seconds + ' s.');
+
+assert.deepEqual(['normal', 'elite', 'boss'].map(tier => encounterHp(1, tier, 1)), [240, 580, 1400]);
+assert.equal(coverage('splash', false), 0.45);
+assert.equal(coverage('chain', true), 0.60);
+assert.equal(coverage('single', false), 0);
+assert.equal(effectiveCooldown(10, 0.95), 5);
+assert.equal(incomingDamage(100, { armor: 0.65, resistance: 0.6, potion: 0.6, amulet: 0.9 }), 10);
+for (let level = 1; level <= 200; level++) {
+  const effects = defensiveRatings(level, { armor: 1e9, resistance: 1e9, cooldown: 1e9, crit: 1e9 });
+  assert.ok(effects.armor <= CORE.armor_cap);
+  assert.ok(effects.resistance <= CORE.status_resist_cap);
+  assert.ok(effects.cooldown <= CORE.cdr_cap);
+  assert.ok(effects.crit <= CORE.crit_cap);
+}
+assert.equal(GIFT_RULES.fire.mana, null);
+assert.equal(GIFT_RULES.telekinesis.cd_sec, null);
+assert.equal(Object.hasOwn(CORE, 'episode_enemy_hit_mult'), false);

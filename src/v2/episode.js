@@ -1,8 +1,10 @@
 import { CORE, ECONOMY, TIDE, baseBattleCoins, tideAt, wandInterval } from '../config/horizon/rules.js';
+import { PREVIEW_CORE } from '../config/horizon/previewTuning.js';
 
 const TITLES = {
   intro: 'Очаг Мирры',
   spark: 'Не трожь фонарь!',
+  lantern: 'Не трожь фонарь!',
   upgrade: 'Искра в палочке',
   frost: 'Тепло у калитки',
   thaw: 'Тепло у калитки',
@@ -20,15 +22,15 @@ export const DIALOGUE = {
     ['Мирра', 'Береги Рыжика! Ищи меня в Светлодоле!..'],
   ],
   thaw: [
-    ['Рыжик', 'Рыжик теперь с тобой! Когда шкала отклика заполнится, он сам бросится добивать врага.'],
+    ['Рыжик', 'Рыжик теперь с тобой! Сам бросается добивать врагов, когда заполнится Шкала отклика.'],
   ],
   veda: [
-    ['Веда', 'Я видела вспышку… Мирру унесло прямо к Светлодолу!'],
-    ['Веда', 'Мы её найдём. На верстаке осталась её записка.'],
+    ['Веда', 'Я видела вспышку... Мирру унесло прямо к Светлодолу!'],
+    ['Веда', 'Не бойся — мы её найдём. Сначала отогрей свой верстак, там осталась её записка.'],
   ],
   grom: [
-    ['Гром', 'От упавших страниц зверьё в бору с ума посходило.'],
-    ['Гром', 'Хочешь драться и качаться без пауз — жми на мой привал. За сильных тварей дам монеты и осколки даров!'],
+    ['Гром', 'Ого, свежая палочка и боевой лис! От упавших страниц зверьё в бору с ума посходило.'],
+    ['Гром', 'Хочешь драться и качаться без пауз — жми на мой привал. За сильных тварей сыплю монеты и осколки даров!'],
   ],
 };
 
@@ -51,7 +53,7 @@ const LUNAR_TIER_MAX = TIDE[0].threshold;
 const REGION_MAX = 20;
 const dayKey = now => new Date(now).toISOString().slice(0, 10);
 export const starterState = () => ({
-  step: 'intro', coins: 0, herbs: 0, storyPage: false, wandRank: 0, fox: false,
+  step: 'intro', coins: 0, herbs: 0, storyPage: false, wandRank: 0, fox: false, foxStars: 0,
   huntLevel: 1, date: '', dailyWins: 0, totalWins: 0, shards: 0, respawns: {},
   bestiary: {},
 });
@@ -61,10 +63,15 @@ export function finishDialogue(state) {
   return next ? { ...state, step: next } : state;
 }
 
+export function claimMirraLantern(state) {
+  if (state.step !== 'lantern') return state;
+  return { ...state, step: 'upgrade', coins: state.coins + 65, herbs: state.herbs + 3, storyPage: true };
+}
+
 export function upgradeWand(state) {
   const { act1_first_wand_coins: coins, act1_first_wand_herbs: herbs } = CORE;
   if (state.step !== 'upgrade' || state.coins < coins || state.herbs < herbs) return state;
-  return { ...state, step: 'frost', coins: state.coins - coins, herbs: state.herbs - herbs, wandRank: CORE.episode_wand_rank_step };
+  return { ...state, step: 'frost', coins: state.coins - coins, herbs: state.herbs - herbs, wandRank: PREVIEW_CORE.episode_wand_rank_step };
 }
 
 export function huntOffers(state, now) {
@@ -95,13 +102,13 @@ export function tideStatus(state, now) {
 export function settleVictory(state, encounter, foxBonus, now) {
   if (state.step === 'spark' && encounter.id === 'spark') {
     return {
-      state: { ...state, step: 'upgrade', coins: state.coins + 65, herbs: state.herbs + 3, storyPage: true },
-      summary: '65 монет · 3 Лунные травы · Страница Гримуара',
+      state: { ...state, step: 'lantern' },
+      summary: 'Подбери треснувший фонарь Мирры.'
     };
   }
   if (state.step === 'frost' && encounter.id === 'frost') {
     return {
-      state: { ...state, step: 'thaw', fox: true, coins: state.coins + 40, herbs: state.herbs + 2 },
+      state: { ...state, step: 'thaw', fox: true, foxStars: 1, coins: state.coins + 40, herbs: state.herbs + 2 },
       summary: '40 монет · 2 Лунные травы · Рыжик',
     };
   }

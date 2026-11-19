@@ -1,5 +1,6 @@
 import { CombatScene } from '../scenes/CombatScene.js';
-import { CORE, STARTER_GIFTS } from '../config/horizon/rules.js';
+import { CORE } from '../config/horizon/rules.js';
+import { PREVIEW_GIFTS } from '../config/horizon/previewTuning.js';
 import { VIEW, COLORS } from '../config/game.config.js';
 import { UI } from '../config/ui.config.js';
 import { MSG } from '../state/EventBus.js';
@@ -132,7 +133,7 @@ export class HorizonCombatScene extends CombatScene {
   }
 
   abilityView(id) {
-    const gift = STARTER_GIFTS[id];
+    const gift = PREVIEW_GIFTS[id];
     if (!gift) return { id, state: 'locked' };
     if (!services.state.isEquipped(id)) return { id, state: 'benched' };
     const left = Math.max(0, (this.battle.cooldown[id] - this.battle.tick) * HORIZON_STEP_MS / 1000);
@@ -201,8 +202,8 @@ export class HorizonCombatScene extends CombatScene {
     const stone = this.selected && this.battle.objects[this.selected];
     const teaching = this.encounter.id === 'spark' && !this.battle.combos;
     let hint = 'Выбери цель или заряди камень Огнём.';
-    if (stone) hint = stone.tag ? 'Брось раскалённый камень Телекинезом.' : 'Примени Огонь или Телекинез.';
-    else if (teaching) hint = this.battle.objects.light.tag ? 'Снова нажми на раскалённый камень.' : 'Нажми на камень, затем на Огонь.';
+    if (stone) hint = stone.tag ? 'Брось раскалённый камень Телекинезом.' : teaching ? 'Нажми «Огонь».' : 'Примени Огонь или Телекинез.';
+    else if (teaching) hint = this.battle.objects.light.tag ? 'Снова нажми на раскалённый камень.' : 'Нажми на камень.';
     if (this.hint.text !== hint) this.hint.setText(hint);
   }
 
@@ -258,6 +259,15 @@ export class HorizonCombatScene extends CombatScene {
       const reward = settleVictory(before, this.encounter, replayed.foxBonus, Date.now());
       saveCampaign(reward.state, { notify: false });
       services.audio.play('victory');
+      if (reward.state.step === 'lantern') {
+        const enemy = this.enemyViews[0];
+        this.burst(enemy.x, enemy.y - 48, COLORS.gold, 34);
+        this.bus.emit(MSG.DIALOG, {
+          title: 'Победа!', text: reward.summary, color: COLORS.gold,
+          buttons: [{ label: 'Продолжить', primary: true, onClick }],
+        });
+        return;
+      }
       this.bus.emit(MSG.DIALOG, {
         title: 'Победа!', color: COLORS.gold,
         victory: {

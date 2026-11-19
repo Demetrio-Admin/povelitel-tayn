@@ -89,10 +89,14 @@ try {
   await stone('light');
   await cast('telekinesis');
   await page.waitForFunction(() => window.__game.scene.getScene('CombatScene').battle.combos === 1);
-  await waitStep('upgrade');
-  console.log('Reached upgrade');
+  await waitStep('lantern');
   await next();
   await waitMode('exploration');
+  await visit('lantern');
+  await waitStep('upgrade');
+  assert.equal(await page.evaluate(() => window.__witch.state.item('mirra_lantern_cracked')), 1);
+  assert.equal(await page.evaluate(() => window.__witch.state.item('grimoire_page_fragment')), 1);
+  console.log('Reached upgrade');
 
   await visit('upgrade');
   await modal();

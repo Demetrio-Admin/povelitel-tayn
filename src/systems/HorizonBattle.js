@@ -1,4 +1,5 @@
-import { CORE, FOX, PACKS, STARTER_GIFTS, levelScale, wandInterval } from '../config/horizon/rules.js';
+import { CORE, FOX, PACKS, levelScale, wandInterval, encounterHp, coverage, incomingDamage, effectiveCooldown } from '../config/horizon/rules.js';
+import { PREVIEW_CORE, PREVIEW_GIFTS } from '../config/horizon/previewTuning.js';
 
 export const HORIZON_STEP_MS = 50;
 const ticks = seconds => Math.ceil(seconds * 1000 / HORIZON_STEP_MS);
@@ -25,12 +26,12 @@ export class HorizonBattle {
     this.fox = fox;
     this.foxBonus = false;
     this.combos = 0;
-    this.intervals = { wand: Math.round(wandInterval(wandRank) * 1000 / HORIZON_STEP_MS), enemies: ticks(CORE.episode_enemy_attack_interval) };
+    this.intervals = { wand: Math.round(wandInterval(wandRank) * 1000 / HORIZON_STEP_MS), enemies: ticks(PREVIEW_CORE.episode_enemy_attack_interval) };
     this.nextShot = this.intervals.wand;
     const heroScale = levelScale(heroLevel);
     const fraction = (Math.min(heroLevel, CORE.target_year_levels) - 1) / (CORE.target_year_levels - 1);
     this.power = CORE.base_power * heroScale;
-    this.wandPower = this.power * CORE.episode_wand_base_mult * CORE.episode_wand_upgrade_power ** (wandRank / CORE.episode_wand_rank_step);
+    this.wandPower = this.power * PREVIEW_CORE.episode_wand_base_mult * PREVIEW_CORE.episode_wand_upgrade_power ** (wandRank / PREVIEW_CORE.episode_wand_rank_step);
     this.hero = {
       maxHp: Math.round(CORE.hero_base_hp * heroScale),
       maxMana: CORE.mana_start + (CORE.mana_end - CORE.mana_start) * fraction,
@@ -40,11 +41,11 @@ export class HorizonBattle {
     this.hero.mana = this.hero.maxMana;
     const enemyScale = levelScale(encounter.level);
     this.enemies = encounter.enemies.map((def, index) => {
-      const hp = Math.round(CORE.base_power * CORE.mob_hp_mult * enemyScale * pack.hp_shares[index]);
+      const hp = encounterHp(encounter.level, def.difficulty ?? encounter.difficulty ?? 'normal', pack.hp_shares[index]);
       return {
         ...def, hp, maxHp: hp, slot: FORMATION_X[encounter.pack][index], index,
-        hit: CORE.base_power * enemyScale * CORE.episode_enemy_hit_mult * pack.dps_shares[index],
-        nextAttack: ticks(pack.first_attack_sec?.[index] ?? 2),
+        hit: CORE.base_power * enemyScale * PREVIEW_CORE.episode_enemy_hit_mult * pack.dps_shares[index],
+        nextAttack: ticks(pack.first_attack_sec?.[index] ?? PREVIEW_CORE.episode_solo_first_attack_sec),
         attacks: 0, castUntil: 0, heat: 0, heatUntil: 0, nextHeat: 0, shield: 0,
       };
     });
@@ -70,14 +71,14 @@ export class HorizonBattle {
       return true;
     }
     const { type, gift, object } = action;
-    const rule = Object.hasOwn(STARTER_GIFTS, gift) ? STARTER_GIFTS[gift] : null;
+    const rule = Object.hasOwn(PREVIEW_GIFTS, gift) ? PREVIEW_GIFTS[gift] : null;
     if (!rule || !['cast', 'cast_on_object'].includes(type) || this.cooldown[gift] > this.tick || this.hero.mana < rule.mana) return false;
     const target = this.enemies[this.focus];
     const stone = type === 'cast_on_object' && Object.hasOwn(this.objects, object) ? this.objects[object] : null;
     if (type === 'cast_on_object' && (!stone || stone.respawnAt > this.tick || (gift === 'fire' && stone.tag))) return false;
 
     this.hero.mana -= rule.mana;
-    this.cooldown[gift] = this.tick + ticks(rule.cd_sec);
+    this.cooldown[gift] = this.tick + ticks(effectiveCooldown(rule.cd_sec));
     this.actions.push(type === 'cast_on_object' ? { tick: this.tick, type, gift, object } : { tick: this.tick, type, gift });
     if (stone && gift === 'fire') {
       stone.tag = 'heat';
@@ -104,7 +105,7 @@ export class HorizonBattle {
     this.applyHeat(target, 2);
     if (stone.id === 'heavy') {
       for (const other of this.enemies) {
-        if (other !== target && other.hp > 0) this.damage(other, this.power * stone.heat * CORE.scope_splash_secondary, 'fire-stone');
+        if (other !== target && other.hp > 0) this.damage(other, this.power * stone.heat * coverage('splash', false), 'fire-stone');
       }
     }
     this.addCharge(CORE.companion_arena_combo);
@@ -114,7 +115,7 @@ export class HorizonBattle {
     if (!target.hp) return;
     if (!target.heat) target.nextHeat = this.tick + ticks(1);
     target.heat = Math.min(3, target.heat + stacks);
-    target.heatUntil = this.tick + ticks(CORE.episode_heat_duration);
+    target.heatUntil = this.tick + ticks(PREVIEW_CORE.episode_heat_duration);
   }
 
   interrupt(target) {
@@ -169,7 +170,7 @@ export class HorizonBattle {
     for (const enemy of this.enemies) {
       if (!enemy.hp) continue;
       if (enemy.heat && this.tick >= enemy.nextHeat && this.tick <= enemy.heatUntil) {
-        this.damage(enemy, this.power * enemy.heat * CORE.episode_heat_tick_mult, 'heat');
+        this.damage(enemy, this.power * enemy.heat * PREVIEW_CORE.episode_heat_tick_mult, 'heat');
         enemy.nextHeat += ticks(1);
       }
       if (this.tick >= enemy.heatUntil) enemy.heat = 0;
@@ -185,26 +186,26 @@ export class HorizonBattle {
       // A lone guardian uses its cast as an attack. In a pack it protects a wounded ally.
       const ally = enemy.role === 'warder' && this.enemies.find(other => other !== enemy && other.hp > 0);
       if (ally) {
-        ally.shield = Math.round(ally.maxHp * 0.15);
+        ally.shield = Math.round(ally.maxHp * PREVIEW_CORE.episode_ward_shield);
         this.emit('ward', { enemy: ally.index });
       } else {
-        this.hitHero(enemy, CORE.episode_enemy_cast_mult);
+        this.hitHero(enemy, PREVIEW_CORE.episode_enemy_cast_mult);
       }
       return;
     }
     if (enemy.nextAttack > this.tick) return;
     enemy.nextAttack = this.tick + this.intervals.enemies;
-    const wantsCast = ++enemy.attacks % CORE.episode_enemy_cast_every === 0;
+    const wantsCast = ++enemy.attacks % PREVIEW_CORE.episode_enemy_cast_every === 0;
     const casts = this.enemies.filter(other => other.castUntil > this.tick).length;
     if (wantsCast && casts < this.maxConcurrentCasts) {
-      enemy.castUntil = this.tick + ticks(CORE.episode_enemy_cast_duration);
+      enemy.castUntil = this.tick + ticks(PREVIEW_CORE.episode_enemy_cast_duration);
       return;
     }
     this.hitHero(enemy, 1);
   }
 
   hitHero(enemy, multiplier) {
-    this.hero.hp = Math.max(0, this.hero.hp - Math.round(enemy.hit * multiplier));
+    this.hero.hp = Math.max(0, this.hero.hp - Math.round(incomingDamage(enemy.hit * multiplier)));
     this.emit('hit', { enemy: enemy.index });
   }
 

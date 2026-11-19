@@ -10,6 +10,7 @@ const KEY = 'horizon_campaign';
 const OBJECTIVES = {
   intro: 'Поговори с Миррой у очага.',
   spark: 'Отгони Искроцапа от фонаря.',
+  lantern: 'Подбери треснувший фонарь Мирры.',
   upgrade: 'Усиль палочку у стола Мирры.',
   frost: 'Отгони Морозуна от калитки.',
   thaw: 'Оглянись. Лёд у калитки растаял.',
@@ -33,11 +34,18 @@ export function campaign() {
   return { ...state.getObject(KEY), coins: state.item('coins'), herbs: state.item('moon_herb') };
 }
 
+function syncRelics(state, progress) {
+  if (!progress.storyPage) return;
+  state.data.inventory.mirra_lantern_cracked = 1;
+  state.data.inventory.grimoire_page_fragment = 1;
+}
+
 export function saveCampaign(next, { notify = true } = {}) {
   const { state, bus } = services;
   state.setObject(KEY, next);
   state.data.inventory.coins = next.coins;
   state.data.inventory.moon_herb = next.herbs;
+  syncRelics(state, next);
   if (next.fox) state.data.inventory.companion_fox = 1;
   state.data.heroLevel = next.huntLevel;
   state.data.heroXP = state.levelRow().xp;
@@ -67,6 +75,11 @@ export function prepareCampaign() {
   }
   for (const id of ['fire', 'telekinesis']) state.unlockAbility(id, 1);
   state.setBuild({ slots: ['telekinesis', 'fire'] });
-  if (campaign().fox) setCompanionPref('fox');
+  const progress = campaign();
+  syncRelics(state, progress);
+  if (progress.fox) {
+    setCompanionPref('fox');
+    if (!progress.foxStars) saveCampaign({ ...progress, foxStars: 1 }, { notify: false });
+  }
   state.save();
 }

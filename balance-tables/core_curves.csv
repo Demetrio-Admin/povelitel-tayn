@@ -65,15 +65,5 @@ amulet_4_power,1.28,multiplier
 amulet_4_coins,110000,coins
 amulet_5_power,1.35,multiplier
 amulet_5_coins,500000,coins
-episode_wand_rank_step,8,ranks
-episode_wand_base_mult,0.86,multiplier
-episode_wand_upgrade_power,1.065,multiplier
-episode_enemy_hit_mult,0.70,multiplier
-episode_enemy_attack_interval,2.5,s
-episode_enemy_cast_every,3,attacks
-episode_enemy_cast_duration,1.2,s
-episode_enemy_cast_mult,1.8,multiplier
-episode_heat_tick_mult,0.13,multiplier
-episode_heat_duration,4,s
 episode_fox_kill_refund,35,points
 episode_fox_kill_coins,0.1,ratio

@@ -2,6 +2,7 @@ import { BootScene } from '../scenes/BootScene.js';
 import { PreloadScene } from '../scenes/PreloadScene.js';
 import { initServices, services } from '../services.js';
 import { setCompanionStorage } from '../objects/Companion.js';
+import { ITEMS } from '../config/balance.progression.js';
 import { PACK_IMAGES } from '../config/assets.packs.js';
 import { prepareCampaign } from './campaign.js';
 
@@ -23,6 +24,10 @@ export class HorizonBootScene extends BootScene {
     initServices({ storage, localOnly: true });
     services.skipMenu = true;
     services.settings.set('hints', false);
+    Object.assign(ITEMS, {
+      mirra_lantern_cracked: { name: 'Треснувший фонарь Мирры', icon: 'lantern_02' },
+      grimoire_page_fragment: { name: 'Расколотая страница Гримуара', icon: 'magic_book_01' },
+    });
     prepareCampaign();
     this.scene.start('PreloadScene');
   }
@@ -33,5 +38,6 @@ export class HorizonPreloadScene extends PreloadScene {
     super.preload();
     this.load.image('enemy_frost_critter', PACK_IMAGES.chapter2.enemy_frost_critter);
     this.load.image('arena_frostwood', PACK_IMAGES.chapter2.arena_frostwood);
+    this.load.image('horizon_hearth_gate', 'assets/city-cozy/fence_wood.webp');
   }
 }

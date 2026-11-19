@@ -27,3 +27,69 @@ jobs:
           npm run preview -- --host 127.0.0.1 --port 5196 > /tmp/koldovstvo-v2-preview.log 2>&1 &
           curl --fail --retry 20 --retry-all-errors --retry-delay 1 http://127.0.0.1:5196/ -o /dev/null
           npm run test:v2:browser
+
+  browser-preview:
+    needs: playthrough
+    if: github.ref == 'refs/heads/v2/episode-1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node tools/build-v2-preview.mjs
+      - name: Publish the checked Phaser client to the branch
+        id: publish
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add play.html
+          git diff --cached --quiet || git commit -m 'Publish the checked Phaser browser build'
+          git push origin HEAD:refs/heads/v2/episode-1
+          echo "revision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - run: npx playwright install --with-deps chromium
+      - name: Verify the branch link in a browser
+        env:
+          PLAY_SHA: ${{ steps.publish.outputs.revision }}
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { chromium } from 'playwright';
+          import { setTimeout as delay } from 'node:timers/promises';
+
+          const repo = 'Demetrio-Admin/povelitel-tayn';
+          const asset = 'https://raw.githubusercontent.com/' + repo + '/' + process.env.PLAY_SHA + '/play.html';
+          let available = false;
+          for (let i = 0; i < 12; i++) {
+            if ((await fetch(asset)).ok) { available = true; break; }
+            await delay(5000);
+          }
+          assert.ok(available, 'The browser build must be available on GitHub');
+          const browser = await chromium.launch();
+          try {
+            const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+            const errors = [];
+            page.on('pageerror', error => errors.push(error.message));
+            await page.goto('https://htmlpreview.github.io/?https://github.com/' + repo + '/blob/' + process.env.PLAY_SHA + '/play.html');
+            await page.waitForFunction(() => window.__game?.scene.isActive('ExplorationScene'), null, { timeout: 90000 });
+            const scene = await page.evaluate(() => {
+              const world = window.__game.scene.getScene('ExplorationScene');
+              return { map: world.loc.id, step: window.__witch.state.getObject('horizon_campaign').step,
+                texture: world.textures.get('npc_mirra').source[0].source.width };
+            });
+            assert.equal(scene.map, 'forest');
+            assert.equal(scene.step, 'intro');
+            assert.ok(scene.texture > 128, 'Existing Mirra art must be loaded');
+            assert.deepEqual(errors, []);
+            console.log('Verified the actual Phaser client at GitHub revision ' + process.env.PLAY_SHA);
+          } finally {
+            await browser.close();
+          }
+          JS

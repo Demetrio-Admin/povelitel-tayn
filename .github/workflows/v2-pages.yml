@@ -1,0 +1,106 @@
+name: Publish the V2 playtest to GitHub Pages
+on:
+  push:
+    branches: ['v2/episode-1']
+    paths: ['.github/workflows/v2-pages.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: preview
+      - uses: actions/checkout@v4
+        with:
+          ref: 04ad66f68be6450b830ba812e498e70b67b1b769
+          path: production
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: production/package-lock.json
+      - name: Build the current production release
+        working-directory: production
+        run: |
+          npm ci
+          npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_LOGIN_EMAIL_DOMAIN: ${{ vars.VITE_LOGIN_EMAIL_DOMAIN }}
+      - name: Verify the live release and add the separate playtest page
+        env:
+          LIVE_SITE: https://demetrio-admin.github.io/povelitel-tayn
+        run: |
+          curl --fail --silent --show-error "$LIVE_SITE/" --output "$RUNNER_TEMP/live-index.html"
+          curl --fail --silent --show-error "$LIVE_SITE/admin.html" --output "$RUNNER_TEMP/live-admin.html"
+          cmp --quiet "$RUNNER_TEMP/live-index.html" production/dist/index.html
+          cmp --quiet "$RUNNER_TEMP/live-admin.html" production/dist/admin.html
+          test ! -e production/dist/v2
+          mkdir production/dist/v2
+          cp preview/play.html production/dist/v2/index.html
+          sed -i "s|</head>|<meta name=\"playtest-commit\" content=\"$GITHUB_SHA\"></head>|" production/dist/v2/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: production/dist
+
+  publish:
+    needs: assemble
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  verify:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Open the public playtest and start playing
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { setTimeout as delay } from 'node:timers/promises';
+          import { chromium } from 'playwright';
+
+          const url = 'https://demetrio-admin.github.io/povelitel-tayn/v2/?rev=' + process.env.GITHUB_SHA;
+          let html = '';
+          for (let attempt = 0; attempt < 12; attempt++) {
+            const response = await fetch(url, { cache: 'no-store' });
+            if (response.ok) html = await response.text();
+            if (html.includes('name="playtest-commit" content="' + process.env.GITHUB_SHA + '"')) break;
+            await delay(5000);
+          }
+          assert.ok(html.includes('name="playtest-commit" content="' + process.env.GITHUB_SHA + '"'));
+          const browser = await chromium.launch();
+          try {
+            const page = await browser.newPage();
+            await page.goto(url);
+            await page.getByRole('button', { name: 'Дальше' }).click();
+            assert.match(await page.locator('.dialogue').innerText(), /Не бойся мелких искр/);
+          } finally {
+            await browser.close();
+          }
+          JS

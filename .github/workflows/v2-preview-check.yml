@@ -26,12 +26,10 @@ jobs:
           import { chromium } from 'playwright';
 
           const repo = 'Demetrio-Admin/povelitel-tayn';
-          const revision = '4724ac0a76614ee17a86044c44a2574ace0f3a8a';
+          const revision = process.env.GITHUB_SHA;
           const candidates = [
             ['GitHub Preview', 'https://htmlpreview.github.io/?https://github.com/' + repo + '/blob/v2/episode-1/play.html'],
             ['GitHub Preview (pinned)', 'https://htmlpreview.github.io/?https://github.com/' + repo + '/blob/' + revision + '/play.html'],
-            ['GitHub HTML CDN', 'https://rawcdn.githack.com/' + repo + '/' + revision + '/play.html'],
-            ['GitHub mirror preview', 'https://htmlpreview.github.io/?https://cdn.jsdelivr.net/gh/' + repo + '@' + revision + '/play.html'],
           ];
           const endpoints = [
             'https://raw.githubusercontent.com/' + repo + '/' + revision + '/play.html',

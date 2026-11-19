@@ -1,0 +1,13 @@
+axis,step,shards_or_tier,mult,common_qty,rare_qty,catalyst_qty,coin_cost,ritual_min
+stars,1,10,1,,,,,
+stars,2,20,1.15,,,,,
+stars,3,50,1.35,,,,,
+stars,4,100,1.6,,,,,
+stars,5,180,1.9,,,,,
+stars,6,300,2.3,,,,,
+color,white,,1,,,,,
+color,green,tier_1,1.15,4,2,,,0
+color,blue,tier_2,1.32,,,,,
+color,purple,tier_3,1.52,,,,,
+color,orange,tier_4–tier_5,1.75,,,,,
+color,gold,tier_6,2,,,,,

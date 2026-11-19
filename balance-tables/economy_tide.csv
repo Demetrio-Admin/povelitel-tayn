@@ -1,0 +1,37 @@
+section,key,threshold,value,sapphire_cost
+coins,base_fight,,4,
+coins,reward_growth,,1.055,
+coins,combat_income_share,,0.6,
+coins,control_daily_f2p_level_one,1,550,
+coins,control_daily_hardcore_level_one,1,1550,
+level,cost_base,,60,
+level,cost_growth,120,1.078,
+level,paragon_cost_growth,,1.16,
+level,active_tracks,,5,
+simulation,extra_days_min,,55,
+simulation,extra_days_max,,60,
+tide,Лунный прилив,20,5,
+tide,Удачная охота,50,2,
+tide,Обычная охота,150,1,
+tide,Поздний обход,,0.3,
+hunt,window_min,,-1,
+hunt,window_max,,2,
+hunt,max_active,,4,
+hunt,respawn_seconds,,30,
+gather,rich_nodes,40,1,
+gather,post_rich_mult,,0.3,
+gather,vendor_sell_ratio,,0.33,
+gather,permanent_share,,0.8,
+bag,base_slots,,100,
+bag,extra_slots,,50,100
+sapphires,chest_single,,1,150
+sapphires,chest_ten,,10,1350
+sapphires,chest_pity,10,1,
+sapphires,ritual_speedup_minutes,,15,1
+sapphires,hunt_boost_hours,,24,120
+sapphires,extra_tide_wins,,20,
+sapphires,infinite_mob_drop,,0,
+sapphires,build_slots_max,,6,
+sapphires,build_slot_price_min,,,30
+sapphires,build_slot_price_max,,,150
+sapphires,switch_branch,,,5

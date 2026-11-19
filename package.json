@@ -66,7 +66,9 @@
     "balance:economy": "node tools/balance/economy-report.mjs",
     "balance:boris": "node tools/balance/boris-prices.mjs",
     "test:graveyard": "node tests/graveyard-layout-test.mjs",
-    "test:frostwood": "node tests/frostwood-layout-test.mjs"
+    "test:frostwood": "node tests/frostwood-layout-test.mjs",
+    "balance:sync": "node tools/balance/sync-tables.mjs",
+    "balance:sim": "node tools/balance/horizon-sim.mjs"
   },
   "dependencies": {
     "@fontsource/philosopher": "^5.2.8",

@@ -39,3 +39,7 @@ npm run e2e
 ## Выпуск
 
 [Порядок выпуска и обновления Supabase](GAME_SYSTEMS/RELEASE_AND_RECOVERY.md) и [примечание к v0.39.1](docs/releases/v0.39.1.md). [Прежние заметки о выпусках](https://github.com/Demetrio-Admin/povelitel-tayn/tree/1f23ae56a79f6b8ab03d44d39c9e373f3b0b629d/docs) и [маршруты ранних прототипов](https://github.com/Demetrio-Admin/povelitel-tayn/blob/1f23ae56a79f6b8ab03d44d39c9e373f3b0b629d/README.md) доступны в истории Git.
+
+## Версия 2
+
+[Таблицы и симулятор баланса 41](balance-tables/README.md), контур первого эпизода и открытые параметры.

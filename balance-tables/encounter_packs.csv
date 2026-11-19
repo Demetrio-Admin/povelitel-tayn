@@ -1,0 +1,4 @@
+pack_id,count,hp_shares,dps_shares,archetypes,arena_objects,max_casts,first_attack_sec
+solo,1,[1],[1],,,1,
+duo,2,"[0.60,0.55]","[0.60,0.50]",,,1,"[1.8,2.7]"
+trio,3,"[0.60,0.35,0.35]","[0.48,0.34,0.34]",,,1,"[1.8,2.7,3.5]"

@@ -1,0 +1,6 @@
+id,name,role,target_scope,sp_mult,heal_pct,bonus_effect,tier,enabled
+fox,Рыжик,finisher,single,1.1,,Цель с наименьшей долей HP. Прерывает слабый каст. Добивание возвращает 35 отклика и даёт 10% монет.,1,false
+robin,Звонка,marks,all,,,"Продлевает метки на 2,5 с, лечит героя на 5–8% максимального HP.",2,false
+stone_hedgehog,Булыжник,arena,object,,,Досрочно возвращает потраченный предмет с зарядом.,3,false
+owl,Вечер,shield_breaker,single,,,Снимает щит с противника и возвращает 15% маны.,4,false
+black_cat,Уголёк,critical,single,,,Накладывает Хрупкость на лидера и повышает крит палочки на 5 с.,5,false

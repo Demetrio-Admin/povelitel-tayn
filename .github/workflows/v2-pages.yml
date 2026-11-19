@@ -1,8 +1,5 @@
 name: Publish the V2 playtest to GitHub Pages
 on:
-  push:
-    branches: ['v2/episode-1']
-    paths: ['.github/workflows/v2-pages.yml']
   workflow_dispatch:
 
 concurrency:

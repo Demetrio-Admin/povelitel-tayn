@@ -10,8 +10,9 @@ import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
 import { campaign, saveCampaign, completeActStep, objective } from './campaign.js';
 import { ensureLocationWithScreen } from '../systems/assetPacks.js';
+import { findPath } from '../world/nav.js';
 import { CITY_LAYOUT_VERSION } from '../config/city.plan.js';
-import { BOR, actLocation, actLocationAt, arrivalFor, borMap } from './regions.js';
+import { BOR, TOWN, TOWN_WEST_PASSAGE, actLocation, actLocationAt, arrivalFor, borMap, crossesTownWall } from './regions.js';
 import { QUEST_BY_ID } from './quests.js';
 import { dailyElite, questStep, plannedEncounter, townOpen } from './actProgress.js';
 import { actsTargets, actsTargetAvailable, runtimeEncounter, regionForPoint, canUsePortal,
@@ -24,17 +25,18 @@ const target = (key, label, { x, y }, texture, step = key, options = {}) => ({
   id: 'v2_' + key, kind: 'horizon', action: key, label, x, y, texture, step, radius: 97, ...options,
 });
 const interactWithProp = { ghost: { w: 110, h: 72 } };
+const workbenchTarget = { ...interactWithProp, approach: { x: WORKBENCH.x, y: WORKBENCH.y + 50 } };
 
 const STORY_TARGETS = [
   target('intro', 'Мирра', MIRRA, 'npc_mirra'),
   target('spark', 'Искроцап', { x: 889, y: 794 }, 'enemy_scavenger_small'),
   target('lantern', 'Треснувший фонарь', LANTERN, 'lantern_02', 'lantern', { size: [34, 57] }),
-  target('upgrade', 'Верстак Мирры', WORKBENCH, null, 'upgrade', interactWithProp),
+  target('upgrade', 'Верстак Мирры', WORKBENCH, null, 'upgrade', workbenchTarget),
   target('frost', 'Морозун', FROST, 'enemy_frost_critter'),
   target('thaw', 'Открыть калитку', { x: GATE.x, y: GATE.y - 20 }, null, 'thaw', interactWithProp),
   target('veda', 'Веда', { x: 773, y: 977 }, 'npc_veda', 'veda', { resident: true }),
   target('grom', 'Гром', { x: 1167, y: 1069 }, 'npc_goran', 'grom', { resident: true }),
-  target('workbench', 'Отогреть верстак', WORKBENCH, null, 'hunt', interactWithProp),
+  target('workbench', 'Отогреть верстак', WORKBENCH, null, 'hunt', workbenchTarget),
   target('camp', 'Привал Грома', CAMPFIRE, null, 'hunt', interactWithProp),
 ];
 
@@ -185,7 +187,24 @@ export class HorizonExplorationScene extends ExplorationScene {
 
   guideTargetPos() {
     const id = this.guideTarget();
-    return id ? this.targetPos(id) : null;
+    const target=id ? this.targetPos(id) : null;
+    if (target && this.loc===TOWN && crossesTownWall(this.player,target)) {
+      const side=target.x<TOWN_WEST_PASSAGE.x?-1:1;
+      return {...TOWN_WEST_PASSAGE,x:TOWN_WEST_PASSAGE.x+side*96};
+    }
+    return target;
+  }
+
+  planPath(x,y) {
+    const goal={x,y};
+    if (this.loc!==TOWN || !crossesTownWall(this.player,goal)) return super.planPath(x,y);
+    // The laboratory is outside the west wall. Split the walk at the town gate
+    // so the long detour stays within the local pathfinder's search budget.
+    const grids=this.navGrids();
+    const toGate=findPath(grids,this.player,TOWN_WEST_PASSAGE);
+    const fromGate=toGate?.complete && findPath(grids,TOWN_WEST_PASSAGE,goal);
+    if (!fromGate) return super.planPath(x,y);
+    return {...fromGate,points:[...toGate.points,...fromGate.points]};
   }
 
   onZoneLine() {} // the scripted speech belongs to the current campaign

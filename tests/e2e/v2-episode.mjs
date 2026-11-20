@@ -26,6 +26,7 @@ try {
   }
 
   async function visit(id, touch = false) {
+    await page.waitForFunction(() => window.__game.scene.getScene('ExplorationScene').canAct());
     const target = await page.evaluate(id => {
       const scene = window.__game.scene.getScene('ExplorationScene');
       const obj = scene.objects.find(o => o.id === 'v2_' + id && o.isAvailable());

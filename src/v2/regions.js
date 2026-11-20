@@ -8,6 +8,9 @@ export const TOWN = { id: 'city', name: 'Светлодол', rect: CITY_RECT, a
 export const HEARTH_TRAIL = { x: 1781, y: 1111 };
 export const BOR_TRACT = borPoint(714, 181);
 export const TOWN_GATE = cityPoint(819, 5270);
+export const TOWN_WEST_PASSAGE = cityPoint(660, 5170);
+export const crossesTownWall = (from, to) =>
+  (from.x<TOWN_WEST_PASSAGE.x)!==(to.x<TOWN_WEST_PASSAGE.x);
 export const ACT_LOCATIONS = [HEARTH, BOR, TOWN, ...CITY_ROOMS];
 export const actLocation = id => ACT_LOCATIONS.find(location => location.id === id);
 export function actLocationAt({ x, y } = {}) {

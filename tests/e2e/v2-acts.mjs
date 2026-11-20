@@ -159,6 +159,7 @@ try {
   assert.equal((await data()).activeCompanion,'robin');
   await interact(q('flood')); await next();
   await win(q('flood',1),false,true);
+  console.log('Svetlodol fountain, both warehouses, the cold wall and ice crossing verified.');
   await interact(q('lab_seal'));
   await interact('door_lab'); await scene('city_lab');
   await win(q('lab_seal',1),true,true);

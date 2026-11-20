@@ -21,7 +21,7 @@ const portals = [
   portal('v2_town_route',BOR_TRACT,'Восточный тракт в Светлодол','signpost_01','city',TOWN.arrival,'town'),
   portal('v2_bor_return',TOWN_GATE,'Южные ворота · Янтарный Бор','signpost_01',BOR.id,borPoint(690,188)),
   ...CITY_PORTALS.map(door => portal(door.id,door,door.hint || (door.room==='city'?'Выйти':'Войти'),null,door.room,door.target,
-    ['city_lab','city_cellar','city_rescue','city_duel'].includes(door.room)?door.room:null)),
+    ['city_lab','city_cellar','city_rescue','city_duel','city_warehouse_a','city_warehouse_b'].includes(door.room)?door.room:null)),
 ].map(row => row.texture ? row : { ...row, ghost:{w:135,h:90} });
 export function canUsePortal(p,cfg) {
   switch(cfg.lock) {
@@ -31,6 +31,8 @@ export function canUsePortal(p,cfg) {
     case 'city_cellar': return questDone(p,'cellar_house');
     case 'city_rescue': return questDone(p,'rescue_house');
     case 'city_duel': return (p.tasks.august || 0)>0;
+    case 'city_warehouse_a':
+    case 'city_warehouse_b': return questDone(p,'archive');
     default: return true;
   }
 }

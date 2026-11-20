@@ -157,6 +157,7 @@ export class HorizonExplorationScene extends ExplorationScene {
     }
     installActPresentation(this);
     pollField(this);
+    if (campaign().step==='hunt') this.bus.emit(MSG.QUEST_CHANGED);
   }
 
   setupCompanion() {

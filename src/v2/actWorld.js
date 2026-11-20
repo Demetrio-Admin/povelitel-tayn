@@ -60,7 +60,7 @@ const elites=[
 const sources = [1,2].flatMap(tier=>gatherZones(tier).map((p,i)=>{
   const kinds=TIERS_41['tier_'+tier];
   const id=i%3===0?kinds.rare_id:kinds.common_id;
-  const tex=tier===1?(i%3===0?'resin_log_01':'moon_herb_01'):(i%3===0?'rune_sigil_01':'frost_herb_01');
+  const tex=tier===1?(i%3===0?'resin_log_01':'moon_herb_01'):(i%3===0?'rune_sigil_01':'city_frost_herb');
   return actTarget('v2-gather-'+tier+'-'+i,p,itemLabel(id),tex,{gatherTier:tier,zone:i});
 }));
 const anomalySpots = {
@@ -179,7 +179,7 @@ export function refreshActPresentation(scene) {
   const quarter=scene.groundViews.get('city_frost_quarter')?.img;
   quarter?.setVisible(!questDone(p,'august')).setAlpha(p.tasks.flood>0?.13:questDone(p,'bridge_wall')?.25:.38);
   const plaza=scene.groundViews.get('city_frost_plaza')?.img;
-  plaza?.setVisible(!questDone(p,'fountain')).setAlpha(.3);
+  plaza?.setVisible(!questDone(p,'fountain')).setAlpha(.18);
 }
 
 export function claimWorldAction(scene,cfg,ability) {

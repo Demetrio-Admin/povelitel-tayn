@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import { CORE, GIFT_RULES, MOBS_41, PACKS, namedEncounter } from '../src/config/horizon/rules.js';
 import { HORIZON_TABLES } from '../src/config/horizon/tables.generated.js';
+import { ASSET_FILES } from '../src/config/assets.manifest.js';
 import { HorizonBattle, replayHorizonBattle } from '../src/systems/HorizonBattle.js';
 import { QUESTS, QUEST_BY_ID, PROLOGUE } from '../src/v2/quests.js';
 import { BOR, TOWN, actLocationAt, gatherZones, spawnZones } from '../src/v2/regions.js';
 import { advanceQuest, fieldEncounter, gather, nextRegionOpen, populateHunt, questDone, questStep, settleField, townOpen } from '../src/v2/actProgress.js';
+import { actsTargets } from '../src/v2/actWorld.js';
 import { award, craftPotion, finishRitual, hydrateActProgress, openChest, startColor } from '../src/v2/progression.js';
 
 const now=Date.UTC(2026,10,20,12);
@@ -20,6 +22,9 @@ const finish=(p,id)=>{
 assert.deepEqual([BOR.rect.w,BOR.rect.h,TOWN.rect.w,TOWN.rect.h],[3600,2400,2880,5760]);
 assert.deepEqual([QUESTS.filter(q=>q.act===1).length+PROLOGUE.length,QUESTS.filter(q=>q.act===2).length],[27,30]);
 assert.equal(new Set(QUESTS.map(q=>q.id)).size,QUESTS.length);
+for (const {id,texture} of actsTargets()) {
+  if (texture && !['horizon_asya','horizon_hearth_fence'].includes(texture)) assert.ok(Object.hasOwn(ASSET_FILES,texture),id+' · '+texture);
+}
 for (const q of QUESTS) {
   for (const id of q.needs) assert.ok(QUEST_BY_ID[id]||PROLOGUE.some(r=>r[0]===id),id);
   for (const step of q.steps) {

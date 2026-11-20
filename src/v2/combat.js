@@ -34,7 +34,8 @@ export class HorizonCombatScene extends CombatScene {
     this.context = battleContext(campaign(), this.encounter);
     this.battle = new HorizonBattle(this.context);
     this.cm = { arena: { ground: 0x26362b }, enemy: { hasArmor: false } };
-    this.def = { arena: this.encounter.id === 'frost' ? 'frostwood' : 'forest' };
+    const atHearth = ['spark', 'frost'].includes(this.encounter.id);
+    this.def = { arena: atHearth ? 'mirra_hearth' : 'forest' };
     this.enemyType = this.encounter.id;
     this.started = false;
     this.ended = false;
@@ -45,6 +46,7 @@ export class HorizonCombatScene extends CombatScene {
     this.bus.emit(MSG.UI_MODE, 'combat');
 
     this.buildArena();
+    if (this.encounter.id === 'frost') this.arenaArt?.setTint(0xc0d9ec);
     this.buildHero();
     this.buildHurtVignette();
     this.makeEnemyViews();
@@ -123,7 +125,7 @@ export class HorizonCombatScene extends CombatScene {
   }
 
   makeBattleHud() {
-    this.hint = this.label(VIEW.width / 2, 885, '');
+    this.hint = this.label(VIEW.width / 2, 875, '').setPadding(16, 8).setBackgroundColor('#251c24');
     if (this.battle.fox) {
       this.companion = applyDisplaySize(this.add.image(HERO.x + 156, HERO.y - 16, 'companion_fox'), 'companion_fox')
         .setOrigin(0.5, 1).setDepth(HERO.y);
@@ -143,13 +145,19 @@ export class HorizonCombatScene extends CombatScene {
     return { id, state: 'ready', suggested: !!stone && id === (stone.tag ? 'telekinesis' : 'fire') };
   }
 
+  teaching() { return this.encounter.id === 'spark' && !this.battle.combos; }
+
   cast(id) {
     if (!this.canAct() || this.abilityView(id).state !== 'ready') return;
     const object = this.selected;
+    const stone = object && this.battle.objects[object];
+    if (this.teaching() && (!stone || id !== (stone.tag ? 'telekinesis' : 'fire'))) return;
+    const target = this.enemyViews[this.battle.focus], charged = stone?.tag === 'heat';
     if (!this.battle.command({ type: object ? 'cast_on_object' : 'cast', gift: id, object })) return;
     this.selected = null;
     this.heroAnim.playCast(id);
     services.audio.play(id === 'fire' ? 'fire_cast' : 'telekinesis_cast');
+    if (stone && id === 'telekinesis') this.animateThrownStone(object, target, charged);
     this.handleBattleEvents();
     this.refreshBattle();
     if (this.battle.result) this.finishBattle();
@@ -166,7 +174,7 @@ export class HorizonCombatScene extends CombatScene {
 
   update(_, delta) {
     this.updateHero(delta);
-    if (!this.canAct()) return;
+    if (!this.canAct() || this.teaching()) return;
     this.elapsed += Math.min(delta, 150);
     while (this.elapsed >= HORIZON_STEP_MS && !this.battle.result) {
       this.battle.advance();
@@ -193,18 +201,38 @@ export class HorizonCombatScene extends CombatScene {
       if (stone.tag) view.sprite.setTint(0xff9449);
       else view.sprite.clearTint();
       view.glow.setTint(stone.tag ? COLORS.fire : COLORS.telekinesis)
-        .setAlpha(wait ? 0 : this.selected === stone.id ? 0.75 : stone.tag ? 0.5 : 0);
+        .setAlpha(wait ? 0 : this.selected === stone.id ? 0.75 : stone.tag ? 0.5 : this.teaching() ? 0.36 : 0);
       const text = wait ? 'Через ' + wait + ' с' : stone.tag ? 'Раскалён' : stone.name;
       if (view.title.text !== text) view.title.setText(text);
     }
     this.response?.setFraction(this.battle.charge / CORE.companion_max_charge);
     if (this.responseLabel) this.responseLabel.setText('Отклик ' + this.battle.charge + '%');
     const stone = this.selected && this.battle.objects[this.selected];
-    const teaching = this.encounter.id === 'spark' && !this.battle.combos;
-    let hint = 'Выбери цель или заряди камень Огнём.';
-    if (stone) hint = stone.tag ? 'Брось раскалённый камень Телекинезом.' : teaching ? 'Нажми «Огонь».' : 'Примени Огонь или Телекинез.';
-    else if (teaching) hint = this.battle.objects.light.tag ? 'Снова нажми на раскалённый камень.' : 'Нажми на камень.';
+    const teaching = this.teaching();
+    let hint = this.encounter.id === 'frost' ? 'Палочка стреляет сама. Огнём можно ускорить бой.' : '';
+    if (stone) hint = stone.tag ? 'Нажми «Телекинез», чтобы бросить камень.' : 'Нажми «Огонь», чтобы раскалить камень.';
+    else if (teaching) hint = this.battle.objects.light.tag ? 'Выбери раскалённый камень.' : 'Коснись камня на поляне.';
+    this.hint.setVisible(!!hint);
     if (this.hint.text !== hint) this.hint.setText(hint);
+  }
+
+  animateThrownStone(id, enemy, charged) {
+    const { x, y } = this.stones[id];
+    const key = 'field_rock_' + id;
+    const rock = applyDisplaySize(this.add.image(x, y - 27, key), key).setDepth(6010)
+      .setTint(charged ? 0xffa15b : COLORS.telekinesis);
+    const hitY = enemy.y - enemy.sprite.displayHeight * 0.46;
+    this.tweens.addCounter({ from: 0, to: 1, duration: 330,
+      onUpdate: tween => {
+        const t = tween.getValue();
+        rock.setPosition(x + (enemy.x - x) * t, y - 27 + (hitY - y + 27) * t - 250 * t * (1 - t));
+        rock.setAngle(t * 115);
+      },
+      onComplete: () => {
+        rock.destroy();
+        this.burst(enemy.x, hitY, charged ? COLORS.fire : COLORS.telekinesis, 19);
+      },
+    });
   }
 
   handleBattleEvents() {
@@ -230,7 +258,7 @@ export class HorizonCombatScene extends CombatScene {
         const hot = ['fire', 'fire-stone', 'heat'].includes(source);
         const color = hot ? COLORS.fire : source === 'impulse' ? 0xffd578 : COLORS.telekinesis;
         this.floatText(enemy.x, y, '−' + event.amount, color, source === 'impulse' ? 43 : 30);
-        if (['wand', 'impulse', 'stone', 'fire-stone', 'fox'].includes(source)) {
+        if (['wand', 'impulse', 'fox'].includes(source)) {
           const from = source === 'fox' && this.companion ? this.companion : this.heroSprite;
           const upgraded = this.context.wandRank > 0;
           const glow = source === 'wand' ? (upgraded ? 0x81e9df : 0xffd986) : color;

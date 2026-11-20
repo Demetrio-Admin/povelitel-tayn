@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
 try {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const errors = [];
@@ -73,9 +73,24 @@ try {
     const scene = window.__game.scene.getScene('CombatScene');
     return scene.sys.isActive() && scene.started && !scene.ended;
   });
+  const gateState = () => page.evaluate(() => {
+    const scene = window.__game.scene.getScene('ExplorationScene');
+    return { blocked: scene.hearth.blocker.body.enable, frozen: scene.hearth.frozen, y: scene.player.y,
+      outsideReachable: scene.planPath(688, 949)?.complete };
+  });
 
   assert.equal(await step(), 'intro');
-  assert.equal(await page.evaluate(() => window.__game.scene.getScene('ExplorationScene').loc.id), 'forest');
+  assert.equal(await page.evaluate(() => window.__game.scene.getScene('ExplorationScene').loc.id), 'mirra-hearth');
+  assert.deepEqual(await gateState(), { blocked: true, frozen: false, y: 733, outsideReachable: false });
+  await page.keyboard.down('s');
+  await page.waitForFunction(() => window.__game.scene.getScene('ExplorationScene').player.y >= 810);
+  await page.waitForTimeout(500);
+  await page.keyboard.up('s');
+  assert.ok((await gateState()).y <= 832, 'The closed gate also stops direct movement');
+  const outside = await canvasPoint('ExplorationScene', 688, 949, true);
+  await page.touchscreen.tap(outside.x, outside.y);
+  await page.waitForTimeout(450);
+  assert.ok((await gateState()).y <= 832, 'A tap past the gate stops inside the yard');
   await visit('intro', true);
   for (let i = 0; i < 3; i++) await next();
   await waitStep('spark');
@@ -83,6 +98,10 @@ try {
 
   await visit('spark');
   await ready();
+  await cast('telekinesis');
+  await page.waitForTimeout(400);
+  assert.equal(await page.evaluate(() => window.__game.scene.getScene('CombatScene').battle.tick), 0,
+    'The first fight waits for the player to learn the combo');
   await stone('light');
   await cast('fire');
   await page.waitForFunction(() => window.__game.scene.getScene('CombatScene').battle.objects.light.tag === 'heat');
@@ -102,6 +121,11 @@ try {
   await modal();
   await next();
   await waitStep('frost');
+  await page.waitForFunction(() => {
+    const scene = window.__game.scene.getScene('ExplorationScene');
+    return scene.hearth.frozen && scene.canAct();
+  });
+  assert.equal((await gateState()).blocked, true);
   console.log('Reached frost');
   await visit('frost');
   await ready();
@@ -109,8 +133,15 @@ try {
   await waitStep('thaw');
   console.log('Reached thaw');
   await next();
-  await next();
+  await page.waitForFunction(() => {
+    const scene = window.__game.scene.getScene('ExplorationScene');
+    return scene.canAct() && !scene.hearth.frozen;
+  });
+  assert.equal((await gateState()).blocked, true, 'The latch is still closed after the ice melts');
+  await visit('thaw', true);
   await waitStep('veda');
+  assert.equal((await gateState()).blocked, false);
+  assert.equal((await gateState()).outsideReachable, true);
   console.log('Reached veda');
   await visit('veda');
   await next();
@@ -125,6 +156,8 @@ try {
   assert.equal(await page.evaluate(() => window.__game.scene.getScene('ExplorationScene').companion.id), 'fox');
 
   await visit('workbench');
+  await page.waitForFunction(() => window.__game.scene.getScene('ExplorationScene').interaction.focus?.id === 'v2_workbench');
+  await cast('fire');
   await next();
   await page.waitForFunction(() => window.__witch.state.getObject('horizon_campaign').workbenchRestored);
   console.log('Restored Mirra’s workbench');
@@ -140,7 +173,7 @@ try {
   assert.equal(await step(), 'hunt');
   assert.equal(await page.evaluate(() => window.__witch.state.getObject('horizon_campaign').dailyWins), 1);
   assert.deepEqual(errors, []);
-  console.log('Phaser mobile playthrough passed. Forest, original scenes and HUD, two story battles, camp, hunt and reload.');
+  console.log('Phaser mobile playthrough passed. Walk and tap collisions, first combo, frozen and opened gate, camp, hunt and reload.');
 } finally {
   await browser.close();
 }

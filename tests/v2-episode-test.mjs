@@ -61,8 +61,10 @@ assert.ok(second.events.some(event => event.source === 'impulse'));
 
 state = settleVictory(state, STORY_ENCOUNTERS.frost, false, now).state;
 assert.equal(state.step, 'thaw');
-assert.deepEqual([state.coins, state.herbs, state.fox], [45, 3, true]);
-state = finishDialogue(finishDialogue(finishDialogue(state)));
+assert.deepEqual([state.coins, state.herbs, state.fox], [45, 3, false]);
+state = finishDialogue(state);
+assert.deepEqual([state.step, state.fox, state.foxStars], ['veda', true, 1]);
+state = finishDialogue(finishDialogue(state));
 assert.equal(state.step, 'hunt');
 const warmed = restoreWorkbench(state);
 assert.deepEqual([warmed.step, warmed.workbenchRestored, warmed.coins - state.coins, warmed.herbs - state.herbs],

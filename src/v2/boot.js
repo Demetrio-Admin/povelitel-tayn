@@ -7,7 +7,7 @@ import { PACK_IMAGES } from '../config/assets.packs.js';
 import { prepareCampaign } from './campaign.js';
 
 function campaignStorage() {
-  const prefix = 'koldovstvo.horizon41.';
+  const prefix = 'koldovstvo.horizon41.hearth.';
   let storage;
   try { storage = window.localStorage; } catch { /* private browsing */ }
   return {
@@ -37,7 +37,10 @@ export class HorizonPreloadScene extends PreloadScene {
   preload() {
     super.preload();
     this.load.image('enemy_frost_critter', PACK_IMAGES.chapter2.enemy_frost_critter);
-    this.load.image('arena_frostwood', PACK_IMAGES.chapter2.arena_frostwood);
-    this.load.image('horizon_hearth_gate', 'assets/city-cozy/fence_wood.webp');
+    this.load.image('horizon_hearth_yard', 'assets/horizon-hearth/yard.webp');
+    this.load.image('arena_mirra_hearth', 'assets/horizon-hearth/arena.webp');
+    for (const key of ['fence', 'gate', 'ice']) {
+      this.load.image('horizon_hearth_' + key, 'assets/horizon-hearth/' + key + '.webp');
+    }
   }
 }

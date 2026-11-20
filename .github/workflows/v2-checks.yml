@@ -1,10 +1,13 @@
 name: Version 2 episode checks
 on:
   push:
-    branches: ['v2/episode-1']
+    branches: ['v2/acts-1-2']
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: v2-acts-preview-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   playthrough:
     runs-on: ubuntu-latest
@@ -32,7 +35,7 @@ jobs:
 
   browser-preview:
     needs: playthrough
-    if: github.ref == 'refs/heads/v2/episode-1'
+    if: github.ref == 'refs/heads/v2/acts-1-2'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     permissions:
@@ -54,7 +57,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add play.html
           git diff --cached --quiet || git commit -m 'Publish the checked Phaser browser build'
-          git push origin HEAD:refs/heads/v2/episode-1
+          git push origin HEAD:refs/heads/v2/acts-1-2
           echo "revision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - run: npx playwright install --with-deps chromium
       - name: Verify the branch link in a browser
@@ -84,11 +87,13 @@ jobs:
             const scene = await page.evaluate(() => {
               const world = window.__game.scene.getScene('ExplorationScene');
               return { map: world.loc.id, step: window.__witch.state.getObject('horizon_campaign').step,
-                texture: world.textures.get('npc_mirra').source[0].source.width };
+                yardWidth: world.textures.get('horizon_hearth_yard').source[0].source.width,
+                gateClosed: world.hearth.blocker.body.enable };
             });
-            assert.equal(scene.map, 'forest');
+            assert.equal(scene.map, 'mirra-hearth');
             assert.equal(scene.step, 'intro');
-            assert.ok(scene.texture > 128, 'Existing Mirra art must be loaded');
+            assert.equal(scene.yardWidth, 1536);
+            assert.equal(scene.gateClosed, true);
             assert.deepEqual(errors, []);
             console.log('Verified the actual Phaser client at GitHub revision ' + process.env.PLAY_SHA);
           } finally {

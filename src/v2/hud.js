@@ -12,11 +12,18 @@ export class HorizonUIScene extends UIScene {
       padding: { x: 14, y: 5 }, stroke: '#211625', strokeThickness: 3,
     }).setOrigin(0.5, 0).setDepth(5800).setVisible(false);
     this.viewport?.assign(this.tideLabel, 'top');
+    this.introHint = this.add.text(VIEW.width / 2, 180, 'Нажми на Мирру, чтобы подойти', {
+      fontFamily: UI.font, fontSize: UI.type.small, color: '#ffecd2', backgroundColor: '#362720',
+      padding: { x: 18, y: 10 }, align: 'center', wordWrap: { width: 475 },
+    }).setOrigin(0.5, 0).setDepth(5800).setVisible(false);
+    this.viewport?.assign(this.introHint, 'top');
   }
 
   update(time, delta) {
     super.update(time, delta);
-    const ep = campaign(), visible = this.mode === 'exploration' && ep.step === 'hunt' && !this.modal;
+    const ep = campaign(), exploring = this.mode === 'exploration' && !this.modal;
+    this.introHint?.setVisible(exploring && ep.step === 'intro');
+    const visible = exploring && ep.step === 'hunt';
     this.tideLabel?.setVisible(visible);
     if (!visible) return;
     const { remaining, tide } = tideStatus(ep, Date.now());

@@ -113,7 +113,7 @@ export class ExplorationScene extends Phaser.Scene {
     migrateFrostwoodSave(state);
     let p = this.fixStartPosition(state.data.player);
     state.data.player={...p};
-    this.loc = services.edit ? null : locationAt(p.x, p.y);
+    this.loc = this.locationFor(p);
     if (this.loc && !inLocation(p, this.loc)) { p = { ...this.loc.arrival }; state.data.player = { ...p }; }   // старое сохранение за краем локации
     services.audio?.setArea(this.loc);   // у города и рощи своя музыка (иначе — лесная)
     const R = this.loc ? this.loc.rect : { x: 0, y: 0, w: WORLD.width, h: WORLD.height };
@@ -123,7 +123,7 @@ export class ExplorationScene extends Phaser.Scene {
     this.physics.world.setBounds(R.x, R.y, R.w, R.h);
     this.solids = this.physics.add.staticGroup();
 
-    this.map = services.map;
+    this.map = this.mapForLocation();
     this.terrain = buildTerrain({ ROADS: this.map.roads, WATERS: this.map.waters });
     const here = (o) => inLocation(o, this.loc);
     const content = this.worldContent();
@@ -218,6 +218,8 @@ export class ExplorationScene extends Phaser.Scene {
     this.migrateV10();
   }
 
+  locationFor(p) { return services.edit ? null : locationAt(p.x, p.y); }
+  mapForLocation() { return services.map; }
   worldContent() { return { interactives: INTERACTIVES, enemies: ENEMY_SPAWNS }; }
 
   // ------------------------------------------------------------------ v0.9: завязка и стартовый набор

@@ -3,17 +3,17 @@ import { MSG } from '../state/EventBus.js';
 import { CORE, levelScale } from '../config/horizon/rules.js';
 import { setCompanionPref } from '../objects/Companion.js';
 import { starterState, titleOf } from './episode.js';
+import { HEARTH_START, hearthArrival } from './hearth.js';
 
-export const START = { x: 900, y: 4760 };
 const KEY = 'horizon_campaign';
 
 const OBJECTIVES = {
-  intro: 'Поговори с Миррой у очага.',
+  intro: 'Нажми на Мирру у крыльца.',
   spark: 'Отгони Искроцапа от фонаря.',
   lantern: 'Подбери треснувший фонарь Мирры.',
-  upgrade: 'Усиль палочку у стола Мирры.',
-  frost: 'Отгони Морозуна от калитки.',
-  thaw: 'Оглянись. Лёд у калитки растаял.',
+  upgrade: 'Подойди к верстаку и усиль палочку.',
+  frost: 'Отгони Морозуна. Калитка скована льдом.',
+  thaw: 'Открой калитку, чтобы впустить Рыжика.',
   veda: 'Поговори с Ведой у калитки.',
   grom: 'Поговори с Громом у костра.',
   hunt: 'Выбери отряд в Янтарном Бору или вернись к Привалу Грома.',
@@ -71,14 +71,16 @@ export function prepareCampaign() {
   quests.objectiveText = () => objective().text;
   guidance.pointerActive = () => true;
   if (!state.getObject(KEY)) {
-    state.data.player = { ...START };
-    state.data.safePoint = { ...START };
+    state.data.player = { ...HEARTH_START };
+    state.data.safePoint = { ...HEARTH_START };
     state.data.inventory = { coins: 0, moon_herb: 0 };
     saveCampaign(starterState(), { notify: false });
   }
   for (const id of ['fire', 'telekinesis']) state.unlockAbility(id, 1);
   state.setBuild({ slots: ['telekinesis', 'fire'] });
   const progress = campaign();
+  state.data.player = { ...hearthArrival(state.data.player, progress.step) };
+  state.data.safePoint = { ...hearthArrival(state.data.safePoint, progress.step) };
   syncRelics(state, progress);
   if (progress.fox) {
     setCompanionPref('fox');

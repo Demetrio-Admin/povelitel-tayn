@@ -163,7 +163,17 @@ try {
   await page.waitForFunction(() => window.__witch.state.getObject('horizon_campaign').workbenchRestored);
   console.log('Restored Mirra’s workbench');
 
-  await visit('camp-edge');
+  const reachedHunt=await page.evaluate(()=>{
+    const world=window.__game.scene.getScene('ExplorationScene');
+    const enemy=world.objects.find(o=>o.id==='v2_camp-edge' && o.isAvailable());
+    if (!enemy||!world.canAct()) return false;
+    const route=world.planPath(enemy.x,enemy.y);
+    if (!route?.complete) return false;
+    world.player.setPosition(route.end.x,route.end.y);
+    world.interaction.setFocus(enemy);
+    return world.interaction.act(null);
+  });
+  assert.ok(reachedHunt,'A walkable route connects the restored workbench to the first hunt');
   await ready();
   assert.equal(await page.evaluate(() => window.__game.scene.getScene('CombatScene').battle.fox), true);
   await page.waitForFunction(() => window.__witch.state.getObject('horizon_campaign').dailyWins === 1);

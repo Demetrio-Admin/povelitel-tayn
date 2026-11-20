@@ -70,7 +70,7 @@
     "balance:sync": "node tools/balance/sync-tables.mjs",
     "balance:sim": "node tools/balance/horizon-sim.mjs",
     "test:v2": "node tests/v2-episode-test.mjs && npm run test:v2:acts",
-    "test:v2:acts": "node --import ./tools/ui/register.mjs tests/v2-acts-test.mjs",
+    "test:v2:acts": "node --import ./tools/ui/register.mjs tests/v2-acts-test.mjs && node --import ./tools/ui/register.mjs tests/v2-progression-test.mjs",
     "test:v2:browser": "node tests/e2e/v2-episode.mjs && npm run test:v2:acts:browser",
     "test:v2:acts:browser": "node tests/e2e/v2-acts.mjs"
   },

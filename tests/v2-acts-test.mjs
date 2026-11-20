@@ -5,6 +5,8 @@ import { ASSET_FILES } from '../src/config/assets.manifest.js';
 import { HorizonBattle, replayHorizonBattle } from '../src/systems/HorizonBattle.js';
 import { QUESTS, QUEST_BY_ID, PROLOGUE } from '../src/v2/quests.js';
 import { BOR, TOWN, actLocationAt, gatherZones, spawnZones } from '../src/v2/regions.js';
+import { ACT_CITY_PORTALS, ACT_ROOMS, actRoomMap, resizeRoomPoint } from '../src/v2/rooms.js';
+import { CITY_ROOMS } from '../src/config/city.plan.js';
 import { advanceQuest, fieldEncounter, gather, nextRegionOpen, plannedEncounter, populateHunt, questDone, questStep, settleField, townOpen } from '../src/v2/actProgress.js';
 import { actsTargets, canUsePortal } from '../src/v2/actWorld.js';
 import { amuletOffer, award, craftPotion, finishRitual, hydrateActProgress, openChest, startColor } from '../src/v2/progression.js';
@@ -20,12 +22,30 @@ const finish=(p,id)=>{
   return p;
 };
 assert.deepEqual([BOR.rect.w,BOR.rect.h,TOWN.rect.w,TOWN.rect.h],[3600,2400,2880,5760]);
+assert.deepEqual(ACT_ROOMS.map(({rect})=>[rect.w,rect.h]),[
+  [720,960],[900,1500],[900,1320],[960,2160],[1080,1680],[840,1200],
+  [720,1680],[720,1680],[720,960],[720,960],
+]);
+for (const [index,room] of ACT_ROOMS.entries()) {
+  const {rect,arrival}=room;
+  const map=actRoomMap(room);
+  assert.equal(actLocationAt(arrival),room);
+  assert.deepEqual(resizeRoomPoint(CITY_ROOMS[index].arrival),arrival);
+  assert.equal(ACT_CITY_PORTALS.find(door=>door.room===room.id).target.y,arrival.y);
+  assert.equal(map.grounds[0].w,rect.w);
+  assert.equal(map.grounds[0].h,rect.h);
+  assert.ok(map.colliders.some(c=>c.id===room.id+'_wall_back' && c.w===rect.w));
+}
 assert.deepEqual([QUESTS.filter(q=>q.act===1).length+PROLOGUE.length,QUESTS.filter(q=>q.act===2).length],[27,30]);
 assert.equal(new Set(QUESTS.map(q=>q.id)).size,QUESTS.length);
 const anomaly=QUEST_BY_ID.first_anomaly;
 const firstEncounter=plannedEncounter(anomaly,questStep({...player(),huntLevel:1},anomaly));
 assert.equal(actLocationAt(anomaly.steps[0].where).id,'mirra-hearth');
 assert.deepEqual([firstEncounter.level,firstEncounter.arena],[4,['light']]);
+for (const [id,index] of [['treegazer',0],['august',1]]) {
+  const q=QUEST_BY_ID[id];
+  assert.deepEqual(plannedEncounter(q,{...q.steps[index],index}).arena,['heavy','crystal']);
+}
 assert.equal(amuletOffer(award(player(),{items:{recipe_amulet_forest:1}}),'amulet_forest').cost.coins,0);
 const duelDoor=actsTargets().find(cfg=>cfg.id==='door_duel');
 assert.ok(canUsePortal(player(),duelDoor));
@@ -83,6 +103,13 @@ for (const tier of [1,2]) {
   const rebuilt=populateHunt(p,tier,now+30000,()=>true,()=>true);
   assert.notEqual(rebuilt.field[tier][0].zone,old.zone);
 }
+const northZone=spawnZones(2).findIndex(zone=>zone.gate==='bridge_wall');
+const yardZone=spawnZones(2).findIndex(zone=>zone.gate==='flood');
+const district={...player(),field:{2:[{zone:northZone,generation:0},{zone:yardZone,generation:0}]}};
+assert.equal(fieldEncounter(district,2,northZone),null);
+assert.ok(fieldEncounter({...district,tasks:{bridge_wall:1}},2,northZone));
+assert.equal(fieldEncounter({...district,tasks:{bridge_wall:1}},2,yardZone),null);
+assert.ok(fieldEncounter({...district,tasks:{bridge_wall:1,flood:1}},2,yardZone));
 const rare=gather({...player(),satchel:150},1,0,now);
 assert.equal(rare.take,3);
 assert.equal(gather(rare.next,1,0,now),null);

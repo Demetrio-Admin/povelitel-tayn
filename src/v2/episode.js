@@ -1,4 +1,4 @@
-import { CORE, ECONOMY, TIDE, baseBattleCoins, tideAt, wandInterval } from '../config/horizon/rules.js';
+import { CORE, ECONOMY, TIDE, baseBattleCoins, namedEncounter, tideAt, wandInterval } from '../config/horizon/rules.js';
 import { PREVIEW_CORE } from '../config/horizon/previewTuning.js';
 export { PROLOGUE_DIALOGUE as DIALOGUE } from './dialogue.js';
 
@@ -28,9 +28,10 @@ const FOES = {
   frost: { name: 'Морозун', texture: 'enemy_frost_critter', role: 'fighter' },
   thorn: { name: 'Колючник', texture: 'enemy_rootling', role: 'warder' },
 };
-export const STORY_ENCOUNTERS = Object.fromEntries(['spark', 'frost'].map(key => [key, {
-  id: key, name: FOES[key].name, level: 1, pack: 'solo', enemies: [FOES[key]], arena: ['light'],
-}]));
+export const STORY_ENCOUNTERS = {
+  spark: namedEncounter('spark','t1_tutorial_1',1,1),
+  frost: namedEncounter('frost','t1_tutorial_2',1,1),
+};
 
 const SLOT_LAYOUT = [
   ['camp-edge', -1, 'solo', ['spark']],

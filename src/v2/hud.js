@@ -129,6 +129,7 @@ export class HorizonUIScene extends UIScene {
         } else this.toast('Гром ждёт свежих следов.');
       }},
       {label:'Короны и мастерство',onClick:()=>this.openJournal('hunt')},
+      ...(tier===1?[{label:'Продать лесные материалы',onClick:()=>this.marketTier(1,true)}]:[]),
       {label:'Бестиарий',onClick:()=>this.openModal({title:'Бестиарий',text:Object.entries(p.bestiary)
         .map(([id,count])=>(MOBS_41[id]?.name || {spark:'Искроцап',frost:'Морозун',thorn:'Колючник'}[id] || id)+' · '+count).join('\n') || 'Пока записей нет.'})},
       {label:'Карта мира',onClick:()=>this.openMap()},
@@ -281,12 +282,14 @@ export class HorizonUIScene extends UIScene {
       {label:'Сундук Гримуара',onClick:()=>this.openActBank()},
     ]);
   }
-  marketTier(tier) {
+  marketTier(tier, sellOnly=false) {
     const row=TIERS_41['tier_'+tier];
+    const reopen=()=>this.marketTier(tier,sellOnly);
     this.choose('Материалы','Цена продажи — треть цены покупки.',[row.common_id,row.rare_id].flatMap((id,i)=>[
-      {label:'Купить · '+itemLabel(id)+' · '+(i?row.buy_price_rare:row.buy_price_common),onClick:()=>this.commit(trade(campaign(),id,row,true),()=>this.marketTier(tier))},
-      {label:'Продать · '+itemLabel(id),onClick:()=>this.commit(trade(campaign(),id,row,false),()=>this.marketTier(tier))},
-    ]),0,()=>this.openTrader());
+      ...(sellOnly?[]:[{label:'Купить · '+itemLabel(id)+' · '+(i?row.buy_price_rare:row.buy_price_common),
+        onClick:()=>this.commit(trade(campaign(),id,row,true),reopen)}]),
+      {label:'Продать · '+itemLabel(id),onClick:()=>this.commit(trade(campaign(),id,row,false),reopen)},
+    ]),0,()=>sellOnly?this.openActCamp(1):this.openTrader());
   }
   openActBank() {
     const p=campaign();

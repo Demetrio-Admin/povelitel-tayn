@@ -5,6 +5,7 @@ import { setCompanionPref } from '../objects/Companion.js';
 import { starterState, titleOf } from './episode.js';
 import { HEARTH_START, hearthArrival } from './hearth.js';
 import { actLocationAt, HEARTH_TRAIL } from './regions.js';
+import { resizeRoomPoint } from './rooms.js';
 import { advanceQuest, mainQuest, questDone, questStep, taskTarget, townOpen } from './actProgress.js';
 import { hydrateActProgress, itemList, payItems, startColor } from './progression.js';
 import { QUEST_BY_ID } from './quests.js';
@@ -110,6 +111,11 @@ export function prepareCampaign() {
     state.data.safePoint = { ...HEARTH_START };
     state.data.inventory = { coins: 0, moon_herb: 0 };
     saveCampaign(starterState(), { notify: false });
+  }
+  if (!state.getObject('horizon_room_layout')) {
+    state.data.player = resizeRoomPoint(state.data.player);
+    state.data.safePoint = resizeRoomPoint(state.data.safePoint);
+    state.setObject('horizon_room_layout', { version: 1 });
   }
   const progress = campaign();
   const position=state.data.player;

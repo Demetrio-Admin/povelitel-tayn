@@ -1,5 +1,6 @@
-import { CITY_RECT, CITY_ROOMS, cityPoint } from '../config/city.plan.js';
+import { CITY_RECT, cityPoint } from '../config/city.plan.js';
 import { HEARTH, HEARTH_START } from './hearth.js';
+import { ACT_ROOMS } from './rooms.js';
 
 const maple = { x: 18000, y: 300, w: 3600, h: 2400 };
 export const borPoint = (x, y) => ({ x: Math.round(maple.x + x * 4.8), y: Math.round(maple.y + y * 4.8) });
@@ -11,7 +12,7 @@ export const TOWN_GATE = cityPoint(819, 5270);
 export const TOWN_WEST_PASSAGE = cityPoint(660, 5170);
 export const crossesTownWall = (from, to) =>
   (from.x<TOWN_WEST_PASSAGE.x)!==(to.x<TOWN_WEST_PASSAGE.x);
-export const ACT_LOCATIONS = [HEARTH, BOR, TOWN, ...CITY_ROOMS];
+export const ACT_LOCATIONS = [HEARTH, BOR, TOWN, ...ACT_ROOMS];
 export const actLocation = id => ACT_LOCATIONS.find(location => location.id === id);
 export function actLocationAt({ x, y } = {}) {
   return ACT_LOCATIONS.find(({ rect: r }) => x >= r.x && y >= r.y && x < r.x + r.w && y < r.y + r.h);
@@ -34,17 +35,22 @@ export const BOR_COLLIDERS = boxes.map(([x,y,w,h],index) => ({
 export function borMap() { return { grounds: [], roads: [], waters: [], props: [], pos: {}, colliders: BOR_COLLIDERS }; }
 
 const borSpawn = [
-  [104,416],[103,359],[158,338],[187,318],[208,291],[119,274],[105,221],[91,163],
-  [124,109],[191,82],[221,127],[215,179],[331,151],[392,125],[459,105],[568,104],
-  [585,158],[651,152],[654,211],[597,257],[540,239],[437,263],[448,337],[392,385],
+  [104,416,0],[103,359,1],[158,338,1],[187,318,2],[208,291,2],[119,274,0],[105,221,1],[91,163,1],
+  [124,109,2],[191,82,2],[221,127,3],[215,179,3],[331,151,2],[392,125,3],[459,105,4],[568,104,4],
+  [585,158,3],[651,152,5],[654,211,5],[597,257,5],[540,239,4],[437,263,3],[448,337,4],[392,385,4],
 ];
 const townSpawn = [
-  [680,5050],[1110,5170],[1340,5300],[1730,5270],[2210,5450],[2460,5170],
-  [1110,4720],[1470,4810],[1670,4720],[2040,4700],[2350,4740],[2450,4440],
-  [1330,4290],[1510,4090],[1700,3850],[2020,4020],[2360,3940],[2470,3600],
-  [1320,3780],[1650,3320],[1870,3180],[2130,3060],[1510,2790],[2250,2650],
+  [790,5050,0],[1110,5170,1],[1340,5300,2],[1730,5270,0],[2210,5450,1],[1600,5070,1],
+  [1110,4720,2],[1470,4810,1],[1670,4720,2],[2040,4700,3],[2350,4740,2],[2450,4440,3],
+  [1330,4290,3],[1510,4090,3],[1700,3850,4],[2020,4340,3],[1470,3190,4],[1520,2420,4],
+  [1500,2040,4,'bridge_wall'],[1840,1930,5,'bridge_wall'],[1500,1480,5,'bridge_wall'],[1870,1350,5,'bridge_wall'],
+  [1530,756,5,'flood'],[1970,720,5,'flood'],
 ];
-export const spawnZones = tier => (tier === 1 ? borSpawn.map(p=>borPoint(...p)) : townSpawn.map(p=>cityPoint(...p)));
+const spawnByTier = {
+  1: borSpawn.map(([x,y,band])=>({...borPoint(x,y),band})),
+  2: townSpawn.map(([x,y,band,gate])=>({...cityPoint(x,y),band,gate})),
+};
+export const spawnZones = tier => spawnByTier[tier];
 const borGather = [
   [71,420],[129,381],[177,335],[76,274],[157,255],[181,226],[106,198],[191,170],[215,106],
   [336,135],[421,112],[496,151],[606,144],[649,195],[573,228],[463,254],[417,329],[578,383],

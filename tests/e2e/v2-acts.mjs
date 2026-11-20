@@ -146,11 +146,18 @@ try {
   assert.equal((await data()).tasks.fountain,1);
   assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').colliderObjects.find(o=>o.texture?.key?.includes('fountain'))?.texture.key),'city_final_fountain');
   await interact('door_archive'); await scene('city_archive');
+  assert.deepEqual(await page.evaluate(()=>{
+    const world=window.__game.scene.getScene('ExplorationScene');
+    return [world.bounds.w,world.bounds.h,world.groundViews.has('floor_city_archive')];
+  }),[900,1500,true]);
   await interact(q('klara')); await next();
   await interact('room_exit_archive'); await scene('city');
   await win(q('pavement')); await interact(q('pavement',1)); await interact(q('pavement',2)); await next();
   await interact('door_archive'); await scene('city_archive');
-  await interact(q('archive')); await next();
+  await interact(q('archive'));
+  assert.deepEqual((await next())[1],[
+    'Ведомость Архива','Август Град. Общество Преображения\nПоставки на Южный склад А и Южный склад Б.',
+  ]);
   await interact('room_exit_archive'); await scene('city');
   // B competes with A in the same section of the journal but has its own persisted checkpoint.
   await interact('door_warehouse_b'); await scene('city_warehouse_b');

@@ -80,7 +80,7 @@ export class HorizonBattle {
         interval: ticks(interval), rating, tags: {},
         nextAttack: ticks(pack.first_attack_sec?.[index] ?? (this.named ? interval : PREVIEW_CORE.episode_solo_first_attack_sec)),
         nextCast: ticks(def.cast_cd_sec || 1), castCount:0,
-        attacks: 0, castUntil: 0, heat: 0, heatUntil: 0, nextHeat: 0, shield: initialShield,
+        attacks: 0, castStart: 0, castUntil: 0, heat: 0, heatUntil: 0, nextHeat: 0, shield: initialShield,
       };
     });
     this.objects = Object.fromEntries(encounter.arena.map(id => [id, { ...ARENA[id], id, tag: null, respawnAt: 0 }]));
@@ -133,7 +133,11 @@ export class HorizonBattle {
 
   activeTag(enemy,key) { return !!key && (key==='heat' ? enemy.heat>0 : (enemy.tags[key] || 0)>this.tick); }
 
-  rankFactor(rank=1) { return Math.max(0.8,Math.min(1,levelScale(rank)/levelScale(this.heroLevel))); }
+  rankFactor(rank=1) {
+    const ceiling = levelScale(this.heroLevel);
+    const progress = ceiling > 1 ? (levelScale(Math.min(rank, this.heroLevel)) - 1) / (ceiling - 1) : 1;
+    return 0.8 + 0.2 * progress;
+  }
 
   mark(enemy,tag,seconds=5) {
     if (!enemy.hp || !tag) return;
@@ -170,7 +174,7 @@ export class HorizonBattle {
       }
       stone.tag=null; stone.respawnAt=this.tick+ticks(stone.respawn);
       if (rule.role==='obereg') {
-        if (rule.id==='seal' && stone.id==='crystal') {
+        if (stone.id==='crystal') {
           this.hero.mana=Math.min(this.hero.maxMana,this.hero.mana+this.hero.maxMana*CORE.crystal_mana);
         } else {
           this.shieldHero(this.hero.maxHp*(rule.id==='stone_shell'?.35:.24),6);
@@ -186,7 +190,7 @@ export class HorizonBattle {
           if (!enemy.hp || !share) continue;
           this.mark(enemy,effective,effective==='brittle'?6:5);
           this.damage(enemy,power*force*share*(effective==='echo'?1.4:1),effective==='heat'?'fire-stone':'stone');
-          this.interrupt(enemy);
+          this.interrupt(enemy,'arena');
           if (effective==='heat') this.applyHeat(enemy,1);
         }
         this.healForestAmulet();
@@ -280,8 +284,10 @@ export class HorizonBattle {
     target.heatUntil = this.tick + ticks(PREVIEW_CORE.episode_heat_duration);
   }
 
-  interrupt(target) {
+  interrupt(target, source) {
     if (!target.castUntil) return;
+    if (target.id==='boss_august_grad' &&
+      (target.castCount%2===1 || (source!=='arena' && source!=='fox'))) return;
     target.castUntil = 0;
     target.nextAttack = this.tick + target.interval;
     this.emit('interrupt', { enemy: target.index });
@@ -328,7 +334,7 @@ export class HorizonBattle {
     const target = this.enemies.filter(enemy => enemy.hp > 0)
       .sort((a, b) => a.hp * b.maxHp - b.hp * a.maxHp || a.index - b.index)[0];
     this.damage(target, this.power * FOX.sp_mult * (this.named?this.rankFactor(this.petRank):1), 'fox');
-    this.interrupt(target);
+    this.interrupt(target,'fox');
     if (!target.hp) {
       this.charge = CORE.episode_fox_kill_refund;
       this.foxBonus = true;
@@ -384,6 +390,7 @@ export class HorizonBattle {
     const casts = this.enemies.filter(other => other.castUntil > this.tick).length;
     if (wantsCast && casts < this.maxConcurrentCasts) {
       enemy.castUntil = this.tick + ticks(PREVIEW_CORE.episode_enemy_cast_duration);
+      enemy.castStart = this.tick;
       return;
     }
     this.hitHero(enemy, 1);
@@ -418,6 +425,7 @@ export class HorizonBattle {
     if (enemy.nextCast<=this.tick && casts<this.maxConcurrentCasts) {
       enemy.castCount++;
       enemy.castUntil=this.tick+ticks(enemy.cast_time_sec);
+      enemy.castStart=this.tick;
       enemy.nextCast=this.tick+ticks(enemy.cast_cd_sec);
       return;
     }

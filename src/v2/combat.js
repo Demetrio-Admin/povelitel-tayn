@@ -1,8 +1,7 @@
 import { CombatScene } from '../scenes/CombatScene.js';
 import { CORE } from '../config/horizon/rules.js';
-import { QUEST_BY_ID } from './quests.js';
-import { advanceQuest, settleElite, settleField } from './actProgress.js';
-import { payItems, POTIONS_41 } from './progression.js';
+import { POTIONS_41 } from './progression.js';
+import { resolveHorizonBattle } from './battleResolution.js';
 import { VIEW, COLORS } from '../config/game.config.js';
 import { UI } from '../config/ui.config.js';
 import { MSG } from '../state/EventBus.js';
@@ -10,8 +9,8 @@ import { services } from '../services.js';
 import { bindSceneViewport } from '../ui/viewport.js';
 import { UIBar } from '../ui/widgets.js';
 import { applyDisplaySize } from '../objects/InteractiveObject.js';
-import { HorizonBattle, HORIZON_STEP_MS, replayHorizonBattle } from '../systems/HorizonBattle.js';
-import { battleContext, settleVictory } from './episode.js';
+import { HorizonBattle, HORIZON_STEP_MS } from '../systems/HorizonBattle.js';
+import { battleContext } from './episode.js';
 import { campaign, saveCampaign } from './campaign.js';
 
 const OBJECT_ART={light:'field_rock_light',heavy:'field_rock_heavy',crystal:'field_crystal',barrel:'barrel_01'};
@@ -96,7 +95,8 @@ export class HorizonCombatScene extends CombatScene {
       const ring = this.add.image(x, y - 4, 'fx_ring').setTint(COLORS.gold).setDisplaySize(150, 48).setDepth(y - 1);
       const bar = new UIBar(this, x - size / 2, healthY, size, 21, 'hp', 5000);
       const name = this.label(x, healthY - 25, enemy.name + ' · ' + this.encounter.level, '#fff0d6', size + 15);
-      const tag = this.label(x, healthY + 28, '', '#ffb994', size);
+      const cast = new UIBar(this, x - size / 2, healthY + 19, size, 8, 'xp', 5000).setVisible(false);
+      const tag = this.label(x, healthY + 38, '', '#ffb994', size);
       const hit = this.add.zone(x, y - sprite.displayHeight / 2, Math.max(138, sprite.displayWidth), sprite.displayHeight + 54)
         .setDepth(5040).setInteractive({ useHandCursor: true });
       hit.on('pointerdown', () => {
@@ -104,7 +104,7 @@ export class HorizonCombatScene extends CombatScene {
         this.selected = null;
         this.refreshBattle();
       });
-      return { x, y, sprite, bar, ring, name, tag };
+      return { x, y, sprite, bar, cast, ring, name, tag };
     });
   }
 
@@ -207,9 +207,17 @@ export class HorizonCombatScene extends CombatScene {
       view.bar.setFraction(enemy.hp / enemy.maxHp);
       view.ring.setVisible(enemy.hp > 0 && this.battle.focus === i);
       view.sprite.setAlpha(enemy.hp ? 1 : 0.27);
+      const casting = enemy.castUntil > this.battle.tick;
+      view.cast.setVisible(casting);
+      if (casting) view.cast.setFraction((this.battle.tick-enemy.castStart)/(enemy.castUntil-enemy.castStart));
       const statuses={brittle:'Хрупкость',charge:'Разряд',breach:'Пролом',viscosity:'Вязкость',echo:'Эхо'};
       const tag=Object.keys(statuses).find(key=>this.battle.activeTag(enemy,key));
-      const text = enemy.castUntil ? (enemy.cast_name || 'Готовит удар') : enemy.heat ? 'Жар ×' + enemy.heat : enemy.shield ? 'Щит' : statuses[tag] || '';
+      const castName = enemy.id==='boss_august_grad'
+        ? enemy.castCount%2===1?'Ледяной барьер':'Волна холода'
+        : enemy.id==='boss_treegazer'
+          ? enemy.castCount%2===1?'Кора веков':'Обвал корней'
+          : enemy.cast_name || 'Готовит удар';
+      const text = enemy.castUntil ? castName : enemy.shield ? 'Щит' : enemy.heat ? 'Жар ×' + enemy.heat : statuses[tag] || '';
       if (view.tag.text !== text) view.tag.setText(text);
     }
     for (const stone of Object.values(this.battle.objects)) {
@@ -233,7 +241,12 @@ export class HorizonCombatScene extends CombatScene {
     if (this.responseLabel) this.responseLabel.setText('Отклик ' + this.battle.charge + '%');
     const stone = this.selected && this.battle.objects[this.selected];
     const teaching = this.teaching();
-    let hint = this.encounter.id === 'frost' ? 'Палочка стреляет сама. Огнём можно ускорить бой.' : '';
+    let hint = this.encounter.id === 'frost' ? 'Палочка стреляет быстрее. Раскали камень Огнём и брось Телекинезом.' : '';
+    const focused = this.battle.enemies[this.battle.focus];
+    if (focused.id==='boss_august_grad') {
+      if (focused.shield) hint='Астрал или Пролом снимет ледяной щит.';
+      else if (focused.castUntil && focused.castCount%2===0) hint='Сбей волну броском или выпей Тёплый настой.';
+    }
     if (stone) hint = stone.tag ? 'Нажми «Телекинез», чтобы бросить камень.' : 'Нажми «Огонь», чтобы раскалить камень.';
     else if (teaching) hint = this.battle.objects.light.tag ? 'Выбери раскалённый камень.' : 'Коснись камня на поляне.';
     this.hint.setVisible(!!hint);
@@ -310,22 +323,24 @@ export class HorizonCombatScene extends CombatScene {
     if (this.ended) return;
     this.ended = true;
     const battle = this.battle;
-    const replayed = replayHorizonBattle(this.context, battle.record());
     const before=campaign();
-    const costs=Object.fromEntries(Object.entries(replayed.usedPotions).filter(([,count])=>count));
-    const afterPotions=payItems(before,costs)||before;
-    const victory = replayed.result === 'victory';
+    let reward;
+    try {
+      reward=resolveHorizonBattle(before,this.context,battle.record(),Date.now());
+    } catch (error) {
+      console.error(error);
+      this.bus.emit(MSG.DIALOG, {
+        title: 'Итог боя не сохранён',
+        text: 'Вернись на карту и попробуй ещё раз.',
+        buttons: [{ label: 'На карту', primary: true, onClick: () => this.exit('cancelled') }],
+      });
+      return;
+    }
+    const {victory}=reward;
+    saveCampaign(reward.state,{notify:false});
     this.hint.setVisible(false);
     const onClick = () => this.exit(victory ? 'victory' : 'defeat');
     if (victory) {
-      let reward;
-      if (this.encounter.quest) {
-        const quest=QUEST_BY_ID[this.encounter.quest];
-        reward={state:advanceQuest(afterPotions,quest,this.encounter.index),summary:''};
-      } else if (this.encounter.eliteTier) reward={state:settleElite(afterPotions,this.encounter,Date.now()),summary:''};
-      else if (this.encounter.tier) reward={state:settleField(afterPotions,this.encounter,replayed.foxBonus,Date.now()),summary:''};
-      else reward=settleVictory(afterPotions,this.encounter,replayed.foxBonus,Date.now());
-      saveCampaign(reward.state,{notify:false});
       services.audio.play('victory');
       if (this.encounter.id==='spark') {
         const enemy = this.enemyViews[0];
@@ -347,7 +362,6 @@ export class HorizonCombatScene extends CombatScene {
         buttons: [{ label: 'Продолжить', primary: true, onClick }],
       });
     } else {
-      saveCampaign(afterPotions,{notify:false});
       this.heroAnim.playDeath();
       services.audio.play('defeat');
       this.bus.emit(MSG.DIALOG, {

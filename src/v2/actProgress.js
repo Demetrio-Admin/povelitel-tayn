@@ -2,6 +2,7 @@ import { CORE, ECONOMY, namedEncounter, baseBattleCoins, tideAt } from '../confi
 import { QUESTS, QUEST_BY_ID, PROLOGUE } from './quests.js';
 import { award, dayAt, gearSpace, TIERS_41 } from './progression.js';
 import { HORIZON_TABLES } from '../config/horizon/tables.generated.js';
+import { spawnZones } from './regions.js';
 
 const prelude = ['intro','spark','lantern','upgrade','frost','thaw','veda','grom','hunt'];
 export const townOpen = p => questDone(p, 'treegazer') || p.huntLevel >= 21;
@@ -57,32 +58,41 @@ const mixes = {
   1:['t1_solo_grab','t1_solo_imp','t1_solo_thorn','t1_duo_anomaly','t1_duo_outpost','t1_trio_birch'],
   2:['t2_solo_collector','t2_solo_imp','t2_solo_collector','t2_duo_plaza','t2_duo_society','t2_trio_quarter'],
 };
-const zoneCount=ECONOMY['world.spawn_zones_per_map'];
 const maxActive=ECONOMY['hunt.max_active'];
 const fieldKey = tier => String(tier);
+function zoneOpen(p, point) {
+  if (!point) return false;
+  if (point.gate === 'flood') return p.tasks.flood > 0;
+  return !point.gate || questDone(p, point.gate);
+}
 export function populateHunt(p,tier,now,away,walkable) {
   const key=fieldKey(tier);
+  const zones=spawnZones(tier), zoneCount=zones.length;
   const saved=p.field[key] || [];
   const lanes=[...saved];
   let changed=false;
   for (let i=0;i<maxActive;i++) {
     const old=lanes[i];
-    if (old && (!old.readyAt || old.readyAt>now)) continue;
+    const oldOpen=old && zoneOpen(p,zones[old.zone]);
+    if (oldOpen && (!old.readyAt || old.readyAt>now)) continue;
     const occupied=new Set(lanes.filter((row,index)=>row && index!==i && !row.readyAt).map(row=>row.zone));
     const generation=(old?.generation ?? -1)+1;
     const first=(i*5+tier*2+generation*7)%zoneCount;
     const options=Array.from({length:zoneCount},(_,offset)=>(first+offset)%zoneCount);
-    const zone=options.find(point=>point!==old?.zone && !occupied.has(point) && walkable(point) && (!old || away(point)));
+    const zone=options.find(point=>point!==old?.zone && !occupied.has(point) && zoneOpen(p,zones[point]) &&
+      walkable(point) && (!oldOpen || away(point)));
     if (zone===undefined) continue;
     lanes[i]={zone,generation}; changed=true;
   }
   return changed?{...p,field:{...p.field,[key]:lanes}}:p;
 }
 export function fieldEncounter(p,tier,zone) {
+  const point=spawnZones(tier)[zone];
+  if (!zoneOpen(p,point)) return null;
   const lane=p.field[fieldKey(tier)]?.findIndex(row=>row?.zone===zone&&!row.readyAt)??-1;
   if (lane<0) return null;
   const row=p.field[fieldKey(tier)][lane];
-  const band=zone%6;
+  const {band}=point;
   const offset=[ECONOMY['hunt.window_min'],0,0,1,1,ECONOMY['hunt.window_max']][band];
   const range=TIERS_41['tier_'+tier];
   const level=Math.max(range.min_lvl,Math.min(range.max_lvl,p.huntLevel+offset));

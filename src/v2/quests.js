@@ -1,12 +1,13 @@
-import { CITY_POSITIONS, CITY_ROOMS, cityPoint } from '../config/city.plan.js';
+import { cityPoint } from '../config/city.plan.js';
 import { roomPoint } from '../config/city.rooms.js';
 import { borPoint, CITY_ACTORS } from './regions.js';
+import { ACT_CITY_POSITIONS, ACT_ROOMS } from './rooms.js';
 import { QUEST_DIALOGUE } from './dialogue.js';
 
 const F = borPoint;
 const C = cityPoint;
-const R = (key, x, y) => roomPoint(key, x, y, CITY_ROOMS);
-const P = id => CITY_POSITIONS[id];
+const R = (key, x, y) => roomPoint(key, x, y, ACT_ROOMS);
+const P = id => ACT_CITY_POSITIONS[id];
 const battle = (where, label, pack, level, intro = '', after = '') => ({ where, label, pack, level, intro, after });
 const spell = (where, label, texture, gift, after = '', more = {}) => ({ where, label, texture, gift, after, ...more });
 const talk = (where, label, texture, after, extra = {}) => ({ where, label, texture, after, ...extra });
@@ -48,7 +49,7 @@ const region1 = [
     action(F(630,212),'Гром у заставы','npc_goran','',{needsTactical:true}),
   ],rewards(180,{[warm]:1,[resin]:4}),11),
   story('treegazer','Вековой Древогляд',['outpost'],[
-    battle(keeper,'Вековой Древогляд','t1_boss_treegazer',20),
+    {...battle(keeper,'Вековой Древогляд','t1_boss_treegazer',20),arena:['heavy','crystal']},
   ],rewards(400,{[wick]:2,recipe_amulet_forest:1},{seal:10},50),12),
   side('birch_cat','Рыжий кот на берёзе',[],[
     battle(F(95,368),'Колючник у берёзы','t1_solo_thorn',2,'','Кот спрыгивает с берёзы. Теперь он будет ждать у крыльца.'),
@@ -107,7 +108,7 @@ const region2 = [
     talk(P('npc_ilaria'),'Архивариус Клара','npc_ilaria','',{learn:'seal'}),
   ],rewards(180,{[frost]:3}),2),
   story('pavement','Иней на мостовой',['klara'],[
-    battle(C(1769,3669),'Инеевый Скупщик у ящика','t2_solo_collector',23),
+    {...battle(C(1769,3669),'Инеевый Скупщик у ящика','t2_solo_collector',23),arena:['light']},
     spell(C(1842,3679),'Покрытый инеем ящик','crate_01','telekinesis'),
     spell(C(1859,3663),'Доска с оттиском','rune_slab_01','seal'),
   ],rewards(240,{[dust]:3},{seal_crack:5}),3),
@@ -151,7 +152,7 @@ const region2 = [
   ],rewards(460,{[warm]:1,[dust]:4},{storm:5}),13),
   story('august','Дуэль в Зале',['lab_journal'],[
     spell(P('final_ward'),'Пелена у Зала Дуэлей','astral_ward_01','seal'),
-    battle(P('final_severin'),'Август Град','t2_boss_august',40),
+    {...battle(P('final_severin'),'Август Град','t2_boss_august',40),arena:['heavy','crystal']},
     spell(P('final_letters'),'Зашифрованные письма','magic_book_01','seal'),
   ],rewards(750,{[heart]:2,recipe_amulet_frost:1},{storm:15},60),14),
   side('martha_pies','Пироги тётушки Марфы',[],[

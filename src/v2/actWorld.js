@@ -1,4 +1,5 @@
-import { CITY_PORTALS, CITY_POSITIONS, cityPoint } from '../config/city.plan.js';
+import { cityPoint } from '../config/city.plan.js';
+import { ACT_CITY_PORTALS, ACT_CITY_POSITIONS as CITY_POSITIONS } from './rooms.js';
 import { COLORS, DEPTH, PLAYER } from '../config/game.config.js';
 import { MOBS_41, PACKS, ECONOMY } from '../config/horizon/rules.js';
 import { applyDisplaySize } from '../objects/InteractiveObject.js';
@@ -20,7 +21,7 @@ const portals = [
   portal('v2_hearth_route',borPoint(46,443),'Дорога к Очагу Мирры','signpost_01','mirra-hearth',{x:1740,y:1110}),
   portal('v2_town_route',BOR_TRACT,'Восточный тракт в Светлодол','signpost_01','city',TOWN.arrival,'town'),
   portal('v2_bor_return',TOWN_GATE,'Южные ворота · Янтарный Бор','signpost_01',BOR.id,borPoint(690,188)),
-  ...CITY_PORTALS.map(door => portal(door.id,door,door.hint || (door.room==='city'?'Выйти':'Войти'),null,door.room,door.target,
+  ...ACT_CITY_PORTALS.map(door => portal(door.id,door,door.hint || (door.room==='city'?'Выйти':'Войти'),null,door.room,door.target,
     ['city_lab','city_cellar','city_rescue','city_duel','city_warehouse_a','city_warehouse_b'].includes(door.room)?door.room:null)),
 ].map(row => row.texture ? row : { ...row, ghost:{w:135,h:90} });
 export function canUsePortal(p,cfg) {
@@ -77,7 +78,7 @@ export function actsTargetAvailable(p,cfg) {
   if (cfg.portal) return cfg.lock!=='hunt'||p.step==='hunt';
   if (cfg.service) return p.step==='hunt'&&(!cfg.when||questDone(p,cfg.when));
   if (p.step!=='hunt') return false;
-  if (cfg.field) return !!p.field[cfg.field]?.some(row=>row?.zone===cfg.zone && !row.readyAt);
+  if (cfg.field) return !!runtimeEncounter(p,cfg);
   if (cfg.elite) return !!dailyElite(p,cfg.elite,Date.now());
   if (cfg.gatherTier) return (p.gathering.points?.[cfg.gatherTier+'-'+cfg.zone]||0)<=Date.now();
   if (cfg.anomaly) {
@@ -111,7 +112,7 @@ const staticDecor = {
     [borPoint(78,124),'ancient_gate_01'],[borPoint(96,414),'signpost_01'],
     [borPoint(238,340),'forest_node_restored','bridge_beacon'],
     [borPoint(396,127),'forest_node_restored','birch_ambush'],
-    [borPoint(330,194),'forest_node_restored','brook_flame'],
+    [borPoint(330,194),'forest_node_restored','brook_flame','firstStep'],
     [borPoint(418,105),'lunar_altar_01'],[borPoint(419,92),'lunar_flame_01','brook_flame'],
     [borPoint(99,407),'rune_sigil_01','horseshoe'],[borPoint(101,377),'corrupted_roots_01','treegazer'],
   ],
@@ -128,13 +129,25 @@ const staticDecor = {
   city_warehouse_a:[[CITY_POSITIONS.wh_equipment,'cat_01','warehouse_a']],
 };
 export function installActPresentation(scene) {
-  scene.questDecor=(staticDecor[scene.loc.id]||[]).filter(([,tex])=>scene.textures.exists(tex)).map(([p,tex,flag])=>{
+  scene.questDecor=(staticDecor[scene.loc.id]||[]).filter(([,tex])=>scene.textures.exists(tex)).map(([p,tex,flag,phase])=>{
     const img=applyDisplaySize(scene.add.image(p.x,p.y,tex),tex).setOrigin(.5,1).setDepth(DEPTH.mainBase+p.y);
     if (tex.startsWith('npc_') || tex==='enemy_volunteer_miron') img.setScale(PLAYER.displayHeight/img.height);
     if (tex==='fx_glow') img.setTint(0xffc464).setBlendMode('ADD').setDisplaySize(122,146);
     if (flag==='moon_bed' || flag==='apothecary_garden') img.setDisplaySize(108,68);
-    return {img,flag};
+    return {img,flag,phase};
   });
+  scene.groveGlow = null;
+  if (scene.loc===BOR) {
+    const altar=borPoint(414,102);
+    const light=scene.add.image(altar.x,altar.y,'fx_glow').setTint(0xffc36d)
+      .setDisplaySize(730,520).setBlendMode('ADD').setAlpha(.29).setDepth(DEPTH.fx - 2);
+    const beams=scene.add.graphics().setBlendMode('ADD').setDepth(DEPTH.fx - 1);
+    for (const source of [borPoint(238,335),borPoint(396,122),borPoint(330,189)]) {
+      beams.lineStyle(8,0xf5ad43,.2).lineBetween(source.x,source.y,altar.x,altar.y);
+      beams.lineStyle(2,0xffe29a,.65).lineBetween(source.x,source.y,altar.x,altar.y);
+    }
+    scene.groveGlow={light,beams};
+  }
   scene.questGates=[];
   if (scene.loc.id==='city') {
     for (const [id,key,texture,width,h] of [
@@ -155,7 +168,13 @@ export function installActPresentation(scene) {
 
 export function refreshActPresentation(scene) {
   const p=campaign();
-  for (const row of scene.questDecor||[]) row.img.setVisible(!row.flag||questDone(p,row.flag));
+  for (const row of scene.questDecor||[]) {
+    row.img.setVisible(row.phase==='firstStep' ? p.tasks[row.flag]>0 : !row.flag||questDone(p,row.flag));
+  }
+  if (scene.groveGlow) {
+    scene.groveGlow.beams.setVisible(p.tasks.brook_flame===1);
+    scene.groveGlow.light.setVisible(questDone(p,'brook_flame'));
+  }
   for (const gate of scene.questGates||[]) {
     const closed=gate.id==='flood' ? !(p.tasks.flood>0) : !questDone(p,gate.id);
     gate.solid.body.enable=closed;

@@ -93,7 +93,11 @@ try {
   await page.waitForTimeout(450);
   assert.ok((await gateState()).y <= 832, 'A tap past the gate stops inside the yard');
   await visit('intro', true);
-  for (let i = 0; i < 3; i++) await next();
+  await next();
+  await next();
+  await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').riftShield?.visible);
+  assert.equal(await step(),'intro');
+  await next();
   await waitStep('spark');
   console.log('Reached spark');
 

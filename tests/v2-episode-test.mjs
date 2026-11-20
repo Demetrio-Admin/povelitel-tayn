@@ -54,9 +54,12 @@ state = upgradeWand(state);
 assert.equal(state.step, 'frost');
 assert.deepEqual([state.coins, state.herbs, state.wandRank], [5, 1, PREVIEW_CORE.episode_wand_rank_step]);
 assert.equal(upgradeWand(state), state);
-const second = play(battleContext(state, STORY_ENCOUNTERS.frost), () => {});
+const second = play(battleContext(state, STORY_ENCOUNTERS.frost), battle => {
+  if (battle.tick === 90) assert.ok(castAtStone(battle, 'fire', 'light'));
+  if (battle.tick === 110) assert.ok(castAtStone(battle, 'telekinesis', 'light'));
+});
 assert.equal(second.battle.intervals.wand, 26);
-assert.ok(second.seconds <= 18, 'Second battle time: ' + second.seconds);
+assert.ok(second.seconds >= 14 && second.seconds <= 17, 'Second battle time: ' + second.seconds);
 assert.ok(second.events.some(event => event.source === 'impulse'));
 
 state = settleVictory(state, STORY_ENCOUNTERS.frost, false, now).state;

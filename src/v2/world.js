@@ -12,6 +12,7 @@ import { campaign, saveCampaign, completeActStep, objective } from './campaign.j
 import { ensureLocationWithScreen } from '../systems/assetPacks.js';
 import { findPath } from '../world/nav.js';
 import { CITY_LAYOUT_VERSION } from '../config/city.plan.js';
+import { actRoomMap } from './rooms.js';
 import { BOR, TOWN, TOWN_WEST_PASSAGE, actLocation, actLocationAt, arrivalFor, borMap, crossesTownWall } from './regions.js';
 import { QUEST_BY_ID } from './quests.js';
 import { dailyElite, questStep, plannedEncounter, townOpen } from './actProgress.js';
@@ -118,6 +119,7 @@ export class HorizonExplorationScene extends ExplorationScene {
   mapForLocation() {
     if (this.loc===HEARTH) return hearthMap();
     if (this.loc===BOR) return borMap();
+    if (this.loc?.interior) return actRoomMap(this.loc);
     return super.mapForLocation();
   }
   fixStartPosition(p) { return this.locationFor(p)===HEARTH ? hearthArrival(p,campaign().step) : p; }
@@ -291,7 +293,7 @@ export class HorizonExplorationScene extends ExplorationScene {
     if (!step || step.index!==cfg.index) return;
     if (step.pack) {
       const encounter=plannedEncounter(quest,step);
-      const start=()=>{ this.questBattle=step; this.enterHorizonBattle(encounter); };
+      const start=()=>{ this.questBattle={...step,quest:quest.id}; this.enterHorizonBattle(encounter); };
       if (step.intro) this.showActDialogue(step.intro,quest.title,start,'Вступить в бой');
       else start();
       return;
@@ -301,10 +303,29 @@ export class HorizonExplorationScene extends ExplorationScene {
       return;
     }
     const complete=()=>{
-      if (this.finishActAction(cfg) && step.after) this.showActDialogue(step.after,quest.title);
+      if (!this.finishActAction(cfg) || !step.after) return;
+      if (quest.id==='brook_flame' && cfg.index===1) this.showMirraEcho(cfg,step.after,quest.title);
+      else this.showActDialogue(step.after,quest.title);
     };
     if (step.intro) this.showActDialogue(step.intro,quest.title,complete,step.cost?'Помочь':undefined);
     else complete();
+  }
+
+  showMirraEcho(cfg, lines, title) {
+    const lantern=this.add.image(this.player.x+34,this.player.y-59,'lantern_02').setDisplaySize(35,56)
+      .setTint(0xffdc9c).setDepth(DEPTH.fx+1);
+    const echo=this.add.image(cfg.x,cfg.y-29,'npc_mirra').setOrigin(.5,1).setAlpha(0)
+      .setTint(0xffdb92).setBlendMode('ADD').setDepth(DEPTH.fx);
+    echo.setScale(PLAYER.displayHeight/echo.height);
+    this.burst(lantern.x,lantern.y,COLORS.gold,22);
+    this.tweens.add({targets:echo,alpha:.78,duration:450});
+    this.showActDialogue(lines,title,()=>{
+      this.tweens.add({targets:[echo,lantern],alpha:0,duration:560,onComplete:()=>{
+        this.sparkleShower(echo.x,echo.y-30,COLORS.gold);
+        echo.destroy();
+        lantern.destroy();
+      }});
+    });
   }
 
   finishActAction(cfg) {
@@ -359,14 +380,15 @@ export class HorizonExplorationScene extends ExplorationScene {
       title: speaker, text,
       buttons: [{ label: step === 'grom' && line === lines.length - 1 ? 'Открыть охоту' : 'Дальше', primary: true, onClick: () => {
         if (line + 1 < lines.length) {
-          this.playDialogue(step, line + 1);
+          if (step === 'intro' && line === 1) this.openGrimoireRift(() => this.playDialogue(step, line + 1));
+          else this.playDialogue(step, line + 1);
           return;
         }
         saveCampaign(finishDialogue(campaign()));
         this.refreshAll();
         this.refreshHearth();
         if (step === 'intro') {
-          this.grimoireRift();
+          this.mirraVanishes();
           this.heroSay('Отгони Искроцапа от фонаря!');
         }
       } }],
@@ -380,19 +402,40 @@ export class HorizonExplorationScene extends ExplorationScene {
       onComplete: () => ring.destroy() });
   }
 
-  grimoireRift() {
-    const mirra = this.add.image(MIRRA.x, MIRRA.y, 'npc_mirra').setOrigin(0.5, 1)
-      .setDisplaySize(84, 126).setDepth(DEPTH.mainBase + MIRRA.y + 1);
+  openGrimoireRift(onComplete) {
+    this.storyPending = true;
     this.burst(MIRRA.x, MIRRA.y - 57, 0xcc9df0, 26);
     this.heroRing(0xfed17c, 930);
-    const ray=this.add.image(966,264,'fx_glow').setDisplaySize(151,730).setTint(0xc080ff)
-      .setBlendMode('ADD').setAlpha(.8).setDepth(DEPTH.fx);
-    const shield=this.add.image(this.player.x,this.player.y-52,'fx_ring').setDisplaySize(156,166)
+    const ray = this.add.image(893, 438, 'fx_glow').setDisplaySize(210, 780)
+      .setTint(0xc080ff).setBlendMode('ADD').setDepth(DEPTH.fx);
+    const core = this.add.image(893, 438, 'fx_glow').setDisplaySize(54, 770)
+      .setTint(0xffd582).setBlendMode('ADD').setDepth(DEPTH.fx+1);
+    this.riftShield = this.add.image(this.player.x, this.player.y - 42, 'fx_ring').setDisplaySize(175, 182)
       .setTint(0xffd58a).setBlendMode('ADD').setDepth(DEPTH.fx+1);
-    this.tweens.add({targets:[ray,shield],alpha:0,duration:880,onComplete:()=>{ray.destroy();shield.destroy();}});
-    this.tweens.add({ targets: mirra, y: mirra.y - 36, alpha: 0, duration: 630, ease: 'Quad.In',
-      onComplete: () => { mirra.destroy(); this.sparkleShower(LANTERN.x, LANTERN.y - 20, COLORS.gold); } });
+    this.riftCold = this.add.ellipse((GATE.x + MIRRA.x) / 2, GATE.y - 59, 590, 270, 0x88b9ef, .23)
+      .setDepth(DEPTH.fx - 1);
+    this.cameras.main.flash(465, 193, 172, 255);
+    this.tweens.add({ targets: [ray, core], alpha: .18, duration: 710, onComplete: () => {
+      ray.destroy();
+      core.destroy();
+      this.storyPending = false;
+      onComplete();
+    } });
     services.audio.play('quest_update');
+  }
+
+  mirraVanishes() {
+    const mirra = this.add.image(MIRRA.x, MIRRA.y, 'npc_mirra').setOrigin(0.5, 1)
+      .setScale(PLAYER.displayHeight / this.textures.get('npc_mirra').getSourceImage().height)
+      .setDepth(DEPTH.mainBase + MIRRA.y + 1);
+    const fading = [mirra, this.riftShield, this.riftCold].filter(Boolean);
+    this.riftShield = null;
+    this.riftCold = null;
+    this.tweens.add({ targets: mirra, x: MIRRA.x + 105, y: MIRRA.y - 80, duration: 630, ease: 'Quad.In' });
+    this.tweens.add({ targets: fading, alpha: 0, duration: 670, onComplete: () => {
+      fading.forEach(view => view.destroy());
+      this.sparkleShower(LANTERN.x, LANTERN.y - 20, COLORS.gold);
+    } });
   }
 
   showFrostAttack() {
@@ -556,7 +599,11 @@ export class HorizonExplorationScene extends ExplorationScene {
     if (campaign().step === 'thaw' && this.hearth?.frozen) this.meltGate();
     else this.refreshHearth();
     if (data?.result==='victory' && this.questBattle?.after) {
-      this.time.delayedCall(450,()=>{ if(this.canAct()) this.showActDialogue(this.questBattle.after,'После боя'); });
+      let lines = this.questBattle.after;
+      if (this.questBattle.quest==='fountain' && !campaign().inv.mirra_lantern_restored) {
+        lines = [lines[0], ['Клара', 'Постой... Это же фонарь Мирры! Он весь в трещинах. Она была в Архиве в ту самую ночь, когда раскололся Гримуар.'], lines[2]];
+      }
+      this.time.delayedCall(450,()=>{ if(this.canAct()) this.showActDialogue(lines,'После боя'); });
     }
     this.bus.emit(MSG.QUEST_CHANGED);
   }

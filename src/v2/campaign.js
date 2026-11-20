@@ -28,7 +28,7 @@ export function heroStatsAt(level) {
   const fraction = (Math.min(level, CORE.target_year_levels) - 1) / (CORE.target_year_levels - 1);
   return {
     maxHp: Math.round(CORE.hero_base_hp * levelScale(level)),
-    maxMana: CORE.mana_start + (CORE.mana_end - CORE.mana_start) * fraction,
+    maxMana: Math.round(CORE.mana_start + (CORE.mana_end - CORE.mana_start) * fraction),
     manaRegen: CORE.mana_regen_start + (CORE.mana_regen_end - CORE.mana_regen_start) * fraction,
     damageMult: levelScale(level),
   };

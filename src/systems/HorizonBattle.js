@@ -56,7 +56,7 @@ export class HorizonBattle {
       : this.power * PREVIEW_CORE.episode_wand_base_mult * PREVIEW_CORE.episode_wand_upgrade_power ** (wandRank / PREVIEW_CORE.episode_wand_rank_step);
     this.hero = {
       maxHp: Math.round(CORE.hero_base_hp * heroScale * (this.named ? this.rankFactor(context.vigor) : 1)),
-      maxMana: CORE.mana_start + (CORE.mana_end - CORE.mana_start) * fraction,
+      maxMana: Math.round(CORE.mana_start + (CORE.mana_end - CORE.mana_start) * fraction),
       regen: CORE.mana_regen_start + (CORE.mana_regen_end - CORE.mana_regen_start) * fraction,
     };
     this.hero.hp = this.hero.maxHp;

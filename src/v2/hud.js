@@ -16,11 +16,6 @@ import { AMULETS_41, TIERS_41, POTIONS_41, amuletOffer, award, blessHunt, colorO
 export class HorizonUIScene extends UIScene {
   create() {
     super.create();
-    this.tideLabel = this.add.text(VIEW.width / 2, 124, '', {
-      fontFamily: UI.font, fontSize: UI.type.small, color: '#ffeeac', backgroundColor: '#2c2049',
-      padding: { x: 14, y: 5 }, stroke: '#211625', strokeThickness: 3,
-    }).setOrigin(0.5, 0).setDepth(5800).setVisible(false);
-    this.viewport?.assign(this.tideLabel, 'top');
     this.introHint = this.add.text(VIEW.width / 2, 180, 'Нажми на Мирру, чтобы подойти', {
       fontFamily: UI.font, fontSize: UI.type.small, color: '#ffecd2', backgroundColor: '#362720',
       padding: { x: 18, y: 10 }, align: 'center', wordWrap: { width: 475 },
@@ -30,13 +25,7 @@ export class HorizonUIScene extends UIScene {
 
   update(time, delta) {
     super.update(time, delta);
-    const ep = campaign(), exploring = this.mode === 'exploration' && !this.modal;
-    this.introHint?.setVisible(exploring && ep.step === 'intro');
-    const visible = exploring && ep.step === 'hunt';
-    this.tideLabel?.setVisible(visible);
-    if (!visible) return;
-    const { remaining, tide } = tideStatus(ep, Date.now());
-    this.tideLabel.setText(remaining ? tide.key + ' ' + remaining + '/' + tide.threshold : tide.key + ' · ×' + tide.value);
+    this.introHint?.setVisible(this.mode === 'exploration' && !this.modal && campaign().step === 'intro');
   }
 
   choose(title, text, choices, page=0, back) {
@@ -69,6 +58,9 @@ export class HorizonUIScene extends UIScene {
       this.toast('Цель · '+q.title);
     }}));
     const prologue=tier===1 && tab==='story'?PROLOGUE.map(([id,title])=>(questDone(p,id)?'✓ ':'○ ')+title):[];
+    const { remaining, tide }=tideStatus(p,Date.now());
+    const huntStatus=tab==='hunt' && p.step==='hunt'
+      ? '\n'+tide.key+(remaining?' · '+remaining+'/'+tide.threshold:'')+' · ×'+tide.value : '';
     const lines=tasks.map(q=>{
       const done=questDone(p,q.id);
       const open=questStep(p,q);
@@ -80,7 +72,7 @@ export class HorizonUIScene extends UIScene {
     buttons.push({label:'Закрыть',cancel:true});
     this.openModal({
       title:tier===2?'Светлодол под инеем':'Янтарный Бор',
-      text:current.title+' · '+current.text+'\n\n'+[...prologue,...lines].join('\n'),
+      text:current.title+' · '+current.text+huntStatus+'\n\n'+[...prologue,...lines].join('\n'),
       vertical:true,buttons,
       topTabs:[['story','Сюжет'],['side','Истории'],['hunt','Мастерство']].map(([key,label])=>({
         label, selected:key===tab,onClick:()=>this.openJournal(key),

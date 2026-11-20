@@ -95,6 +95,7 @@ try {
   });
   assert.deepEqual([board.bounds.w,board.bounds.h,board.targets,board.resources,board.art],[3600,2400,12,18,1536]);
   assert.equal(board.trail,true,'A path connects the hearth road to the eastern trail over real bridges');
+  assert.match(await page.evaluate(()=>window.__game.scene.getScene('UIScene').manaText.text),/^\d+ \/ \d+$/);
   await win(q('first_anomaly'),true);
   await interact(q('first_anomaly',1)); await next();
   assert.equal((await data()).tasks.first_anomaly,2);

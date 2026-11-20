@@ -58,9 +58,11 @@ class CampaignTarget extends InteractiveObject {
     }
     if (cfg.action === 'workbench') this.ability = 'fire';
     if (cfg.gift) this.ability=cfg.gift;
-    this.caption = scene.add.text(cfg.x, this.markerY - 14, '', {
-      fontFamily: UI.font, fontSize: UI.type.small, color: COLORS.textGold, align: 'center', stroke: '#180f16', strokeThickness: 4,
-    }).setOrigin(0.5, 1).setDepth(DEPTH.markers).setVisible(false);
+    if (cfg.step && !cfg.hunt) {
+      this.caption = scene.add.text(cfg.x, this.markerY - 14, '', {
+        fontFamily: UI.font, fontSize: UI.type.small, color: COLORS.textGold, align: 'center', stroke: '#180f16', strokeThickness: 4,
+      }).setOrigin(0.5, 1).setDepth(DEPTH.markers).setVisible(false);
+    }
   }
 
   get label() {
@@ -106,8 +108,7 @@ class CampaignTarget extends InteractiveObject {
         this.baseScale={x:this.sprite.scaleX,y:this.sprite.scaleY};
       }
     }
-    this.caption?.setVisible(this.isAvailable() && !this.cfg.gatherTier && !this.cfg.field && !this.cfg.portal)
-      .setText(this.label).setY(this.markerY-14);
+    this.caption?.setVisible(this.isAvailable()).setText(this.label).setY(this.markerY-14);
   }
 
   interact(ability) { this.scene.advanceCampaign(this.cfg, ability); }

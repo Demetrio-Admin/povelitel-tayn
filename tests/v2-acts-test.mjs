@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
-import { CORE, GIFT_RULES, MOBS_41, PACKS, namedEncounter } from '../src/config/horizon/rules.js';
+import { CORE, GIFT_RULES, MOBS_41, PACKS, defensiveRatings, namedEncounter } from '../src/config/horizon/rules.js';
 import { HORIZON_TABLES } from '../src/config/horizon/tables.generated.js';
 import { ASSET_FILES } from '../src/config/assets.manifest.js';
 import { HorizonBattle, replayHorizonBattle } from '../src/systems/HorizonBattle.js';
 import { QUESTS, QUEST_BY_ID, PROLOGUE } from '../src/v2/quests.js';
 import { BOR, TOWN, actLocationAt, gatherZones, spawnZones } from '../src/v2/regions.js';
-import { advanceQuest, fieldEncounter, gather, nextRegionOpen, populateHunt, questDone, questStep, settleField, townOpen } from '../src/v2/actProgress.js';
-import { actsTargets } from '../src/v2/actWorld.js';
-import { award, craftPotion, finishRitual, hydrateActProgress, openChest, startColor } from '../src/v2/progression.js';
+import { advanceQuest, fieldEncounter, gather, nextRegionOpen, plannedEncounter, populateHunt, questDone, questStep, settleField, townOpen } from '../src/v2/actProgress.js';
+import { actsTargets, canUsePortal } from '../src/v2/actWorld.js';
+import { amuletOffer, award, craftPotion, finishRitual, hydrateActProgress, openChest, startColor } from '../src/v2/progression.js';
 
 const now=Date.UTC(2026,10,20,12);
 const player=()=>hydrateActProgress({
@@ -22,6 +22,15 @@ const finish=(p,id)=>{
 assert.deepEqual([BOR.rect.w,BOR.rect.h,TOWN.rect.w,TOWN.rect.h],[3600,2400,2880,5760]);
 assert.deepEqual([QUESTS.filter(q=>q.act===1).length+PROLOGUE.length,QUESTS.filter(q=>q.act===2).length],[27,30]);
 assert.equal(new Set(QUESTS.map(q=>q.id)).size,QUESTS.length);
+const anomaly=QUEST_BY_ID.first_anomaly;
+const firstEncounter=plannedEncounter(anomaly,questStep({...player(),huntLevel:1},anomaly));
+assert.equal(actLocationAt(anomaly.steps[0].where).id,'mirra-hearth');
+assert.deepEqual([firstEncounter.level,firstEncounter.arena],[4,['light']]);
+assert.equal(amuletOffer(award(player(),{items:{recipe_amulet_forest:1}}),'amulet_forest').cost.coins,0);
+const duelDoor=actsTargets().find(cfg=>cfg.id==='door_duel');
+assert.ok(canUsePortal(player(),duelDoor));
+assert.equal(canUsePortal({...player(),tasks:{lab_journal:2}},duelDoor),false);
+assert.ok(canUsePortal({...player(),tasks:{lab_journal:2,august:1}},duelDoor));
 for (const {id,texture} of actsTargets()) {
   if (texture && !['horizon_asya','horizon_hearth_fence'].includes(texture)) assert.ok(Object.hasOwn(ASSET_FILES,texture),id+' · '+texture);
 }
@@ -91,6 +100,9 @@ assert.ok(craftPotion({...player(),satchel:150},'potion_fire_flask'));
 const ctx={balanceVersion:41,heroLevel:21,vigor:21,wandRank:16,wandLevel:21,pet:'robin',
   slots:['fire','telekinesis','seal'],potions:{potion_life_small:4,potion_fire_flask:2},
   encounter:namedEncounter('replay','t2_trio_quarter',21,2)};
+const boss=new HorizonBattle({...ctx,heroLevel:16,encounter:namedEncounter('treegazer','t1_boss_treegazer',20,1)});
+assert.equal(boss.enemies[0].maxHp,Math.round(1400 * 1.065 ** 19));
+assert.equal(boss.enemies[0].rating.armor,defensiveRatings(20,{armor:30}).armor);
 const battle=new HorizonBattle(ctx);
 for (let i=0;i<3;i++) assert.ok(battle.command({type:'potion',id:'potion_life_small'}));
 assert.ok(!battle.command({type:'potion',id:'potion_life_small'}));

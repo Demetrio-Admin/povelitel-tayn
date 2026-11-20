@@ -135,8 +135,8 @@ export function amuletOffer(p,id) {
   if (rank===undefined) {
     const recipe=id==='amulet_forest'?'recipe_amulet_forest':id==='amulet_frost'?'recipe_amulet_frost':'recipe_amulet_market';
     if (!p.inv[recipe]) return null;
-    const tier=TIERS_41[AMULETS_41[id].tier];
-    return {...amuletRanks[0],cost:{coins:300,[tier.common_id]:6,[tier.rare_id]:4}};
+    const row=amuletRanks[0];
+    return {...row,cost:{coins:row.coin_cost}};
   }
   const row=amuletRanks[rank+1];
   if (!row) return null;

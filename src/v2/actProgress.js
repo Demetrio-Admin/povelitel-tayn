@@ -49,10 +49,9 @@ export function advanceQuest(p, quest, index) {
   }
   return next;
 }
-export function plannedEncounter(p,quest,step) {
-  const floor=TIERS_41['tier_'+quest.act].min_lvl;
-  const level=Math.min(step.level,Math.max(floor,p.huntLevel+1));
-  return {...namedEncounter(taskTarget(quest.id,step.index),step.pack,level,quest.act),quest:quest.id,index:step.index};
+export function plannedEncounter(quest,step) {
+  const encounter=namedEncounter(taskTarget(quest.id,step.index),step.pack,step.level,quest.act);
+  return {...encounter,arena:step.arena ?? encounter.arena,quest:quest.id,index:step.index};
 }
 const mixes = {
   1:['t1_solo_grab','t1_solo_imp','t1_solo_thorn','t1_duo_anomaly','t1_duo_outpost','t1_trio_birch'],

@@ -1,5 +1,5 @@
 import { CITY_PORTALS, CITY_POSITIONS, cityPoint } from '../config/city.plan.js';
-import { COLORS, DEPTH } from '../config/game.config.js';
+import { COLORS, DEPTH, PLAYER } from '../config/game.config.js';
 import { MOBS_41, PACKS, ECONOMY } from '../config/horizon/rules.js';
 import { applyDisplaySize } from '../objects/InteractiveObject.js';
 import { BOR, BOR_TRACT, borPoint, CITY_ACTORS, HEARTH_TRAIL, TOWN, TOWN_GATE, actLocationAt, gatherZones, spawnZones } from './regions.js';
@@ -13,7 +13,7 @@ const actTarget = (id, {x,y}, label, texture, opts) => ({
 });
 const portal = (id, where, label, texture, to, at, lock) => actTarget(id,where,label,texture,{to,at,lock,portal:true});
 const service=(kind,where,label,texture,more)=>actTarget('service-'+kind,where,label,texture,{service:kind,...more});
-const asya=actTarget('v2-asya',CITY_ACTORS.asya,'Ася-Фонарщица','horizon_asya',{resident:true,service:'asya',size:[34,90]});
+const asya=actTarget('v2-asya',CITY_ACTORS.asya,'Ася-Фонарщица','horizon_asya',{resident:true,service:'asya',height:90});
 
 const portals = [
   portal('v2_bor_route',HEARTH_TRAIL,'Ярмарочная дорога','signpost_01',BOR.id,null,'hunt'),
@@ -30,7 +30,7 @@ export function canUsePortal(p,cfg) {
     case 'city_lab': return (p.tasks.lab_seal || 0)>0;
     case 'city_cellar': return questDone(p,'cellar_house');
     case 'city_rescue': return questDone(p,'rescue_house');
-    case 'city_duel': return (p.tasks.august || 0)>0;
+    case 'city_duel': return questStep(p,QUEST_BY_ID.august)?.index!==0;
     case 'city_warehouse_a':
     case 'city_warehouse_b': return questDone(p,'archive');
     default: return true;
@@ -122,7 +122,7 @@ const staticDecor = {
     [cityPoint(1280,1840),'city_lamp_01','cellar_house'],
     [cityPoint(897,5175),'field_crystal','august'],
     [cityPoint(2075,880),'npc_tikhon','lab_seal'],
-    [cityPoint(2150,895),'enemy_volunteer','lab_seal'],
+    [cityPoint(2150,895),'enemy_volunteer_miron','lab_seal'],
     [cityPoint(1363,4390),'city_walk_market_stall','martha_pies'],
   ],
   city_warehouse_a:[[CITY_POSITIONS.wh_equipment,'cat_01','warehouse_a']],
@@ -130,6 +130,7 @@ const staticDecor = {
 export function installActPresentation(scene) {
   scene.questDecor=(staticDecor[scene.loc.id]||[]).filter(([,tex])=>scene.textures.exists(tex)).map(([p,tex,flag])=>{
     const img=applyDisplaySize(scene.add.image(p.x,p.y,tex),tex).setOrigin(.5,1).setDepth(DEPTH.mainBase+p.y);
+    if (tex.startsWith('npc_') || tex==='enemy_volunteer_miron') img.setScale(PLAYER.displayHeight/img.height);
     if (tex==='fx_glow') img.setTint(0xffc464).setBlendMode('ADD').setDisplaySize(122,146);
     if (flag==='moon_bed' || flag==='apothecary_garden') img.setDisplaySize(108,68);
     return {img,flag};

@@ -68,9 +68,11 @@ export class HorizonBattle {
     this.hero.mana = this.hero.maxMana;
     const enemyScale = levelScale(encounter.level);
     this.enemies = encounter.enemies.map((def, index) => {
-      const hp = encounterHp(encounter.level, def.difficulty ?? encounter.difficulty ?? 'normal', pack.hp_shares[index]);
+      const soloBoss = pack.count===1 && def.role==='boss';
+      const hp = soloBoss ? encounterHp(encounter.level,'boss',1)
+        : encounterHp(encounter.level,def.difficulty ?? encounter.difficulty ?? 'normal',pack.hp_shares[index]);
       const interval = this.named ? def.attack_interval_sec : PREVIEW_CORE.episode_enemy_attack_interval;
-      const rating = defensiveRatings(heroLevel,{armor:def.armor_rating_base || 0,resistance:def.res_rating_base || 0});
+      const rating = defensiveRatings(encounter.level,{armor:def.armor_rating_base || 0,resistance:def.res_rating_base || 0});
       const initialShield = encounter.packId==='t2_duel_shield' ? Math.round(hp*.2) : 0;
       return {
         ...def, hp, maxHp: hp, slot: FORMATION_X[encounter.pack][index], index,

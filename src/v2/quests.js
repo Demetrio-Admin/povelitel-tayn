@@ -1,6 +1,7 @@
 import { CITY_POSITIONS, CITY_ROOMS, cityPoint } from '../config/city.plan.js';
 import { roomPoint } from '../config/city.rooms.js';
 import { borPoint, CITY_ACTORS } from './regions.js';
+import { QUEST_DIALOGUE } from './dialogue.js';
 
 const F = borPoint;
 const C = cityPoint;
@@ -24,60 +25,60 @@ const bank=C(2125,4310), bench=P('archive_document');
 const gateCamp=CITY_ACTORS.grom, north=C(2050,905);
 const region1 = [
   story('first_anomaly','Первая аномалия',['workbench'],[
-    battle(F(125,342),'Искроцап и Колючник','t1_duo_anomaly',4,'Веда\nГляди, туда упала целая страница! Эти двое держатся парой — бей по одному.'),
-    spell(F(139,354),'Огненная аномалия','fire_circle_01','fire','Веда\nЭто Багровый всплеск. Ставь его в третий слот — он срывает Жар громким взрывом!'),
+    {...battle({x:844,y:1075},'Искроцап и Колючник','t1_duo_anomaly',4),arena:['light']},
+    spell({x:923,y:1105},'Огненная аномалия','fire_circle_01','fire'),
   ],rewards(80,{}, {crimson_burst:10},0,{equip:'crimson_burst'}),6),
   story('green_page','Зелёная страница',['first_anomaly'],[
     action(F(183,329),'Лунная трава на полянке','moon_herb_01','',{take:{[herb]:4}}),
     action(F(207,314),'Смоляной пень','resin_log_01','',{take:{[resin]:2}}),
-    action(F(189,289),'Посвящение дара','magic_book_01','Веда\nВот Настой жизни. Береги его на вожаков!',{practiceColor:true}),
+    action(F(189,289),'Посвящение дара','magic_book_01','',{practiceColor:true}),
   ],rewards(100,{[life]:1},{fire:5}),7),
   story('bridge_beacon','Маячок у мостика',['green_page'],[
-    spell(F(235,340),'Валун на первом маячке','heavy_boulder_01','telekinesis','Веда\nПервый маячок горит! Лунный алтарь уже откликается.'),
+    spell(F(235,340),'Валун на первом маячке','heavy_boulder_01','telekinesis'),
   ],rewards(120,{[resin]:3},{lunar_veil:5}),8),
   story('birch_ambush','Берёзовая засада',['bridge_beacon'],[
-    battle(F(393,134),'Чащобник и два Колючника','t1_trio_birch',12,'Гром\nТройка на полянке! Раскалённый камень и Багровый всплеск накроют всех.','Гром\nКрасиво разнёс. Второй маячок уже горит!'),
+    battle(F(393,134),'Чащобник и два Колючника','t1_trio_birch',12),
   ],rewards(160,{[herb]:3},{crimson_burst:5}),9),
   story('brook_flame','Огонёк у ручья',['birch_ambush'],[
     spell(F(330,199),'Третий маячок подо льдом','forest_node_broken','fire'),
-    action(grove,'Лунный алтарь','lunar_flame_01','Эхо Мирры\nМы разбили Гримуар, чтобы орден не запер магию. Найди Клару в Светлодоле.'),
+    action(grove,'Лунный алтарь','lunar_flame_01'),
   ],rewards(200,{mirra_lantern_restored:1},{seal:5},15),10),
   story('outpost','Застава перед трактом',['brook_flame'],[
-    battle(F(604,228),'Передовая охрана','t1_duo_outpost',16,'Гром\nДревогляду в кору впилась страница. Прогони охрану, а потом приготовь тактический настой.'),
-    action(F(630,212),'Гром у заставы','npc_goran','Гром\nСбей замах камнем и следи за кристаллом на арене.',{needsTactical:true}),
+    battle(F(604,228),'Передовая охрана','t1_duo_outpost',16),
+    action(F(630,212),'Гром у заставы','npc_goran','',{needsTactical:true}),
   ],rewards(180,{[warm]:1,[resin]:4}),11),
   story('treegazer','Вековой Древогляд',['outpost'],[
-    battle(keeper,'Вековой Древогляд','t1_boss_treegazer',20,'Веда\nВыбей страницу — и старик сам успокоится!','Гром\nТуман над трактом сошёл. Светлодол впереди!'),
+    battle(keeper,'Вековой Древогляд','t1_boss_treegazer',20),
   ],rewards(400,{[wick]:2,recipe_amulet_forest:1},{seal:10},50),12),
   side('birch_cat','Рыжий кот на берёзе',[],[
     battle(F(95,368),'Колючник у берёзы','t1_solo_thorn',2,'','Кот спрыгивает с берёзы. Теперь он будет ждать у крыльца.'),
   ],rewards(70,{}, {resin_thread:5})),
   side('rolling_barrel','Убежавшая бочка смолы',[],[
-    battle(F(152,274),'Два Искроцапа у бочки','t1_duo_barrel',5,'Веда\nОй, моя смола! Подпали бочку прямо на них!'),
+    battle(F(152,274),'Два Искроцапа у бочки','t1_duo_barrel',5),
   ],rewards(80,{[resin]:3},{stone_call:5})),
   side('lost_hare','Заблудившийся зайчонок',[],[
     battle(F(210,360),'Морозун у мостика','t1_solo_imp',4,'','Зайчонок выскакивает из кустов и убегает в рощу.'),
   ],rewards(60,{[herb]:4})),
   side('veda_cauldron','Сбежавший котёл Веды',[],[
-    battle(F(160,365),'Искроцапы у котла','t1_duo_barrel',6,'Веда\nПереварила отвар — а эти проныры на запах прибежали!','Веда\nУспели! Забирай лишнюю смолу.'),
+    battle(F(160,365),'Искроцапы у котла','t1_duo_barrel',6),
   ],rewards(90,{[resin]:4},{lunar_veil:5})),
   side('moon_bed','Лунные грядки',['workbench'],[
-    action({x:481,y:765},'Лунная грядка','city_walk_herbbed','Веда\nВот и первая грядка у твоего крыльца.',{cost:{[herb]:4}}),
+    action({x:481,y:765},'Лунная грядка','city_walk_herbbed','',{cost:{[herb]:4}}),
   ],rewards(70,{}, {resin_thread:3})),
   side('resin_fence','Смоляной забор',['moon_bed'],[
-    action({x:461,y:822},'Укрепить ограду','horizon_hearth_fence','Веда\nСмола схватилась. Зверьё через доски не пролезет.',{cost:{[resin]:3}}),
+    action({x:461,y:822},'Укрепить ограду','horizon_hearth_fence','',{cost:{[resin]:3}}),
   ],rewards(90,{}, {stone_call:3})),
   side('apothecary_garden','Аптекарский уголок',['resin_fence'],[
-    action({x:493,y:637},'Аптекарская грядка','city_walk_flowerbed','Веда\nВот теперь настоящий ведьминский дом!',{cost:{[herb]:4,[resin]:2}}),
+    action({x:493,y:637},'Аптекарская грядка','city_walk_flowerbed','',{cost:{[herb]:4,[resin]:2}}),
   ],rewards(120,{[herb]:6,[resin]:5},{lunar_veil:10})),
   side('ancient_cache','Тайник у Древних Ворот',[],[
-    spell(F(83,137),'Камень перед Древними Воротами','heavy_boulder_01','telekinesis','На арке стёртый знак полумесяца и трёх печатей.'),
+    spell(F(83,137),'Камень перед Древними Воротами','heavy_boulder_01','telekinesis'),
     battle(F(109,148),'Морозун у тайника','t1_solo_imp',10),
   ],rewards(100,{}, {seal:5},10)),
   side('horseshoe','Пропавшая подкова Грома',[],[
-    talk(foxCamp,'Гром','npc_goran','Гром\nИскроцап утащил подкову в дупло у берёз. Выручишь?'),
+    talk(foxCamp,'Гром','npc_goran'),
     battle(F(471,122),'Искроцап у дупла','t1_solo_grab',8),
-    talk(foxCamp,'Вернуть подкову Грому','npc_goran','Гром\nВот она, родная! Повешу у привала на удачу.'),
+    talk(foxCamp,'Вернуть подкову Грому','npc_goran'),
   ],rewards(110,{}, {fire:5})),
   hunt('bor_crown_1','Корона Бора I · Угольный Цап',[],[
     battle(F(197,108),'Угольный Цап','t1_elite_ember',9),
@@ -89,102 +90,102 @@ const region1 = [
     battle(F(614,328),'Король Бурелома','t1_elite_king',20),
   ],rewards(0,{[wick]:1},{crimson_burst:10})),
   hunt('wand_light','Новый свет палочки',[],[
-    talk(foxCamp,'Гром · свет палочки','npc_goran','Гром\nТеперь у палочки настоящий лунный луч!',{milestone:'wand15'}),
+    talk(foxCamp,'Гром · свет палочки','npc_goran','',{milestone:'wand15'}),
   ],rewards(200,{}, {},10)),
   hunt('first_star','Первая звезда дара',[],[
-    talk(foxCamp,'Гром · две звезды','npc_goran','Гром\nДве звезды? Теперь и на вожака идти не страшно.',{milestone:'star2'}),
+    talk(foxCamp,'Гром · две звезды','npc_goran','',{milestone:'star2'}),
   ],rewards(150,{[resin]:3})),
   hunt('full_tide','Полный Лунный прилив',[],[
-    talk(foxCamp,'Гром · двадцать побед','npc_goran','Гром\nДвадцать побед под полной луной!',{milestone:'tide20'}),
+    talk(foxCamp,'Гром · двадцать побед','npc_goran','',{milestone:'tide20'}),
   ],rewards(200,{}, {},15)),
 ];
 const region2 = [
   story('fountain','Фонтан на площади',[],[
-    battle(C(1580,3674),'Отряд у фонтана','t2_duo_plaza',21,'Ася\nПомоги! Они фонтан заморозили, и мой фонарик погас!','Ася\nУра, снова светится!'),
+    battle(C(1580,3674),'Отряд у фонтана','t2_duo_plaza',21),
   ],rewards(260,{[frost]:4},{fire:5}),1),
   story('klara','Встреча с Кларой',['fountain'],[
-    talk(P('npc_ilaria'),'Архивариус Клара','npc_ilaria','Клара\nМирра вынесла половину страниц. Осмотри разбитый ящик у площади.',{learn:'seal'}),
+    talk(P('npc_ilaria'),'Архивариус Клара','npc_ilaria','',{learn:'seal'}),
   ],rewards(180,{[frost]:3}),2),
   story('pavement','Иней на мостовой',['klara'],[
     battle(C(1769,3669),'Инеевый Скупщик у ящика','t2_solo_collector',23),
     spell(C(1842,3679),'Покрытый инеем ящик','crate_01','telekinesis'),
-    spell(C(1859,3663),'Доска с оттиском','rune_slab_01','seal','Клара\nЭто клеймо городской мастерской! В Архиве я покажу тебе ведомость.'),
+    spell(C(1859,3663),'Доска с оттиском','rune_slab_01','seal'),
   ],rewards(240,{[dust]:3},{seal_crack:5}),3),
   story('archive','Записи Архива',['pavement'],[
-    spell(bench,'Ведомость Архива','magic_book_01','seal','Клара\nАвгуст Град, Общество Преображения. Проверь оба Южных склада, каждый заперт отдельно.'),
+    spell(bench,'Ведомость Архива','magic_book_01','seal'),
   ],rewards(220,{[frost]:4}),4),
   story('warehouse_a','Дело Склада А',['archive'],[
     battle(P('wh_collector_1'),'Два Скупщика на Складе А','t2_duo_warehouse_a',25),
     action(R('warehouse_a',425,1020),'Клетка складского кота','crate_01','Кот выпрыгнул. Под клеткой накладная с пометкой «Остудить канал».'),
   ],rewards(300,{[frost]:4},{seal_crack:5}),5),
   story('warehouse_b','Дело Склада Б',['archive'],[
-    battle(P('wh_elite'),'Старший Скупщик на Складе Б','t2_solo_senior',26,'Старший Скупщик\nЧужакам вход закрыт!'),
+    battle(P('wh_elite'),'Старший Скупщик на Складе Б','t2_solo_senior',26),
     spell(R('warehouse_b',510,1054),'Ящики с клеймом Общества','crate_01','telekinesis','За ящиками лежит ледяная страница Гримуара.'),
   ],rewards(340,{[dust]:3},{ice:10}),6),
   story('cold_truth','Холодная правда',['warehouse_a','warehouse_b'],[
-    talk(P('npc_severin'),'Август Град','npc_severin','Август\nПриборы мои. Только управляемый холод удержит Светлодол.'),
-    battle(court,'Голем и Морозун во дворе Общества','t2_duo_society',28,'Август\nПрибери сбой во дворе. Дальше я сам.','Клара\nАвгуст перекрыл северный мост. За ним остались люди!'),
+    talk(P('npc_severin'),'Август Град','npc_severin'),
+    battle(court,'Голем и Морозун во дворе Общества','t2_duo_society',28),
   ],rewards(360,{[frost]:4},{ice_shatter:5}),7),
   story('bridge_wall','Стена на мосту',['cold_truth'],[
-    spell(bridge,'Ледяная стена на мосту','ice_wall_01','fire','Инга\nОгонь здесь не всё решает. Помоги открыть два дома за мостом.'),
+    spell(bridge,'Ледяная стена на мосту','ice_wall_01','fire'),
   ],rewards(280,{[frost]:3},{frost_prism:5}),8),
   story('cellar_house','Дом с погребом',['bridge_wall'],[
     battle(P('fq_critter'),'Морозун у погреба','t2_solo_imp',31),
-    spell(P('fq_cellar'),'Ящики на дверях погреба','crate_01','telekinesis','Горожанин\nСпасибо! Думал, до весны тут просижу.'),
+    spell(P('fq_cellar'),'Ящики на дверях погреба','crate_01','telekinesis'),
   ],rewards(320,{[frost]:4,[dust]:3}),9),
   story('rescue_house','Дом за ледяной дверью',['cellar_house'],[
     battle(P('fq_collector'),'Отряд у ледяной двери','t2_duo_plaza',32),
-    spell(P('fq_door'),'Швы ледяного замка','frozen_door_01','seal','Инга\nЗарянка тебя выбрала. Звонка продлевает метки и подлечит в трудную минуту.'),
+    spell(P('fq_door'),'Швы ледяного замка','frozen_door_01','seal'),
   ],rewards(380,{}, {ice:5},0,{companion:'robin'}),10),
   story('flood','Затопленный пролом',['rescue_house'],[
-    spell(water,'Вода в проломе','water_patch_01','ice','Инга\nВот и хрустальный мост. За ним целая стая.'),
-    battle(P('fq_training'),'Стая Северного двора','t2_trio_quarter',34,'','Инга\nИщи тяжёлую дверь на западной тропе. Там лаборатория Августа.'),
+    spell(water,'Вода в проломе','water_patch_01','ice'),
+    battle(P('fq_training'),'Стая Северного двора','t2_trio_quarter',34),
   ],rewards(420,{[dust]:4},{ice_shatter:5}),11),
   story('lab_seal','Печать на склоне',['flood'],[
     spell(P('lab_seal'),'Нестабильная печать лаборатории','rune_sigil_01','ice'),
-    battle(P('vol_1'),'Остуженные Тихон и Мирон','t2_volunteers',35,'Мирон\nНе подходи... Прибор не должен остыть!','Тихон\nХолод оказался сильнее нас. Останови Августа, пока весь город не замёрз.'),
+    battle(P('vol_1'),'Остуженные Тихон и Мирон','t2_volunteers',35),
   ],rewards(440,{[frost]:4},{stone_shell:5}),12),
   story('lab_journal','Журнал подвала',['lab_seal'],[
     battle(P('lab_construct'),'Студёный Голем','t2_solo_golem',37),
-    spell(P('lab_journal'),'Лабораторный журнал','magic_book_01','seal','Инга\nОн перенёс прибор в Зал Дуэлей. Бежим на площадь!'),
+    spell(P('lab_journal'),'Лабораторный журнал','magic_book_01','seal'),
   ],rewards(460,{[warm]:1,[dust]:4},{storm:5}),13),
   story('august','Дуэль в Зале',['lab_journal'],[
-    spell(P('final_ward'),'Пелена у Зала Дуэлей','astral_ward_01','seal','Феликс\nПроход открыт. Внутри Август и его кристалл.'),
-    battle(P('final_severin'),'Август Град','t2_boss_august',40,'Август\nЕщё минута — и дикая магия не тронет Светлодол.'),
-    spell(P('final_letters'),'Зашифрованные письма','magic_book_01','seal','Август\nЧертежи присылал Мастер Крон. Последнее письмо пришло из Хрустальной Чащи.'),
+    spell(P('final_ward'),'Пелена у Зала Дуэлей','astral_ward_01','seal'),
+    battle(P('final_severin'),'Август Град','t2_boss_august',40),
+    spell(P('final_letters'),'Зашифрованные письма','magic_book_01','seal'),
   ],rewards(750,{[heart]:2,recipe_amulet_frost:1},{storm:15},60),14),
   side('martha_pies','Пироги тётушки Марфы',[],[
-    battle(C(1310,4475),'Искроцап с корзинкой','t1_solo_grab',21,'Марфа\nАх ты окаянный, куда с моими пирогами?!','Марфа\nВот, возьми тёплого на дорожку.'),
+    battle(C(1310,4475),'Искроцап с корзинкой','t1_solo_grab',21),
   ],rewards(180,{[warm]:1},{fire:5})),
   side('archive_cat','Кот на перилах Архива',['fountain'],[
-    battle(C(1430,2710),'Морозун у перил','t2_solo_imp',23,'Ася\nОн опять кота обижает! Прогони его, пожалуйста.'),
+    battle(C(1430,2710),'Морозун у перил','t2_solo_imp',23),
   ],rewards(190,{}, {spark_seed:5})),
   side('asya_lamp','Вечерний фонарь Аси',['fountain'],[
-    spell(C(1740,3445),'Погасший фонарь Аси','city_lamp_01','fire','Ася\nТеперь у нас целая улица светится!'),
+    spell(C(1740,3445),'Погасший фонарь Аси','city_lamp_01','fire'),
   ],rewards(150,{[frost]:3},{lunar_veil:5})),
   side('bank_key','Пропавший ключ Агаты',[],[
-    talk(P('npc_banker'),'Агата','npc_banker','Агата\nСкупщик утащил медный ключ от боковой двери. Вернёшь его без шума?'),
+    talk(P('npc_banker'),'Агата','npc_banker'),
     battle(bank,'Скупщик у Банка','t2_solo_collector',24),
-    talk(P('npc_banker'),'Вернуть ключ Агате','npc_banker','Агата\nБезупречно. Зачисляю приветственный взнос.'),
+    talk(P('npc_banker'),'Вернуть ключ Агате','npc_banker'),
   ],rewards(260,{}, {},15)),
   side('boris_cart','Тележка Бориса',[],[
-    battle(C(1355,4970),'Скупщики у тележки','t2_side_cart',24,'Борис\nСреди бела дня товар тащат!','Борис\nЗабирай пыль и скидочный чертёж.'),
+    battle(C(1355,4970),'Скупщики у тележки','t2_side_cart',24),
   ],rewards(280,{[dust]:5,recipe_amulet_market:1},{stone_call:5})),
   side('coven_flowers','Цветы для круга Ядвиги',[],[
-    talk(P('npc_rowena'),'Ядвига','npc_rowena','Ядвига\nХолод рассорил магов. Принеси морозник и руническую пыль, разожжём круг.',{cost:{[frost]:6,[dust]:3}}),
+    talk(P('npc_rowena'),'Ядвига','npc_rowena','',{cost:{[frost]:6,[dust]:3}}),
   ],rewards(260,{}, {stone_shell:5})),
   side('garden_scroll','Забытый свиток в саду',[],[
-    battle(C(1620,2730),'Два Морозуна у свитка','t2_side_garden',25,'Клара\nПрогони проказников, пока не сгрызли мои заметки!'),
+    battle(C(1620,2730),'Два Морозуна у свитка','t2_side_garden',25),
   ],rewards(250,{}, {veil_rend:10})),
   side('duel_lesson_1','Урок Феликса I · Против щита',['klara'],[
-    battle(P('npc_duelist'),'Спарринг против щита','t2_duel_shield',25,'Феликс\nПокажи Пролом, прежде чем бросать камень.','Феликс\nЩит снял, камень кинул. Вот это музыка!'),
+    battle(P('npc_duelist'),'Спарринг против щита','t2_duel_shield',25),
   ],rewards(280,{}, {seal_crack:5})),
   side('duel_lesson_2','Урок Феликса II · Против холода',['duel_lesson_1','rescue_house'],[
-    battle(P('npc_duelist'),'Морозный дуэлянт','t2_duel_frost',33,'Феликс\nПоймай его на Хрупкость или прикройся Тёплым настоем.','Феликс\nДержи вымпел Зала для своего двора!'),
+    battle(P('npc_duelist'),'Морозный дуэлянт','t2_duel_frost',33),
   ],rewards(320,{}, {ice_shatter:5},10)),
   side('north_workshop','Мастерская Тихона и Мирона',['lab_seal'],[
-    spell(north,'Завал у мастерской','heavy_boulder_01','telekinesis','Тихон\nВнутри старый прибор буянит!'),
-    battle(C(2134,872),'Голем в сарае','t2_elite_golem',35,'','Мирон\nПоставим тебе Точильный алтарь у дома.'),
+    spell(north,'Завал у мастерской','heavy_boulder_01','telekinesis'),
+    battle(C(2134,872),'Голем в сарае','t2_elite_golem',35),
   ],rewards(400,{}, {stone_shell:10})),
   hunt('town_crown_1','Корона Светлодола I · Ледолом',[],[
     battle(C(1760,2340),'Ледолом с Набережной','t2_elite_golem',26),
@@ -196,20 +197,23 @@ const region2 = [
     battle(C(1860,690),'Свора Замёрзшего Двора','t2_elite_yard',39),
   ],rewards(500,{[heart]:1},{storm:10})),
   hunt('blue_ritual','Синяя ступень',[],[
-    talk(gateCamp,'Гром · синий ритуал','npc_goran','Гром\nСтраница посинела! Ритуал удался.',{milestone:'blue'}),
+    talk(gateCamp,'Гром · синий ритуал','npc_goran','',{milestone:'blue'}),
   ],rewards(350,{[dust]:4})),
   hunt('two_builds','Два набора мастера',[],[
-    talk(gateCamp,'Гром · наборы мастера','npc_goran','Гром\nОдин набор под вожаков, второй под стаи.',{milestone:'build2'}),
+    talk(gateCamp,'Гром · наборы мастера','npc_goran','',{milestone:'build2'}),
   ],rewards(300,{}, {},10)),
   hunt('first_chest','Первый Сундук Гримуара',[],[
-    talk(gateCamp,'Гром · Сундук Гримуара','npc_goran','Гром\nНа десятой попытке сундук точно даст редкую страницу.',{milestone:'chest'}),
+    talk(gateCamp,'Гром · Сундук Гримуара','npc_goran','',{milestone:'chest'}),
   ],rewards(300,{}, {spark_seed:5})),
 ];
 
 export const QUESTS = [
   ...region1.map(quest => ({ ...quest, act: 1 })),
   ...region2.map(quest => ({ ...quest, act: 2 })),
-];
+].map(quest => ({
+  ...quest,
+  steps: quest.steps.map((step, index) => ({ ...step, ...QUEST_DIALOGUE[quest.id]?.[index] })),
+}));
 export const QUEST_BY_ID = Object.fromEntries(QUESTS.map(q => [q.id, q]));
 export const PROLOGUE = [
   ['lantern_intro','Не трожь фонарь!','upgrade'],

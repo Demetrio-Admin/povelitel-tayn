@@ -18,7 +18,15 @@ try {
   const modal=()=>page.waitForFunction(()=>!!window.__game.scene.getScene('UIScene').modal);
   async function next() {
     await modal();
-    await page.evaluate(()=>window.__game.scene.getScene('UIScene').pressModalButton(true));
+    return page.evaluate(()=>{
+      const ui=window.__game.scene.getScene('UIScene');
+      const pages=[];
+      do {
+        if (ui.modal.opts?.chapterDialogue) pages.push([ui.modal.opts.title,ui.modal.opts.text]);
+        ui.pressModalButton(true);
+      } while (ui.modal?.opts?.chapterDialogue);
+      return pages;
+    });
   }
   const data=()=>page.evaluate(()=>window.__witch.state.getObject('horizon_campaign'));
   async function stage(patch,reload=true) {
@@ -86,6 +94,10 @@ try {
   const q=(id,index=0)=>'v2-quest-'+id+'-'+index;
   await scene('mirra-hearth');
   await stage({step:'hunt',workbenchRestored:true,fox:true,huntLevel:21,wandRank:16,wandLevel:21,vigor:21,activeCompanion:'fox'});
+  await win(q('first_anomaly'),true);
+  await interact(q('first_anomaly',1)); await next();
+  assert.equal((await data()).tasks.first_anomaly,2);
+  assert.ok((await data()).gifts.crimson_burst);
   await interact('v2_bor_route');
   await scene('amberwood');
   let board=await page.evaluate(()=>{
@@ -98,11 +110,12 @@ try {
   assert.deepEqual([board.bounds.w,board.bounds.h,board.targets,board.resources,board.art],[3600,2400,12,18,1536]);
   assert.equal(board.trail,true,'A path connects the hearth road to the eastern trail over real bridges');
   assert.match(await page.evaluate(()=>window.__game.scene.getScene('UIScene').manaText.text),/^\d+ \/ \d+$/);
-  await win(q('first_anomaly'),true);
-  await interact(q('first_anomaly',1)); await next();
-  assert.equal((await data()).tasks.first_anomaly,2);
-  assert.ok((await data()).gifts.crimson_burst);
-  await interact(q('green_page')); await interact(q('green_page',1)); await interact(q('green_page',2)); await next();
+  await interact(q('green_page'));
+  assert.deepEqual(await next(),[
+    ['Веда','Запомни главное правило: обычные травы не жги зря в склянках.'],
+    ['Веда','Влей траву и смолу прямо в страницу дара — подними её до Зелёной ступени!'],
+  ]);
+  await interact(q('green_page',1)); await interact(q('green_page',2)); await next();
   assert.equal((await data()).gifts.telekinesis.color,'green');
   await interact(q('bridge_beacon')); await next();
   assert.equal((await data()).tasks.bridge_beacon,1);
@@ -157,7 +170,7 @@ try {
   await win(q('cold_truth',1),true,true);
   await interact(q('bridge_wall')); await next();
   assert.equal(await page.evaluate(()=>window.__game.scene.getScene('ExplorationScene').questGates[0].solid.body.enable),false);
-  await win(q('cellar_house')); await interact(q('cellar_house',1)); await next();
+  await win(q('cellar_house'),true); await interact(q('cellar_house',1)); await next();
   await win(q('rescue_house')); await interact(q('rescue_house',1)); await next();
   assert.equal((await data()).activeCompanion,'robin');
   await interact(q('flood')); await next();

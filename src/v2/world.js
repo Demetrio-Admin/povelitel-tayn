@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { ExplorationScene } from '../scenes/ExplorationScene.js';
 import { InteractiveObject, applyDisplaySize } from '../objects/InteractiveObject.js';
 import { setCompanionPref } from '../objects/Companion.js';
-import { COLORS, DEPTH } from '../config/game.config.js';
+import { COLORS, DEPTH, PLAYER } from '../config/game.config.js';
 import { UI } from '../config/ui.config.js';
 import { CORE } from '../config/horizon/rules.js';
 import { PREVIEW_CORE } from '../config/horizon/previewTuning.js';
@@ -51,9 +51,8 @@ class CampaignTarget extends InteractiveObject {
   constructor(scene, cfg) {
     super(scene, cfg);
     if (cfg.size) { this.sprite.setDisplaySize(...cfg.size); this.baseScale = { x: this.sprite.scaleX, y: this.sprite.scaleY }; }
-    else if (cfg.texture?.startsWith('npc_')) {
-      const size=120/this.sprite.displayHeight;
-      this.sprite.setScale(this.sprite.scaleX*size,this.sprite.scaleY*size);
+    else if (cfg.height || cfg.texture?.startsWith('npc_')) {
+      this.sprite.setScale((cfg.height || PLAYER.displayHeight)/this.sprite.height);
       this.baseScale={x:this.sprite.scaleX,y:this.sprite.scaleY};
     }
     if (cfg.action === 'workbench') this.ability = 'fire';
@@ -291,7 +290,7 @@ export class HorizonExplorationScene extends ExplorationScene {
     const p=campaign(), quest=QUEST_BY_ID[cfg.quest], step=questStep(p,quest);
     if (!step || step.index!==cfg.index) return;
     if (step.pack) {
-      const encounter=plannedEncounter(p,quest,step);
+      const encounter=plannedEncounter(quest,step);
       const start=()=>{ this.questBattle=step; this.enterHorizonBattle(encounter); };
       if (step.intro) this.showActDialogue(step.intro,quest.title,start,'Вступить в бой');
       else start();
@@ -301,11 +300,11 @@ export class HorizonExplorationScene extends ExplorationScene {
       this.toast('Нужен дар «'+services.abilities.label(step.gift)+'».');
       return;
     }
-    if (step.cost) {
-      this.showActDialogue(step.after,quest.title,()=>this.finishActAction(cfg),'Помочь');
-      return;
-    }
-    if (this.finishActAction(cfg) && step.after) this.showActDialogue(step.after,quest.title);
+    const complete=()=>{
+      if (this.finishActAction(cfg) && step.after) this.showActDialogue(step.after,quest.title);
+    };
+    if (step.intro) this.showActDialogue(step.intro,quest.title,complete,step.cost?'Помочь':undefined);
+    else complete();
   }
 
   finishActAction(cfg) {
@@ -324,10 +323,27 @@ export class HorizonExplorationScene extends ExplorationScene {
     return true;
   }
 
-  showActDialogue(line,fallback,onClick,label='Дальше') {
-    const parts=line.split('\n');
-    this.dialog({title:parts.length>1?parts.shift():fallback,text:parts.join('\n'),
-      buttons:[{label,primary:true,onClick}]});
+  showActDialogue(dialogue,fallback,onClick,label='Дальше') {
+    const lines=Array.isArray(dialogue) ? dialogue : [this.dialogueLine(dialogue,fallback)];
+    this.player.stop();
+    const show=index=>{
+      const [title,text]=lines[index];
+      const more=index+1<lines.length;
+      this.dialog({title,text,chapterDialogue:true,buttons:[{
+        label:more?'Дальше':label,
+        primary:true,
+        onClick:()=>{
+          if (more) show(index+1);
+          else onClick?.();
+        },
+      }]});
+    };
+    show(0);
+  }
+
+  dialogueLine(text,fallback) {
+    const separator=text.indexOf('\n');
+    return separator<0?[fallback,text]:[text.slice(0,separator),text.slice(separator+1)];
   }
 
   playDialogue(step, line = 0) {

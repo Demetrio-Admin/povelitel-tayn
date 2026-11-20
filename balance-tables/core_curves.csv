@@ -1,69 +1,80 @@
-param_key,value,unit
-balance_version,41,version
-target_year_levels,120,levels
-base_power,20,SP
-hero_base_hp,180,HP
-power_growth,1.065,multiplier
-paragon_power_growth,1.015,multiplier
-mob_hp_mult,12,multiplier
-elite_hp_mult,29,multiplier
-boss_hp_mult,70,multiplier
-mana_start,120,MP
-mana_end,480,MP
-mana_regen_start,3,MP/s
-mana_regen_end,7.5,MP/s
-wand_start_interval,1.5,s
-wand_min_interval,0.9,s
-wand_decay_ranks,20,ranks
-wand_impulse_every,4,shots
-wand_impulse_mult,1.6,multiplier
-wand_visual_every,15,levels
-armor_cap,0.65,ratio
-armor_k,100,rating
-crit_cap,0.45,ratio
-crit_k,120,rating
-crit_mult,1.5,multiplier
-cdr_cap,0.35,ratio
-cdr_k,150,rating
-status_resist_cap,0.6,ratio
-status_resist_k,110,rating
-min_damage_floor,0.1,ratio
-max_total_cdr,0.5,ratio
-scope_splash_secondary,0.45,multiplier
-scope_all,0.6,multiplier
-light_stone_base,1.3,multiplier
-light_stone_heat,1.8,multiplier
-light_stone_brittle,1.6,multiplier
-light_stone_respawn,7,s
-heavy_stone_base,1.8,multiplier
-heavy_stone_heat,2.4,multiplier
-heavy_stone_brittle,2,multiplier
-heavy_stone_respawn,10,s
-crystal_storm,2.1,multiplier
-crystal_mana,0.25,ratio
-crystal_respawn,12,s
-max_heal_potions,3,items
-max_tactical_potions,2,items
-tactical_potion_cooldown,12,s
-companion_max_charge,100,points
-companion_wand_impulse,20,points
-companion_arena_combo,25,points
-companion_zhatva_trigger,20,points
-companion_tactical_potion,20,points
-companion_target_share,0.15,ratio
-act1_first_wand_coins,60,coins
-act1_first_wand_herbs,2,items
-amulet_0_power,1.05,multiplier
-amulet_0_coins,0,coins
-amulet_1_power,1.1,multiplier
-amulet_1_coins,500,coins
-amulet_2_power,1.16,multiplier
-amulet_2_coins,3500,coins
-amulet_3_power,1.22,multiplier
-amulet_3_coins,22000,coins
-amulet_4_power,1.28,multiplier
-amulet_4_coins,110000,coins
-amulet_5_power,1.35,multiplier
-amulet_5_coins,500000,coins
-episode_fox_kill_refund,35,points
-episode_fox_kill_coins,0.1,ratio
+param_key,value,unit,notes
+balance_version,41,int,Active balance schema version
+target_year_levels,120,level,Primary Year-1 progression horizon
+base_power,20,sp,Hero base Spell Power at L1: SP(L) = base_power * S(L)
+power_growth,1.065,mult,Scale factor per level: S(L) = 1.065^(L-1)
+hero_base_hp,180,hp,Hero base HP at L1: HP(L) = hero_base_hp * S(L)
+mob_hp_mult,12.0,x_sp,Solo regular mob HP = 240 * S(L) = 12 * SP(L)
+elite_hp_mult,29.0,x_sp,Elite HP = 580 * S(L) (~2.42x solo)
+boss_hp_mult,70.0,x_sp,Tier Boss HP = 1400 * S(L) (~5.83x solo)
+mob_base_dps,4.5,dps,Solo regular mob base DPS at L1: DPS(L) = 4.5 * S(L)
+soft_cap_level,120,level,Paragon soft-cap start level
+paragon_power_growth,1.015,mult,S(L) growth per level for L > 120
+post_cap_cost_growth,1.16,mult,Level coin cost growth for L > 120
+mana_start,120,mp,Max MP at L1
+mana_end,480,mp,Max MP at L120 (linear interpolation)
+mana_regen_start,3.0,mp_per_sec,MP regen/sec at L1
+mana_regen_end,7.5,mp_per_sec,MP regen/sec at L120 (linear interpolation)
+wand_start_interval,1.5,sec,Auto-wand shot interval at rank 0
+wand_min_interval,0.9,sec,Asymptotic hard floor for auto-wand interval
+wand_decay_ranks,20,rank,Exponential decay constant: T(r)=0.90+0.60*exp(-r/20)
+wand_max_tempo_rank,60,rank,Max tempo rank
+wand_base_sp_mult,0.45,x_sp,Base wand auto-shot damage multiplier of SP(L)
+wand_impulse_every,4,shots,Resonant impulse trigger cadence
+wand_impulse_mult,1.6,mult,"Resonant 4th shot multiplier (detonates charge, +20 companion)"
+wand_visual_every,15,level,Wand projectile visual evolution step
+armor_cap,0.65,ratio,Hyperbolic armor mitigation cap
+armor_k,100,rating,Hyperbolic armor K * S(L_target)
+crit_cap,0.45,ratio,Hyperbolic crit chance cap
+crit_k,120,rating,Hyperbolic crit K * S(L_target)
+crit_mult,1.5,mult,Critical hit damage multiplier
+cdr_cap,0.35,ratio,Hyperbolic CDR from rating cap
+cdr_k,150,rating,Hyperbolic CDR K * S(L_target)
+status_resist_cap,0.6,ratio,Hyperbolic status resistance cap
+status_resist_k,110,rating,Hyperbolic status resistance K * S(L_target)
+min_damage_floor,0.1,ratio,Minimum damage floor after all multiplicative reductions
+max_total_cdr,0.5,ratio,Absolute cooldown reduction ceiling across all sources
+scope_single_primary,1.0,mult,Single-target primary multiplier
+scope_single_splash,0.0,mult,Single-target secondary multiplier
+scope_splash_primary,1.0,mult,Splash primary multiplier
+scope_splash_secondary,0.45,mult,Splash secondary multiplier per neighbor
+scope_all,0.6,mult,All/chain multiplier per target
+companion_max_charge,100,charge,Response bar threshold for automatic companion skill
+companion_wand_impulse,20,charge,Charge gained on 4th resonant wand shot
+companion_arena_combo,25,charge,Charge gained on arena object throw/activation
+companion_zhatva_trigger,20,charge,Charge gained when Zhatva detonates a tag
+companion_tactical_potion,20,charge,Charge gained on tactical potion use
+companion_target_share,0.15,ratio,Target companion contribution to total fight power
+light_stone_base,1.3,x_sp,Light rock uncharged throw multiplier
+light_stone_heat,1.8,x_sp,Light rock heat-charged throw multiplier (+2 heat)
+light_stone_brittle,1.6,x_sp,Light rock brittle-charged throw multiplier (armor shred 6s)
+light_stone_respawn,7.0,sec,Light rock respawn time
+heavy_stone_base,1.8,x_sp,Heavy rock uncharged throw multiplier
+heavy_stone_heat,2.4,x_sp,Heavy rock heat-charged throw multiplier (splash)
+heavy_stone_brittle,2.0,x_sp,Heavy rock brittle-charged throw multiplier (splash)
+heavy_stone_respawn,10.0,sec,Heavy rock respawn time
+crystal_storm,2.1,x_sp,Crystal chain storm multiplier (all + micro-stun)
+crystal_mana,0.25,ratio,Crystal absorb mana restore fraction
+crystal_respawn,12.0,sec,Crystal respawn time
+arena_barrel_resin_mult,1.4,x_sp,Resin barrel throw/detonation multiplier (puddle 6s)
+arena_barrel_respawn_sec,10.0,sec,Resin barrel respawn time
+max_heal_potions,3,count,Max restorative HP/MP potions per fight
+max_tactical_potions,2,count,Max tactical potions per fight
+tactical_potion_cooldown,12.0,sec,Shared tactical potion category cooldown
+pack_max_concurrent_casts,1,count,Only one mob in a pack may charge a telegraphed cast at a time
+act1_first_wand_coins,60,coins,
+act1_first_wand_herbs,2,items,
+amulet_0_power,1.05,multiplier,
+amulet_0_coins,0,coins,
+amulet_1_power,1.1,multiplier,
+amulet_1_coins,500,coins,
+amulet_2_power,1.16,multiplier,
+amulet_2_coins,3500,coins,
+amulet_3_power,1.22,multiplier,
+amulet_3_coins,22000,coins,
+amulet_4_power,1.28,multiplier,
+amulet_4_coins,110000,coins,
+amulet_5_power,1.35,multiplier,
+amulet_5_coins,500000,coins,
+episode_fox_kill_refund,35,points,
+episode_fox_kill_coins,0.1,ratio,

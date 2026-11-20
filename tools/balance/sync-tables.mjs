@@ -5,15 +5,20 @@ const tables = {
   core_curves: { id: 'param_key', number: ['value'] },
   economy_tide: { id: ['section', 'key'], number: ['threshold', 'value', 'sapphire_cost'] },
   resource_tiers: { id: 'tier', number: ['min_lvl', 'max_lvl', 'buy_price_common', 'buy_price_rare'] },
-  gifts_40: { id: 'id', count: 40, number: ['mana', 'cd_sec', 'sp_mult', 'shard_tier'] },
+  gifts_40: { id: 'id', count: 40, number: ['mana', 'cd_sec', 'sp_mult'] },
   gift_progression: {
     id: ['axis', 'step'], number: ['mult', 'common_qty', 'rare_qty', 'catalyst_qty', 'coin_cost', 'ritual_min'],
   },
   potions_20: {
-    id: 'id', count: 20, number: ['value_pct', 'duration_sec', 'cd_sec', 'tier', 'over_time_pct'], json: ['recipe_json'],
+    id: 'id', count: 20, number: ['value_pct', 'duration_sec', 'cd_sec'], json: ['recipe_json'],
   },
-  amulets_20: { id: 'id', count: 20, number: ['val_0', 'val_2', 'val_4', 'val_5', 'tier'] },
-  companions: { id: 'id', number: ['sp_mult', 'heal_pct', 'tier'] },
+  amulets_20: { id: 'id', count: 20, number: ['val_0', 'val_2', 'val_4', 'val_5'] },
+  amulet_tiers: { id: 'plus_level', number: ['plus_level', 'power_mult', 'coin_cost', 'catalyst_qty', 'ritual_min'] },
+  companions: { id: 'id', number: ['sp_mult', 'heal_pct'] },
+  mob_archetypes: {
+    id: 'archetype_id', number: ['dps_mult', 'attack_interval_sec', 'armor_rating_base',
+      'res_rating_base', 'cast_time_sec', 'cast_cd_sec', 'cast_value'],
+  },
   encounter_packs: {
     id: 'pack_id', number: ['count', 'max_casts'],
     json: ['hp_shares', 'dps_shares', 'archetypes', 'arena_objects', 'first_attack_sec'],

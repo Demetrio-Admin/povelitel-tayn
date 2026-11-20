@@ -1,0 +1,29 @@
+archetype_id,name,tier,role,sprite_key,dps_mult,attack_interval_sec,armor_rating_base,res_rating_base,cast_id,cast_name,cast_time_sec,cast_cd_sec,cast_effect,cast_value
+spark_grab,Искроцап,tier_1,fighter,enemy_scavenger_small,1.0,2.0,0,0,spark_dash,Рывок с искрами,2.2,9.0,heavy_hit,1.5
+frost_imp,Морозун,tier_1,skirmisher,enemy_frost_critter,0.95,2.2,0,10,frost_breath,Дыхание инея,2.5,10.0,hit_and_slow_wand_3s,1.25
+thorn_kin,Колючник,tier_1,shielder,enemy_rootling,0.9,2.4,15,0,bark_ward,Корявый покров,2.5,11.0,shield_ally_or_self_pct_hp,0.15
+thicket_brute,Чащобник,tier_1,fighter,enemy_scavenger,1.05,2.6,20,10,branch_slam,Удар суком,2.8,12.0,heavy_hit,1.8
+elite_ember_grab,Угольный Цап,tier_1,elite_fighter,enemy_scavenger,1.2,1.8,15,15,ember_volley,Угольный залп,2.4,9.0,heavy_hit_heat1,1.6
+boss_treegazer,Вековой Древогляд,tier_1,boss,enemy_guardian,1.2,2.5,30,20,root_collapse,Обвал корней / Кора веков,3.0,14.0,alternating_shield12_and_heavy21,2.1
+frost_collector,Инеевый Скупщик,tier_2,skirmisher,enemy_frost_collector,1.0,2.2,10,15,chill_drain,Вытяжка тепла,2.4,10.0,hit_and_chill_4s,1.4
+frost_collector_elite,Старший Скупщик,tier_2,shielder,enemy_frost_collector_elite,1.15,2.3,25,20,ice_aegis,Ледяной щит,2.5,11.0,shield_self_pct_hp,0.18
+cold_golem,Студёный Голем,tier_2,fighter,enemy_experimental_construct,1.1,2.7,30,15,crystal_crush,Удар кристаллом,2.8,12.0,heavy_hit,1.85
+chilled_volunteer,Остуженный Доброволец,tier_2,fighter,enemy_volunteer,1.0,2.1,15,10,frost_surge,Всплеск стужи,2.5,10.5,heavy_hit_chill,1.55
+boss_august_grad,Август Град,tier_2,boss,enemy_severin,1.2,2.3,30,30,absolute_freeze,Волна холода / Ледяной барьер,3.0,13.0,alternating_shield15_and_frostwave,2.2
+crystal_wolf,Хрустальный Волк,tier_3,fighter,enemy_frost_wolf,1.05,1.9,15,15,fang_leap,Хрустальный прыжок,2.1,9.0,heavy_hit_brittle,1.6
+ice_giant,Ледовый Великан,tier_3,shielder,enemy_ice_guardian,1.15,2.8,40,20,glacier_wall,Стена ледника,2.7,12.0,shield_self_pct_hp,0.2
+boss_silver_alpha,Серебряный Вожак,tier_3,boss,enemy_frost_alpha,1.2,2.1,35,25,howl_blizzard,Вой бурана,2.8,12.5,heavy_hit_and_chill_aura,2.25
+dusk_hound,Сумеречный Гончий,tier_4,fighter,enemy_grave_hound,1.05,1.9,20,20,shadow_bite,Сумеречный рывок,2.2,9.5,heavy_hit,1.65
+wandering_wisp,Блуждающий Огонёк,tier_4,skirmisher,enemy_grave_wisp,1.0,2.3,10,30,blue_burn,Синее пламя,2.4,10.0,heavy_hit_heat2,1.45
+candle_warden,Свечной Сторож,tier_4,shielder,enemy_barrow_warden,1.15,2.6,35,25,wax_ward,Восковой покров,2.6,11.5,shield_ally_or_self_pct_hp,0.2
+boss_barrow_warden,Хранитель Кургана,tier_4,boss,enemy_barrow_warden,1.2,2.4,40,35,funeral_pyre,Погребальный костёр,3.0,13.0,alternating_shield16_and_burn2,2.25
+glass_stoat,Хрустальный Горностай,tier_5,skirmisher,chapter3/glass_stoat,1.0,1.9,15,25,glass_dart,Осколочный выпад,2.2,9.0,heavy_hit_brittle,1.55
+mirror_wolf,Зеркальный Волк,tier_5,fighter,chapter3/glass_wolf,1.05,2.0,25,25,echo_pounce,Двойной прыжок,2.4,10.0,heavy_hit_echo,1.65
+glass_needle_mob,Стеклянная Игла,tier_5,skirmisher,chapter3/needle,1.1,2.1,15,20,pierce_glint,Блеск иглы,2.3,9.5,crit_heavy_hit,1.75
+memory_echo,Отблеск Памяти,tier_5,healer,chapter3/echo,0.95,2.4,20,35,mirror_mend,Отголосок восстановления,2.6,11.5,heal_lowest_ally_pct_hp,0.14
+boss_glass_guardian,Стеклянный Хранитель,tier_5,boss,chapter3/glass_guardian,1.2,2.4,40,40,mirror_shatter,Зеркальный разлом,3.0,13.0,alternating_reflect_shield_and_heavy,2.3
+storm_falcon,Грозовой Сокол,tier_6,skirmisher,t6_storm_falcon,1.05,1.8,20,30,static_dive,Грозовое пике,2.2,9.0,heavy_hit_charge_stun,1.6
+spark_warden,Искровой Страж,tier_6,fighter,t6_spark_warden,1.1,2.3,30,30,arc_lance,Разрядное копьё,2.5,10.5,heavy_hit_charge,1.75
+seal_keeper,Хранитель Печати,tier_6,shielder,t6_seal_keeper,1.15,2.6,45,35,golden_seal,Золотая печать,2.6,11.5,shield_ally_or_self_pct_hp,0.22
+order_sentinel,Часовой Ордена,tier_6,elite_fighter,t6_order_sentinel,1.2,2.2,40,40,echo_judgment,Печать отголоска,2.6,10.5,heavy_hit_echo_shield,1.9
+boss_master_kron,Мастер Крон,tier_6,boss,t6_master_kron,1.2,2.2,45,45,architect_decree,Печать Порядка (3 фазы),3.0,12.5,phases_shield_crystal_tempo,2.35

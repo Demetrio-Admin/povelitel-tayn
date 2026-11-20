@@ -1,7 +1,7 @@
 tier,min_lvl,max_lvl,common_id,rare_id,catalyst_id,buy_price_common,buy_price_rare
-tier_1,1,20,moon_herb,tree_resin,lunar_wick,,
-tier_2,21,40,hellebore,rune_dust,cold_heart,,
-tier_3,41,60,frost_leaf,ice_crystal,frost_shard,,
-tier_4,61,80,ash_grass,memory_shard,bell_echo,,
-tier_5,81,100,willow_bark,glass_leaf,memory_spark,,
-tier_6,101,120,storm_moss,star_quartz,storm_core,,
+tier_1,1,20,moon_herb,tree_resin,lunar_wick,18,28
+tier_2,21,40,frost_herb,rune_dust,cold_heart,22,36
+tier_3,41,60,rime_leaf,ice_crystal,frost_shard,30,55
+tier_4,61,80,ash_herb,memory_shard,bell_chime,42,75
+tier_5,81,100,willow_bark,glass_leaf,memory_spark,58,105
+tier_6,101,120,storm_moss,star_quartz,storm_core,80,145

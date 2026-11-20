@@ -1,6 +1,8 @@
 import { CombatScene } from '../scenes/CombatScene.js';
 import { CORE } from '../config/horizon/rules.js';
-import { PREVIEW_GIFTS } from '../config/horizon/previewTuning.js';
+import { QUEST_BY_ID } from './quests.js';
+import { advanceQuest, settleElite, settleField } from './actProgress.js';
+import { payItems, POTIONS_41 } from './progression.js';
 import { VIEW, COLORS } from '../config/game.config.js';
 import { UI } from '../config/ui.config.js';
 import { MSG } from '../state/EventBus.js';
@@ -12,6 +14,7 @@ import { HorizonBattle, HORIZON_STEP_MS, replayHorizonBattle } from '../systems/
 import { battleContext, settleVictory } from './episode.js';
 import { campaign, saveCampaign } from './campaign.js';
 
+const OBJECT_ART={light:'field_rock_light',heavy:'field_rock_heavy',crystal:'field_crystal',barrel:'barrel_01'};
 const HERO = { x: VIEW.width / 2, y: 1040 };
 const POSITIONS = {
   solo: [[VIEW.width / 2, 581]],
@@ -35,7 +38,7 @@ export class HorizonCombatScene extends CombatScene {
     this.battle = new HorizonBattle(this.context);
     this.cm = { arena: { ground: 0x26362b }, enemy: { hasArmor: false } };
     const atHearth = ['spark', 'frost'].includes(this.encounter.id);
-    this.def = { arena: atHearth ? 'mirra_hearth' : 'forest' };
+    this.def = { arena: atHearth ? 'mirra_hearth' : this.encounter.region===2?'city':'forest' };
     this.enemyType = this.encounter.id;
     this.started = false;
     this.ended = false;
@@ -77,10 +80,11 @@ export class HorizonCombatScene extends CombatScene {
   makeEnemyViews() {
     this.enemyViews = this.battle.enemies.map((enemy, i) => {
       const [x, y] = POSITIONS[this.encounter.pack][i];
-      this.def = { texture: enemy.texture, tier: 'normal' };
+      this.def = { texture: enemy.texture, tier: enemy.role==='boss'?'strong':'normal' };
       this.enemyPos = { x, y };
       this.buildEnemy();
       const sprite = this.enemySprite;
+      if (enemy.id==='boss_august_grad') sprite.setScale(sprite.scale*152/sprite.displayHeight);
       if (this.battle.enemies.length > 1) {
         this.idle.stop();
         const height = Math.min(200, sprite.displayHeight);
@@ -107,9 +111,9 @@ export class HorizonCombatScene extends CombatScene {
   makeArenaViews() {
     const stones = Object.values(this.battle.objects);
     this.stones = Object.fromEntries(stones.map((stone, i) => {
-      const x = stones.length === 1 ? VIEW.width / 2 : VIEW.width * (i ? 0.7 : 0.3);
+      const x = VIEW.width * (i+1)/(stones.length+1);
       const y = 790;
-      const texture = 'field_rock_' + stone.id;
+      const texture = OBJECT_ART[stone.id];
       const sprite = applyDisplaySize(this.add.image(x, y, texture), texture).setOrigin(0.5, 1).setDepth(y);
       const glow = this.add.image(x, y - 30, 'fx_glow').setDisplaySize(150, 135).setBlendMode('ADD').setDepth(y - 1);
       const title = this.label(x, y + 23, stone.name);
@@ -126,8 +130,20 @@ export class HorizonCombatScene extends CombatScene {
 
   makeBattleHud() {
     this.hint = this.label(VIEW.width / 2, 875, '').setPadding(16, 8).setBackgroundColor('#251c24');
-    if (this.battle.fox) {
-      this.companion = applyDisplaySize(this.add.image(HERO.x + 156, HERO.y - 16, 'companion_fox'), 'companion_fox')
+    this.quickPotions=Object.entries(this.battle.potions).filter(([id,n])=>n>0 && POTIONS_41[id] && POTIONS_41[id].category!=='pre_combat').slice(0,3)
+      .map(([id],i)=>{
+        const y=926+i*80,x=64;
+        const ring=this.add.circle(x,y,33,0x221824,.94).setStrokeStyle(2,COLORS.gold).setDepth(5200);
+        const kind=POTIONS_41[id].effect_type;
+        const texture=kind.startsWith('mana')?'icon_potion_mana':kind.startsWith('heal')?'icon_potion_life':'icon_potion_fire';
+        const icon=this.add.image(x,y,texture).setDisplaySize(39,41).setDepth(5201);
+        const count=this.label(x+26,y+22,'','#fff3da').setDepth(5202);
+        const hit=this.add.zone(x,y,75,75).setDepth(5203).setInteractive({useHandCursor:true});
+        hit.on('pointerdown',()=>this.dose(id));
+        return { id,ring,icon,count,hit };
+      });
+    if (this.battle.pet) {
+      this.companion = applyDisplaySize(this.add.image(HERO.x + 156, HERO.y - 16, 'companion_'+this.battle.pet), 'companion_'+this.battle.pet)
         .setOrigin(0.5, 1).setDepth(HERO.y);
       this.response = new UIBar(this, HERO.x + 93, HERO.y + 1, 126, 13, 'mp', 5050);
       this.responseLabel = this.label(HERO.x + 156, HERO.y + 33, 'Отклик');
@@ -135,7 +151,7 @@ export class HorizonCombatScene extends CombatScene {
   }
 
   abilityView(id) {
-    const gift = PREVIEW_GIFTS[id];
+    const gift = this.battle.rules[id];
     if (!gift) return { id, state: 'locked' };
     if (!services.state.isEquipped(id)) return { id, state: 'benched' };
     const left = Math.max(0, (this.battle.cooldown[id] - this.battle.tick) * HORIZON_STEP_MS / 1000);
@@ -155,9 +171,9 @@ export class HorizonCombatScene extends CombatScene {
     const target = this.enemyViews[this.battle.focus], charged = stone?.tag === 'heat';
     if (!this.battle.command({ type: object ? 'cast_on_object' : 'cast', gift: id, object })) return;
     this.selected = null;
-    this.heroAnim.playCast(id);
+    this.heroAnim.playCast(id in COLORS?id:'seal');
     services.audio.play(id === 'fire' ? 'fire_cast' : 'telekinesis_cast');
-    if (stone && id === 'telekinesis') this.animateThrownStone(object, target, charged);
+    if (stone && this.battle.rules[id].role==='volya') this.animateThrownStone(object,target,charged);
     this.handleBattleEvents();
     this.refreshBattle();
     if (this.battle.result) this.finishBattle();
@@ -191,21 +207,29 @@ export class HorizonCombatScene extends CombatScene {
       view.bar.setFraction(enemy.hp / enemy.maxHp);
       view.ring.setVisible(enemy.hp > 0 && this.battle.focus === i);
       view.sprite.setAlpha(enemy.hp ? 1 : 0.27);
-      const text = enemy.castUntil ? 'Готовит удар' : enemy.heat ? 'Жар ×' + enemy.heat : enemy.shield ? 'Щит' : '';
+      const statuses={brittle:'Хрупкость',charge:'Разряд',breach:'Пролом',viscosity:'Вязкость',echo:'Эхо'};
+      const tag=Object.keys(statuses).find(key=>this.battle.activeTag(enemy,key));
+      const text = enemy.castUntil ? (enemy.cast_name || 'Готовит удар') : enemy.heat ? 'Жар ×' + enemy.heat : enemy.shield ? 'Щит' : statuses[tag] || '';
       if (view.tag.text !== text) view.tag.setText(text);
     }
     for (const stone of Object.values(this.battle.objects)) {
       const view = this.stones[stone.id];
       const wait = Math.max(0, Math.ceil((stone.respawnAt - this.battle.tick) * HORIZON_STEP_MS / 1000));
       view.sprite.setAlpha(wait ? 0.28 : 1);
-      if (stone.tag) view.sprite.setTint(0xff9449);
+      const colors={heat:0xff9449,brittle:0x91edff,charge:0xb9a1ff,breach:0xc7b0fe,viscosity:0xefba72,echo:0xacdcff};
+      if (stone.tag) view.sprite.setTint(colors[stone.tag] || 0xff9449);
       else view.sprite.clearTint();
       view.glow.setTint(stone.tag ? COLORS.fire : COLORS.telekinesis)
         .setAlpha(wait ? 0 : this.selected === stone.id ? 0.75 : stone.tag ? 0.5 : this.teaching() ? 0.36 : 0);
-      const text = wait ? 'Через ' + wait + ' с' : stone.tag ? 'Раскалён' : stone.name;
+      const text=wait?'Через '+wait+' с':stone.tag==='heat'?'Раскалён':stone.name;
       if (view.title.text !== text) view.title.setText(text);
     }
     this.response?.setFraction(this.battle.charge / CORE.companion_max_charge);
+    for (const view of this.quickPotions) {
+      const available=(this.battle.potions[view.id] || 0)-(this.battle.usedPotions[view.id] || 0);
+      view.count.setText(String(available));
+      view.icon.setAlpha(available?1:.34);
+    }
     if (this.responseLabel) this.responseLabel.setText('Отклик ' + this.battle.charge + '%');
     const stone = this.selected && this.battle.objects[this.selected];
     const teaching = this.teaching();
@@ -218,7 +242,7 @@ export class HorizonCombatScene extends CombatScene {
 
   animateThrownStone(id, enemy, charged) {
     const { x, y } = this.stones[id];
-    const key = 'field_rock_' + id;
+    const key = OBJECT_ART[id];
     const rock = applyDisplaySize(this.add.image(x, y - 27, key), key).setDepth(6010)
       .setTint(charged ? 0xffa15b : COLORS.telekinesis);
     const hitY = enemy.y - enemy.sprite.displayHeight * 0.46;
@@ -274,20 +298,36 @@ export class HorizonCombatScene extends CombatScene {
     }
   }
 
+  dose(id) {
+    if (!this.canAct() || !this.battle.command({type:'potion',id})) return false;
+    this.handleBattleEvents();
+    this.refreshBattle();
+    if (this.battle.result) this.finishBattle();
+    return true;
+  }
+
   finishBattle() {
     if (this.ended) return;
     this.ended = true;
     const battle = this.battle;
     const replayed = replayHorizonBattle(this.context, battle.record());
+    const before=campaign();
+    const costs=Object.fromEntries(Object.entries(replayed.usedPotions).filter(([,count])=>count));
+    const afterPotions=payItems(before,costs)||before;
     const victory = replayed.result === 'victory';
     this.hint.setVisible(false);
     const onClick = () => this.exit(victory ? 'victory' : 'defeat');
     if (victory) {
-      const before = campaign();
-      const reward = settleVictory(before, this.encounter, replayed.foxBonus, Date.now());
-      saveCampaign(reward.state, { notify: false });
+      let reward;
+      if (this.encounter.quest) {
+        const quest=QUEST_BY_ID[this.encounter.quest];
+        reward={state:advanceQuest(afterPotions,quest,this.encounter.index),summary:''};
+      } else if (this.encounter.eliteTier) reward={state:settleElite(afterPotions,this.encounter,Date.now()),summary:''};
+      else if (this.encounter.tier) reward={state:settleField(afterPotions,this.encounter,replayed.foxBonus,Date.now()),summary:''};
+      else reward=settleVictory(afterPotions,this.encounter,replayed.foxBonus,Date.now());
+      saveCampaign(reward.state,{notify:false});
       services.audio.play('victory');
-      if (reward.state.step === 'lantern') {
+      if (this.encounter.id==='spark') {
         const enemy = this.enemyViews[0];
         this.burst(enemy.x, enemy.y - 48, COLORS.gold, 34);
         this.bus.emit(MSG.DIALOG, {
@@ -299,15 +339,15 @@ export class HorizonCombatScene extends CombatScene {
       this.bus.emit(MSG.DIALOG, {
         title: 'Победа!', color: COLORS.gold,
         victory: {
-          reward: { coins: reward.state.coins - before.coins, items: {
-            ...(reward.state.herbs > before.herbs ? { moon_herb: reward.state.herbs - before.herbs } : {}),
-            ...(!before.fox && reward.state.fox ? { companion_fox: 1 } : {}),
-          } },
+          reward: { coins: reward.state.coins - before.coins, items: Object.fromEntries(Object.entries(reward.state.inv || {})
+            .filter(([id,n])=>id!=='coins' && n>(before.inv[id]||0)).map(([id,n])=>[id,n-(before.inv[id]||0)]))
+           },
           vitals: this.battleVitals(), seconds: battle.tick * HORIZON_STEP_MS / 1000, interrupts: 0, levelUps: [],
         },
         buttons: [{ label: 'Продолжить', primary: true, onClick }],
       });
     } else {
+      saveCampaign(afterPotions,{notify:false});
       this.heroAnim.playDeath();
       services.audio.play('defeat');
       this.bus.emit(MSG.DIALOG, {

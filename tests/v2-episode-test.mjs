@@ -94,7 +94,7 @@ assert.deepEqual([state.huntLevel, state.shards, state.bestiary.thorn], [2, 1, 1
 assert.equal(tideStatus(state, now).remaining, 19);
 assert.equal(tideStatus(state, now + 86400000).remaining, 20);
 assert.equal(baseBattleCoins(1) * tideAt(0).value, 20);
-assert.deepEqual([19, 20, 49, 50, 149, 150].map(wins => tideAt(wins).value), [5, 2, 2, 1, 1, 0.3]);
+assert.deepEqual([19, 20, 34, 35, 49, 50].map(wins => tideAt(wins).value), [5, 2, 2, 1, 1, 0.3]);
 assert.equal(settleVictory(state, hardest, false, now).state, state);
 assert.equal(huntOffers(state, now).at(-1).ready, false);
 assert.equal(huntOffers(state, now + 30000).at(-1).ready, true);
@@ -116,6 +116,6 @@ for (let level = 1; level <= 200; level++) {
   assert.ok(effects.cooldown <= CORE.cdr_cap);
   assert.ok(effects.crit <= CORE.crit_cap);
 }
-assert.equal(GIFT_RULES.fire.mana, null);
-assert.equal(GIFT_RULES.telekinesis.cd_sec, null);
+assert.equal(GIFT_RULES.fire.mana, 18);
+assert.equal(GIFT_RULES.telekinesis.cd_sec, 3.5);
 assert.equal(Object.hasOwn(CORE, 'episode_enemy_hit_mult'), false);

@@ -54,7 +54,7 @@ const SLOT_LAYOUT = [
   ['wood-road', 2, 'trio', ['thorn', 'spark', 'frost']],
 ];
 const LUNAR_TIER_MAX = TIDE[0].threshold;
-const REGION_MAX = 20;
+const REGION_MAX = 21;
 const dayKey = now => new Date(now).toISOString().slice(0, 10);
 export const starterState = () => ({
   step: 'intro', coins: 0, herbs: 0, storyPage: false, wandRank: 0, fox: false, foxStars: 0,
@@ -96,6 +96,10 @@ export function battleContext(state, encounter) {
   return {
     balanceVersion: CORE.balance_version,
     heroLevel: state.huntLevel, wandRank: state.wandRank, fox: state.fox, encounter,
+    slots:state.loadout, gifts:state.gifts, vigor:state.vigor, wandLevel:state.wandLevel,
+    pet:state.activeCompanion, petRank:state.tempers?.[state.activeCompanion],
+    amulet:state.amulet, amuletRank:state.amuletLevels?.[state.amulet],
+    potions:state.inv,
   };
 }
 

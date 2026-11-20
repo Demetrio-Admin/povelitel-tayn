@@ -1,21 +1,21 @@
-id,name,tab,category,effect_type,value_pct,duration_sec,cd_sec,tier,recipe_json,enabled,over_time_pct,effect,status
-potion_life_small,Настой жизни (малый),health,restorative,heal,0.2,,,,,false,,Мгновенно $+20\%\text{ HP}$.,Есть (перевод в %)
-potion_life_medium,Густое зелье здоровья,health,restorative,heal,0.35,,,,,false,,Мгновенно $+35\%\text{ HP}$.,Есть (перевод в %)
-potion_life_regen,Восстанавливающее зелье HP,health,restorative,heal,0.1,6,,,,false,0.4,$+10\%$ сразу и $+40\%$ за $6\text{ с}$ (итого $50\%$).,Есть (перевод в %)
-potion_life_large,Большое зелье здоровья,health,restorative,heal,0.55,,,,,false,,Мгновенно $+55\%\text{ HP}$ (экономит слот при лимите 3).,Есть (перевод в %)
-potion_mana_small,Лунный эликсир (малый),mana,restorative,mana,0.25,,,,,false,,Мгновенно $+25\%\text{ MP}$.,Есть (перевод в %)
-potion_mana_medium,Густое зелье маны,mana,restorative,mana,0.4,,,,,false,,Мгновенно $+40\%\text{ MP}$.,Есть (перевод в %)
-potion_mana_regen,Восстанавливающее зелье MP,mana,restorative,mana,0.1,6,,,,false,0.45,$+10\%$ сразу и $+45\%$ за $6\text{ с}$ (итого $55\%$).,Есть (перевод в %)
-potion_mana_large,Кристальное зелье маны,mana,restorative,mana,0.65,,,,,false,,Мгновенно $+65\%\text{ MP}$.,Есть (перевод в %)
-potion_stable,Стабилизирующий настой,protection,tactical,cleanse_heal,0.18,,12,,,false,,Снимает холод и горение + лечит $18\%\text{ HP}$.,Есть
-potion_warm,Тёплый настой,protection,tactical,cold_resist,0.5,20,12,,,false,,Снимает замедление + $-50\%$ входящего урона холода ($20\text{ с}$).,Есть
-potion_guard,Защитный отвар (potion_guard),protection,tactical,direct_resist,0.35,12,12,,,false,,Снижает входящий прямой урон на $35\%$ ($12\text{ с}$).,Есть
-potion_antiburn,Защита от горения (potion_antiburn),protection,tactical,heat_resist,0.6,20,12,,,false,,Снимает слои горения и антихил + $-60\%$ нового горения ($20\text{ с}$).,Есть
-potion_lightning_guard,Громовой изолятор,protection,tactical,lightning_resist,0.5,15,12,,,false,,Снимает *Разряд* + $-50\%$ урона молнии и антистан ($15\text{ с}$).,Новое
-potion_mirror_balm,Зеркальный бальзам,protection,tactical,shield,0.25,5,12,,,false,,Краткий щит $25\%\text{ maxHP}$ на $5\text{ с}$ под телеграф босса.,Новое
-potion_brittle,Зелье хрупкости (potion_brittle),attack,tactical,brittle,0.25,10,12,,,false,,"Накладывает на цель *Хрупкость* ($+25\%$ урона, $10\text{ с}$).",Есть
-potion_firebomb,Огненная склянка,attack,tactical,fire_sp,,,12,,,false,,Бросок во врага: $\times 1.2\text{ SP}$ + 2 слоя *Жара*.,Есть
-potion_resin,Склянка смолы,attack,tactical,viscosity,,10,12,,,false,,Создаёт лужу смолы (*Вязкость* на $10\text{ с}$).,Новое
-potion_tempo,Искра темпа,attack,tactical,wand_cadence,,10,12,,,false,,На $10\text{ с}$ резонанс палочки срабатывает каждые 2 выстрела.,Новое
-potion_crystal_dust,Кристальная пыль,attack,tactical,arena_refresh,,,12,,,false,,Мгновенно обновляет и случайно заряжает все предметы арены.,Новое
-potion_luck,Настой удачи *(вне лимита боя)*,attack,outside,hunt_luck,0.3,,,,,false,,Выпивается до боя: $+30\%$ монет и шанс доп. ресурса с элиты/босса.,Новое
+id,name,tab,category,effect_type,value_pct,duration_sec,cd_sec,tier,recipe_json,enabled
+potion_life_small,Настой жизни,vitals,heal,heal_instant,0.2,0,0,tier_1,"{""moon_herb"": 2, ""coins"": 5}",true
+potion_life_medium,Густое зелье здоровья,vitals,heal,heal_instant,0.35,0,0,tier_2,"{""frost_herb"": 3, ""rune_dust"": 1, ""coins"": 15}",false
+potion_life_regen,Восстанавливающее зелье HP,vitals,heal,heal_instant_10_hot_40,0.5,6,0,tier_3,"{""rime_leaf"": 3, ""ice_crystal"": 1, ""coins"": 25}",false
+potion_life_big,Большое зелье здоровья,vitals,heal,heal_instant,0.55,0,0,tier_4,"{""ash_herb"": 4, ""memory_shard"": 2, ""coins"": 45}",false
+potion_mana_small,Лунный эликсир,vitals,heal,mana_instant,0.25,0,0,tier_1,"{""moon_herb"": 1, ""tree_resin"": 1, ""coins"": 8}",true
+potion_mana_medium,Густое зелье маны,vitals,heal,mana_instant,0.4,0,0,tier_2,"{""frost_herb"": 2, ""rune_dust"": 2, ""coins"": 18}",false
+potion_mana_regen,Восстанавливающее зелье MP,vitals,heal,mana_instant_10_hot_45,0.55,6,0,tier_3,"{""rime_leaf"": 2, ""ice_crystal"": 2, ""coins"": 30}",false
+potion_mana_crystal,Кристальное зелье маны,vitals,heal,mana_instant,0.65,0,0,tier_4,"{""ash_herb"": 3, ""memory_shard"": 3, ""coins"": 55}",false
+potion_stable,Стабилизирующий настой,tactical,tactical,cleanse_burn_chill_heal_18,0.18,0,12,tier_2,"{""frost_herb"": 2, ""tree_resin"": 1, ""coins"": 15}",false
+potion_warm,Тёплый настой,tactical,tactical,cleanse_slow_frost_mit,0.5,20,12,tier_2,"{""frost_herb"": 2, ""moon_herb"": 2, ""coins"": 15}",false
+potion_guard,Защитный отвар,tactical,tactical,direct_dmg_mit,0.35,12,12,tier_2,"{""frost_herb"": 2, ""rune_dust"": 1, ""coins"": 18}",false
+potion_antiburn,Защита от горения,tactical,tactical,cleanse_burn_burn_mit,0.6,20,12,tier_4,"{""frost_herb"": 2, ""ice_crystal"": 1, ""ash_herb"": 1, ""coins"": 25}",false
+potion_lightning_ward,Громовой изолятор,tactical,tactical,cleanse_charge_lightning_mit_antistun,0.5,15,12,tier_6,"{""storm_moss"": 2, ""star_quartz"": 1, ""coins"": 60}",false
+potion_mirror_balm,Зеркальный бальзам,tactical,tactical,shield_max_hp,0.25,5,12,tier_5,"{""willow_bark"": 2, ""glass_leaf"": 1, ""coins"": 45}",false
+potion_brittle,Зелье хрупкости,tactical,tactical,apply_brittle_25,0.25,10,12,tier_2,"{""frost_herb"": 1, ""rune_dust"": 1, ""coins"": 15}",false
+potion_fire_flask,Огненная склянка,tactical,tactical,sp_burst_heat2,1.2,0,12,tier_1,"{""moon_herb"": 1, ""tree_resin"": 2, ""coins"": 12}",true
+potion_resin_flask,Склянка смолы,tactical,tactical,apply_viscosity,1.0,10,12,tier_1,"{""tree_resin"": 2, ""coins"": 12}",true
+potion_tempo_spark,Искра темпа,tactical,tactical,wand_impulse_every_2_shots,2.0,10,12,tier_5,"{""willow_bark"": 2, ""glass_leaf"": 2, ""coins"": 50}",false
+potion_crystal_dust,Кристальная пыль,tactical,tactical,respawn_and_charge_arena,1.0,0,12,tier_5,"{""glass_leaf"": 2, ""ice_crystal"": 1, ""coins"": 50}",false
+potion_luck,Настой удачи,special,pre_combat,bonus_coins_30pct_and_drop,0.3,0,0,tier_3,"{""rime_leaf"": 2, ""moon_herb"": 2, ""coins"": 35}",false

@@ -1,0 +1,7 @@
+plus_level,power_mult,coin_cost,catalyst_qty,catalyst_tier,ritual_min
+0,1.05,0,0,tier_1,0
+1,1.1,500,0,tier_1,0
+2,1.16,3500,1,tier_2,60
+3,1.22,22000,0,tier_3,240
+4,1.28,110000,2,tier_4,720
+5,1.35,500000,4,tier_6,1440

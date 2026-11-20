@@ -5,7 +5,23 @@ export const ECONOMY = Object.fromEntries(HORIZON_TABLES.economy_tide.map(row =>
 export const TIDE = HORIZON_TABLES.economy_tide.filter(row => row.section === 'tide');
 export const PACKS = Object.fromEntries(HORIZON_TABLES.encounter_packs.map(row => [row.pack_id, row]));
 export const GIFT_RULES = Object.fromEntries(HORIZON_TABLES.gifts_40.map(row => [row.id, row]));
+export const MOBS_41 = Object.fromEntries(HORIZON_TABLES.mob_archetypes.map(row => [row.archetype_id, row]));
 export const FOX = HORIZON_TABLES.companions.find(row => row.id === 'fox');
+export const ROBIN = HORIZON_TABLES.companions.find(row => row.id === 'robin');
+
+export const ARENA_KEYS = { field_rock_light:'light', field_rock_heavy:'heavy', field_crystal:'crystal', barrel_01:'barrel' };
+const FORMATS = [null, 'solo', 'duo', 'trio'];
+export function namedEncounter(id, packId, level, region) {
+  const pack = PACKS[packId];
+  if (!pack?.archetypes) throw new Error('Unknown named pack ' + packId);
+  const enemies = pack.archetypes.map(key => {
+    const def = MOBS_41[key];
+    return { id:key, ...def, texture:def.sprite_key };
+  });
+  return { id, packId, level, region, pack:FORMATS[pack.count], enemies,
+    enemyIds:pack.archetypes, arena:pack.arena_objects.map(key=>ARENA_KEYS[key]),
+    name:enemies.map(enemy=>enemy.name).join(' · ') };
+}
 
 export function tideAt(winsBefore) {
   return TIDE.find(row => row.threshold === null || winsBefore < row.threshold);

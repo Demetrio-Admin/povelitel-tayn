@@ -4,342 +4,476 @@ export const HORIZON_TABLES = {
     {
       "param_key": "balance_version",
       "value": 41,
-      "unit": "version"
+      "unit": "int",
+      "notes": "Active balance schema version"
     },
     {
       "param_key": "target_year_levels",
       "value": 120,
-      "unit": "levels"
+      "unit": "level",
+      "notes": "Primary Year-1 progression horizon"
     },
     {
       "param_key": "base_power",
       "value": 20,
-      "unit": "SP"
-    },
-    {
-      "param_key": "hero_base_hp",
-      "value": 180,
-      "unit": "HP"
+      "unit": "sp",
+      "notes": "Hero base Spell Power at L1: SP(L) = base_power * S(L)"
     },
     {
       "param_key": "power_growth",
       "value": 1.065,
-      "unit": "multiplier"
+      "unit": "mult",
+      "notes": "Scale factor per level: S(L) = 1.065^(L-1)"
     },
     {
-      "param_key": "paragon_power_growth",
-      "value": 1.015,
-      "unit": "multiplier"
+      "param_key": "hero_base_hp",
+      "value": 180,
+      "unit": "hp",
+      "notes": "Hero base HP at L1: HP(L) = hero_base_hp * S(L)"
     },
     {
       "param_key": "mob_hp_mult",
       "value": 12,
-      "unit": "multiplier"
+      "unit": "x_sp",
+      "notes": "Solo regular mob HP = 240 * S(L) = 12 * SP(L)"
     },
     {
       "param_key": "elite_hp_mult",
       "value": 29,
-      "unit": "multiplier"
+      "unit": "x_sp",
+      "notes": "Elite HP = 580 * S(L) (~2.42x solo)"
     },
     {
       "param_key": "boss_hp_mult",
       "value": 70,
-      "unit": "multiplier"
+      "unit": "x_sp",
+      "notes": "Tier Boss HP = 1400 * S(L) (~5.83x solo)"
+    },
+    {
+      "param_key": "mob_base_dps",
+      "value": 4.5,
+      "unit": "dps",
+      "notes": "Solo regular mob base DPS at L1: DPS(L) = 4.5 * S(L)"
+    },
+    {
+      "param_key": "soft_cap_level",
+      "value": 120,
+      "unit": "level",
+      "notes": "Paragon soft-cap start level"
+    },
+    {
+      "param_key": "paragon_power_growth",
+      "value": 1.015,
+      "unit": "mult",
+      "notes": "S(L) growth per level for L > 120"
+    },
+    {
+      "param_key": "post_cap_cost_growth",
+      "value": 1.16,
+      "unit": "mult",
+      "notes": "Level coin cost growth for L > 120"
     },
     {
       "param_key": "mana_start",
       "value": 120,
-      "unit": "MP"
+      "unit": "mp",
+      "notes": "Max MP at L1"
     },
     {
       "param_key": "mana_end",
       "value": 480,
-      "unit": "MP"
+      "unit": "mp",
+      "notes": "Max MP at L120 (linear interpolation)"
     },
     {
       "param_key": "mana_regen_start",
       "value": 3,
-      "unit": "MP/s"
+      "unit": "mp_per_sec",
+      "notes": "MP regen/sec at L1"
     },
     {
       "param_key": "mana_regen_end",
       "value": 7.5,
-      "unit": "MP/s"
+      "unit": "mp_per_sec",
+      "notes": "MP regen/sec at L120 (linear interpolation)"
     },
     {
       "param_key": "wand_start_interval",
       "value": 1.5,
-      "unit": "s"
+      "unit": "sec",
+      "notes": "Auto-wand shot interval at rank 0"
     },
     {
       "param_key": "wand_min_interval",
       "value": 0.9,
-      "unit": "s"
+      "unit": "sec",
+      "notes": "Asymptotic hard floor for auto-wand interval"
     },
     {
       "param_key": "wand_decay_ranks",
       "value": 20,
-      "unit": "ranks"
+      "unit": "rank",
+      "notes": "Exponential decay constant: T(r)=0.90+0.60*exp(-r/20)"
+    },
+    {
+      "param_key": "wand_max_tempo_rank",
+      "value": 60,
+      "unit": "rank",
+      "notes": "Max tempo rank"
+    },
+    {
+      "param_key": "wand_base_sp_mult",
+      "value": 0.45,
+      "unit": "x_sp",
+      "notes": "Base wand auto-shot damage multiplier of SP(L)"
     },
     {
       "param_key": "wand_impulse_every",
       "value": 4,
-      "unit": "shots"
+      "unit": "shots",
+      "notes": "Resonant impulse trigger cadence"
     },
     {
       "param_key": "wand_impulse_mult",
       "value": 1.6,
-      "unit": "multiplier"
+      "unit": "mult",
+      "notes": "Resonant 4th shot multiplier (detonates charge, +20 companion)"
     },
     {
       "param_key": "wand_visual_every",
       "value": 15,
-      "unit": "levels"
+      "unit": "level",
+      "notes": "Wand projectile visual evolution step"
     },
     {
       "param_key": "armor_cap",
       "value": 0.65,
-      "unit": "ratio"
+      "unit": "ratio",
+      "notes": "Hyperbolic armor mitigation cap"
     },
     {
       "param_key": "armor_k",
       "value": 100,
-      "unit": "rating"
+      "unit": "rating",
+      "notes": "Hyperbolic armor K * S(L_target)"
     },
     {
       "param_key": "crit_cap",
       "value": 0.45,
-      "unit": "ratio"
+      "unit": "ratio",
+      "notes": "Hyperbolic crit chance cap"
     },
     {
       "param_key": "crit_k",
       "value": 120,
-      "unit": "rating"
+      "unit": "rating",
+      "notes": "Hyperbolic crit K * S(L_target)"
     },
     {
       "param_key": "crit_mult",
       "value": 1.5,
-      "unit": "multiplier"
+      "unit": "mult",
+      "notes": "Critical hit damage multiplier"
     },
     {
       "param_key": "cdr_cap",
       "value": 0.35,
-      "unit": "ratio"
+      "unit": "ratio",
+      "notes": "Hyperbolic CDR from rating cap"
     },
     {
       "param_key": "cdr_k",
       "value": 150,
-      "unit": "rating"
+      "unit": "rating",
+      "notes": "Hyperbolic CDR K * S(L_target)"
     },
     {
       "param_key": "status_resist_cap",
       "value": 0.6,
-      "unit": "ratio"
+      "unit": "ratio",
+      "notes": "Hyperbolic status resistance cap"
     },
     {
       "param_key": "status_resist_k",
       "value": 110,
-      "unit": "rating"
+      "unit": "rating",
+      "notes": "Hyperbolic status resistance K * S(L_target)"
     },
     {
       "param_key": "min_damage_floor",
       "value": 0.1,
-      "unit": "ratio"
+      "unit": "ratio",
+      "notes": "Minimum damage floor after all multiplicative reductions"
     },
     {
       "param_key": "max_total_cdr",
       "value": 0.5,
-      "unit": "ratio"
+      "unit": "ratio",
+      "notes": "Absolute cooldown reduction ceiling across all sources"
+    },
+    {
+      "param_key": "scope_single_primary",
+      "value": 1,
+      "unit": "mult",
+      "notes": "Single-target primary multiplier"
+    },
+    {
+      "param_key": "scope_single_splash",
+      "value": 0,
+      "unit": "mult",
+      "notes": "Single-target secondary multiplier"
+    },
+    {
+      "param_key": "scope_splash_primary",
+      "value": 1,
+      "unit": "mult",
+      "notes": "Splash primary multiplier"
     },
     {
       "param_key": "scope_splash_secondary",
       "value": 0.45,
-      "unit": "multiplier"
+      "unit": "mult",
+      "notes": "Splash secondary multiplier per neighbor"
     },
     {
       "param_key": "scope_all",
       "value": 0.6,
-      "unit": "multiplier"
-    },
-    {
-      "param_key": "light_stone_base",
-      "value": 1.3,
-      "unit": "multiplier"
-    },
-    {
-      "param_key": "light_stone_heat",
-      "value": 1.8,
-      "unit": "multiplier"
-    },
-    {
-      "param_key": "light_stone_brittle",
-      "value": 1.6,
-      "unit": "multiplier"
-    },
-    {
-      "param_key": "light_stone_respawn",
-      "value": 7,
-      "unit": "s"
-    },
-    {
-      "param_key": "heavy_stone_base",
-      "value": 1.8,
-      "unit": "multiplier"
-    },
-    {
-      "param_key": "heavy_stone_heat",
-      "value": 2.4,
-      "unit": "multiplier"
-    },
-    {
-      "param_key": "heavy_stone_brittle",
-      "value": 2,
-      "unit": "multiplier"
-    },
-    {
-      "param_key": "heavy_stone_respawn",
-      "value": 10,
-      "unit": "s"
-    },
-    {
-      "param_key": "crystal_storm",
-      "value": 2.1,
-      "unit": "multiplier"
-    },
-    {
-      "param_key": "crystal_mana",
-      "value": 0.25,
-      "unit": "ratio"
-    },
-    {
-      "param_key": "crystal_respawn",
-      "value": 12,
-      "unit": "s"
-    },
-    {
-      "param_key": "max_heal_potions",
-      "value": 3,
-      "unit": "items"
-    },
-    {
-      "param_key": "max_tactical_potions",
-      "value": 2,
-      "unit": "items"
-    },
-    {
-      "param_key": "tactical_potion_cooldown",
-      "value": 12,
-      "unit": "s"
+      "unit": "mult",
+      "notes": "All/chain multiplier per target"
     },
     {
       "param_key": "companion_max_charge",
       "value": 100,
-      "unit": "points"
+      "unit": "charge",
+      "notes": "Response bar threshold for automatic companion skill"
     },
     {
       "param_key": "companion_wand_impulse",
       "value": 20,
-      "unit": "points"
+      "unit": "charge",
+      "notes": "Charge gained on 4th resonant wand shot"
     },
     {
       "param_key": "companion_arena_combo",
       "value": 25,
-      "unit": "points"
+      "unit": "charge",
+      "notes": "Charge gained on arena object throw/activation"
     },
     {
       "param_key": "companion_zhatva_trigger",
       "value": 20,
-      "unit": "points"
+      "unit": "charge",
+      "notes": "Charge gained when Zhatva detonates a tag"
     },
     {
       "param_key": "companion_tactical_potion",
       "value": 20,
-      "unit": "points"
+      "unit": "charge",
+      "notes": "Charge gained on tactical potion use"
     },
     {
       "param_key": "companion_target_share",
       "value": 0.15,
-      "unit": "ratio"
+      "unit": "ratio",
+      "notes": "Target companion contribution to total fight power"
+    },
+    {
+      "param_key": "light_stone_base",
+      "value": 1.3,
+      "unit": "x_sp",
+      "notes": "Light rock uncharged throw multiplier"
+    },
+    {
+      "param_key": "light_stone_heat",
+      "value": 1.8,
+      "unit": "x_sp",
+      "notes": "Light rock heat-charged throw multiplier (+2 heat)"
+    },
+    {
+      "param_key": "light_stone_brittle",
+      "value": 1.6,
+      "unit": "x_sp",
+      "notes": "Light rock brittle-charged throw multiplier (armor shred 6s)"
+    },
+    {
+      "param_key": "light_stone_respawn",
+      "value": 7,
+      "unit": "sec",
+      "notes": "Light rock respawn time"
+    },
+    {
+      "param_key": "heavy_stone_base",
+      "value": 1.8,
+      "unit": "x_sp",
+      "notes": "Heavy rock uncharged throw multiplier"
+    },
+    {
+      "param_key": "heavy_stone_heat",
+      "value": 2.4,
+      "unit": "x_sp",
+      "notes": "Heavy rock heat-charged throw multiplier (splash)"
+    },
+    {
+      "param_key": "heavy_stone_brittle",
+      "value": 2,
+      "unit": "x_sp",
+      "notes": "Heavy rock brittle-charged throw multiplier (splash)"
+    },
+    {
+      "param_key": "heavy_stone_respawn",
+      "value": 10,
+      "unit": "sec",
+      "notes": "Heavy rock respawn time"
+    },
+    {
+      "param_key": "crystal_storm",
+      "value": 2.1,
+      "unit": "x_sp",
+      "notes": "Crystal chain storm multiplier (all + micro-stun)"
+    },
+    {
+      "param_key": "crystal_mana",
+      "value": 0.25,
+      "unit": "ratio",
+      "notes": "Crystal absorb mana restore fraction"
+    },
+    {
+      "param_key": "crystal_respawn",
+      "value": 12,
+      "unit": "sec",
+      "notes": "Crystal respawn time"
+    },
+    {
+      "param_key": "arena_barrel_resin_mult",
+      "value": 1.4,
+      "unit": "x_sp",
+      "notes": "Resin barrel throw/detonation multiplier (puddle 6s)"
+    },
+    {
+      "param_key": "arena_barrel_respawn_sec",
+      "value": 10,
+      "unit": "sec",
+      "notes": "Resin barrel respawn time"
+    },
+    {
+      "param_key": "max_heal_potions",
+      "value": 3,
+      "unit": "count",
+      "notes": "Max restorative HP/MP potions per fight"
+    },
+    {
+      "param_key": "max_tactical_potions",
+      "value": 2,
+      "unit": "count",
+      "notes": "Max tactical potions per fight"
+    },
+    {
+      "param_key": "tactical_potion_cooldown",
+      "value": 12,
+      "unit": "sec",
+      "notes": "Shared tactical potion category cooldown"
+    },
+    {
+      "param_key": "pack_max_concurrent_casts",
+      "value": 1,
+      "unit": "count",
+      "notes": "Only one mob in a pack may charge a telegraphed cast at a time"
     },
     {
       "param_key": "act1_first_wand_coins",
       "value": 60,
-      "unit": "coins"
+      "unit": "coins",
+      "notes": null
     },
     {
       "param_key": "act1_first_wand_herbs",
       "value": 2,
-      "unit": "items"
+      "unit": "items",
+      "notes": null
     },
     {
       "param_key": "amulet_0_power",
       "value": 1.05,
-      "unit": "multiplier"
+      "unit": "multiplier",
+      "notes": null
     },
     {
       "param_key": "amulet_0_coins",
       "value": 0,
-      "unit": "coins"
+      "unit": "coins",
+      "notes": null
     },
     {
       "param_key": "amulet_1_power",
       "value": 1.1,
-      "unit": "multiplier"
+      "unit": "multiplier",
+      "notes": null
     },
     {
       "param_key": "amulet_1_coins",
       "value": 500,
-      "unit": "coins"
+      "unit": "coins",
+      "notes": null
     },
     {
       "param_key": "amulet_2_power",
       "value": 1.16,
-      "unit": "multiplier"
+      "unit": "multiplier",
+      "notes": null
     },
     {
       "param_key": "amulet_2_coins",
       "value": 3500,
-      "unit": "coins"
+      "unit": "coins",
+      "notes": null
     },
     {
       "param_key": "amulet_3_power",
       "value": 1.22,
-      "unit": "multiplier"
+      "unit": "multiplier",
+      "notes": null
     },
     {
       "param_key": "amulet_3_coins",
       "value": 22000,
-      "unit": "coins"
+      "unit": "coins",
+      "notes": null
     },
     {
       "param_key": "amulet_4_power",
       "value": 1.28,
-      "unit": "multiplier"
+      "unit": "multiplier",
+      "notes": null
     },
     {
       "param_key": "amulet_4_coins",
       "value": 110000,
-      "unit": "coins"
+      "unit": "coins",
+      "notes": null
     },
     {
       "param_key": "amulet_5_power",
       "value": 1.35,
-      "unit": "multiplier"
+      "unit": "multiplier",
+      "notes": null
     },
     {
       "param_key": "amulet_5_coins",
       "value": 500000,
-      "unit": "coins"
+      "unit": "coins",
+      "notes": null
     },
     {
       "param_key": "episode_fox_kill_refund",
       "value": 35,
-      "unit": "points"
+      "unit": "points",
+      "notes": null
     },
     {
       "param_key": "episode_fox_kill_coins",
       "value": 0.1,
-      "unit": "ratio"
+      "unit": "ratio",
+      "notes": null
     }
   ],
   "economy_tide": [
@@ -430,14 +564,14 @@ export const HORIZON_TABLES = {
     {
       "section": "tide",
       "key": "Удачная охота",
-      "threshold": 50,
+      "threshold": 35,
       "value": 2,
       "sapphire_cost": null
     },
     {
       "section": "tide",
       "key": "Обычная охота",
-      "threshold": 150,
+      "threshold": 50,
       "value": 1,
       "sapphire_cost": null
     },
@@ -466,7 +600,7 @@ export const HORIZON_TABLES = {
       "section": "hunt",
       "key": "max_active",
       "threshold": null,
-      "value": 4,
+      "value": 12,
       "sapphire_cost": null
     },
     {
@@ -594,6 +728,97 @@ export const HORIZON_TABLES = {
       "threshold": null,
       "value": null,
       "sapphire_cost": 5
+    },
+    {
+      "section": "world",
+      "key": "min_active_on_map",
+      "threshold": null,
+      "value": 10,
+      "sapphire_cost": null
+    },
+    {
+      "section": "world",
+      "key": "spawn_zones_per_map",
+      "threshold": null,
+      "value": 24,
+      "sapphire_cost": null
+    },
+    {
+      "section": "world",
+      "key": "respawn_outside_camera",
+      "threshold": null,
+      "value": 1,
+      "sapphire_cost": null
+    },
+    {
+      "section": "world",
+      "key": "hunt_menu_direct_combat",
+      "threshold": null,
+      "value": 0,
+      "sapphire_cost": null
+    },
+    {
+      "section": "world",
+      "key": "gather_nodes_per_map",
+      "threshold": null,
+      "value": 18,
+      "sapphire_cost": null
+    },
+    {
+      "section": "world",
+      "key": "anomalies_active_per_map",
+      "threshold": null,
+      "value": 3,
+      "sapphire_cost": null
+    },
+    {
+      "section": "world",
+      "key": "anomaly_respawn_sec",
+      "threshold": null,
+      "value": 600,
+      "sapphire_cost": null
+    },
+    {
+      "section": "world",
+      "key": "daily_sapphires_t1_min",
+      "threshold": null,
+      "value": 35,
+      "sapphire_cost": null
+    },
+    {
+      "section": "world",
+      "key": "daily_sapphires_t1_max",
+      "threshold": null,
+      "value": 45,
+      "sapphire_cost": null
+    },
+    {
+      "section": "world",
+      "key": "daily_sapphires_t2_t4_min",
+      "threshold": null,
+      "value": 55,
+      "sapphire_cost": null
+    },
+    {
+      "section": "world",
+      "key": "daily_sapphires_t2_t4_max",
+      "threshold": null,
+      "value": 65,
+      "sapphire_cost": null
+    },
+    {
+      "section": "world",
+      "key": "daily_sapphires_t5_t6_min",
+      "threshold": null,
+      "value": 70,
+      "sapphire_cost": null
+    },
+    {
+      "section": "world",
+      "key": "daily_sapphires_t5_t6_max",
+      "threshold": null,
+      "value": 85,
+      "sapphire_cost": null
     }
   ],
   "resource_tiers": [
@@ -604,38 +829,38 @@ export const HORIZON_TABLES = {
       "common_id": "moon_herb",
       "rare_id": "tree_resin",
       "catalyst_id": "lunar_wick",
-      "buy_price_common": null,
-      "buy_price_rare": null
+      "buy_price_common": 18,
+      "buy_price_rare": 28
     },
     {
       "tier": "tier_2",
       "min_lvl": 21,
       "max_lvl": 40,
-      "common_id": "hellebore",
+      "common_id": "frost_herb",
       "rare_id": "rune_dust",
       "catalyst_id": "cold_heart",
-      "buy_price_common": null,
-      "buy_price_rare": null
+      "buy_price_common": 22,
+      "buy_price_rare": 36
     },
     {
       "tier": "tier_3",
       "min_lvl": 41,
       "max_lvl": 60,
-      "common_id": "frost_leaf",
+      "common_id": "rime_leaf",
       "rare_id": "ice_crystal",
       "catalyst_id": "frost_shard",
-      "buy_price_common": null,
-      "buy_price_rare": null
+      "buy_price_common": 30,
+      "buy_price_rare": 55
     },
     {
       "tier": "tier_4",
       "min_lvl": 61,
       "max_lvl": 80,
-      "common_id": "ash_grass",
+      "common_id": "ash_herb",
       "rare_id": "memory_shard",
-      "catalyst_id": "bell_echo",
-      "buy_price_common": null,
-      "buy_price_rare": null
+      "catalyst_id": "bell_chime",
+      "buy_price_common": 42,
+      "buy_price_rare": 75
     },
     {
       "tier": "tier_5",
@@ -644,8 +869,8 @@ export const HORIZON_TABLES = {
       "common_id": "willow_bark",
       "rare_id": "glass_leaf",
       "catalyst_id": "memory_spark",
-      "buy_price_common": null,
-      "buy_price_rare": null
+      "buy_price_common": 58,
+      "buy_price_rare": 105
     },
     {
       "tier": "tier_6",
@@ -654,8 +879,8 @@ export const HORIZON_TABLES = {
       "common_id": "storm_moss",
       "rare_id": "star_quartz",
       "catalyst_id": "storm_core",
-      "buy_price_common": null,
-      "buy_price_rare": null
+      "buy_price_common": 80,
+      "buy_price_rare": 145
     }
   ],
   "gifts_40": [
@@ -666,18 +891,15 @@ export const HORIZON_TABLES = {
       "tag": "heat",
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Раскаляет камень (бросок вешает 2 слоя *Жара*).",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 1,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "heat",
-      "direct_effect": "Урон + слой *Жара* (до 3 слоёв, антихил $-30\\%$).",
-      "source": "Старт / Тир 1"
+      "mana": 18,
+      "cd_sec": 4,
+      "sp_mult": 1.15,
+      "arena_effect": "charge_heat_2stacks",
+      "passive_3star": "heat_duration_plus_3s",
+      "passive_5star": "heat_3stacks_buff_wand_15pct",
+      "shard_tier": "tier_1",
+      "rarity": "common",
+      "enabled": true
     },
     {
       "id": "ice",
@@ -686,18 +908,15 @@ export const HORIZON_TABLES = {
       "tag": "brittle",
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Делает камень хрупким (бросок режет броню).",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 1,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "brittle",
-      "direct_effect": "Замедление + *Хрупкость* ($+25\\%$ урона).",
-      "source": "Тир 1–2"
+      "mana": 20,
+      "cd_sec": 5,
+      "sp_mult": 1.05,
+      "arena_effect": "charge_brittle_armor_shred_6s",
+      "passive_3star": "brittle_duration_plus_2s",
+      "passive_5star": "brittle_crit_taken_plus_10pct",
+      "shard_tier": "tier_2",
+      "rarity": "common",
+      "enabled": false
     },
     {
       "id": "resin_thread",
@@ -706,18 +925,15 @@ export const HORIZON_TABLES = {
       "tag": "viscosity",
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Покрывает камень смолой (бросок создаёт лужу).",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 1,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "viscosity",
-      "direct_effect": "Замедляет атаки + *Вязкость* (усиливает *Жар*/*Разряд*).",
-      "source": "Тир 1"
+      "mana": 20,
+      "cd_sec": 5.5,
+      "sp_mult": 0.9,
+      "arena_effect": "coat_rock_resin_puddle_6s",
+      "passive_3star": "puddle_duration_plus_2s",
+      "passive_5star": "viscosity_bonus_plus_20pct",
+      "shard_tier": "tier_1",
+      "rarity": "common",
+      "enabled": true
     },
     {
       "id": "willow_echo",
@@ -726,18 +942,15 @@ export const HORIZON_TABLES = {
       "tag": "echo",
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Раздваивает предмет при броске (2 удара).",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 3,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "echo",
-      "direct_effect": "Вешает *Эхо* (повтор $35\\%$ следующего удара).",
-      "source": "Тир 3"
+      "mana": 22,
+      "cd_sec": 6,
+      "sp_mult": 0.85,
+      "arena_effect": "split_rock_two_hits_1_4x",
+      "passive_3star": "echo_copy_plus_10pct",
+      "passive_5star": "echo_triggers_companion_plus10",
+      "shard_tier": "tier_5",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "spark_seed",
@@ -746,18 +959,15 @@ export const HORIZON_TABLES = {
       "tag": "charge",
       "detonate_tag": null,
       "target_scope": "all",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Заряжает field_crystal для цепного удара.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 2,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "charge",
-      "direct_effect": "Вешает *Разряд* на группу (взрыв от 4-го выстрела).",
-      "source": "Тир 2"
+      "mana": 24,
+      "cd_sec": 6.5,
+      "sp_mult": 0.75,
+      "arena_effect": "charge_crystal_chain_stun",
+      "passive_3star": "charge_explode_plus_20pct",
+      "passive_5star": "charge_refund_8mp_per_target",
+      "shard_tier": "tier_2",
+      "rarity": "common",
+      "enabled": false
     },
     {
       "id": "seal_crack",
@@ -766,18 +976,15 @@ export const HORIZON_TABLES = {
       "tag": "breach",
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Делает предмет пробивным (снимает щит при броске).",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 2,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "breach",
-      "direct_effect": "Вешает *Пролом* (срез брони + ослабление будущих щитов).",
-      "source": "Тир 2"
+      "mana": 18,
+      "cd_sec": 5,
+      "sp_mult": 1,
+      "arena_effect": "charge_rock_strip_shield",
+      "passive_3star": "breach_duration_plus_2s",
+      "passive_5star": "breach_weakens_next_shield_50pct",
+      "shard_tier": "tier_2",
+      "rarity": "common",
+      "enabled": false
     },
     {
       "id": "smolder_ash",
@@ -786,18 +993,15 @@ export const HORIZON_TABLES = {
       "tag": "heat",
       "detonate_tag": null,
       "target_scope": "all",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Раскаляет сразу все камни на арене.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 4,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "heat",
-      "direct_effect": "Долгий мягкий *Жар* по группе + бафф палочке по горящим.",
-      "source": "Тир 4 / Сундук"
+      "mana": 26,
+      "cd_sec": 7,
+      "sp_mult": 0.8,
+      "arena_effect": "charge_all_rocks_heat",
+      "passive_3star": "ash_wand_dmg_plus_15pct_on_heat",
+      "passive_5star": "ash_spread_heat_on_kill",
+      "shard_tier": "tier_4",
+      "rarity": "epic",
+      "enabled": false
     },
     {
       "id": "frost_mist",
@@ -806,18 +1010,15 @@ export const HORIZON_TABLES = {
       "tag": "brittle",
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Превращает кристалл в резонатор холода.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": null,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "brittle",
-      "direct_effect": "Малый урон + заморозка таймера каста врага на $1.5\\text{ с}$.",
-      "source": "Сезон Дуэли"
+      "mana": 20,
+      "cd_sec": 6,
+      "sp_mult": 0.85,
+      "arena_effect": "turn_crystal_frost_resonator",
+      "passive_3star": "cast_freeze_plus_1s",
+      "passive_5star": "mist_adds_20pct_slow",
+      "shard_tier": "tier_3",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "mire_bog",
@@ -826,58 +1027,49 @@ export const HORIZON_TABLES = {
       "tag": "viscosity",
       "detonate_tag": null,
       "target_scope": "all",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Утяжеляет лёгкий камень до тяжёлого.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 4,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "viscosity",
-      "direct_effect": "*Вязкость* + режет урон сильных атак врагов.",
-      "source": "Тир 4 / Аномалии"
+      "mana": 24,
+      "cd_sec": 7,
+      "sp_mult": 0.75,
+      "arena_effect": "upgrade_light_rock_to_heavy",
+      "passive_3star": "strong_attack_debuff_plus_10pct",
+      "passive_5star": "bog_slows_enemy_cast_20pct",
+      "shard_tier": "tier_4",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "lunar_mark",
       "name": "Лунная метка",
       "role": "nagovor",
-      "tag": "echo+breach",
+      "tag": "echo|breach",
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Заряжает предмет лунным светом ($+$крит при броске).",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": null,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "echo+breach",
-      "direct_effect": "4-й выстрел палочки бьёт дважды сквозь броню.",
-      "source": "Ковен / Редкий"
+      "mana": 26,
+      "cd_sec": 7.5,
+      "sp_mult": 0.95,
+      "arena_effect": "charge_rock_lunar_crit",
+      "passive_3star": "wand_4th_hits_twice_through_armor",
+      "passive_5star": "mark_extends_2s_on_crit",
+      "shard_tier": "tier_6",
+      "rarity": "epic",
+      "enabled": false
     },
     {
       "id": "storm",
       "name": "Гроза",
       "role": "zhatva",
       "tag": null,
-      "detonate_tag": "charge/brittle",
+      "detonate_tag": "charge|brittle",
       "target_scope": "all",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Проводит усиленную дугу через field_crystal со сбитием каста.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 2,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "charge/brittle",
-      "direct_effect": "Сильный разряд; повышенный крит по *Хрупкости*/*Разряду*.",
-      "source": "Тир 2"
+      "mana": 28,
+      "cd_sec": 8,
+      "sp_mult": 1.45,
+      "arena_effect": "arc_crystal_chain_interrupt",
+      "passive_3star": "crit_vs_charge_brittle_plus_20pct",
+      "passive_5star": "crystal_arc_cd_minus_1_5s",
+      "shard_tier": "tier_2",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "crimson_burst",
@@ -886,18 +1078,15 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": "heat",
       "target_scope": "splash",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Подрывает раскалённый камень прямо на месте.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 1,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "heat",
-      "direct_effect": "Срывает все слои *Жара* в мгновенный взрыв.",
-      "source": "Тир 1"
+      "mana": 26,
+      "cd_sec": 7,
+      "sp_mult": 1.55,
+      "arena_effect": "detonate_hot_rock_in_place",
+      "passive_3star": "detonate_refund_10mp",
+      "passive_5star": "detonate_crit_plus_20pct",
+      "shard_tier": "tier_1",
+      "rarity": "rare",
+      "enabled": true
     },
     {
       "id": "ice_shatter",
@@ -906,18 +1095,15 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": "brittle",
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Раскалывает ледяной предмет градом осколков.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 2,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "brittle",
-      "direct_effect": "Двойной урон по *Хрупкости* + короткое оглушение.",
-      "source": "Тир 2"
+      "mana": 26,
+      "cd_sec": 7.5,
+      "sp_mult": 1.65,
+      "arena_effect": "shatter_ice_object_hail",
+      "passive_3star": "stun_duration_plus_0_6s",
+      "passive_5star": "shatter_splash_35pct_neighbors",
+      "shard_tier": "tier_2",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "mirror_cleave",
@@ -926,18 +1112,15 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": "echo",
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Бьёт сквозь кристалл, продлевая *Эхо*.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 3,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "echo",
-      "direct_effect": "Срывает *Эхо* и удваивает силу резонанса палочки на $5\\text{ с}$.",
-      "source": "Тир 3"
+      "mana": 24,
+      "cd_sec": 6.5,
+      "sp_mult": 1.5,
+      "arena_effect": "strike_through_crystal_extend_echo",
+      "passive_3star": "wand_impulse_2x_for_5s",
+      "passive_5star": "cleave_grants_15_companion",
+      "shard_tier": "tier_5",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "resin_flash",
@@ -946,18 +1129,15 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": "viscosity",
       "target_scope": "splash",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Поджигает лужу смолы на арене.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 1,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "viscosity",
-      "direct_effect": "Воспламеняет *Вязкость* (взрыв + 2 слоя *Жара*).",
-      "source": "Тир 1–2"
+      "mana": 24,
+      "cd_sec": 7,
+      "sp_mult": 1.45,
+      "arena_effect": "ignite_resin_puddle_aoe",
+      "passive_3star": "ignite_applies_2_heat_stacks",
+      "passive_5star": "flash_reduces_cd_1s_per_target",
+      "shard_tier": "tier_2",
+      "rarity": "common",
+      "enabled": false
     },
     {
       "id": "veil_rend",
@@ -966,18 +1146,15 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": "breach",
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Высасывает заряд предмета в пробивной удар.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 2,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "breach",
-      "direct_effect": "Усиленный урон по *Пролому* и пробитым щитам.",
-      "source": "Тир 2"
+      "mana": 22,
+      "cd_sec": 6,
+      "sp_mult": 1.6,
+      "arena_effect": "drain_object_charge_pierce",
+      "passive_3star": "bonus_dmg_vs_broken_shield_35pct",
+      "passive_5star": "rend_ignores_40pct_armor",
+      "shard_tier": "tier_2",
+      "rarity": "common",
+      "enabled": false
     },
     {
       "id": "ball_lightning",
@@ -986,18 +1163,15 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": "charge",
       "target_scope": "all",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Разряжает все объекты арены в один залп.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 4,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "charge",
-      "direct_effect": "Урон растёт за каждый заряженный предмет на поле.",
-      "source": "Тир 4 / Сундук"
+      "mana": 30,
+      "cd_sec": 8.5,
+      "sp_mult": 1.5,
+      "arena_effect": "discharge_all_arena_objects_volley",
+      "passive_3star": "dmg_plus_20pct_per_charged_obj",
+      "passive_5star": "volley_stuns_primary_1s",
+      "shard_tier": "tier_4",
+      "rarity": "epic",
+      "enabled": false
     },
     {
       "id": "flame_sickle",
@@ -1006,58 +1180,49 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": "heat",
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Раскалывает раскалённый камень в горящие искры.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": null,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "heat",
-      "direct_effect": "Не снимает *Жар*, но обновляет таймер и бьёт с антихилом.",
-      "source": "Сезон Дуэли"
+      "mana": 22,
+      "cd_sec": 5.5,
+      "sp_mult": 1.35,
+      "arena_effect": "split_hot_rock_burning_sparks",
+      "passive_3star": "refresh_heat_without_consume",
+      "passive_5star": "antiheal_40pct_on_target",
+      "shard_tier": "tier_3",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "glass_needle",
       "name": "Стеклянная игла",
       "role": "zhatva",
       "tag": null,
-      "detonate_tag": "brittle/echo",
+      "detonate_tag": "brittle|echo",
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Откалывает кусок тяжёлого камня без его траты.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 3,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "brittle/echo",
-      "direct_effect": "Быстрый дешёвый выстрел с повышенным шансом крита.",
-      "source": "Тир 3 / Ковен"
+      "mana": 16,
+      "cd_sec": 4.5,
+      "sp_mult": 1.25,
+      "arena_effect": "chip_heavy_rock_without_consume",
+      "passive_3star": "needle_crit_chance_plus_25pct",
+      "passive_5star": "crit_refunds_8mp",
+      "shard_tier": "tier_3",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "eclipse_call",
       "name": "Зов затмения",
       "role": "zhatva",
       "tag": null,
-      "detonate_tag": "Любые 2",
+      "detonate_tag": "any_2",
       "target_scope": "splash",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Поглощает 1 предмет арены ради снижения цены MP.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 5,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Любые 2",
-      "direct_effect": "Срывает сразу 2 разные метки с высоким множителем.",
-      "source": "Тир 5+ / Сундук"
+      "mana": 32,
+      "cd_sec": 9,
+      "sp_mult": 1.95,
+      "arena_effect": "consume_object_reduce_mp_50pct",
+      "passive_3star": "detonate_2_tags_bonus_35pct",
+      "passive_5star": "eclipse_fills_companion_plus25",
+      "shard_tier": "tier_6",
+      "rarity": "epic",
+      "enabled": false
     },
     {
       "id": "telekinesis",
@@ -1065,19 +1230,16 @@ export const HORIZON_TABLES = {
       "role": "volya",
       "tag": null,
       "detonate_tag": null,
-      "target_scope": "single/splash",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Бросок любого камня с полной активацией его метки.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 1,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Базовый бросок",
-      "direct_effect": "Толчок (малый урон + сбитие слабого каста).",
-      "source": "Старт / Тир 1"
+      "target_scope": "single",
+      "mana": 16,
+      "cd_sec": 3.5,
+      "sp_mult": 0.95,
+      "arena_effect": "throw_activate_tag",
+      "passive_3star": "throw_dmg_plus_15pct",
+      "passive_5star": "throw_grant_companion_plus10",
+      "shard_tier": "tier_1",
+      "rarity": "common",
+      "enabled": true
     },
     {
       "id": "stone_call",
@@ -1086,38 +1248,32 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Усиливает выбранный камень ($+30\\%$ к следующему броску).",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 1,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Призыв",
-      "direct_effect": "Мгновенно создаёт field_rock_heavy на пустом слоте.",
-      "source": "Тир 1"
+      "mana": 22,
+      "cd_sec": 8,
+      "sp_mult": 0,
+      "arena_effect": "spawn_heavy_rock_or_buff_30pct",
+      "passive_3star": "spawned_rock_precharged",
+      "passive_5star": "cd_minus_1_5s",
+      "shard_tier": "tier_1",
+      "rarity": "common",
+      "enabled": true
     },
     {
       "id": "frost_prism",
       "name": "Морозная призма",
       "role": "volya",
-      "tag": null,
+      "tag": "brittle",
       "detonate_tag": null,
       "target_scope": "all",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Разбивает кристалл в волну *Хрупкости*.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 2,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Призыв + Холод",
-      "direct_effect": "Ставит ледяной кристалл (враги замедлены, пока стоит).",
-      "source": "Тир 2"
+      "mana": 24,
+      "cd_sec": 9,
+      "sp_mult": 0.7,
+      "arena_effect": "summon_frost_crystal_or_shatter_brittle",
+      "passive_3star": "prism_slow_aura_20pct",
+      "passive_5star": "shatter_extends_brittle_2s",
+      "shard_tier": "tier_2",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "glass_vortex",
@@ -1126,38 +1282,32 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": null,
       "target_scope": "all",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Приоритетно активирует метку выбранного объекта.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 3,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Массовый бросок",
-      "direct_effect": "Бросает сразу все предметы арены ($\\times 0.75$ за каждый).",
-      "source": "Тир 3"
+      "mana": 28,
+      "cd_sec": 9.5,
+      "sp_mult": 1.25,
+      "arena_effect": "throw_all_arena_objects_0_75x",
+      "passive_3star": "primary_tag_full_power",
+      "passive_5star": "vortex_reduces_respawn_2s",
+      "shard_tier": "tier_5",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "resin_barrel",
       "name": "Бочка смолы",
       "role": "volya",
-      "tag": null,
+      "tag": "viscosity",
       "detonate_tag": null,
       "target_scope": "splash",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Бросает бочку — разливает лужу *Вязкости*.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 2,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Призыв + Смола",
-      "direct_effect": "Ставит на поле бочку смолы.",
-      "source": "Тир 2"
+      "mana": 20,
+      "cd_sec": 8,
+      "sp_mult": 0.85,
+      "arena_effect": "summon_or_throw_resin_barrel",
+      "passive_3star": "puddle_slow_plus_15pct",
+      "passive_5star": "barrel_throw_adds_1_heat_if_burning",
+      "shard_tier": "tier_2",
+      "rarity": "common",
+      "enabled": false
     },
     {
       "id": "shard_barrage",
@@ -1166,38 +1316,32 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Дробит камень на 3 быстрых снаряда под крит.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 2,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Прерывание",
-      "direct_effect": "Быстрый удар гравием, сбивает подготовку врага.",
-      "source": "Тир 2"
+      "mana": 20,
+      "cd_sec": 5.5,
+      "sp_mult": 1.15,
+      "arena_effect": "split_rock_3_crit_shards",
+      "passive_3star": "always_interrupt_enemy_cast",
+      "passive_5star": "each_shard_plus_10pct_crit",
+      "shard_tier": "tier_2",
+      "rarity": "common",
+      "enabled": false
     },
     {
       "id": "lightning_rod",
       "name": "Громоотвод",
       "role": "volya",
-      "tag": null,
+      "tag": "charge",
       "detonate_tag": null,
       "target_scope": "all",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Усиливает проводимость кристалла на $10\\text{ с}$.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 4,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Призыв + Молния",
-      "direct_effect": "Ставит на поле field_crystal с готовым *Разрядом*.",
-      "source": "Тир 4 / Сундук"
+      "mana": 24,
+      "cd_sec": 9.5,
+      "sp_mult": 0.6,
+      "arena_effect": "summon_charged_crystal_or_amp_10s",
+      "passive_3star": "rod_passive_zap_every_3s",
+      "passive_5star": "crystal_chain_dmg_plus_25pct",
+      "shard_tier": "tier_4",
+      "rarity": "epic",
+      "enabled": false
     },
     {
       "id": "shard_magnet",
@@ -1206,78 +1350,66 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Бросает предмет и мгновенно возвращает его на поле.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": null,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Возврат",
-      "direct_effect": "Перехватывает снаряд врага ($-50\\%$ урона).",
-      "source": "Сезон Дуэли"
+      "mana": 22,
+      "cd_sec": 7.5,
+      "sp_mult": 0.9,
+      "arena_effect": "throw_and_instant_return_object",
+      "passive_3star": "intercept_enemy_projectile_50pct",
+      "passive_5star": "returned_object_keeps_tag",
+      "shard_tier": "tier_3",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "ember_monolith",
       "name": "Жаркий монолит",
       "role": "volya",
-      "tag": null,
+      "tag": "heat",
       "detonate_tag": null,
       "target_scope": "splash",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Мгновенно запускает валун в цель.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 5,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Призыв + Огонь",
-      "direct_effect": "Ставит раскалённый валун (взрывается сам через $4\\text{ с}$).",
-      "source": "Тир 5 / Боссы"
+      "mana": 26,
+      "cd_sec": 9.5,
+      "sp_mult": 1.2,
+      "arena_effect": "summon_hot_boulder_auto_explode_4s",
+      "passive_3star": "explosion_applies_2_heat",
+      "passive_5star": "manual_throw_dmg_plus_30pct",
+      "shard_tier": "tier_5",
+      "rarity": "epic",
+      "enabled": false
     },
     {
       "id": "mirror_twin",
       "name": "Зеркальный двойник",
       "role": "volya",
-      "tag": null,
+      "tag": "echo",
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Копирует уже заряженный предмет с сохранением метки.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 5,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Копия + Эхо",
-      "direct_effect": "Ускоряет респавн всех предметов арены на $4\\text{ с}$.",
-      "source": "Ковен / Тир 5+"
+      "mana": 26,
+      "cd_sec": 10,
+      "sp_mult": 0,
+      "arena_effect": "copy_charged_object_keep_tag",
+      "passive_3star": "arena_respawn_minus_4s",
+      "passive_5star": "copied_throw_bonus_20pct",
+      "shard_tier": "tier_6",
+      "rarity": "epic",
+      "enabled": false
     },
     {
       "id": "seal",
       "name": "Астрал",
       "role": "obereg",
-      "tag": null,
+      "tag": "breach",
       "detonate_tag": null,
       "target_scope": "single",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Поглощает field_crystal в $+25\\%$ маны.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 1,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Пролом + Мана",
-      "direct_effect": "Снимает щиты и барьеры врага + вешает *Пролом*.",
-      "source": "Тир 1–2"
+      "mana": 22,
+      "cd_sec": 7.5,
+      "sp_mult": 1.05,
+      "arena_effect": "absorb_crystal_25pct_mp",
+      "passive_3star": "breach_duration_plus_2s",
+      "passive_5star": "strip_shield_refund_15mp",
+      "shard_tier": "tier_1",
+      "rarity": "rare",
+      "enabled": true
     },
     {
       "id": "lunar_veil",
@@ -1286,18 +1418,15 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": null,
       "target_scope": "self",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Поглощает лёгкий камень в доп. прочность щита.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 1,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Щит",
-      "direct_effect": "Щит $20\\%\\text{ maxHP}$ на $6\\text{ с}$ + сбитие слабого каста.",
-      "source": "Тир 1"
+      "mana": 24,
+      "cd_sec": 10,
+      "sp_mult": 0,
+      "arena_effect": "absorb_light_rock_plus_shield",
+      "passive_3star": "shield_plus_5pct_hp",
+      "passive_5star": "shield_break_pulse_dmg",
+      "shard_tier": "tier_1",
+      "rarity": "rare",
+      "enabled": true
     },
     {
       "id": "funeral_bell",
@@ -1305,19 +1434,16 @@ export const HORIZON_TABLES = {
       "role": "obereg",
       "tag": null,
       "detonate_tag": null,
-      "target_scope": "self/all",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Гасит опасные метки, превращая в $+8\\%\\text{ HP}$.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 2,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Очищение",
-      "direct_effect": "Снимает *Жар*/холод с героя + режет урон врагов на $20\\%$ ($5\\text{ с}$).",
-      "source": "Тир 2"
+      "target_scope": "self",
+      "mana": 22,
+      "cd_sec": 9.5,
+      "sp_mult": 0,
+      "arena_effect": "cleanse_tags_heal_8pct_hp",
+      "passive_3star": "enemy_dmg_minus_20pct_5s",
+      "passive_5star": "bell_adds_15pct_status_res_6s",
+      "shard_tier": "tier_4",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "grove_breath",
@@ -1326,18 +1452,15 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": null,
       "target_scope": "self",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Ускоряет откат предметов арены.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 3,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Палочка + Спутник",
-      "direct_effect": "На $6\\text{ с}$ резонанс палочки каждые 3 выстрела + ускорение Отклика.",
-      "source": "Тир 3"
+      "mana": 24,
+      "cd_sec": 10,
+      "sp_mult": 0,
+      "arena_effect": "speedup_arena_respawn_30pct",
+      "passive_3star": "wand_impulse_every_3_shots_6s",
+      "passive_5star": "companion_charge_gain_plus_25pct",
+      "shard_tier": "tier_5",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "stone_shell",
@@ -1346,38 +1469,32 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": null,
       "target_scope": "self",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Тяжёлый камень даёт иммунитет к прерыванию на $5\\text{ с}$.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 2,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Тяжёлый щит",
-      "direct_effect": "Превращает камень с поля в щит $35\\%\\text{ maxHP}$.",
-      "source": "Тир 2"
+      "mana": 26,
+      "cd_sec": 11,
+      "sp_mult": 0,
+      "arena_effect": "convert_rock_shield_35pct_hp",
+      "passive_3star": "heavy_rock_interrupt_immune_5s",
+      "passive_5star": "shell_reflects_15pct_melee",
+      "shard_tier": "tier_2",
+      "rarity": "common",
+      "enabled": false
     },
     {
       "id": "reflect_glass",
       "name": "Отражающее стекло",
       "role": "obereg",
-      "tag": null,
+      "tag": "echo",
       "detonate_tag": null,
       "target_scope": "self",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Заряжает выбранный предмет *Эхом*.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 3,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Контратака",
-      "direct_effect": "Отражает $40\\%$ следующего сильного удара врага.",
-      "source": "Тир 3"
+      "mana": 24,
+      "cd_sec": 9,
+      "sp_mult": 0,
+      "arena_effect": "charge_object_echo",
+      "passive_3star": "reflect_40pct_next_strong_hit",
+      "passive_5star": "reflect_grants_15mp",
+      "shard_tier": "tier_5",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "flow_source",
@@ -1386,38 +1503,32 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": null,
       "target_scope": "self",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Двойной возврат маны при поглощении кристалла.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 4,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Мана + Откат",
-      "direct_effect": "$+20\\%$ MP и $-2\\text{ с}$ КД двух других даров (в капе $50\\%$).",
-      "source": "Аномалии / Тир 4"
+      "mana": 0,
+      "cd_sec": 12,
+      "sp_mult": 0,
+      "arena_effect": "double_crystal_mana_restore",
+      "passive_3star": "restore_20pct_mp_and_cd_minus_2s",
+      "passive_5star": "next_gift_sp_plus_20pct",
+      "shard_tier": "tier_4",
+      "rarity": "epic",
+      "enabled": false
     },
     {
       "id": "quiet_ember",
       "name": "Тихий уголь",
       "role": "obereg",
-      "tag": null,
+      "tag": "heat",
       "detonate_tag": null,
       "target_scope": "self",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Бесплатно поджигает предмет на поле.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": null,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Конверсия",
-      "direct_effect": "$30\\%$ полученного за $5\\text{ с}$ урона усиливает следующую *Жатву*.",
-      "source": "Сезон Дуэли"
+      "mana": 20,
+      "cd_sec": 9.5,
+      "sp_mult": 0,
+      "arena_effect": "free_ignite_arena_object",
+      "passive_3star": "convert_30pct_dmg_taken_5s_to_zhatva",
+      "passive_5star": "ember_grants_10pct_mit_5s",
+      "shard_tier": "tier_3",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "calm_seal",
@@ -1426,18 +1537,15 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": null,
       "target_scope": "self",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Ускоряет респавн предметов арены на $30\\%$.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": 4,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Контроль статусов",
-      "direct_effect": "$-40\\%$ силы статусов врага на $6\\text{ с}$ (мультипликативно).",
-      "source": "Тир 4 / Ковен"
+      "mana": 22,
+      "cd_sec": 10,
+      "sp_mult": 0,
+      "arena_effect": "arena_respawn_minus_30pct",
+      "passive_3star": "status_dmg_taken_minus_40pct_6s",
+      "passive_5star": "cleanse_1_debuff_on_cast",
+      "shard_tier": "tier_4",
+      "rarity": "rare",
+      "enabled": false
     },
     {
       "id": "coven_circle",
@@ -1446,107 +1554,104 @@ export const HORIZON_TABLES = {
       "tag": null,
       "detonate_tag": null,
       "target_scope": "self",
-      "mana": null,
-      "cd_sec": null,
-      "sp_mult": null,
-      "arena_effect": "Активирует пассивный бонус надетого амулета на $4\\text{ с}$.",
-      "passive_3star": null,
-      "passive_5star": null,
-      "shard_tier": null,
-      "rarity": null,
-      "enabled": false,
-      "specialization": "Универсал",
-      "direct_effect": "Малый щит + $12\\%$ MP + случайная зарядка предмета поля.",
-      "source": "Ковен / Редкий"
+      "mana": 26,
+      "cd_sec": 11.5,
+      "sp_mult": 0,
+      "arena_effect": "trigger_equipped_amulet_4s",
+      "passive_3star": "small_shield_12pct_mp_random_charge",
+      "passive_5star": "circle_grants_20_companion",
+      "shard_tier": "tier_6",
+      "rarity": "epic",
+      "enabled": false
     }
   ],
   "gift_progression": [
     {
-      "axis": "stars",
+      "axis": "star",
       "step": "1",
       "shards_or_tier": "10",
       "mult": 1,
-      "common_qty": null,
-      "rare_qty": null,
-      "catalyst_qty": null,
-      "coin_cost": null,
-      "ritual_min": null
+      "common_qty": 0,
+      "rare_qty": 0,
+      "catalyst_qty": 0,
+      "coin_cost": 0,
+      "ritual_min": 0
     },
     {
-      "axis": "stars",
+      "axis": "star",
       "step": "2",
       "shards_or_tier": "20",
       "mult": 1.15,
-      "common_qty": null,
-      "rare_qty": null,
-      "catalyst_qty": null,
-      "coin_cost": null,
-      "ritual_min": null
+      "common_qty": 0,
+      "rare_qty": 0,
+      "catalyst_qty": 0,
+      "coin_cost": 150,
+      "ritual_min": 0
     },
     {
-      "axis": "stars",
+      "axis": "star",
       "step": "3",
       "shards_or_tier": "50",
       "mult": 1.35,
-      "common_qty": null,
-      "rare_qty": null,
-      "catalyst_qty": null,
-      "coin_cost": null,
-      "ritual_min": null
+      "common_qty": 0,
+      "rare_qty": 0,
+      "catalyst_qty": 0,
+      "coin_cost": 600,
+      "ritual_min": 0
     },
     {
-      "axis": "stars",
+      "axis": "star",
       "step": "4",
       "shards_or_tier": "100",
       "mult": 1.6,
-      "common_qty": null,
-      "rare_qty": null,
-      "catalyst_qty": null,
-      "coin_cost": null,
-      "ritual_min": null
+      "common_qty": 0,
+      "rare_qty": 0,
+      "catalyst_qty": 0,
+      "coin_cost": 2500,
+      "ritual_min": 0
     },
     {
-      "axis": "stars",
+      "axis": "star",
       "step": "5",
       "shards_or_tier": "180",
       "mult": 1.9,
-      "common_qty": null,
-      "rare_qty": null,
-      "catalyst_qty": null,
-      "coin_cost": null,
-      "ritual_min": null
+      "common_qty": 0,
+      "rare_qty": 0,
+      "catalyst_qty": 0,
+      "coin_cost": 12000,
+      "ritual_min": 0
     },
     {
-      "axis": "stars",
+      "axis": "star",
       "step": "6",
       "shards_or_tier": "300",
       "mult": 2.3,
-      "common_qty": null,
-      "rare_qty": null,
-      "catalyst_qty": null,
-      "coin_cost": null,
-      "ritual_min": null
+      "common_qty": 0,
+      "rare_qty": 0,
+      "catalyst_qty": 0,
+      "coin_cost": 50000,
+      "ritual_min": 0
     },
     {
       "axis": "color",
       "step": "white",
-      "shards_or_tier": null,
+      "shards_or_tier": "tier_1",
       "mult": 1,
-      "common_qty": null,
-      "rare_qty": null,
-      "catalyst_qty": null,
-      "coin_cost": null,
-      "ritual_min": null
+      "common_qty": 0,
+      "rare_qty": 0,
+      "catalyst_qty": 0,
+      "coin_cost": 0,
+      "ritual_min": 0
     },
     {
       "axis": "color",
       "step": "green",
       "shards_or_tier": "tier_1",
       "mult": 1.15,
-      "common_qty": 4,
-      "rare_qty": 2,
-      "catalyst_qty": null,
-      "coin_cost": null,
+      "common_qty": 18,
+      "rare_qty": 6,
+      "catalyst_qty": 0,
+      "coin_cost": 250,
       "ritual_min": 0
     },
     {
@@ -1554,648 +1659,677 @@ export const HORIZON_TABLES = {
       "step": "blue",
       "shards_or_tier": "tier_2",
       "mult": 1.32,
-      "common_qty": null,
-      "rare_qty": null,
-      "catalyst_qty": null,
-      "coin_cost": null,
-      "ritual_min": null
+      "common_qty": 35,
+      "rare_qty": 12,
+      "catalyst_qty": 1,
+      "coin_cost": 1500,
+      "ritual_min": 30
     },
     {
       "axis": "color",
       "step": "purple",
       "shards_or_tier": "tier_3",
       "mult": 1.52,
-      "common_qty": null,
-      "rare_qty": null,
-      "catalyst_qty": null,
-      "coin_cost": null,
-      "ritual_min": null
+      "common_qty": 60,
+      "rare_qty": 20,
+      "catalyst_qty": 2,
+      "coin_cost": 8500,
+      "ritual_min": 180
     },
     {
       "axis": "color",
       "step": "orange",
-      "shards_or_tier": "tier_4–tier_5",
+      "shards_or_tier": "tier_4",
       "mult": 1.75,
-      "common_qty": null,
-      "rare_qty": null,
-      "catalyst_qty": null,
-      "coin_cost": null,
-      "ritual_min": null
+      "common_qty": 95,
+      "rare_qty": 32,
+      "catalyst_qty": 4,
+      "coin_cost": 42000,
+      "ritual_min": 720
     },
     {
       "axis": "color",
       "step": "gold",
       "shards_or_tier": "tier_6",
       "mult": 2,
-      "common_qty": null,
-      "rare_qty": null,
-      "catalyst_qty": null,
-      "coin_cost": null,
-      "ritual_min": null
+      "common_qty": 140,
+      "rare_qty": 48,
+      "catalyst_qty": 8,
+      "coin_cost": 180000,
+      "ritual_min": 1440
     }
   ],
   "potions_20": [
     {
       "id": "potion_life_small",
-      "name": "Настой жизни (малый)",
-      "tab": "health",
-      "category": "restorative",
-      "effect_type": "heal",
+      "name": "Настой жизни",
+      "tab": "vitals",
+      "category": "heal",
+      "effect_type": "heal_instant",
       "value_pct": 0.2,
-      "duration_sec": null,
-      "cd_sec": null,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Мгновенно $+20\\%\\text{ HP}$.",
-      "status": "Есть (перевод в %)"
+      "duration_sec": 0,
+      "cd_sec": 0,
+      "tier": "tier_1",
+      "recipe_json": {
+        "moon_herb": 2,
+        "coins": 5
+      },
+      "enabled": true
     },
     {
       "id": "potion_life_medium",
       "name": "Густое зелье здоровья",
-      "tab": "health",
-      "category": "restorative",
-      "effect_type": "heal",
+      "tab": "vitals",
+      "category": "heal",
+      "effect_type": "heal_instant",
       "value_pct": 0.35,
-      "duration_sec": null,
-      "cd_sec": null,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Мгновенно $+35\\%\\text{ HP}$.",
-      "status": "Есть (перевод в %)"
+      "duration_sec": 0,
+      "cd_sec": 0,
+      "tier": "tier_2",
+      "recipe_json": {
+        "frost_herb": 3,
+        "rune_dust": 1,
+        "coins": 15
+      },
+      "enabled": false
     },
     {
       "id": "potion_life_regen",
       "name": "Восстанавливающее зелье HP",
-      "tab": "health",
-      "category": "restorative",
-      "effect_type": "heal",
-      "value_pct": 0.1,
+      "tab": "vitals",
+      "category": "heal",
+      "effect_type": "heal_instant_10_hot_40",
+      "value_pct": 0.5,
       "duration_sec": 6,
-      "cd_sec": null,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": 0.4,
-      "effect": "$+10\\%$ сразу и $+40\\%$ за $6\\text{ с}$ (итого $50\\%$).",
-      "status": "Есть (перевод в %)"
+      "cd_sec": 0,
+      "tier": "tier_3",
+      "recipe_json": {
+        "rime_leaf": 3,
+        "ice_crystal": 1,
+        "coins": 25
+      },
+      "enabled": false
     },
     {
-      "id": "potion_life_large",
+      "id": "potion_life_big",
       "name": "Большое зелье здоровья",
-      "tab": "health",
-      "category": "restorative",
-      "effect_type": "heal",
+      "tab": "vitals",
+      "category": "heal",
+      "effect_type": "heal_instant",
       "value_pct": 0.55,
-      "duration_sec": null,
-      "cd_sec": null,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Мгновенно $+55\\%\\text{ HP}$ (экономит слот при лимите 3).",
-      "status": "Есть (перевод в %)"
+      "duration_sec": 0,
+      "cd_sec": 0,
+      "tier": "tier_4",
+      "recipe_json": {
+        "ash_herb": 4,
+        "memory_shard": 2,
+        "coins": 45
+      },
+      "enabled": false
     },
     {
       "id": "potion_mana_small",
-      "name": "Лунный эликсир (малый)",
-      "tab": "mana",
-      "category": "restorative",
-      "effect_type": "mana",
+      "name": "Лунный эликсир",
+      "tab": "vitals",
+      "category": "heal",
+      "effect_type": "mana_instant",
       "value_pct": 0.25,
-      "duration_sec": null,
-      "cd_sec": null,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Мгновенно $+25\\%\\text{ MP}$.",
-      "status": "Есть (перевод в %)"
+      "duration_sec": 0,
+      "cd_sec": 0,
+      "tier": "tier_1",
+      "recipe_json": {
+        "moon_herb": 1,
+        "tree_resin": 1,
+        "coins": 8
+      },
+      "enabled": true
     },
     {
       "id": "potion_mana_medium",
       "name": "Густое зелье маны",
-      "tab": "mana",
-      "category": "restorative",
-      "effect_type": "mana",
+      "tab": "vitals",
+      "category": "heal",
+      "effect_type": "mana_instant",
       "value_pct": 0.4,
-      "duration_sec": null,
-      "cd_sec": null,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Мгновенно $+40\\%\\text{ MP}$.",
-      "status": "Есть (перевод в %)"
+      "duration_sec": 0,
+      "cd_sec": 0,
+      "tier": "tier_2",
+      "recipe_json": {
+        "frost_herb": 2,
+        "rune_dust": 2,
+        "coins": 18
+      },
+      "enabled": false
     },
     {
       "id": "potion_mana_regen",
       "name": "Восстанавливающее зелье MP",
-      "tab": "mana",
-      "category": "restorative",
-      "effect_type": "mana",
-      "value_pct": 0.1,
+      "tab": "vitals",
+      "category": "heal",
+      "effect_type": "mana_instant_10_hot_45",
+      "value_pct": 0.55,
       "duration_sec": 6,
-      "cd_sec": null,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": 0.45,
-      "effect": "$+10\\%$ сразу и $+45\\%$ за $6\\text{ с}$ (итого $55\\%$).",
-      "status": "Есть (перевод в %)"
+      "cd_sec": 0,
+      "tier": "tier_3",
+      "recipe_json": {
+        "rime_leaf": 2,
+        "ice_crystal": 2,
+        "coins": 30
+      },
+      "enabled": false
     },
     {
-      "id": "potion_mana_large",
+      "id": "potion_mana_crystal",
       "name": "Кристальное зелье маны",
-      "tab": "mana",
-      "category": "restorative",
-      "effect_type": "mana",
+      "tab": "vitals",
+      "category": "heal",
+      "effect_type": "mana_instant",
       "value_pct": 0.65,
-      "duration_sec": null,
-      "cd_sec": null,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Мгновенно $+65\\%\\text{ MP}$.",
-      "status": "Есть (перевод в %)"
+      "duration_sec": 0,
+      "cd_sec": 0,
+      "tier": "tier_4",
+      "recipe_json": {
+        "ash_herb": 3,
+        "memory_shard": 3,
+        "coins": 55
+      },
+      "enabled": false
     },
     {
       "id": "potion_stable",
       "name": "Стабилизирующий настой",
-      "tab": "protection",
+      "tab": "tactical",
       "category": "tactical",
-      "effect_type": "cleanse_heal",
+      "effect_type": "cleanse_burn_chill_heal_18",
       "value_pct": 0.18,
-      "duration_sec": null,
+      "duration_sec": 0,
       "cd_sec": 12,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Снимает холод и горение + лечит $18\\%\\text{ HP}$.",
-      "status": "Есть"
+      "tier": "tier_2",
+      "recipe_json": {
+        "frost_herb": 2,
+        "tree_resin": 1,
+        "coins": 15
+      },
+      "enabled": false
     },
     {
       "id": "potion_warm",
       "name": "Тёплый настой",
-      "tab": "protection",
+      "tab": "tactical",
       "category": "tactical",
-      "effect_type": "cold_resist",
+      "effect_type": "cleanse_slow_frost_mit",
       "value_pct": 0.5,
       "duration_sec": 20,
       "cd_sec": 12,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Снимает замедление + $-50\\%$ входящего урона холода ($20\\text{ с}$).",
-      "status": "Есть"
+      "tier": "tier_2",
+      "recipe_json": {
+        "frost_herb": 2,
+        "moon_herb": 2,
+        "coins": 15
+      },
+      "enabled": false
     },
     {
       "id": "potion_guard",
-      "name": "Защитный отвар (potion_guard)",
-      "tab": "protection",
+      "name": "Защитный отвар",
+      "tab": "tactical",
       "category": "tactical",
-      "effect_type": "direct_resist",
+      "effect_type": "direct_dmg_mit",
       "value_pct": 0.35,
       "duration_sec": 12,
       "cd_sec": 12,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Снижает входящий прямой урон на $35\\%$ ($12\\text{ с}$).",
-      "status": "Есть"
+      "tier": "tier_2",
+      "recipe_json": {
+        "frost_herb": 2,
+        "rune_dust": 1,
+        "coins": 18
+      },
+      "enabled": false
     },
     {
       "id": "potion_antiburn",
-      "name": "Защита от горения (potion_antiburn)",
-      "tab": "protection",
+      "name": "Защита от горения",
+      "tab": "tactical",
       "category": "tactical",
-      "effect_type": "heat_resist",
+      "effect_type": "cleanse_burn_burn_mit",
       "value_pct": 0.6,
       "duration_sec": 20,
       "cd_sec": 12,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Снимает слои горения и антихил + $-60\\%$ нового горения ($20\\text{ с}$).",
-      "status": "Есть"
+      "tier": "tier_4",
+      "recipe_json": {
+        "frost_herb": 2,
+        "ice_crystal": 1,
+        "ash_herb": 1,
+        "coins": 25
+      },
+      "enabled": false
     },
     {
-      "id": "potion_lightning_guard",
+      "id": "potion_lightning_ward",
       "name": "Громовой изолятор",
-      "tab": "protection",
+      "tab": "tactical",
       "category": "tactical",
-      "effect_type": "lightning_resist",
+      "effect_type": "cleanse_charge_lightning_mit_antistun",
       "value_pct": 0.5,
       "duration_sec": 15,
       "cd_sec": 12,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Снимает *Разряд* + $-50\\%$ урона молнии и антистан ($15\\text{ с}$).",
-      "status": "Новое"
+      "tier": "tier_6",
+      "recipe_json": {
+        "storm_moss": 2,
+        "star_quartz": 1,
+        "coins": 60
+      },
+      "enabled": false
     },
     {
       "id": "potion_mirror_balm",
       "name": "Зеркальный бальзам",
-      "tab": "protection",
+      "tab": "tactical",
       "category": "tactical",
-      "effect_type": "shield",
+      "effect_type": "shield_max_hp",
       "value_pct": 0.25,
       "duration_sec": 5,
       "cd_sec": 12,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Краткий щит $25\\%\\text{ maxHP}$ на $5\\text{ с}$ под телеграф босса.",
-      "status": "Новое"
+      "tier": "tier_5",
+      "recipe_json": {
+        "willow_bark": 2,
+        "glass_leaf": 1,
+        "coins": 45
+      },
+      "enabled": false
     },
     {
       "id": "potion_brittle",
-      "name": "Зелье хрупкости (potion_brittle)",
-      "tab": "attack",
+      "name": "Зелье хрупкости",
+      "tab": "tactical",
       "category": "tactical",
-      "effect_type": "brittle",
+      "effect_type": "apply_brittle_25",
       "value_pct": 0.25,
       "duration_sec": 10,
       "cd_sec": 12,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Накладывает на цель *Хрупкость* ($+25\\%$ урона, $10\\text{ с}$).",
-      "status": "Есть"
+      "tier": "tier_2",
+      "recipe_json": {
+        "frost_herb": 1,
+        "rune_dust": 1,
+        "coins": 15
+      },
+      "enabled": false
     },
     {
-      "id": "potion_firebomb",
+      "id": "potion_fire_flask",
       "name": "Огненная склянка",
-      "tab": "attack",
+      "tab": "tactical",
       "category": "tactical",
-      "effect_type": "fire_sp",
-      "value_pct": null,
-      "duration_sec": null,
+      "effect_type": "sp_burst_heat2",
+      "value_pct": 1.2,
+      "duration_sec": 0,
       "cd_sec": 12,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Бросок во врага: $\\times 1.2\\text{ SP}$ + 2 слоя *Жара*.",
-      "status": "Есть"
+      "tier": "tier_1",
+      "recipe_json": {
+        "moon_herb": 1,
+        "tree_resin": 2,
+        "coins": 12
+      },
+      "enabled": true
     },
     {
-      "id": "potion_resin",
+      "id": "potion_resin_flask",
       "name": "Склянка смолы",
-      "tab": "attack",
+      "tab": "tactical",
       "category": "tactical",
-      "effect_type": "viscosity",
-      "value_pct": null,
+      "effect_type": "apply_viscosity",
+      "value_pct": 1,
       "duration_sec": 10,
       "cd_sec": 12,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Создаёт лужу смолы (*Вязкость* на $10\\text{ с}$).",
-      "status": "Новое"
+      "tier": "tier_1",
+      "recipe_json": {
+        "tree_resin": 2,
+        "coins": 12
+      },
+      "enabled": true
     },
     {
-      "id": "potion_tempo",
+      "id": "potion_tempo_spark",
       "name": "Искра темпа",
-      "tab": "attack",
+      "tab": "tactical",
       "category": "tactical",
-      "effect_type": "wand_cadence",
-      "value_pct": null,
+      "effect_type": "wand_impulse_every_2_shots",
+      "value_pct": 2,
       "duration_sec": 10,
       "cd_sec": 12,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "На $10\\text{ с}$ резонанс палочки срабатывает каждые 2 выстрела.",
-      "status": "Новое"
+      "tier": "tier_5",
+      "recipe_json": {
+        "willow_bark": 2,
+        "glass_leaf": 2,
+        "coins": 50
+      },
+      "enabled": false
     },
     {
       "id": "potion_crystal_dust",
       "name": "Кристальная пыль",
-      "tab": "attack",
+      "tab": "tactical",
       "category": "tactical",
-      "effect_type": "arena_refresh",
-      "value_pct": null,
-      "duration_sec": null,
+      "effect_type": "respawn_and_charge_arena",
+      "value_pct": 1,
+      "duration_sec": 0,
       "cd_sec": 12,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Мгновенно обновляет и случайно заряжает все предметы арены.",
-      "status": "Новое"
+      "tier": "tier_5",
+      "recipe_json": {
+        "glass_leaf": 2,
+        "ice_crystal": 1,
+        "coins": 50
+      },
+      "enabled": false
     },
     {
       "id": "potion_luck",
-      "name": "Настой удачи *(вне лимита боя)*",
-      "tab": "attack",
-      "category": "outside",
-      "effect_type": "hunt_luck",
+      "name": "Настой удачи",
+      "tab": "special",
+      "category": "pre_combat",
+      "effect_type": "bonus_coins_30pct_and_drop",
       "value_pct": 0.3,
-      "duration_sec": null,
-      "cd_sec": null,
-      "tier": null,
-      "recipe_json": null,
-      "enabled": false,
-      "over_time_pct": null,
-      "effect": "Выпивается до боя: $+30\\%$ монет и шанс доп. ресурса с элиты/босса.",
-      "status": "Новое"
+      "duration_sec": 0,
+      "cd_sec": 0,
+      "tier": "tier_3",
+      "recipe_json": {
+        "rime_leaf": 2,
+        "moon_herb": 2,
+        "coins": 35
+      },
+      "enabled": false
     }
   ],
   "amulets_20": [
     {
       "id": "amulet_lunar",
       "name": "Лунный амулет",
-      "group": "mana",
-      "passive_type": null,
+      "group": "mana_tempo",
+      "passive_type": "mana_rescue_below_20pct",
       "val_0": 0.5,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.6,
+      "val_4": 0.7,
       "val_5": 0.8,
-      "tier": null,
-      "enabled": false,
-      "rule": "При падении $\\text{MP} < 20\\%$ раз за бой возвращает $50\\% \\to 80\\%$ маны.",
-      "build": "Боссы и Дуэли"
+      "tier": "tier_2",
+      "enabled": false
     },
     {
       "id": "amulet_focus",
       "name": "Амулет сосредоточения",
-      "group": "mana",
-      "passive_type": null,
-      "val_0": null,
-      "val_2": null,
-      "val_4": null,
-      "val_5": null,
-      "tier": null,
-      "enabled": false,
-      "rule": "Повышает manaRegen и шанс крита резонансного выстрела палочки.",
-      "build": "Универсальный"
+      "group": "mana_tempo",
+      "passive_type": "mana_regen_and_impulse_crit",
+      "val_0": 0.08,
+      "val_2": 0.14,
+      "val_4": 0.2,
+      "val_5": 0.25,
+      "tier": "tier_2",
+      "enabled": false
     },
     {
       "id": "amulet_storm_heart",
       "name": "Грозовое сердце",
-      "group": "mana",
-      "passive_type": null,
-      "val_0": 1,
-      "val_2": null,
-      "val_4": null,
-      "val_5": 2,
-      "tier": null,
-      "enabled": false,
-      "rule": "Усиливает *Разряд*/*Грозу*; разряд через кристалл срезает КД на $1\\text{–}2\\text{ с}$.",
-      "build": "Билды через *Грозу*"
+      "group": "mana_tempo",
+      "passive_type": "storm_dmg_and_crystal_cd_cut",
+      "val_0": 0.12,
+      "val_2": 0.2,
+      "val_4": 0.28,
+      "val_5": 0.35,
+      "tier": "tier_6",
+      "enabled": false
     },
     {
       "id": "amulet_archivist_clock",
       "name": "Часы архивариуса",
-      "group": "mana",
-      "passive_type": null,
+      "group": "mana_tempo",
+      "passive_type": "every_3rd_nagovor_cuts_zhatva_cd_sec",
       "val_0": 1.5,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 2,
+      "val_4": 2.5,
       "val_5": 3,
-      "tier": null,
-      "enabled": false,
-      "rule": "Каждый 3-й *Наговор* сокращает КД *Жатвы* на $1.5 \\to 3.0\\text{ с}$.",
-      "build": "Плотные комбо"
+      "tier": "tier_4",
+      "enabled": false
     },
     {
-      "id": "amulet_wellspring",
+      "id": "amulet_source_heart",
       "name": "Сердце источника",
-      "group": "mana",
-      "passive_type": null,
+      "group": "mana_tempo",
+      "passive_type": "wand_dmg_while_mp_above_60pct",
       "val_0": 0.1,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.15,
+      "val_4": 0.2,
       "val_5": 0.25,
-      "tier": null,
-      "enabled": false,
-      "rule": "Пока $\\text{MP} > 60\\%$, выстрелы палочки сильнее на $10\\% \\to 25\\%$.",
-      "build": "Экономный фарм"
+      "tier": "tier_3",
+      "enabled": false
     },
     {
       "id": "amulet_frost",
       "name": "Амулет инея",
-      "group": "elements",
-      "passive_type": null,
+      "group": "element_nagovor",
+      "passive_type": "extend_brittle_slow_sec",
       "val_0": 1,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 1.7,
+      "val_4": 2.4,
       "val_5": 3,
-      "tier": null,
-      "enabled": false,
-      "rule": "Усиливает и продлевает *Хрупкость*/замедление на $1 \\to 3\\text{ с}$.",
-      "build": "Контроль и *Лёд*"
+      "tier": "tier_2",
+      "enabled": false
     },
     {
       "id": "amulet_forest",
       "name": "Амулет леса",
-      "group": "elements",
-      "passive_type": null,
+      "group": "element_nagovor",
+      "passive_type": "heal_pct_on_zhatva_or_throw",
       "val_0": 0.02,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.03,
+      "val_4": 0.04,
       "val_5": 0.05,
-      "tier": null,
-      "enabled": false,
-      "rule": "Мягкий отхил $2\\% \\to 5\\%\\text{ HP}$ при срабатывании *Жатвы* или броске.",
-      "build": "Комфортный фарм"
+      "tier": "tier_1",
+      "enabled": true
     },
     {
-      "id": "amulet_embers",
+      "id": "amulet_ember_medallion",
       "name": "Угольный медальон",
-      "group": "elements",
-      "passive_type": null,
+      "group": "element_nagovor",
+      "passive_type": "heat_dot_bonus_pct",
       "val_0": 0.15,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.22,
+      "val_4": 0.28,
       "val_5": 0.35,
-      "tier": null,
-      "enabled": false,
-      "rule": "$+15\\% \\to 35\\%$ урона слоёв *Жара*; 3-й слой бафает палочку.",
-      "build": "Поджигатель"
+      "tier": "tier_3",
+      "enabled": false
     },
     {
       "id": "amulet_amber_drop",
       "name": "Янтарная капля",
-      "group": "elements",
-      "passive_type": null,
-      "val_0": null,
-      "val_2": null,
-      "val_4": null,
-      "val_5": null,
-      "tier": null,
-      "enabled": false,
-      "rule": "Удлиняет лужи *Вязкости* и усиливает взрыв смолы.",
-      "build": "*Смола* + *Огонь*"
+      "group": "element_nagovor",
+      "passive_type": "viscosity_duration_and_flash_bonus",
+      "val_0": 0.15,
+      "val_2": 0.22,
+      "val_4": 0.28,
+      "val_5": 0.35,
+      "tier": "tier_2",
+      "enabled": false
     },
     {
       "id": "amulet_willow_shard",
       "name": "Осколок ивы",
-      "group": "elements",
-      "passive_type": null,
+      "group": "element_nagovor",
+      "passive_type": "echo_copy_total_pct",
       "val_0": 0.45,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.5,
+      "val_4": 0.55,
       "val_5": 0.6,
-      "tier": null,
-      "enabled": false,
-      "rule": "Повышает долю урона *Эха* с $35\\%$ до $45\\% \\to 60\\%$.",
-      "build": "Билды через *Эхо*"
+      "tier": "tier_5",
+      "enabled": false
     },
     {
-      "id": "amulet_breaker",
+      "id": "amulet_gravity_stone",
       "name": "Камень притяжения",
-      "group": "arena",
-      "passive_type": null,
+      "group": "arena_volya",
+      "passive_type": "throw_dmg_bonus_and_respawn_cut",
       "val_0": 0.15,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.22,
+      "val_4": 0.28,
       "val_5": 0.35,
-      "tier": null,
-      "enabled": false,
-      "rule": "$+15\\% \\to 35\\%$ урона бросков, респавн камней быстрее на $1 \\to 2.5\\text{ с}$.",
-      "build": "*Телекинез* / *Воля*"
+      "tier": "tier_3",
+      "enabled": false
     },
     {
       "id": "amulet_crystal_prism",
       "name": "Призма кристаллов",
-      "group": "arena",
-      "passive_type": null,
+      "group": "arena_volya",
+      "passive_type": "crystal_use_sp_buff_5s",
       "val_0": 0.15,
-      "val_2": null,
-      "val_4": null,
-      "val_5": 0.15,
-      "tier": null,
-      "enabled": false,
-      "rule": "Использование field_crystal даёт $+15\\%\\text{ SP}$ на $5\\text{ с}$.",
-      "build": "Игра от кристаллов"
+      "val_2": 0.2,
+      "val_4": 0.25,
+      "val_5": 0.3,
+      "tier": "tier_3",
+      "enabled": false
     },
     {
-      "id": "amulet_runic_glove",
+      "id": "amulet_rune_gauntlet",
       "name": "Руническая перчатка",
-      "group": "arena",
-      "passive_type": null,
+      "group": "arena_volya",
+      "passive_type": "charged_throw_shield_max_hp",
       "val_0": 0.06,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.09,
+      "val_4": 0.11,
       "val_5": 0.14,
-      "tier": null,
-      "enabled": false,
-      "rule": "Бросок заряженного предмета вешает щит $6\\% \\to 14\\%\\text{ maxHP}$.",
-      "build": "Гибрид атака/щит"
+      "tier": "tier_4",
+      "enabled": false
     },
     {
       "id": "amulet_architect_seal",
       "name": "Печать зодчего",
-      "group": "arena",
-      "passive_type": null,
+      "group": "arena_volya",
+      "passive_type": "precharged_arena_objects_on_start",
       "val_0": 1,
-      "val_2": null,
-      "val_4": null,
-      "val_5": 1,
-      "tier": null,
-      "enabled": false,
-      "rule": "На старте боя на арене уже лежит 1 заранее заряженный предмет.",
-      "build": "Быстрые победы"
+      "val_2": 1,
+      "val_4": 2,
+      "val_5": 2,
+      "tier": "tier_6",
+      "enabled": false
     },
     {
-      "id": "amulet_equilibrium",
+      "id": "amulet_balance_shard",
       "name": "Осколок равновесия",
-      "group": "arena",
-      "passive_type": null,
+      "group": "arena_volya",
+      "passive_type": "every_2nd_volya_mp_discount",
       "val_0": 0.3,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.4,
+      "val_4": 0.5,
       "val_5": 0.6,
-      "tier": null,
-      "enabled": false,
-      "rule": "Каждый 2-й дар роли *Воля* стоит на $30\\% \\to 60\\%$ меньше MP.",
-      "build": "Спам арены"
+      "tier": "tier_4",
+      "enabled": false
     },
     {
-      "id": "amulet_fortitude",
+      "id": "amulet_resilience",
       "name": "Талисман стойкости",
-      "group": "utility",
-      "passive_type": null,
+      "group": "defense_duel_farm",
+      "passive_type": "status_dmg_mitigation",
       "val_0": 0.15,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.22,
+      "val_4": 0.28,
       "val_5": 0.35,
-      "tier": null,
-      "enabled": false,
-      "rule": "Снижает входящий урон статусов на $15\\% \\to 35\\%$ (мультипликативно).",
-      "build": "Ожоги / Холод"
+      "tier": "tier_4",
+      "enabled": false
     },
     {
       "id": "amulet_alchemist",
       "name": "Амулет алхимика",
-      "group": "utility",
-      "passive_type": null,
+      "group": "defense_duel_farm",
+      "passive_type": "potion_power_bonus_and_save_chance",
       "val_0": 0.15,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.22,
+      "val_4": 0.28,
       "val_5": 0.35,
-      "tier": null,
-      "enabled": false,
-      "rule": "$+15\\% \\to 35\\%$ к силе зелий; $10\\% \\to 25\\%$ шанс не потратить склянку.",
-      "build": "Боссы / Дуэли"
+      "tier": "tier_3",
+      "enabled": false
     },
     {
       "id": "amulet_tracker",
       "name": "Знак следопыта",
-      "group": "utility",
-      "passive_type": null,
+      "group": "defense_duel_farm",
+      "passive_type": "bonus_coins_hunt_and_gather",
       "val_0": 0.1,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.17,
+      "val_4": 0.24,
       "val_5": 0.3,
-      "tier": null,
-      "enabled": false,
-      "rule": "$+10\\% \\to 30\\%$ монет с охоты/сбора и повышенный шанс редкого дропа.",
-      "build": "Фарм ресурсов"
+      "tier": "tier_2",
+      "enabled": false
     },
     {
-      "id": "amulet_duelist",
+      "id": "amulet_duelist_ward",
       "name": "Оберег дуэлянта",
-      "group": "utility",
-      "passive_type": null,
+      "group": "defense_duel_farm",
+      "passive_type": "first_strong_enemy_hit_mitigation",
       "val_0": 0.3,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.4,
+      "val_4": 0.5,
       "val_5": 0.6,
-      "tier": null,
-      "enabled": false,
-      "rule": "Первая сильная атака врага в бою срезана на $30\\% \\to 60\\%$.",
-      "build": "Магическая Дуэль"
+      "tier": "tier_4",
+      "enabled": false
     },
     {
-      "id": "amulet_companion",
+      "id": "amulet_companion_bell",
       "name": "Звон спутника",
-      "group": "utility",
-      "passive_type": null,
+      "group": "defense_duel_farm",
+      "passive_type": "companion_skill_bonus_and_charge",
       "val_0": 0.2,
-      "val_2": null,
-      "val_4": null,
+      "val_2": 0.3,
+      "val_4": 0.4,
       "val_5": 0.5,
-      "tier": null,
-      "enabled": false,
-      "rule": "Ускоряет набор Отклика и усиливает умение спутника на $20\\% \\to 50\\%$.",
-      "build": "Синергия спутника"
+      "tier": "tier_6",
+      "enabled": false
+    }
+  ],
+  "amulet_tiers": [
+    {
+      "plus_level": 0,
+      "power_mult": 1.05,
+      "coin_cost": 0,
+      "catalyst_qty": 0,
+      "catalyst_tier": "tier_1",
+      "ritual_min": 0
+    },
+    {
+      "plus_level": 1,
+      "power_mult": 1.1,
+      "coin_cost": 500,
+      "catalyst_qty": 0,
+      "catalyst_tier": "tier_1",
+      "ritual_min": 0
+    },
+    {
+      "plus_level": 2,
+      "power_mult": 1.16,
+      "coin_cost": 3500,
+      "catalyst_qty": 1,
+      "catalyst_tier": "tier_2",
+      "ritual_min": 60
+    },
+    {
+      "plus_level": 3,
+      "power_mult": 1.22,
+      "coin_cost": 22000,
+      "catalyst_qty": 0,
+      "catalyst_tier": "tier_3",
+      "ritual_min": 240
+    },
+    {
+      "plus_level": 4,
+      "power_mult": 1.28,
+      "coin_cost": 110000,
+      "catalyst_qty": 2,
+      "catalyst_tier": "tier_4",
+      "ritual_min": 720
+    },
+    {
+      "plus_level": 5,
+      "power_mult": 1.35,
+      "coin_cost": 500000,
+      "catalyst_qty": 4,
+      "catalyst_tier": "tier_6",
+      "ritual_min": 1440
     }
   ],
   "companions": [
@@ -2203,56 +2337,534 @@ export const HORIZON_TABLES = {
       "id": "fox",
       "name": "Рыжик",
       "role": "finisher",
-      "target_scope": "single",
+      "target_scope": "lowest_hp_single",
       "sp_mult": 1.1,
-      "heal_pct": null,
-      "bonus_effect": "Цель с наименьшей долей HP. Прерывает слабый каст. Добивание возвращает 35 отклика и даёт 10% монет.",
-      "tier": 1,
-      "enabled": false
+      "heal_pct": 0,
+      "bonus_effect": "interrupt_weak_and_kill_refund35_coins10pct",
+      "tier": "tier_1",
+      "enabled": true
     },
     {
       "id": "robin",
       "name": "Звонка",
-      "role": "marks",
+      "role": "tag_keeper",
       "target_scope": "all",
-      "sp_mult": null,
-      "heal_pct": null,
-      "bonus_effect": "Продлевает метки на 2,5 с, лечит героя на 5–8% максимального HP.",
-      "tier": 2,
+      "sp_mult": 0.45,
+      "heal_pct": 0.06,
+      "bonus_effect": "extend_tags_2_5s_and_heal_5_to_8pct",
+      "tier": "tier_2",
       "enabled": false
     },
     {
       "id": "stone_hedgehog",
       "name": "Булыжник",
-      "role": "arena",
-      "target_scope": "object",
-      "sp_mult": null,
-      "heal_pct": null,
-      "bonus_effect": "Досрочно возвращает потраченный предмет с зарядом.",
-      "tier": 3,
+      "role": "arena_helper",
+      "target_scope": "single",
+      "sp_mult": 0.85,
+      "heal_pct": 0,
+      "bonus_effect": "respawn_rock_precharged",
+      "tier": "tier_3",
       "enabled": false
     },
     {
       "id": "owl",
       "name": "Вечер",
       "role": "shield_breaker",
-      "target_scope": "single",
-      "sp_mult": null,
-      "heal_pct": null,
-      "bonus_effect": "Снимает щит с противника и возвращает 15% маны.",
-      "tier": 4,
+      "target_scope": "random_shielded",
+      "sp_mult": 0.9,
+      "heal_pct": 0,
+      "bonus_effect": "strip_shield_and_restore_15pct_mp",
+      "tier": "tier_4",
       "enabled": false
     },
     {
       "id": "black_cat",
       "name": "Уголёк",
-      "role": "critical",
-      "target_scope": "single",
-      "sp_mult": null,
-      "heal_pct": null,
-      "bonus_effect": "Накладывает Хрупкость на лидера и повышает крит палочки на 5 с.",
-      "tier": 5,
+      "role": "crit_hunter",
+      "target_scope": "leader_single",
+      "sp_mult": 0.95,
+      "heal_pct": 0,
+      "bonus_effect": "apply_brittle_and_wand_crit_5s",
+      "tier": "tier_5",
       "enabled": false
+    }
+  ],
+  "mob_archetypes": [
+    {
+      "archetype_id": "spark_grab",
+      "name": "Искроцап",
+      "tier": "tier_1",
+      "role": "fighter",
+      "sprite_key": "enemy_scavenger_small",
+      "dps_mult": 1,
+      "attack_interval_sec": 2,
+      "armor_rating_base": 0,
+      "res_rating_base": 0,
+      "cast_id": "spark_dash",
+      "cast_name": "Рывок с искрами",
+      "cast_time_sec": 2.2,
+      "cast_cd_sec": 9,
+      "cast_effect": "heavy_hit",
+      "cast_value": 1.5
+    },
+    {
+      "archetype_id": "frost_imp",
+      "name": "Морозун",
+      "tier": "tier_1",
+      "role": "skirmisher",
+      "sprite_key": "enemy_frost_critter",
+      "dps_mult": 0.95,
+      "attack_interval_sec": 2.2,
+      "armor_rating_base": 0,
+      "res_rating_base": 10,
+      "cast_id": "frost_breath",
+      "cast_name": "Дыхание инея",
+      "cast_time_sec": 2.5,
+      "cast_cd_sec": 10,
+      "cast_effect": "hit_and_slow_wand_3s",
+      "cast_value": 1.25
+    },
+    {
+      "archetype_id": "thorn_kin",
+      "name": "Колючник",
+      "tier": "tier_1",
+      "role": "shielder",
+      "sprite_key": "enemy_rootling",
+      "dps_mult": 0.9,
+      "attack_interval_sec": 2.4,
+      "armor_rating_base": 15,
+      "res_rating_base": 0,
+      "cast_id": "bark_ward",
+      "cast_name": "Корявый покров",
+      "cast_time_sec": 2.5,
+      "cast_cd_sec": 11,
+      "cast_effect": "shield_ally_or_self_pct_hp",
+      "cast_value": 0.15
+    },
+    {
+      "archetype_id": "thicket_brute",
+      "name": "Чащобник",
+      "tier": "tier_1",
+      "role": "fighter",
+      "sprite_key": "enemy_scavenger",
+      "dps_mult": 1.05,
+      "attack_interval_sec": 2.6,
+      "armor_rating_base": 20,
+      "res_rating_base": 10,
+      "cast_id": "branch_slam",
+      "cast_name": "Удар суком",
+      "cast_time_sec": 2.8,
+      "cast_cd_sec": 12,
+      "cast_effect": "heavy_hit",
+      "cast_value": 1.8
+    },
+    {
+      "archetype_id": "elite_ember_grab",
+      "name": "Угольный Цап",
+      "tier": "tier_1",
+      "role": "elite_fighter",
+      "sprite_key": "enemy_scavenger",
+      "dps_mult": 1.2,
+      "attack_interval_sec": 1.8,
+      "armor_rating_base": 15,
+      "res_rating_base": 15,
+      "cast_id": "ember_volley",
+      "cast_name": "Угольный залп",
+      "cast_time_sec": 2.4,
+      "cast_cd_sec": 9,
+      "cast_effect": "heavy_hit_heat1",
+      "cast_value": 1.6
+    },
+    {
+      "archetype_id": "boss_treegazer",
+      "name": "Вековой Древогляд",
+      "tier": "tier_1",
+      "role": "boss",
+      "sprite_key": "enemy_guardian",
+      "dps_mult": 1.2,
+      "attack_interval_sec": 2.5,
+      "armor_rating_base": 30,
+      "res_rating_base": 20,
+      "cast_id": "root_collapse",
+      "cast_name": "Обвал корней / Кора веков",
+      "cast_time_sec": 3,
+      "cast_cd_sec": 14,
+      "cast_effect": "alternating_shield12_and_heavy21",
+      "cast_value": 2.1
+    },
+    {
+      "archetype_id": "frost_collector",
+      "name": "Инеевый Скупщик",
+      "tier": "tier_2",
+      "role": "skirmisher",
+      "sprite_key": "enemy_frost_collector",
+      "dps_mult": 1,
+      "attack_interval_sec": 2.2,
+      "armor_rating_base": 10,
+      "res_rating_base": 15,
+      "cast_id": "chill_drain",
+      "cast_name": "Вытяжка тепла",
+      "cast_time_sec": 2.4,
+      "cast_cd_sec": 10,
+      "cast_effect": "hit_and_chill_4s",
+      "cast_value": 1.4
+    },
+    {
+      "archetype_id": "frost_collector_elite",
+      "name": "Старший Скупщик",
+      "tier": "tier_2",
+      "role": "shielder",
+      "sprite_key": "enemy_frost_collector_elite",
+      "dps_mult": 1.15,
+      "attack_interval_sec": 2.3,
+      "armor_rating_base": 25,
+      "res_rating_base": 20,
+      "cast_id": "ice_aegis",
+      "cast_name": "Ледяной щит",
+      "cast_time_sec": 2.5,
+      "cast_cd_sec": 11,
+      "cast_effect": "shield_self_pct_hp",
+      "cast_value": 0.18
+    },
+    {
+      "archetype_id": "cold_golem",
+      "name": "Студёный Голем",
+      "tier": "tier_2",
+      "role": "fighter",
+      "sprite_key": "enemy_experimental_construct",
+      "dps_mult": 1.1,
+      "attack_interval_sec": 2.7,
+      "armor_rating_base": 30,
+      "res_rating_base": 15,
+      "cast_id": "crystal_crush",
+      "cast_name": "Удар кристаллом",
+      "cast_time_sec": 2.8,
+      "cast_cd_sec": 12,
+      "cast_effect": "heavy_hit",
+      "cast_value": 1.85
+    },
+    {
+      "archetype_id": "chilled_volunteer",
+      "name": "Остуженный Доброволец",
+      "tier": "tier_2",
+      "role": "fighter",
+      "sprite_key": "enemy_volunteer",
+      "dps_mult": 1,
+      "attack_interval_sec": 2.1,
+      "armor_rating_base": 15,
+      "res_rating_base": 10,
+      "cast_id": "frost_surge",
+      "cast_name": "Всплеск стужи",
+      "cast_time_sec": 2.5,
+      "cast_cd_sec": 10.5,
+      "cast_effect": "heavy_hit_chill",
+      "cast_value": 1.55
+    },
+    {
+      "archetype_id": "boss_august_grad",
+      "name": "Август Град",
+      "tier": "tier_2",
+      "role": "boss",
+      "sprite_key": "enemy_severin",
+      "dps_mult": 1.2,
+      "attack_interval_sec": 2.3,
+      "armor_rating_base": 30,
+      "res_rating_base": 30,
+      "cast_id": "absolute_freeze",
+      "cast_name": "Волна холода / Ледяной барьер",
+      "cast_time_sec": 3,
+      "cast_cd_sec": 13,
+      "cast_effect": "alternating_shield15_and_frostwave",
+      "cast_value": 2.2
+    },
+    {
+      "archetype_id": "crystal_wolf",
+      "name": "Хрустальный Волк",
+      "tier": "tier_3",
+      "role": "fighter",
+      "sprite_key": "enemy_frost_wolf",
+      "dps_mult": 1.05,
+      "attack_interval_sec": 1.9,
+      "armor_rating_base": 15,
+      "res_rating_base": 15,
+      "cast_id": "fang_leap",
+      "cast_name": "Хрустальный прыжок",
+      "cast_time_sec": 2.1,
+      "cast_cd_sec": 9,
+      "cast_effect": "heavy_hit_brittle",
+      "cast_value": 1.6
+    },
+    {
+      "archetype_id": "ice_giant",
+      "name": "Ледовый Великан",
+      "tier": "tier_3",
+      "role": "shielder",
+      "sprite_key": "enemy_ice_guardian",
+      "dps_mult": 1.15,
+      "attack_interval_sec": 2.8,
+      "armor_rating_base": 40,
+      "res_rating_base": 20,
+      "cast_id": "glacier_wall",
+      "cast_name": "Стена ледника",
+      "cast_time_sec": 2.7,
+      "cast_cd_sec": 12,
+      "cast_effect": "shield_self_pct_hp",
+      "cast_value": 0.2
+    },
+    {
+      "archetype_id": "boss_silver_alpha",
+      "name": "Серебряный Вожак",
+      "tier": "tier_3",
+      "role": "boss",
+      "sprite_key": "enemy_frost_alpha",
+      "dps_mult": 1.2,
+      "attack_interval_sec": 2.1,
+      "armor_rating_base": 35,
+      "res_rating_base": 25,
+      "cast_id": "howl_blizzard",
+      "cast_name": "Вой бурана",
+      "cast_time_sec": 2.8,
+      "cast_cd_sec": 12.5,
+      "cast_effect": "heavy_hit_and_chill_aura",
+      "cast_value": 2.25
+    },
+    {
+      "archetype_id": "dusk_hound",
+      "name": "Сумеречный Гончий",
+      "tier": "tier_4",
+      "role": "fighter",
+      "sprite_key": "enemy_grave_hound",
+      "dps_mult": 1.05,
+      "attack_interval_sec": 1.9,
+      "armor_rating_base": 20,
+      "res_rating_base": 20,
+      "cast_id": "shadow_bite",
+      "cast_name": "Сумеречный рывок",
+      "cast_time_sec": 2.2,
+      "cast_cd_sec": 9.5,
+      "cast_effect": "heavy_hit",
+      "cast_value": 1.65
+    },
+    {
+      "archetype_id": "wandering_wisp",
+      "name": "Блуждающий Огонёк",
+      "tier": "tier_4",
+      "role": "skirmisher",
+      "sprite_key": "enemy_grave_wisp",
+      "dps_mult": 1,
+      "attack_interval_sec": 2.3,
+      "armor_rating_base": 10,
+      "res_rating_base": 30,
+      "cast_id": "blue_burn",
+      "cast_name": "Синее пламя",
+      "cast_time_sec": 2.4,
+      "cast_cd_sec": 10,
+      "cast_effect": "heavy_hit_heat2",
+      "cast_value": 1.45
+    },
+    {
+      "archetype_id": "candle_warden",
+      "name": "Свечной Сторож",
+      "tier": "tier_4",
+      "role": "shielder",
+      "sprite_key": "enemy_barrow_warden",
+      "dps_mult": 1.15,
+      "attack_interval_sec": 2.6,
+      "armor_rating_base": 35,
+      "res_rating_base": 25,
+      "cast_id": "wax_ward",
+      "cast_name": "Восковой покров",
+      "cast_time_sec": 2.6,
+      "cast_cd_sec": 11.5,
+      "cast_effect": "shield_ally_or_self_pct_hp",
+      "cast_value": 0.2
+    },
+    {
+      "archetype_id": "boss_barrow_warden",
+      "name": "Хранитель Кургана",
+      "tier": "tier_4",
+      "role": "boss",
+      "sprite_key": "enemy_barrow_warden",
+      "dps_mult": 1.2,
+      "attack_interval_sec": 2.4,
+      "armor_rating_base": 40,
+      "res_rating_base": 35,
+      "cast_id": "funeral_pyre",
+      "cast_name": "Погребальный костёр",
+      "cast_time_sec": 3,
+      "cast_cd_sec": 13,
+      "cast_effect": "alternating_shield16_and_burn2",
+      "cast_value": 2.25
+    },
+    {
+      "archetype_id": "glass_stoat",
+      "name": "Хрустальный Горностай",
+      "tier": "tier_5",
+      "role": "skirmisher",
+      "sprite_key": "chapter3/glass_stoat",
+      "dps_mult": 1,
+      "attack_interval_sec": 1.9,
+      "armor_rating_base": 15,
+      "res_rating_base": 25,
+      "cast_id": "glass_dart",
+      "cast_name": "Осколочный выпад",
+      "cast_time_sec": 2.2,
+      "cast_cd_sec": 9,
+      "cast_effect": "heavy_hit_brittle",
+      "cast_value": 1.55
+    },
+    {
+      "archetype_id": "mirror_wolf",
+      "name": "Зеркальный Волк",
+      "tier": "tier_5",
+      "role": "fighter",
+      "sprite_key": "chapter3/glass_wolf",
+      "dps_mult": 1.05,
+      "attack_interval_sec": 2,
+      "armor_rating_base": 25,
+      "res_rating_base": 25,
+      "cast_id": "echo_pounce",
+      "cast_name": "Двойной прыжок",
+      "cast_time_sec": 2.4,
+      "cast_cd_sec": 10,
+      "cast_effect": "heavy_hit_echo",
+      "cast_value": 1.65
+    },
+    {
+      "archetype_id": "glass_needle_mob",
+      "name": "Стеклянная Игла",
+      "tier": "tier_5",
+      "role": "skirmisher",
+      "sprite_key": "chapter3/needle",
+      "dps_mult": 1.1,
+      "attack_interval_sec": 2.1,
+      "armor_rating_base": 15,
+      "res_rating_base": 20,
+      "cast_id": "pierce_glint",
+      "cast_name": "Блеск иглы",
+      "cast_time_sec": 2.3,
+      "cast_cd_sec": 9.5,
+      "cast_effect": "crit_heavy_hit",
+      "cast_value": 1.75
+    },
+    {
+      "archetype_id": "memory_echo",
+      "name": "Отблеск Памяти",
+      "tier": "tier_5",
+      "role": "healer",
+      "sprite_key": "chapter3/echo",
+      "dps_mult": 0.95,
+      "attack_interval_sec": 2.4,
+      "armor_rating_base": 20,
+      "res_rating_base": 35,
+      "cast_id": "mirror_mend",
+      "cast_name": "Отголосок восстановления",
+      "cast_time_sec": 2.6,
+      "cast_cd_sec": 11.5,
+      "cast_effect": "heal_lowest_ally_pct_hp",
+      "cast_value": 0.14
+    },
+    {
+      "archetype_id": "boss_glass_guardian",
+      "name": "Стеклянный Хранитель",
+      "tier": "tier_5",
+      "role": "boss",
+      "sprite_key": "chapter3/glass_guardian",
+      "dps_mult": 1.2,
+      "attack_interval_sec": 2.4,
+      "armor_rating_base": 40,
+      "res_rating_base": 40,
+      "cast_id": "mirror_shatter",
+      "cast_name": "Зеркальный разлом",
+      "cast_time_sec": 3,
+      "cast_cd_sec": 13,
+      "cast_effect": "alternating_reflect_shield_and_heavy",
+      "cast_value": 2.3
+    },
+    {
+      "archetype_id": "storm_falcon",
+      "name": "Грозовой Сокол",
+      "tier": "tier_6",
+      "role": "skirmisher",
+      "sprite_key": "t6_storm_falcon",
+      "dps_mult": 1.05,
+      "attack_interval_sec": 1.8,
+      "armor_rating_base": 20,
+      "res_rating_base": 30,
+      "cast_id": "static_dive",
+      "cast_name": "Грозовое пике",
+      "cast_time_sec": 2.2,
+      "cast_cd_sec": 9,
+      "cast_effect": "heavy_hit_charge_stun",
+      "cast_value": 1.6
+    },
+    {
+      "archetype_id": "spark_warden",
+      "name": "Искровой Страж",
+      "tier": "tier_6",
+      "role": "fighter",
+      "sprite_key": "t6_spark_warden",
+      "dps_mult": 1.1,
+      "attack_interval_sec": 2.3,
+      "armor_rating_base": 30,
+      "res_rating_base": 30,
+      "cast_id": "arc_lance",
+      "cast_name": "Разрядное копьё",
+      "cast_time_sec": 2.5,
+      "cast_cd_sec": 10.5,
+      "cast_effect": "heavy_hit_charge",
+      "cast_value": 1.75
+    },
+    {
+      "archetype_id": "seal_keeper",
+      "name": "Хранитель Печати",
+      "tier": "tier_6",
+      "role": "shielder",
+      "sprite_key": "t6_seal_keeper",
+      "dps_mult": 1.15,
+      "attack_interval_sec": 2.6,
+      "armor_rating_base": 45,
+      "res_rating_base": 35,
+      "cast_id": "golden_seal",
+      "cast_name": "Золотая печать",
+      "cast_time_sec": 2.6,
+      "cast_cd_sec": 11.5,
+      "cast_effect": "shield_ally_or_self_pct_hp",
+      "cast_value": 0.22
+    },
+    {
+      "archetype_id": "order_sentinel",
+      "name": "Часовой Ордена",
+      "tier": "tier_6",
+      "role": "elite_fighter",
+      "sprite_key": "t6_order_sentinel",
+      "dps_mult": 1.2,
+      "attack_interval_sec": 2.2,
+      "armor_rating_base": 40,
+      "res_rating_base": 40,
+      "cast_id": "echo_judgment",
+      "cast_name": "Печать отголоска",
+      "cast_time_sec": 2.6,
+      "cast_cd_sec": 10.5,
+      "cast_effect": "heavy_hit_echo_shield",
+      "cast_value": 1.9
+    },
+    {
+      "archetype_id": "boss_master_kron",
+      "name": "Мастер Крон",
+      "tier": "tier_6",
+      "role": "boss",
+      "sprite_key": "t6_master_kron",
+      "dps_mult": 1.2,
+      "attack_interval_sec": 2.2,
+      "armor_rating_base": 45,
+      "res_rating_base": 45,
+      "cast_id": "architect_decree",
+      "cast_name": "Печать Порядка (3 фазы)",
+      "cast_time_sec": 3,
+      "cast_cd_sec": 12.5,
+      "cast_effect": "phases_shield_crystal_tempo",
+      "cast_value": 2.35
     }
   ],
   "encounter_packs": [
@@ -2304,6 +2916,1071 @@ export const HORIZON_TABLES = {
       ],
       "archetypes": null,
       "arena_objects": null,
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7,
+        3.5
+      ]
+    },
+    {
+      "pack_id": "t1_tutorial_1",
+      "count": 1,
+      "hp_shares": [
+        0.7
+      ],
+      "dps_shares": [
+        0.6
+      ],
+      "archetypes": [
+        "spark_grab"
+      ],
+      "arena_objects": [
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t1_tutorial_2",
+      "count": 1,
+      "hp_shares": [
+        0.7
+      ],
+      "dps_shares": [
+        0.6
+      ],
+      "archetypes": [
+        "frost_imp"
+      ],
+      "arena_objects": [
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t1_solo_grab",
+      "count": 1,
+      "hp_shares": [
+        1
+      ],
+      "dps_shares": [
+        1
+      ],
+      "archetypes": [
+        "spark_grab"
+      ],
+      "arena_objects": [
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t1_solo_imp",
+      "count": 1,
+      "hp_shares": [
+        1
+      ],
+      "dps_shares": [
+        1
+      ],
+      "archetypes": [
+        "frost_imp"
+      ],
+      "arena_objects": [
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t1_duo_anomaly",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "spark_grab",
+        "thorn_kin"
+      ],
+      "arena_objects": [
+        "field_rock_light",
+        "barrel_01"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t1_duo_barrel",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "spark_grab",
+        "spark_grab"
+      ],
+      "arena_objects": [
+        "barrel_01",
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t1_trio_birch",
+      "count": 3,
+      "hp_shares": [
+        0.6,
+        0.35,
+        0.35
+      ],
+      "dps_shares": [
+        0.48,
+        0.34,
+        0.34
+      ],
+      "archetypes": [
+        "thicket_brute",
+        "thorn_kin",
+        "thorn_kin"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7,
+        3.5
+      ]
+    },
+    {
+      "pack_id": "t1_elite_ember",
+      "count": 1,
+      "hp_shares": [
+        2.42
+      ],
+      "dps_shares": [
+        1.2
+      ],
+      "archetypes": [
+        "elite_ember_grab"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "barrel_01"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t1_elite_burrs",
+      "count": 2,
+      "hp_shares": [
+        1.3,
+        1.12
+      ],
+      "dps_shares": [
+        0.65,
+        0.55
+      ],
+      "archetypes": [
+        "thorn_kin",
+        "spark_grab"
+      ],
+      "arena_objects": [
+        "field_rock_light",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t1_elite_king",
+      "count": 3,
+      "hp_shares": [
+        1.4,
+        0.51,
+        0.51
+      ],
+      "dps_shares": [
+        0.56,
+        0.32,
+        0.32
+      ],
+      "archetypes": [
+        "thicket_brute",
+        "frost_imp",
+        "frost_imp"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "barrel_01",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7,
+        3.5
+      ]
+    },
+    {
+      "pack_id": "t1_boss_treegazer",
+      "count": 1,
+      "hp_shares": [
+        5.83
+      ],
+      "dps_shares": [
+        1.2
+      ],
+      "archetypes": [
+        "boss_treegazer"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal",
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t2_solo_collector",
+      "count": 1,
+      "hp_shares": [
+        1
+      ],
+      "dps_shares": [
+        1
+      ],
+      "archetypes": [
+        "frost_collector"
+      ],
+      "arena_objects": [
+        "field_rock_light",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t2_duo_plaza",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "frost_collector",
+        "frost_imp"
+      ],
+      "arena_objects": [
+        "field_rock_light",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t2_trio_quarter",
+      "count": 3,
+      "hp_shares": [
+        0.6,
+        0.35,
+        0.35
+      ],
+      "dps_shares": [
+        0.48,
+        0.34,
+        0.34
+      ],
+      "archetypes": [
+        "frost_collector_elite",
+        "frost_imp",
+        "frost_imp"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7,
+        3.5
+      ]
+    },
+    {
+      "pack_id": "t2_elite_golem",
+      "count": 1,
+      "hp_shares": [
+        2.42
+      ],
+      "dps_shares": [
+        1.2
+      ],
+      "archetypes": [
+        "cold_golem"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t2_boss_august",
+      "count": 1,
+      "hp_shares": [
+        5.83
+      ],
+      "dps_shares": [
+        1.2
+      ],
+      "archetypes": [
+        "boss_august_grad"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal",
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t3_solo_wolf",
+      "count": 1,
+      "hp_shares": [
+        1
+      ],
+      "dps_shares": [
+        1
+      ],
+      "archetypes": [
+        "crystal_wolf"
+      ],
+      "arena_objects": [
+        "field_rock_light",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t3_duo_wolves",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "crystal_wolf",
+        "frost_imp"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t3_trio_pack",
+      "count": 3,
+      "hp_shares": [
+        0.6,
+        0.35,
+        0.35
+      ],
+      "dps_shares": [
+        0.48,
+        0.34,
+        0.34
+      ],
+      "archetypes": [
+        "ice_giant",
+        "crystal_wolf",
+        "crystal_wolf"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7,
+        3.5
+      ]
+    },
+    {
+      "pack_id": "t3_boss_alpha",
+      "count": 1,
+      "hp_shares": [
+        5.83
+      ],
+      "dps_shares": [
+        1.2
+      ],
+      "archetypes": [
+        "boss_silver_alpha"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal",
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t4_solo_wisp",
+      "count": 1,
+      "hp_shares": [
+        1
+      ],
+      "dps_shares": [
+        1
+      ],
+      "archetypes": [
+        "wandering_wisp"
+      ],
+      "arena_objects": [
+        "field_rock_light",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t4_duo_crypt",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "dusk_hound",
+        "wandering_wisp"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t4_trio_barrow",
+      "count": 3,
+      "hp_shares": [
+        0.6,
+        0.35,
+        0.35
+      ],
+      "dps_shares": [
+        0.48,
+        0.34,
+        0.34
+      ],
+      "archetypes": [
+        "candle_warden",
+        "dusk_hound",
+        "wandering_wisp"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7,
+        3.5
+      ]
+    },
+    {
+      "pack_id": "t4_boss_barrow",
+      "count": 1,
+      "hp_shares": [
+        5.83
+      ],
+      "dps_shares": [
+        1.2
+      ],
+      "archetypes": [
+        "boss_barrow_warden"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal",
+        "barrel_01"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t5_solo_wolf",
+      "count": 1,
+      "hp_shares": [
+        1
+      ],
+      "dps_shares": [
+        1
+      ],
+      "archetypes": [
+        "mirror_wolf"
+      ],
+      "arena_objects": [
+        "field_rock_light",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t5_duo_bridge",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "glass_stoat",
+        "mirror_wolf"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t5_trio_dam",
+      "count": 3,
+      "hp_shares": [
+        0.6,
+        0.35,
+        0.35
+      ],
+      "dps_shares": [
+        0.48,
+        0.34,
+        0.34
+      ],
+      "archetypes": [
+        "memory_echo",
+        "glass_needle_mob",
+        "glass_stoat"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7,
+        3.5
+      ]
+    },
+    {
+      "pack_id": "t5_boss_guardian",
+      "count": 1,
+      "hp_shares": [
+        5.83
+      ],
+      "dps_shares": [
+        1.2
+      ],
+      "archetypes": [
+        "boss_glass_guardian"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal",
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t6_solo_falcon",
+      "count": 1,
+      "hp_shares": [
+        1
+      ],
+      "dps_shares": [
+        1
+      ],
+      "archetypes": [
+        "storm_falcon"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t6_duo_gate",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "storm_falcon",
+        "spark_warden"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t6_trio_terrace",
+      "count": 3,
+      "hp_shares": [
+        0.6,
+        0.35,
+        0.35
+      ],
+      "dps_shares": [
+        0.48,
+        0.34,
+        0.34
+      ],
+      "archetypes": [
+        "seal_keeper",
+        "spark_warden",
+        "storm_falcon"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7,
+        3.5
+      ]
+    },
+    {
+      "pack_id": "t6_elite_sentinel",
+      "count": 1,
+      "hp_shares": [
+        2.42
+      ],
+      "dps_shares": [
+        1.2
+      ],
+      "archetypes": [
+        "order_sentinel"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t6_boss_kron",
+      "count": 1,
+      "hp_shares": [
+        5.83
+      ],
+      "dps_shares": [
+        1.2
+      ],
+      "archetypes": [
+        "boss_master_kron"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal",
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t1_solo_thorn",
+      "count": 1,
+      "hp_shares": [
+        1
+      ],
+      "dps_shares": [
+        1
+      ],
+      "archetypes": [
+        "thorn_kin"
+      ],
+      "arena_objects": [
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t1_duo_outpost",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "thorn_kin",
+        "frost_imp"
+      ],
+      "arena_objects": [
+        "field_rock_light",
+        "field_rock_heavy"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t2_duo_warehouse_a",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "frost_collector",
+        "frost_collector"
+      ],
+      "arena_objects": [
+        "field_rock_light",
+        "barrel_01"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t2_solo_senior",
+      "count": 1,
+      "hp_shares": [
+        2.42
+      ],
+      "dps_shares": [
+        1.2
+      ],
+      "archetypes": [
+        "frost_collector_elite"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t2_duo_society",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "cold_golem",
+        "frost_imp"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t2_solo_imp",
+      "count": 1,
+      "hp_shares": [
+        1
+      ],
+      "dps_shares": [
+        1
+      ],
+      "archetypes": [
+        "frost_imp"
+      ],
+      "arena_objects": [
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t2_volunteers",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "chilled_volunteer",
+        "chilled_volunteer"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t2_solo_golem",
+      "count": 1,
+      "hp_shares": [
+        2.42
+      ],
+      "dps_shares": [
+        1.2
+      ],
+      "archetypes": [
+        "cold_golem"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal",
+        "barrel_01"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t2_side_cart",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "frost_collector",
+        "frost_collector"
+      ],
+      "arena_objects": [
+        "barrel_01",
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t2_side_garden",
+      "count": 2,
+      "hp_shares": [
+        0.6,
+        0.55
+      ],
+      "dps_shares": [
+        0.6,
+        0.5
+      ],
+      "archetypes": [
+        "frost_imp",
+        "frost_imp"
+      ],
+      "arena_objects": [
+        "field_rock_light",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t2_duel_shield",
+      "count": 1,
+      "hp_shares": [
+        1
+      ],
+      "dps_shares": [
+        1
+      ],
+      "archetypes": [
+        "frost_collector_elite"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t2_duel_frost",
+      "count": 1,
+      "hp_shares": [
+        1
+      ],
+      "dps_shares": [
+        1
+      ],
+      "archetypes": [
+        "chilled_volunteer"
+      ],
+      "arena_objects": [
+        "field_rock_light",
+        "field_crystal"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": null
+    },
+    {
+      "pack_id": "t2_elite_collectors",
+      "count": 2,
+      "hp_shares": [
+        1.3,
+        1.12
+      ],
+      "dps_shares": [
+        0.65,
+        0.55
+      ],
+      "archetypes": [
+        "frost_collector_elite",
+        "frost_collector"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_rock_light"
+      ],
+      "max_casts": 1,
+      "first_attack_sec": [
+        1.8,
+        2.7
+      ]
+    },
+    {
+      "pack_id": "t2_elite_yard",
+      "count": 3,
+      "hp_shares": [
+        1.4,
+        0.51,
+        0.51
+      ],
+      "dps_shares": [
+        0.56,
+        0.32,
+        0.32
+      ],
+      "archetypes": [
+        "frost_collector_elite",
+        "frost_imp",
+        "frost_imp"
+      ],
+      "arena_objects": [
+        "field_rock_heavy",
+        "field_crystal"
+      ],
       "max_casts": 1,
       "first_attack_sec": [
         1.8,

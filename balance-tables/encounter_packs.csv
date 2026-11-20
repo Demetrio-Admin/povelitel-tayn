@@ -2,3 +2,50 @@ pack_id,count,hp_shares,dps_shares,archetypes,arena_objects,max_casts,first_atta
 solo,1,[1],[1],,,1,
 duo,2,"[0.60,0.55]","[0.60,0.50]",,,1,"[1.8,2.7]"
 trio,3,"[0.60,0.35,0.35]","[0.48,0.34,0.34]",,,1,"[1.8,2.7,3.5]"
+t1_tutorial_1,1,[0.7],[0.6],"[""spark_grab""]","[""field_rock_light""]",1,
+t1_tutorial_2,1,[0.7],[0.6],"[""frost_imp""]","[""field_rock_light""]",1,
+t1_solo_grab,1,[1.0],[1.0],"[""spark_grab""]","[""field_rock_light""]",1,
+t1_solo_imp,1,[1.0],[1.0],"[""frost_imp""]","[""field_rock_light""]",1,
+t1_duo_anomaly,2,"[0.6, 0.55]","[0.6, 0.5]","[""spark_grab"", ""thorn_kin""]","[""field_rock_light"", ""barrel_01""]",1,"[1.8, 2.7]"
+t1_duo_barrel,2,"[0.6, 0.55]","[0.6, 0.5]","[""spark_grab"", ""spark_grab""]","[""barrel_01"", ""field_rock_light""]",1,"[1.8, 2.7]"
+t1_trio_birch,3,"[0.6, 0.35, 0.35]","[0.48, 0.34, 0.34]","[""thicket_brute"", ""thorn_kin"", ""thorn_kin""]","[""field_rock_heavy"", ""field_rock_light""]",1,"[1.8, 2.7, 3.5]"
+t1_elite_ember,1,[2.42],[1.2],"[""elite_ember_grab""]","[""field_rock_heavy"", ""barrel_01""]",1,
+t1_elite_burrs,2,"[1.3, 1.12]","[0.65, 0.55]","[""thorn_kin"", ""spark_grab""]","[""field_rock_light"", ""field_crystal""]",1,"[1.8, 2.7]"
+t1_elite_king,3,"[1.4, 0.51, 0.51]","[0.56, 0.32, 0.32]","[""thicket_brute"", ""frost_imp"", ""frost_imp""]","[""field_rock_heavy"", ""barrel_01"", ""field_crystal""]",1,"[1.8, 2.7, 3.5]"
+t1_boss_treegazer,1,[5.83],[1.2],"[""boss_treegazer""]","[""field_rock_heavy"", ""field_crystal"", ""field_rock_light""]",1,
+t2_solo_collector,1,[1.0],[1.0],"[""frost_collector""]","[""field_rock_light"", ""field_crystal""]",1,
+t2_duo_plaza,2,"[0.6, 0.55]","[0.6, 0.5]","[""frost_collector"", ""frost_imp""]","[""field_rock_light"", ""field_crystal""]",1,"[1.8, 2.7]"
+t2_trio_quarter,3,"[0.6, 0.35, 0.35]","[0.48, 0.34, 0.34]","[""frost_collector_elite"", ""frost_imp"", ""frost_imp""]","[""field_rock_heavy"", ""field_crystal""]",1,"[1.8, 2.7, 3.5]"
+t2_elite_golem,1,[2.42],[1.2],"[""cold_golem""]","[""field_rock_heavy"", ""field_crystal""]",1,
+t2_boss_august,1,[5.83],[1.2],"[""boss_august_grad""]","[""field_rock_heavy"", ""field_crystal"", ""field_rock_light""]",1,
+t3_solo_wolf,1,[1.0],[1.0],"[""crystal_wolf""]","[""field_rock_light"", ""field_crystal""]",1,
+t3_duo_wolves,2,"[0.6, 0.55]","[0.6, 0.5]","[""crystal_wolf"", ""frost_imp""]","[""field_rock_heavy"", ""field_crystal""]",1,"[1.8, 2.7]"
+t3_trio_pack,3,"[0.6, 0.35, 0.35]","[0.48, 0.34, 0.34]","[""ice_giant"", ""crystal_wolf"", ""crystal_wolf""]","[""field_rock_heavy"", ""field_crystal""]",1,"[1.8, 2.7, 3.5]"
+t3_boss_alpha,1,[5.83],[1.2],"[""boss_silver_alpha""]","[""field_rock_heavy"", ""field_crystal"", ""field_rock_light""]",1,
+t4_solo_wisp,1,[1.0],[1.0],"[""wandering_wisp""]","[""field_rock_light"", ""field_crystal""]",1,
+t4_duo_crypt,2,"[0.6, 0.55]","[0.6, 0.5]","[""dusk_hound"", ""wandering_wisp""]","[""field_rock_heavy"", ""field_crystal""]",1,"[1.8, 2.7]"
+t4_trio_barrow,3,"[0.6, 0.35, 0.35]","[0.48, 0.34, 0.34]","[""candle_warden"", ""dusk_hound"", ""wandering_wisp""]","[""field_rock_heavy"", ""field_crystal""]",1,"[1.8, 2.7, 3.5]"
+t4_boss_barrow,1,[5.83],[1.2],"[""boss_barrow_warden""]","[""field_rock_heavy"", ""field_crystal"", ""barrel_01""]",1,
+t5_solo_wolf,1,[1.0],[1.0],"[""mirror_wolf""]","[""field_rock_light"", ""field_crystal""]",1,
+t5_duo_bridge,2,"[0.6, 0.55]","[0.6, 0.5]","[""glass_stoat"", ""mirror_wolf""]","[""field_rock_heavy"", ""field_crystal""]",1,"[1.8, 2.7]"
+t5_trio_dam,3,"[0.6, 0.35, 0.35]","[0.48, 0.34, 0.34]","[""memory_echo"", ""glass_needle_mob"", ""glass_stoat""]","[""field_rock_heavy"", ""field_crystal""]",1,"[1.8, 2.7, 3.5]"
+t5_boss_guardian,1,[5.83],[1.2],"[""boss_glass_guardian""]","[""field_rock_heavy"", ""field_crystal"", ""field_rock_light""]",1,
+t6_solo_falcon,1,[1.0],[1.0],"[""storm_falcon""]","[""field_rock_heavy"", ""field_crystal""]",1,
+t6_duo_gate,2,"[0.6, 0.55]","[0.6, 0.5]","[""storm_falcon"", ""spark_warden""]","[""field_rock_heavy"", ""field_crystal""]",1,"[1.8, 2.7]"
+t6_trio_terrace,3,"[0.6, 0.35, 0.35]","[0.48, 0.34, 0.34]","[""seal_keeper"", ""spark_warden"", ""storm_falcon""]","[""field_rock_heavy"", ""field_crystal""]",1,"[1.8, 2.7, 3.5]"
+t6_elite_sentinel,1,[2.42],[1.2],"[""order_sentinel""]","[""field_rock_heavy"", ""field_crystal""]",1,
+t6_boss_kron,1,[5.83],[1.2],"[""boss_master_kron""]","[""field_rock_heavy"", ""field_crystal"", ""field_rock_light""]",1,
+t1_solo_thorn,1,[1],[1],"[""thorn_kin""]","[""field_rock_light""]",1,
+t1_duo_outpost,2,"[0.6, 0.55]","[0.6, 0.5]","[""thorn_kin"", ""frost_imp""]","[""field_rock_light"", ""field_rock_heavy""]",1,"[1.8, 2.7]"
+t2_duo_warehouse_a,2,"[0.6, 0.55]","[0.6, 0.5]","[""frost_collector"", ""frost_collector""]","[""field_rock_light"", ""barrel_01""]",1,"[1.8, 2.7]"
+t2_solo_senior,1,[2.42],[1.2],"[""frost_collector_elite""]","[""field_rock_heavy"", ""field_crystal""]",1,
+t2_duo_society,2,"[0.6, 0.55]","[0.6, 0.5]","[""cold_golem"", ""frost_imp""]","[""field_rock_heavy"", ""field_crystal""]",1,"[1.8, 2.7]"
+t2_solo_imp,1,[1],[1],"[""frost_imp""]","[""field_rock_light""]",1,
+t2_volunteers,2,"[0.6, 0.55]","[0.6, 0.5]","[""chilled_volunteer"", ""chilled_volunteer""]","[""field_rock_heavy"", ""field_crystal""]",1,"[1.8, 2.7]"
+t2_solo_golem,1,[2.42],[1.2],"[""cold_golem""]","[""field_rock_heavy"", ""field_crystal"", ""barrel_01""]",1,
+t2_side_cart,2,"[0.6, 0.55]","[0.6, 0.5]","[""frost_collector"", ""frost_collector""]","[""barrel_01"", ""field_rock_light""]",1,"[1.8, 2.7]"
+t2_side_garden,2,"[0.6, 0.55]","[0.6, 0.5]","[""frost_imp"", ""frost_imp""]","[""field_rock_light"", ""field_crystal""]",1,"[1.8, 2.7]"
+t2_duel_shield,1,[1],[1],"[""frost_collector_elite""]","[""field_rock_heavy"", ""field_crystal""]",1,
+t2_duel_frost,1,[1],[1],"[""chilled_volunteer""]","[""field_rock_light"", ""field_crystal""]",1,
+t2_elite_collectors,2,"[1.3, 1.12]","[0.65, 0.55]","[""frost_collector_elite"", ""frost_collector""]","[""field_rock_heavy"", ""field_rock_light""]",1,"[1.8, 2.7]"
+t2_elite_yard,3,"[1.4, 0.51, 0.51]","[0.56, 0.32, 0.32]","[""frost_collector_elite"", ""frost_imp"", ""frost_imp""]","[""field_rock_heavy"", ""field_crystal""]",1,"[1.8, 2.7, 3.5]"

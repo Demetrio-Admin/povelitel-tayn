@@ -1,11 +1,16 @@
 import { services } from '../services.js';
 import { MSG } from '../state/EventBus.js';
-import { CORE, levelScale } from '../config/horizon/rules.js';
+import { CORE, GIFT_RULES, levelScale } from '../config/horizon/rules.js';
 import { setCompanionPref } from '../objects/Companion.js';
 import { starterState, titleOf } from './episode.js';
 import { HEARTH_START, hearthArrival } from './hearth.js';
+import { actLocationAt, HEARTH_TRAIL } from './regions.js';
+import { advanceQuest, mainQuest, questDone, questStep, taskTarget, townOpen } from './actProgress.js';
+import { hydrateActProgress, itemList, payItems, startColor } from './progression.js';
+import { QUEST_BY_ID } from './quests.js';
 
 const KEY = 'horizon_campaign';
+let cachedProgress;
 
 const OBJECTIVES = {
   intro: 'Нажми на Мирру у крыльца.',
@@ -31,7 +36,12 @@ export function heroStatsAt(level) {
 
 export function campaign() {
   const state = services.state;
-  return { ...state.getObject(KEY), coins: state.item('coins'), herbs: state.item('moon_herb') };
+  const raw=state.getObject(KEY), inventory=state.data.inventory, sapphires=state.sapphires();
+  const revision=[raw,inventory,sapphires,inventory.coins,inventory.moon_herb];
+  if (cachedProgress && revision.every((value,index)=>value===cachedProgress.revision[index])) return cachedProgress.value;
+  const value=hydrateActProgress(raw || {},inventory,sapphires);
+  cachedProgress={revision,value};
+  return value;
 }
 
 function syncRelics(state, progress) {
@@ -42,11 +52,23 @@ function syncRelics(state, progress) {
 
 export function saveCampaign(next, { notify = true } = {}) {
   const { state, bus } = services;
-  state.setObject(KEY, next);
+  const { inv, ...saved } = next;
+  state.setObject(KEY, saved);
+  if (inv) state.data.inventory = { ...inv };
   state.data.inventory.coins = next.coins;
   state.data.inventory.moon_herb = next.herbs;
+  if (Number.isFinite(next.sapphires)) state.data.wallet.sapphires = next.sapphires;
   syncRelics(state, next);
   if (next.fox) state.data.inventory.companion_fox = 1;
+  if (next.activeCompanion && state.data.inventory['companion_'+next.activeCompanion]) setCompanionPref(next.activeCompanion);
+  if (next.tasks) {
+    if (townOpen(next)) state.markEvent('ch2_city_arrived');
+    if (questDone(next,'bridge_wall')) state.markEvent('ch2_quarter_open');
+    if (questDone(next,'cellar_house')) state.markEvent('ch2_rescue_cellar');
+    if (questDone(next,'rescue_house')) state.markEvent('ch2_rescue_door');
+    if (next.tasks.flood > 0) state.markEvent('ch2_water_frozen');
+    if (questDone(next,'august')) state.markEvent('chapter_2_complete');
+  }
   state.data.heroLevel = next.huntLevel;
   state.data.heroXP = state.levelRow().xp;
   state.save();
@@ -57,7 +79,20 @@ export function saveCampaign(next, { notify = true } = {}) {
 }
 
 export function objective() {
-  const { step, workbenchRestored } = campaign();
+  const p = campaign(), { step, workbenchRestored } = p;
+  const location = actLocationAt(services.state.data.player);
+  const tier = location?.tier || (location?.interior ? 2 : 1);
+  if (step === 'hunt' && (workbenchRestored || tier===2)) {
+    const tracked=QUEST_BY_ID[p.tracked];
+    const quest=questStep(p,tracked) ? tracked : mainQuest(p,tier);
+    if (quest) {
+      const goal=questStep(p,quest);
+      return { id:taskTarget(quest.id,goal.index),title:quest.title,text:goal.label,where:goal.where };
+    }
+    if (tier===1 && townOpen(p)) return { id:'v2_town_route',title:'Тракт в Светлодол',
+      text:'Иди по восточному тракту в Светлодол.',where:location?.tier===1?null:HEARTH_TRAIL };
+    if (questDone(p,'august')) return {id:'hunt',title:'Светлодол оттаял',text:'След Крона ведёт в Хрустальную Чащу.'};
+  }
   if (step === 'hunt' && !workbenchRestored) {
     return { id: 'workbench', title: 'Оживший верстак', text: 'Отогрей верстак Огнём и прочитай записку Мирры.' };
   }
@@ -76,15 +111,42 @@ export function prepareCampaign() {
     state.data.inventory = { coins: 0, moon_herb: 0 };
     saveCampaign(starterState(), { notify: false });
   }
-  for (const id of ['fire', 'telekinesis']) state.unlockAbility(id, 1);
-  state.setBuild({ slots: ['telekinesis', 'fire'] });
   const progress = campaign();
-  state.data.player = { ...hearthArrival(state.data.player, progress.step) };
-  state.data.safePoint = { ...hearthArrival(state.data.safePoint, progress.step) };
+  const position=state.data.player;
+  if (!actLocationAt(position) || actLocationAt(position).id==='mirra-hearth') {
+    state.data.player={...hearthArrival(position,progress.step)};
+  }
+  if (!actLocationAt(state.data.safePoint)) state.data.safePoint={...HEARTH_START};
+  state.giftSlotCount=()=>3;
+  state.isUnlocked=id=>!!campaign().gifts[id];
+  state.equippedGifts=()=>campaign().loadout;
+  state.isEquipped=id=>state.equippedGifts().includes(id);
+  services.abilities.label=id=>GIFT_RULES[id]?.name || id;
   syncRelics(state, progress);
   if (progress.fox) {
-    setCompanionPref('fox');
+    setCompanionPref(progress.activeCompanion || 'fox');
     if (!progress.foxStars) saveCampaign({ ...progress, foxStars: 1 }, { notify: false });
   }
   state.save();
+}
+
+export function completeActStep(p, quest, index) {
+  const step=questStep(p,quest);
+  if (!step || step.index!==index) return { error:'Сначала заверши предыдущий шаг.' };
+  if (step.needsTactical && !Object.entries(p.inv).some(([id,n])=>n>0 && ['potion_fire_flask','potion_resin_flask','potion_warm','potion_guard','potion_stable','potion_brittle'].includes(id))) {
+    return { error:'Свари тактический настой в котле Мирры или возьми готовый из сумки.' };
+  }
+  let next=p;
+  if (step.cost) {
+    next=payItems(p,step.cost);
+    if (!next) return {error:'Понадобится: '+itemList(step.cost)};
+  }
+  if (step.practiceColor) {
+    const choice=next.loadout.find(id=>next.gifts[id]?.color==='white');
+    if (choice) {
+      next=startColor(next,choice,Date.now(),true);
+      if (!next) return {error:'Сначала собери четыре Лунных травы и две Древесные смолы.'};
+    }
+  }
+  return { next:advanceQuest(next,quest,index) };
 }

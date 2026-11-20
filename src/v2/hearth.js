@@ -175,7 +175,7 @@ export class HearthPresentation {
     if (!frozen && this.frostMist.emitting) this.frostMist.stop();
   }
 
-  refresh({ step, workbenchRestored }, frozen = step === 'frost') {
+  refresh({ step, workbenchRestored }, frozen = ['spark','lantern','upgrade','frost'].includes(step)) {
     const closed = gateClosed(step);
     const cold = !workbenchRestored && (frozen || step === 'thaw' || !closed);
     this.gate.setVisible(closed);
@@ -183,8 +183,8 @@ export class HearthPresentation {
     for (const leaf of this.openLeaves) leaf.setVisible(!closed);
     this.setFrozen(frozen);
     this.fox.setVisible(closed);
-    this.lantern.setVisible(step === 'intro');
-    this.lanternLight.setVisible(step === 'intro');
+    this.lantern.setVisible(step === 'intro' || !closed);
+    this.lanternLight.setVisible(step === 'intro' || !closed);
     this.workbenchIce.setVisible(cold);
     this.workbench.setTint(cold ? 0x8bbcca : 0xffffff);
     this.cauldron.setTint(cold ? 0x9abdd3 : 0xffffff);

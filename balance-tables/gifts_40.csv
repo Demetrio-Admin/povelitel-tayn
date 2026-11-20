@@ -1,41 +1,41 @@
-id,name,role,tag,detonate_tag,target_scope,mana,cd_sec,sp_mult,arena_effect,passive_3star,passive_5star,shard_tier,rarity,enabled,specialization,direct_effect,source
-fire,Огонь,nagovor,heat,,single,,,,Раскаляет камень (бросок вешает 2 слоя *Жара*).,,,1,,false,heat,"Урон + слой *Жара* (до 3 слоёв, антихил $-30\%$).",Старт / Тир 1
-ice,Лёд,nagovor,brittle,,single,,,,Делает камень хрупким (бросок режет броню).,,,1,,false,brittle,Замедление + *Хрупкость* ($+25\%$ урона).,Тир 1–2
-resin_thread,Смоляная нить,nagovor,viscosity,,single,,,,Покрывает камень смолой (бросок создаёт лужу).,,,1,,false,viscosity,Замедляет атаки + *Вязкость* (усиливает *Жар*/*Разряд*).,Тир 1
-willow_echo,Отголосок ивы,nagovor,echo,,single,,,,Раздваивает предмет при броске (2 удара).,,,3,,false,echo,Вешает *Эхо* (повтор $35\%$ следующего удара).,Тир 3
-spark_seed,Искровой посев,nagovor,charge,,all,,,,Заряжает field_crystal для цепного удара.,,,2,,false,charge,Вешает *Разряд* на группу (взрыв от 4-го выстрела).,Тир 2
-seal_crack,Трещина печати,nagovor,breach,,single,,,,Делает предмет пробивным (снимает щит при броске).,,,2,,false,breach,Вешает *Пролом* (срез брони + ослабление будущих щитов).,Тир 2
-smolder_ash,Тлеющий пепел,nagovor,heat,,all,,,,Раскаляет сразу все камни на арене.,,,4,,false,heat,Долгий мягкий *Жар* по группе + бафф палочке по горящим.,Тир 4 / Сундук
-frost_mist,Инеевая дымка,nagovor,brittle,,single,,,,Превращает кристалл в резонатор холода.,,,,,false,brittle,Малый урон + заморозка таймера каста врага на $1.5\text{ с}$.,Сезон Дуэли
-mire_bog,Болотная топь,nagovor,viscosity,,all,,,,Утяжеляет лёгкий камень до тяжёлого.,,,4,,false,viscosity,*Вязкость* + режет урон сильных атак врагов.,Тир 4 / Аномалии
-lunar_mark,Лунная метка,nagovor,echo+breach,,single,,,,Заряжает предмет лунным светом ($+$крит при броске).,,,,,false,echo+breach,4-й выстрел палочки бьёт дважды сквозь броню.,Ковен / Редкий
-storm,Гроза,zhatva,,charge/brittle,all,,,,Проводит усиленную дугу через field_crystal со сбитием каста.,,,2,,false,charge/brittle,Сильный разряд; повышенный крит по *Хрупкости*/*Разряду*.,Тир 2
-crimson_burst,Багровый всплеск,zhatva,,heat,splash,,,,Подрывает раскалённый камень прямо на месте.,,,1,,false,heat,Срывает все слои *Жара* в мгновенный взрыв.,Тир 1
-ice_shatter,Ледяной раскол,zhatva,,brittle,single,,,,Раскалывает ледяной предмет градом осколков.,,,2,,false,brittle,Двойной урон по *Хрупкости* + короткое оглушение.,Тир 2
-mirror_cleave,Зеркальный скол,zhatva,,echo,single,,,,"Бьёт сквозь кристалл, продлевая *Эхо*.",,,3,,false,echo,Срывает *Эхо* и удваивает силу резонанса палочки на $5\text{ с}$.,Тир 3
-resin_flash,Вспышка смолы,zhatva,,viscosity,splash,,,,Поджигает лужу смолы на арене.,,,1,,false,viscosity,Воспламеняет *Вязкость* (взрыв + 2 слоя *Жара*).,Тир 1–2
-veil_rend,Рассечение завесы,zhatva,,breach,single,,,,Высасывает заряд предмета в пробивной удар.,,,2,,false,breach,Усиленный урон по *Пролому* и пробитым щитам.,Тир 2
-ball_lightning,Шаровая молния,zhatva,,charge,all,,,,Разряжает все объекты арены в один залп.,,,4,,false,charge,Урон растёт за каждый заряженный предмет на поле.,Тир 4 / Сундук
-flame_sickle,Пламенный серп,zhatva,,heat,single,,,,Раскалывает раскалённый камень в горящие искры.,,,,,false,heat,"Не снимает *Жар*, но обновляет таймер и бьёт с антихилом.",Сезон Дуэли
-glass_needle,Стеклянная игла,zhatva,,brittle/echo,single,,,,Откалывает кусок тяжёлого камня без его траты.,,,3,,false,brittle/echo,Быстрый дешёвый выстрел с повышенным шансом крита.,Тир 3 / Ковен
-eclipse_call,Зов затмения,zhatva,,Любые 2,splash,,,,Поглощает 1 предмет арены ради снижения цены MP.,,,5,,false,Любые 2,Срывает сразу 2 разные метки с высоким множителем.,Тир 5+ / Сундук
-telekinesis,Телекинез,volya,,,single/splash,,,,Бросок любого камня с полной активацией его метки.,,,1,,false,Базовый бросок,Толчок (малый урон + сбитие слабого каста).,Старт / Тир 1
-stone_call,Зов камней,volya,,,single,,,,Усиливает выбранный камень ($+30\%$ к следующему броску).,,,1,,false,Призыв,Мгновенно создаёт field_rock_heavy на пустом слоте.,Тир 1
-frost_prism,Морозная призма,volya,,,all,,,,Разбивает кристалл в волну *Хрупкости*.,,,2,,false,Призыв + Холод,"Ставит ледяной кристалл (враги замедлены, пока стоит).",Тир 2
-glass_vortex,Стеклянный вихрь,volya,,,all,,,,Приоритетно активирует метку выбранного объекта.,,,3,,false,Массовый бросок,Бросает сразу все предметы арены ($\times 0.75$ за каждый).,Тир 3
-resin_barrel,Бочка смолы,volya,,,splash,,,,Бросает бочку — разливает лужу *Вязкости*.,,,2,,false,Призыв + Смола,Ставит на поле бочку смолы.,Тир 2
-shard_barrage,Осколочный шквал,volya,,,single,,,,Дробит камень на 3 быстрых снаряда под крит.,,,2,,false,Прерывание,"Быстрый удар гравием, сбивает подготовку врага.",Тир 2
-lightning_rod,Громоотвод,volya,,,all,,,,Усиливает проводимость кристалла на $10\text{ с}$.,,,4,,false,Призыв + Молния,Ставит на поле field_crystal с готовым *Разрядом*.,Тир 4 / Сундук
-shard_magnet,Магнит осколков,volya,,,single,,,,Бросает предмет и мгновенно возвращает его на поле.,,,,,false,Возврат,Перехватывает снаряд врага ($-50\%$ урона).,Сезон Дуэли
-ember_monolith,Жаркий монолит,volya,,,splash,,,,Мгновенно запускает валун в цель.,,,5,,false,Призыв + Огонь,Ставит раскалённый валун (взрывается сам через $4\text{ с}$).,Тир 5 / Боссы
-mirror_twin,Зеркальный двойник,volya,,,single,,,,Копирует уже заряженный предмет с сохранением метки.,,,5,,false,Копия + Эхо,Ускоряет респавн всех предметов арены на $4\text{ с}$.,Ковен / Тир 5+
-seal,Астрал,obereg,,,single,,,,Поглощает field_crystal в $+25\%$ маны.,,,1,,false,Пролом + Мана,Снимает щиты и барьеры врага + вешает *Пролом*.,Тир 1–2
-lunar_veil,Лунный покров,obereg,,,self,,,,Поглощает лёгкий камень в доп. прочность щита.,,,1,,false,Щит,Щит $20\%\text{ maxHP}$ на $6\text{ с}$ + сбитие слабого каста.,Тир 1
-funeral_bell,Погребальный звон,obereg,,,self/all,,,,"Гасит опасные метки, превращая в $+8\%\text{ HP}$.",,,2,,false,Очищение,Снимает *Жар*/холод с героя + режет урон врагов на $20\%$ ($5\text{ с}$).,Тир 2
-grove_breath,Дыхание рощи,obereg,,,self,,,,Ускоряет откат предметов арены.,,,3,,false,Палочка + Спутник,На $6\text{ с}$ резонанс палочки каждые 3 выстрела + ускорение Отклика.,Тир 3
-stone_shell,Каменный панцирь,obereg,,,self,,,,Тяжёлый камень даёт иммунитет к прерыванию на $5\text{ с}$.,,,2,,false,Тяжёлый щит,Превращает камень с поля в щит $35\%\text{ maxHP}$.,Тир 2
-reflect_glass,Отражающее стекло,obereg,,,self,,,,Заряжает выбранный предмет *Эхом*.,,,3,,false,Контратака,Отражает $40\%$ следующего сильного удара врага.,Тир 3
-flow_source,Источник потока,obereg,,,self,,,,Двойной возврат маны при поглощении кристалла.,,,4,,false,Мана + Откат,$+20\%$ MP и $-2\text{ с}$ КД двух других даров (в капе $50\%$).,Аномалии / Тир 4
-quiet_ember,Тихий уголь,obereg,,,self,,,,Бесплатно поджигает предмет на поле.,,,,,false,Конверсия,$30\%$ полученного за $5\text{ с}$ урона усиливает следующую *Жатву*.,Сезон Дуэли
-calm_seal,Печать покоя,obereg,,,self,,,,Ускоряет респавн предметов арены на $30\%$.,,,4,,false,Контроль статусов,$-40\%$ силы статусов врага на $6\text{ с}$ (мультипликативно).,Тир 4 / Ковен
-coven_circle,Круг ковена,obereg,,,self,,,,Активирует пассивный бонус надетого амулета на $4\text{ с}$.,,,,,false,Универсал,Малый щит + $12\%$ MP + случайная зарядка предмета поля.,Ковен / Редкий
+id,name,role,tag,detonate_tag,target_scope,mana,cd_sec,sp_mult,arena_effect,passive_3star,passive_5star,shard_tier,rarity,enabled
+fire,Огонь,nagovor,heat,,single,18,4.0,1.15,charge_heat_2stacks,heat_duration_plus_3s,heat_3stacks_buff_wand_15pct,tier_1,common,true
+ice,Лёд,nagovor,brittle,,single,20,5.0,1.05,charge_brittle_armor_shred_6s,brittle_duration_plus_2s,brittle_crit_taken_plus_10pct,tier_2,common,false
+resin_thread,Смоляная нить,nagovor,viscosity,,single,20,5.5,0.9,coat_rock_resin_puddle_6s,puddle_duration_plus_2s,viscosity_bonus_plus_20pct,tier_1,common,true
+willow_echo,Отголосок ивы,nagovor,echo,,single,22,6.0,0.85,split_rock_two_hits_1_4x,echo_copy_plus_10pct,echo_triggers_companion_plus10,tier_5,rare,false
+spark_seed,Искровой посев,nagovor,charge,,all,24,6.5,0.75,charge_crystal_chain_stun,charge_explode_plus_20pct,charge_refund_8mp_per_target,tier_2,common,false
+seal_crack,Трещина печати,nagovor,breach,,single,18,5.0,1.0,charge_rock_strip_shield,breach_duration_plus_2s,breach_weakens_next_shield_50pct,tier_2,common,false
+smolder_ash,Тлеющий пепел,nagovor,heat,,all,26,7.0,0.8,charge_all_rocks_heat,ash_wand_dmg_plus_15pct_on_heat,ash_spread_heat_on_kill,tier_4,epic,false
+frost_mist,Инеевая дымка,nagovor,brittle,,single,20,6.0,0.85,turn_crystal_frost_resonator,cast_freeze_plus_1s,mist_adds_20pct_slow,tier_3,rare,false
+mire_bog,Болотная топь,nagovor,viscosity,,all,24,7.0,0.75,upgrade_light_rock_to_heavy,strong_attack_debuff_plus_10pct,bog_slows_enemy_cast_20pct,tier_4,rare,false
+lunar_mark,Лунная метка,nagovor,echo|breach,,single,26,7.5,0.95,charge_rock_lunar_crit,wand_4th_hits_twice_through_armor,mark_extends_2s_on_crit,tier_6,epic,false
+storm,Гроза,zhatva,,charge|brittle,all,28,8.0,1.45,arc_crystal_chain_interrupt,crit_vs_charge_brittle_plus_20pct,crystal_arc_cd_minus_1_5s,tier_2,rare,false
+crimson_burst,Багровый всплеск,zhatva,,heat,splash,26,7.0,1.55,detonate_hot_rock_in_place,detonate_refund_10mp,detonate_crit_plus_20pct,tier_1,rare,true
+ice_shatter,Ледяной раскол,zhatva,,brittle,single,26,7.5,1.65,shatter_ice_object_hail,stun_duration_plus_0_6s,shatter_splash_35pct_neighbors,tier_2,rare,false
+mirror_cleave,Зеркальный скол,zhatva,,echo,single,24,6.5,1.5,strike_through_crystal_extend_echo,wand_impulse_2x_for_5s,cleave_grants_15_companion,tier_5,rare,false
+resin_flash,Вспышка смолы,zhatva,,viscosity,splash,24,7.0,1.45,ignite_resin_puddle_aoe,ignite_applies_2_heat_stacks,flash_reduces_cd_1s_per_target,tier_2,common,false
+veil_rend,Рассечение завесы,zhatva,,breach,single,22,6.0,1.6,drain_object_charge_pierce,bonus_dmg_vs_broken_shield_35pct,rend_ignores_40pct_armor,tier_2,common,false
+ball_lightning,Шаровая молния,zhatva,,charge,all,30,8.5,1.5,discharge_all_arena_objects_volley,dmg_plus_20pct_per_charged_obj,volley_stuns_primary_1s,tier_4,epic,false
+flame_sickle,Пламенный серп,zhatva,,heat,single,22,5.5,1.35,split_hot_rock_burning_sparks,refresh_heat_without_consume,antiheal_40pct_on_target,tier_3,rare,false
+glass_needle,Стеклянная игла,zhatva,,brittle|echo,single,16,4.5,1.25,chip_heavy_rock_without_consume,needle_crit_chance_plus_25pct,crit_refunds_8mp,tier_3,rare,false
+eclipse_call,Зов затмения,zhatva,,any_2,splash,32,9.0,1.95,consume_object_reduce_mp_50pct,detonate_2_tags_bonus_35pct,eclipse_fills_companion_plus25,tier_6,epic,false
+telekinesis,Телекинез,volya,,,single,16,3.5,0.95,throw_activate_tag,throw_dmg_plus_15pct,throw_grant_companion_plus10,tier_1,common,true
+stone_call,Зов камней,volya,,,single,22,8.0,0.0,spawn_heavy_rock_or_buff_30pct,spawned_rock_precharged,cd_minus_1_5s,tier_1,common,true
+frost_prism,Морозная призма,volya,brittle,,all,24,9.0,0.7,summon_frost_crystal_or_shatter_brittle,prism_slow_aura_20pct,shatter_extends_brittle_2s,tier_2,rare,false
+glass_vortex,Стеклянный вихрь,volya,,,all,28,9.5,1.25,throw_all_arena_objects_0_75x,primary_tag_full_power,vortex_reduces_respawn_2s,tier_5,rare,false
+resin_barrel,Бочка смолы,volya,viscosity,,splash,20,8.0,0.85,summon_or_throw_resin_barrel,puddle_slow_plus_15pct,barrel_throw_adds_1_heat_if_burning,tier_2,common,false
+shard_barrage,Осколочный шквал,volya,,,single,20,5.5,1.15,split_rock_3_crit_shards,always_interrupt_enemy_cast,each_shard_plus_10pct_crit,tier_2,common,false
+lightning_rod,Громоотвод,volya,charge,,all,24,9.5,0.6,summon_charged_crystal_or_amp_10s,rod_passive_zap_every_3s,crystal_chain_dmg_plus_25pct,tier_4,epic,false
+shard_magnet,Магнит осколков,volya,,,single,22,7.5,0.9,throw_and_instant_return_object,intercept_enemy_projectile_50pct,returned_object_keeps_tag,tier_3,rare,false
+ember_monolith,Жаркий монолит,volya,heat,,splash,26,9.5,1.2,summon_hot_boulder_auto_explode_4s,explosion_applies_2_heat,manual_throw_dmg_plus_30pct,tier_5,epic,false
+mirror_twin,Зеркальный двойник,volya,echo,,single,26,10.0,0.0,copy_charged_object_keep_tag,arena_respawn_minus_4s,copied_throw_bonus_20pct,tier_6,epic,false
+seal,Астрал,obereg,breach,,single,22,7.5,1.05,absorb_crystal_25pct_mp,breach_duration_plus_2s,strip_shield_refund_15mp,tier_1,rare,true
+lunar_veil,Лунный покров,obereg,,,self,24,10.0,0.0,absorb_light_rock_plus_shield,shield_plus_5pct_hp,shield_break_pulse_dmg,tier_1,rare,true
+funeral_bell,Погребальный звон,obereg,,,self,22,9.5,0.0,cleanse_tags_heal_8pct_hp,enemy_dmg_minus_20pct_5s,bell_adds_15pct_status_res_6s,tier_4,rare,false
+grove_breath,Дыхание рощи,obereg,,,self,24,10.0,0.0,speedup_arena_respawn_30pct,wand_impulse_every_3_shots_6s,companion_charge_gain_plus_25pct,tier_5,rare,false
+stone_shell,Каменный панцирь,obereg,,,self,26,11.0,0.0,convert_rock_shield_35pct_hp,heavy_rock_interrupt_immune_5s,shell_reflects_15pct_melee,tier_2,common,false
+reflect_glass,Отражающее стекло,obereg,echo,,self,24,9.0,0.0,charge_object_echo,reflect_40pct_next_strong_hit,reflect_grants_15mp,tier_5,rare,false
+flow_source,Источник потока,obereg,,,self,0,12.0,0.0,double_crystal_mana_restore,restore_20pct_mp_and_cd_minus_2s,next_gift_sp_plus_20pct,tier_4,epic,false
+quiet_ember,Тихий уголь,obereg,heat,,self,20,9.5,0.0,free_ignite_arena_object,convert_30pct_dmg_taken_5s_to_zhatva,ember_grants_10pct_mit_5s,tier_3,rare,false
+calm_seal,Печать покоя,obereg,,,self,22,10.0,0.0,arena_respawn_minus_30pct,status_dmg_taken_minus_40pct_6s,cleanse_1_debuff_on_cast,tier_4,rare,false
+coven_circle,Круг ковена,obereg,,,self,26,11.5,0.0,trigger_equipped_amulet_4s,small_shield_12pct_mp_random_charge,circle_grants_20_companion,tier_6,epic,false

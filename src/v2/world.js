@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { ExplorationScene } from '../scenes/ExplorationScene.js';
-import { InteractiveObject } from '../objects/InteractiveObject.js';
+import { InteractiveObject, applyDisplaySize } from '../objects/InteractiveObject.js';
 import { setCompanionPref } from '../objects/Companion.js';
 import { COLORS, DEPTH } from '../config/game.config.js';
 import { UI } from '../config/ui.config.js';
@@ -8,7 +8,14 @@ import { CORE } from '../config/horizon/rules.js';
 import { PREVIEW_CORE } from '../config/horizon/previewTuning.js';
 import { MSG } from '../state/EventBus.js';
 import { services } from '../services.js';
-import { campaign, saveCampaign } from './campaign.js';
+import { campaign, saveCampaign, completeActStep, objective } from './campaign.js';
+import { ensureLocationWithScreen } from '../systems/assetPacks.js';
+import { CITY_LAYOUT_VERSION } from '../config/city.plan.js';
+import { BOR, actLocation, actLocationAt, arrivalFor, borMap } from './regions.js';
+import { QUEST_BY_ID } from './quests.js';
+import { dailyElite, questStep, plannedEncounter, townOpen } from './actProgress.js';
+import { actsTargets, actsTargetAvailable, runtimeEncounter, regionForPoint, canUsePortal,
+  installActPresentation, refreshActPresentation, claimWorldAction, pollField } from './actWorld.js';
 import { HEARTH, GATE, WORKBENCH, LANTERN, FROST, FOX, CAMPFIRE, HearthPresentation, gateClosed, hearthArrival, hearthMap } from './hearth.js';
 import { DIALOGUE, MIRRA_NOTE, STORY_ENCOUNTERS, claimMirraLantern, finishDialogue, huntOffers, restoreWorkbench, tideStatus, upgradeWand, wandSeconds } from './episode.js';
 
@@ -42,33 +49,46 @@ class CampaignTarget extends InteractiveObject {
   constructor(scene, cfg) {
     super(scene, cfg);
     if (cfg.size) { this.sprite.setDisplaySize(...cfg.size); this.baseScale = { x: this.sprite.scaleX, y: this.sprite.scaleY }; }
+    else if (cfg.texture?.startsWith('npc_')) {
+      const size=120/this.sprite.displayHeight;
+      this.sprite.setScale(this.sprite.scaleX*size,this.sprite.scaleY*size);
+      this.baseScale={x:this.sprite.scaleX,y:this.sprite.scaleY};
+    }
     if (cfg.action === 'workbench') this.ability = 'fire';
+    if (cfg.gift) this.ability=cfg.gift;
     this.caption = scene.add.text(cfg.x, this.markerY - 14, '', {
       fontFamily: UI.font, fontSize: UI.type.small, color: COLORS.textGold, align: 'center', stroke: '#180f16', strokeThickness: 4,
     }).setOrigin(0.5, 1).setDepth(DEPTH.markers).setVisible(false);
   }
 
   get label() {
+    if (this.cfg.field) {
+      const encounter=runtimeEncounter(campaign(),this.cfg);
+      return encounter ? encounter.name+' · '+encounter.level : this.cfg.label;
+    }
     if (!this.cfg.hunt) return this.cfg.label;
     const offer = this.offer();
     return offer ? this.cfg.label + ' · ур. ' + offer.level : this.cfg.label;
   }
 
   get markerIcon() {
-    if (this.cfg.hunt || ['spark', 'frost'].includes(this.cfg.action)) return 'icon_fight';
-    if (this.cfg.action === 'lantern') return 'icon_gather';
+    if (this.cfg.field || this.cfg.pack || this.cfg.hunt || ['spark', 'frost'].includes(this.cfg.action)) return 'icon_fight';
+    if (this.cfg.action === 'lantern' || this.cfg.gatherTier) return 'icon_gather';
+    if (this.cfg.gift) return 'icon_'+this.cfg.gift;
+    if (this.cfg.portal) return 'icon_hand';
     if (this.cfg.action === 'thaw') return 'icon_hand';
     return ['upgrade', 'workbench'].includes(this.cfg.action) ? 'icon_fire' : 'icon_talk';
   }
 
-  get markerColor() { return this.cfg.hunt ? COLORS.danger : COLORS.gold; }
+  get markerColor() { return this.cfg.hunt || this.cfg.field || this.cfg.pack ? COLORS.danger : COLORS.gold; }
 
   offer() {
     return huntOffers(campaign(), Date.now()).find(o => o.id === this.cfg.action);
   }
 
   requirementsMet() {
-    const { step, workbenchRestored } = campaign();
+    const p=campaign(), { step, workbenchRestored } = p;
+    if (!this.cfg.step) return actsTargetAvailable(p,this.cfg);
     if (step !== this.cfg.step) return false;
     if (this.cfg.action === 'workbench') return !workbenchRestored;
     return !this.cfg.hunt || !!this.offer()?.ready;
@@ -77,21 +97,34 @@ class CampaignTarget extends InteractiveObject {
   refresh() {
     super.refresh();
     if (this.cfg.resident) this.sprite.setVisible(true);
-    this.caption?.setVisible(this.isAvailable()).setText(this.label);
+    if (this.cfg.field && this.sprite.visible) {
+      const texture=runtimeEncounter(campaign(),this.cfg)?.enemies[0].texture;
+      if (texture && this.sprite.texture.key!==texture && this.scene.textures.exists(texture)) {
+        applyDisplaySize(this.sprite.setTexture(texture),texture);
+        this.baseScale={x:this.sprite.scaleX,y:this.sprite.scaleY};
+      }
+    }
+    this.caption?.setVisible(this.isAvailable() && !this.cfg.gatherTier && !this.cfg.field && !this.cfg.portal)
+      .setText(this.label).setY(this.markerY-14);
   }
 
   interact(ability) { this.scene.advanceCampaign(this.cfg, ability); }
 }
 
 export class HorizonExplorationScene extends ExplorationScene {
-  locationFor() { return HEARTH; }
-  mapForLocation() { return hearthMap(); }
-  fixStartPosition(p) { return hearthArrival(p, campaign().step); }
-  worldContent() { return { interactives: [...STORY_TARGETS, ...HUNT_TARGETS], enemies: [] }; }
-
+  locationFor(p) { return actLocationAt(p) || HEARTH; }
+  mapForLocation() {
+    if (this.loc===HEARTH) return hearthMap();
+    if (this.loc===BOR) return borMap();
+    return super.mapForLocation();
+  }
+  fixStartPosition(p) { return this.locationFor(p)===HEARTH ? hearthArrival(p,campaign().step) : p; }
+  worldContent() { return { interactives:[...STORY_TARGETS,...HUNT_TARGETS,...actsTargets()],enemies:[] }; }
   buildGround() {
-    this.add.image(0, 0, 'horizon_hearth_yard').setOrigin(0)
-      .setDisplaySize(HEARTH.rect.w, HEARTH.rect.h).setDepth(DEPTH.ground);
+    if (![HEARTH,BOR].includes(this.loc)) { super.buildGround(); return; }
+    const {x,y,w,h}=this.loc.rect;
+    this.add.image(x,y,this.loc===HEARTH?'horizon_hearth_yard':'horizon_amberwood').setOrigin(0)
+      .setDisplaySize(w,h).setDepth(DEPTH.ground);
   }
 
   createObject(cfg) {
@@ -101,15 +134,26 @@ export class HorizonExplorationScene extends ExplorationScene {
   scheduleStory() {}
   migrateV10() {}
   updateZone() {}
+  refreshAll() {
+    super.refreshAll();
+    if (this.questDecor) refreshActPresentation(this);
+  }
   canAct() { return !this.storyPending && super.canAct(); }
 
   create() {
     this.campaignPoll = 0;
     this.storyPending = false;
     this.trackedHunt = null;
+    this.hearth=null;
+    this.questDecor=null;
+    this.questBattle=null;
     super.create();
-    this.hearth = new HearthPresentation(this);
-    this.refreshHearth();
+    if (this.loc===HEARTH) {
+      this.hearth=new HearthPresentation(this);
+      this.refreshHearth();
+    }
+    installActPresentation(this);
+    pollField(this);
   }
 
   setupCompanion() {
@@ -117,16 +161,26 @@ export class HorizonExplorationScene extends ExplorationScene {
   }
 
   refreshHearth(frozen) {
-    this.hearth.refresh(campaign(), frozen);
+    this.hearth?.refresh(campaign(), frozen);
     this.setupCompanion();
   }
 
   guideTarget() {
-    const { step, workbenchRestored } = campaign();
-    let key = 'v2_' + step;
-    if (step === 'hunt') key = this.trackedHunt || (workbenchRestored ? null : 'v2_workbench');
-    if (!key) return null;
-    return this.objects.some(o => o.id === key && o.isAvailable()) ? key : null;
+    const { step, workbenchRestored }=campaign();
+    const available=id=>this.objects.some(o=>o.id===id&&o.isAvailable());
+    if (this.trackedHunt && available(this.trackedHunt)) return this.trackedHunt;
+    if (this.loc===HEARTH && step!=='hunt') return available('v2_'+step)?'v2_'+step:null;
+    if (this.loc===HEARTH && !workbenchRestored) return 'v2_workbench';
+    const goal=objective();
+    if (available(goal.id)) return goal.id;
+    const dest=goal.where && regionForPoint(goal.where);
+    if (dest===this.loc.id) return null;
+    const portals=this.objects.filter(o=>o.cfg.portal&&o.isAvailable());
+    const target = portals.find(o=>o.cfg.to===dest)
+      || (this.loc===HEARTH && portals.find(o=>o.cfg.to===BOR.id))
+      || (this.loc===BOR && portals.find(o=>o.cfg.to==='city'&&townOpen(campaign())))
+      || (this.loc.interior && portals.find(o=>o.cfg.to==='city'));
+    return target?.id || null;
   }
 
   guideTargetPos() {
@@ -136,8 +190,34 @@ export class HorizonExplorationScene extends ExplorationScene {
 
   onZoneLine() {} // the scripted speech belongs to the current campaign
 
-  travelToLocation() {
-    this.toast('Дальние тропы открываются в следующих эпизодах.');
+  travelToLocation(id, at) {
+    const loc=actLocation(id);
+    if (!loc || !this.canAct() || this.inTransition || loc.id===this.loc.id) return;
+    this.inTransition=true;
+    services.mode='transition';
+    this.player.stop();
+    this.interaction.clearFocus();
+    const cam=this.cameras.main;
+    cam.fadeOut(260,0,0,0);
+    cam.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE,async()=>{
+      if (loc.id!==BOR.id && loc.id!==HEARTH.id) await ensureLocationWithScreen(this,loc);
+      const position=at || arrivalFor(id), state=services.state;
+      // Use the painted city coordinates directly when arriving from the new forest.
+      state.setObject('city_layout',{version:CITY_LAYOUT_VERSION});
+      state.data.player={...position};
+      state.data.safePoint={...position};
+      state.save();
+      this.scene.restart();
+    });
+  }
+
+  onAbility(id) {
+    const target=this.interaction.focus;
+    if (this.canAct() && target instanceof CampaignTarget && target.cfg.gift) {
+      target.interact(id);
+      return;
+    }
+    super.onAbility(id);
   }
 
   update(time, delta) {
@@ -145,11 +225,30 @@ export class HorizonExplorationScene extends ExplorationScene {
     if (campaign().step === 'hunt' && time >= this.campaignPoll) {
       this.campaignPoll = time + 950;
       for (const object of this.objects) if (object.cfg.hunt) object.refresh();
+      pollField(this);
     }
   }
 
   advanceCampaign(cfg, ability) {
     if (!this.canAct()) return;
+    if (cfg.portal) {
+      if (canUsePortal(campaign(),cfg)) this.travelToLocation(cfg.to,cfg.at);
+      else this.toast(cfg.lock==='town'?'Тракт откроется после Древогляда или на 21-м уровне охоты.':'Проход пока закрыт.');
+      return;
+    }
+    if (cfg.quest) { this.actQuest(cfg,ability); return; }
+    if (cfg.elite) {
+      const encounter=dailyElite(campaign(),cfg.elite,Date.now());
+      if (encounter) this.enterHorizonBattle(encounter);
+      return;
+    }
+    if (cfg.field) {
+      const encounter=runtimeEncounter(campaign(),cfg);
+      if (encounter) { this.trackedHunt=null; this.enterHorizonBattle(encounter); }
+      return;
+    }
+    if (cfg.gatherTier || cfg.anomaly) { claimWorldAction(this,cfg,ability); return; }
+    if (cfg.service) { this.scene.get('UIScene').openActService(cfg.service); return; }
     if (cfg.hunt) {
       const encounter = huntOffers(campaign(), Date.now()).find(o => o.id === cfg.action && o.ready);
       if (encounter) { this.trackedHunt = null; this.enterHorizonBattle(encounter); }
@@ -165,6 +264,49 @@ export class HorizonExplorationScene extends ExplorationScene {
       else this.heroSay('Примени Огонь к верстаку.');
     }
     else if (STORY_ENCOUNTERS[cfg.action]) this.enterHorizonBattle(STORY_ENCOUNTERS[cfg.action]);
+  }
+
+  actQuest(cfg,ability) {
+    const p=campaign(), quest=QUEST_BY_ID[cfg.quest], step=questStep(p,quest);
+    if (!step || step.index!==cfg.index) return;
+    if (step.pack) {
+      const encounter=plannedEncounter(p,quest,step);
+      const start=()=>{ this.questBattle=step; this.enterHorizonBattle(encounter); };
+      if (step.intro) this.showActDialogue(step.intro,quest.title,start,'Вступить в бой');
+      else start();
+      return;
+    }
+    if (step.gift && (ability && ability!==step.gift || !p.gifts[step.gift])) {
+      this.toast('Нужен дар «'+services.abilities.label(step.gift)+'».');
+      return;
+    }
+    if (step.cost) {
+      this.showActDialogue(step.after,quest.title,()=>this.finishActAction(cfg),'Помочь');
+      return;
+    }
+    if (this.finishActAction(cfg) && step.after) this.showActDialogue(step.after,quest.title);
+  }
+
+  finishActAction(cfg) {
+    const before=campaign(), quest=QUEST_BY_ID[cfg.quest];
+    const {next,error}=completeActStep(before,quest,cfg.index);
+    if (error) { this.toast(error); return false; }
+    saveCampaign(next);
+    if (cfg.gift) this.castFx(cfg.x,cfg.y-36,COLORS[cfg.gift] || COLORS.gold);
+    else this.burst(cfg.x,cfg.y-40,COLORS.gold,16);
+    if (before.activeCompanion!==next.activeCompanion) {
+      setCompanionPref(next.activeCompanion);
+      this.setupCompanion();
+    }
+    this.refreshAll();
+    if (next.tasks[quest.id]>=quest.steps.length) this.toast('Задание выполнено · '+quest.title);
+    return true;
+  }
+
+  showActDialogue(line,fallback,onClick,label='Дальше') {
+    const parts=line.split('\n');
+    this.dialog({title:parts.length>1?parts.shift():fallback,text:parts.join('\n'),
+      buttons:[{label,primary:true,onClick}]});
   }
 
   playDialogue(step, line = 0) {
@@ -206,6 +348,11 @@ export class HorizonExplorationScene extends ExplorationScene {
       .setDisplaySize(84, 126).setDepth(DEPTH.mainBase + MIRRA.y + 1);
     this.burst(MIRRA.x, MIRRA.y - 57, 0xcc9df0, 26);
     this.heroRing(0xfed17c, 930);
+    const ray=this.add.image(966,264,'fx_glow').setDisplaySize(151,730).setTint(0xc080ff)
+      .setBlendMode('ADD').setAlpha(.8).setDepth(DEPTH.fx);
+    const shield=this.add.image(this.player.x,this.player.y-52,'fx_ring').setDisplaySize(156,166)
+      .setTint(0xffd58a).setBlendMode('ADD').setDepth(DEPTH.fx+1);
+    this.tweens.add({targets:[ray,shield],alpha:0,duration:880,onComplete:()=>{ray.destroy();shield.destroy();}});
     this.tweens.add({ targets: mirra, y: mirra.y - 36, alpha: 0, duration: 630, ease: 'Quad.In',
       onComplete: () => { mirra.destroy(); this.sparkleShower(LANTERN.x, LANTERN.y - 20, COLORS.gold); } });
     services.audio.play('quest_update');
@@ -369,8 +516,11 @@ export class HorizonExplorationScene extends ExplorationScene {
 
   onWake(system, data) {
     super.onWake(system, data);
-    if (campaign().step === 'thaw' && this.hearth.frozen) this.meltGate();
+    if (campaign().step === 'thaw' && this.hearth?.frozen) this.meltGate();
     else this.refreshHearth();
+    if (data?.result==='victory' && this.questBattle?.after) {
+      this.time.delayedCall(450,()=>{ if(this.canAct()) this.showActDialogue(this.questBattle.after,'После боя'); });
+    }
     this.bus.emit(MSG.QUEST_CHANGED);
   }
 }

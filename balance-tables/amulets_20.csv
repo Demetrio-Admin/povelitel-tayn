@@ -1,21 +1,21 @@
-id,name,group,passive_type,val_0,val_2,val_4,val_5,tier,enabled,rule,build
-amulet_lunar,Лунный амулет,mana,,0.5,,,0.8,,false,При падении $\text{MP} < 20\%$ раз за бой возвращает $50\% \to 80\%$ маны.,Боссы и Дуэли
-amulet_focus,Амулет сосредоточения,mana,,,,,,,false,Повышает manaRegen и шанс крита резонансного выстрела палочки.,Универсальный
-amulet_storm_heart,Грозовое сердце,mana,,1,,,2,,false,Усиливает *Разряд*/*Грозу*; разряд через кристалл срезает КД на $1\text{–}2\text{ с}$.,Билды через *Грозу*
-amulet_archivist_clock,Часы архивариуса,mana,,1.5,,,3,,false,Каждый 3-й *Наговор* сокращает КД *Жатвы* на $1.5 \to 3.0\text{ с}$.,Плотные комбо
-amulet_wellspring,Сердце источника,mana,,0.1,,,0.25,,false,"Пока $\text{MP} > 60\%$, выстрелы палочки сильнее на $10\% \to 25\%$.",Экономный фарм
-amulet_frost,Амулет инея,elements,,1,,,3,,false,Усиливает и продлевает *Хрупкость*/замедление на $1 \to 3\text{ с}$.,Контроль и *Лёд*
-amulet_forest,Амулет леса,elements,,0.02,,,0.05,,false,Мягкий отхил $2\% \to 5\%\text{ HP}$ при срабатывании *Жатвы* или броске.,Комфортный фарм
-amulet_embers,Угольный медальон,elements,,0.15,,,0.35,,false,$+15\% \to 35\%$ урона слоёв *Жара*; 3-й слой бафает палочку.,Поджигатель
-amulet_amber_drop,Янтарная капля,elements,,,,,,,false,Удлиняет лужи *Вязкости* и усиливает взрыв смолы.,*Смола* + *Огонь*
-amulet_willow_shard,Осколок ивы,elements,,0.45,,,0.6,,false,Повышает долю урона *Эха* с $35\%$ до $45\% \to 60\%$.,Билды через *Эхо*
-amulet_breaker,Камень притяжения,arena,,0.15,,,0.35,,false,"$+15\% \to 35\%$ урона бросков, респавн камней быстрее на $1 \to 2.5\text{ с}$.",*Телекинез* / *Воля*
-amulet_crystal_prism,Призма кристаллов,arena,,0.15,,,0.15,,false,Использование field_crystal даёт $+15\%\text{ SP}$ на $5\text{ с}$.,Игра от кристаллов
-amulet_runic_glove,Руническая перчатка,arena,,0.06,,,0.14,,false,Бросок заряженного предмета вешает щит $6\% \to 14\%\text{ maxHP}$.,Гибрид атака/щит
-amulet_architect_seal,Печать зодчего,arena,,1,,,1,,false,На старте боя на арене уже лежит 1 заранее заряженный предмет.,Быстрые победы
-amulet_equilibrium,Осколок равновесия,arena,,0.3,,,0.6,,false,Каждый 2-й дар роли *Воля* стоит на $30\% \to 60\%$ меньше MP.,Спам арены
-amulet_fortitude,Талисман стойкости,utility,,0.15,,,0.35,,false,Снижает входящий урон статусов на $15\% \to 35\%$ (мультипликативно).,Ожоги / Холод
-amulet_alchemist,Амулет алхимика,utility,,0.15,,,0.35,,false,$+15\% \to 35\%$ к силе зелий; $10\% \to 25\%$ шанс не потратить склянку.,Боссы / Дуэли
-amulet_tracker,Знак следопыта,utility,,0.1,,,0.3,,false,$+10\% \to 30\%$ монет с охоты/сбора и повышенный шанс редкого дропа.,Фарм ресурсов
-amulet_duelist,Оберег дуэлянта,utility,,0.3,,,0.6,,false,Первая сильная атака врага в бою срезана на $30\% \to 60\%$.,Магическая Дуэль
-amulet_companion,Звон спутника,utility,,0.2,,,0.5,,false,Ускоряет набор Отклика и усиливает умение спутника на $20\% \to 50\%$.,Синергия спутника
+id,name,group,passive_type,val_0,val_2,val_4,val_5,tier,enabled
+amulet_lunar,Лунный амулет,mana_tempo,mana_rescue_below_20pct,0.5,0.6,0.7,0.8,tier_2,false
+amulet_focus,Амулет сосредоточения,mana_tempo,mana_regen_and_impulse_crit,0.08,0.14,0.2,0.25,tier_2,false
+amulet_storm_heart,Грозовое сердце,mana_tempo,storm_dmg_and_crystal_cd_cut,0.12,0.2,0.28,0.35,tier_6,false
+amulet_archivist_clock,Часы архивариуса,mana_tempo,every_3rd_nagovor_cuts_zhatva_cd_sec,1.5,2.0,2.5,3.0,tier_4,false
+amulet_source_heart,Сердце источника,mana_tempo,wand_dmg_while_mp_above_60pct,0.1,0.15,0.2,0.25,tier_3,false
+amulet_frost,Амулет инея,element_nagovor,extend_brittle_slow_sec,1.0,1.7,2.4,3.0,tier_2,false
+amulet_forest,Амулет леса,element_nagovor,heal_pct_on_zhatva_or_throw,0.02,0.03,0.04,0.05,tier_1,true
+amulet_ember_medallion,Угольный медальон,element_nagovor,heat_dot_bonus_pct,0.15,0.22,0.28,0.35,tier_3,false
+amulet_amber_drop,Янтарная капля,element_nagovor,viscosity_duration_and_flash_bonus,0.15,0.22,0.28,0.35,tier_2,false
+amulet_willow_shard,Осколок ивы,element_nagovor,echo_copy_total_pct,0.45,0.5,0.55,0.6,tier_5,false
+amulet_gravity_stone,Камень притяжения,arena_volya,throw_dmg_bonus_and_respawn_cut,0.15,0.22,0.28,0.35,tier_3,false
+amulet_crystal_prism,Призма кристаллов,arena_volya,crystal_use_sp_buff_5s,0.15,0.2,0.25,0.3,tier_3,false
+amulet_rune_gauntlet,Руническая перчатка,arena_volya,charged_throw_shield_max_hp,0.06,0.09,0.11,0.14,tier_4,false
+amulet_architect_seal,Печать зодчего,arena_volya,precharged_arena_objects_on_start,1.0,1.0,2.0,2.0,tier_6,false
+amulet_balance_shard,Осколок равновесия,arena_volya,every_2nd_volya_mp_discount,0.3,0.4,0.5,0.6,tier_4,false
+amulet_resilience,Талисман стойкости,defense_duel_farm,status_dmg_mitigation,0.15,0.22,0.28,0.35,tier_4,false
+amulet_alchemist,Амулет алхимика,defense_duel_farm,potion_power_bonus_and_save_chance,0.15,0.22,0.28,0.35,tier_3,false
+amulet_tracker,Знак следопыта,defense_duel_farm,bonus_coins_hunt_and_gather,0.1,0.17,0.24,0.3,tier_2,false
+amulet_duelist_ward,Оберег дуэлянта,defense_duel_farm,first_strong_enemy_hit_mitigation,0.3,0.4,0.5,0.6,tier_4,false
+amulet_companion_bell,Звон спутника,defense_duel_farm,companion_skill_bonus_and_charge,0.2,0.3,0.4,0.5,tier_6,false

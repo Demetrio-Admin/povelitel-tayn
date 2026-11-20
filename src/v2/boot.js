@@ -3,8 +3,11 @@ import { PreloadScene } from '../scenes/PreloadScene.js';
 import { initServices, services } from '../services.js';
 import { setCompanionStorage } from '../objects/Companion.js';
 import { ITEMS } from '../config/balance.progression.js';
+import { ABILITIES } from '../config/balance.abilities.js';
 import { PACK_IMAGES } from '../config/assets.packs.js';
 import { prepareCampaign } from './campaign.js';
+import { GIFT_RULES } from '../config/horizon/rules.js';
+import { ITEM_LABELS, POTIONS_41 } from './progression.js';
 
 function campaignStorage() {
   const prefix = 'koldovstvo.horizon41.hearth.';
@@ -28,6 +31,11 @@ export class HorizonBootScene extends BootScene {
       mirra_lantern_cracked: { name: 'Треснувший фонарь Мирры', icon: 'lantern_02' },
       grimoire_page_fragment: { name: 'Расколотая страница Гримуара', icon: 'magic_book_01' },
     });
+    for (const [id,name] of Object.entries(ITEM_LABELS)) if (!ITEMS[id]) ITEMS[id]={name,icon:'icon_shard'};
+    for (const potion of Object.values(POTIONS_41)) ITEMS[potion.id]={name:potion.name,icon:potion.category==='heal'?'icon_potion_life':'icon_potion_fire'};
+    for (const gift of Object.values(GIFT_RULES)) {
+      if (!ABILITIES[gift.id]) ABILITIES[gift.id]={name:gift.name,color:gift.role==='nagovor'?'fire':gift.role==='volya'?'telekinesis':'seal',levels:{}};
+    }
     prepareCampaign();
     this.scene.start('PreloadScene');
   }
@@ -39,8 +47,22 @@ export class HorizonPreloadScene extends PreloadScene {
     this.load.image('enemy_frost_critter', PACK_IMAGES.chapter2.enemy_frost_critter);
     this.load.image('horizon_hearth_yard', 'assets/horizon-hearth/yard.webp');
     this.load.image('arena_mirra_hearth', 'assets/horizon-hearth/arena.webp');
+    this.load.image('horizon_amberwood','assets/horizon-acts/amberwood.webp');
+    this.load.image('horizon_asya','assets/horizon-acts/asya.webp');
+    const robin=PACK_IMAGES.chapter3.companion_robin;
+    if (robin) this.load.image('companion_robin',robin);
     for (const key of ['fence', 'gate', 'ice']) {
       this.load.image('horizon_hearth_' + key, 'assets/horizon-hearth/' + key + '.webp');
+    }
+  }
+
+  create() {
+    super.create();
+    for (const gift of Object.values(GIFT_RULES)) {
+      const key='icon_'+gift.id;
+      if (this.textures.exists(key)) continue;
+      const base=this.textures.get('icon_'+ABILITIES[gift.id].color).getSourceImage();
+      this.textures.addImage(key,base);
     }
   }
 }

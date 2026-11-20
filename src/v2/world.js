@@ -406,18 +406,28 @@ export class HorizonExplorationScene extends ExplorationScene {
     this.storyPending = true;
     this.burst(MIRRA.x, MIRRA.y - 57, 0xcc9df0, 26);
     this.heroRing(0xfed17c, 930);
-    const ray = this.add.image(893, 438, 'fx_glow').setDisplaySize(210, 780)
+    const camera = this.cameras.main;
+    const rayX = Math.min(893, camera.worldView.right - 92);
+    const rayY = camera.worldView.y + 202;
+    const ray = this.add.image(rayX, rayY, 'fx_glow').setDisplaySize(240, 670)
       .setTint(0xc080ff).setBlendMode('ADD').setDepth(DEPTH.fx);
-    const core = this.add.image(893, 438, 'fx_glow').setDisplaySize(54, 770)
+    const core = this.add.image(rayX, rayY, 'fx_glow').setDisplaySize(54, 690)
       .setTint(0xffd582).setBlendMode('ADD').setDepth(DEPTH.fx+1);
+    const shaft = this.add.graphics().setBlendMode('ADD').setDepth(DEPTH.fx);
+    shaft.fillStyle(0x9f56e1,.32).fillTriangle(rayX-22,rayY+150,rayX+23,rayY+150,rayX-7,rayY-298);
+    shaft.fillStyle(0xecc694,.42).fillTriangle(rayX-4,rayY+150,rayX+5,rayY+150,rayX-2,rayY-246);
+    this.burst(rayX,rayY+174,0xffd582,18);
     this.riftShield = this.add.image(this.player.x, this.player.y - 42, 'fx_ring').setDisplaySize(175, 182)
       .setTint(0xffd58a).setBlendMode('ADD').setDepth(DEPTH.fx+1);
-    this.riftCold = this.add.ellipse((GATE.x + MIRRA.x) / 2, GATE.y - 59, 590, 270, 0x88b9ef, .23)
-      .setDepth(DEPTH.fx - 1);
-    this.cameras.main.flash(465, 193, 172, 255);
-    this.tweens.add({ targets: [ray, core], alpha: .18, duration: 710, onComplete: () => {
+    this.riftCold = this.add.image(GATE.x,GATE.y-43,'fx_glow').setDisplaySize(630,235)
+      .setTint(0x92c9ff).setAlpha(.38).setBlendMode('ADD').setDepth(DEPTH.fx - 1);
+    const fox = this.hearth?.fox;
+    if (fox) fox.setPosition(this.player.x+39,this.player.y+2).setDepth(DEPTH.mainBase+this.player.y+2);
+    camera.flash(465, 193, 172, 255);
+    this.tweens.add({ targets: [ray, core, shaft], alpha: .18, duration: 710, onComplete: () => {
       ray.destroy();
       core.destroy();
+      shaft.destroy();
       this.storyPending = false;
       onComplete();
     } });
@@ -431,6 +441,11 @@ export class HorizonExplorationScene extends ExplorationScene {
     const fading = [mirra, this.riftShield, this.riftCold].filter(Boolean);
     this.riftShield = null;
     this.riftCold = null;
+    const fox = this.hearth?.fox;
+    if (fox) {
+      this.tweens.add({targets:fox,x:FOX.x,y:FOX.y,duration:620,ease:'Quad.InOut',
+        onUpdate:()=>fox.setDepth(DEPTH.mainBase+fox.y)});
+    }
     this.tweens.add({ targets: mirra, x: MIRRA.x + 105, y: MIRRA.y - 80, duration: 630, ease: 'Quad.In' });
     this.tweens.add({ targets: fading, alpha: 0, duration: 670, onComplete: () => {
       fading.forEach(view => view.destroy());

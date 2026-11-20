@@ -95,7 +95,10 @@ try {
   await visit('intro', true);
   await next();
   await next();
-  await page.waitForFunction(()=>window.__game.scene.getScene('ExplorationScene').riftShield?.visible);
+  await page.waitForFunction(()=>{
+    const scene=window.__game.scene.getScene('ExplorationScene');
+    return scene.riftShield?.visible && Math.hypot(scene.hearth.fox.x-scene.player.x,scene.hearth.fox.y-scene.player.y)<55;
+  });
   assert.equal(await step(),'intro');
   await next();
   await waitStep('spark');

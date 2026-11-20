@@ -34,6 +34,10 @@ export class HorizonBattle {
     this.fox = this.pet === 'fox';
     this.amulet = context.amulet || null;
     this.amuletRank = context.amuletRank;
+    const amulet=AMULETS_41[this.amulet];
+    const passiveRank=this.amuletRank>=5?5:this.amuletRank>=4?4:this.amuletRank>=2?2:0;
+    this.amuletEffect=amulet?.passive_type;
+    this.amuletValue=amulet?.['val_'+passiveRank] || 0;
     this.potions = { ...context.potions };
     this.usedPotions = {};
     this.healsUsed = 0;
@@ -41,6 +45,7 @@ export class HorizonBattle {
     this.nextTactical = 0;
     this.effects = {};
     this.heroShield = 0;
+    this.heroShieldUntil = 0;
     this.slowUntil = 0;
     this.encounterLevel = encounter.level;
     this.heroLevel=heroLevel;
@@ -131,13 +136,25 @@ export class HorizonBattle {
   mark(enemy,tag,seconds=5) {
     if (!enemy.hp || !tag) return;
     if (tag==='heat') { this.applyHeat(enemy,1); return; }
-    enemy.tags[tag]=this.tick+ticks(seconds*(1-enemy.rating.resistance));
+    const extra=tag==='brittle' && this.amuletEffect==='extend_brittle_slow_sec'?this.amuletValue:0;
+    enemy.tags[tag]=this.tick+ticks((seconds+extra)*(1-enemy.rating.resistance));
     if (tag==='breach') enemy.shield=0;
   }
 
   giftPower(rule) {
     const gift=this.gifts[rule.id];
     return this.power * giftMultiplier(gift) * this.rankFactor(gift?.rank) * amuletPower(this.amuletRank);
+  }
+
+  shieldHero(amount,seconds) {
+    this.heroShield=Math.max(this.heroShieldUntil>this.tick?this.heroShield:0,amount);
+    this.heroShieldUntil=this.tick+ticks(seconds);
+  }
+
+  healForestAmulet() {
+    if (this.amuletEffect==='heal_pct_on_zhatva_or_throw') {
+      this.hero.hp=Math.min(this.hero.maxHp,this.hero.hp+this.hero.maxHp*this.amuletValue);
+    }
   }
 
   castNamed(rule,stone,primary) {
@@ -151,8 +168,11 @@ export class HorizonBattle {
       }
       stone.tag=null; stone.respawnAt=this.tick+ticks(stone.respawn);
       if (rule.role==='obereg') {
-        this.hero.mana=Math.min(this.hero.maxMana,this.hero.mana+this.hero.maxMana*CORE.crystal_mana);
-        this.heroShield+=stone.id==='crystal'?0:power*.4;
+        if (rule.id==='seal' && stone.id==='crystal') {
+          this.hero.mana=Math.min(this.hero.maxMana,this.hero.mana+this.hero.maxMana*CORE.crystal_mana);
+        } else {
+          this.shieldHero(this.hero.maxHp*(rule.id==='stone_shell'?.35:.24),6);
+        }
       } else {
         const effective=tag || rule.tag;
         const force=effective==='brittle'
@@ -167,6 +187,7 @@ export class HorizonBattle {
           this.interrupt(enemy);
           if (effective==='heat') this.applyHeat(enemy,1);
         }
+        this.healForestAmulet();
       }
       if (tag || stone.id==='crystal' || stone.id==='barrel') {
         this.combos++;
@@ -175,23 +196,28 @@ export class HorizonBattle {
       return;
     }
     if (rule.target_scope==='self') {
-      this.heroShield+=Math.max(this.hero.maxHp*.12,power*rule.sp_mult);
+      const shield=rule.id==='lunar_veil'?.20:rule.id==='stone_shell'?.35:.12;
+      this.shieldHero(Math.max(this.hero.maxHp*shield,power*rule.sp_mult),6);
       return;
     }
+    let harvested=false;
     for (const enemy of this.enemies) {
       const share=coverage(rule.target_scope,enemy===primary);
       if (!enemy.hp || !share) continue;
-      const harvesting=rule.role==='zhatva' && this.activeTag(enemy,rule.detonate_tag);
+      const harvestedTag=rule.role==='zhatva' && rule.detonate_tag?.split('|').find(tag=>this.activeTag(enemy,tag));
       if (rule.tag) this.mark(enemy,rule.tag);
       if (rule.id==='seal') this.mark(enemy,'breach');
-      this.damage(enemy,power*rule.sp_mult*share*(harvesting?1.6:1),rule.id);
-      if (harvesting) {
-        if (rule.detonate_tag==='heat') enemy.heat=0;
-        else enemy.tags[rule.detonate_tag]=0;
+      this.damage(enemy,power*rule.sp_mult*share*(harvestedTag?rule.id==='ice_shatter'?2:1.6:1),rule.id);
+      if (harvestedTag) {
+        if (harvestedTag==='heat') enemy.heat=0;
+        else enemy.tags[harvestedTag]=0;
+        if (rule.id==='ice_shatter') this.interrupt(enemy);
         this.addCharge(CORE.companion_zhatva_trigger);
+        harvested=true;
       }
       if (rule.role==='volya') this.interrupt(enemy);
     }
+    if (harvested) this.healForestAmulet();
   }
 
   usePotion(id) {
@@ -219,7 +245,7 @@ export class HorizonBattle {
     } else if (p.effect_type.startsWith('apply_')) {
       this.mark(this.enemies[this.focus],p.effect_type.includes('viscosity')?'viscosity':'brittle',p.duration_sec);
     } else if (p.effect_type.startsWith('shield_')) {
-      this.heroShield+=this.hero.maxHp*p.value_pct;
+      this.shieldHero(this.hero.maxHp*p.value_pct,p.duration_sec);
     } else {
       this.effects[p.effect_type]={until:this.tick+ticks(p.duration_sec),value:p.value_pct};
     }
@@ -400,9 +426,9 @@ export class HorizonBattle {
     const direct=this.effects.direct_dmg_mit;
     const warm=this.effects.cleanse_slow_frost_mit;
     const potion=Math.max(direct?.until>this.tick?direct.value:0,cold && warm?.until>this.tick?warm.value:0);
-    const def=AMULETS_41[this.amulet];
-    const amulet=cold && def?.passive_type.includes('frost')?def.val_0:0;
+    const amulet=cold && this.amuletEffect==='status_dmg_mitigation'?this.amuletValue:0;
     const damage=Math.round(incomingDamage(enemy.hit*multiplier,{potion,amulet}));
+    if (this.heroShieldUntil<=this.tick) this.heroShield=0;
     const absorbed=Math.min(this.heroShield,damage);
     this.heroShield-=absorbed;
     this.hero.hp=Math.max(0,this.hero.hp-damage+absorbed);

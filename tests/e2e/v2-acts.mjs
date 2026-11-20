@@ -62,11 +62,13 @@ try {
     if (intro) await next();
     await inBattle();
     const result=await page.evaluate(()=>{
-      const s=window.__game.scene.getScene('CombatScene'), b=s.battle;
+      const s=window.__game.scene.getScene('CombatScene');
+      const b=s.battle=new s.battle.constructor(s.context);
       const tactics=['telekinesis','fire','seal','crimson_burst','ice','lunar_veil'];
       for (let i=0;!b.result && i<3000;i++) {
         if (b.hero.hp<b.hero.maxHp*.68) b.command({type:'potion',id:'potion_life_small'});
-        if (b.enemies.some(e=>e.castUntil && e.role==='boss')) b.command({type:'potion',id:'potion_warm'});
+        if (b.enemies.some(e=>e.id==='boss_august_grad' && e.castUntil)) b.command({type:'potion',id:'potion_warm'});
+        if (b.enemies.some(e=>e.id==='boss_treegazer' && e.hp<e.maxHp*.8 && !e.shield)) b.command({type:'potion',id:'potion_fire_flask'});
         for (const gift of tactics) {
           const obj=Object.values(b.objects).find(item=>item.respawnAt<=b.tick && (gift==='telekinesis'?item.tag:gift==='fire'&&!item.tag));
           b.command(obj?{type:'cast_on_object',gift,object:obj.id}:{type:'cast',gift});

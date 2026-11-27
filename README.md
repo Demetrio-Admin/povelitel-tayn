@@ -1,8 +1,10 @@
 # Колдовство: Магическая RPG
 
-Мобильная браузерная RPG на Phaser 4.2.1. Основная игра поддерживает облачный прогресс через Supabase и локальный режим разработки. Камера и эпизод запускаются отдельно.
+Мобильная браузерная RPG на Phaser 4.2.1. Основная игра поддерживает облачный прогресс через Supabase и локальный режим разработки.
 
 Рабочие документы: [видение игры](GAME_VISION.md), [архитектура](ARCHITECTURE.md), [паспорта систем](GAME_SYSTEMS/README.md), [реестр решений](DECISIONS.md), [правила разработки](AGENTS.md).
+
+Актуальные правила находятся в `GAME_SYSTEMS/`, `src/config/` и серверных контрактах. [Материалы дизайна и восстановления](docs/README.md) не заменяют действующие правила.
 
 ## Запуск
 
@@ -38,4 +40,4 @@ npm run e2e
 
 ## Выпуск
 
-[Порядок выпуска и обновления Supabase](GAME_SYSTEMS/RELEASE_AND_RECOVERY.md) и [примечание к v0.39.1](docs/releases/v0.39.1.md). [Прежние заметки о выпусках](https://github.com/Demetrio-Admin/povelitel-tayn/tree/1f23ae56a79f6b8ab03d44d39c9e373f3b0b629d/docs) и [маршруты ранних прототипов](https://github.com/Demetrio-Admin/povelitel-tayn/blob/1f23ae56a79f6b8ab03d44d39c9e373f3b0b629d/README.md) доступны в истории Git.
+[Порядок выпуска и обновления Supabase](GAME_SYSTEMS/RELEASE_AND_RECOVERY.md) и [примечание к v0.39.1](docs/releases/v0.39.1.md). История прежних выпусков доступна в Git.
